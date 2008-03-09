@@ -45,6 +45,9 @@ $(DOC_OUTPUT_DIR)/%.ico : %.ico
 $(DOC_OUTPUT_DIR)/%.html : %.dd doc.ddoc
 	$(DMD) -c -o- -Df$@ doc.ddoc $<
 
+$(DOC_OUTPUT_DIR)/cpptod.html : cpptod.dd doc.ddoc
+	$(DMD) -c -o- -Df$@ doc.ddoc $<
+
 zip:
 	rm doc.zip
 	zip32 doc win32.mak style.css doc.ddoc
