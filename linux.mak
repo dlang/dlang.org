@@ -42,7 +42,7 @@ $(DOC_OUTPUT_DIR)/%.gif : %.gif
 $(DOC_OUTPUT_DIR)/%.ico : %.ico
 	cp $< $@
 
-$(DOC_OUTPUT_DIR)/%.html : %.d doc.ddoc
+$(DOC_OUTPUT_DIR)/%.html : %.ddoc doc.ddoc
 	$(DMD) -c -o- -Df$@ doc.ddoc $<
 
 zip:
