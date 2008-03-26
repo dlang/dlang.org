@@ -159,7 +159,7 @@ $(P
 
 $(GRAMMAR
 $(I ExpressionStatement):
-    $(I Expression) $(B ;)
+    $(EXPRESSION) $(B ;)
 )
 
 	The expression is evaluated.
@@ -206,9 +206,9 @@ $(I IfStatement):
 	$(B if $(LPAREN)) $(I IfCondition) $(B $(RPAREN)) $(I ThenStatement) $(B else) $(I ElseStatement)
 
 $(I IfCondition):
-	$(I Expression)
-	$(B auto) $(I Identifier) $(B =) $(I Expression)
-	$(I Declarator) $(B =) $(I Expression)
+	$(EXPRESSION)
+	$(B auto) $(I Identifier) $(B =) $(EXPRESSION)
+	$(I Declarator) $(B =) $(EXPRESSION)
 
 $(I ThenStatement):
 	$(PSSCOPE)
@@ -217,7 +217,7 @@ $(I ElseStatement):
 	$(PSSCOPE)
 )
 
-	$(I Expression) is evaluated and must have a type that
+	$(EXPRESSION) is evaluated and must have a type that
 	can be converted to a boolean. If it's true the
 	$(I ThenStatement) is transferred to, else the $(I ElseStatement)
 	is transferred to.
@@ -230,14 +230,14 @@ $(I ElseStatement):
 	If an $(B auto) $(I Identifier) is provided, it is declared and
 	initialized
 	to the value
-	and type of the $(I Expression). Its scope extends from when it is
+	and type of the $(EXPRESSION). Its scope extends from when it is
 	initialized to the end of the $(I ThenStatement).
 	<p>
 
 	If a $(I Declarator) is provided, it is declared and
 	initialized
 	to the value
-	of the $(I Expression). Its scope extends from when it is
+	of the $(EXPRESSION). Its scope extends from when it is
 	initialized to the end of the $(I ThenStatement).
 
 ---
@@ -262,17 +262,17 @@ writefln(m.pre);         // error, m undefined
 
 $(GRAMMAR
 $(I WhileStatement):
-    $(B while $(LPAREN)) $(I Expression) $(B $(RPAREN)) $(PSSCOPE)
+    $(B while $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
 )
 
 	While statements implement simple loops.
 
-	$(I Expression) is evaluated and must have a type that
+	$(EXPRESSION) is evaluated and must have a type that
 	can be converted to a boolean. If it's true the
 	$(PSSCOPE) is executed. After the $(PSSCOPE) is executed,
-	the $(I Expression) is evaluated again, and if true the
+	the $(EXPRESSION) is evaluated again, and if true the
 	$(PSSCOPE) is executed again. This continues until the
-	$(I Expression) evaluates to false.
+	$(EXPRESSION) evaluates to false.
 
 ---
 int i = 0;
@@ -285,23 +285,23 @@ while (i < 10)
 
 	A $(GLINK BreakStatement) will exit the loop.
 	A $(GLINK ContinueStatement)
-	will transfer directly to evaluating $(I Expression) again.
+	will transfer directly to evaluating $(EXPRESSION) again.
 
 <h2>$(LNAME2 DoStatement, Do Statement)</h2>
 
 $(GRAMMAR
 $(I DoStatement):
-    $(B do) $(PSSCOPE) $(B  while $(LPAREN)) $(I Expression) $(B $(RPAREN))
+    $(B do) $(PSSCOPE) $(B  while $(LPAREN)) $(EXPRESSION) $(B $(RPAREN))
 )
 
 	Do while statements implement simple loops.
 
 	$(PSSCOPE) is executed. Then
-	$(I Expression) is evaluated and must have a type that
+	$(EXPRESSION) is evaluated and must have a type that
 	can be converted to a boolean. If it's true the
 	loop is iterated again.
 	This continues until the
-	$(I Expression) evaluates to false.
+	$(EXPRESSION) evaluates to false.
 
 ---
 int i = 0;
@@ -313,7 +313,7 @@ do
 
 	A $(GLINK BreakStatement) will exit the loop.
 	A $(GLINK ContinueStatement)
-	will transfer directly to evaluating $(I Expression) again.
+	will transfer directly to evaluating $(EXPRESSION) again.
 
 <h2>$(LNAME2 ForStatement, For Statement)</h2>
 
@@ -330,11 +330,11 @@ $(I Initialize):
 
 $(I Test):
 	$(I empty)
-	$(I Expression)
+	$(EXPRESSION)
 
 $(I Increment):
 	$(I empty)
-	$(I Expression)
+	$(EXPRESSION)
 )
 
 	$(P $(I Initialize) is executed.
@@ -412,7 +412,7 @@ $(GNAME ForeachType):
     $(I Identifier)
 
 $(I Aggregate):
-    $(I Expression)
+    $(EXPRESSION)
     $(I Tuple)
 )
 
@@ -728,7 +728,7 @@ double
 
 $(GRAMMAR
 $(I SwitchStatement):
-	$(B switch $(LPAREN)) $(I Expression) $(B $(RPAREN)) $(PSSCOPE)
+	$(B switch $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
 
 $(GNAME CaseStatement):
 	$(B case) $(I ExpressionList) $(B :) $(PSSEMI_PSCURLYSCOPE)
@@ -737,39 +737,58 @@ $(GNAME DefaultStatement):
 	$(B default:) $(PSSEMI_PSCURLYSCOPE)
 )
 
-	$(I Expression) is evaluated. The result type T must be
-	of integral type or char[], wchar[] or dchar[]. The result is
+	$(P $(EXPRESSION) is evaluated. The result type T must be
+	of integral type or $(CODE char[]), $(CODE wchar[]) or $(CODE dchar[]).
+	The result is
 	compared against each of the case expressions. If there is
 	a match, the corresponding case statement is transferred to.
-	<p>
+	)
 
-	The case expressions, $(I ExpressionList), are a comma separated
+	$(P The case expressions, $(I ExpressionList), are a comma separated
 	list of expressions.
-	<p>
+	)
 
-	If none of the case expressions match, and there is a default
+	$(P If none of the case expressions match, and there is a default
 	statement, the default statement is transferred to.
-	<p>
+	)
 
-	If none of the case expressions match, and there is not a default
-	statement, a SwitchError is thrown. The reason for this is
+	$(P If none of the case expressions match, and there is not a default
+	statement, a
+	$(LINK2 phobos/std_switcherr.html, $(CODE std.switcherr.SwitchError))
+	is thrown.
+	The reason for this is
 	to catch the common programming error of adding a new value to
 	an enum, but failing to account for the extra value in
 	switch statements. This behavior is unlike C or C++.
-	<p>
+	)
 
+	$(P
+$(V1
 	The case expressions must all evaluate to a constant value
-	or array, and be implicitly convertible to the type T of the
-	switch $(I Expression).
-	<p>
+	or array.
+)
+$(V2
+	The case expressions must all evaluate to a constant value
+	or array, or a runtime initialized const or invariant variable of
+	integral type.
+)
+	They must be implicitly convertible to the type of the
+	switch $(EXPRESSION).
+	)
 
-	Case expressions must all evaluate to distinct values.
+	$(P Case expressions must all evaluate to distinct values.
+$(V2
+	Const or invariant variables must all have different names.
+	If they share a value, the first case statement with that value
+	gets control.
+)
 	There may not be two or more default statements.
-	<p>
+	)
 
-	Case statements and default statements associated with the switch
+	$(P Case statements and default statements associated with the switch
 	can be nested within block statements; they do not have to be in
 	the outermost block. For example, this is allowed:
+	)
 
 --------------
     switch (i)
@@ -782,9 +801,10 @@ $(GNAME DefaultStatement):
     }
 --------------
 
-	Like in C and C++, case statements 'fall through' to subsequent
+	$(P Case statements 'fall through' to subsequent
 	case values. A break statement will exit the switch $(I BlockStatement).
 	For example:
+	)
 
 --------------
 switch (i)
@@ -801,11 +821,12 @@ switch (i)
 }
 --------------
 
-	will set x to 4 if i is 1.
-	<p>
+	$(P will set $(CODE x) to $(CODE 4) if $(CODE i) is $(CODE 1).
+	)
 
-	$(B Note:) Unlike C and C++, strings can be used in switch
+	$(P $(B Note:) Unlike C and C++, strings can be used in switch
 	expressions. For example:
+	)
 
 --------------
 char[] name;
@@ -818,17 +839,18 @@ switch (name)
 }
 --------------
 
-	For applications like command line switch processing, this
+	$(P For applications like command line switch processing, this
 	can lead to much more straightforward code, being clearer and
 	less error prone. Both ascii and wchar strings are allowed.
-	<p>
+	)
 
-	$(B Implementation Note:) The compiler's code generator may
+	$(P $(B Implementation Note:) The compiler's code generator may
 	assume that the case
 	statements are sorted by frequency of use, with the most frequent
 	appearing first and the least frequent last. Although this is
 	irrelevant as far as program correctness is concerned, it is of
 	performance interest.
+	)
 
 
 <h2>$(LNAME2 ContinueStatement, Continue Statement)</h2>
@@ -911,15 +933,15 @@ for (i = 0; i < 10; i++)
 $(GRAMMAR
 $(I ReturnStatement):
     $(B return;)
-    $(B return) $(I Expression) $(B ;)
+    $(B return) $(EXPRESSION) $(B ;)
 )
 
 	A return exits the current function and supplies its return
 	value.
 
-	$(I Expression) is required if the function specifies
+	$(EXPRESSION) is required if the function specifies
 	a return type that is not void.
-	The $(I Expression) is implicitly converted to the
+	The $(EXPRESSION) is implicitly converted to the
 	function return type.
 	<p>
 
@@ -928,8 +950,8 @@ $(I ReturnStatement):
 	specifies a return type that is not void.
 	<p>
 
-	$(I Expression) is allowed even if the function specifies
-	a $(B void) return type. The $(I Expression) will be evaluated,
+	$(EXPRESSION) is allowed even if the function specifies
+	a $(B void) return type. The $(EXPRESSION) will be evaluated,
 	but nothing will be returned.
 	<p>
 
@@ -949,7 +971,7 @@ $(I ReturnStatement):
 	If there is an out postcondition
 	(see $(LINK2 dbc.html, Contract Programming)),
 	that postcondition is executed
-	after the $(I Expression) is evaluated and before the function
+	after the $(EXPRESSION) is evaluated and before the function
 	actually returns.
 
 ---
@@ -966,7 +988,7 @@ $(I GotoStatement):
     $(B goto) $(I Identifier) $(B ;)
     $(B goto) $(B default) $(B ;)
     $(B goto) $(B case) $(B ;)
-    $(B goto) $(B case) $(I Expression) $(B ;)
+    $(B goto) $(B case) $(EXPRESSION) $(B ;)
 )
 
 	A goto transfers to the statement labelled with
@@ -980,18 +1002,20 @@ L1:
     x++;
 ---
 
-	The second form, $(TT goto default;), transfers to the
-	innermost $(I DefaultStatement) of an enclosing $(I SwitchStatement).
+	The second form, $(CODE goto default;), transfers to the
+	innermost $(GLINK DefaultStatement) of an enclosing
+	$(GLINK SwitchStatement).
 	<p>
 
-	The third form, $(TT goto case;), transfers to the
-	next $(I CaseStatement) of the innermost enclosing
+	The third form, $(CODE goto case;), transfers to the
+	next $(GLINK CaseStatement) of the innermost enclosing
 	$(I SwitchStatement).
 	<p>
 
-	The fourth form, $(TT goto case $(I Expression);), transfers to the
-	$(I CaseStatement) of the innermost enclosing $(I SwitchStatement)
-	with a matching $(I Expression).
+	The fourth form, $(CODE goto case $(EXPRESSION);), transfers to the
+	$(GLINK CaseStatement) of the innermost enclosing
+	$(GLINK SwitchStatement)
+	with a matching $(EXPRESSION).
 
 ---
 switch (x)
@@ -1021,12 +1045,12 @@ switch (x)
 
 $(GRAMMAR
 $(I WithStatement):
-	$(B with) $(B $(LPAREN)) $(I Expression) $(B $(RPAREN)) $(PSSCOPE)
+	$(B with) $(B $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
 	$(B with) $(B $(LPAREN)) $(I Symbol) $(B $(RPAREN)) $(PSSCOPE)
 	$(B with) $(B $(LPAREN)) $(I TemplateInstance) $(B $(RPAREN)) $(PSSCOPE)
 )
 
-	where $(I Expression) evaluates to a class reference or struct
+	where $(EXPRESSION) evaluates to a class reference or struct
 	instance.
 	Within the with body the referenced object is searched first for
 	identifier symbols. The $(I WithStatement)
@@ -1050,14 +1074,15 @@ $(B with) (expression)
 }
 --------------
 
-	Note that $(TT expression) only gets evaluated once.
+	$(P Note that $(EXPRESSION) only gets evaluated once.
 	The with statement does not change what $(B this) or
 	$(B super) refer to.
-	<p>
+	)
 
-	For $(I Symbol) which is a scope or $(I TemplateInstance),
+	$(P For $(I Symbol) which is a scope or $(I TemplateInstance),
 	the corresponding scope is searched when looking up symbols.
 	For example:
+	)
 
 --------------
 struct Foo
@@ -1080,31 +1105,34 @@ with (Foo)
 $(GRAMMAR
 $(I SynchronizedStatement):
     $(B synchronized) $(PSSCOPE)
-    $(B synchronized $(LPAREN)) $(I Expression) $(B $(RPAREN)) $(PSSCOPE)
+    $(B synchronized $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
 )
 
-	Synchronized allows only one thread at a time to execute
+	$(P Synchronized allows only one thread at a time to execute
 	$(I ScopeStatement).
-	<p>
+	)
 
-	synchronized ($(I Expression)), where $(I Expression) evaluates to an
+	$(P $(CODE synchronized ($(EXPRESSION))), where $(EXPRESSION) evaluates
+	to an
 	Object reference, allows only one thread at a time to use
 	that Object to execute the $(I ScopeStatement).
-	If $(I Expression) is an instance of an $(I Interface), it is
+	If $(EXPRESSION) is an instance of an $(I Interface), it is
 	cast to an $(I Object).
-	<p>
+	)
 
-	The synchronization gets released even if $(I ScopeStatement) terminates
-	with an exception, goto, or return.
-	<p>
+	$(P The synchronization gets released even if $(I ScopeStatement)
+	terminates with an exception, goto, or return.
+	)
 
-	Example:
+	$(P Example:
+	)
 
 --------------
 synchronized { ... }
 --------------
 
-	This implements a standard critical section.
+	$(P This implements a standard critical section.
+	)
 
 <h2>$(LNAME2 TryStatement, Try Statement)</h2>
 
@@ -1209,10 +1237,10 @@ done
 
 $(GRAMMAR
 $(I ThrowStatement):
-	$(B throw) $(I Expression) $(B ;)
+	$(B throw) $(EXPRESSION) $(B ;)
 )
 
-	$(I Expression) is evaluated and must be an Object reference.
+	$(EXPRESSION) is evaluated and must be an Object reference.
 	The Object reference is thrown as an exception.
 
 ---
@@ -1465,10 +1493,10 @@ $(I ForeachRangeStatement):
     $(GLINK Foreach) $(LPAREN)$(GLINK ForeachType)$(B ;) $(I LwrExpression) $(B ..) $(I UprExpression) $(B $(RPAREN)) $(PSSCOPE)
 
 $(I LwrExpression):
-    $(I Expression)
+    $(EXPRESSION)
 
 $(I UprExpression):
-    $(I Expression)
+    $(EXPRESSION)
 )
 
 	$(P
@@ -1519,6 +1547,7 @@ Macros:
 	WIKI=Statement
 	GLINK=$(LINK2 #$0, $(I $0))
 	GNAME=$(LNAME2 $0, $0)
+	EXPRESSION=$(LINK2 expression.html#Expression, $(I Expression))
 	PSSEMI_PSCURLYSCOPE=$(GLINK Statement)
 	PS0=$(GLINK NoScopeNonEmptyStatement)
 	PSSCOPE=$(GLINK ScopeStatement)
