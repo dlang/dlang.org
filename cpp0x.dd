@@ -6,12 +6,14 @@ $(COMMUNITY D and C++0x,
 	$(P
 	C++ is undergoing an upgrade to a new standard, commonly referred
 	to as C++0x.
-	Here is the
-	$(LINK2 $(NDOCS)2008/n2565.html, current status of C++0x).
-	This article covers the highlights of C++0x core language changes
+	This article covers the highlights of
+	$(LINK2 $(NDOCS)2008/n2565.html, C++0x core language changes)
 	and compares them with what is available in D.
-	Since C++0x is far from being finalized and is a moving target,
-	this article cannot be precise about it.
+	Since C++0x is far from being finalized,
+	this article is subject to being obsoleted by new proposals and
+	revisions to existing ones.
+	C++0x standard library changes are not addressed here.
+	TBD means To Be Determined.
 	)
 
 $(SECTION3 Proposed C++0x Features,
@@ -113,9 +115,17 @@ $(SECTION3 $(LNAME2 static-assert, static_assert),
 
 $(SECTION3 $(LNAME2 template-aliases, Template aliases for C++),
 
-	$(P $(LINK2 $(NDOCS)2007/n2258.pdf, N2258): TBD
+	$(P $(LINK2 $(NDOCS)2007/n2258.pdf, N2258):
+	Both $(LINK2 template.html, templates and template instantiations)
+	can be $(LINK2 declaration.html#alias, aliased):
 	)
-
+---
+struct S(T) { T int; }
+alias S X;       // alias template
+alias S!(int) Y; // alias template instantiation
+X!(int) x;
+Y y;  // x and y are the same type
+---
 )
 
 $(SECTION3 $(LNAME2 extern-template, Extern template),
@@ -157,7 +167,30 @@ $(SECTION3 $(LNAME2 nullptr, A name for the null pointer: nullptr),
 
 $(SECTION3 $(LNAME2 strong-enums, Strongly Typed Enums),
 
-	$(P $(LINK2 $(NDOCS)2007/n2347.pdf, N2347): TBD
+	$(P $(LINK2 $(NDOCS)2007/n2347.pdf, N2347):
+	D $(LINK2 enum.html, enums) are:
+	)
+
+	$(OL
+	$(LI Comparisons between different enum types should be an error,
+	but is not:
+---
+void main() {
+    enum Color { ClrRed, ClrOrange, ClrYellow, ClrGreen, ClrBlue, ClrViolet };
+    enum Alert { CndGreen, CndYellow, CndRed };
+    Color c = Color.ClrRed;
+    Alert a = Alert.CndGreen;
+    a = c; // error
+    a = Color.ClrYellow; // error
+    bool armWeapons = ( a >= Color.ClrYellow ); // ok; oops
+}
+---
+	)
+	$(LI The underlying type can be specified.)
+	$(LI Named enums are strongly scoped. Anonymous enum members are
+	declared in the enclosing scope.)
+	$(LI Explicit qualification is needed to specify a named enum
+	member.)
 	)
 
 )
@@ -180,14 +213,27 @@ $(SECTION3 $(LNAME2 extended-friends, Extended friend Declarations),
 
 $(SECTION3 $(LNAME2 constant-expressions, Generalized Constant Expressions),
 
-	$(P $(LINK2 $(NDOCS)2007/n2235.pdf, N2235): TBD
+	$(P $(LINK2 $(NDOCS)2007/n2235.pdf, N2235):
+	D has $(LINK2 function.html#interpretation, compile time function execution)
+	(CTFE). CTFE is much more flexible, as functions to be evaluated
+	at compile time:
+	)
+
+	$(OL
+	$(LI do not require a special keyword (C++0x requires $(CODE constexpr)))
+	$(LI can have multiple statements in the function)
+	$(LI can be recursive)
+	$(LI can modify local variables)
+	$(LI can have out parameters)
 	)
 
 )
 
 $(SECTION3 $(LNAME2 namespace-association, Namespace Association ("Strong Using")),
 
-	$(P $(LINK2 $(NDOCS)2008/n2535.html, N2535): TBD
+	$(P $(LINK2 $(NDOCS)2008/n2535.html, N2535):
+	D doesn't have namespaces,
+	so this is irrelevant.
 	)
 
 )
@@ -195,7 +241,8 @@ $(SECTION3 $(LNAME2 namespace-association, Namespace Association ("Strong Using"
 $(SECTION3 $(LNAME2 c99-preprocessor, Synchronizing the C++ preprocessor with C99),
 
 	$(P $(LINK2 $(NDOCS)2004/n1653.htm, N1653):
-	D has no text preprocessor, so this is not relevant to D.
+	D does not have a preprocessor,
+	so this is not relevant to D.
 	)
 
 )
@@ -214,14 +261,18 @@ $(SECTION3 $(LNAME2 alignment, Adding Alignment Support to the C++ Programming L
 
 $(SECTION3 $(LNAME2 conditional, Conditionally-Supported Behavior),
 
-	$(P $(LINK2 $(NDOCS)2004/n1627.pdf, N1627): TBD
+	$(P $(LINK2 $(NDOCS)2004/n1627.pdf, N1627):
+	There are some allowed vendor specific behaviors in D,
+	such as $(LINK2 pragma.html, pragmas).
 	)
 
 )
 
 $(SECTION3 $(LNAME2 undefined-behavior, Changing Undefined Behavior into Diagnosable Errors),
 
-	$(P $(LINK2 $(NDOCS)2004/n1727.pdf, N1727): TBD
+	$(P $(LINK2 $(NDOCS)2004/n1727.pdf, N1727):
+	D does not have undefined behavior with integer literal types,
+	character escapes, or passing non-POD objects to ellipses.
 	)
 
 )
@@ -249,7 +300,9 @@ $(SECTION3 $(LNAME2 extended-integer-types, Adding extended integer types to C++
 
 $(SECTION3 $(LNAME2 delegating-ctors, Delegating Constructors),
 
-	$(P $(LINK2 $(NDOCS)2006/n1986.pdf, N1986): TBD
+	$(P $(LINK2 $(NDOCS)2006/n1986.pdf, N1986):
+	D has
+	$(LINK2 class.html#delegating-constructors, delegating constructors).
 	)
 
 )
@@ -284,14 +337,18 @@ $(SECTION3 $(LNAME2 right-angle-brackets, Right Angle Brackets),
 
 $(SECTION3 $(LNAME2 type-deduction, Deducing the type of variable from its initializer expression),
 
-	$(P $(LINK2 $(NDOCS)2006/n1984.pdf, N1984): TBD
+	$(P $(LINK2 $(NDOCS)2006/n1984.pdf, N1984):
+	D has $(LINK2 declaration.html#AutoDeclaration, type inference)
+	from initializers.
 	)
 
 )
 
 $(SECTION3 $(LNAME2 auto-declarations, The Syntax of auto Declarations),
 
-	$(P $(LINK2 $(NDOCS)2008/n2546.html, N2546): TBD
+	$(P $(LINK2 $(NDOCS)2008/n2546.html, N2546):
+	D $(LINK2 attribute.html#auto, auto declarations)
+	do not have syntactic issues.
 	)
 
 )
@@ -312,7 +369,9 @@ $(SECTION3 $(LNAME2 sequence-points, A finer-grained alternative to sequence poi
 
 $(SECTION3 $(LNAME2 lambda, (monomorphic) Lambda expressions and closures for C++),
 
-	$(P $(LINK2 $(NDOCS)2008/n2550.pdf, N2550): TBD
+	$(P $(LINK2 $(NDOCS)2008/n2550.pdf, N2550):
+	D has $(LINK2 expression.html#FunctionLiteral, lambda expressions) and
+	$(LINK2 function.html#closures, closures).
 	)
 
 )
@@ -340,14 +399,19 @@ $(SECTION3 $(LNAME2 concurrency, Sequencing and the concurrency memory model),
 
 $(SECTION3 $(LNAME2 raw-strings, Raw String Literals),
 
-	$(P $(LINK2 $(NDOCS)2007/n2442.html, N2442): TBD
+	$(P $(LINK2 $(NDOCS)2007/n2442.html, N2442):
+	D has $(LINK2 lex.html#StringLiteral, wysiwyg and delimited strings),
+	and all strings are Unicode.
 	)
 
 )
 
 $(SECTION3 $(LNAME2 pod, PODs unstrung),
 
-	$(P $(LINK2 $(NDOCS)2007/n2342.html, N2342): TBD
+	$(P $(LINK2 $(NDOCS)2007/n2294.html, N2294):
+	All D $(LINK2 struct.html, structs) are
+	$(LINK2 glossary.html#pod, POD (Plain Old Data)).
+	D $(LINK2 class.html, classes) are reference, polymorphic types.
 	)
 
 )
@@ -438,7 +502,7 @@ $(SECTION3 $(LNAME2 abandoning, Abandoning a Process),
 
 $(SECTION3 $(LNAME2 return-types, New function declaration syntax for deduced return types),
 
-	$(P $(LINK2 $(NDOCS)2008/n2541.html, N2541): TBD
+	$(P $(LINK2 $(NDOCS)2007/n2445.html, N2445): TBD
 	)
 
 )
@@ -452,14 +516,20 @@ $(SECTION3 $(LNAME2 atomic-signals, Allow atomics use in signal handlers),
 
 $(SECTION3 $(LNAME2 local-classes, Making Local Classes more Useful),
 
-	$(P $(LINK2 $(NDOCS)2007/n2402.pdf, N2402): TBD
+	$(P $(LINK2 $(NDOCS)2007/n2402.pdf, N2402):
+	D has no restrictions on using local classes as template
+	parameters.
 	)
 
 )
 
 $(SECTION3 $(LNAME2 initializer-lists, Initializer lists),
 
-	$(P $(LINK2 $(NDOCS)2008/n2531.pdf, N2531): TBD
+	$(P $(LINK2 $(NDOCS)2008/n2531.pdf, N2531):
+	D has
+	$(LINK2 struct.html#StructLiteral, struct literals),
+	$(LINK2 expression.html#ArrayLiteral, array literals),
+	and $(LINK2 expression.html#AssocArrayLiteral, associative array literals).
 	)
 
 )
@@ -474,7 +544,10 @@ $(SECTION3 $(LNAME2 thread-local-storage, Thread-Local Storage),
 
 $(SECTION3 $(LNAME2 member-initializers, Member Initializers),
 
-	$(P $(LINK2 $(NDOCS)2007/n2426.htm, N2426): TBD
+	$(P $(LINK2 $(NDOCS)2007/n2426.htm, N2426):
+	D has
+	$(LINK2 class.html#class-default-initializer, member initializers),
+	which are called $(I default initializers).
 	)
 
 )
@@ -497,14 +570,18 @@ $(SECTION3 $(LNAME2 for-loop, Proposal for new for-loop),
 
 $(SECTION3 $(LNAME2 general-attributes, General Attributes for C++),
 
-	$(P $(LINK2 $(NDOCS)2007/n2418.pdf, N2418): TBD
+	$(P $(LINK2 $(NDOCS)2007/n2418.pdf, N2418):
+	Vendor specific attributes can be applied to statements
+	and declarations with
+	$(LINK2 pragma.html, pragmas).
 	)
 
 )
 
 $(SECTION3 $(LNAME2 extensible-literals, Extensible Literals),
 
-	$(P $(LINK2 $(NDOCS)2007/n2378.pdf, N2378): TBD
+	$(P $(LINK2 $(NDOCS)2007/n2378.pdf, N2378):
+	D does not have user extensible literals.
 	)
 
 )
@@ -531,7 +608,15 @@ $(SECTION3 $(LNAME2 garbage-collection, Minimal Support for Garbage Collection a
 
 $(SECTION3 $(LNAME2 forward-enums, Forward declaration of enumerations),
 
-	$(P $(LINK2 $(NDOCS)2008/n2499.pdf, N2499): TBD
+	$(P $(LINK2 $(NDOCS)2008/n2499.pdf, N2499):
+	Forward declarations are not necessary in D, as all declarations
+	are resolved essentially in parallel.
+	Incomplete $(LINK2 enum.html, enum) types, however, are possible:
+	)
+---
+enum E : int;
+---
+	$(P where the member values are hidden from the user.
 	)
 
 )
