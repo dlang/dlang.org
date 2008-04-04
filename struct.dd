@@ -118,7 +118,7 @@ $(SPEC_S Structs &amp; Unions,
 	$(YES)
 	$(YES)
 	)
-
+$(V1
 	$(TR
 	$(TD destructors)
 	$(NO)
@@ -127,6 +127,57 @@ $(SPEC_S Structs &amp; Unions,
 	$(YES)
 	$(YES)
 	)
+	$(TR
+	$(TD RAII)
+	$(NO)
+	$(YES)
+	$(NO)
+	$(YES)
+	$(YES)
+	)
+	$(TR
+	$(TD assign overload)
+	$(NO)
+	$(NO)
+	$(NO)
+	$(YES)
+	$(YES)
+	)
+)
+$(V2
+	$(TR
+	$(TD $(LINK2 #StructPostblit, postblit)/copy constructors)
+	$(YES)
+	$(NO)
+	$(NO)
+	$(YES)
+	$(YES)
+	)
+	$(TR
+	$(TD $(LINK2 #StructDestructor, destructors))
+	$(YES)
+	$(YES)
+	$(NO)
+	$(YES)
+	$(YES)
+	)
+	$(TR
+	$(TD RAII)
+	$(YES)
+	$(YES)
+	$(NO)
+	$(YES)
+	$(YES)
+	)
+	$(TR
+	$(TD $(LINK2 #AssignOverload, assign overload))
+	$(YES)
+	$(NO)
+	$(NO)
+	$(YES)
+	$(YES)
+	)
+)
 
 	$(TR
 	$(TD $(LINK2 #StructLiteral, literals))
@@ -135,15 +186,6 @@ $(SPEC_S Structs &amp; Unions,
 	$(NO)
 	$(NO)
 	$(NO)
-	)
-
-	$(TR
-	$(TD RAII)
-	$(NO)
-	$(YES)
-	$(NO)
-	$(YES)
-	$(YES)
 	)
 
 	$(TR
@@ -245,6 +287,24 @@ $(SPEC_S Structs &amp; Unions,
 	$(YES)
 	)
 
+	$(TR
+	$(TD static constructor)
+	$(YES)
+	$(YES)
+	$(NO)
+	$(NO)
+	$(NO)
+	)
+
+	$(TR
+	$(TD static destructor)
+	$(YES)
+	$(YES)
+	$(NO)
+	$(NO)
+	$(NO)
+	)
+
 $(V2
 	$(TR
 	$(TD const/invariant)
@@ -258,23 +318,23 @@ $(V2
 	)
 
 $(GRAMMAR
-$(I AggregateDeclaration):
+$(GNAME AggregateDeclaration):
 	$(I Tag) $(I Identifier) $(I StructBody)
 	$(I Tag) $(I Identifier) $(B ;)
 
-$(I Tag):
+$(GNAME Tag):
 	$(B struct)
 	$(B union)
 
-$(I StructBody):
+$(GNAME StructBody):
 	$(B {) $(B })
 	$(B {) $(I StructBodyDeclarations) $(B })
 
-$(I StructBodyDeclarations):
+$(GNAME StructBodyDeclarations):
 	$(I StructBodyDeclaration)
 	$(I StructBodyDeclaration) $(I StructBodyDeclarations)
 
-$(I StructBodyDeclaration):
+$(GNAME StructBodyDeclaration):
 	$(I Declaration)
 	$(I StaticConstructor)
 	$(I StaticDestructor)
@@ -282,11 +342,13 @@ $(I StructBodyDeclaration):
 	$(I UnitTest)
 	$(I StructAllocator)
 	$(I StructDeallocator)
+	$(V2 $(GLINK StructPostblit)
+	$(GLINK StructDestructor))
 
-$(I StructAllocator):
+$(GNAME StructAllocator):
 	$(I ClassAllocator)
 
-$(I StructDeallocator):
+$(GNAME StructDeallocator):
 	$(I ClassDeallocator)
 )
 
@@ -388,7 +450,7 @@ S s = 3;	// sets s.a to 3
 S t = s;	// sets t.a to 3, S.$(B opCall)(s) is not called
 ----
 
-<h3><a name="StructLiteral">Struct Literals</a></h3>
+<h3>$(LNAME2 StructLiteral, Struct Literals)</h3>
 
 	$(P Struct literals consist of the name of the struct followed
 	by a parenthesized argument list:)
@@ -452,6 +514,144 @@ void main()
 )
 )
 
+$(V2
+$(SECTION3 <a name="StructPostblit">Struct Postblits</a>,
+
+$(GRAMMAR
+$(GNAME StructPostblit):
+    $(B this(this)) $(I FunctionBody)
+)
+
+	$(P $(I Copy construction) is defined as initializing
+	 a struct instance from another struct of the same type.
+	 Copy construction is divided into two parts:)
+
+	$(OL
+	$(LI blitting the fields, i.e. copying the bits)
+	$(LI running $(I postblit) on the result)
+	)
+
+	$(P The first part is done automatically by the language,
+	the second part is done if a postblit function is defined
+	for the struct.
+	The postblit has access only to the destination struct object,
+	not the source.
+	Its job is to 'fix up' the destination as necessary, such as
+	making copies of referenced data, incrementing reference counts,
+	etc. For example:
+	)
+
+---
+struct S
+{
+   int[] a;    // array is privately owned by this instance
+   this(this)
+   {
+       a = a.dup;
+   }
+   ~this()
+   {
+       delete a;
+   }
+}
+---
+
+)
+)
+
+$(V2
+$(SECTION3 <a name="StructDestructor">Struct Destructors</a>,
+
+$(GRAMMAR
+$(GNAME StructDestructor):
+    $(B ~this()) $(I FunctionBody)
+)
+
+	$(P Destructors are called when an object goes out of scope.
+	Their purpose is to free up resources owned by the struct
+	object.
+	)
+)
+)
+
+$(V2
+$(SECTION3 <a name="AssignOverload">Assignment Overload</a>,
+
+	$(P While copy construction takes care of initializing
+	an object from another object of the same type,
+	assignment is defined as copying the contents of one
+	object over another, already initialized, type:
+	)
+
+---
+struct S { ... }
+S s;      // default construction of s
+S t = s;  // t is copy-constructed from s
+t = s;    // t is assigned from s
+---
+
+	$(P Struct assignment $(CODE t=s) is defined to be semantically
+	equivalent to:
+	)
+
+---
+t = S.opAssign(s);
+---
+
+	$(P where $(CODE opAssign) is a member function of S:)
+
+---
+S* opAssign(S s)
+{   ... bitcopy *this into tmp ...
+    ... bitcopy s into *this ...
+    ... call destructor on tmp ...
+    return this;
+}
+---
+
+	$(P While the compiler will generate a default $(CODE opAssign)
+	as needed, a user-defined one can be supplied. The user-defined
+	one must still implement the equivalent semantics, but can
+	be more efficient.
+	)
+
+	$(P One reason a custom $(CODE opAssign) might be more efficient
+	is if the struct has a reference to a local buffer:
+	)
+
+---
+struct S
+{
+    int[] buf;
+    int a;
+
+    S* opAssign(ref const S s)
+    {
+	a = s.a;
+	return this;
+    }
+
+    this(this)
+    {
+	buf = buf.dup;
+    }
+
+    ~this()
+    {
+	delete buf;
+    }
+}
+---
+
+	$(P Here, $(CODE S) has a temporary workspace $(CODE buf[]).
+	The normal postblit
+	will pointlessly free and reallocate it. The custom $(CODE opAssign)
+	will reuse the existing storage.
+	)
+
+)
+)
+
 )
 
 Macros:
@@ -459,3 +659,6 @@ Macros:
 	WIKI=Struct
 	NO=$(TD &nbsp;)
 	YES=$(TD X)
+	GLINK=$(LINK2 #$0, $(I $0))
+	GNAME=<a name=$0>$(I $0)</a>
+	FOO=

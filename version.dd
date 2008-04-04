@@ -9,37 +9,37 @@ $(SPEC_S Conditional Compilation,
 	)
 
 $(GRAMMAR
-$(I ConditionalDeclaration):
-    $(I Condition) $(I DeclarationBlock)
-    $(I Condition) $(I DeclarationBlock) $(B else) $(I DeclarationBlock)
+$(GNAME ConditionalDeclaration):
+    $(I Condition) $(I CCDeclarationBlock)
+    $(I Condition) $(I CCDeclarationBlock) $(B else) $(I CCDeclarationBlock)
     $(I Condition) $(B :) $(I Declarations)
 
-$(I DeclarationBlock):
+$(GNAME CCDeclarationBlock):
     $(I Declaration)
     $(B {) $(I Declarations) $(B })
     $(B { })
 
-$(I Declarations):
+$(GNAME Declarations):
     $(I Declaration)
     $(I Declaration) $(I Declarations)
 
-$(I ConditionalStatement):
+$(GNAME ConditionalStatement):
     $(I Condition) $(I NoScopeNonEmptyStatement)
     $(I Condition) $(I NoScopeNonEmptyStatement) $(B else) $(I NoScopeNonEmptyStatement)
 )
 
 	$(P If the $(I Condition) is satisfied, then the following
-	$(I DeclarationBlock) or $(I Statement) is compiled in.
-	If it is not satisfied, the $(I DeclarationBlock) or $(I Statement)
+	$(I CCDeclarationBlock) or $(I Statement) is compiled in.
+	If it is not satisfied, the $(I CCDeclarationBlock) or $(I Statement)
 	after the optional $(CODE else) is compiled in.
 	)
 
-	$(P Any $(I DeclarationBlock) or $(I Statement) that is not
+	$(P Any $(I CCDeclarationBlock) or $(I Statement) that is not
 	compiled in still must be syntactically correct.
 	)
 
 	$(P No new scope is introduced, even if the
-	$(I DeclarationBlock) or $(I Statement)
+	$(I CCDeclarationBlock) or $(I Statement)
 	is enclosed by $(CODE { }).
 	)
 
@@ -56,7 +56,7 @@ $(I ConditionalStatement):
 	)
 
 $(GRAMMAR
-$(I Condition):
+$(GNAME Condition):
     $(LINK2 #version, $(I VersionCondition))
     $(LINK2 #debug, $(I DebugCondition))
     $(LINK2 #staticif, $(I StaticIfCondition))
@@ -69,7 +69,7 @@ $(I Condition):
 	)
 
 $(GRAMMAR
-$(I VersionCondition):
+$(GNAME VersionCondition):
 	$(B version $(LPAREN)) $(I Integer) $(B $(RPAREN))
 	$(B version $(LPAREN)) $(I Identifier) $(B $(RPAREN))
 )
@@ -234,6 +234,7 @@ version($(I identifier)) // add in version code if version
 	$(TR $(TD $(B BigEndian)) $(TD Byte order, most significant first))
 	$(TR $(TD $(B D_Coverage)) $(TD Coverage analyser is implemented and the $(B -cov) switch is thrown))
 	$(TR $(TD $(B D_InlineAsm_X86)) $(TD Inline assembler for X86 is implemented))
+	$(V2 $(TR $(TD $(B unittest)) $(TD Unit tests are enabled)))
 	$(V2 $(TR $(TD $(B D_Version2)) $(TD This is a D version 2 compiler)))
 	$(TR $(TD $(B none)) $(TD Never defined; used to just disable a section of code))
 	$(TR $(TD $(B all)) $(TD Always defined; used as the opposite of $(B none)))
@@ -286,7 +287,7 @@ version(DigitalMars_funky_extension)
 	)
 
 $(GRAMMAR
-$(I DebugCondition):
+$(GNAME DebugCondition):
     $(B debug)
     $(B debug $(LPAREN)) $(I Integer) $(B $(RPAREN))
     $(B debug $(LPAREN)) $(I Identifier) $(B $(RPAREN))
@@ -359,7 +360,7 @@ debug($(I identifier)) { } // add in debug code if debug keyword is $(I identifi
 <h2>$(LNAME2 staticif, Static If Condition)</h2>
 
 $(GRAMMAR
-$(I StaticIfCondition):
+$(GNAME StaticIfCondition):
     $(B static if $(LPAREN)) $(ASSIGNEXPRESSION) $(B $(RPAREN))
 )
 
@@ -440,7 +441,7 @@ INT!(17) c;	// error, static assert trips
 <h2>$(LNAME2 staticassert, Static Assert)</h2>
 
 $(GRAMMAR
-$(I StaticAssert):
+$(GNAME StaticAssert):
     $(B static assert $(LPAREN)) $(ASSIGNEXPRESSION) $(B $(RPAREN);)
     $(B static assert $(LPAREN)) $(ASSIGNEXPRESSION) $(B ,) $(ASSIGNEXPRESSION) $(B $(RPAREN);)
 )

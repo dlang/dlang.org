@@ -11,18 +11,18 @@ $(P	Templates are D's approach to generic programming.
 )
 
 $(GRAMMAR
-$(I TemplateDeclaration):
+$(GNAME TemplateDeclaration):
 	$(B template) $(I TemplateIdentifier) $(B $(LPAREN)) $(I TemplateParameterList) $(B $(RPAREN))
 		$(B {) DeclDefs $(B })
 
-$(I TemplateIdentifier):
+$(GNAME TemplateIdentifier):
 	$(I Identifier)
 
-$(I TemplateParameterList)
+$(GNAME TemplateParameterList)
 	$(I TemplateParameter)
 	$(I TemplateParameter) , $(I TemplateParameterList)
 
-$(I TemplateParameter):
+$(GNAME TemplateParameter):
 	$(GLINK TemplateTypeParameter)
 	$(GLINK TemplateValueParameter)
 	$(GLINK TemplateAliasParameter)
@@ -64,14 +64,17 @@ $(P
 )
 
 $(GRAMMAR
-$(I TemplateInstance):
+$(GNAME TemplateInstance):
 	$(I TemplateIdentifer) $(B !$(LPAREN)) $(I TemplateArgumentList) $(B $(RPAREN))
 
-$(I TemplateArgumentList):
+$(GNAME TemplateIdentifer):
+	$(I Identifer)
+
+$(GNAME TemplateArgumentList):
 	$(I TemplateArgument)
 	$(I TemplateArgument) , $(I TemplateArgumentList)
 
-$(I TemplateArgument):
+$(GNAME TemplateArgument):
 	$(I Type)
 	$(ASSIGNEXPRESSION)
 	$(I Symbol)
@@ -295,10 +298,10 @@ $(GNAME TemplateTypeParameter):
 	$(I Identifier) $(I TemplateTypeParameterDefault)
 	$(I Identifier) $(I TemplateTypeParameterSpecialization) $(I TemplateTypeParameterDefault)
 
-$(I TemplateTypeParameterSpecialization):
+$(GNAME TemplateTypeParameterSpecialization):
 	 $(B :) $(I Type)
 
-$(I TemplateTypeParameterDefault):
+$(GNAME TemplateTypeParameterDefault):
 	 $(B =) $(I Type)
 )
 
@@ -376,17 +379,24 @@ invariant(S)
 
 $(GRAMMAR
 $(GNAME TemplateValueParameter):
-	$(I Declaration)
-	$(I Declaration) $(I TemplateValueParameterSpecialization)
-	$(I Declaration) $(I TemplateValueParameterDefault)
-	$(I Declaration) $(I TemplateValueParameterSpecialization) $(I TemplateValueParameterDefault)
+    $(I Declaration)
+    $(I Declaration) $(I TemplateValueParameterSpecialization)
+    $(I Declaration) $(I TemplateValueParameterDefault)
+    $(I Declaration) $(I TemplateValueParameterSpecialization) $(I TemplateValueParameterDefault)
 
-$(I TemplateValueParameterSpecialization):
-	 $(B :) $(I ConditionalExpression)
+$(GNAME TemplateValueParameterSpecialization):
+    $(B :) $(LINK2 expression.html#ConditionalExpression, $(I ConditionalExpression))
 
-$(I TemplateValueParameterDefault):
-	 $(B =) $(I ConditionalExpression)
+$(GNAME TemplateValueParameterDefault):
+$(V2
+    $(B = __FILE__)
+    $(B = __LINE__))
+    $(B =) $(LINK2 expression.html#ConditionalExpression, $(I ConditionalExpression))
+)
 
+$(V2
+	$(P The $(CODE __FILE__) and $(CODE __LINE__) expand to the source
+	file name and line number at the point of instantiation.)
 )
 
 	$(P This example of template foo has a value parameter that
@@ -415,10 +425,10 @@ $(GNAME TemplateAliasParameter):
 	$(B alias) $(I Identifier) $(I TemplateAliasParameterDefault)
 	$(B alias) $(I Identifier) $(I TemplateAliasParameterSpecialization) $(I TemplateAliasParameterDefault)
 
-$(I TemplateAliasParameterSpecialization):
+$(GNAME TemplateAliasParameterSpecialization):
 	 $(B :) $(I Type)
 
-$(I TemplateAliasParameterDefault):
+$(GNAME TemplateAliasParameterDefault):
 	 $(B =) $(I Type)
 )
 
@@ -537,7 +547,7 @@ void test()
 	)
 	)
 
-<h2>Template Tuple Parameters</h2>
+<h2>$(LNAME2 variadic-templates, Template Tuple Parameters)</h2>
 
 $(GRAMMAR
 $(GNAME TemplateTupleParameter):
@@ -705,7 +715,7 @@ void test()
 <h2>Class Templates</h2>
 
 $(GRAMMAR
-$(I ClassTemplateDeclaration):
+$(GNAME ClassTemplateDeclaration):
     $(B class) $(I Identifier) $(B $(LPAREN)) $(I TemplateParameterList) $(B $(RPAREN)) [$(I SuperClass) {$(B ,) $(I InterfaceClass) }] $(I ClassBody)
 )
 
@@ -747,7 +757,7 @@ class $(B Bar)(T)
 	)
 
 $(GRAMMAR
-$(I FunctionTemplateDeclaration):
+$(GNAME FunctionTemplateDeclaration):
     $(I Type) $(I Identifier) $(B $(LPAREN)) $(I TemplateParameterList) $(B $(RPAREN)) $(B $(LPAREN)) $(I FunctionParameterList) $(B $(RPAREN)) $(I FunctionBody)
 )
 

@@ -24,41 +24,41 @@ $(SPEC_S Classes,
 	)
 
 $(GRAMMAR
-$(I ClassDeclaration):
+$(GNAME ClassDeclaration):
 	$(B class) $(I Identifier) $(I BaseClassList)<sub>opt</sub> $(I ClassBody)
 
-$(I BaseClassList):
+$(GNAME BaseClassList):
 	$(B :) $(I SuperClass)
 	$(B :) $(I SuperClass) $(I InterfaceClasses)
 	$(B :) $(I InterfaceClass)
 
-$(I SuperClass):
+$(GNAME SuperClass):
 	$(I Identifier)
 	$(I Protection) $(I Identifier)
 
-$(I InterfaceClasses):
+$(GNAME InterfaceClasses):
 	$(I InterfaceClass)
 	$(I InterfaceClass) $(I InterfaceClasses)
 
-$(I InterfaceClass):
+$(GNAME InterfaceClass):
 	$(I Identifier)
 	$(I Protection) $(I Identifier)
 
-$(I Protection):
+$(GNAME Protection):
 	$(B private)
 	$(B package)
 	$(B public)
 	$(B export)
 
-$(I ClassBody):
+$(GNAME ClassBody):
 	$(B {) $(B })
 	$(B {) $(I ClassBodyDeclarations) $(B })
 
-$(I ClassBodyDeclarations):
+$(GNAME ClassBodyDeclarations):
 	$(I ClassBodyDeclaration)
 	$(I ClassBodyDeclaration) $(I ClassBodyDeclarations)
 
-$(I ClassBodyDeclaration):
+$(GNAME ClassBodyDeclaration):
 	$(I Declaration)
 	$(GLINK Constructor)
 	$(GLINK Destructor)
@@ -193,7 +193,8 @@ $(GNAME Constructor):
 	$(B this) $(I Parameters) $(I FunctionBody)
 )
 
-	Members are always initialized to the default initializer
+	$(P Members are always initialized to the
+	$(LNAME2 class-default-initializer, default initializer)
 	for their type, which is usually 0 for integer types and
 	NAN for floating point types.
 	This eliminates an entire
@@ -202,7 +203,7 @@ $(GNAME Constructor):
 	In the class definition,
 	there can be a static initializer to be 
 	used instead of the default:
-
+	)
 ------
 class Abc
 {
@@ -249,8 +250,10 @@ class B : A
 }
 ------
 
-	Constructors can also call other constructors for the same class
-	in order to share common initializations:
+	$(P Constructors can also call other constructors for the same class
+	in order to share common initializations
+	$(LNAME2 delegating-constructors, (this is called delegating constructors)):
+	)
 
 ------
 class C
@@ -1071,8 +1074,11 @@ void test()
 	)
 
 $(GRAMMAR
-$(I NewAnonClassExpression):
-    $(B new $(LPAREN))$(I ArgumentList)$(B $(RPAREN))<sub>opt</sub> $(B class $(LPAREN))$(I ArgumentList)$(B $(RPAREN))<sub>opt</sub> $(I SuperClass)<sub>opt</sub> $(I InterfaceClasses)<sub>opt</sub> $(I ClassBody)
+$(GNAME NewAnonClassExpression):
+    $(B new) $(I PerenArgumentList)<sub>opt</sub> $(B class) $(I PerenArgumentList)<sub>opt</sub> $(I SuperClass)<sub>opt</sub> $(I InterfaceClasses)<sub>opt</sub> $(I ClassBody)
+
+$(GNAME PerenArgumentList):
+    $(B $(LPAREN))$(I ArgumentList)$(B $(RPAREN))
 )
 
 	$(P which is equivalent to:

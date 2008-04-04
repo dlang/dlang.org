@@ -11,10 +11,46 @@ $(SPEC_S Expressions,
 	tested, or ignored. Expressions can also have side effects.
 	)
 
-<h2>Evaluation Order</h2>
+<h2><a name="order-of-evaluation">Order Of Evaluation</a></h2>
 
-	$(P Unless otherwise specified, the implementation is free to evaluate
-	the components of an expression in any order. It is an error
+	$(P The following binary expressions are evaluated in strictly
+	left-to-right order:)
+
+	$(P
+$(V2
+	$(GLINK OrExpression),
+	$(GLINK XorExpression),
+	$(GLINK AndExpression),
+	$(GLINK CmpExpression),
+	$(GLINK ShiftExpression),
+	$(GLINK AddExpression),
+	$(GLINK CatExpression),
+	$(GLINK MulExpression),
+)
+	$(GLINK CommaExpression),
+	$(GLINK OrOrExpression),
+	$(GLINK AndAndExpression)
+	)
+
+	$(P The following binary expressions are evaluated in an
+	implementation-defined order:)
+
+	$(P
+	$(GLINK AssignExpression),
+$(V1
+	$(GLINK OrExpression),
+	$(GLINK XorExpression),
+	$(GLINK AndExpression),
+	$(GLINK CmpExpression),
+	$(GLINK ShiftExpression),
+	$(GLINK AddExpression),
+	$(GLINK CatExpression),
+	$(GLINK MulExpression),
+)
+	function parameters
+	)
+
+	$(P It is an error
 	to depend on order of evaluation when it is not specified.
 	For example, the following are illegal:
 	)
@@ -251,16 +287,32 @@ x.re == y.re && x.im == y.im
 x.re != y.re || x.im != y.im
 </pre>
 
-	For class and struct objects, the expression $(TT (a == b))
+	$(P For class and struct objects, the expression $(TT (a == b))
 	is rewritten as
 	$(TT a.opEquals(b)), and $(TT (a != b)) is rewritten as
 	$(TT !a.opEquals(b)).
-	<p>
+	)
 
-	For static and dynamic arrays, equality is defined as the
+	$(P For class objects, the $(CODE ==) and $(CODE !=)
+	operators compare the
+	contents of the objects. Therefore, comparing against
+	$(CODE null) is invalid, as $(CODE null) has no contents.
+	Use the $(CODE is) and $(CODE !is) operators instead.
+	)
+
+---
+class C;
+C c;
+if (c == null)  // error
+  ...
+if (c is null)  // ok
+  ...
+---
+
+	$(P For static and dynamic arrays, equality is defined as the
 	lengths of the arrays
 	matching, and all the elements are equal.
-	
+	)
 
 <h2><a name="IdentityExpression">Identity Expressions</a></h2>
 
@@ -335,27 +387,27 @@ $(GNAME RelExpression):
 
 <h3>Integer comparisons</h3>
 
-	Integer comparisons happen when both operands are integral
+	$(P Integer comparisons happen when both operands are integral
 	types.
-	<p>
+	)
 
 	$(TABLE1
 	<caption>Integer comparison operators</caption>
-	<tr>
-	<th>Operator</th><th>Relation</th>
-	</tr><tr>
-	<td>&lt;</td>		<td>less</td>
-	</tr><tr>
-	<td>&gt;</td>		<td>greater</td>
-	</tr><tr>
-	<td>&lt;=</td>		<td>less or equal</td>
-	</tr><tr>
-	<td>&gt;=</td>		<td>greater or equal</td>
-	</tr><tr>
-	<td>==</td>		<td>equal</td>
-	</tr><tr>
-	<td>!=</td>		<td>not equal</td>
-	</tr>
+	$(TR
+	$(TH Operator)$(TH Relation)
+	)$(TR
+	$(TD &lt;)		$(TD less)
+	)$(TR
+	$(TD &gt;)		$(TD greater)
+	)$(TR
+	$(TD &lt;=)		$(TD less or equal)
+	)$(TR
+	$(TD &gt;=)		$(TD greater or equal)
+	)$(TR
+	$(TD ==)		$(TD equal)
+	)$(TR
+	$(TD !=)		$(TD not equal)
+	)
 	)
 
 	$(P It is an error to have one operand be signed and the other
@@ -380,64 +432,65 @@ $(GNAME RelExpression):
 
 	$(TABLE1
 	<caption>Floating point comparison operators</caption>
-	<tr>
-	<th>Operator
-	<th>Greater Than
-	<th>Less Than
-	<th>Equal
-	<th>Unordered
-	<th>Exception
-	<th>Relation
-
-	<tr>
-	<td> ==		<td> F <td> F <td> T <td> F <td> no	<td> equal
-
-	<tr>
-	<td> !=		<td> T <td> T <td> F <td> T <td> no	<td> unordered, less, or greater
-
-	<tr>
-	<td> &gt;	<td> T <td> F <td> F <td> F <td> yes	<td> greater
-
-	<tr>
-	<td> &gt;=	<td> T <td> F <td> T <td> F <td> yes	<td> greater or equal
-
-	<tr>
-	<td> &lt;	<td> F <td> T <td> F <td> F <td> yes	<td> less
-
-	<tr>
-	<td> &lt;=	<td> F <td> T <td> T <td> F <td> yes	<td> less or equal
-
-	<tr>
-	<td> !&lt;&gt;=	<td> F <td> F <td> F <td> T <td> no	<td> unordered
-
-	<tr>
-	<td> &lt;&gt;	<td> T <td> T <td> F <td> F <td> yes	<td> less or greater
-
-	<tr>
-	<td> &lt;&gt;=	<td> T <td> T <td> T <td> F <td> yes	<td> less, equal, or greater
-
-	<tr>
-	<td> !&lt;=	<td> T <td> F <td> F <td> T <td> no	<td> unordered or greater
-
-	<tr>
-	<td> !&lt;	<td> T <td> F <td> T <td> T <td> no	<td> unordered, greater, or equal
-
-	<tr>
-	<td> !&gt;=	<td> F <td> T <td> F <td> T <td> no	<td> unordered or less
-
-	<tr>
-	<td> !&gt;	<td> F <td> T <td> T <td> T <td> no	<td> unordered, less, or equal
-
-	<tr>
-	<td> !&lt;&gt;	<td> F <td> F <td> T <td> T <td> no	<td> unordered or equal
-
+	$(TR
+	$(TH Operator)
+	$(TH Greater Than)
+	$(TH Less Than)
+	$(TH Equal)
+	$(TH Unordered)
+	$(TH Exception)
+	$(TH Relation)
+	)
+	$(TR
+	$(TD ==)	$(TD F)$(TD F)$(TD T)$(TD F)$(TD no)	$(TD equal)
+	)
+	$(TR
+	$(TD !=)	$(TD T)$(TD T)$(TD F)$(TD T)$(TD no)	$(TD unordered, less, or greater)
+	)
+	$(TR
+	$(TD &gt;)	$(TD T)$(TD F)$(TD F)$(TD F)$(TD yes)	$(TD greater)
+	)
+	$(TR
+	$(TD &gt;=)	$(TD T)$(TD F)$(TD T)$(TD F)$(TD yes)	$(TD greater or equal)
+	)
+	$(TR
+	$(TD &lt;)	$(TD F)$(TD T)$(TD F)$(TD F)$(TD yes)	$(TD less)
+	)
+	$(TR
+	$(TD &lt;=)	$(TD F)$(TD T)$(TD T)$(TD F)$(TD yes)	$(TD less or equal)
+	)
+	$(TR
+	$(TD !&lt;&gt;=) $(TD F)$(TD F)$(TD F)$(TD T)$(TD no)	$(TD unordered)
+	)
+	$(TR
+	$(TD &lt;&gt;)	$(TD T)$(TD T)$(TD F)$(TD F)$(TD yes)	$(TD less or greater)
+	)
+	$(TR
+	$(TD &lt;&gt;=)	$(TD T)$(TD T)$(TD T)$(TD F)$(TD yes)	$(TD less, equal, or greater)
+	)
+	$(TR
+	$(TD !&lt;=)	$(TD T)$(TD F)$(TD F)$(TD T)$(TD no)	$(TD unordered or greater)
+	)
+	$(TR
+	$(TD !&lt;)	$(TD T)$(TD F)$(TD T)$(TD T)$(TD no)	$(TD unordered, greater, or equal)
+	)
+	$(TR
+	$(TD !&gt;=)	$(TD F)$(TD T)$(TD F)$(TD T)$(TD no)	$(TD unordered or less)
+	)
+	$(TR
+	$(TD !&gt;)	$(TD F)$(TD T)$(TD T)$(TD T)$(TD no)	$(TD unordered, less, or equal)
+	)
+	$(TR
+	$(TD !&lt;&gt;)	$(TD F)$(TD F)$(TD T)$(TD T)$(TD no)	$(TD unordered or equal)
+	)
 	)
 
 	<h4>Notes:</h4>
 
 	$(OL
-	$(LI For floating point comparison operators, (a !op b) is not the same
-	as !(a op b).)
+	$(LI For floating point comparison operators,
+	 $(CODE ($(I a) !$(I op) $(I b)))
+	 is not the same as $(CODE !($(I a op b))).)
 	$(LI "Unordered" means one or both of the operands is a NAN.)
 	$(LI "Exception" means the $(I Invalid Exception) is raised if one
 		of the operands is a NAN. It does not mean an exception
@@ -446,10 +499,25 @@ $(GNAME RelExpression):
 	)
 	)
 
+<h3><a name="class_comparisons">Class comparisons</a></h3>
+
+	$(P For class objects, the relational
+	operators compare the
+	contents of the objects. Therefore, comparing against
+	$(CODE null) is invalid, as $(CODE null) has no contents.
+	)
+
+---
+class C;
+C c;
+if (c < null)  // error
+  ...
+---
+
 <h2><a name="InExpression">In Expressions</a></h2>
 
 $(GRAMMAR
-$(I InExpression):
+$(GNAME InExpression):
 	$(GLINK ShiftExpression) $(B in) $(GLINK ShiftExpression)
 )
 
@@ -586,7 +654,7 @@ $(GNAME MulExpression):
 <h2><a name="UnaryExpression">Unary Expressions</a></h2>
 
 $(GRAMMAR
-$(I UnaryExpression):
+$(GNAME UnaryExpression):
 	$(GLINK PostfixExpression)
 	$(B &amp;) $(I UnaryExpression)
 	$(B ++) $(I UnaryExpression)
@@ -899,10 +967,13 @@ $(GNAME PrimaryExpression):
 	$(B .)$(I Identifier)
 	$(B this)
 	$(B super)
-	$(B null)
+	$(LINK2 #null, $(B null))
 	$(B true)
 	$(B false)
 	$(B $)
+$(V2
+	$(B __FILE__)
+	$(B __LINE__))
 	$(I NumericLiteral)
 	$(GLINK CharacterLiteral)
 	$(GLINK StringLiterals)
@@ -972,7 +1043,7 @@ void main()
 	to $(B super), a non-virtual call is made.
 	)
 
-<h3>null</h3>
+<h3>$(LNAME2 null, null)</h3>
 
 	$(P $(B null) represents the null value for
 	pointers, pointers to functions, delegates,
@@ -1043,17 +1114,17 @@ $(GRAMMAR
 $(GNAME AssocArrayLiteral):
 	$(B [) $(I KeyValuePairs) $(B ])
 
-$(I KeyValuePairs):
+$(GNAME KeyValuePairs):
 	$(I KeyValuePair)
 	$(I KeyValuePair) $(B ,) $(I KeyValuePairs)
 
-$(I KeyValuePair):
+$(GNAME KeyValuePair):
 	$(I KeyExpression) $(B :) $(I ValueExpression)
 
-$(I KeyExpression):
+$(GNAME KeyExpression):
 	$(GLINK ConditionalExpression)
 
-$(I ValueExpression):
+$(GNAME ValueExpression):
 	$(GLINK ConditionalExpression)
 )
 
@@ -1084,7 +1155,7 @@ $(I ValueExpression):
 <h3>Function Literals</h3>
 
 $(GRAMMAR
-$(GNAME FunctionLiteral)
+$(GNAME FunctionLiteral):
 	$(B function) $(I Type)<sub>opt</sub> $(B $(LPAREN)) $(I ParameterList) $(B $(RPAREN))<sub>opt</sub> $(I FunctionBody)
 	$(B delegate) $(I Type)<sub>opt</sub> $(B $(LPAREN)) $(I ParameterList) $(B $(RPAREN))<sub>opt</sub> $(I FunctionBody)
 	$(B $(LPAREN)) $(I ParameterList) $(B $(RPAREN)) $(I FunctionBody)
@@ -1251,7 +1322,7 @@ Error: AssertError Failure test.d(3) an error message
 <h3><a name="MixinExpression">Mixin Expressions</a></h3>
 
 $(GRAMMAR
-$(I MixinExpression):
+$(GNAME MixinExpression):
 	$(B mixin $(LPAREN)) $(GLINK AssignExpression) $(B $(RPAREN))
 )
 
@@ -1271,7 +1342,7 @@ int foo(int x)
 <h3><a name="ImportExpression">Import Expressions</a></h3>
 
 $(GRAMMAR
-$(I ImportExpression):
+$(GNAME ImportExpression):
 	$(B import $(LPAREN)) $(GLINK AssignExpression) $(B $(RPAREN))
 )
 
@@ -1293,7 +1364,7 @@ void foo()
 <h3><a name="typeidexpression">Typeid Expressions</a></h3>
 
 $(GRAMMAR
-$(I TypeidExpression):
+$(GNAME TypeidExpression):
     $(B typeid $(LPAREN)) $(I Type) $(B $(RPAREN))
 )
 
@@ -1305,7 +1376,7 @@ $(I TypeidExpression):
 <h3><a name="IsExpression">IsExpression</a></h3>
 
 $(GRAMMAR
-$(I IsExpression):
+$(GNAME IsExpression):
 	$(B is $(LPAREN)) $(I Type) $(B $(RPAREN))
 	$(B is $(LPAREN)) $(I Type) $(B :) $(I TypeSpecialization) $(B $(RPAREN))
 	$(B is $(LPAREN)) $(I Type) $(B ==) $(I TypeSpecialization) $(B $(RPAREN))
@@ -1316,7 +1387,7 @@ $(I IsExpression):
 	$(B is $(LPAREN)) $(I Type) $(I Identifier) $(B ==) $(I TypeSpecialization) $(B ,) $(I TemplateParameterList) $(B $(RPAREN))
 )
 
-$(I TypeSpecialization):
+$(GNAME TypeSpecialization):
 	$(I Type)
 	$(B typedef)
 	$(B struct)
@@ -1639,6 +1710,16 @@ void main()
 	)
 
 
+<h2><a name="associativity">Associativity and Commutativity</a></h2>
+
+	$(P An implementation may rearrange the evaluation of expressions
+	according to arithmetic associativity and commutativity rules
+	as long as, within that thread of execution, no observable
+	different is possible.
+	)
+
+	$(P This rule precludes any associative or commutative reordering of
+	floating point expressions.)
 )
 
 Macros:

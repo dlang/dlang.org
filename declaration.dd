@@ -3,34 +3,34 @@ Ddoc
 $(SPEC_S Declarations,
 
 $(GRAMMAR
-$(I Declaration):
+$(GNAME Declaration):
         $(B typedef) $(I Decl)
         $(B alias) $(I Decl)
         $(I Decl)
 
-$(I Decl):
+$(GNAME Decl):
         $(I StorageClasses) $(I Decl)
         $(I BasicType) $(I Declarators) $(B ;)
         $(I BasicType) $(I Declarator) $(I FunctionBody)
 	$(GLINK AutoDeclaration)
 
-$(I Declarators):
+$(GNAME Declarators):
         $(I DeclaratorInitializer)
         $(I DeclaratorInitializer) $(B ,) $(I DeclaratorIdentifierList)
 
-$(I DeclaratorInitializer):
+$(GNAME DeclaratorInitializer):
         $(I Declarator)
         $(I Declarator) $(B =) $(I Initializer)
 
-$(I DeclaratorIdentifierList):
+$(GNAME DeclaratorIdentifierList):
         $(I DeclaratorIdentifier)
         $(I DeclaratorIdentifier) $(B ,) $(I DeclaratorIdentifierList)
 
-$(I DeclaratorIdentifier):
+$(GNAME DeclaratorIdentifier):
         $(I Identifier)
         $(I Identifier) $(B =) $(I Initializer)
 
-$(I BasicType):
+$(GNAME BasicType):
         $(B bool)
         $(B byte)
         $(B ubyte)
@@ -58,7 +58,7 @@ $(I BasicType):
         $(GLINK Typeof)
         $(GLINK Typeof) $(B .) $(I IdentifierList)
 
-$(I BasicType2):
+$(GNAME BasicType2):
         $(B *)
         $(B [ ])
         $(B [) $(I Expression) $(B ])
@@ -66,34 +66,34 @@ $(I BasicType2):
         $(B delegate) $(I Parameters)
         $(B function) $(I Parameters)
 
-$(I Declarator):
+$(GNAME Declarator):
         $(I BasicType2) $(I Declarator)
         $(I Identifier)
         $(B () $(I Declarator) $(B ))
         $(I Identifier) $(I DeclaratorSuffixes)
         $(B () $(I Declarator) $(B )) $(I DeclaratorSuffixes)
 
-$(I DeclaratorSuffixes):
+$(GNAME DeclaratorSuffixes):
         $(I DeclaratorSuffix)
         $(I DeclaratorSuffix) $(I DeclaratorSuffixes)
 
-$(I DeclaratorSuffix):
+$(GNAME DeclaratorSuffix):
         $(B [ ])
         $(B [) $(I Expression) $(B ])
         $(B [) $(I Type) $(B ])
 	$(I Parameters)
 
-$(I IdentifierList):
+$(GNAME IdentifierList):
         $(I Identifier)
         $(I Identifier) $(B .) $(I IdentifierList)
         $(I TemplateInstance)
         $(I TemplateInstance) $(B .) $(I IdentifierList)
 
-$(I StorageClasses):
+$(GNAME StorageClasses):
 	$(I StorageClass)
 	$(I StorageClass) $(I StorageClasses)
 
-$(I StorageClass):
+$(GNAME StorageClass):
         $(B abstract)
         $(B auto)
         $(B const)
@@ -106,69 +106,75 @@ $(I StorageClass):
         $(B static)
         $(B synchronized)
 
-$(I Type):
+$(GNAME Type):
         $(I BasicType)
         $(I BasicType) $(I Declarator2)
 
-$(I Declarator2):
+$(GNAME Declarator2):
         $(I BasicType2) $(I Declarator2)
         $(B $(LPAREN)) $(I Declarator2) $(B $(RPAREN))
         $(B $(LPAREN)) $(I Declarator2) $(B $(RPAREN)) $(I DeclaratorSuffixes)
 
-$(I Parameters):
+$(GNAME Parameters):
 	$(B $(LPAREN)) $(I ParameterList) $(B $(RPAREN))
 	$(B ( ))
 
-$(I ParameterList):
+$(GNAME ParameterList):
         $(I Parameter)
         $(I Parameter) $(B ,) $(I ParameterList)
         $(I Parameter) $(B ...)
         $(B ...)
 
-$(I Parameter):
+$(GNAME Parameter):
         $(I Declarator)
-        $(I Declarator) = $(ASSIGNEXPRESSION)
+        $(I Declarator) = $(I DefaultInitializerExpression)
         $(I InOut) $(I Declarator)
-        $(I InOut) $(I Declarator) = $(ASSIGNEXPRESSION)
+        $(I InOut) $(I Declarator) = $(I DefaultInitializerExpression)
 
-$(I InOut):
+$(GNAME InOut):
         $(B in)
         $(B out)
         $(B ref)
         $(B lazy)
 
-$(I Initializer):
+$(GNAME DefaultInitializerExpression):
+	$(ASSIGNEXPRESSION)
+$(V2
+	$(B __FILE__)
+	$(B __LINE__))
+
+$(GNAME Initializer):
         $(GLINK VoidInitializer)
 	$(I NonVoidInitializer)
 
-$(I NonVoidInitializer):
+$(GNAME NonVoidInitializer):
         $(ASSIGNEXPRESSION)
         $(I ArrayInitializer)
         $(I StructInitializer)
 
-$(I ArrayInitializer):
+$(GNAME ArrayInitializer):
 	$(B [ ])
 	$(B [) $(I ArrayMemberInitializations) $(B ])
 
-$(I ArrayMemberInitializations):
+$(GNAME ArrayMemberInitializations):
 	$(I ArrayMemberInitialization)
 	$(I ArrayMemberInitialization) $(B ,)
 	$(I ArrayMemberInitialization) $(B ,) $(I ArrayMemberInitializations)
 
-$(I ArrayMemberInitialization):
+$(GNAME ArrayMemberInitialization):
 	$(I NonVoidInitializer)
 	$(ASSIGNEXPRESSION) $(B :) $(I NonVoidInitializer)
 
-$(I StructInitializer):
+$(GNAME StructInitializer):
 	$(B {  })
 	$(B {) $(I StructMemberInitializers) $(B })
 
-$(I StructMemberInitializers):
+$(GNAME StructMemberInitializers):
 	$(I StructMemberInitializer)
 	$(I StructMemberInitializer) $(B ,)
 	$(I StructMemberInitializer) $(B ,) $(I StructMemberInitializers)
 
-$(I StructMemberInitializer):
+$(GNAME StructMemberInitializer):
 	$(I NonVoidInitializer)
 	$(I Identifier) $(B :) $(I NonVoidInitializer)
 )
@@ -235,7 +241,7 @@ int x[],y;	// error, multiple types
 <h3><a name="AutoDeclaration">Implicit Type Inference</a></h3>
 
 $(GRAMMAR
-$(I AutoDeclaration):
+$(GNAME AutoDeclaration):
 	$(I StorageClasses) $(I Identifier) $(B =) $(ASSIGNEXPRESSION) $(B ;)
 )
 
@@ -549,6 +555,4 @@ void foo()
 Macros:
 	TITLE=Declarations
 	WIKI=Declaration
-	GLINK=$(LINK2 #$0, $(I $0))
-	GNAME=$(LNAME2 $0, $0)
 	FOO=
