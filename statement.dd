@@ -121,7 +121,7 @@ $(P	Statements can be labeled. A label is an identifier that
 
 $(GRAMMAR
 $(I LabelledStatement):
-    $(I Identifier) ':' $(PSSEMI)
+    $(I Identifier) : $(PSSEMI)
 )
 
 $(P
@@ -205,15 +205,15 @@ $(I IfStatement):
 	$(B if $(LPAREN)) $(I IfCondition) $(B $(RPAREN)) $(I ThenStatement)
 	$(B if $(LPAREN)) $(I IfCondition) $(B $(RPAREN)) $(I ThenStatement) $(B else) $(I ElseStatement)
 
-$(I IfCondition):
+$(GNAME IfCondition):
 	$(EXPRESSION)
 	$(B auto) $(I Identifier) $(B =) $(EXPRESSION)
 	$(I Declarator) $(B =) $(EXPRESSION)
 
-$(I ThenStatement):
+$(GNAME ThenStatement):
 	$(PSSCOPE)
 
-$(I ElseStatement):
+$(GNAME ElseStatement):
 	$(PSSCOPE)
 )
 
@@ -324,15 +324,15 @@ $(GRAMMAR
 $(I ForStatement):
 	$(B for $(LPAREN))$(I Initialize) $(I Test)$(B ;) $(I Increment)$(B $(RPAREN)) $(PSSCOPE)
 
-$(I Initialize):
+$(GNAME Initialize):
 	$(B ;)
 	$(PS0)
 
-$(I Test):
+$(GNAME Test):
 	$(I empty)
 	$(EXPRESSION)
 
-$(I Increment):
+$(GNAME Increment):
 	$(I empty)
 	$(EXPRESSION)
 )
@@ -401,7 +401,7 @@ $(GNAME Foreach):
     $(B foreach)
     $(B foreach_reverse)
 
-$(I ForeachTypeList):
+$(GNAME ForeachTypeList):
     $(I ForeachType)
     $(I ForeachType) , $(I ForeachTypeList)
 
@@ -411,7 +411,7 @@ $(GNAME ForeachType):
     $(B ref) $(I Identifier)
     $(I Identifier)
 
-$(I Aggregate):
+$(GNAME Aggregate):
     $(EXPRESSION)
     $(I Tuple)
 )
@@ -1144,18 +1144,21 @@ $(I TryStatement):
 	$(B try) $(PSSCOPE) $(I Catches) $(I FinallyStatement)
 	$(B try) $(PSSCOPE) $(I FinallyStatement)
 
-$(I Catches):
+$(GNAME Catches):
 	$(I LastCatch)
 	$(I Catch)
 	$(I Catch) $(I Catches)
 
-$(I LastCatch):
+$(GNAME LastCatch):
 	$(B catch) $(PS0)
 
-$(I Catch):
+$(GNAME Catch):
 	$(B catch $(LPAREN)) $(I CatchParameter) $(B $(RPAREN)) $(PS0)
 
-$(I FinallyStatement):
+$(GNAME CatchParameter):
+	$(I BasicType) $(I Identifier)
+
+$(GNAME FinallyStatement):
 	$(B finally) $(PS0)
 )
 
@@ -1365,11 +1368,11 @@ $(I VolatileStatement):
 	Inline assembler is supported with the asm statement:
 
 $(GRAMMAR
-$(I AsmStatement):
+$(GNAME AsmStatement):
 	$(B asm { })
 	$(B asm {) $(I AsmInstructionList) $(B })
 
-$(I AsmInstructionList):
+$(GNAME AsmInstructionList):
 	$(I AsmInstruction) $(B ;)
 	$(I AsmInstruction) $(B ;) $(I AsmInstructionList)
 )
@@ -1492,10 +1495,10 @@ $(GRAMMAR
 $(I ForeachRangeStatement):
     $(GLINK Foreach) $(LPAREN)$(GLINK ForeachType)$(B ;) $(I LwrExpression) $(B ..) $(I UprExpression) $(B $(RPAREN)) $(PSSCOPE)
 
-$(I LwrExpression):
+$(GNAME LwrExpression):
     $(EXPRESSION)
 
-$(I UprExpression):
+$(GNAME UprExpression):
     $(EXPRESSION)
 )
 

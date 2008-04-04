@@ -7,7 +7,19 @@ $(SPEC_S Operator Overloading,
 	binary operators. No additional syntax is used.
 	)
 
-<h2>Unary Operator Overloading</h2>
+	$(UL
+	$(LI $(LINK2 #Unary, Unary Operator Overloading))
+	$(LI $(LINK2 #Binary, Binary Operator Overloading))
+	$(LI $(LINK2 #FunctionCall, Function Call Operator Overloading))
+	$(LI $(LINK2 #Array, Array Operator Overloading))
+	$(LI $(LINK2 #Assignment, Assignment Operator Overloading))
+$(V2
+	$(LI $(LINK2 #Dot, Forwarding))
+)
+	$(LI $(LINK2 #Future, Future Directions))
+	)
+
+<h2><a name="Unary">Unary Operator Overloading</a></h2>
 
 
 	$(TABLE1
@@ -128,7 +140,7 @@ void test()
 }
 -------
 
-<h2>Binary Operator Overloading</h2>
+<h2><a name="Binary">Binary Operator Overloading</a></h2>
 
 
 	$(TABLE1
@@ -375,34 +387,52 @@ int $(B opCmp)(Object o);
 	$(P so that every class object has a $(CODE $(B opCmp)()).
 	)
 
-	$(P If a struct has no $(B opCmp)() function declared for it, attempting
+	$(P $(CODE $(B opCmp)) for structs works analogously to
+	$(CODE $(B opEquals)) for structs:
+	)
+-------
+struct Pair
+{
+    int a, b;
+    int $(B opCmp)(Pair rhs)
+    {
+        if (a!=rhs.a) return a-rhs.a;
+        return b-rhs.b;
+    }
+}
+-------
+
+	$(P If a struct has no $(CODE $(B opCmp)()) function declared for it,
+	attempting
 	to compare two structs is an error.
 	)
 
 <h4>Rationale</h4>
 
-	$(P The reason for having both $(B opEquals)() and $(B opCmp)() is
-	that:)
+	$(P The reason for having both $(CODE $(B opEquals)) and
+	$(CODE $(B opCmp)) is that:)
 
 	$(UL
 	$(LI Testing for equality can sometimes be a much more efficient
 	operation than testing for less or greater than.)
-	$(LI Having an opCmp defined in Object makes it possible to
+	$(LI Having an $(CODE $(B opCmp)) defined in $(CODE Object)
+	makes it possible to
 	make associative arrays work generically for classes.)
 	$(LI For some objects, testing for less or greater makes no sense.
-	This is why Object.opCmp throws a runtime error.
-	opCmp must be overridden in each class for which comparison
+	This is why $(CODE Object.$(B opCmp)) throws a runtime error.
+	$(CODE $(B opCmp)) must be overridden in each class for which comparison
 	makes sense.)
 	)
 
 	$(P The parameter to $(B opEquals) and $(B opCmp)
 	for class definitions must
-	be of type Object, rather than the type of the particular class,
-	in order to override the Object.$(B opEquals) and Object.$(B opCmp)
+	be of type $(CODE Object), rather than the type of the particular class,
+	in order to override the $(CODE Object.$(B opEquals)) and
+	$(CODE Object.$(B opCmp))
 	functions properly.
 	)
 
-<h2>Function Call Operator Overloading $(I f)()</h2>
+<h2><a name="FunctionCall">Function Call Operator Overloading $(I f)()</a></h2>
 
 	$(P The function call operator, (), can be overloaded by
 	declaring a function named $(B opCall):
@@ -428,7 +458,7 @@ void test()
 	were a function.
 	)
 
-<h2>Array Operator Overloading</h2>
+<h2><a name="Array">Array Operator Overloading</a></h2>
 
 <h3>Overloading Indexing $(I a)[$(I i)]</h3>
 
@@ -496,7 +526,7 @@ void test()
 }
 -------
 
-<h2>Assignment Operator Overloading</h2>
+<h2><a name="Assignment">Assignment Operator Overloading</a></h2>
 
 	$(P The assignment operator $(CODE =) can be overloaded if the
 	lvalue is a struct $(V1 or class) aggregate, and $(CODE opAssign)
@@ -522,7 +552,65 @@ opAssign(T, U = defaultValue, etc.)
 	implicitly convertible to $(I A).
 	)
 
-<h2>Future Directions</h2>
+$(V2
+<h2><a name="Dot">Forwarding</a></h2>
+
+	$(P Providing a struct or class member function $(CODE opDot) enables
+	the forwarding
+	of any names not found in the struct's scope to be forwarded
+	to the return type of the $(CODE opDot) function. In other words:
+	)
+
+---
+struct T {
+  ...
+  S opDot() { ... }
+}
+T t;
+...
+t.m
+---
+
+	$(P is rewritten as:)
+
+---
+t.opDot().m
+---
+
+	$(P if m does not exist as a member of the struct T.)
+
+	$(P The members .sizeof, .init, .offsetof, .alignof, .mangleof
+	and .stringof are not forwarded to $(CODE opDot).)
+
+---
+struct S {
+    int a, b, c;
+}
+
+struct T {
+    S s;
+    int b = 7;
+
+    S* opDot() {
+        return &s;    // forwards to member s
+    }
+}
+
+void main() {
+    T t;
+    t.a = 4;
+    t.b = 5;
+    t.c = 6;
+    assert(t.a == 4);
+    assert(t.b == 5);    // T.b overrides S.b
+    assert(t.c == 6);
+    assert(t.s.b == 0);
+    assert(t.sizeof == 4*4); // sizeof T, not sizeof S
+}
+---
+)
+
+<h2><a name="Future">Future Directions</a></h2>
 
 	$(P The operators $(CODE ! . && || ?:) and a few others will
 	likely never be overloadable.
