@@ -4,7 +4,7 @@ $(SPEC_S Functions,
 
 $(GRAMMAR
 $(GNAME FunctionBody):
-	$(I BlockStatement)
+	$(LINK2 statement.html#BlockStatement, $(I BlockStatement))
 	$(I BodyStatement)
 	$(I InStatement) $(I BodyStatement)
 	$(I OutStatement) $(I BodyStatement)
@@ -12,17 +12,62 @@ $(GNAME FunctionBody):
 	$(I OutStatement) $(I InStatement) $(I BodyStatement)
 
 $(GNAME InStatement):
-	$(B in) $(I BlockStatement)
+	$(B in) $(LINK2 statement.html#BlockStatement, $(I BlockStatement))
 
 $(GNAME OutStatement):
-	$(B out) $(I BlockStatement)
-	$(B out) $(B $(LPAREN)) $(I Identifier) $(B $(RPAREN)) $(I BlockStatement)
+	$(B out) $(LINK2 statement.html#BlockStatement, $(I BlockStatement))
+	$(B out) $(B $(LPAREN)) $(I Identifier) $(B $(RPAREN)) $(LINK2 statement.html#BlockStatement, $(I BlockStatement))
 
 $(GNAME BodyStatement):
-	$(B body) $(I BlockStatement)
+	$(B body) $(LINK2 statement.html#BlockStatement, $(I BlockStatement))
 )
 
-<h3>Virtual Functions</h3>
+
+$(V2
+<h3>$(LNAME2 pure-functions, Pure Functions)</h3>
+
+	$(P Pure functions are functions that produce the same
+	result for the same arguments.
+	To that end, a pure function:
+	)
+
+	$(UL
+	$(LI has parameters that are all invariant or are implicitly
+	convertible to invariant)
+	$(LI does not read or write any global mutable state)
+	)
+
+	$(P A pure function can throw exceptions and allocate memory
+	via a $(LINK2 expression.html#NewExpression, $(I NewExpression)).
+	)
+
+---
+int x;
+invariant int y;
+const int* pz;
+
+pure int foo(int i,     // ok, implicitly convertible to invariant
+             char* p,         // error, not invariant
+             const char* q,   // error, not invariant
+             invariant int* s // ok, invariant
+            )
+{
+    x = i;    // error, modifying global state
+    i = x;    // error, reading mutable global state
+    i = y;    // ok, reading invariant global state
+    i = *pz;  // error, reading const global state
+    return i;
+}
+---
+
+<h3>$(LNAME2 nothrow-functions, Nothrow Functions)</h3>
+
+	$(P Nothrow functions do not throw any exceptions derived
+	from class $(I Exception).
+	)
+)
+
+<h3>$(LNAME2 virtual-functions, Virtual Functions)</h3>
 
 	Virtual functions are functions that are called indirectly
 	through a function
