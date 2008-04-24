@@ -324,23 +324,71 @@ void test()
 
 <h2><a name="function-overloading">Function Overloading</a></h2>
 
-	$(P In C++, there are many complex levels of function overloading, with
-	some defined as "better" matches than others. If the code designer
-	takes advantage of the more subtle 
-	behaviors of overload function selection, the code can become
-	difficult to maintain. Not 
-	only will it take a C++ expert to understand why one function is
-	selected over another, but different C++ compilers can implement
-	this tricky feature differently, producing 
-	subtly disastrous results.
+	$(P Functions are overloaded based on how well the arguments
+	to a function can match up with the parameters.
+	The function with the $(I best) match is selected.
+	The levels of matching are:
 	)
 
-	$(P In D, function overloading is simple. It matches exactly, it matches
-	with implicit conversions, or it does not match. If there is more than
-	one match, it is an error.
+	$(OL
+	$(LI no match)
+	$(LI match with implicit conversions)
+	$(V2 $(LI match with conversion to const))
+	$(LI exact match)
 	)
+
+	$(P Each argument (including any $(CODE this) pointer) is
+	compared against the function's corresponding parameter, to
+	determine the match level for that argument. The match level
+	for a function is the $(I worst) match level of each of its
+	arguments.)
+
+$(V1
+	$(P If two or more functions have the same match level,
+	it is an ambiguity error.
+	)
+)
+$(V2
+	$(P If two or more functions have the same match level,
+	then $(LNAME2 partial-ordering, $(I partial ordering))
+	is used to try to find the best match.
+	Partial ordering finds the most specialized function.
+	If neither function is more specialized than the other,
+	then it is an ambiguity error.
+	Partial ordering is determined for functions $(CODE f())
+	and $(CODE g()) by taking the parameter types of $(CODE f()),
+	constructing a list of arguments by taking the default values
+	of those types, and attempting to match them against $(CODE g()).
+	If it succeeds, then $(CODE g()) is at least as specialized
+	as $(CODE f()).
+	For example:
+	)
+---
+class A { }
+class B : A { }
+class C : B { }
+void foo(A);
+void foo(B);
+
+void test()
+{
+  C c;
+  /* Both foo(A) and foo(B) match with implicit conversion rules.
+   * Applying partial ordering rules,
+   * foo(B) cannot be called with an A, and foo(A) can be called
+   * with a B. Therefore, foo(B) is more specialized, and is selected.
+   */
+  foo(c); // calls foo(B)
+}
+---
+	$(P A function with a variadic argument is considered less
+	specialized than a function without.
+	)
+)
 
 	$(P Functions defined with non-D linkage cannot be overloaded.
+	because the name mangling does not take the parameter types
+	into account.
 	)
 
 $(V2

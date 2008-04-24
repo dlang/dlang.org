@@ -42,6 +42,7 @@ $(D_S FAQ,
 	$(ITEMR cpp_interface, Why doesn't D have an interface to C++ as well as C?)
 	$(ITEMR reference-counting, Why doesn't D use reference counting for garbage collection?)
 	$(ITEMR gc_1, Isn't garbage collection slow and non-deterministic?)
+	$(ITEMR pure, Can't a sufficiently smart compiler figure out that a function is pure automatically?)
 	)
 
 $(ITEM q1, Why the name D?)
@@ -719,6 +720,35 @@ $(ITEM gc_1, Isn't garbage collection slow and non-deterministic?)
 	This can mean that GC is actually faster than explict management.
 	)
 
+$(ITEM pure, Can't a sufficiently smart compiler figure out that a function is pure automatically?)
+
+	$(P The problems with the
+	$(LINK2 http://c2.com/cgi/wiki?SufficientlySmartCompiler, sufficently smart compiler)
+	argument are:
+	)
+
+	$(OL
+	$(LI most functions call other functions, which call other functions,
+	until one of them calls a library routine whose source is not available
+	to the compiler. So it will have to assume it is not pure.
+	With a pure function attribute, external library functions that are pure
+	can be marked as pure, and then the analysis can work for enough cases
+	to be useful.
+	)
+
+	$(LI Since virtual functions (and by extension delegates and function
+	pointers) can be extended by the user at times the compiler won't see
+	it, they have to be assumed to be impure.
+	)
+
+	$(LI If the programmer intends for a particular function to be pure
+	and the compiler detects it is not, this may go unnoticed by the
+	programmer. Even worse, if the programmer does notice it, it may
+	be arbitrarily difficult to determine why the compiler thinks it is
+	impure - is it a programming mistake or a compiler bug?
+	)
+
+	)
 
 $(COMMENT
 	> Single inheritance may be easier to implement, but you are losing

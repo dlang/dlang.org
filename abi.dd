@@ -21,9 +21,67 @@ $(SECTION3 C ABI,
 	)
 )
 
+$(SECTION3 Endianness,
+
+	$(P The $(LINK2 http://en.wikipedia.org/wiki/Endianness, endianness)
+	(byte order) of the layout of the data
+	will conform to the endianness of the target machine.
+	The Intel x86 CPUs are $(I little endian) meaning that
+	the value 0x0A0B0C0D is stored in memory as:
+	$(CODE 0D 0C 0B 0A).
+	)
+)
+
 $(SECTION3 Basic Types,
 
-	$(P TBD)
+	$(DL
+	$(DT bool)
+	$(DD 8 bit byte with the values 0 for false and 1 for true)
+	$(DT byte)
+	$(DD 8 bit signed value)
+	$(DT ubyte)
+	$(DD 8 bit unsigned value)
+	$(DT short)
+	$(DD 16 bit signed value)
+	$(DT ushort)
+	$(DD 16 bit unsigned value)
+	$(DT int)
+	$(DD 32 bit signed value)
+	$(DT uint)
+	$(DD 32 bit unsigned value)
+	$(DT long)
+	$(DD 64 bit signed value)
+	$(DT ulong)
+	$(DD 64 bit unsigned value)
+	$(DT cent)
+	$(DD 128 bit signed value)
+	$(DT ucent)
+	$(DD 128 bit unsigned value)
+	$(DT float)
+	$(DD 32 bit IEEE 754 floating point value)
+	$(DT double)
+	$(DD 64 bit IEEE 754 floating point value)
+	$(DT real)
+	$(DD implementation defined floating point value, for x86 it is
+	 80 bit IEEE 754 extended real)
+	)
+)
+
+$(SECTION3 Delegates,
+
+	$(P Delegates are $(I fat pointers) with two parts:)
+
+	$(TABLE2 Delegates,
+	$(TR $(TH offset)		$(TH contents))
+	$(TR $(TD 0)			$(TD context pointer))
+	$(TR $(TD $(I ptrsize))		$(TD pointer to function))
+	)
+
+	$(P The $(I context pointer) can be a class $(I this)
+	reference, a struct $(I this) pointer, a pointer to
+	a closure (nested functions) or a pointer to an enclosing
+	function's stack frame (nested functions).
+	)
 )
 
 $(SECTION3 Structs,
@@ -35,7 +93,7 @@ $(SECTION3 Classes,
 
 	$(P An object consists of:)
 
-$(TABLE1
+$(TABLE2 Class Object Layout,
 $(TR $(TH offset)		$(TH contents))
 $(TR $(TD 0)			$(TD pointer to vtable))
 $(TR $(TD $(I ptrsize))		$(TD monitor))
@@ -44,7 +102,7 @@ $(TR $(TD $(I ptrsize*2)...)	$(TD non-static members))
 
 	$(P The vtable consists of:)
 
-$(TABLE1
+$(TABLE2 Virtual Function Pointer Table,
 $(TR $(TH offset)		$(TH contents))
 $(TR $(TD 0)			$(TD pointer to instance of ClassInfo))
 $(TR $(TD $(I ptrsize)...)	$(TD pointers to virtual member functions))
@@ -79,7 +137,7 @@ $(SECTION3 Arrays,
 
 	$(P A dynamic array consists of:)
 
-$(TABLE1
+$(TABLE1 Dynamic Array,
 $(TR $(TH offset) $(TH contents))
 $(TR $(TD  0)	$(TD  array dimension))
 $(TR $(TD  $(I size_t))	$(TD  pointer to array data))
@@ -348,7 +406,7 @@ $(I TypePointer):
     $(B P) $(I Type)
 
 $(I TypeFunction):
-    $(I CallConvention) $(I FuncAttr)<sub>opt</sub> $(I Arguments) $(I ArgClose) $(I Type)
+    $(I CallConvention) $(V2 $(I FuncAttr)<sub>opt</sub> )$(I Arguments) $(I ArgClose) $(I Type)
 
 $(I CallConvention):
     $(B F)
@@ -357,10 +415,10 @@ $(I CallConvention):
     $(B V)
     $(B R)
 
-$(I FuncAttr):
+$(V2 $(I FuncAttr):
     $(B Na)
     $(B Nb)
-
+)
 $(I Arguments):
     $(I Argument)
     $(I Argument) $(I Arguments)

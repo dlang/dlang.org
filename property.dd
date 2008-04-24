@@ -4,7 +4,7 @@ $(SPEC_S Properties,
 
 	$(P Every type and expression has properties that can be queried:)
 
-$(TABLE1
+$(TABLE2 Property Examples,
 $(TR $(TH Expression)	$(TH Value))
 $(TR $(TD int.sizeof)	$(TD yields 4))
 $(TR $(TD float.nan)	$(TD yields the floating point nan (Not A Number) value))
@@ -17,10 +17,9 @@ $(TR $(TD int.stringof)	$(TD yields the string "int"))
 $(TR $(TD (1+2).stringof)	$(TD yields the string "1 + 2"))
 )
 
+$(BR)
 
-$(SECTION2 Properties for All Types,
-
-$(TABLE1
+$(TABLE2 Properties for All Types,
 $(TR $(TH Property)	$(TH Description))
 $(TR $(TD .init)	$(TD initializer))
 $(TR $(TD .sizeof)	$(TD size in bytes (equivalent to C's sizeof(type))))
@@ -29,22 +28,18 @@ $(TR $(TD .mangleof)	$(TD string representing the 'mangled' representation of th
 $(TR $(TD .stringof)	$(TD string representing the source representation of the type))
 )
 
-)
+$(BR)
 
-$(SECTION2 Properties for Integral Types,
-
-$(TABLE1
+$(TABLE2 Properties for Integral Types,
 $(TR $(TH Property)	$(TH Description))
 $(TR $(TD .init)	$(TD initializer (0)))
 $(TR $(TD .max)		$(TD maximum value))
 $(TR $(TD .min)		$(TD minimum value))
 )
 
-)
+$(BR)
 
-$(SECTION2 Properties for Floating Point Types,
-
-$(TABLE1
+$(TABLE2 Properties for Floating Point Types,
 $(TR $(TH Property)	$(TH Description))
 $(TR $(TD .init)	$(TD initializer (NaN)))
 $(TR $(TD .infinity)	$(TD infinity value))
@@ -60,8 +55,6 @@ $(TR $(TD .max)		$(TD largest representable value that's not infinity))
 $(TR $(TD .min)		$(TD smallest representable normalized value that's not 0))
 $(TR $(TD .re)		$(TD real part))
 $(TR $(TD .im)		$(TD imaginary part))
-)
-
 )
 
 $(SECTION2 .init Property,
@@ -179,6 +172,42 @@ int test()
 	$(I op)=, ++, or -- operator.
 	)
 )
+)
+
+$(SECTION2 $(LNAME2 sizeof, .sizeof Property),
+
+	$(P $(CODE $(I e).sizeof) gives the size in bytes of the expression
+	$(I e).
+	)
+
+	$(P When getting the size of a member, it is not necessary for
+	there to be a $(I this) object:
+	)
+
+---
+struct S {
+    int a;
+    static int foo() {
+	return a.sizeof;   // returns 4
+    }
+}
+
+void test() {
+    int x = S.a.sizeof;    // sets x to 4
+}
+---
+
+	$(P $(CODE .sizeof) applied to a class object returns the size of
+	the class reference, not the class instantiation.)
+
+)
+
+$(SECTION2 $(LNAME2 alignof, .alignof Property),
+
+	$(P $(CODE .alignof) gives the aligned size of an expression or type.
+	For example, an aligned size of 1 means that it is aligned on
+	a byte boundary, 4 means it is aligned on a 32 bit boundary.
+	)
 )
 
 )
