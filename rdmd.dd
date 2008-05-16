@@ -2,53 +2,103 @@ Ddoc
 
 $(D_S rdmd,
 
-$(P
-$(B rdmd) is a program to compile, cache and execute D source code files or 
-'pseudo shell scripts' (using the she-bang syntax with dmd v0.146 or above) 
-on Linux and Windows systems.
-)
+<h2>Synopsis</h2>
+
+In a command prompt:
+<pre>
+% cat myprog.d
+import std.stdio;
+void main() 
+{
+    writeln("Hello, world without explicit compilations!"); 
+}
+% rdmd myprog
+Hello, world without explicit compilations!
+% <blink>_</blink>
+</pre>
+
+In a D program:
+----
+#!/usr/bin/rdmd
+import std.stdio;
+void main() 
+{
+    writeln("Hello, world with automated script running!"); 
+}
+----
+
+(Under Windows replace $(B cat) with $(B type) and $(B
+#!/usr/bin/rdmd) with $(B #!rdmd), the latter assuming that $(B rdmd)
+can be found in your path. But first see the "Bugs" section below.)
+
+<h2>Description</h2>
+
+$(P $(B rdmd) is a companion to the $(B dmd) compiler that simplifies
+the typical edit-compile-link-run or edit-make-run cycle to a rapid
+edit-run cycle. Like $(B make) and other tools, $(B rdmd) uses the
+relative dates of the files involved to minimize the amount of work
+necessary. Unlike $(B make), $(B rdmd) tracks dependencies and
+freshness without requiring additional information from the user.)
+
+$(P $(B rdmd): $(UL 
+
+$(LI shields its user from the notion that producing a running program
+from D programming language files may entail several concerted steps
+against different source files producing various intermediate files;)
+
+$(LI automatically infers and builds dependent files, transitively, by
+following $(B import) directives;)
+
+$(LI recognizes and passes down all of $(B dmd)'s command-line options;)
+
+$(LI understands how various $(B dmd) compiler options (e.g. $(B
+-release) vs. $(B -debug)) affect generation of intermediate files,
+and avoids conflations (e.g., does not unwittingly run a debug
+executable when the release executable is asked for);)
+
+$(LI recompiles files only on a needed basis, e.g. two invocations of
+$(B rdmd) in sequence without an intervening change to any relevant
+source file does not produce the executable again;)
+
+))
+
+<h2>Usage</h2>
 
 $(P
-It will cache the executable in the /tmp directory by default and will 
-re-compile the executable if any of the source file, the compiler or $(B rdmd) 
-itself is newer than the cached executable. It can optionally use gdmd if 
-specified, but uses dmd by default.
+        $(B rdmd) [$(I dmd and rdmd options)] $(I progfile)[.d] [$(I program arguments)]
 )
 
-<h2>Usage:</h2>
-
-$(P
-        $(B rdmd) [$(I D compiler arguments)] [$(I rdmd arguments)] $(I progfile).d [$(I program arguments)]
+$(P In addition to $(B dmd)'s options, $(B rdmd) recognizes the following:
 )
 
-$(P
-$(I rdmd arguments):
+$(DL 
+
+$(DT $(B --chatty)) $(DD write dmd commands to stdout before executing
+them)
+
+$(DT $(B --compiler)=/path/to/compiler) $(DD use the specified
+compiler (e.g. gdmd) instead of dmd)
+
+$(DT $(B --dry-run)) $(DD do not compile, just show what commands
+would be run (implies --chatty))
+
+$(DT $(B --force)) $(DD force a rebuild even if apparently not
+necessary)
+
+$(DT $(B --help)) $(DD show a help message and exit)
+
+$(DT $(B --man)) $(DD open web browser on manual page)
+
 )
 
-$(DL
-	$(DT $(B --help))
-			$(DD This message)
-	$(DT $(B --force))
-			$(DD Force re-compilation of source code
-			[default = do not force])
-	$(DT $(B --compiler)=($(B dmd)|$(B gdmd)))
-			$(DD Specify compiler [default = $(B dmd)])
-	$(DT $(B --tmpdir)=$(I tmp_dir_path))
-			$(DD Specify directory to store cached program 
-			and other temporaries [default = $(B /tmp)])
-)
+<h2><font color=red>BUGS</font></h2>
 
-<h2>Notes:</h2>
+Currently not compiling under Windows because it uses $(B popen),
+which has not been emulated under D yet.
 
-	$(UL
-        $(LI $(B dmd) or $(B gdmd) must be in the current user context $PATH)
-        $(LI $(B rdmd) does not support execution of D source code via stdin)
-        $(LI $(B rdmd) will only compile and execute files with a '.d' file
-	 extension)
-	$(LI $(B rdmd)'s functionality will probably get folded into dmd itself)
-	)
+<h2>Author</h2>
 
-$(P written by Dave Fladebo and Robert Mariottini)
+$(LINK2 http://erdani.org, Andrei Alexandrescu)
 )
 
 Macros:
