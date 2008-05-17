@@ -784,17 +784,39 @@ char[] str;
 char[] str1 = "abc";
 str[0] = 'b';        // error, "abc" is read only, may crash
 ---------
+
+	$(P The name $(CODE string) is aliased to $(CODE char[]),
+	so the above declarations could be equivalently written as:
+	)
+
+---------
+string str;
+string str1 = "abc";
+---------
 )
 $(V2
 ---------
-char[] str1 = "abc";             // error, "abc" is not mutable
-char[] str2 = "abc".dup;         // ok, make mutable copy
-invariant(char)[] str3 = "abc";  // ok
+char[] str1 = "abc";                // error, "abc" is not mutable
+char[] str2 = "abc".dup;            // ok, make mutable copy
+invariant(char)[] str3 = "abc";     // ok
+invariant(char)[] str4 = str1;      // error, str4 is not mutable
+invariant(char)[] str5 = str1.idup; // ok, make invariant copy
+---------
+
+	$(P The name $(CODE string) is aliased to $(CODE invariant(char)[]),
+	so the above declarations could be equivalently written as:
+	)
+---------
+char[] str1 = "abc";       // error, "abc" is not mutable
+char[] str2 = "abc".dup;   // ok, make mutable copy
+string str3 = "abc";       // ok
+string str4 = str1;        // error, str4 is not mutable
+string str5 = str1.idup;   // ok, make invariant copy
 ---------
 )
-	$(P char[] strings are in UTF-8 format.
-	wchar[] strings are in UTF-16 format.
-	dchar[] strings are in UTF-32 format.
+	$(P $(CODE char[]) strings are in UTF-8 format.
+	$(CODE wchar[]) strings are in UTF-16 format.
+	$(CODE dchar[]) strings are in UTF-32 format.
 	)
 
 	$(P Strings can be copied, compared, concatenated, and appended:)
@@ -807,8 +829,8 @@ str4 ~= str1;
 ---------
 
 	$(P with the obvious semantics. Any generated temporaries get cleaned up
-	by the garbage collector (or by using alloca()). Not only that,
-	this works with any 
+	by the garbage collector (or by using $(CODE alloca())).
+	Not only that, this works with any 
 	array not just a special String array.
 	)
 

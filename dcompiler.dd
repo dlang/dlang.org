@@ -1,65 +1,70 @@
 Ddoc
 
-$(D_S Compiler for D Programming Language,
+$(D_S dmd - $(WINDOWS Windows)$(LINUX Linux) D Compiler,
 
 	$(UL 
-	$(LI D for <a href="#Win32">Win32</a>)
-	$(LI D for <a href="#linux">x86 Linux</a>)
-	$(LI <a href="#general">general</a>)
+	$(WINDOWS $(LI dmd for $(LINK2 dmd-linux.html, x86 Linux)))
+	$(LINUX   $(LI dmd for $(LINK2 dmd-windows.html, Windows)))
+	$(LI $(LINK2 #requirements, Requirements and Downloads))
+	$(LI $(LINK2 #files, Files))
+	$(LI $(LINK2 #installation, Installation))
+	$(WINDOWS $(LI $(LINK2 #example, Example)))
+	$(LI $(LINK2 #switches, Compiler Arguments and Switches))
+	$(LI $(LINK2 #linking, Linking))
+	$(LI $(LINK2 #environment, Environment Variables))
+	$(WINDOWS $(LI $(LINK2 #sc_ini, sc.ini Initialization File)))
+	$(LINUX $(LI $(LINK2 #dmd_conf, dmd.conf Initialization File)))
+	$(WINDOWS $(LI $(LINK2 #problems, Common Installation Problems)))
+	$(LI $(LINK2 #differences, Differences between Windows and Linux versions))
+	$(LI $(LINK2 #interface_files, D Interface Files))
+	$(LI $(LINK2 #library, Building Libraries))
 	)
 
-<h2>Downloads</h2>
+<h2>$(LNAME2 requirements, Requirements and Downloads)</h2>
 
-	$(LINK2 http://www.digitalmars.com/d/download.html, Download D Compiler)
+	$(OL
+	$(LI $(LINK2 http://www.digitalmars.com/d/download.html, Download D Compiler))
 
-<h2>Files Common to Win32 and Linux</h2>
-
-	$(DL
-
-	$(DT $(TT \dmd\src\phobos\)
-	$(DD D runtime library source)
-	)
-
-	$(DT $(TT \dmd\src\dmd\)
-	$(DD D compiler front end source under dual (GPL and Artistic) license)
-	)
-
-	$(DT $(TT \dmd\html\d\)
-	$(DD Documentation)
-	)
-
-	$(DT $(TT \dmd\samples\d\)
-	$(DD Sample D programs)
-	)
-
-	)
-
-<hr>
-<h1><a name="Win32">DMD Win32 D Compiler</a></h1>
-
-<h2>Requirements and Downloads</h2>
-
-	$(UL 
+    $(WINDOWS
 	$(LI 32 bit Windows (Win32) operating system, such as Windows XP)
-
-	$(LI Download dmd)
 
 	$(LI Download
 	 <a href="http://ftp.digitalmars.com/dmc.zip" title="download dmc.zip">
 	 dmc.zip (linker and utilities)</a> for Win32
 	)
+    )
+    $(LINUX
+	$(LI 32 bit x86 Linux operating system)
 
+	$(LI Gnu C compiler (gcc))
+    )
 	)
 
-<h2>Files</h2>
+<h2>$(LNAME2 files, Files)</h2>
 
 	$(DL
 
+	$(DT $(TT $(SEP)dmd$(SEP)src$(SEP)phobos$(SEP))
+	$(DD D runtime library source)
+	)
+
+	$(DT $(TT $(SEP)dmd$(SEP)src$(SEP)dmd$(SEP))
+	$(DD D compiler front end source under dual (GPL and Artistic) license)
+	)
+
+	$(DT $(TT $(SEP)dmd$(SEP)html$(SEP)d$(SEP))
+	$(DD Documentation)
+	)
+
+	$(DT $(TT $(SEP)dmd$(SEP)samples$(SEP)d$(SEP))
+	$(DD Sample D programs)
+	)
+    $(WINDOWS
 	$(DT $(TT \dmd\bin\dmd.exe)
 	$(DD D compiler executable)
 	)
 
-	$(DT $(TT \dmd\bin\shell.exe)
+	$(DT $(TT \dmd\bin\$(LINK2 http://www.digitalmars.com/ctg/shell.html, shell.exe))
 	$(DD Simple command line shell)
 	)
 
@@ -67,14 +72,32 @@ $(D_S Compiler for D Programming Language,
 	$(DD Global compiler settings)
 	)
 
-	$(DT $(TT \dmd\lib\phobos.lib)
+	$(DT $(TT \dmd\lib\$(LIB))
 	$(DD D runtime library)
 	)
+    )
+    $(LINUX
+	<dt>$(TT /dmd/bin/dmd)
+	<dd>D compiler executable
+
+	<dt>$(TT /dmd/bin/$(LINK2 http://www.digitalmars.com/ctg/dumpobj.html, dumpobj))
+	<dd>Elf file dumper
+
+	<dt>$(TT /dmd/bin/$(LINK2 http://www.digitalmars.com/ctg/obj2asm.html, obj2asm))
+	<dd>Elf file disassembler
+
+	<dt>$(TT /dmd/bin/dmd.conf)
+	<dd>Global compiler settings (copy to $(TT /etc/dmd.conf))
+
+	<dt>$(TT /dmd/lib/$(LIB))
+	<dd>D runtime library (copy to $(TT /usr/lib/$(LIB)))
+    )
 
 	)
 
-<h2>Installation</h2>
+<h2>$(LNAME2 installation, Installation)</h2>
 
+    $(WINDOWS
 	$(P Open a console window (for Windows XP this is done by
 	clicking on [Start][Command Prompt]).
 	All the tools are command line tools, which means
@@ -94,18 +117,52 @@ C:\Documents and Settings\Your Name&gt;cd \
 C:\&gt;unzip dmd.zip
 C:\&gt;unzip dmc.zip
 )
+    )
+    $(LINUX
+	$(LI Unzip the archive into your home directory.
+	It will create
+	a $(TT ~/dmd) directory with all the files in it.
+	All the tools are command line tools, which means
+	they are run from a console window.)
+
+	$(LI Copy $(TT dmd.conf) to $(TT /etc):
+
+$(CONSOLE
+cp dmd/bin/dmd.conf /etc
+)
+	)
+
+	$(LI Give execute permission to the following files:
+
+$(CONSOLE
+chmod u+x dmd/bin/{dmd,dumpobj,obj2asm,rdmd}
+)
+	)
+
+	$(LI Put $(TT dmd/bin) on your $(B PATH),
+	or copy the linux executables
+	to $(TT /usr/local/bin))
+
+	$(LI Copy the library to $(TT /usr/lib):
+
+$(CONSOLE
+cp dmd/lib/$(LIB) /usr/lib
+)
+	)
+    )
 
 <h2>Example</h2>
 
 	$(P Run:)
 
 $(CONSOLE
-\dmd\bin\shell all.sh
+$(SEP)dmd$(SEP)bin$(SEP)shell all.sh
 )
 
-	$(P in the $(TT \dmd\samples\d) directory for several small examples.)
+	$(P in the $(TT $(SEP)dmd$(SEP)samples$(SEP)d) directory for several small examples.)
 
-<h2>Compiler Arguments and Switches</h2>
+
+<h2>$(LNAME2 switches, Compiler Arguments and Switches)</h2>
 
 	$(DL
 	  $(DT $(B dmd) $(I files)... -$(I switches)...
@@ -114,7 +171,7 @@ $(CONSOLE
 
 	  $(DT $(I files)...
 		$(DD
-		<table border=1 cellpadding=4 cellspacing=0 summary="File Extensions">
+		$(TABLE2 File Extensions,
 		$(TR
 		$(TH Extension)
 		$(TH File Type)
@@ -128,20 +185,25 @@ $(CONSOLE
 		$(TD D source files)
 		)
 		$(TR
+		$(TD $(B .dd))
+		$(TD Ddoc source files)
+		)
+		$(TR
 		$(TD $(B .di))
 		$(TD $(LINK2 #interface_files, D interface files))
 		)
 		$(TR
-		$(TD $(B .obj))
+		$(TD $(B .$(OBJEXT)))
 		$(TD Object files to link in)
 		)
 		$(TR
-		$(TD $(B .lib))
+		$(TD $(B .$(LIBEXT)))
 		$(TD Object code libraries to search)
 		)
+$(WINDOWS
 		$(TR
 		$(TD $(B .exe))
-		$(TD Name output executable file)
+		$(TD Output executable file)
 		)
 		$(TR
 		$(TD $(B .def))
@@ -151,148 +213,245 @@ $(CONSOLE
 		$(TD $(B .res))
 		$(TD resource file)
 		)
-		</table>
+)
+		)
 		)
 	  )
 
-	  $(DT $(B @)$(I cmdfile)
-		$(DD reads compiler arguments and switches from
-		text file $(I cmdfile))
+    $(WINDOWS
+	  $(SWITCH $(B @)$(I cmdfile),
+		reads compiler arguments and switches from
+		text file $(I cmdfile)
+	  )
+    )
+
+	  $(SWITCH $(B -c),
+		compile only, do not link
 	  )
 
-	  $(DT $(B -c)
-		$(DD compile only, do not link)
+	  $(SWITCH $(B -cov),
+		instrument for $(LINK2 code_coverage.html, code coverage analysis)
 	  )
 
-	  $(DT $(B -cov)
-		$(DD instrument for $(LINK2 code_coverage.html, code coverage analysis))
+	  $(SWITCH $(B -D),
+		generate $(LINK2 ddoc.html, documentation) from source
 	  )
 
-	  $(DT $(B -D)
-		$(DD Generate $(LINK2 ddoc.html, documentation) from source.)
+	  $(SWITCH $(B -Dd)$(I docdir),
+		write documentation file to $(I docdir) directory
 	  )
 
-	  $(DT $(B -Dd)$(I docdir)
-		$(DD write documentation file to $(I docdir) directory)
+	  $(SWITCH $(B -Df)$(I filename),
+		write documentation file to $(I filename)
 	  )
 
-	  <dt>$(B -Df)$(I filename)</dt>
-		$(DD write documentation file to $(I filename))
+	  $(SWITCH $(B -d),
+		allow deprecated features
+	  )
+	  $(SWITCH $(B -debug),
+		compile in $(LINK2 version.html#debug, debug) code
+	  )
+	  $(SWITCH $(B -debug=)$(I level),
+		compile in $(LINK2 version.html#debug, debug level) &lt;= $(I level)
+	  )
+	  $(SWITCH $(B -debug=)$(I ident),
+		compile in $(LINK2 version.html#debug, debug identifier) $(I ident)
+	  )
 
-	  <dt>$(B -d)</dt>
-		<dd>allow deprecated features
-	  <dt>$(B -debug)</dt>
-		<dd>compile in debug code
-	  <dt>$(B -debug=)$(I level)</dt>
-		<dd>compile in debug code <= $(I level)
-	  $(DT $(B -debug=)$(I ident))
-		$(DD compile in debug code identified by $(I ident))
+	  $(SWITCH $(B -debuglib=)$(I libname),
+		link in $(I libname) as the default library when
+		compiling for symbolic debugging instead of $(B $(LIB))
+	  )
+	  $(SWITCH $(B -defaultlib=)$(I libname),
+		link in $(I libname) as the default library when
+		not compiling for symbolic debugging instead of $(B $(LIB))
+	  )
 
-	  $(DT $(B -debuglib=)$(I libname))
-		$(DD link in $(I libname) as the default library when
-		compiling for symbolic debugging instead of $(B phobos.lib))
-	  $(DT $(B -defaultlib=)$(I libname))
-		$(DD link in $(I libname) as the default library when
-		not compiling for symbolic debugging instead of $(B phobos.lib))
+    $(LINUX
+	  $(SWITCH $(B -fPIC),
+		generate Position Independent Code (which is used
+		for building shared libraries)
+	  )
+    )
 
-	  $(DT $(B -g)
-		$(DD add CodeView 4 symbolic debug info with
+	  $(SWITCH $(B -g),
+    $(WINDOWS
+		add CodeView 4 symbolic debug info with
 		$(LINK2 abi.html#codeview, D extensions)
 		for debuggers such as
-		$(LINK2 http://ddbg.mainia.de/releases.html, Ddbg))
-	  )
-	  $(DT $(B -gc)
-		$(DD add CodeView 4 symbolic debug info in C format
+		$(LINK2 http://ddbg.mainia.de/releases.html, Ddbg)
+    )
+    $(LINUX
+		add Dwarf symbolic debug info with
+		$(LINK2 abi.html#dwarf, D extensions)
 		for debuggers such as
-		$(TT \dmd\bin\windbg))
+		$(LINK2 http://www.zerobugs.org/, ZeroBUGS)
+    )
 	  )
 
-	  $(DT $(B -H))
-		$(DD generate D interface file)
+	  $(SWITCH $(B -gc),
+    $(WINDOWS
+		add CodeView 4 symbolic debug info in C format
+		for debuggers such as
+		$(TT \dmd\bin\windbg)
+    )
+    $(LINUX
+		add Dwarf symbolic debug info in C format
+		for debuggers such as
+		$(TT gdb)
+    )
+	  )
 
-	  $(DT $(B -Hd)$(I dir))
-		$(DD write D interface file to $(I dir) directory)
+	  $(SWITCH $(B -H),
+		generate $(LINK2 #interface_files, D interface file)
+	  )
 
-	  $(DT $(B -Hf)$(I filename))
-		$(DD write D interface file to $(I filename))
+	  $(SWITCH $(B -Hd)$(I dir),
+		write D interface file to $(I dir) directory
+	  )
 
-	  <dt>$(B --help)</dt>
-		<dd>print help
-	  <dt>$(B -inline)
-		<dd>inline expand functions
-	  $(DT $(B -I)$(I path)
-		$(DD where to look for imports. $(I path) is a ; separated
+	  $(SWITCH $(B -Hf)$(I filename),
+		write D interface file to $(I filename)
+	  )
+
+	  $(SWITCH $(B --help),
+		print brief help to console
+	  )
+
+	  $(SWITCH $(B -inline),
+		inline expand functions at the discretion of the compiler.
+		This can improve performance, at the expense of making
+		it more difficult to use a debugger on it.
+	  )
+
+	  $(SWITCH $(B -I)$(I path),
+		where to look for
+		$(LINK2 module.html#ImportDeclaration, imports).
+		$(I path) is a ; separated
 		list of paths. Multiple $(B -I)'s can be used, and the paths
 		are searched in the same order.
-		)
 	  )
-	  $(DT $(B -J)$(I path)
-		$(DD where to look for files for $(I ImportExpression)s.
+
+	  $(SWITCH $(B -ignore),
+		ignore unsupported pragmas
+	  )
+
+	  $(SWITCH $(B -J)$(I path),
+		where to look for files for
+		$(LINK2 expression.html#ImportExpression, $(I ImportExpression))s.
 		This switch is required in order to use $(I ImportExpression)s.
 		$(I path) is a ; separated
 		list of paths. Multiple $(B -J)'s can be used, and the paths
 		are searched in the same order.
-		)
 	  )
-	  <dt>$(B -L)$(I linkerflag)
-		<dd>pass $(I linkerflag) to the linker, for example,
-		$(TT /ma/li)
 
-	  $(DT $(B -nofloat))
-		$(DD Prevents emission of $(B __fltused) reference in
+	  $(SWITCH $(B -L)$(I linkerflag),
+		pass $(I linkerflag) to the
+		$(WINDOWS $(LINK2 http://www.digitalmars.com/ctg/optlink.html, linker))
+		$(LINUX linker), for example,
+		$(WINDOWS $(TT -L/ma/li))$(LINUX $(TT -L-M))
+	  )
+
+	  $(SWITCH $(B -lib),
+		generate library file as output instead of object file(s).
+		All compiled source files, as well as object files and library
+		files specified on the command line, are inserted into
+		the output library.
+		Compiled source modules may be partitioned into several object
+		modules to improve granularity.
+		The name of the library is taken from the name of the first
+		source module to be compiled. This can be overridden with
+		the $(B -of) switch.
+	  )
+
+	  $(SWITCH $(B -man),
+    $(WINDOWS
+		open default browser on this page
+    )
+    $(LINUX
+		open browser specified by the $(B BROWSER)
+		environment variable on this page. If $(B BROWSER) is
+		undefined, $(B firefox) is assumed.
+    )
+	  )
+
+    $(WINDOWS
+	  $(SWITCH $(B -nofloat),
+		Prevents emission of $(B __fltused) reference in
 		object files, even if floating point code is present.
-		Useful for library code. Windows only.)
+		Useful for library code.
+	  )
+    )
 
-	  $(DT $(B -O))
-		$(DD Optimize generated code.)
+	  $(SWITCH $(B -O),
+		Optimize generated code. For fastest executables, compile
+		with the $(B -O -release -inline) switches together.
+	  )
 
-	  $(DT $(B -o-))
-		$(DD Suppress generation of object file. Useful in
-		conjuction with $(B -D) or $(B -H) flags.)
+	  $(SWITCH $(B -o-),
+		Suppress generation of object file. Useful in
+		conjuction with $(B -D) or $(B -H) flags.
+	  )
 
-	  <dt>$(B -od)$(I objdir)</dt>
+	  $(SWITCH $(B -od)$(I objdir),
 		$(DD write object files relative to directory $(I objdir)
 		instead of to the current directory)
-	  <dt>$(B -of)$(I filename)</dt>
-		<dd>set output file name to $(I filename) in the output
-		directory
-	  <dt>$(B -op)</dt>
-		<dd>normally the path for $(B .d) source files is stripped
+	  )
+	  $(SWITCH $(B -of)$(I filename),
+		Set output file name to $(I filename) in the output
+		directory. The output file can be an object file,
+		executable file, or library file depending on the other
+		switches.
+	  )
+	  $(SWITCH $(B -op),
+		normally the path for $(B .d) source files is stripped
 		off when generating an object file name. $(B -op) will leave
 		it on.
-	  <dt>$(B -profile)</dt>
-		<dd><a href="http://www.digitalmars.com/ctg/trace.html">profile</a>
+	  )
+	  $(SWITCH $(B -profile),
+		$(LINK2 http://www.digitalmars.com/ctg/trace.html, profile)
 		the runtime performance
 		of the generated code
-	  <dt>$(B -quiet)</dt>
-		<dd>suppress non-essential compiler messages
-	  <dt>$(B -release)</dt>
-		<dd>compile release version, which means not generating
+	  )
+	  $(SWITCH $(B -quiet),
+		suppress non-essential compiler messages
+	  )
+	  $(SWITCH $(B -release),
+		compile release version, which means not generating
 		code for contracts and asserts
-	  $(DT $(B -run) $(I srcfile args...))
-		$(DD compile, link, and run the program $(I srcfile) with the
+	  )
+	  $(SWITCH $(B -run) $(I srcfile args...)
+		compile, link, and run the program $(I srcfile) with the
 		rest of the
 		command line, $(I args...), as the arguments to the program.
-		No .obj or .exe file is left behind.)
-	  <dt>$(B -unittest)</dt>
-		<dd>compile in unittest code, also turns on asserts
-	  <dt>$(B -v)</dt>
-		<dd>verbose
-	  <dt>$(B -version=)$(I level)</dt>
-		<dd>compile in version code >= $(I level)
-	  <dt>$(B -version=)$(I ident)</dt>
-		<dd>compile in version code identified by $(I ident)
-	  <dt>$(B -w)</dt>
-		$(DD enable <a href="warnings.html">warnings</a>)
+		No .$(OBJEXT) or executable file is left behind.
+	  )
+	  $(SWITCH $(B -unittest),
+		compile in unittest code, turns on asserts, and sets the
+		$(TT unittest) $(LINK2 version.html#PredefinedVersions, version identifier)
+	  )
+	  $(SWITCH $(B -v),
+		verbose
+	  )
+	  $(SWITCH $(B -version=)$(I level),
+		compile in $(LINK2 version.html#version, version level) >= $(I level)
+	  )
+	  $(SWITCH $(B -version=)$(I ident),
+		compile in $(LINK2 version.html#version, version identifier) $(I ident)
+	  )
+	  $(SWITCH $(B -w),
+		enable $(LINK2 warnings.html, warnings)
+	  )
 	)
 
-<h2>Linking</h2>
+<h2>$(LNAME2 linking, Linking)</h2>
 
 	$(P Linking is done directly by the $(B dmd) compiler after a successful
 	compile. To prevent $(B dmd) from running the linker, use the
 	$(B -c) switch.
 	)
 
+    $(WINDOWS
 	$(P The programs must be linked with the D runtime library $(B phobos.lib),
 	followed by the C runtime library $(B snn.lib).
 	This is done automatically as long as the directories for the
@@ -303,14 +462,21 @@ $(CONSOLE
 $(CONSOLE
 set LIB=\dmd\lib;\dm\lib
 )
+     )
+     $(LINUX
+	$(P The actual linking is done by running $(B gcc).
+	This ensures compatibility with modules compiled with $(B gcc).
+	)
+     )
 
-<h2>Environment Variables</h2>
+<h2>$(LNAME2 environment, Environment Variables)</h2>
 
 	$(P The D compiler dmd uses the following environment variables:
 	)
 
 	$(DL
 
+    $(WINDOWS
 	<dt>$(B DFLAGS)
 	<dd>The value of $(B DFLAGS) is treated as if it were appended to the
 	command line to $(B dmd.exe).
@@ -341,10 +507,30 @@ set LINKCMD=\dm\bin\link
 	is found first in the $(B PATH) before other $(B link.exe)'s,
 	or use $(B LINKCMD) to specifically identify which linker
 	to use.
+    )
+    $(LINUX
+	<dt>$(B CC)
+	<dd> $(B dmd) normally runs the linker by looking for $(B gcc)
+	along the $(B PATH). To use a specific linker instead, set the
+	$(B CC) environment variable to it. For example:
 
+$(CONSOLE
+set CC=gcc
+)
+	$(DT $(B BROWSER)
+	    $(DD This sets the browser used to open the manual page with
+	    the $(B -man) switch. It defaults to $(TT firefox).
+	    )
 	)
 
-<h2><a name="sc_ini">sc.ini Initialization File</a></h2>
+	<dt>$(B DFLAGS)
+	<dd>The value of $(B DFLAGS) is treated as if it were appended to the
+	command line to $(B dmd).
+    )
+	)
+
+$(WINDOWS
+<h2>$(LNAME2 sc_ini, sc.ini Initialization File)</h2>
 
 	$(P $(B dmd) will look for the initialization file $(B sc.ini) in the
 	following sequence of directories:
@@ -407,289 +593,23 @@ DDOCFILE=mysettings.ddoc
 	to re-edit $(TT sc.ini).
 	)
 
-<h2>Common Installation Problems</h2>
-
-	$(UL 
-	$(LI Using Cygwin's $(B unzip) utility has been known to cause
-	strange problems.
-	)
-	$(LI Running the compiler under Cygwin's command shell has
-	been also known to cause problems. Try getting it to work
-	under the regular Windows shell $(B cmd.exe) before trying Cygwin's.
-	)
-	$(LI Installing $(B dmd) and $(B dmc) into directory paths with spaces
-	in them causes problems.
-	)
-	)
-
-<hr>
-<h1><a name="linux">Linux D Compiler</a></h1>
-
-<h2>Requirements and Downloads</h2>
-
-	$(UL 
-	$(LI 32 bit x86 Linux operating system)
-
-	$(LI Download dmd)
-
-	$(LI Gnu C compiler (gcc))
-
-	)
-
-<h2>Files</h2>
-
-	<dl>
-
-	<dt>$(TT /dmd/bin/dmd)
-	<dd>D compiler executable
-
-	<dt>$(TT /dmd/bin/dumpobj)
-	<dd>Elf file dumper
-
-	<dt>$(TT /dmd/bin/obj2asm)
-	<dd>Elf file disassembler
-
-	<dt>$(TT /dmd/bin/dmd.conf)
-	<dd>Global compiler settings (copy to $(TT /etc/dmd.conf))
-
-	<dt>$(TT /dmd/lib/$(LIB))
-	<dd>D runtime library (copy to $(TT /usr/lib/$(LIB)))
-
-	</dl>
-
-<h2>Installation</h2>
-
-	$(OL 
-
-	$(LI Unzip the archive into your home directory.
-	It will create
-	a $(TT ~/dmd) directory with all the files in it.
-	All the tools are command line tools, which means
-	they are run from a console window.)
-
-	$(LI Copy $(TT dmd.conf) to $(TT /etc):
-
-$(CONSOLE
-cp dmd/bin/dmd.conf /etc
 )
-	)
+$(LINUX
+<h2>$(LNAME2 dmd_conf, dmd.conf Initialization File)</h2>
 
-	$(LI Give execute permission to the following files:
-
-$(CONSOLE
-chmod u+x dmd/bin/{dmd,dumpobj,obj2asm,rdmd}
-)
-	)
-
-	$(LI Put $(TT dmd/bin) on your $(B PATH),
-	or copy the linux executables
-	to $(TT /usr/local/bin))
-
-	$(LI Copy the library to $(TT /usr/lib):
-
-$(CONSOLE
-cp dmd/lib/$(LIB) /usr/lib
-)
-	)
-
-	)
-
-<h2>Compiler Arguments and Switches</h2>
-
-	<dl><dl>
-	  <dt>$(B dmd) $(I files)... -$(I switch)...
-	  <p>
-	  <dt>$(I files)...
-		<dd>
-		<table border=1 cellpadding=4 cellspacing=0 summary="File Extensions">
-		$(TR
-		$(TH Extension)
-		$(TH File Type)
-		)
-		$(TR
-		$(TD $(I none))
-		$(TD D source files)
-		)
-		$(TR
-		$(TD $(B .d))
-		$(TD D source files)
-		)
-		$(TR
-		$(TD $(B .di))
-		$(TD $(LINK2 #interface_files, D interface files))
-		)
-		$(TR
-		$(TD $(B .o))
-		$(TD Object files to link in)
-		)
-		$(TR
-		$(TD $(B .a))
-		$(TD Library files to link in)
-		)
-		</table>
-
-	  <dt>$(B -c)</dt>
-		$(DD compile only, do not link)
-
-	  <dt>$(B -cov)</dt>
-		$(DD instrument for $(LINK2 code_coverage.html, code coverage analysis))
-
-	  <dt>$(B -D)</dt>
-		$(DD generate documentation)
-
-	  <dt>$(B -Dd)$(I docdir)</dt>
-		$(DD write documentation file to $(I docdir) directory)
-
-	  <dt>$(B -Df)$(I filename)</dt>
-		$(DD write documentation file to $(I filename))
-
-	  <dt>$(B -d)</dt>
-		<dd>allow deprecated features
-	  <dt>$(B -debug)</dt>
-		<dd>compile in debug code
-	  <dt>$(B -debug=)$(I level)</dt>
-		<dd>compile in debug code <= $(I level)
-	  <dt>$(B -debug=)$(I ident)</dt>
-		<dd>compile in debug code identified by $(I ident)
-
-	  $(DT $(B -debuglib=)$(I libname))
-		$(DD link in $(I libname) as the default library when
-		compiling for symbolic debugging instead of $(B $(LIB)))
-	  $(DT $(B -defaultlib=)$(I libname))
-		$(DD link in $(I libname) as the default library when
-		not compiling for symbolic debugging instead of $(B $(LIB)))
-
-	  <dt>$(B -fPIC)</dt>
-		<dd>generate position independent code
-
-	  $(DT $(B -g)
-		$(DD add Dwarf symbolic debug info with
-		$(LINK2 abi.html#dwarf, D extensions)
-		for debuggers such as
-		$(LINK2 http://www.zerobugs.org/, ZeroBUGS))
-	  )
-	  $(DT $(B -gc)
-		$(DD add Dwarf symbolic debug info in C format
-		for debuggers such as
-		<tt>gdb</tt>)
-	  )
-
-	  $(DT $(B -H))
-		$(DD generate D interface file)
-
-	  $(DT $(B -Hd)$(I dir))
-		$(DD write D interface file to $(I dir) directory)
-
-	  $(DT $(B -Hf)$(I filename))
-		$(DD write D interface file to $(I filename))
-
-	  <dt>$(B --help)</dt>
-		<dd>print help
-	  <dt>$(B -inline)
-		<dd>inline expand functions
-	  $(DT $(B -I)$(I path)
-		$(DD where to look for imports. $(I path) is a ; separated
-		list of paths. Multiple $(B -I)'s can be used, and the paths
-		are searched in the same order.
-		)
-	  )
-	  $(DT $(B -J)$(I path)
-		$(DD where to look for files for $(I ImportExpression)s.
-		This switch is required in order to use $(I ImportExpression)s.
-		$(I path) is a ; separated
-		list of paths. Multiple $(B -J)'s can be used, and the paths
-		are searched in the same order.
-		)
-	  )
-	  <dt>$(B -L)$(I linkerflag)
-		<dd>pass $(I linkerflag) to the linker, for example,
-		$(TT -M)
-	  <dt>$(B -O)</dt>
-		<dd>optimize
-	  <dt>$(B -o-)</dt>
-		<dd>suppress generation of object file
-	  <dt>$(B -od)$(I objdir)</dt>
-		<dd>write object files relative to directory $(I objdir)
-		instead of to the current directory
-	  <dt>$(B -of)$(I filename)</dt>
-		<dd>set output file name to $(I filename) in the output
-		directory
-	  <dt>$(B -op)</dt>
-		<dd>normally the path for $(B .d) source files is stripped
-		off when generating an object file name. $(B -op) will leave
-		it on.
-	  <dt>$(B -quiet)</dt>
-		<dd>suppress non-essential compiler messages
-	  <dt>$(B -profile)</dt>
-		<dd><a href="http://www.digitalmars.com/ctg/trace.html">profile</a>
-		the runtime performance
-		of the generated code
-	  <dt>$(B -release)</dt>
-		<dd>compile release version
-	  $(DT $(B -run) $(I srcfile args...))
-		$(DD compile, link, and run the program $(I srcfile) with the
-		rest of the
-		command line, $(I args...), as the arguments to the program.
-		No .o or executable file is left behind.)
-	  <dt>$(B -unittest)</dt>
-		<dd>compile in unittest code
-	  <dt>$(B -v)</dt>
-		<dd>verbose
-	  <dt>$(B -version=)$(I level)</dt>
-		<dd>compile in version code >= $(I level)
-	  <dt>$(B -version=)$(I ident)</dt>
-		<dd>compile in version code identified by $(I ident)
-	  <dt>$(B -w)</dt>
-		<dd>enable <a href="warnings.html">warnings</a>
-	</dl></dl>
-
-<h2>Linking</h2>
-
-	$(P Linking is done directly by the $(B dmd) compiler after a successful
-	compile. To prevent $(B dmd) from running the linker, use the
-	$(B -c) switch.
-	)
-
-	$(P The actual linking is done by running $(B gcc).
-	This ensures compatibility with modules compiled with $(B gcc).
-	)
-
-<h2>Environment Variables</h2>
-
-	The D compiler dmd uses the following environment variables:
-
-	$(DL
-
-	<dt>$(B CC)
-	<dd> $(B dmd) normally runs the linker by looking for $(B gcc)
-	along the $(B PATH). To use a specific linker instead, set the
-	$(B CC) environment variable to it. For example:
-
-$(CONSOLE
-set CC=gcc
-)
-
-	<dt>$(B DFLAGS)
-	<dd>The value of $(B DFLAGS) is treated as if it were appended to the
-	command line to $(B dmd).
-
-	)
-
-<h2>dmd.conf Initialization File</h2>
-
-	$(P The Linux dmd file $(TT dmd.conf) is the same as $(TT sc.conf)
+	$(P The Linux dmd file $(TT dmd.conf) is the same as $(TT sc.ini)
 	for Windows, it's just that the file has a different name,
 	enabling a setup common to both Windows and Linux to be created
 	without having to re-edit the file.)
 
-	$(P $(B dmd) will look for the initialization file $(B dmd.conf) in the
+	$(P $(B dmd) will look for the initialization file $(TT dmd.conf) in the
 	following sequence of directories:)
 
 	$(OL
 	$(LI current working directory)
 	$(LI directory specified by the $(B HOME) environment variable)
 	$(LI directory $(B dmd) resides in)
-	$(LI $(B /etc/))
+	$(LI $(TT /etc/))
 	)
 
 	$(P If found, environment variable
@@ -713,20 +633,35 @@ $(SCINI
 [Environment]
 DFLAGS="-I%@P%/../src/phobos"
 )
+)
 
-<h2>Differences from Win32 version</h2>
+$(WINDOWS
+<h2>$(LNAME2 problems, Common Installation Problems)</h2>
 
 	$(UL 
-	$(LI String literals are read-only. Attempting to write to them
-	will cause a segment violation.)
-
-	$(LI The configuration file is $(TT /etc/dmd.conf))
+	$(LI Using Cygwin's $(B unzip) utility has been known to cause
+	strange problems.
 	)
+	$(LI Running the compiler under Cygwin's command shell has
+	been also known to cause problems. Try getting it to work
+	under the regular Windows shell $(B cmd.exe) before trying Cygwin's.
+	)
+	$(LI Installing $(B dmd) and $(B dmc) into directory paths with spaces
+	in them causes problems.
+	)
+	)
+)
 
 <hr>
-<h1><a name="general">General</a></h1>
+<h2>$(LNAME2 differences, Differences between Windows and Linux versions)</h2>
 
-<h2><a name="interface_files">D Interface Files</a></h2>
+	$(UL 
+	$(LI String literals are read-only under Linux.
+	Attempting to write to them
+	will cause a segment violation.)
+	)
+<hr>
+<h2>$(LNAME2 interface_files, D Interface Files)</h2>
 
 	$(P When an import declaration is processed in a D source file,
 	the compiler searches for the D source file corresponding to
@@ -763,9 +698,70 @@ DFLAGS="-I%@P%/../src/phobos"
 	They are a feature of the compiler, and serve only as an optimization
 	of the build process.
 	)
+
+<h2>$(LNAME2 library, Building Libraries)</h2>
+
+	$(P There are three ways to build a library. For example,
+	given $(TT foo.d) and $(TT bar.d) which are to be compiled, and existing
+	object file $(TT bar.$(OBJEXT)) and existing library
+	$(TT def.$(LIBEXT)) which are
+	all to be combined into a library $(TT foo.$(LIBEXT)):)
+
+	$(OL
+	$(LI Compile modules separately and then run librarian on them:
+$(WINDOWS
+$(CONSOLE
+dmd -c foo.d
+dmd -c bar.d
+$(LINK2 http://www.digitalmars.com/ctg/lib.html, lib) -c -p32 foo.lib foo.obj bar.obj abc.obj def.lib
+del foo.obj bar.obj
+)
+)
+$(LINUX
+$(CONSOLE
+dmd -c foo.d
+dmd -c bar.d
+rm -f foo.a
+ar -r foo.a foo.o bar.o abc.o def.a
+rm foo.o bar.o
+)
+)
+	This option is typical when using a makefile to avoid compiling
+	modules that have already been compiled.
+	)
+	$(LI Compile modules together and then run librarian on them:
+$(WINDOWS
+$(CONSOLE
+dmd -c foo.d bar.d
+$(LINK2 http://www.digitalmars.com/ctg/lib.html, lib) -c -p32 foo.lib foo.obj bar.obj abc.obj def.lib
+del foo.obj bar.obj
+)
+)
+$(LINUX
+$(CONSOLE
+dmd -c foo.d bar.d
+rm -f foo.a
+ar -r foo.a foo.o bar.o abc.o def.a
+rm foo.o bar.o
+)
+)
+	)
+	$(LI Use $(B dmd) to compile and build library in one operation:
+$(CONSOLE
+dmd -lib foo.d bar.d abc.$(OBJEXT) def.$(LIBEXT)
+)
+	No object files are written to disk, it's all done in memory.
+	Using $(B -lib) also has the advantage that modules may be compiled
+	into multiple object files rather than exactly one per module.
+	This improves granularity of the library without having to break
+	up the modules.
+	)
+	)
+
 )
 
 Macros:
-	TITLE=DMD Compiler
+	TITLE=DMD Compiler for $(WINDOWS Windows)$(LINUX Linux)
 	WIKI=DCompiler
-	LIB=$(V1 libphobos.a)$(V2 libphobos2.a)
+	LIB=$(WINDOWS phobos.lib)$(LINUX $(V1 libphobos.a)$(V2 libphobos2.a))
+	SWITCH=$(DT $1)$(DD $+)
