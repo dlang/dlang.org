@@ -12,7 +12,7 @@ $(P	Templates are D's approach to generic programming.
 
 $(GRAMMAR
 $(GNAME TemplateDeclaration):
-	$(B template) $(I TemplateIdentifier) $(B $(LPAREN)) $(I TemplateParameterList) $(B $(RPAREN))
+	$(B template) $(I TemplateIdentifier) $(B $(LPAREN)) $(I TemplateParameterList) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(SUB $(I opt)))
 		$(B {) DeclDefs $(B })
 
 $(GNAME TemplateIdentifier):
@@ -434,26 +434,23 @@ void main()
 ------
 
 
-<h2><a name="aliasparameters">Template Alias Parameters</a></h2>
+<h2>$(LNAME2 aliasparameters, Template Alias Parameters)</h2>
 
 $(GRAMMAR
 $(GNAME TemplateAliasParameter):
-	$(B alias) $(I Identifier)
-	$(B alias) $(I Identifier) $(I TemplateAliasParameterSpecialization)
-	$(B alias) $(I Identifier) $(I TemplateAliasParameterDefault)
-	$(B alias) $(I Identifier) $(I TemplateAliasParameterSpecialization) $(I TemplateAliasParameterDefault)
+    $(B alias) $(I Identifier) $(I TemplateAliasParameterSpecialization)$(SUB $(I opt)) $(I TemplateAliasParameterDefault)$(SUB $(I opt))
 
 $(GNAME TemplateAliasParameterSpecialization):
-	 $(B :) $(I Type)
+     $(B :) $(I Type)
 
 $(GNAME TemplateAliasParameterDefault):
-	 $(B =) $(I Type)
+     $(B =) $(I Type)
 )
 
 	$(P Alias parameters enable templates to be parameterized with
-	any type of D symbol, including global names, local names, typedef names,
-	module names, template names, and template instance names.
-	It is a superset of the uses of template template parameters in C++.
+	any type of D symbol, including global names, local names, typedef
+	names, module names, template names, and template instance names.
+	$(V2 Literals can also be used as arguments to alias parameters.)
 	)
 
 	$(UL 
@@ -563,6 +560,23 @@ void test()
 }
 ------
 	)
+
+	$(V2 $(LI Literals
+------
+
+template Foo(alias X, alias Y)
+{
+    static int i = X;
+    static string s = Y;
+}
+
+void test()
+{
+    alias Foo!(3, "bar") foo;
+    writeln(foo.i, foo.s);  // prints 3bar
+}
+------
+	))
 	)
 
 <h2>$(LNAME2 variadic-templates, Template Tuple Parameters)</h2>
@@ -768,7 +782,7 @@ class $(B Bar)(T)
 	can be transformed into templates by supplying a parameter list.
 	)
 
-<h2>Function Templates</h2>
+<h2>$(LNAME2 function-templates, Function Templates)</h2>
 
 	$(P If a template declares exactly one member, and that member is a function
 	with the same name as the template:
@@ -826,6 +840,25 @@ int x;
 Foo(&x);    // T is int, U is int*
 ------
 
+$(V2	$(P Function templates can have their return types deduced based
+	on the first
+	$(LINK2 statement.html#ReturnStatement, $(I ReturnStatement))
+	in the function:
+	)
+
+---
+auto $(B Square)(T)(T t)
+{
+    return t * t;
+}
+---
+	$(P If there is more than one return statement, then the
+	types of the return statement expressions must match.
+	If there are no return statements, then the return type of the
+	function template is $(CODE void).
+	)
+)
+
 
 <h2>Recursive Templates</h2>
 
@@ -850,6 +883,42 @@ void test()
     writefln("%s", factorial!(4));	// prints 24
 }
 ------
+
+$(V2
+<h2>Template Constraints</h2>
+
+---
+$(GNAME Constraint):
+    $(B if) $(B $(LPAREN)) $(I ConstraintExpression) $(B $(RPAREN))
+
+$(I ConstraintExpression):
+    $(I Expression)
+---
+
+	$(P $(I Constraint)s are used to impose additional constraints
+	on matching arguments to a template beyond what is possible
+	in the $(GLINK TemplateParameterList).
+	The $(I ConstraintExpression) is computed at compile time
+	and returns a result that is converted to a boolean value.
+	If that value is true, then the template is matched,
+	otherwise the template is not matched.
+	)
+
+	$(P For example, the following function template only
+	matches with odd values of $(CODE N):
+	)
+
+---
+void foo(int N)()
+	if (N & 1)
+{
+    ...
+}
+...
+foo!(3)();  // ok, matches
+foo!(4)();  // error, no match
+---
+)
 
 <h2>Limitations</h2>
 

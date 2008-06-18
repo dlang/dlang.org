@@ -51,7 +51,7 @@ $(D_S FAQ,
 	$(ITEMR q5, Will D be open source?)
 	$(ITEMR q6, Why fall through on switch statements?)
 	$(ITEMR q7, Why should I use D instead of Java?)
-	$(ITEMR q7_2, Doesn't C++ support strings, bit arrays, etc. with STL?)
+	$(ITEMR q7_2, Doesn't C++ support strings, etc. with STL?)
 	$(ITEMR q7_3, Can't garbage collection be done in C++ with an add-on library?)
 	$(ITEMR q7_4, Can't unit testing be done in C++ with an add-on library?)
 	$(ITEMR q8, Why have an asm statement in a portable language?)
@@ -190,10 +190,10 @@ $(ITEM q7, Why should I use D instead of Java?)
 	garbage collection is good and multiple inheritance is bad &lt;g&gt;, their
 	different design goals mean the languages have very different feels.
 
-$(ITEM q7_2, Doesn't C++ support strings, bit arrays, etc. with STL?)
+$(ITEM q7_2, Doesn't C++ support strings, etc. with STL?)
 
 	$(P In the C++ standard library are mechanisms for doing strings,
-	bit arrays, dynamic arrays, associative arrays, bounds checked
+	dynamic arrays, associative arrays, bounds checked
 	arrays, and complex numbers.
 	)
 
@@ -375,28 +375,8 @@ double d;	// d is set to double.nan
 
 $(ITEM assignmentoverloading, Why is overloading of the assignment operator not supported?)
 
-	Most of the assignment operator overloading in C++ seems to be needed to
-	just keep track of who owns the memory. So by using reference types
-	coupled with GC, most of this just gets replaced with copying the
-	reference itself. For example, given an array of class objects, the
-	array's contents can be moved, sorted, shifted, etc., all without any
-	need for overloaded assignments. Ditto for function parameters and
-	return values. The references themselves just get moved about. There
-	just doesn't seem to be any need for copying the entire contents of one
-	class object into another pre-existing class object.
-	<p>
-
-	Sometimes, one does need to create a copy of a class object, and for
-	that one can still write a copy constructor in D, but they just don't
-	seem to be needed remotely as much as in C++.
-	<p>
-
-	Structs, being value objects, do get copied about. A copy is defined in
-	D to be a bit copy. I've never been comfortable with any object in C++
-	that does something other than a bit copy when copied. Most of this
-	other behavior stems from that old problem of trying to manage memory.
-	Absent that, there doesn't seem to be a compelling rationale for
-	having anything other than a bit copy.
+	$(P Overloading of the assignment operator for structs is supported
+	in D 2.0.)
 
 $(ITEM keys, The '~' is not on my keyboard?)
 
@@ -627,7 +607,8 @@ $(V2
 	$(LI C++ throws exceptions of arbitrary type, not just descendants of
 	Object.)
 
-	$(LI C++ overloads based on const and volatile. D does not.)
+	$(LI C++ overloads based on const and volatile. D overloads
+	based on const and invariant.)
 
 	$(LI C++ overloads operators in significantly different ways - for
 	example, operator[]() overloading for lvalue and rvalue is based on
@@ -636,18 +617,12 @@ $(V2
 	$(LI C++ overloads operators like &lt; completely independently of
 	&gt;.)
 
-	$(LI C++ overloads indirection (operator*).)
-
 	$(LI C++ does not distinguish between a class and a struct object.)
 
 	$(LI The vtbl[] location and layout is different between C++ and D.)
 
 	$(LI The way RTTI is done is completely different. C++ has no
 	classinfo.)
-
-	$(LI D does not allow overloading of assignment.)
-
-	$(LI D does not have constructors or destructors for struct objects.)
 
 	$(LI D does not have two phase lookup, nor does it have Koenig (ADL)
 	lookup.)
@@ -666,9 +641,10 @@ $(V2
 
 	$(LI C++ name mangling depends on const and volatile being type
 	modifiers.
-	Since D does not have const and volatile type modifiers, there is
-	no straightforward way to infer the C++ mangled identifier from a D
-	type.)
+	D name mangling depends on const and invariant being type modifiers.
+	D's const is also transitive, unlike C++. One cannot have a const
+	pointer to mutable in D.
+	)
 
 	)
 

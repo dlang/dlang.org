@@ -2,45 +2,49 @@
 
 DMD=dmd
 
-SRC= cpptod.d ctod.d pretod.d cppstrings.d cppcomplex.d cppdbc.d	\
-	index.d overview.d lex.d module.d dnews.d declaration.d type.d	\
-	property.d attribute.d pragma.d expression.d statement.d	\
-	arrays.d struct.d class.d enum.d function.d			\
-	operatoroverloading.d template.d mixin.d dbc.d version.d	\
-	errors.d garbage.d memory.d float.d iasm.d interface.d		\
-	portability.d html.d entity.d abi.d windows.d dll.d		\
-	htomodule.d faq.d dstyle.d wc.d future.d changelog.d		\
-	glossary.d acknowledgements.d dcompiler.d builtin.d		\
-	interfaceToC.d comparison.d rationale.d ddoc.d code_coverage.d	\
-	exception-safe.d rdmd.d templates-revisited.d warnings.d	\
-	ascii-table.d windbg.d htod.d regular-expression.d		\
-	lazy-evaluation.d lisp-java-d.d variadic-function-templates.d	\
-	howto-promote.d tuple.d template-comparison.d template-mixin.d	\
-	final-const-invariant.d const.d traits.d COM.d cpp_interface.d	\
-	hijack.d const3.d features2.d
+SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd \
+	cppdbc.dd index.dd overview.dd lex.dd module.dd dnews.dd \
+	declaration.dd type.dd property.dd attribute.dd pragma.dd \
+	expression.dd statement.dd arrays.dd struct.dd class.dd enum.dd \
+	function.dd operatoroverloading.dd template.dd mixin.dd dbc.dd \
+	version.dd errors.dd garbage.dd memory.dd float.dd iasm.dd \
+	interface.dd portability.dd html.dd entity.dd \
+	abi.dd windows.dd dll.dd htomodule.dd faq.dd \
+	dstyle.dd wc.dd future.dd changelog.dd glossary.dd \
+	acknowledgements.dd dcompiler.dd builtin.dd interfaceToC.dd \
+	comparison.dd rationale.dd \
+	ddoc.dd code_coverage.dd exception-safe.dd rdmd.dd \
+	templates-revisited.dd warnings.dd ascii-table.dd \
+	windbg.dd htod.dd \
+	regular-expression.dd lazy-evaluation.dd \
+	lisp-java-d.dd variadic-function-templates.dd howto-promote.dd \
+	tuple.dd template-comparison.dd template-mixin.dd \
+	final-const-invariant.dd const.dd traits.dd COM.dd cpp_interface.dd \
+	hijack.dd const3.dd features2.dd safed.dd cpp0x.dd const-faq.dd
 
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 
-TARGETS=cpptod.html ctod.html pretod.html cppstrings.html		\
-	cppcomplex.html cppdbc.html index.html overview.html lex.html	\
-	module.html dnews.html declaration.html type.html		\
-	property.html attribute.html pragma.html expression.html	\
-	statement.html arrays.html struct.html class.html enum.html	\
-	function.html operatoroverloading.html template.html		\
-	mixin.html dbc.html version.html errors.html garbage.html	\
-	memory.html float.html iasm.html interface.html			\
-	portability.html html.html entity.html abi.html windows.html	\
-	dll.html htomodule.html faq.html dstyle.html wc.html		\
-	future.html changelog.html glossary.html acknowledgements.html	\
-	dcompiler.html builtin.html interfaceToC.html comparison.html	\
-	rationale.html ddoc.html code_coverage.html			\
-	exception-safe.html rdmd.html templates-revisited.html		\
-	warnings.html ascii-table.html windbg.html htod.html		\
-	regular-expression.html lazy-evaluation.html lisp-java-d.html	\
-	variadic-function-templates.html howto-promote.html tuple.html	\
-	template-comparison.html template-mixin.html			\
-	final-const-invariant.html const.html traits.html COM.html	\
-	cpp_interface.html hijack.html const3.html features2.html
+TARGETS=cpptod.html ctod.html pretod.html cppstrings.html \
+	cppcomplex.html cppdbc.html index.html overview.html lex.html \
+	module.html dnews.html declaration.html type.html property.html \
+	attribute.html pragma.html expression.html statement.html arrays.html \
+	struct.html class.html enum.html function.html \
+	operatoroverloading.html template.html mixin.html dbc.html \
+	version.html errors.html garbage.html memory.html float.html iasm.html \
+	interface.html portability.html html.html entity.html \
+	abi.html windows.html dll.html htomodule.html faq.html \
+	dstyle.html wc.html future.html changelog.html glossary.html \
+	acknowledgements.html builtin.html interfaceToC.html \
+	comparison.html rationale.html \
+	ddoc.html code_coverage.html exception-safe.html rdmd.html \
+	templates-revisited.html warnings.html ascii-table.html \
+	windbg.html htod.html \
+	regular-expression.html lazy-evaluation.html \
+	lisp-java-d.html variadic-function-templates.html howto-promote.html \
+	tuple.html template-comparison.html template-mixin.html \
+	final-const-invariant.html const.html traits.html COM.html cpp_interface.html \
+	hijack.html const3.html features2.html safed.html cpp0x.html const-faq.html \
+	dmd-windows.html dmd-linux.html
 
 
 target: $(TARGETS)
@@ -48,166 +52,179 @@ target: $(TARGETS)
 .d.html:
 	$(DMD) -o- -c -D doc.ddoc $*.d
 
-abi.html : doc.ddoc abi.d
+.dd.html:
+	$(DMD) -o- -c -D doc.ddoc $*.dd
 
-acknowledgements.html : doc.ddoc acknowledgements.d
+dmd-linux.html : doc.ddoc linux.ddoc dcompiler.dd
+	$(DMD) -o- -c -D doc.ddoc linux.ddoc dcompiler.dd -Dfdmd-linux.html
 
-arrays.html : doc.ddoc arrays.d
+dmd-windows.html : doc.ddoc windows.ddoc dcompiler.dd
+	$(DMD) -o- -c -D doc.ddoc windows.ddoc dcompiler.dd -Dfdmd-windows.html
 
-ascii-table.html : doc.ddoc ascii-table.d
+abi.html : doc.ddoc abi.dd
 
-attribute.html : doc.ddoc attribute.d
+acknowledgements.html : doc.ddoc acknowledgements.dd
 
-builtin.html : doc.ddoc builtin.d
+arrays.html : doc.ddoc arrays.dd
 
-changelog.html : doc.ddoc changelog.d
+ascii-table.html : doc.ddoc ascii-table.dd
 
-class.html : doc.ddoc class.d
+attribute.html : doc.ddoc attribute.dd
 
-code_coverage.html : doc.ddoc code_coverage.d
+builtin.html : doc.ddoc builtin.dd
 
-COM.html : doc.ddoc COM.d
+changelog.html : doc.ddoc changelog.dd
 
-comparison.html : doc.ddoc comparison.d
+class.html : doc.ddoc class.dd
 
-const.html : doc.ddoc const.d
+code_coverage.html : doc.ddoc code_coverage.dd
 
-const3.html : doc.ddoc const3.d
+COM.html : doc.ddoc COM.dd
 
-cpp_interface.html : doc.ddoc cpp_interface.d
+comparison.html : doc.ddoc comparison.dd
 
-cppdbc.html : doc.ddoc cppdbc.d
+const.html : doc.ddoc const.dd
 
-cppcomplex.html : doc.ddoc cppcomplex.d
+const3.html : doc.ddoc const3.dd
 
-cppstrings.html : doc.ddoc cppstrings.d
+const-faq.html : doc.ddoc const-faq.dd
 
-cpptod.html : doc.ddoc cpptod.d
+cpp_interface.html : doc.ddoc cpp_interface.dd
 
-ctod.html : doc.ddoc ctod.d
+cppdbc.html : doc.ddoc cppdbc.dd
 
-dbc.html : doc.ddoc dbc.d
+cppcomplex.html : doc.ddoc cppcomplex.dd
 
-dcompiler.html : doc.ddoc dcompiler.d
+cpp0x.html : doc.ddoc cpp0x.dd
 
-ddoc.html : doc.ddoc ddoc.d
+cppstrings.html : doc.ddoc cppstrings.dd
 
-declaration.html : doc.ddoc declaration.d
+cpptod.html : doc.ddoc cpptod.dd
 
-dll.html : doc.ddoc dll.d
+ctod.html : doc.ddoc ctod.dd
 
-dnews.html : doc.ddoc dnews.d
+dbc.html : doc.ddoc dbc.dd
 
-dstyle.html : doc.ddoc dstyle.d
+ddoc.html : doc.ddoc ddoc.dd
 
-entity.html : doc.ddoc entity.d
+declaration.html : doc.ddoc declaration.dd
 
-enum.html : doc.ddoc enum.d
+dll.html : doc.ddoc dll.dd
 
-errors.html : doc.ddoc errors.d
+dnews.html : doc.ddoc dnews.dd
 
-exception-safe.html : doc.ddoc exception-safe.d
+dstyle.html : doc.ddoc dstyle.dd
 
-expression.html : doc.ddoc expression.d
+entity.html : doc.ddoc entity.dd
 
-faq.html : doc.ddoc faq.d
+enum.html : doc.ddoc enum.dd
 
-features2.html : doc.ddoc features2.d
+errors.html : doc.ddoc errors.dd
 
-final-const-invariant.html : doc.ddoc final-const-invariant.d
+exception-safe.html : doc.ddoc exception-safe.dd
 
-float.html : doc.ddoc float.d
+expression.html : doc.ddoc expression.dd
 
-function.html : doc.ddoc function.d
+faq.html : doc.ddoc faq.dd
 
-future.html : doc.ddoc future.d
+features2.html : doc.ddoc features2.dd
 
-garbage.html : doc.ddoc garbage.d
+final-const-invariant.html : doc.ddoc final-const-invariant.dd
 
-glossary.html : doc.ddoc glossary.d
+float.html : doc.ddoc float.dd
 
-hijack.html : doc.ddoc hijack.d
+function.html : doc.ddoc function.dd
 
-howto-promote.html : doc.ddoc howto-promote.d
+future.html : doc.ddoc future.dd
 
-html.html : doc.ddoc html.d
+garbage.html : doc.ddoc garbage.dd
 
-htod.html : doc.ddoc htod.d
+glossary.html : doc.ddoc glossary.dd
 
-htomodule.html : doc.ddoc htomodule.d
+hijack.html : doc.ddoc hijack.dd
 
-iasm.html : doc.ddoc iasm.d
+howto-promote.html : doc.ddoc howto-promote.dd
 
-interface.html : doc.ddoc interface.d
+html.html : doc.ddoc html.dd
 
-interfaceToC.html : doc.ddoc interfaceToC.d
+htod.html : doc.ddoc htod.dd
 
-index.html : doc.ddoc index.d
+htomodule.html : doc.ddoc htomodule.dd
 
-lazy-evaluation.html : doc.ddoc lazy-evaluation.d
+iasm.html : doc.ddoc iasm.dd
 
-lex.html : doc.ddoc lex.d
+interface.html : doc.ddoc interface.dd
 
-lisp-java-d.html : doc.ddoc lisp-java-d.d
+interfaceToC.html : doc.ddoc interfaceToC.dd
 
-memory.html : doc.ddoc memory.d
+index.html : doc.ddoc index.dd
 
-mixin.html : doc.ddoc mixin.d
+lazy-evaluation.html : doc.ddoc lazy-evaluation.dd
 
-module.html : doc.ddoc module.d
+lex.html : doc.ddoc lex.dd
 
-operatoroverloading.html : doc.ddoc operatoroverloading.d
+lisp-java-d.html : doc.ddoc lisp-java-d.dd
 
-overview.html : doc.ddoc overview.d
+memory.html : doc.ddoc memory.dd
 
-portability.html : doc.ddoc portability.d
+mixin.html : doc.ddoc mixin.dd
 
-pragma.html : doc.ddoc pragma.d
+module.html : doc.ddoc module.dd
 
-pretod.html : doc.ddoc pretod.d
+operatoroverloading.html : doc.ddoc operatoroverloading.dd
 
-property.html : doc.ddoc property.d
+overview.html : doc.ddoc overview.dd
 
-rationale.html : doc.ddoc rationale.d
+portability.html : doc.ddoc portability.dd
 
-rdmd.html : doc.ddoc rdmd.d
+pragma.html : doc.ddoc pragma.dd
 
-regular-expression.html : doc.ddoc regular-expression.d
+pretod.html : doc.ddoc pretod.dd
 
-statement.html : doc.ddoc statement.d
+property.html : doc.ddoc property.dd
 
-struct.html : doc.ddoc struct.d
+rationale.html : doc.ddoc rationale.dd
 
-template.html : doc.ddoc template.d
+rdmd.html : doc.ddoc rdmd.dd
 
-template-comparison.html : doc.ddoc template-comparison.d
+regular-expression.html : doc.ddoc regular-expression.dd
 
-template-mixin.html : doc.ddoc template-mixin.d
+safed.html : doc.ddoc safed.dd
 
-templates-revisited.html : doc.ddoc templates-revisited.d
+statement.html : doc.ddoc statement.dd
 
-traits.html : doc.ddoc traits.d
+struct.html : doc.ddoc struct.dd
 
-tuple.html : doc.ddoc tuple.d
+template.html : doc.ddoc template.dd
 
-type.html : doc.ddoc type.d
+template-comparison.html : doc.ddoc template-comparison.dd
 
-variadic-function-templates.html : doc.ddoc variadic-function-templates.d
+template-mixin.html : doc.ddoc template-mixin.dd
 
-version.html : doc.ddoc version.d
+templates-revisited.html : doc.ddoc templates-revisited.dd
 
-warnings.html : doc.ddoc warnings.d
+traits.html : doc.ddoc traits.dd
 
-wc.html : doc.ddoc wc.d
+tuple.html : doc.ddoc tuple.dd
 
-windbg.html : doc.ddoc windbg.d
+type.html : doc.ddoc type.dd
 
-windows.html : doc.ddoc windows.d
+variadic-function-templates.html : doc.ddoc variadic-function-templates.dd
+
+version.html : doc.ddoc version.dd
+
+warnings.html : doc.ddoc warnings.dd
+
+wc.html : doc.ddoc wc.dd
+
+windbg.html : doc.ddoc windbg.dd
+
+windows.html : doc.ddoc windows.dd
 
 zip:
 	del doc.zip
-	zip32 doc win32.mak style.css doc.ddoc
-	zip32 doc $(SRC) download.html
+	zip32 doc win32.mak style.css print.css doc.ddoc windows.ddoc linux.ddoc
+	zip32 doc $(SRC) download.html dcompiler.html
 	zip32 doc $(IMG)
 
 clean:

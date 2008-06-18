@@ -1100,8 +1100,9 @@ with (Foo)
 
 <h2>$(LNAME2 SynchronizedStatement, Synchronized Statement)</h2>
 
-	The synchronized statement wraps a statement with
-	critical section to synchronize access among multiple threads.
+	$(P The synchronized statement wraps a statement with
+	a mutex to synchronize access among multiple threads.
+	)
 
 $(GRAMMAR
 $(I SynchronizedStatement):
@@ -1110,15 +1111,20 @@ $(I SynchronizedStatement):
 )
 
 	$(P Synchronized allows only one thread at a time to execute
-	$(I ScopeStatement).
+	$(I ScopeStatement) by using a mutex.
 	)
 
-	$(P $(CODE synchronized ($(EXPRESSION))), where $(EXPRESSION) evaluates
-	to an
-	Object reference, allows only one thread at a time to use
-	that Object to execute the $(I ScopeStatement).
-	If $(EXPRESSION) is an instance of an $(I Interface), it is
-	cast to an $(I Object).
+	$(P What mutex is used is determined by the $(EXPRESSION).
+	If there is no $(EXPRESSION), then a global mutex is created,
+	one per such synchronized statement.
+	Different synchronized statements will have different global mutexes.
+	)
+
+	$(P If there is an $(EXPRESSION), it must evaluate to either an
+	Object or an instance of an $(I Interface), in which case it
+	is cast to the Object instance that implemented that $(I Interface).
+	The mutex used is specific to that Object instance, and
+	is shared by all synchronized statements referring to that instance.
 	)
 
 	$(P The synchronization gets released even if $(I ScopeStatement)
