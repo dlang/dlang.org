@@ -259,7 +259,7 @@ $(GNAME AsmBrExp):
 
 $(GNAME AsmUnaExp):
     $(I AsmTypePrefix) $(I AsmExp)
-    $(B offset) $(I AsmExp)
+    $(B offsetof) $(I AsmExp)
     $(B seg) $(I AsmExp)
     $(B +) $(I AsmUnaExp)
     $(B -) $(I AsmUnaExp)
@@ -280,13 +280,19 @@ $(GNAME DotIdentifier)
     $(I Identifier) $(B .) $(I DotIdentifier)
 )
 
-	The operand syntax more or less follows the Intel CPU documentation
+	$(P The operand syntax more or less follows the Intel CPU documentation
 	conventions.
 	In particular, the convention is that for two operand instructions
 	the source is the right operand and the destination is the left
 	operand.
 	The syntax differs from that of Intel's in order to be compatible
 	with the D language tokenizer and to simplify parsing.
+	)
+
+	$(P The $(B seg) means load the segment number that the symbol is
+	in. This is not relevant for flat model code.
+	Instead, do a move from the relevant segment register.
+	)
 
 <h3>Operand Types</h3>
 
@@ -316,6 +322,9 @@ add	[EAX],3		;
 add	byte ptr [EAX],3	;
 add	int ptr [EAX],7		;
 --------------
+
+	$(P $(B far ptr) is not relevant for flat model code.
+	)
 
 <h3>Struct/Union/Class Member Offsets</h3>
 
@@ -357,10 +366,10 @@ int foo(int x)
 
 <h3>Special Symbols</h3>
 
-	<dl><dl>
+	$(DL
 
-	<dt>$(B &#36;&#36;)
-	<dd>Represents the program counter of the start of the next
+	$(DT $(B &#36;))
+	$(DD Represents the program counter of the start of the next
 	instruction. So,
 
 --------------
@@ -368,14 +377,17 @@ jmp	$  ;
 --------------
 
 	branches to the instruction following the jmp instruction.
-	<p>
+	The $(B &#36;) can only appear as the target of a jmp or call
+	instruction.
+	)
 
-	<dt>$(B __LOCAL_SIZE)
-	<dd>This gets replaced by the number of local bytes in the local
+	$(DT $(B __LOCAL_SIZE))
+	$(DD This gets replaced by the number of local bytes in the local
 	stack frame. It is most handy when the $(B naked) is invoked
 	and a custom stack frame is programmed.
+	)
 
-	</dl></dl>
+	)
 
 <h2>Opcodes Supported</h2>
 

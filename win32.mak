@@ -20,7 +20,8 @@ SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd \
 	lisp-java-d.dd variadic-function-templates.dd howto-promote.dd \
 	tuple.dd template-comparison.dd template-mixin.dd \
 	final-const-invariant.dd const.dd traits.dd COM.dd cpp_interface.dd \
-	hijack.dd const3.dd features2.dd safed.dd cpp0x.dd const-faq.dd
+	hijack.dd const3.dd features2.dd safed.dd cpp0x.dd const-faq.dd \
+	concepts.dd
 
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 
@@ -44,7 +45,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html \
 	tuple.html template-comparison.html template-mixin.html \
 	final-const-invariant.html const.html traits.html COM.html cpp_interface.html \
 	hijack.html const3.html features2.html safed.html cpp0x.html const-faq.html \
-	dmd-windows.html dmd-linux.html
+	dmd-windows.html dmd-linux.html concepts.html
 
 
 target: $(TARGETS)
@@ -82,6 +83,8 @@ code_coverage.html : doc.ddoc code_coverage.dd
 COM.html : doc.ddoc COM.dd
 
 comparison.html : doc.ddoc comparison.dd
+
+concepts.html : doc.ddoc concepts.dd
 
 const.html : doc.ddoc const.dd
 

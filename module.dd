@@ -4,7 +4,7 @@ $(SPEC_S Modules,
 
 $(GRAMMAR
 $(GNAME Module):
-	$(I ModuleDeclaration) $(GLINK DeclDefs)
+	$(GLINK ModuleDeclaration) $(GLINK DeclDefs)
 	$(GLINK DeclDefs)
 
 $(GNAME DeclDefs):
@@ -84,16 +84,28 @@ $(GNAME DeclDef):
 
 $(GRAMMAR
 $(GNAME ModuleDeclaration):
-	$(B module) $(I ModuleName) $(B ;)
+	$(B module) $(I ModuleFullyQualifiedName) $(B ;)
+
+$(GNAME ModuleFullyQualifiedName):
+	$(I ModuleName)
+	$(I Packages) $(B .) $(I ModuleName)
 
 $(GNAME ModuleName):
 	$(I Identifier)
-	$(I ModuleName) $(B .) $(I Identifier)
+
+$(GNAME Packages):
+	$(I PackageName)
+	$(I Packages) $(B .) $(I PackageName)
+
+$(GNAME PackageName):
+	$(I Identifier)
 )
 
-	$(P The $(I Identifier) preceding the rightmost are the $(I packages)
+	$(P The $(I Identifiers) preceding the rightmost are the $(I Packages)
 	that the module is in. The packages correspond to directory names in
 	the source file path.
+	Package names cannot be keywords, hence the corresponding
+	directory names cannot be keywords, either.
 	)
 
 	$(P If present, the $(I ModuleDeclaration) appears syntactically first
@@ -131,8 +143,8 @@ $(GNAME ImportList):
 	$(I Import) $(B ,) $(I ImportList)
 
 $(GNAME Import):
-	$(I ModuleName)
-	$(I ModuleAliasIdentifier) $(B =) $(I ModuleName)
+	$(I ModuleFullyQualifiedName)
+	$(I ModuleAliasIdentifier) $(B =) $(I ModuleFullyQualifiedName)
 
 $(GNAME ImportBindings):
 	$(I Import) $(B :) $(I ImportBindList)
@@ -155,8 +167,8 @@ $(GNAME ModuleAliasIdentifier):
 	$(P The order in which $(I ImportDeclarations) occur has no
 	significance.)
 
-	$(P $(I ModuleName)s in the $(I ImportDeclaration) must be fully
-	qualified
+	$(P $(I ModuleFullyQualifiedName)s in the $(I ImportDeclaration) must be
+	fully qualified
 	with whatever packages they are in. They are not considered to
 	be relative to the module that imports them.)
 

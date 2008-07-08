@@ -143,9 +143,9 @@ Foo var;
 
 	The $(B .offsetof) property gives the offset in bytes of the field
 	from the beginning of the class instantiation.
-	$(B .offsetof) can only be applied to fields qualified with the
-	type of the class, not expressions which produce the type of
-	the field itself:
+	$(B .offsetof) can only be applied to
+	not expressions which produce the type of
+	the field itself, not the class type:
 
 ------
 class Foo
@@ -157,8 +157,8 @@ void test(Foo foo)
 {
     size_t o;
 
-    o = Foo.x$(B .offsetof);   // yields 8
-    o = foo.x$(B .offsetof);   // error, .offsetof an int type
+    o = Foo.x$(B .offsetof);   // error, Foo.x needs a 'this' reference
+    o = foo.x$(B .offsetof);   // ok
 }
 ------
 
@@ -179,6 +179,11 @@ void test(Foo foo)
 	writef(x);		// prints 12
 }
 ---
+
+	$(P The properties $(B .__vptr) and $(B .__monitor) give access
+	to the class object's vtbl[] and monitor, respectively, but
+	should not be used in user code.
+	)
 
 <h3>Super Class</h3>
 
@@ -388,48 +393,45 @@ class Foo
 }
 ------
 
-	There can be only one destructor per class, the destructor
+	$(P There can be only one destructor per class, the destructor
 	does not have any parameters, 
 	and has no attributes. It is always virtual.
-	<p>
+	)
 
-	The destructor is expected to release any resources held by the object.
-	<p>
+	$(P The destructor is expected to release any resources held by the
+	object.
+	)
 
-	The  program can explicitly inform the garbage collector that an
+	$(P The  program can explicitly inform the garbage collector that an
 	object is no longer referred to (with the delete expression), and
 	then the garbage collector calls the destructor  
 	immediately, and adds the object's memory to the free storage.
 	The destructor is guaranteed to never be called twice.
-	<p>
+	)
 
-	The destructor for the super class automatically gets called when
+	$(P The destructor for the super class automatically gets called when
 	the destructor ends. There is no way to call the super destructor
 	explicitly.
-	<p>
+	)
 
-	When the garbage collector calls a destructor for an object of a class
-	that has
-	members that are references to garbage collected objects, those
-	references are no longer valid. This means that destructors
-	cannot reference sub objects.
-	This is because that the garbage collector does not collect objects
-	in any guaranteed order, so there is no guarantee that any pointers
-	or references to any other garbage collected objects exist when the garbage
-	collector runs the destructor for an object.
-	This rule does not apply to auto objects or objects deleted
-	with the $(I DeleteExpression), as the destructor is not being run
-	by the garbage collector, meaning all references are valid.
-	<p>
-
-	The garbage collector is not guaranteed to run the destructor
+	$(P The garbage collector is not guaranteed to run the destructor
 	for all unreferenced objects. Furthermore, the order in which the
 	garbage collector calls destructors for unreference objects
 	is not specified.
-	<p>
+	This means that
+	when the garbage collector calls a destructor for an object of a class
+	that has
+	members that are references to garbage collected objects, those
+	references may no longer be valid. This means that destructors
+	cannot reference sub objects.
+	This rule does not apply to auto objects or objects deleted
+	with the $(I DeleteExpression), as the destructor is not being run
+	by the garbage collector, meaning all references are valid.
+	)
 
-	Objects referenced from the data segment never get collected
+	$(P Objects referenced from the data segment never get collected
 	by the gc.
+	)
 
 <h3>Static Constructors</h3>
 
