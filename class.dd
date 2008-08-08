@@ -72,25 +72,25 @@ $(GNAME ClassBodyDeclaration):
 
 Classes consist of:
 
-$(DL
-	$(DT a super class)
-	$(DT interfaces)
-	$(DT dynamic fields)
-	$(DT static fields)
-	$(DT types)
-	$(DT $(LINK2 #member-functions, member functions))
-	$(DD
-	$(DL
-	    $(DT static functions)
-	    $(DT $(LINK2 function.html#virtual-functions, virtual functions))
-	    $(DT $(LINK2 #constructors, constructors))
-	    $(DT $(LINK2 #destructors, destructors))
-	    $(DT $(LINK2 #staticconstructor, static constructors))
-	    $(DT $(LINK2 #staticdestructor, static destructors))
-	    $(DT $(LINK2 #invariants, invariants))
-	    $(DT $(LINK2 #unittest, unit tests))
-	    $(DT $(LINK2 #allocators, allocators))
-	    $(DT $(LINK2 #deallocators, deallocators))
+$(UL
+	$(LI a super class)
+	$(LI interfaces)
+	$(LI dynamic fields)
+	$(LI static fields)
+	$(LI types)
+	$(LI $(LINK2 #member-functions, member functions)
+	$(UL
+	    $(LI static member functions)
+	    $(LI $(LINK2 function.html#virtual-functions, Virtual Functions))
+	    $(LI $(LINK2 #synchronized-functions, Synchronized Functions))
+	    $(LI $(LINK2 #constructors, Constructors))
+	    $(LI $(LINK2 #destructors, Destructors))
+	    $(LI $(LINK2 #StaticConstructor, Static Constructors))
+	    $(LI $(LINK2 #StaticDestructor, Static Destructors))
+	    $(LI $(LINK2 #invariants, Class Invariants))
+	    $(LI $(LINK2 #unittest, Unit Tests))
+	    $(LI $(LINK2 #allocators, Class Allocators))
+	    $(LI $(LINK2 #deallocators, Class Deallocators))
 	)
 	)
 )
@@ -121,11 +121,12 @@ Foo var;
 
 <h3>Fields</h3>
 
-	Class members are always accessed with the . operator. There are no :: or -> 
+	$(P Class members are always accessed with the . operator.
+	There are no :: or -&gt; 
 	operators as in C++.
-	<p>
+	)
 
-	The D compiler is free to rearrange the order of fields in a class to
+	$(P The D compiler is free to rearrange the order of fields in a class to
 	optimally pack them in an implementation-defined manner.
 	Consider the fields much like the local
 	variables in a function - 
@@ -138,14 +139,16 @@ Foo var;
 	machine optimization rules. Explicit control of field layout is provided
 	by struct/union 
 	types, not classes.
+	)
 
 <h3>Field Properties</h3>
 
-	The $(B .offsetof) property gives the offset in bytes of the field
+	$(P The $(B .offsetof) property gives the offset in bytes of the field
 	from the beginning of the class instantiation.
 	$(B .offsetof) can only be applied to
-	not expressions which produce the type of
+	expressions which produce the type of
 	the field itself, not the class type:
+	)
 
 ------
 class Foo
@@ -197,6 +200,39 @@ void test(Foo foo)
 	called $(I this) through which the class object's other members
 	can be accessed.
 	)
+
+<h3>$(LNAME2 #synchronized-functions, Synchronized Functions)</h3>
+
+	$(P Synchronized class member functions have the storage class
+	$(CODE synchronized).
+	A static member function is synchronized on the $(I classinfo)
+	object for the class, which means that one monitor is used
+	for all static synchronized member functions for that class.
+	For non-static synchronized functions, the monitor used is
+	part of the class object. For example:
+	)
+
+---
+class Foo
+{
+   synchronized void bar() { ...statements... }
+}
+---
+
+	$(P is equivalent to (as far as the monitors go):
+	)
+
+---
+class Foo
+{
+   void bar()
+   {
+       synchronized (this) { ...statements... }
+   }
+}
+---
+
+	$(P Structs do not have synchronized member functions.)
 
 <h3>$(LNAME2 constructors, Constructors)</h3>
 

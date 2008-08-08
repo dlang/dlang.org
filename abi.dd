@@ -71,10 +71,10 @@ $(SECTION3 Delegates,
 
 	$(P Delegates are $(I fat pointers) with two parts:)
 
-	$(TABLE2 Delegates,
-	$(TR $(TH offset)		$(TH contents))
-	$(TR $(TD 0)			$(TD context pointer))
-	$(TR $(TD $(I ptrsize))		$(TD pointer to function))
+	$(TABLE2 Delegate Layout,
+	$(TR $(TH offset) $(TH property) $(TH contents))
+	$(TR $(TD 0) $(TD $(CODE .ptr)) $(TD context pointer))
+	$(TR $(TD $(I ptrsize)) $(TD $(CODE .funcptr)) $(TD pointer to function))
 	)
 
 	$(P The $(I context pointer) can be a class $(I this)
@@ -94,15 +94,15 @@ $(SECTION3 Classes,
 	$(P An object consists of:)
 
 $(TABLE2 Class Object Layout,
-$(TR $(TH offset)		$(TH contents))
-$(TR $(TD 0)			$(TD pointer to vtable))
-$(TR $(TD $(I ptrsize))		$(TD monitor))
-$(TR $(TD $(I ptrsize*2)...)	$(TD non-static members))
+$(TR $(TH offset) $(TH property) $(TH contents))
+$(TR $(TD 0) $(TD $(CODE .__vptr)) $(TD pointer to vtable))
+$(TR $(TD $(I ptrsize)) $(TD $(CODE .__monitor)) $(TD monitor))
+$(TR $(TD $(I ptrsize*2)...) $(TD named members ) $(TD non-static members))
 )
 
 	$(P The vtable consists of:)
 
-$(TABLE2 Virtual Function Pointer Table,
+$(TABLE2 Virtual Function Pointer Table Layout,
 $(TR $(TH offset)		$(TH contents))
 $(TR $(TD 0)			$(TD pointer to instance of ClassInfo))
 $(TR $(TD $(I ptrsize)...)	$(TD pointers to virtual member functions))
@@ -137,10 +137,10 @@ $(SECTION3 Arrays,
 
 	$(P A dynamic array consists of:)
 
-$(TABLE1 Dynamic Array,
-$(TR $(TH offset) $(TH contents))
-$(TR $(TD  0)	$(TD  array dimension))
-$(TR $(TD  $(I size_t))	$(TD  pointer to array data))
+$(TABLE2 Dynamic Array Layout,
+$(TR $(TH offset) $(TH property) $(TH contents))
+$(TR $(TD  0) $(TD $(CODE .length)) $(TD  array dimension))
+$(TR $(TD  $(I size_t)) $(TD $(CODE .ptr)) $(TD  pointer to array data))
 )
 
 	$(P A dynamic array is declared as:)
@@ -753,8 +753,7 @@ $(SECTION2 Symbolic Debugging,
 	$(B -gc) compiler switch.
 	)
 
-	$(TABLE1
-	<caption>Types for C Debuggers</caption>
+	$(TABLE2 Types for C Debuggers,
 	$(TR
 	$(TH D type)
 	$(TH C representation)
@@ -789,8 +788,7 @@ $(SECTION3 <a name="codeview">Codeview Debugger Extensions</a>,
 	$(P D makes use of the Codeview OEM generic type record
 	indicated by $(B LF_OEM) (0x0015). The format is:)
 
-	$(TABLE1
-	<caption>Codeview OEM Extensions for D</caption>
+	$(TABLE2 Codeview OEM Extensions for D,
 	$(TR
 	$(TD field size)
 	$(TD 2)
@@ -878,8 +876,7 @@ $(SECTION3 <a name="codeview">Codeview Debugger Extensions</a>,
 $(SECTION3 <a name="dwarf">Dwarf Debugger Extensions</a>,
 	$(P The following leaf types are added:)
 
-	$(TABLE1
-	<caption>Dwarf Extensions for D</caption>
+	$(TABLE2 Dwarf Extensions for D,
 	$(TR
 	$(TH D type)
 	$(TH Identifier)

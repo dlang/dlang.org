@@ -336,6 +336,58 @@ a[1..3] = b[] + 3;	// error, 2 elements not same as 3 elements
 )
 
 
+<h2>$(LNAME2 array-operations, Array Operations)</h2>
+
+	$(P Many array operations, also known as vector operations,
+	can be expressed at a high level rather than as a loop.
+	For example, the loop:
+	)
+
+---
+T[] a, b;
+...
+for (size_t i = 0; i < a.length; i++)
+    a[i] = b[i] + 4;
+---
+
+	$(P assigns to the elements of $(CODE a) the elements of $(CODE b)
+	with $(CODE 4) added to each. This can also be expressed in
+	vector notation as:
+	)
+
+---
+T[] a, b;
+...
+a[] = b[] + 4;
+---
+
+	$(P A vector operation is indicated by the slice operator appearing
+	as the lvalue of an =, +=, -=, *=, /=, %=, &amp;= or |= operator.
+	The rvalue can be an expression consisting either of an array
+	slice of the same length and type as the lvalue or an expression
+	of the element type of the lvalue, in any combination.
+	The operators supported for vector operations are the binary
+	operators +, -, *, /, %, &amp; and |, and the unary operators
+	- and ~.
+	)
+
+	$(P The lvalue slice and any rvalue slices must not overlap.
+	The vector assignment operators are evaluated right to left,
+	and the other binary operators are evaluated left to right.
+	All operands are evaluated exactly once, even if the array slice
+	has zero elements in it.
+	)
+
+	$(P The order in which the array elements are computed
+	is implementation defined, and may even occur in parallel.
+	An application must not depend on this order.
+	)
+
+	$(P Implementation note: many of the more common vector
+	operations are expected to take advantage of any vector
+	math instructions available on the target computer.
+	)
+
 <h2>Pointer Arithmetic</h2>
 
 ---------
@@ -1051,7 +1103,8 @@ struct MyString
 
 	$(UL
 	$(LI $(TT hash_t toHash()))
-	$(LI $(TT int opEquals(Object)))
+$(V1	$(LI $(TT int opEquals(Object))))
+$(V2	$(LI $(TT bool opEquals(Object))))
 	$(LI $(TT int opCmp(Object)))
 	)
 
@@ -1068,7 +1121,7 @@ class Foo
 
     hash_t toHash() { return a + b; }
 
-    int opEquals(Object o)
+$(V1      int opEquals(Object o))$(V2      bool opEquals(Object o))
     {	Foo f = cast(Foo) o;
 	return f && a == foo.a && b == foo.b;
     }
@@ -1097,7 +1150,8 @@ class Foo
 
 	$(UL
 	$(LI $(TT hash_t toHash()))
-	$(LI $(TT int opEquals(S)) or $(TT int opEquals(S*)))
+$(V1	$(LI $(TT int opEquals(S)) or $(TT int opEquals(S*))))
+$(V2	$(LI $(TT bool opEquals(S)) or $(TT bool opEquals(S*))))
 	$(LI $(TT int opCmp(S)) or $(TT int opCmp(S*)))
 	)
 
@@ -1114,7 +1168,7 @@ struct S
 
     hash_t toHash() { return a + b; }
 
-    int opEquals(S s)
+$(V1      int opEquals(S s))$(V2      bool opEquals(S s))
     {
 	return a == s.a && b == s.b;
     }
