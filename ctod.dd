@@ -1442,15 +1442,15 @@ j = i >>> 3;
 	that computes the maximum of those ints.
 
 $(CCODE
+void apply(void *p, int *array, int dim, void (*fp)(void *, int))
+{
+    for (int i = 0; i < dim; i++)
+	fp(p, array[i]);
+}
+
 struct Collection
 {
     int array[10];
-
-    void apply(void *p, void (*fp)(void *, int))
-    {
-	for (int i = 0; i < sizeof(array)/sizeof(array[0]); i++)
-	    fp(p, array[i]);
-    }
 };
 
 void comp_max(void *p, int i)
@@ -1461,16 +1461,15 @@ void comp_max(void *p, int i)
 	*pmax = i;
 }
 
-void func(Collection *c)
+void func(struct Collection *c)
 {
     int max = INT_MIN;
 
-    c->apply(&amp;max, comp_max);
+    apply(&amp;max, c->array, sizeof(c->array)/sizeof(c->array[0]), comp_max);
 }
 )
 
-	The C way makes heavy use of pointers and casting.
-	The casting is tedious, error prone, and loses all type safety.
+	$(P While this works, it isn't very flexible.)
 
 <h4>The D Way</h4>
 
