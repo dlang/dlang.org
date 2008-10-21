@@ -109,6 +109,7 @@ $(SPEC_S Structs &amp; Unions,
 	$(YES)
 	)
 
+$(V1
 	$(TR
 	$(TD constructors)
 	$(NO)
@@ -117,7 +118,6 @@ $(SPEC_S Structs &amp; Unions,
 	$(YES)
 	$(YES)
 	)
-$(V1
 	$(TR
 	$(TD destructors)
 	$(NO)
@@ -144,6 +144,14 @@ $(V1
 	)
 )
 $(V2
+	$(TR
+	$(TD $(LINK2 #Struct-Constructor, constructors))
+	$(YES)
+	$(YES)
+	$(NO)
+	$(YES)
+	$(YES)
+	)
 	$(TR
 	$(TD $(LINK2 #StructPostblit, postblit)/copy constructors)
 	$(YES)
@@ -341,7 +349,8 @@ $(GNAME StructBodyDeclaration):
 	$(I UnitTest)
 	$(I StructAllocator)
 	$(I StructDeallocator)
-	$(V2 $(GLINK StructPostblit)
+	$(V2 $(GLINK StructConstructor)
+	$(GLINK StructPostblit)
 	$(GLINK StructDestructor))
 
 $(GNAME StructAllocator):
@@ -383,6 +392,7 @@ ABC x;
 	If a static initializer is supplied, the
 	members are initialized by the member name, 
 	colon, expression syntax. The members may be initialized in any order.
+	Initializers for statics must be evaluatable at compile time.
 	Members not specified in the initializer list are default initialized.
 
 ------
@@ -397,7 +407,25 @@ static X z = { c:4, b:5, a:2 , d:5};  // z.a = 2, z.b = 5, z.c = 4, z.d = 5
 ------
 static X q = { 1, 2 };	  // q.a = 1, q.b = 2, q.c = 0, q.d = 7
 ------
-	
+
+	$(P Struct literals can also be used to initialize statics, but
+	they must be evaluable at compile time.)
+
+-----
+static X q = S( 1, 2+3 );   // q.a = 1, q.b = 5, q.c = 0, q.d = 7
+-----
+
+	$(P The static initializer syntax can also be used to initialize
+	non-static variables, provided that the member names are not given.
+	The initializer need not be evaluatable at compile time.)
+
+----
+void test(int i)
+{
+    S s = { 1, i };   // q.a = 1, q.b = i, q.c = 0, q.d = 7
+}
+----
+
 
 <h3>Static Initialization of Unions</h3>
 
@@ -510,6 +538,23 @@ void main()
     t.a = 4;       // error, t.a is const
 }
 ----
+)
+)
+
+$(V2
+$(SECTION3 <a name="Struct-Constructor">Struct Constructors</a>,
+
+$(GRAMMAR
+$(GNAME StructConstructor):
+    $(B this( $(I ParameterList) )) $(I FunctionBody)
+)
+
+	$(P Struct constructors are used to initialize an instance
+	of a struct.
+	The $(I ParameterList) may not be empty.
+	Struct instances that are not instantiated with a constructor
+	are default initialized to their $(CODE .init) value.
+	)
 )
 )
 

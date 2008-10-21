@@ -349,6 +349,7 @@ $(SECTION3 Type Mangling,
 
 $(GRAMMAR
 $(I Type):
+    $(I Shared)
     $(I Const)
     $(I Invariant)
     $(I TypeArray)
@@ -387,6 +388,9 @@ $(I Type):
     $(I TypeDchar)
     $(I TypeTuple)
 
+$(I Shared):
+    $(B O) $(I Type)
+
 $(I Const):
     $(B x) $(I Type)
 
@@ -406,7 +410,7 @@ $(I TypePointer):
     $(B P) $(I Type)
 
 $(I TypeFunction):
-    $(I CallConvention) $(V2 $(I FuncAttr)<sub>opt</sub> )$(I Arguments) $(I ArgClose) $(I Type)
+    $(I CallConvention) $(V2 $(I FuncAttrs) )$(I Arguments) $(I ArgClose) $(I Type)
 
 $(I CallConvention):
     $(B F)
@@ -415,9 +419,24 @@ $(I CallConvention):
     $(B V)
     $(B R)
 
-$(V2 $(I FuncAttr):
+$(V2 $(I FuncAttrs):
+    $(I FuncAttr)
+    $(I FuncAttr) $(I FuncAttrs)
+
+$(I FuncAttr):
+    $(I empty)
+    $(I FuncAttrPure)
+    $(I FuncAttrNothrow)
+    $(I FuncAttrRef)
+
+$(I FuncAttrPure):
     $(B Na)
+
+$(I FuncAttrNothrow):
     $(B Nb)
+
+$(I FuncAttrRef):
+    $(B Nc)
 )
 $(I Arguments):
     $(I Argument)
@@ -588,7 +607,7 @@ $(SECTION4 Return Value,
 	$(LI For Windows, 8 byte structs are returned in EDX,EAX, where
 	EDX gets the most significant half.)
 
-	$(LI For other struct sizes, and for all structs on Linux,
+	$(LI For other struct sizes,
 	the return value is stored through a hidden pointer passed as
 	an argument to the function.)
 

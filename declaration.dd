@@ -10,8 +10,8 @@ $(GNAME Declaration):
 
 $(GNAME Decl):
         $(I StorageClasses) $(I Decl)
-        $(I BasicType) $(I Declarators) $(B ;)
-        $(I BasicType) $(I Declarator) $(LINK2 function.html#FunctionBody, $(I FunctionBody))
+        $(GLINK BasicType) $(I Declarators) $(B ;)
+        $(GLINK BasicType) $(I Declarator) $(LINK2 function.html#FunctionBody, $(I FunctionBody))
 	$(GLINK AutoDeclaration)
 
 $(GNAME Declarators):
@@ -62,16 +62,14 @@ $(GNAME BasicType2):
         $(B *)
         $(B [ ])
         $(B [) $(I Expression) $(B ])
+        $(B [) $(I Expression) .. $(I Expression) $(B ])
         $(B [) $(I Type) $(B ])
-        $(B delegate) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)<sub>opt</sub>)
-        $(B function) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)<sub>opt</sub>)
+        $(B delegate) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
+        $(B function) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
 
 $(GNAME Declarator):
-        $(I BasicType2) $(I Declarator)
-        $(I Identifier)
-        $(B () $(I Declarator) $(B ))
-        $(I Identifier) $(I DeclaratorSuffixes)
-        $(B () $(I Declarator) $(B )) $(I DeclaratorSuffixes)
+        $(I BasicType2) $(I Declarator) $(I DeclaratorSuffixes)$(OPT)
+        $(I BasicType2) $(I Identifier) $(I DeclaratorSuffixes)$(OPT)
 
 $(GNAME DeclaratorSuffixes):
         $(I DeclaratorSuffix)
@@ -81,7 +79,7 @@ $(GNAME DeclaratorSuffix):
         $(B [ ])
         $(B [) $(I Expression) $(B ])
         $(B [) $(I Type) $(B ])
-	$(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)<sub>opt</sub>)
+	$(I TemplateParameterList)$(OPT) $(GLINK Parameters) $(V2 $(GLINK MemberFunctionAttributes)<sub>opt</sub>)
 
 $(GNAME IdentifierList):
         $(I Identifier)
@@ -103,8 +101,7 @@ $(GNAME StorageClass):
         $(B invariant)
 $(V2
 	$(B nothrow)
-)        $(B override)
-$(V2
+        $(B override)
 	$(B pure)
 )        $(B scope)
         $(B static)
@@ -147,9 +144,17 @@ $(GNAME FunctionAttributes):
 	$(I FunctionAttribute) $(I FunctionAttributes)
 
 $(GNAME FunctionAttribute):
-	$(B pure)
 	$(B nothrow)
+	$(B pure)
 )
+$(GNAME MemberFunctionAttributes):
+	$(I MemberFunctionAttribute)
+	$(I MemberFunctionAttribute) $(I MemberFunctionAttributes)
+
+$(GNAME MemberFunctionAttribute):
+	$(B const)
+	$(B invariant)
+	$(GLINK FunctionAttribute)
 
 $(GNAME DefaultInitializerExpression):
 	$(ASSIGNEXPRESSION)
@@ -569,4 +574,5 @@ void foo()
 Macros:
 	TITLE=Declarations
 	WIKI=Declaration
+	OPT=<sub>opt</sub>
 	FOO=
