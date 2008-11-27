@@ -4,6 +4,7 @@ $(D_S D Change Log,
 
 
 $(UL
+	$(NEW 021)
 	$(NEW 020)
 	$(NEW 019)
 	$(NEW 018)
@@ -35,12 +36,62 @@ $(UL
 	$(LI $(LINK2 http://www.digitalmars.com/pnews/index.php?category=2, tech support))
 )
 
-$(VERSION 010, Nov ??, 2008, =================================================,
+$(VERSION 021, Nov 25, 2008, =================================================,
 
     $(WHATSNEW
+	$(LI Added $(B -safe) switch and $(CODE module(system) Identifier;) syntax.)
+	$(LI Added range support to foreach statement.)
+	$(LI $(B scope) parameter storage class means the parameter will
+	 not 'escape' the scope of the function invocation.
+	 Using this for delegate parameters will prevent some closure allocations
+	 by the calling function.)
+	$(LI The $(B lazy) storage class now implies $(B scope) so that lazy
+	 arguments won't trigger a heap allocated closure.)
+	$(LI The 'this' parameter to struct member functions is now a
+	 reference type, rather than a pointer.
+	 $(RED This breaks existing code.)
+	 )
+
+	$(LI More changes to druntime:
+	$(TABLE1
+	$(TR $(TH from) $(TH to))
+	$(TRENAME OutOfMemoryException, OutOfMemoryError)
+	$(TRENAME SwitchException, SwitchError)
+	$(TRENAME HiddenFuncException, HiddenFuncError)
+	$(TRENAME ArrayBoundsException, RangeError)
+	$(TRENAME AssertException, AssertError)
+	$(TRENAME FinalizeException, FinalizeError)
+	$(TRENAME onArrayBoundsError, onRangeError)
+	$(TRENAME stdc.*, core.stdc.*)
+	$(TRENAME sys.*, core.sys.*)
+
+
+	)
+	)
+
+	$(LI Added core.runtime.loadLibrary() as an experimental feature for
+	loading dynamic libraries (Win32 only at the moment).)
+	$(LI Added core.runtime.unloadLibrary() as an experimental feature for
+	unloading dynamic libraries previously loaded by loadLibrary().)
+	$(LI core.thread.sleep() accepts a long integer specifying the sleep interval
+	in 100 nanosecond intervals (the previous release notes said this was a
+	float, IIRC).)
+	$(LI It is no longer necessary to link in druntime separately, it is
+	inserted into libphobos2.a.)
     )
     $(BUGSFIXED
+	$(LI $(BUGZILLA 313): Fully qualified names bypass private imports)
 	$(LI $(BUGZILLA 920): SPEC: Auto classes referenced where scope should be used)
+	$(LI $(BUGZILLA 929): Resizing array of associative arrays (uint[char[]][]) causes infinite loop / hang)
+	$(LI $(BUGZILLA 1372): Compiler accepts pragma(msg,))
+	$(LI $(BUGZILLA 1610): Enum.stringof is int, not the name of the enum)
+	$(LI $(BUGZILLA 1663): pragma(lib, "") don't work on linux)
+	$(LI $(BUGZILLA 1797): Documentation comments - ///)
+	$(LI $(BUGZILLA 2428): Accessing item in enum'd array produced compiler error)
+	$(LI $(BUGZILLA 2429): std.stream.File incorrect flag parsing and sharing mode)
+	$(LI $(BUGZILLA 2431): Internal error: ../ztc/cgcod.c 1031 when using -O)
+	$(LI $(BUGZILLA 2470): Cannot build libraries from other libraries)
+	$(LI unittest functions now always use D linkage)
     )
 )
 
