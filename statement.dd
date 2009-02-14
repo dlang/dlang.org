@@ -433,6 +433,9 @@ $(P
 	elements to the aggregate cannot be added or removed from it
 	in the $(PS0).
 )
+
+<h3>Foreach over Arrays</h3>
+
 $(P
 	If the aggregate is a static or dynamic array, there
 	can be one or two variables declared. If one, then the variable
@@ -462,6 +465,8 @@ foreach (int i, char c; a)
 	For $(B foreach_reverse), the array elements are visited in the reverse
 	order.
 	)
+
+<h3>Foreach over Arrays of Characters</h3>
 
 	$(P If the aggregate expression is a static or dynamic array of
 	$(B char)s, $(B wchar)s, or $(B dchar)s, then the $(I Type) of
@@ -516,6 +521,8 @@ $(CONSOLE
 'y'
 )
 
+<h3>Foreach over Associative Arrays</h3>
+
 	$(P If the aggregate expression is an associative array, there
 	can be one or two variables declared. If one, then the variable
 	is said to be the $(I value) set to the elements of the array,
@@ -540,11 +547,64 @@ foreach (char[] s, double d; a)
 }
 --------------
 
+$(V2
+<h3>Foreach over Structs and Classes with Ranges</h3>
+
+	$(P Iteration over struct and class objects can be done with
+	ranges, which means the following properties must be defined:
+	)
+
+	$(TABLE2 Foreach Range Properties,
+	$(TR $(TH Property) $(TH Purpose ))
+	$(TR $(TD $(TT .empty)) $(TD returns true if no more elements))
+	$(TR $(TD $(TT .next)) $(TD move the left edge of the range right one))
+	$(TR $(TD $(TT .retreat)) $(TD move the right edge of the range left one))
+	$(TR $(TD $(TT .head)) $(TD return the leftmost element of the range))
+	$(TR $(TD $(TT .toe)) $(TD return the rightmost element of the range))
+	)
+
+	$(P Meaning:)
+
+---
+foreach (e; range) { ... }
+---
+
+	$(P translates to:)
+
+---
+for (auto __r = range; !__r.empty; __r.next)
+{   auto e = __r.head;
+   ...
+}
+---
+
+	$(P Similarly:)
+
+---
+foreach_reverse (e; range) { ... }
+---
+
+	$(P translates to:)
+
+---
+for (auto __r = range; !__r.empty; __r.retreat)
+{   auto e = __r.toe;
+   ...
+}
+---
+
+	$(P If the foreach range properties do not exist, the $(TT opApply)
+	method will be used instead.
+	)
+)
+
+<h3>Foreach over Structs and Classes with opApply</h3>
+
 	$(P
 	If it is a struct or class object, the $(B foreach) is defined by
-	the special $(I opApply) member function.
+	the special $(LNAME2 #opApply, $(I opApply)) member function.
 	The $(B foreach_reverse) behavior is defined by the special
-	$(I opApplyReverse) member function.
+	$(LNAME2 opApplyReverse, $(I opApplyReverse)) member function.
 	These special functions must be defined by the type in order
 	to use the corresponding foreach statement.
 	The functions have the type:
@@ -618,59 +678,15 @@ $(CONSOLE
 73
 82
 )
+
+<h3>Foreach over Delegates</h3>
+
 	$(P If $(I Aggregate) is a delegate, the type signature of
 	the delegate is of the same as for $(B opApply). This enables
 	many different named looping strategies to coexist in the same
 	class or struct.)
 
-	$(P $(B ref) can be used to update the original elements:
-	)
-
---------------
-void test()
-{
-    static uint[2] a = [7, 8];
-
-    foreach (ref uint u; a)
-    {
-	u++;
-    }
-    foreach (uint u; a)
-    {
-	writefln("%d", u);
-    }
-}
---------------
-
-	which would print:
-
-$(CONSOLE
-8
-9
-)
-	$(P $(B ref) can not be applied to the index values.)
-
-	$(P If not specified, the $(I Type)s in the $(I ForeachType) can be
-	inferred from
-	the type of the $(I Aggregate).
-	)
-
-	$(P The aggregate itself must not be resized, reallocated, free'd,
-	reassigned or destructed
-	while the foreach is iterating over the elements.
-	)
-
---------------
-int[] a;
-int[] b;
-foreach (int i; a)
-{
-    a = null;			// error
-    a.length = a.length + 10;	// error
-    a = b;			// error
-}
-a = null;			// ok
---------------
+<h3>Foreach over Tuples</h3>
 
 $(P
 	If the aggregate is a tuple, there
@@ -715,6 +731,62 @@ int
 long
 double
 )
+
+<h3>Foreach Ref Parameters</h3>
+
+	$(P $(B ref) can be used to update the original elements:
+	)
+
+--------------
+void test()
+{
+    static uint[2] a = [7, 8];
+
+    foreach (ref uint u; a)
+    {
+	u++;
+    }
+    foreach (uint u; a)
+    {
+	writefln("%d", u);
+    }
+}
+--------------
+
+	which would print:
+
+$(CONSOLE
+8
+9
+)
+	$(P $(B ref) can not be applied to the index values.)
+
+	$(P If not specified, the $(I Type)s in the $(I ForeachType) can be
+	inferred from
+	the type of the $(I Aggregate).
+	)
+
+<h3>Foreach Restrictions</h3>
+
+	$(P The aggregate itself must not be resized, reallocated, free'd,
+	reassigned or destructed
+	while the foreach is iterating over the elements.
+	)
+
+--------------
+int[] a;
+int[] b;
+foreach (int i; a)
+{
+    a = null;			// error
+    a.length = a.length + 10;	// error
+    a = b;			// error
+}
+a = null;			// ok
+--------------
+
+<h3>Break and Continue out of Foreach</h3>
+
 
 	$(P A $(GLINK BreakStatement) in the body of the foreach will exit the
 	foreach, a $(GLINK ContinueStatement) will immediately start the

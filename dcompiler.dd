@@ -1,10 +1,14 @@
 Ddoc
 
-$(D_S dmd - $(WINDOWS Windows)$(LINUX Linux) D Compiler,
+$(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX) D Compiler,
 
 	$(UL 
-	$(WINDOWS $(LI dmd for $(LINK2 dmd-linux.html, x86 Linux)))
+	$(WINDOWS $(LI dmd for $(LINK2 dmd-linux.html,   Linux)))
+	$(WINDOWS $(LI dmd for $(LINK2 dmd-osx.html,     OSX)))
 	$(LINUX   $(LI dmd for $(LINK2 dmd-windows.html, Windows)))
+	$(LINUX   $(LI dmd for $(LINK2 dmd-osx.html,     OSX)))
+	$(OSX     $(LI dmd for $(LINK2 dmd-windows.html, Windows)))
+	$(OSX     $(LI dmd for $(LINK2 dmd-linux.html,   Linux)))
 	$(LI $(LINK2 #requirements, Requirements and Downloads))
 	$(LI $(LINK2 #files, Files))
 	$(LI $(LINK2 #installation, Installation))
@@ -13,7 +17,7 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux) D Compiler,
 	$(LI $(LINK2 #linking, Linking))
 	$(LI $(LINK2 #environment, Environment Variables))
 	$(WINDOWS $(LI $(LINK2 #sc_ini, sc.ini Initialization File)))
-	$(LINUX $(LI $(LINK2 #dmd_conf, dmd.conf Initialization File)))
+	$(UNIX $(LI $(LINK2 #dmd_conf, dmd.conf Initialization File)))
 	$(WINDOWS $(LI $(LINK2 #problems, Common Installation Problems)))
 	$(LI $(LINK2 #differences, Differences between Windows and Linux versions))
 	$(LI $(LINK2 #interface_files, D Interface Files))
@@ -30,11 +34,17 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux) D Compiler,
 
 	$(LI Download
 	 <a href="http://ftp.digitalmars.com/dmc.zip" title="download dmc.zip">
-	 dmc.zip (linker and utilities)</a> for Win32
+	 dmc.zip (C and C++ compiler)</a> for Win32
+	 (not required, but it complements dmd for Windows)
 	)
     )
     $(LINUX
 	$(LI 32 bit x86 Linux operating system)
+
+	$(LI Gnu C compiler (gcc))
+    )
+    $(OSX
+	$(LI 32 bit x86 Mac OSX operating system)
 
 	$(LI Gnu C compiler (gcc))
     )
@@ -60,37 +70,63 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux) D Compiler,
 	$(DD Sample D programs)
 	)
     $(WINDOWS
-	$(DT $(TT \dmd\bin\dmd.exe)
+	$(DT $(TT \dmd\windows\bin\dmd.exe)
 	$(DD D compiler executable)
 	)
 
-	$(DT $(TT \dmd\bin\$(LINK2 http://www.digitalmars.com/ctg/shell.html, shell.exe))
+	$(DT $(TT \dmd\windows\bin\$(LINK2 http://www.digitalmars.com/ctg/shell.html, shell.exe))
 	$(DD Simple command line shell)
 	)
 
-	$(DT $(TT \dmd\bin\sc.ini)
+	$(DT $(TT \dmd\windows\bin\sc.ini)
 	$(DD Global compiler settings)
 	)
 
-	$(DT $(TT \dmd\lib\$(LIB))
+	$(DT $(TT \dmd\windows\lib\$(LIB))
 	$(DD D runtime library)
 	)
     )
     $(LINUX
-	<dt>$(TT /dmd/bin/dmd)
-	<dd>D compiler executable
+	$(DT $(TT /dmd/linux/bin/dmd)
+	$(DD D compiler executable)
+	)
 
-	<dt>$(TT /dmd/bin/$(LINK2 http://www.digitalmars.com/ctg/dumpobj.html, dumpobj))
-	<dd>Elf file dumper
+	$(DT $(TT /dmd/linux/bin/$(LINK2 http://www.digitalmars.com/ctg/dumpobj.html, dumpobj))
+	$(DD Elf file dumper)
+	)
 
-	<dt>$(TT /dmd/bin/$(LINK2 http://www.digitalmars.com/ctg/obj2asm.html, obj2asm))
-	<dd>Elf file disassembler
+	$(DT $(TT /dmd/linux/bin/$(LINK2 http://www.digitalmars.com/ctg/obj2asm.html, obj2asm))
+	$(DD Elf file disassembler)
+	)
 
-	<dt>$(TT /dmd/bin/dmd.conf)
-	<dd>Global compiler settings (copy to $(TT /etc/dmd.conf))
+	$(DT $(TT /dmd/linux/bin/dmd.conf)
+	$(DD Global compiler settings (copy to $(TT /etc/dmd.conf)))
+	)
 
-	<dt>$(TT /dmd/lib/$(LIB))
-	<dd>D runtime library (copy to $(TT /usr/lib/$(LIB)))
+	$(DT $(TT /dmd/linux/lib/$(LIB))
+	$(DD D runtime library (copy to $(TT /usr/lib/$(LIB))))
+	)
+    )
+    $(OSX
+	$(DT $(TT /dmd/osx/bin/dmd)
+	$(DD D compiler executable)
+	)
+
+	$(DT $(TT /dmd/osx/bin/$(LINK2 http://www.digitalmars.com/ctg/dumpobj.html, dumpobj))
+	$(DD Mach-O file dumper)
+	)
+
+	$(DT $(TT /dmd/osx/bin/$(LINK2 http://www.digitalmars.com/ctg/obj2asm.html, obj2asm))
+	$(DD Mach-O file disassembler)
+	)
+
+	$(DT $(TT /dmd/osx/bin/dmd.conf)
+	$(DD Global compiler settings (copy to $(TT /etc/dmd.conf)))
+	)
+
+	$(DT $(TT /dmd/osx/lib/$(LIB))
+	$(DD D runtime library (copy to $(TT /usr/lib/$(LIB))))
+	)
     )
 
 	)
@@ -128,25 +164,57 @@ C:\&gt;unzip dmc.zip
 	$(LI Copy $(TT dmd.conf) to $(TT /etc):
 
 $(CONSOLE
-cp dmd/bin/dmd.conf /etc
+cp dmd/linux/bin/dmd.conf /etc
 )
 	)
 
 	$(LI Give execute permission to the following files:
 
 $(CONSOLE
-chmod u+x dmd/bin/{dmd,dumpobj,obj2asm,rdmd}
+chmod u+x dmd/linux/bin/{dmd,dumpobj,obj2asm,rdmd}
 )
 	)
 
-	$(LI Put $(TT dmd/bin) on your $(B PATH),
+	$(LI Put $(TT dmd/linux/bin) on your $(B PATH),
 	or copy the linux executables
 	to $(TT /usr/local/bin))
 
 	$(LI Copy the library to $(TT /usr/lib):
 
 $(CONSOLE
-cp dmd/lib/$(LIB) /usr/lib
+cp dmd/linux/lib/$(LIB) /usr/lib
+)
+	)
+    )
+    $(OSX
+	$(LI Unzip the archive into your home directory.
+	It will create
+	a $(TT ~/dmd) directory with all the files in it.
+	All the tools are command line tools, which means
+	they are run from a console window.)
+
+	$(LI Copy $(TT dmd.conf) to $(TT /etc):
+
+$(CONSOLE
+cp dmd/osx/bin/dmd.conf /etc
+)
+	)
+
+	$(LI Give execute permission to the following files:
+
+$(CONSOLE
+chmod u+x dmd/osx/bin/{dmd,dumpobj,obj2asm,rdmd}
+)
+	)
+
+	$(LI Put $(TT dmd/osx/bin) on your $(B PATH),
+	or copy the linux executables
+	to $(TT /usr/local/bin))
+
+	$(LI Copy the library to $(TT /usr/lib):
+
+$(CONSOLE
+cp dmd/osx/lib/$(LIB) /usr/lib
 )
 	)
     )
@@ -267,10 +335,11 @@ $(WINDOWS
 		not compiling for symbolic debugging instead of $(B $(LIB))
 	  )
 
-    $(LINUX
+    $(UNIX
 	  $(SWITCH $(B -fPIC),
 		generate Position Independent Code (which is used
-		for building shared libraries)
+		for building shared libraries).
+		$(OSX This is always on for OSX.)
 	  )
     )
 
@@ -281,11 +350,11 @@ $(WINDOWS
 		for debuggers such as
 		$(LINK2 http://ddbg.mainia.de/releases.html, Ddbg)
     )
-    $(LINUX
+    $(UNIX
 		add Dwarf symbolic debug info with
 		$(LINK2 abi.html#dwarf, D extensions)
-		for debuggers such as
-		$(LINK2 http://www.zerobugs.org/, ZeroBUGS)
+		for debuggers $(LINUX such as
+		$(LINK2 http://www.zerobugs.org/, ZeroBUGS))
     )
 	  )
 
@@ -295,7 +364,7 @@ $(WINDOWS
 		for debuggers such as
 		$(TT \dmd\bin\windbg)
     )
-    $(LINUX
+    $(UNIX
 		add Dwarf symbolic debug info in C format
 		for debuggers such as
 		$(TT gdb)
@@ -348,8 +417,8 @@ $(WINDOWS
 	  $(SWITCH $(B -L)$(I linkerflag),
 		pass $(I linkerflag) to the
 		$(WINDOWS $(LINK2 http://www.digitalmars.com/ctg/optlink.html, linker))
-		$(LINUX linker), for example,
-		$(WINDOWS $(TT -L/ma/li))$(LINUX $(TT -L-M))
+		$(UNIX linker), for example,
+		$(WINDOWS $(TT -L/ma/li))$(UNIX $(TT -L-M))
 	  )
 
 	  $(SWITCH $(B -lib),
@@ -371,7 +440,12 @@ $(WINDOWS
     $(LINUX
 		open browser specified by the $(B BROWSER)
 		environment variable on this page. If $(B BROWSER) is
-		undefined, $(B firefox) is assumed.
+		undefined, $(B x-www-browser) is assumed.
+    )
+    $(OSX
+		open browser specified by the $(B BROWSER)
+		environment variable on this page. If $(B BROWSER) is
+		undefined, $(B Safari) is assumed.
     )
 	  )
 
@@ -472,8 +546,16 @@ $(V2
 $(CONSOLE
 set LIB=\dmd\lib;\dm\lib
 )
+
+	$(P If the $(B dmd) command is used to both compile and link
+	to an executable, it will make certain optimizations that are
+	valid only for Windows executable files. Do not use the resulting
+	.obj files in a DLL.
+	To compile modules into .obj files that can be used in an exe or
+	DLL, compile with $(B -c).
+	)
      )
-     $(LINUX
+     $(UNIX
 	$(P The actual linking is done by running $(B gcc).
 	This ensures compatibility with modules compiled with $(B gcc).
 	)
@@ -518,7 +600,7 @@ set LINKCMD=\dm\bin\link
 	or use $(B LINKCMD) to specifically identify which linker
 	to use.
     )
-    $(LINUX
+    $(UNIX
 	<dt>$(B CC)
 	<dd> $(B dmd) normally runs the linker by looking for $(B gcc)
 	along the $(B PATH). To use a specific linker instead, set the
@@ -529,7 +611,7 @@ set CC=gcc
 )
 	$(DT $(B BROWSER)
 	    $(DD This sets the browser used to open the manual page with
-	    the $(B -man) switch. It defaults to $(TT firefox).
+	    the $(B -man) switch. It defaults to $(TT x-www-browser).
 	    )
 	)
 
@@ -577,7 +659,8 @@ $(SCINI
 ; to this file.
 [Environment]
 LIB="%@P%\..\lib";\dm\lib
-DFLAGS="-I%@P%\..\src\phobos"
+$(V1 DFLAGS="-I%@P%\..\src\phobos")
+$(V2 DFLAGS="-I%@P%\..\src\phobos" "-I%@P%\..\src\druntime\import")
 LINKCMD="%@P%\..\..\dm\bin"
 DDOCFILE=mysettings.ddoc
 )
@@ -594,7 +677,8 @@ DDOCFILE=mysettings.ddoc
 $(SCINI
 [Environment]
 LIB="c:\dmd\bin\..\lib";\dm\lib
-DFLAGS="-Ic:\dmd\bin\..\src\phobos"
+$(V1 DFLAGS="-Ic:\dmd\bin\..\src\phobos")
+$(V2 DFLAGS="-Ic:\dmd\bin\..\src\phobos" "-Ic:\dmd\bin\..\src\druntime\import")
 LINKCMD="c:\dmd\bin\..\..\dm\bin"
 DDOCFILE=mysettings.ddoc
 )
@@ -604,12 +688,12 @@ DDOCFILE=mysettings.ddoc
 	)
 
 )
-$(LINUX
+$(UNIX
 <h2>$(LNAME2 dmd_conf, dmd.conf Initialization File)</h2>
 
-	$(P The Linux dmd file $(TT dmd.conf) is the same as $(TT sc.ini)
+	$(P The dmd file $(TT dmd.conf) is the same as $(TT sc.ini)
 	for Windows, it's just that the file has a different name,
-	enabling a setup common to both Windows and Linux to be created
+	enabling a setup common to both Windows and this system to be created
 	without having to re-edit the file.)
 
 	$(P $(B dmd) will look for the initialization file $(TT dmd.conf) in the
@@ -641,7 +725,8 @@ $(SCINI
 ; and inserted. The special name %@P% is replaced with the path
 ; to this file.
 [Environment]
-DFLAGS="-I%@P%/../src/phobos"
+$(V1 DFLAGS=-I%@P%/../src/phobos)
+$(V2 DFLAGS=-I%@P%/../src/phobos -I%@P%/../src/druntime/import)
 )
 )
 
@@ -727,7 +812,7 @@ $(LINK2 http://www.digitalmars.com/ctg/lib.html, lib) -c -p32 foo.lib foo.obj ba
 del foo.obj bar.obj
 )
 )
-$(LINUX
+$(UNIX
 $(CONSOLE
 dmd -c foo.d
 dmd -c bar.d
@@ -747,7 +832,7 @@ $(LINK2 http://www.digitalmars.com/ctg/lib.html, lib) -c -p32 foo.lib foo.obj ba
 del foo.obj bar.obj
 )
 )
-$(LINUX
+$(UNIX
 $(CONSOLE
 dmd -c foo.d bar.d
 rm -f foo.a
@@ -771,7 +856,7 @@ dmd -lib foo.d bar.d abc.$(OBJEXT) def.$(LIBEXT)
 )
 
 Macros:
-	TITLE=DMD Compiler for $(WINDOWS Windows)$(LINUX Linux)
+	TITLE=DMD Compiler for $(WINDOWS Windows)$(LINUX Linux)$(OSX OSX)
 	WIKI=DCompiler
-	LIB=$(WINDOWS phobos.lib)$(LINUX $(V1 libphobos.a)$(V2 libphobos2.a))
+	LIB=$(WINDOWS phobos.lib)$(UNIX $(V1 libphobos.a)$(V2 libphobos2.a))
 	SWITCH=$(DT $1)$(DD $+)

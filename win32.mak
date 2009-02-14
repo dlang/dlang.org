@@ -21,7 +21,7 @@ SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd \
 	tuple.dd template-comparison.dd template-mixin.dd \
 	final-const-invariant.dd const.dd traits.dd COM.dd cpp_interface.dd \
 	hijack.dd const3.dd features2.dd safed.dd cpp0x.dd const-faq.dd \
-	concepts.dd
+	concepts.dd memory-safe-d.dd
 
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 
@@ -45,7 +45,8 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html \
 	tuple.html template-comparison.html template-mixin.html \
 	final-const-invariant.html const.html traits.html COM.html cpp_interface.html \
 	hijack.html const3.html features2.html safed.html cpp0x.html const-faq.html \
-	dmd-windows.html dmd-linux.html concepts.html
+	dmd-windows.html dmd-linux.html dmd-osx.html \
+	concepts.html memory-safe-d.html
 
 
 target: $(TARGETS)
@@ -58,6 +59,9 @@ target: $(TARGETS)
 
 dmd-linux.html : doc.ddoc linux.ddoc dcompiler.dd
 	$(DMD) -o- -c -D doc.ddoc linux.ddoc dcompiler.dd -Dfdmd-linux.html
+
+dmd-osx.html : doc.ddoc osx.ddoc dcompiler.dd
+	$(DMD) -o- -c -D doc.ddoc osx.ddoc dcompiler.dd -Dfdmd-osx.html
 
 dmd-windows.html : doc.ddoc windows.ddoc dcompiler.dd
 	$(DMD) -o- -c -D doc.ddoc windows.ddoc dcompiler.dd -Dfdmd-windows.html
@@ -170,6 +174,8 @@ lisp-java-d.html : doc.ddoc lisp-java-d.dd
 
 memory.html : doc.ddoc memory.dd
 
+memory-safe-d.html : doc.ddoc memory-safe-d.dd
+
 mixin.html : doc.ddoc mixin.dd
 
 module.html : doc.ddoc module.dd
@@ -226,7 +232,7 @@ windows.html : doc.ddoc windows.dd
 
 zip:
 	del doc.zip
-	zip32 doc win32.mak style.css print.css doc.ddoc windows.ddoc linux.ddoc
+	zip32 doc win32.mak style.css print.css doc.ddoc windows.ddoc linux.ddoc osx.ddoc
 	zip32 doc $(SRC) download.html dcompiler.html
 	zip32 doc $(IMG)
 
