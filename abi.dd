@@ -9,9 +9,6 @@ $(SPEC_S D Application Binary Interface,
 	D binaries built by other implementations.
 	)
 
-	$(P Most of this specification remains TBD (To Be Defined).
-	)
-
 $(SECTION3 C ABI,
 
 	$(P The C ABI referred to in this specification means the C Application
@@ -130,7 +127,26 @@ class XXXX
 
 $(SECTION3 Interfaces,
 
-	$(P TBD)
+	$(P An interface is a pointer to a pointer to a vtbl[].
+	The vtbl[0] entry is a pointer to the corresponding
+	instance of the object.Interface class.
+	The rest of the vtbl[1..$] entries are pointers to the
+	virtual functions implemented by that interface, in the
+	order that they were declared.
+	)
+
+	$(P A COM interface differs from a regular interface in that
+	there is no object.Interface entry in vtbl[0]; the entries
+	vtbl[0..$] are all the virtual function pointers, in the order
+	that they were declared.
+	This matches the COM object layout used by Windows.
+	)
+    $(V2
+	$(P A C++ interface differs from a regular interface in that
+	it matches the layout of a C++ class using single inheritance
+	on the target machine.
+	)
+    )
 )
 
 $(SECTION3 Arrays,
@@ -736,10 +752,80 @@ $(SECTION3 Exception Handling,
 	)
     )
 
-    $(SECTION4 Linux,
+    $(SECTION4 Linux and OSX,
 
 	$(P Uses static address range/handler tables.
-	TBD
+	It is not compatible with the ELF exception handling tables.
+	The stack is walked assuming it uses the EBP stack frame
+	convention. The EBP convention must be used for every
+	function that has an associated EH table.
+	)
+
+	$(P For each function that has exception handlers,
+	an EH table entry is generated.
+	)
+
+	$(TABLE1
+	<caption>EH Table Entry</caption>
+	$(TR $(TH field) $(TH description))
+	$(TR $(TD void*) $(TD pointer to start of function))
+	$(TR $(TD DHandlerTable*) $(TD pointer to corresponding EH data))
+	$(TR $(TD uint) $(TD size in bytes of the function))
+	)
+	$(BR)
+
+	$(P The EH table entries are placed into the following special
+	segments, which are concatenated by the linker.
+	)
+
+	$(TABLE1
+	<caption>EH Table Segment</caption>
+	$(TR $(TH Operating System) $(TH Segment Name))
+	$(TR $(TD Windows) $(TD FI))
+	$(TR $(TD Linux) $(TD .deh_eh))
+	$(TR $(TD OSX) $(TD __deh_eh, __DATA))
+	)
+	$(BR)
+
+	$(P The rest of the EH data can be placed anywhere,
+	it is immutable.)
+
+	$(TABLE1
+	<caption>DHandlerTable</caption>
+	$(TR $(TH field) $(TH description))
+	$(TR $(TD void*) $(TD pointer to start of function))
+	$(TR $(TD uint) $(TD offset of ESP from EBP))
+	$(TR $(TD uint) $(TD offset from start of function to return code))
+	$(TR $(TD uint) $(TD number of entries in DHandlerInfo[]))
+	$(TR $(TD DHandlerInfo[]) $(TD array of handler information))
+	)
+	$(BR)
+
+	$(TABLE1
+	<caption>DHandlerInfo</caption>
+	$(TR $(TH field) $(TH description))
+	$(TR $(TD uint) $(TD offset from function address to start of guarded section))
+	$(TR $(TD uint) $(TD offset of end of guarded section))
+	$(TR $(TD int) $(TD previous table index))
+	$(TR $(TD uint) $(TD if != 0 offset to DCatchInfo data from start of table))
+	$(TR $(TD void*) $(TD if not null, pointer to finally code to execute))
+	)
+	$(BR)
+
+	$(TABLE1
+	<caption>DCatchInfo</caption>
+	$(TR $(TH field) $(TH description))
+	$(TR $(TD uint) $(TD number of entries in DCatchBlock[]))
+	$(TR $(TD DCatchBlock[]) $(TD array of catch information))
+	)
+	$(BR)
+
+	$(TABLE1
+	<caption>DCatchBlock</caption>
+	$(TR $(TH field) $(TH description))
+	$(TR $(TD ClassInfo) $(TD catch type))
+	$(TR $(TD uint) $(TD offset from EBP to catch variable))
+	$(TR $(TD void*) $(TD catch handler code))
 	)
     )
 )
@@ -756,12 +842,26 @@ $(SECTION3 Runtime Helper Functions,
 
 $(SECTION3 Module Initialization and Termination,
 
-	$(P TBD)
+	$(P All the static constructors for a module are aggregated into a
+	single function, and a pointer to that function is inserted
+	into the ctor member of the ModuleInfo instance for that
+	module.
+	)
+
+	$(P All the static denstructors for a module are aggregated into a
+	single function, and a pointer to that function is inserted
+	into the dtor member of the ModuleInfo instance for that
+	module.
+	)
 )
 
 $(SECTION3 Unit Testing,
 
-	$(P TBD)
+	$(P All the unit tests for a module are aggregated into a
+	single function, and a pointer to that function is inserted
+	into the unitTest member of the ModuleInfo instance for that
+	module.
+	)
 )
 
 $(SECTION2 Symbolic Debugging,

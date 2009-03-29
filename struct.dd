@@ -57,7 +57,8 @@ $(SPEC_S Structs &amp; Unions,
 
 	$(TR
 	$(TD hidden members)
-	$(NO)
+$(V1	$(NO))
+$(V2	$(YES))
 	$(YES)
 	$(NO)
 	$(YES)
@@ -317,6 +318,15 @@ $(V2
 	$(TD const/invariant)
 	$(YES)
 	$(YES)
+	$(NO)
+	$(NO)
+	$(NO)
+	)
+
+	$(TR
+	$(TD inner nesting)
+	$(TD $(LINK2 #nested, YES))
+	$(TD $(LINK2 class.html#nested, YES))
 	$(NO)
 	$(NO)
 	$(NO)
@@ -694,6 +704,93 @@ struct S
 	)
 
 )
+)
+
+$(V2
+<h2>$(LNAME2 nested, Nested Structs)</h2>
+
+	$(P A $(I nested struct) is a struct that is declared inside the scope
+	of a function or a templated struct that has aliases to local
+	functions as a template argument.
+	Nested structs have member functions.
+	It has access to the context of its enclosing scope
+	(via an added hidden field).
+	)
+
+---
+void foo()
+{   int i = 7;
+    struct SS
+    {
+        int x,y;
+        int bar() { return x + i + 1; }
+    }
+    SS s;
+    s.x = 3;
+    s.bar(); // returns 11
+}
+---
+
+	$(P Nested structs cannot be used as fields or as the
+	element type of an array:
+	)
+
+---
+void foo()
+{   int i = 7;
+    struct SS
+    {
+        int x,y;
+        int bar() { return x + i + 1; }
+    }
+    struct DD
+    {
+        SS s;    // error, cannot be field
+    }
+    SS[3] a;     // error, cannot be array element
+    SS[] a;      // error, cannot be array element
+}
+---
+
+	$(P A struct can be prevented from being nested by
+	using the static attribute, but then of course it
+	will not be able to access variables from its enclosing
+	scope.)
+
+---
+void foo()
+{   int i = 7;
+    $(B static) struct SS
+    {
+        int x,y;
+        int bar()
+        {
+           return i;   // error, SS is not a nested struct
+        }
+    }
+}
+---
+
+	$(P A templated struct can become a nested struct if it
+	has a local function passed as an aliased argument:
+	)
+
+---
+struct A(alias F)
+{
+    int fun(int i) { return F(i); }
+}
+
+A!(F) makeA(alias F)() {return A!(F)(); }
+
+void main()
+{
+    int x = 40;
+    int fun(int i) { return x + i; }
+    A!(fun) a = makeA!(fun)();
+    a.fun(2);
+}
+---
 )
 
 )

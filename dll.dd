@@ -34,17 +34,9 @@ $(D_S Writing Win32 DLLs in D,
 	)
 
 --------------------------------
+import core.runtime;
 import std.c.windows.windows;
 HINSTANCE g_hInst;
-
-extern (C)
-{
-	void gc_init();
-	void gc_term();
-	void _minit();
-	void _moduleCtor();
-	void _moduleUnitTests();
-}
 
 extern (Windows)
 BOOL $(B DllMain)(HINSTANCE hInstance, ULONG ulReason, LPVOID pvReserved)
@@ -52,14 +44,11 @@ BOOL $(B DllMain)(HINSTANCE hInstance, ULONG ulReason, LPVOID pvReserved)
     switch (ulReason)
     {
 	case DLL_PROCESS_ATTACH:
-	    gc_init();			// initialize GC
-	    _minit();			// initialize module list
-	    _moduleCtor();		// run module constructors
-	    _moduleUnitTests();		// run module unit tests
+	    Runtime.initialize();
 	    break;
 
 	case DLL_PROCESS_DETACH:
-	    gc_term();			// shut down GC
+	    Runtime.terminate();
 	    break;
 
 	case DLL_THREAD_ATTACH:
@@ -74,7 +63,6 @@ BOOL $(B DllMain)(HINSTANCE hInstance, ULONG ulReason, LPVOID pvReserved)
 
 	$(P Notes:)
 	$(UL 
-	$(LI The $(CODE _moduleUnitTests()) call is optional.)
 	$(LI The presence of $(TT DllMain()) is recognized by the compiler
 		causing it to emit a reference to
 		$(LINK2 http://www.digitalmars.com/ctg/acrtused.html, __acrtused_dll)
@@ -283,20 +271,18 @@ class MyCOMobject : ComObject
  * MyDll demonstration of how to write D DLLs.
  */
 
+import core.runtime;
 import std.c.stdio;
 import std.c.stdlib;
 import std.string;
 import std.c.windows.windows;
-import std.gc;
 
 HINSTANCE   g_hInst;
 
 extern (C)
 {
-	void _minit();
-	void _moduleCtor();
-	void _moduleDtor();
-	void _moduleUnitTests();
+    void  gc_setProxy(void* p);
+    void  gc_clrProxy();
 }
 
 extern (Windows)
@@ -306,11 +292,12 @@ extern (Windows)
     {
         case DLL_PROCESS_ATTACH:
 	    printf("DLL_PROCESS_ATTACH\n");
+	    Runtime.initialize();
 	    break;
 
         case DLL_PROCESS_DETACH:
 	    printf("DLL_PROCESS_DETACH\n");
-	    $(B std.c.stdio._fcloseallp = null;) // so stdio doesn't get closed
+	    Runtime.terminate();
 	    break;
 
         case DLL_THREAD_ATTACH:
@@ -328,17 +315,13 @@ extern (Windows)
 export void $(B MyDLL_Initialize)(void* gc)
 {
     printf("MyDLL_Initialize()\n");
-    std.gc.setGCHandle(gc);
-    _minit();
-    _moduleCtor();
-//  _moduleUnitTests();
+    gc_setProxy(gc);
 }
 
 export void $(B MyDLL_Terminate)()
 {
     printf("MyDLL_Terminate()\n");
-    _moduleDtor();			// run module destructors
-    std.gc.endGCHandle();
+    gc_clrProxy();
 }
 
 $(B static this)()
@@ -380,34 +363,26 @@ export MyClass $(B getMyClass)()
 	The $(B printf)'s are placed there so one can trace how it gets
 	called.
 	Notice that the initialization and termination code seen in
-	the earlier DllMain sample code isn't there.
-	This is because the initialization will depend on who is loading
-	the DLL, and how it is loaded (statically or dynamically).
-	There isn't much to do here.
-	The only oddity is the setting of $(B std.c.stdio._fcloseallp) to
-	null. If this is not set to null, the C runtime will flush
-	and close all the standard I/O buffers (like $(B stdout),
-	$(B stderr), etc.)
-	shutting off further output. Setting it to null defers the
-	responsibility for that to the caller of the DLL.
+	the earlier DllMain sample code is in this version as well.
+	This is because the same DLL should be usable from both C and
+	D programs, so the same initialization process should work
+	for both.
 	<p>
 
 	<dt>$(B MyDLL_Initialize)
-	<dd>So instead we'll have our own DLL initialization routine so
-	exactly when it is called can be controlled.
-	It must be called after the caller has initialized itself,
-	the Phobos runtime library, and the module constructors
-	(this would normally be by the time $(B main)() was entered).
+	<dd>
+	When the DLL is dynamically linked via $(B Runtime.loadLibrary)()
+	the runtime makes sure that any initialization steps required
+	by the D program are executed after the library is loaded.  If
+	the library is statically linked, this routine is not called by
+	the program, so to make sure the DLL is initialized properly we
+	have to do some of the work ourselves.  And because the library
+	is being statically linked, we need a function specific to this
+	DLL to perform the initialization.
 	This function takes one argument, a handle to the
 	caller's gc. We'll see how that handle is obtained later.
-	Instead of $(B gc_init)() being called to initialize
-	the DLL's gc, $(B std.gc.setGCHandle)() is called and passed the
-	handle to which gc to use.
-	This step informs the caller's gc
-	which data areas of the DLL to scan.
-	Afterwards follows the call to the $(B _minit)() to initialize the
-	module tables, and $(B _moduleCtor)() to run the module constructors.
-	$(B _moduleUnitTests)() is optional and runs the DLL's unit tests.
+	To pass this handle to the runtime and override the DLL's built-in
+	gc we'll call $(B gc_setProxy)().
 	The function is $(B export)ed as that is how a function is made
 	visible outside of a DLL.
 	<p>
@@ -415,13 +390,11 @@ export MyClass $(B getMyClass)()
 	<dt>$(B MyDLL_Terminate)
 	<dd>Correspondingly, this function terminates the DLL, and is
 	called prior to unloading it.
-	It has two jobs; calling the DLL's module destructors via
-	$(B _moduleDtor()) and informing the runtime that
-	the DLL will no longer be using the caller's gc via
-	$(B std.gc.endGCHandle)().
-	That last step is critical, as the DLL will be unmapped from
-	memory, and if the gc continues to scan its data areas it will
-	cause segment faults.
+	It has only one job: informing the runtime that the DLL will
+	no longer be using the caller's gc via $(B gc_clrProxy)().
+	This is critical, as the DLL will be unmapped from memory,
+	and if the gc continues to scan its data areas it will cause
+	segment faults.
 	<p>
 
 	<dt>$(B static this, static ~this)
@@ -453,11 +426,8 @@ export MyClass $(B getMyClass)()
 	$(B -g) turns on debug info generation.
 	)
 
-	$(LI $(B $(TT dmd mydll.obj \dmd\lib\gcstub.obj mydll.def -g -L/map))
+	$(LI $(B $(TT dmd mydll.obj mydll.def -g -L/map))
 	<br>Links $(TT mydll.obj) into a DLL named $(TT mydll.dll).
-	$(TT gcstub.obj) is not required, but it prevents the bulk
-	of the gc code from being linked in, since it will not be used
-	anyway. It saves about 12Kb.
 	$(TT mydll.def) is the
 	<a href="http://www.digitalmars.com/ctg/ctgDefFiles.html">Module Definition File</a>,
 	and has the contents:
@@ -489,6 +459,7 @@ DATA            PRELOAD SINGLE
 	)
 
 -------------------------------
+import core.runtime;
 import std.stdio;
 import std.gc;
 
@@ -500,71 +471,54 @@ version (DYNAMIC_LOAD)
 {
     import std.c.windows.windows;
 
-    alias void function(void*) MyDLL_Initialize_fp;
-    alias void function() MyDLL_Terminate_fp;
     alias MyClass function() getMyClass_fp;
 
     int main()
-    {	HMODULE h;
-	FARPROC fp;
-	MyDLL_Initialize_fp mydll_initialize;
-	MyDLL_Terminate_fp  mydll_terminate;
+    {   HMODULE h;
+        FARPROC fp;
 
-	getMyClass_fp  getMyClass;
-	MyClass c;
+        getMyClass_fp getMyClass;
+        MyClass c;
 
-	printf("Start Dynamic Link...\n");
+        printf("Start Dynamic Link...\n");
 
-	h = LoadLibraryA("mydll.dll");
-	if (h == null)
-	{   printf("error loading mydll.dll\n");
-	    return 1;
-	}
+        h = cast(HMODULE) Runtime.loadLibrary("mydll.dll");
+        if (h is null)
+        {
+            printf("error loading mydll.dll\n");
+            return 1;
+        }
 
-	fp = GetProcAddress(h, "D5mydll16MyDLL_InitializeFPvZv");
-	if (fp == null)
-	{   printf("error loading symbol MyDLL_Initialize()\n");
-	    return 1;
-	}
+        fp = GetProcAddress(h, "D5mydll10getMyClassFZC5mydll7MyClass");
+        if (fp is null)
+        {   printf("error loading symbol getMyClass()\n");
+            return 1;
+        }
 
-	mydll_initialize = cast(MyDLL_Initialize_fp) fp;
-	(*mydll_initialize)(std.gc.getGCHandle());
+        getMyClass = cast(getMyClass_fp) fp;
+        c = (*getMyClass)();
+        foo(c);
 
-	fp = GetProcAddress(h, "D5mydll10getMyClassFZC5mydll7MyClass");
-	if (fp == null)
-	{   printf("error loading symbol getMyClass()\n");
-	    return 1;
-	}
+        if (!Runtime.unloadLibrary(h))
+        {   printf("error freeing mydll.dll\n");
+            return 1;
+        }
 
-	getMyClass = cast(getMyClass_fp) fp;
-	c = (*getMyClass)();
-	foo(c);
-
-	fp = GetProcAddress(h, "D5mydll15MyDLL_TerminateFZv");
-	if (fp == null)
-	{   printf("error loading symbol MyDLL_Terminate()\n");
-	    return 1;
-	}
-
-	mydll_terminate = cast(MyDLL_Terminate_fp) fp;
-	(*mydll_terminate)();
-
-	if (FreeLibrary(h) == FALSE)
-	{   printf("error freeing mydll.dll\n");
-	    return 1;
-	}
-
-	printf("End...\n");
-	return 0;
+        printf("End...\n");
+        return 0;
     }
 }
 else
 {   // static link the DLL
+    extern (C)
+    {
+        void* gc_getProxy();
+    }
 
     int main()
     {
 	printf("Start Static Link...\n");
-	MyDLL_Initialize(std.gc.getGCHandle());
+	MyDLL_Initialize(gc_getProxy());
 	foo(getMyClass());
 	MyDLL_Terminate();
 	printf("End...\n");
@@ -627,7 +581,7 @@ C:>dmd test -version=DYNAMIC_LOAD -g
 )
 	$(P The import library $(TT mydll.lib) is not needed.
 	The DLL is loaded with a call to
-	$(B LoadLibraryA)(),
+	$(B Runtime.loadLibrary)(),
 	and each exported function has to be retrieved via
 	a call to
 	$(B GetProcAddress)().
@@ -637,7 +591,7 @@ C:>dmd test -version=DYNAMIC_LOAD -g
 	Once this is done, we can use the member functions of the
 	DLL classes as if they were part of $(TT test.exe).
 	When done, release the DLL with
-	$(B FreeLibrary)().
+	$(B Runtime.unloadLibrary)().
 	)
 
 	$(P Running it looks like this:)
@@ -646,10 +600,8 @@ $(CONSOLE
 C:>test
 Start Dynamic Link...
 DLL_PROCESS_ATTACH
-MyDLL_Initialize()
 static this for mydll
 Hello world!
-MyDLL_Terminate()
 static ~this for mydll
 DLL_PROCESS_DETACH
 End...

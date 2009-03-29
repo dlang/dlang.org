@@ -1061,40 +1061,6 @@ if (p != $(B null))
 	$(P $(I KeyType)s cannot be functions or voids.
 	)
 
-	$(P If the $(I KeyType) is a struct type, a default mechanism is used
-	to compute the hash and comparisons of it based on the binary
-	data within the struct value. A custom mechanism can be used
-	by providing the following functions as struct members:
-	)
-
----------
-$(V2 const) uint $(B toHash)();
-$(V2 const) int $(B opCmp)($(I KeyType)* s);
----------
-
-	$(P For example:)
-
----------
-import std.string;
-
-struct MyString
-{
-    char[] str;
-
-    $(V2 const) uint $(B toHash)()
-    {   uint hash;
-	foreach (char c; s)
-	    hash = (hash * 9) + c;
-	return hash;
-    }
-
-    $(V2 const) int $(B opCmp)(MyString* s)
-    {
-	return std.string.cmp(this.str, s.str);
-    }
-}
----------
-
 <h3>Using Classes as the KeyType</h3>
 
 	$(P Classes can be used as the $(I KeyType). For this to work,
@@ -1108,6 +1074,8 @@ $(V2	$(LI $(TT bool opEquals(Object))))
 	$(LI $(TT int opCmp(Object)))
 	)
 
+	$(P $(TT hash_t) is an alias to an integral type.)
+
 	$(P Note that the parameter to $(TT opCmp) and $(TT opEquals) is
 	of type
 	$(TT Object), not the type of the class in which it is defined.)
@@ -1119,14 +1087,14 @@ class Foo
 {
     int a, b;
 
-    hash_t toHash() { return a + b; }
+    hash_t $(B toHash)() { return a + b; }
 
-$(V1      int opEquals(Object o))$(V2      bool opEquals(Object o))
+$(V1      int $(B opEquals)(Object o))$(V2      bool $(B opEquals)(Object o))
     {	Foo f = cast(Foo) o;
 	return f && a == foo.a && b == foo.b;
     }
 
-    int opCmp(Object o)
+    int $(B opCmp)(Object o)
     {	Foo f = cast(Foo) o;
 	if (!f)
 	    return -1;
@@ -1144,43 +1112,63 @@ $(V1      int opEquals(Object o))$(V2      bool opEquals(Object o))
 
 <h3>Using Structs or Unions as the KeyType</h3>
 
-	$(P Structs or unions can be used as the $(I KeyType). For this to work,
-	the struct or union definition must define the following
-	member functions:)
-
-	$(UL
-	$(LI $(TT hash_t toHash()))
-$(V1	$(LI $(TT int opEquals(S)) or $(TT int opEquals(S*))))
-$(V2	$(LI $(TT bool opEquals(S)) or $(TT bool opEquals(S*))))
-	$(LI $(TT int opCmp(S)) or $(TT int opCmp(S*)))
+	$(P If the $(I KeyType) is a struct or union type,
+	a default mechanism is used
+	to compute the hash and comparisons of it based on the binary
+	data within the struct value. A custom mechanism can be used
+	by providing the following functions as struct members:
 	)
 
-	$(P Note that the parameter to $(TT opCmp) and $(TT opEquals)
-	can be either the struct or union type, or a pointer to the struct
-	or untion type.)
+---------
+$(V2 const) hash_t $(B toHash)();
+$(V1 int $(B opEquals)($(I KeyType)* s);)$(V2 const bool $(B opEquals)(ref const $(I KeyType) s);)
+$(V1 int $(B opCmp)($(I KeyType)* s);)$(V2 const int $(B opCmp)(ref const $(I KeyType) s);)
+---------
 
 	$(P For example:)
 
----
-struct S
+---------
+import std.string;
+
+struct MyString
 {
-    int a, b;
+    string str;
 
-    hash_t toHash() { return a + b; }
-
-$(V1      int opEquals(S s))$(V2      bool opEquals(S s))
-    {
-	return a == s.a && b == s.b;
+$(V1      hash_t $(B toHash)()
+    {   hash_t hash;
+	foreach (char c; s)
+	    hash = (hash * 9) + c;
+	return hash;
     }
 
-    int opCmp(S* s)
+    bool $(B opEquals)(MyString* s)
     {
-	if (a == s.a)
-	    return b - s.b;
-	return a - s.a;
+	return std.string.cmp(this.str, s.str) == 0;
     }
+
+    int $(B opCmp)(MyString* s)
+    {
+	return std.string.cmp(this.str, s.str);
+    })
+$(V2      const hash_t $(B toHash)()
+    {   hash_t hash;
+	foreach (char c; s)
+	    hash = (hash * 9) + c;
+	return hash;
+    }
+
+    const bool $(B opEquals)(ref const MyString s)
+    {
+	return std.string.cmp(this.str, s.str) == 0;
+    }
+
+    const int $(B opCmp)(ref const MyString s)
+    {
+	return std.string.cmp(this.str, s.str);
+    })
 }
----
+---------
+
 
 	$(P The implementation may use either $(TT opEquals) or $(TT opCmp) or
 	both. Care should be taken so that the results of
@@ -1241,7 +1229,7 @@ Properties for associative arrays are:
 import std.file;         // D file I/O
 import std.stdio;
 
-int main (char[][] args)
+int main (string[] args)
 {
     int word_total;
     int line_total;
@@ -1297,7 +1285,7 @@ int main (char[][] args)
 
     if (args.length > 2)
     {
-	writef("-------------------------------------\n%8ld%8ld%8ld total",
+	writef("-------------------------------------\n%8d%8d%8d total",
 		line_total, word_total, char_total);
     }
 
