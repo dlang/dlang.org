@@ -91,6 +91,8 @@ $(UL
 	    $(LI $(LINK2 #unittest, Unit Tests))
 	    $(LI $(LINK2 #allocators, Class Allocators))
 	    $(LI $(LINK2 #deallocators, Class Deallocators))
+$(V2
+	    $(LI $(LINK2 #AliasThis, Alias This)))
 	)
 	)
 )
@@ -846,6 +848,47 @@ delete f;
 	$(P See also
 	$(LINK2 memory.html#newdelete, Explicit Class Instance Allocation).
 	)
+
+$(V2
+<h3>$(LNAME2 AliasThis, Alias This)</h3>
+
+$(GRAMMAR
+$(GNAME AliasThis):
+	$(B alias) $(I Identifier) $(B this;)
+)
+
+	$(P An $(I AliasThis) declaration names another class or struct member
+	to which any undefined lookups will be forwarded.
+	The $(I Identifier) names that member.
+	)
+
+	$(P A class or struct can be implicitly converted to the $(I AliasThis)
+	member.
+	)
+
+	$(P There is only one $(I AliasThis) allowed per class or struct.
+	)
+
+---
+struct S
+{   int x;
+    alias x this;
+}
+
+int foo(int i) { return i * 2; }
+
+void test()
+{
+    S s;
+    s.x = 7;
+    int i = -s;   // i == -7
+    i = s + 8;    // i == 15
+    i = s + s;    // i == 14
+    i = 9 + s;    // i == 16
+    i = foo(s);   // implicit conversion to int
+}
+---
+)
 
 <h3>$(LNAME2 auto, Scope Classes)</h3>
 
