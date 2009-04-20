@@ -4,6 +4,8 @@ $(D_S D Change Log,
 
 
 $(UL
+	$(NEW 029)
+	$(NEW 028)
 	$(NEW 027)
 	$(NEW 026)
 	$(NEW 025)
@@ -39,6 +41,164 @@ $(UL
 	 D compiler</a> for Win32 and x86 linux)
 
 	$(LI $(LINK2 http://www.digitalmars.com/pnews/index.php?category=2, tech support))
+)
+
+$(VERSION 029, Apr 19, 2009, =================================================,
+
+    $(NEWPHOBOS
+	$(LII std.algorithm,
+	  $(LI Everything converted to ranges. Big disruption. Algorithms added.)
+	)
+	$(LII std.array,
+	  $(LI Range primitives for arrays)
+	  $(LI Appender template)
+	  $(LI insert, replace functions)
+	)
+	$(LII std.bitmanip,
+	  $(LI Bitfields of length 0 are defined to be always 0.)
+	  $(LI The read functions for bitfields are const.)
+	)
+	$(LII std.contracts,
+	  $(LI enforce accepts const(char)[] instead of string)
+	  $(LI Added enforce overload that invokes a delegate on failure)
+	  $(LI Added assumeSorted template)
+	  $(LI Added structuralCast that implements, well, structural casting
+	  (incomplete).)
+	)
+	$(LII std.conv,
+	  $(LI Rewrote conversions with constrained templates.)
+	  $(LI Added text() function that transforms everything into text.)
+	)
+	$(LII std.date,
+	  $(LI Added a benchmark function that allows for simple timing measurements.)
+	)
+	$(LII std.file,
+
+	  $(LI read, write, append, rename, remove, getSize, getTimes,
+	  getAttributes, isfile, isdir, chdir, mkdir, mkdirRecurse, rmdir,
+	  listdir, copy, take filename(s) by "in char[]")
+	  $(LI Added function readText that reads and validates a text file)
+	  $(LI Added function slurp that reads a file into an array of tuples.
+	  Example:
+---
+auto a = slurp!(int, double)("filename", "%s, %s");
+---
+	  Each line in the file looks like e.g. "1, 2.3". slurp returns an array
+	  of Tuple!(int, double) with the parsed content.
+	  )
+	)
+	$(LII std.format,
+
+	  $(LI Added vector parsing and printing with the specifier "%()". For
+	  example, writefln("[%(s; )]", [1, 2, 3][]) writes "[1; 2; 3]". This
+	  support is experimental and may be changed in the future.)
+	  $(LI Added a formattedRead function (i.e., scanf that doesn't suck). The
+	  implementation is incomplete but common cases are supported.)
+	)
+	$(LII std.functional,
+	  $(LI Improved error messages)
+	  $(LI Added configurable parameter names for functions as strings)
+	  $(LI Added Adjoin template)
+	)
+	$(LII std.getopt,
+	  $(LI Added support for parameterless delegates)
+	)
+	$(LII std.mmfile,
+	  $(LI Minor cosmetic changes)
+	)
+	$(LII std.numeric,
+
+	  $(LI Added type CustomFloat that allows defining specialized floating-point
+	  numbers (e.g. 16-bit floats, positive floats etc.))
+	  $(LI Added FPTemporary as the best type to store temporary values.)
+	  $(LI Templatized oppositeSigns)
+	  $(LI Added Euclidean distance)
+	  $(LI Added dotProduct)
+	  $(LI Added cosineSimilarity)
+	  $(LI Added normalize)
+	  $(LI Added string kernel functions gapWeightedSimilarity,
+	  gapWeightedSimilarityNormalized, gapWeightedSimilarityIncremental.)
+	)
+	$(LII std.outbuffer,
+	  $(LI Added a few missing overloads of write())
+	)
+	$(LII std.path,
+	  $(LI getDrive now works with all string types)
+	  $(LI isabs accepts in char[])
+	  $(LI join accepts variadic in char[])
+	  $(LI fnmatch works with in char[])
+	)
+	$(LII std.random,
+
+	  $(LI Added RandomCover that covers a given range in a random manner)
+	  $(LI Eliminated the old-fashioned random functions)
+	  $(LI Defined a default random object that simplifies calls to the random
+	  functions)
+	  $(LI Changed generators to obey the range interface. So now you can write:
+---
+Random r;
+foreach (n; take(100, uniform(0, 100))) { ... }
+---
+	  )
+	)
+	$(LII std.range (new file),
+	  $(LI Range manipulation stuff.)
+	)
+	$(LII std.regex (new file),
+	  $(LI Regular expression library with wide char support, simplified
+	  interface, better speed etc.)
+	)
+	$(LII std.regexp,
+	  $(LI Scheduled for deprecation. Use std.regex instead.)
+	)
+	$(LII std.stdio,
+	  $(LI Major breaking changes: introduced the File struct.  Now stdin,
+	  stdout, stderr are instances of the File struct.)
+	  $(LI Due to bugs in the compiler, the copy constructor and destructor of
+	  File are commented out. Walter will look into fixing the issues soon.
+	  File should work fine, but you need to close it manually.)
+	  $(LI A byRecord iteration mode makes it pretty easy to iterate structured
+	  text files.)
+	  $(LI writef and writefln now require a string as their first argument.)
+	)
+	$(LII std.string,
+	  $(LI strip, stripl, stripr, startsWith, endsWith now work with any string type)
+	)
+	$(LII std.typecons,
+	  $(LI Added constructors, assignment operator, length, toString, and slice
+	  to Tuple.)
+	)
+	$(LII std.utf,
+	  $(LI toUTF16z accepts in char[])
+	)
+	$(LII std.variant,
+	  $(LI Added support for Variants that contain vectors and hashes of themselves)
+	)
+	$(LII std.c.stdio,
+	  $(LI Added fopen64 and friends)
+	)
+    )
+    $(WHATSNEW
+	$(LI Added template function literals)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 675): %a format has an out-by-1 bug for denormals.)
+	$(LI $(BUGZILLA 2199): Segfault using array operation in function call)
+	$(LI $(BUGZILLA 2203): typeof(class.template.foo) crashes compiler)
+	$(LI $(BUGZILLA 2577): DMD crashes on foreach of undefined identifier)
+	$(LI $(BUGZILLA 2808): 'nothrow' nested functions cannot be parsed)
+	$(LI $(BUGZILLA 2812): sqrt(2.0) is about -2.7341e-53)
+    )
+)
+
+$(VERSION 028, Apr 7, 2009, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 2064): Segfault with mixin(for/foreach) with empty loop body)
+	$(LI $(BUGZILLA 2812): sqrt(2.0) is about -2.7341e-53)
+    )
 )
 
 $(VERSION 027, Mar 31, 2009, =================================================,
@@ -1198,5 +1358,7 @@ Macros:
 	DSTRESS = dstress $0
 	BUGSFIXED = <div id="bugsfixed"><h4>Bugs Fixed</h4> $(UL $0 )</div>
 	WHATSNEW = <div id="whatsnew"><h4>New/Changed Features</h4> $(UL $0 )</div>
+	NEWPHOBOS = <div id="whatsnew"><h4>New/Changed Phobos</h4> $(UL $0 )</div>
 	LARGE=<font size=4>$0</font>
 	TRENAME=$(TR $(TD $(CODE $1)) $(TD $(CODE $2)))
+	LII= $(LI $(TT $1) $(UL $+ ))

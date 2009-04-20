@@ -23,6 +23,8 @@ SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd \
 	hijack.dd const3.dd features2.dd safed.dd cpp0x.dd const-faq.dd \
 	concepts.dd memory-safe-d.dd
 
+DDOC=macros.ddoc doc.ddoc
+
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 
 TARGETS=cpptod.html ctod.html pretod.html cppstrings.html \
@@ -45,194 +47,197 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html \
 	tuple.html template-comparison.html template-mixin.html \
 	final-const-invariant.html const.html traits.html COM.html cpp_interface.html \
 	hijack.html const3.html features2.html safed.html cpp0x.html const-faq.html \
-	dmd-windows.html dmd-linux.html dmd-osx.html \
+	dmd-windows.html dmd-linux.html dmd-osx.html dmd-freebsd.html \
 	concepts.html memory-safe-d.html
 
 
 target: $(TARGETS)
 
 .d.html:
-	$(DMD) -o- -c -D doc.ddoc $*.d
+	$(DMD) -o- -c -D $(DDOC) $*.d
 
 .dd.html:
-	$(DMD) -o- -c -D doc.ddoc $*.dd
+	$(DMD) -o- -c -D $(DDOC) $*.dd
 
-dmd-linux.html : doc.ddoc linux.ddoc dcompiler.dd
-	$(DMD) -o- -c -D doc.ddoc linux.ddoc dcompiler.dd -Dfdmd-linux.html
+dmd-linux.html : $(DDOC) linux.ddoc dcompiler.dd
+	$(DMD) -o- -c -D $(DDOC) linux.ddoc dcompiler.dd -Dfdmd-linux.html
 
-dmd-osx.html : doc.ddoc osx.ddoc dcompiler.dd
-	$(DMD) -o- -c -D doc.ddoc osx.ddoc dcompiler.dd -Dfdmd-osx.html
+dmd-freebsd.html : $(DDOC) freebsd.ddoc dcompiler.dd
+	$(DMD) -o- -c -D $(DDOC) freebsd.ddoc dcompiler.dd -Dfdmd-freebsd.html
 
-dmd-windows.html : doc.ddoc windows.ddoc dcompiler.dd
-	$(DMD) -o- -c -D doc.ddoc windows.ddoc dcompiler.dd -Dfdmd-windows.html
+dmd-osx.html : $(DDOC) osx.ddoc dcompiler.dd
+	$(DMD) -o- -c -D $(DDOC) osx.ddoc dcompiler.dd -Dfdmd-osx.html
 
-abi.html : doc.ddoc abi.dd
+dmd-windows.html : $(DDOC) windows.ddoc dcompiler.dd
+	$(DMD) -o- -c -D $(DDOC) windows.ddoc dcompiler.dd -Dfdmd-windows.html
 
-acknowledgements.html : doc.ddoc acknowledgements.dd
+abi.html : $(DDOC) abi.dd
 
-arrays.html : doc.ddoc arrays.dd
+acknowledgements.html : $(DDOC) acknowledgements.dd
 
-ascii-table.html : doc.ddoc ascii-table.dd
+arrays.html : $(DDOC) arrays.dd
 
-attribute.html : doc.ddoc attribute.dd
+ascii-table.html : $(DDOC) ascii-table.dd
 
-builtin.html : doc.ddoc builtin.dd
+attribute.html : $(DDOC) attribute.dd
 
-changelog.html : doc.ddoc changelog.dd
+builtin.html : $(DDOC) builtin.dd
 
-class.html : doc.ddoc class.dd
+changelog.html : $(DDOC) changelog.dd
 
-code_coverage.html : doc.ddoc code_coverage.dd
+class.html : $(DDOC) class.dd
 
-COM.html : doc.ddoc COM.dd
+code_coverage.html : $(DDOC) code_coverage.dd
 
-comparison.html : doc.ddoc comparison.dd
+COM.html : $(DDOC) COM.dd
 
-concepts.html : doc.ddoc concepts.dd
+comparison.html : $(DDOC) comparison.dd
 
-const.html : doc.ddoc const.dd
+concepts.html : $(DDOC) concepts.dd
 
-const3.html : doc.ddoc const3.dd
+const.html : $(DDOC) const.dd
 
-const-faq.html : doc.ddoc const-faq.dd
+const3.html : $(DDOC) const3.dd
 
-cpp_interface.html : doc.ddoc cpp_interface.dd
+const-faq.html : $(DDOC) const-faq.dd
 
-cppdbc.html : doc.ddoc cppdbc.dd
+cpp_interface.html : $(DDOC) cpp_interface.dd
 
-cppcomplex.html : doc.ddoc cppcomplex.dd
+cppdbc.html : $(DDOC) cppdbc.dd
 
-cpp0x.html : doc.ddoc cpp0x.dd
+cppcomplex.html : $(DDOC) cppcomplex.dd
 
-cppstrings.html : doc.ddoc cppstrings.dd
+cpp0x.html : $(DDOC) cpp0x.dd
 
-cpptod.html : doc.ddoc cpptod.dd
+cppstrings.html : $(DDOC) cppstrings.dd
 
-ctod.html : doc.ddoc ctod.dd
+cpptod.html : $(DDOC) cpptod.dd
 
-dbc.html : doc.ddoc dbc.dd
+ctod.html : $(DDOC) ctod.dd
 
-ddoc.html : doc.ddoc ddoc.dd
+dbc.html : $(DDOC) dbc.dd
 
-declaration.html : doc.ddoc declaration.dd
+ddoc.html : $(DDOC) ddoc.dd
 
-dll.html : doc.ddoc dll.dd
+declaration.html : $(DDOC) declaration.dd
 
-dnews.html : doc.ddoc dnews.dd
+dll.html : $(DDOC) dll.dd
 
-dstyle.html : doc.ddoc dstyle.dd
+dnews.html : $(DDOC) dnews.dd
 
-entity.html : doc.ddoc entity.dd
+dstyle.html : $(DDOC) dstyle.dd
 
-enum.html : doc.ddoc enum.dd
+entity.html : $(DDOC) entity.dd
 
-errors.html : doc.ddoc errors.dd
+enum.html : $(DDOC) enum.dd
 
-exception-safe.html : doc.ddoc exception-safe.dd
+errors.html : $(DDOC) errors.dd
 
-expression.html : doc.ddoc expression.dd
+exception-safe.html : $(DDOC) exception-safe.dd
 
-faq.html : doc.ddoc faq.dd
+expression.html : $(DDOC) expression.dd
 
-features2.html : doc.ddoc features2.dd
+faq.html : $(DDOC) faq.dd
 
-final-const-invariant.html : doc.ddoc final-const-invariant.dd
+features2.html : $(DDOC) features2.dd
 
-float.html : doc.ddoc float.dd
+final-const-invariant.html : $(DDOC) final-const-invariant.dd
 
-function.html : doc.ddoc function.dd
+float.html : $(DDOC) float.dd
 
-future.html : doc.ddoc future.dd
+function.html : $(DDOC) function.dd
 
-garbage.html : doc.ddoc garbage.dd
+future.html : $(DDOC) future.dd
 
-glossary.html : doc.ddoc glossary.dd
+garbage.html : $(DDOC) garbage.dd
 
-hijack.html : doc.ddoc hijack.dd
+glossary.html : $(DDOC) glossary.dd
 
-howto-promote.html : doc.ddoc howto-promote.dd
+hijack.html : $(DDOC) hijack.dd
 
-html.html : doc.ddoc html.dd
+howto-promote.html : $(DDOC) howto-promote.dd
 
-htod.html : doc.ddoc htod.dd
+html.html : $(DDOC) html.dd
 
-htomodule.html : doc.ddoc htomodule.dd
+htod.html : $(DDOC) htod.dd
 
-iasm.html : doc.ddoc iasm.dd
+htomodule.html : $(DDOC) htomodule.dd
 
-interface.html : doc.ddoc interface.dd
+iasm.html : $(DDOC) iasm.dd
 
-interfaceToC.html : doc.ddoc interfaceToC.dd
+interface.html : $(DDOC) interface.dd
 
-index.html : doc.ddoc index.dd
+interfaceToC.html : $(DDOC) interfaceToC.dd
 
-lazy-evaluation.html : doc.ddoc lazy-evaluation.dd
+index.html : $(DDOC) index.dd
 
-lex.html : doc.ddoc lex.dd
+lazy-evaluation.html : $(DDOC) lazy-evaluation.dd
 
-lisp-java-d.html : doc.ddoc lisp-java-d.dd
+lex.html : $(DDOC) lex.dd
 
-memory.html : doc.ddoc memory.dd
+lisp-java-d.html : $(DDOC) lisp-java-d.dd
 
-memory-safe-d.html : doc.ddoc memory-safe-d.dd
+memory.html : $(DDOC) memory.dd
 
-mixin.html : doc.ddoc mixin.dd
+memory-safe-d.html : $(DDOC) memory-safe-d.dd
 
-module.html : doc.ddoc module.dd
+mixin.html : $(DDOC) mixin.dd
 
-operatoroverloading.html : doc.ddoc operatoroverloading.dd
+module.html : $(DDOC) module.dd
 
-overview.html : doc.ddoc overview.dd
+operatoroverloading.html : $(DDOC) operatoroverloading.dd
 
-portability.html : doc.ddoc portability.dd
+overview.html : $(DDOC) overview.dd
 
-pragma.html : doc.ddoc pragma.dd
+portability.html : $(DDOC) portability.dd
 
-pretod.html : doc.ddoc pretod.dd
+pragma.html : $(DDOC) pragma.dd
 
-property.html : doc.ddoc property.dd
+pretod.html : $(DDOC) pretod.dd
 
-rationale.html : doc.ddoc rationale.dd
+property.html : $(DDOC) property.dd
 
-rdmd.html : doc.ddoc rdmd.dd
+rationale.html : $(DDOC) rationale.dd
 
-regular-expression.html : doc.ddoc regular-expression.dd
+rdmd.html : $(DDOC) rdmd.dd
 
-safed.html : doc.ddoc safed.dd
+regular-expression.html : $(DDOC) regular-expression.dd
 
-statement.html : doc.ddoc statement.dd
+safed.html : $(DDOC) safed.dd
 
-struct.html : doc.ddoc struct.dd
+statement.html : $(DDOC) statement.dd
 
-template.html : doc.ddoc template.dd
+struct.html : $(DDOC) struct.dd
 
-template-comparison.html : doc.ddoc template-comparison.dd
+template.html : $(DDOC) template.dd
 
-template-mixin.html : doc.ddoc template-mixin.dd
+template-comparison.html : $(DDOC) template-comparison.dd
 
-templates-revisited.html : doc.ddoc templates-revisited.dd
+template-mixin.html : $(DDOC) template-mixin.dd
 
-traits.html : doc.ddoc traits.dd
+templates-revisited.html : $(DDOC) templates-revisited.dd
 
-tuple.html : doc.ddoc tuple.dd
+traits.html : $(DDOC) traits.dd
 
-type.html : doc.ddoc type.dd
+tuple.html : $(DDOC) tuple.dd
 
-variadic-function-templates.html : doc.ddoc variadic-function-templates.dd
+type.html : $(DDOC) type.dd
 
-version.html : doc.ddoc version.dd
+variadic-function-templates.html : $(DDOC) variadic-function-templates.dd
 
-warnings.html : doc.ddoc warnings.dd
+version.html : $(DDOC) version.dd
 
-wc.html : doc.ddoc wc.dd
+warnings.html : $(DDOC) warnings.dd
 
-windbg.html : doc.ddoc windbg.dd
+wc.html : $(DDOC) wc.dd
 
-windows.html : doc.ddoc windows.dd
+windbg.html : $(DDOC) windbg.dd
+
+windows.html : $(DDOC) windows.dd
 
 zip:
 	del doc.zip
-	zip32 doc win32.mak style.css print.css doc.ddoc windows.ddoc linux.ddoc osx.ddoc
+	zip32 doc win32.mak style.css print.css $(DDOC) windows.ddoc linux.ddoc osx.ddoc freebsd.ddoc
 	zip32 doc $(SRC) download.html dcompiler.html
 	zip32 doc $(IMG)
 

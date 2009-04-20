@@ -5,10 +5,16 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX) D Compiler,
 	$(UL 
 	$(WINDOWS $(LI dmd for $(LINK2 dmd-linux.html,   Linux)))
 	$(WINDOWS $(LI dmd for $(LINK2 dmd-osx.html,     OSX)))
+	$(WINDOWS $(LI dmd for $(LINK2 dmd-freebsd.html, FreeBSD)))
 	$(LINUX   $(LI dmd for $(LINK2 dmd-windows.html, Windows)))
 	$(LINUX   $(LI dmd for $(LINK2 dmd-osx.html,     OSX)))
+	$(LINUX   $(LI dmd for $(LINK2 dmd-freebsd.html, FreeBSD)))
 	$(OSX     $(LI dmd for $(LINK2 dmd-windows.html, Windows)))
 	$(OSX     $(LI dmd for $(LINK2 dmd-linux.html,   Linux)))
+	$(OSX     $(LI dmd for $(LINK2 dmd-freebsd.html, FreeBSD)))
+	$(FREEBSD $(LI dmd for $(LINK2 dmd-windows.html, Windows)))
+	$(FREEBSD $(LI dmd for $(LINK2 dmd-linux.html,   Linux)))
+	$(FREEBSD $(LI dmd for $(LINK2 dmd-osx.html,     OSX)))
 	$(LI $(LINK2 #requirements, Requirements and Downloads))
 	$(LI $(LINK2 #files, Files))
 	$(LI $(LINK2 #installation, Installation))
@@ -45,6 +51,11 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX) D Compiler,
     )
     $(OSX
 	$(LI 32 bit x86 Mac OSX operating system)
+
+	$(LI Gnu C compiler (gcc))
+    )
+    $(FREEBSD
+	$(LI 32 bit x86 FreeBSD 7.1 operating system)
 
 	$(LI Gnu C compiler (gcc))
     )
@@ -104,6 +115,27 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX) D Compiler,
 	)
 
 	$(DT $(TT /dmd/linux/lib/$(LIB))
+	$(DD D runtime library (copy to $(TT /usr/lib/$(LIB))))
+	)
+    )
+    $(FREEBSD
+	$(DT $(TT /dmd/freebsd/bin/dmd)
+	$(DD D compiler executable)
+	)
+
+	$(DT $(TT /dmd/freebsd/bin/$(LINK2 http://www.digitalmars.com/ctg/dumpobj.html, dumpobj))
+	$(DD Elf file dumper)
+	)
+
+	$(DT $(TT /dmd/freebsd/bin/$(LINK2 http://www.digitalmars.com/ctg/obj2asm.html, obj2asm))
+	$(DD Elf file disassembler)
+	)
+
+	$(DT $(TT /dmd/freebsd/bin/dmd.conf)
+	$(DD Global compiler settings (copy to $(TT /etc/dmd.conf)))
+	)
+
+	$(DT $(TT /dmd/freebsd/lib/$(LIB))
 	$(DD D runtime library (copy to $(TT /usr/lib/$(LIB))))
 	)
     )
@@ -186,6 +218,38 @@ cp dmd/linux/lib/$(LIB) /usr/lib
 )
 	)
     )
+    $(FREEBSD
+	$(LI Unzip the archive into your home directory.
+	It will create
+	a $(TT ~/dmd) directory with all the files in it.
+	All the tools are command line tools, which means
+	they are run from a console window.)
+
+	$(LI Copy $(TT dmd.conf) to $(TT /etc):
+
+$(CONSOLE
+cp dmd/freebsd/bin/dmd.conf /etc
+)
+	)
+
+	$(LI Give execute permission to the following files:
+
+$(CONSOLE
+chmod u+x dmd/freebsd/bin/{dmd,dumpobj,obj2asm,rdmd}
+)
+	)
+
+	$(LI Put $(TT dmd/freebsd/bin) on your $(B PATH),
+	or copy the FreeBSD executables
+	to $(TT /usr/local/bin))
+
+	$(LI Copy the library to $(TT /usr/lib):
+
+$(CONSOLE
+cp dmd/freebsd/lib/$(LIB) /usr/lib
+)
+	)
+    )
     $(OSX
 	$(LI Unzip the archive into your home directory.
 	It will create
@@ -208,7 +272,7 @@ chmod u+x dmd/osx/bin/{dmd,dumpobj,obj2asm,rdmd}
 	)
 
 	$(LI Put $(TT dmd/osx/bin) on your $(B PATH),
-	or copy the linux executables
+	or copy the OSX executables
 	to $(TT /usr/local/bin))
 
 	$(LI Copy the library to $(TT /usr/lib):
@@ -439,6 +503,11 @@ $(WINDOWS
 		open default browser on this page
     )
     $(LINUX
+		open browser specified by the $(B BROWSER)
+		environment variable on this page. If $(B BROWSER) is
+		undefined, $(B x-www-browser) is assumed.
+    )
+    $(FREEBSD
 		open browser specified by the $(B BROWSER)
 		environment variable on this page. If $(B BROWSER) is
 		undefined, $(B x-www-browser) is assumed.
@@ -861,7 +930,7 @@ dmd -lib foo.d bar.d abc.$(OBJEXT) def.$(LIBEXT)
 )
 
 Macros:
-	TITLE=DMD Compiler for $(WINDOWS Windows)$(LINUX Linux)$(OSX OSX)
+	TITLE=DMD Compiler for $(WINDOWS Windows)$(LINUX Linux)$(OSX OSX)$(FREEBSD FreeBSD)
 	WIKI=DCompiler
 	LIB=$(WINDOWS phobos.lib)$(UNIX $(V1 libphobos.a)$(V2 libphobos2.a))
 	SWITCH=$(DT $1)$(DD $+)
