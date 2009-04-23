@@ -4,6 +4,7 @@ $(D_S D Change Log,
 
 
 $(UL 
+	$(NEW1 043)
 	$(NEW1 042)
 	$(NEW1 041)
 	$(NEW1 040)
@@ -60,6 +61,16 @@ $(COMMENT
 )
 )
 
+$(VERSION 043, Xyz 99, 2009, =================================================,
+$(WHATSNEW
+        $(LI std.algorithm: added minPos)
+        $(LI std.format: added raw specifier for reading)
+        $(LI added File.byChunk))
+$(BUGSFIXED
+        $(LI $(BUGZILLA 2882): std.random.MersenneTwisterEngine without no seed))
+        $(LI unlisted: made entropy work on const/immutable arrays))
+)
+        
 $(VERSION 042, Mar 12, 2009, =================================================,
 
     $(WHATSNEW
