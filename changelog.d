@@ -73,7 +73,7 @@ $(BUGSFIXED
         
 $(VERSION 042, Mar 12, 2009, =================================================,
 
-    $(WHATSNEW
+$(WHATSNEW
 	$(LI Added response files for Linux and OSX)
 	$(LI On Windows, if there are multiple source files on the command
 	 line they are now read with a background thread. This may speed up
