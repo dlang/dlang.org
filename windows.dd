@@ -65,14 +65,8 @@ export void func(int foo);
 
 	$(LI $(CODE WinMain) must follow this form:
 --------------------
+import core.runtime;
 import std.c.windows.windows;
-
-extern (C) void gc_init();
-extern (C) void gc_term();
-extern (C) void _minit();
-extern (C) void _moduleCtor();
-extern (C) void _moduleDtor();
-extern (C) void _moduleUnitTests();
 
 extern (Windows)
 int $(B WinMain)(HINSTANCE hInstance,
@@ -82,17 +76,18 @@ int $(B WinMain)(HINSTANCE hInstance,
 {
     int result;
 
-    gc_init();			// initialize garbage collector
-    _minit();			// initialize module constructor table
+    void exceptionHandler(Exception e)
+    {
+	throw e;
+    }
 
     try
-    {
-	_moduleCtor();		// call module constructors
-	_moduleUnitTests();	// run unit tests (optional)
+    {	
+	Runtime.initialize(&exceptionHandler);
 
 	result = $(B myWinMain)(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
 
-	_moduleDtor();		// call module destructors
+	Runtime.terminate(&exceptionHandler);
     }
 
     catch (Object o)		// catch any uncaught exceptions
@@ -102,7 +97,6 @@ int $(B WinMain)(HINSTANCE hInstance,
 	result = 0;		// failed
     }
 
-    gc_term();			// run finalizers; terminate garbage collector
     return result;
 }
 
