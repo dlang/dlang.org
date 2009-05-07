@@ -57,17 +57,17 @@ $(P Most problems arise from the distribution of these representable numbers. Th
 
 $(P Notice that half of the IEEE number line lies between -1 and +1. There are 1000 million representable floats between 0 and 0.5, but only 8 million between 0.5 and 1. This has important implications for accuracy: the effective precision is incredibly high near zero. Several examples will be presented where numbers in the range -1 to +1 are treated seperately to take advantage of this.)
 
-$(P Notice also the special numbers: +/- infinity; the so-called "subnormals" between +/-float.min and 0, which are represented at reduced precision; the fact that there are TWO zeros, +0 and -0, and finally "NaN"("Not-a-Number"), the nonsense value, which caused so much grief in Listing 1.)
+$(P Notice also the special numbers: $(PLUSMNINF); the so-called "subnormals" between $(PLUSMN)float.min and 0, which are represented at reduced precision; the fact that there are TWO zeros, +0 and -0, and finally "NaN"("Not-a-Number"), the nonsense value, which caused so much grief in Listing 1.)
 
-$(P Why does NaN exist? It serves a valuable role: it $(I eradicates undefined behaviour) from floating-point arithmetic. This makes floating-point completely predictable. Unlike the $(D int) type, where 3/0 invokes a hardware division by zero trap handler, possibly ending your program, the floating-point division 3.0/0.0 results in an infinity. Numeric overflow (eg, real.max*2) also creates an infinity. Depending on the application, infinity may be a perfectly valid result; more typically, it indicates an error. Nonsensical operations, such as 0.0 / 0.0, result in NaN; but $(I your program does not lose control). At first glance, infinity and NaN may appear unnecessary -- why not just make it an error, just as in the integer case? After all, it is easy to avoid division by zero, simply by checking for a zero denominator before every division. The real difficulty comes from overflow: it is extremely difficult to determine in advance whether an overflow will occur in a multiplication.)
+$(P Why does NaN exist? It serves a valuable role: it $(I eradicates undefined behaviour) from floating-point arithmetic. This makes floating-point completely predictable. Unlike the $(D int) type, where 3/0 invokes a hardware division by zero trap handler, possibly ending your program, the floating-point division 3.0/0.0 results in $(INFIN). Numeric overflow (eg, $(D real.max*2)) also creates $(INFIN). Depending on the application, $(INFIN) may be a perfectly valid result; more typically, it indicates an error. Nonsensical operations, such as $(D 0.0 / 0.0), result in NaN; but $(I your program does not lose control). At first glance, infinity and NaN may appear unnecessary -- why not just make it an error, just as in the integer case? After all, it is easy to avoid division by zero, simply by checking for a zero denominator before every division. The real difficulty comes from overflow: it is extremely difficult to determine in advance whether an overflow will occur in a multiplication.)
 
-$(P Subnormals are necessary to prevent certain anomalies, and preserve important relationships such as: "x - y == 0 if and only if x==y".)
+$(P Subnormals are necessary to prevent certain anomalies, and preserve important relationships such as: "x - y == 0 if and only if x == y".)
 
-$(P Since infinity can be produced by overflow, both +infinity and -infinity are required. Both +0 and -0 are required in order to preserve identities such as: if x>0, then 1/(1/x) > 0. In almost all other cases, however, there is no difference between +0 and -0.)
+$(P Since $(INFIN) can be produced by overflow, both +$(INFIN) and -$(INFIN) are required. Both +0 and -0 are required in order to preserve identities such as: if $(D x>0), then $(D 1/(1/x) > 0). In almost all other cases, however, there is no difference between +0 and -0.)
 
-$(P It's worth noting that these "special values" are usually not very efficient. On x86 machines, for example, a multiplication involving a NaN, and infinity, or a subnormal can be twenty to fifty times slower than an operation on normal numbers. If your numerical code is unexpectedly slow, it's possible that you are inadvertently creating many of these special values. Enabling floating-point exception trapping, described later, is a quick way to confirm this.)
+$(P It's worth noting that these "special values" are usually not very efficient. On x86 machines, for example, a multiplication involving a NaN, an infinity, or a subnormal can be twenty to fifty times slower than an operation on normal numbers. If your numerical code is unexpectedly slow, it's possible that you are inadvertently creating many of these special values. Enabling floating-point exception trapping, described later, is a quick way to confirm this.)
 
-$(P One of the biggest factor obscuring what the machine is doing is in the conversion between binary and decimal. You can eliminate this by using the "%a" format when displaying results. This is an invaluable debugging tool, and an enormously helpful aid when developing floating-point algorithms. The "0x1.23Ap+6" hexadecimal floating-point format can also be used in source code for ensuring that your input data is $(I exactly) what you intended.)
+$(P One of the biggest factor obscuring what the machine is doing is in the conversion between binary and decimal. You can eliminate this by using the $(D "%a") format when displaying results. This is an invaluable debugging tool, and an enormously helpful aid when developing floating-point algorithms. The $(D 0x1.23Ap+6) hexadecimal floating-point format can also be used in source code for ensuring that your input data is $(I exactly) what you intended.)
 
 $(H2 The Quantized Nature of Floating-Point)
 
@@ -77,9 +77,9 @@ $(D nextDown(x)) gives the next representable number which is less than x.
 )
 
 $(P Numerical analysts often describe errors in terms of "units in the last place"(ulp), a surprisingly subtle term which is often used rather carelessly. [footnote:
-The most formal definition is found in [J.-M. Muller, "On the definition of ulp(x)",INRIA Technical Report 5504 (2005).]: If x is a real number that lies between two finite consecutive floating-point numbers a and b of type F, without being equal to one of them, then ulp(x)=abs(b-a); otherwise ulp(x) = x*F.epsilon. Moreover, ulp(NaN) is NaN, and ulp(+-F.infinity) = +-F.max*F.epsilon.]
+The most formal definition is found in [J.-M. Muller, "On the definition of ulp(x)",INRIA Technical Report 5504 (2005).]: If $(D x) is a real number that lies between two finite consecutive floating-point numbers a and b of type F, without being equal to one of them, then ulp(x)=abs(b-a); otherwise ulp(x) = $(D x*F.epsilon). Moreover, ulp(NaN) is NaN, and ulp($(PLUSMN)F.infinity) = $(PLUSMN)$(D F.max*F.epsilon).]
 I prefer a far simpler definition: The difference in ulps between two numbers x and y is is the number of times which you need to call nextUp() or nextDown() to move from x to y. [Footnote: This will not be an integer if either x or y is a real number, rather than a floating point number.]
-The D library function feqrel(x, y) gives the number of bits which are equal between x and y; it is an easy way to check for loss-of-precision problems.
+The D library function $(D feqrel(x, y)) gives the number of bits which are equal between x and y; it is an easy way to check for loss-of-precision problems.
 )
 
 $(P The quantized nature of floating point has some interesting consequences.)
@@ -87,7 +87,7 @@ $(P The quantized nature of floating point has some interesting consequences.)
 $(UL
 $(LI ANY mathematical range [a,b$(RPAREN), $(LPAREN)a,b], or (a,b) can be converted into a range
 or the form [a,b]. (The converse does not apply: there is no (a,b)
-equivalent to [-infinity, infinity]).)
+equivalent to [-$(INFIN), $(INFIN)]).)
 $(LI A naive binary chop doesn't work correctly. The fact that there are hundreds or thousands of times as many representable numbers between 0 and 1, as there are between 1 and 2, is problematic for divide-and-conquer algorithms. A naive binary chop would divide the interval [0 .. 2] into [0 .. 1] and [1 .. 2]. Unfortunately, this is not a true binary chop, because the interval [0 .. 1] contains more than 99% of the representable numbers from the original interval!)
 )
 
@@ -110,13 +110,13 @@ $(H2 The semantics of float, double, and real)
 
 $(P For the x86 machines which dominate the market, floating point has traditionally been performed on a descendent of the 8087 math coprocessor. These "x87" floating point units were the first to implement IEEE754 arithmetic. The SSE2 instruction set is an alternative for x86-64 processors, but x87 remains the only portable option for floating point 32-bit x86 machines (no 32-bit AMD processors support SSE2).)
 
-$(P The x87 is unusual compared to most other floating-point units. It _only_ supports 80-bit operands, henceforth termed "real80". All 'double' and 'float' operands are first converted to 80-bit, all arithmetic operations are performed at 80-bit precision, and the results are reduced to 64-bit or 32-bit precision if required. This means that the results can be significantly more accurate than on a machine which supports at most 64 bit operations. However, it also poses challenges for writing portable code.
-(Footnote: The x87 allows you to reduce the mantissa length to be the same as 'double' or 'float', but it retains the real80 exponent, which means different results are obtained with subnormal numbers. To precisely emulate 'double' arithmetic slows down floating point code by an order of magnitude).
+$(P The x87 is unusual compared to most other floating-point units. It _only_ supports 80-bit operands, henceforth termed "real80". All $(D double) and $(D float) operands are first converted to 80-bit, all arithmetic operations are performed at 80-bit precision, and the results are reduced to 64-bit or 32-bit precision if required. This means that the results can be significantly more accurate than on a machine which supports at most 64 bit operations. However, it also poses challenges for writing portable code.
+(Footnote: The x87 allows you to reduce the mantissa length to be the same as '$(D double) or $(D float), but it retains the real80 exponent, which means different results are obtained with subnormal numbers. To precisely emulate $(D double) arithmetic slows down floating point code by an order of magnitude).
 )
 
 $(P Apart from the x87 family, the Motorola 68K (but not ColdFire) and Itanium processors are the only ones which support 80-bit floating point.)
 
-$(P A similar issue relates to the FMA (fused multiply and accumulate) instruction, which is available on an increasing number of processors, including PowerPC, Itanium, Sparc, and Cell. On such processors, when evaluating expressions such as x*y + z, the "x*y" is performed at twice the normal precison. Some calculations which would otherwise cause a total loss of precision, are instead calculated exactly.
+$(P A similar issue relates to the FMA (fused multiply and accumulate) instruction, which is available on an increasing number of processors, including PowerPC, Itanium, Sparc, and Cell. On such processors, when evaluating expressions such as $(D x*y + z), the $(D x*y) is performed at twice the normal precison. Some calculations which would otherwise cause a total loss of precision, are instead calculated exactly.
 The challenge for a high-level systems programming language is to create an abstraction which provides predictable behaviour on all platforms, but which nonetheless makes good use of the available hardware.
 )
 
@@ -125,15 +125,15 @@ $(P D's approach to this situation arises from the following observations:)
 $(OL
 $(LI It is extremely costly performance-wise to ensure identical behaviour on all processors. In particular, it is crippling for the x87.)
 $(LI Very many programs will only run on a particular processor. It would be unfortunate to deny the use of more accurate hardware, for the sake of portability which would never be required.)
-$(LI The requirements for portability and for high precision are never required simultaneously. If 'double' precision is inadequate, increasing the precision on only some processors doesn't help.)
+$(LI The requirements for portability and for high precision are never required simultaneously. If $(D double) precision is inadequate, increasing the precision on only some processors doesn't help.)
 $(LI The language should not be tied to particular features of specific processors. )
 )
 
-$(P A key design goal is: it should be possible to write code such that, regardless of the processor which is used, the accuracy is never worse than would be obtained on a system which only supports the 'double' type.)
+$(P A key design goal is: it should be possible to write code such that, regardless of the processor which is used, the accuracy is never worse than would be obtained on a system which only supports the $(D double) type.)
 
-$(P (Footnote: 'real' is close to 'indigenous' in the Borneo proposal for the Java programming language[Ref Borneo]).)
+$(P (Footnote: $(D real) is close to 'indigenous' in the Borneo proposal for the Java programming language[Ref Borneo]).)
 
-$(P Consider evaluating x*y + z*w, where x, y, z and w are double.)
+$(P Consider evaluating $(D x*y + z*w), where $(D x, y, z) and $(D w) are double.)
 
 $(OL
 $(LI double r1 = x * y + z * w;)
@@ -151,11 +151,11 @@ On x86, r1==r3, which may be more accurate than r0, though not as much as for th
 r2, however, may be LESS accurate than r0.
 )
 
-$(P By using real for intermediate values, we are guaranteed that our results are never worse than for a simple CPU which only supports doubles.)
+$(P By using $(D real) for intermediate values, we are guaranteed that our results are never worse than for a simple CPU which only supports $(D double).)
 
 $(H2 Properties of the Built-in Types)
 
-$(P The fundamental floating-point properties are "epsilon", "min" and "max". The six integral properties are simply the log2 or log10 of these three.)
+$(P The fundamental floating-point properties are $(D epsilon), $(D min) and $(D max). The six integral properties are simply the log2 or log10 of these three.)
 
 $(TABLE1
 $(TR $(TH &nbsp;) $(TH float) $(TH double) $(TH real80) $(TH quadruple) $(TH decimal64) $(TH decimal128))
@@ -172,62 +172,64 @@ $(TR $(TD min_10_exp) $(TD -37) $(TD -307) $(TD -4932) $(TD -4932) $(TD -382) $(
 $(TR $(TD max_10_exp) $(TD +38) $(TD +308) $(TD +4932) $(TD +4932) $(TD 385) $(TD +6145))
 )
 
-$(P When writing code which should adapt to different CPUs at compile time, use "static if" with the "mant_dig" property. For example, "static if (real.mant_dig==64)" is true if 80-bit reals are available.
-For binary types, the "dig" property gives only the _minimum_ number of valid decimal digits. To ensure that that every representable number has a unique decimal representation, two additional digits are required. Similarly, for decimal numbers, "mant_dig" is a lower bound on the number of valid binary digits.
+$(P When writing code which should adapt to different CPUs at compile time, use $(D static if) with the $(D mant_dig) property. For example, $(D static if (real.mant_dig==64)) is true if 80-bit reals are available.
+For binary types, the $(D dig) property gives only the $(I minimum) number of valid decimal digits. To ensure that that every representable number has a unique decimal representation, two additional digits are required. Similarly, for decimal numbers, $(D mant_dig) is a lower bound on the number of valid binary digits.
 )
 
-$(H2 Useful relations for a floating point type F, where x and y are of type F)
+$(H2 Useful relations for a floating point type $(D F), where $(D x) and $(D y) are of type $(D F))
 
 $(UL
-$(LI The smallest representable number is F.min * F.epsilon)
-$(LI Any integer between 0 and (1/F.epsilon) can be stored in F without loss of precision.
-  1/F.epsilon is always a exact power of the base.)
-$(LI If a number x is subnormal, x*(1/F.epsilon) is normal, and
-  exponent(x) = exponent(x*(1/F.epsilon)) - (mant_dig-1).)
-$(LI x>0 if and only if 1/(1/x) > 0; x<0 if and only if 1/(1/x) < 0.)
-$(LI If x-y==0, then x==y  && isFinite(x) && isFinite(y). Note that if x==y==infinity, then isNaN(x-y).)
-$(LI F.max * F.min = 4 for binary types, 10.0 for decimal types.)
+$(LI The smallest representable number is $(D F.min * F.epsilon))
+$(LI Any integer between 0 and $(D (1/F.epsilon)) can be stored in F without loss of precision.
+  $(D 1/F.epsilon) is always a exact power of the base.)
+$(LI If a number $(D x) is subnormal, $(D x*(1/F.epsilon)) is normal, and
+  $(D exponent(x) = exponent(x*(1/F.epsilon)) - (mant_dig-1)).)
+$(LI $(D x>0) if and only if $(D 1/(1/x) > 0); $(D x<0) if and only if $(D 1/(1/x) < 0).)
+$(LI If $(D x-y==0), then $(D x==y  && isFinite(x) && isFinite(y)). Note that if $(D x==y==infinity), then $(D isNaN(x-y)).)
+$(LI $(D F.max * F.min = 4.0) for binary types, $(D 10.0) for decimal types.)
 )
 
 $(H3  Addition and subtraction)
 
 $(UL  
-$(LI Some loss of precision occurs with x+-y if exponent(x)!=exponent(y). The number of digits of precision which are lost is abs(exponent(x)-exponent(y)).)
-$(LI x+y or x-y has total loss of precision, if and only if
-   (1)  abs(x * F.epsilon) > abs(y), in which case x+y == x, x-y == x
-or (2)  abs(y * F.epsilon) > abs(x), in which case x+y == y, x-y == -y)
-$(LI Addition is commutative: a + b == b + a.)
-$(LI Subtraction is not quite commutative: a - b == -(b - a), but produce +0 and -0 if a==b.)
+$(LI Some loss of precision occurs with x$(PLUSMN)y if exponent(x)!=exponent(y). The number of digits of precision which are lost is abs(exponent(x)-exponent(y)).)
+$(LI x$(PLUSMN)y has total loss of precision, if and only if
+   (1)  $(D abs(x * F.epsilon) > abs(y)), in which case x+y == x, x-y == x
+or (2)  $(D abs(y * F.epsilon) > abs(x)), in which case x+y == y, x-y == -y)
+$(LI Addition is commutative: $(D a + b == b + a).)
+$(LI Subtraction is not quite commutative: $(D a - b == -(b - a)), but produce +0 and -0 if a==b.)
 $(LI Addition is not associative at all.)
 )
 
 $(H3 Multiplication and division)
    
 $(UL  
-$(LI Multiplication and division are _always_ at risk of overflow or underflow.
-  For any abs(x) > F.epsilon, there is at least one finite y such that x/y will overflow to infinity.
-  For any abs(x) < F.epsilon, there is at least one finite y such that x/y will underflow to zero.
-  For any abs(x) > 1, there is at least one finite y such that x*y will overflow to infinity.
-  For any abs(x) < 1, there is at least one finite y such that x*y will underflow to zero.
+$(LI Multiplication and division are $(I always) at risk of overflow or underflow.
+  For any $(D abs(x) > F.epsilon), there is at least one finite $(D y) such that $(D x/y) will overflow to $(INFIN).
+  For any $(D abs(x) < F.epsilon), there is at least one finite $(D y) such that $(D x/y) will underflow to zero.
+  For any $(D abs(x) > 1), there is at least one finite $(D y) such that $(D x*y) will overflow to $(INFIN).
+  For any $(D abs(x) < 1), there is at least one finite $(D y) such that $(D x*y) will underflow to zero.
 )
-$(LI x*x will overflow if abs(x)>sqrt(F.max), and underflow to zero if abs(x)<sqrt(F.min*F.epsilon)  )
-$(LI Multiplication is commutative. a * b == b * a.)
-$(LI Multiplication is not associative in general: a*(b*c) != (a*b)*c, because (1) there is a risk of overflow or underflow and (2) b*c may be an exact calculation, so that a*(b*c) contains only one round-off error, whereas (a*b)*c contains two. The roundoff errors may therefore accumulate at the rate of just under 1 ulp per multiplication.)
-$(LI However, a limited form of associativity is possible if the type used for intermediate results is larger than any of the operands (which happens on x87 and Itanium machines). If  R is the intermediate type, and F is the type being multiplied, up to min(R.max_exp/F.max_exp, R.epsilon/F.epsilon) values of type F can be multiplied together in any order without influencing the result. For example, if R is double, multiplication of 8 floats f1*f2*f3*f4*f5*f6*f7*f8 is completely associative. On x87, 130 floats can be safely multiplied together in any order, and 16 doubles can similarly be multiplied together safely.
+$(LI $(D x*x) will overflow if $(D abs(x)>sqrt(F.max)), and underflow to zero if $(D abs(x) < sqrt(F.min*F.epsilon))  )
+$(LI Multiplication is commutative. $(D a * b == b * a)).
+$(LI Multiplication is not associative in general: $(D a*(b*c) != (a*b)*c), because (1) there is a risk of overflow or underflow and (2) $(D b*c) may be an exact calculation, so that $(D a*(b*c)) contains only one round-off error, whereas $(D (a*b)*c) contains two. The roundoff errors may therefore accumulate at the rate of just under 1 ulp per multiplication.)
+$(LI However, a limited form of associativity is possible if the type used for intermediate results is larger than any of the operands (which happens on x87 and Itanium machines). If $(D R) is the intermediate type, and $(D F) is the type being multiplied, up to $(D min(R.max_exp/F.max_exp, R.epsilon/F.epsilon)) values of type $(D F) can be multiplied together in any order without influencing the result. For example, if $(D R) is $(D double), multiplication of 8 floats $(D f1*f2*f3*f4*f5*f6*f7*f8) is completely associative. On x87, 130 floats can be safely multiplied together in any order, and 16 doubles can similarly be multiplied together safely.
 Strict distributivity does not hold even under these circumstances, as it may destroy the sign of -0.)
+$(LI The distributive law almost never holds. For example, $(D 4*x + 6*x != 10*x) if $(D x==nextDown(1.5)). $(D a*x + b*x == (a+b)*x) for all $(D x) only if the operations $(D a*x, b*x), and $(D (a+b)) are all exact operations, which is true only if $(D a) and $(D b) are exact powers of 2. Even then, if $(D a==-b) and $(D x==-0), then $(D a*x+b*x==0.0, (a+b)*x==-0.0).)
 $(LI Performing a division by multiplication by the reciprocal returns a result which (in round-to-nearest mode) is at most 1.5 ulps from the correctly rounded result. For almost any denominator, the rounding is incorrect (>0.5ulps) for 27% of numerators. [Ref: N. Brisebarre, J-M Muller, and S.K. Raina, "Accelerating Correctly Rounded Floating-Point Division when the Divisor Is Known in Advance", IEEE Trans. on Computers, Vol 53, pp 1069-1072 (2004)].)
 )
+
 
 $(H3  Powers and logarithms)
 
 $(UL  
-$(LI F.mant_dig = -log2(F.epsilon) for binary types
-  F.dig = -log10(F.epsilon) for decimal types)
-$(LI F.max =  exp2(F.max_exp*(1-F.epsilon)) for binary types,
-  F.max = exp10(F.max_10_exp*(1-F.epsilon)) for decimal types.)
-$(LI For any positive finite x, F.min_exp - F.mant_dig <= log2(x) < F.max_exp for binary types
-                             F.min_10_exp - F.dig <= log10(x) < F.max_10_exp  for decimal types)
-$(LI exp2(x) == 0 if x < F.min_exp - F.mant_dig, exp2(x) == infinity if x >= F.max_exp)
+$(LI $(D F.mant_dig = -log2(F.epsilon)) for binary types;)
+$(LI  $(D F.dig = -log10(F.epsilon)) for decimal types.)
+$(LI $(D F.max =  exp2(F.max_exp*(1-F.epsilon))) for binary types;)
+$(LI $(D F.max = exp10(F.max_10_exp*(1-F.epsilon))) for decimal types.)
+$(LI For any positive finite $(D x), $(D F.min_exp - F.mant_dig <= log2(x) < F.max_exp) for binary types,
+                             $(D F.min_10_exp - F.dig <= log10(x) < F.max_10_exp)  for decimal types)
+$(LI $(D exp2(x) == 0) if $(D x < F.min_exp - F.mant_dig), $(D exp2(x) == infinity) if $(D x >= F.max_exp))
 )
 
 $(H2 NaN payloads)
@@ -235,21 +237,23 @@ $(H2 NaN payloads)
 $(P According to the IEEE 754 standard, a 'payload' can be stored in the mantissa of a NaN. This payload can contain information about how or why it was generated. Historically, almost no programming languages have ever made use of this potentially powerful feature. In D, this payload consists of a positive integer.)
 
 $(UL  
-$(LI NaN -- create a NaN with a "payload", where the payload is a ulong.)
-$(LI ulong getNaNPayload(real x) -- returns the integer payload. Note that if narrowing conversions have occured, the high-order bits may have changed.)
+$(LI $(D real NaN(ulong payload)) -- create a NaN with a "payload", where the payload is a $(D ulong).)
+$(LI $(D ulong getNaNPayload(real x)) -- returns the integer payload. Note that if narrowing conversions have occured, the high-order bits may have changed.)
 )
 
-$(P '''Never''' store a pointer as an integer payload inside a NaN. The garbage collector will not be able to find it!)
+$(P $(I Never) store a pointer as an integer payload inside a NaN. The garbage collector will not be able to find it!)
 
 $(H2 NCEG comparison operations)
 
-$(P As well as the usual <, >, <=, and >= comparison operators, D also supports the "NCEG" operators. Most of them are the direct negation of the ordinary operators. Additionally, <>, <>=, !<>, and !<>= are provided. These 8 new operators are different from the normal operators only when a NaN is involved, so for the most part they are quite obscure. They are useful mainly in eliminating the possibility of NaN before beginning a calculation.
+$(P As well as the usual $(D <), $(D >), $(D <=), and $(D >=) comparison operators, D also supports the "NCEG" operators. Most of them are the direct negation of the ordinary operators. Additionally, $(D <>), $(D <>=), $(D !<>), and $(D !<>=) are provided. These 8 new operators are different from the normal operators only when a NaN is involved, so for the most part they are quite obscure. They are useful mainly in eliminating the possibility of NaN before beginning a calculation.
 The most useful relationships are probably:
-x  <>= y   is the same as  !isNaN(x) && !isNaN(y), (except that signalling NaNs may be triggered by <>=).
-x !<>= y   is the same as   isNaN(x) ||  isNaN(y).
-If y is any compile-time constant (eg 0), these reduce to !isNaN(x) and isNaN(x).
-Note that x==x is the same as !isNaN(x), and x!=x is the same as isNaN(x).
-abs(x) !< x.infinity  is the same as  isNaN(x) || isInfinity(x)
+$(UL
+$(LI $(D x  <>= y)   is the same as $(D !isNaN(x) && !isNaN(y)), (except that signalling NaNs may be triggered by <>=).)
+$(LI $(D x !<>= y)   is the same as $(D isNaN(x) ||  isNaN(y)).)
+)
+If $(D y) is any compile-time constant (eg 0), these reduce to $(D !isNaN(x) and isNaN(x)).
+Note that $(D x==x) is the same as $(D !isNaN(x)), and $(D x!=x) is the same as $(D isNaN(x)).
+$(D abs(x) !< x.infinity)  is the same as $(D isNaN(x) || isInfinity(x))
 The above relationships are useful primarily because they can be used in compile time functions.
 Very few uses are known for the remaining NCEG operators.
 )
@@ -257,7 +261,7 @@ Very few uses are known for the remaining NCEG operators.
 $(H2 The IEEE Rounding Modes)
 
 $(P The rounding mode is controlled within a scope. Rounding mode will be restored to its previous state at the end of that scope. 
-Four rounding modes can be set. The default mode, ''Round to nearest'', is the most statistically accurate, but the least intuitive. In the event of tie, the result is rounded to an even number.
+Four rounding modes can be set. The default mode, $(I Round to nearest), is the most statistically accurate, but the least intuitive. In the event of tie, the result is rounded to an even number.
 )
 
 $(TABLE1
@@ -270,24 +274,24 @@ $(TR $(TD Round to zero) $(TD 4) $(TD 5) $(TD -4) $(TD &nbsp;))
 
 $(P There are very few reasons for changing the rounding mode.
 The round-up and round-down modes were created specifically to allow fast implementations of interval arithmetic; they are crucial to certain libraries, but rarely used elsewhere.
-The round-to-zero mode is used for casting floating-point numbers to integers. Since mode switching is slow, especially on Intel machines, it may be useful to switch to round-to-zero mode, in order to exactly duplicate the behaviour of {{{cast(int)}}} in an inner loop.
+The round-to-zero mode is used for casting floating-point numbers to integers. Since mode switching is slow, especially on Intel machines, it may be useful to switch to round-to-zero mode, in order to exactly duplicate the behaviour of $(D cast(int)) in an inner loop.
 )
 
 $(P The only other commonly cited reason for changing the rounding mode is as a simple check for numerical stability: if the calculation produces wildly different results when the rounding mode is changed, it's a clear sign that it is suffering from round-off errors. )
 
 $(H2 The IEEE Exception Status Flags)
 
-$(P All IEEE-compiliant processors include special status bits that indicate when "weird" things have happened that programs might want to know about. For example, {{{ieeeFlags.divideByZero}}} tells if any infinities have been created by dividing by zero. They are 'sticky' bits: once they have been set, they remain set until explicitly cleared. By only checking this once at the end of a calculation, it may be possible to avoid comparing thousands of comparisions that are almost never going to fail.)
+$(P All IEEE-compiliant processors include special status bits that indicate when "weird" things have happened that programs might want to know about. For example, $(D ieeeFlags.divideByZero) tells if any infinities have been created by dividing by zero. They are 'sticky' bits: once they have been set, they remain set until explicitly cleared. By only checking this once at the end of a calculation, it may be possible to avoid comparing thousands of comparisions that are almost never going to fail.)
 
 $(P Here's a list of the weird things that can be detected:)
 
 $(DL
-$(DT invalid) $(DD This is set if any NaN's have been generated. This can happen with infinity - infinity, infinity * 0, 0 * infinity, 0/0, infinity/infinity, infinity%infinity, or x%0, for any number x. Several other operations, such as sqrt(-1), can also generate a NaN. The ''invalid'' condition is also set when a 'signalling NaN' is accessed, indicating use of an uninitialized variable. This almost always indicates a programming error.)
+$(DT invalid) $(DD This is set if any NaN's have been generated. This can happen with $(INFIN) - $(INFIN), $(INFIN) * 0, 0 * $(INFIN), 0/0, $(INFIN)/$(INFIN), $(INFIN)%$(INFIN), or $(D x%0), for any number $(D x). Several other operations, such as sqrt(-1), can also generate a NaN. The $(I invalid) condition is also set when a 'signalling NaN' is accessed, indicating use of an uninitialized variable. This almost always indicates a programming error.)
 
-$(DT overflow) $(DD Set if an infinity was generated by adding or multiplying two numbers that were so large that the sum was greater than real.max. This almost always indicates that the result is incorrect; and corrective action needs to be taken.)
+$(DT overflow) $(DD Set if $(INFIN) was generated by adding or multiplying two numbers that were so large that the sum was greater than $(D real.max). This almost always indicates that the result is incorrect; and corrective action needs to be taken.)
 
-$(DT divisionByZero) $(DD Set if +/-infinity was generated by dividing by zero. This usually indicates a programming error, but not always; some types of calculations return correct results even when division by zero occurs.
-(For example, {{{ 1/(1+ 1/x) == 0}}} if {{{x == 0}}}). Note that division by a tiny, almost-zero number also produces an infinite result, but sets the overflow flag rather than the divisionByZero flag.
+$(DT divisionByZero) $(DD Set if $(PLUSMNINF) was generated by dividing by zero. This usually indicates a programming error, but not always; some types of calculations return correct results even when division by zero occurs.
+(For example, $(D 1/(1+ 1/x) == 0) if $(D x == 0)). Note that division by a tiny, almost-zero number also produces an infinite result, but sets the overflow flag rather than the divisionByZero flag.
 )
 
 $(DT underflow) $(DD This happens if two numbers are subtracted or divided and are so tiny that the result lost precision because it was subnormal. Extreme underflow produces a zero result. Underflow almost never creates problems, and can usually be ignored.)
@@ -302,8 +306,8 @@ A more advanced usage, not yet supported on any platform(!) is to provide a nest
 
 $(H2 Floating point and 'pure nothrow')
 
-$(P Every floating point operation, even the most trivial, is affected by the floating-point rounding state, and writes to the sticky flags. The status flags and control state are thus 'hidden variables', potentially affecting every 'pure' function.
-D provides a facility for the floating-point control mode and exception flags to be usable in limited circumstances even when 'pure' and 'nothrow' functions are called.
+$(P Every floating point operation, even the most trivial, is affected by the floating-point rounding state, and writes to the sticky flags. The status flags and control state are thus 'hidden variables', potentially affecting every $(D pure) function; and if the floating point traps are enabled, any floating point operation can generate a hardware exception.
+D provides a facility for the floating-point control mode and exception flags to be usable in limited circumstances even when $(D pure) and $(D nothrow) functions are called.
 )
 
 $(P [TODO: I've made two proposals, but I haven't persauded Walter yet!].)
@@ -356,6 +360,8 @@ Macros:
       GT = &gt;
       SQRT = &radix;
       HALF = &frac12;
+      D = <font face=Courier><b>$0</b></font>
+      D = <span class="d_inlinecode">$0</span>
 	H2=<h2>$0</h2>
 	H3=<h3>$0</h3>
 	TITLE=Real Close to the Machine: Floating Point in D
