@@ -21,7 +21,7 @@ SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd \
 	tuple.dd template-comparison.dd template-mixin.dd \
 	final-const-invariant.dd const.dd traits.dd COM.dd cpp_interface.dd \
 	hijack.dd const3.dd features2.dd safed.dd cpp0x.dd const-faq.dd \
-	concepts.dd memory-safe-d.dd
+	concepts.dd memory-safe-d.dd d-floating-point.dd
 
 DDOC=macros.ddoc doc.ddoc
 
@@ -48,7 +48,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html \
 	final-const-invariant.html const.html traits.html COM.html cpp_interface.html \
 	hijack.html const3.html features2.html safed.html cpp0x.html const-faq.html \
 	dmd-windows.html dmd-linux.html dmd-osx.html dmd-freebsd.html \
-	concepts.html memory-safe-d.html
+	concepts.html memory-safe-d.html d-floating-point.html
 
 
 target: $(TARGETS)
@@ -114,6 +114,8 @@ cppstrings.html : $(DDOC) cppstrings.dd
 cpptod.html : $(DDOC) cpptod.dd
 
 ctod.html : $(DDOC) ctod.dd
+
+d-floating-point.html : $(DDOC) d-floating-point.dd
 
 dbc.html : $(DDOC) dbc.dd
 
