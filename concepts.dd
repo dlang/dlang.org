@@ -1,0 +1,246 @@
+Ddoc
+
+$(D_S Template Constraints,
+
+	$(P Templates are normally overloaded and matched based on the
+	template arguments being matched to the template parameters.
+	The template parameters can specify specializations, so that
+	the template argument must match particular type patterns.
+	Similarly, template value arguments can be constrained to
+	match particular types.)
+
+	$(P But this has its limitations. Many times there are
+	arbitrarily more
+	complex criteria for what should be accepted by the template.
+	This can be used to:
+	)
+
+	$(UL
+	$(LI more finely discriminate about which
+	 template gets instantiated for given arguments)
+	$(LI provides better self-documentation about what
+	 characteristics template parameters must have)
+	$(LI can provide better diagnostics when arguments don't match,
+	 rather than an obscure error message based on the irrelevant
+	 (to the user) internal details of the template implementation)
+	)
+
+	$(P Constraints address this by simply providing an
+	expression that must evaluate at compile time to true
+	after the arguments are matched to the parameters.
+	If it is true, then that template is a valid match for
+	the arguments, if not, then it is not and is passed over
+	during overload matching.)
+
+	$(P The constraint expression follows the template declaration
+	and the $(CODE if) keyword:)
+
+---
+template Foo(int N)
+        if (N & 1)
+{
+    ...
+}
+---
+
+	$(P which constrains the template $(CODE Foo) to match only if its
+	argument
+	is an odd integer. Arbitrarily complex criteria can be used, as
+	long as it can be computed at compile time. For example, here's
+	a template that only accepts prime numbers:
+	)
+
+---
+bool isprime(int n)
+{
+    if (n < 1 || (n & 1) == 0)
+	return false;
+    if (n > 3)
+    {
+	for (auto i = 3; i * i < n; i += 2)
+	{
+	    if ((n % i) == 0)
+		return false;
+	}
+    }
+    return true;
+}
+
+template Foo(int N)
+	if (isprime(N))
+{
+    ...
+}
+
+Foo!(5)    // ok, 5 is prime
+Foo!(6)    // no match for Foo
+---
+
+	$(P Type constraints can be complex, too. For example, a template
+	Bar that will accept any floating point type using the traditional
+	type specializations:
+	)
+---
+template Bar(T:float)
+{
+   ...
+}
+template Bar(T:double)
+{
+   ...
+}
+template Bar(T:real)
+{
+   ...
+}
+---
+	$(P and the template implementation body must be duplicated
+	three times. But with constraints, this can be specified
+	with one template:
+	)
+---
+template Bar(T)
+	if (is(T == float) || is(T == double) || is(T == real))
+{
+   ...
+}
+---
+	$(P This can be simplified by using the $(CODE isFloatingPoint)
+	template in library module $(CODE std.traits):
+	)
+---
+import std.traits;
+template Bar(T)
+    if (isFloatingPoint!(T))
+{
+   ...
+}
+---
+
+	$(P Characteristics of types can be tested, such as if
+	a type can be added:
+	)
+
+---
+// Returns true if instances of type T can be added
+template isAddable(T)
+{   // Works by attempting to add two instances of type T
+    const isAddable = __traits(compiles, (T t) { return t + t; });
+}
+
+int Foo(T)(T t)
+    if (isAddable!(T))
+{
+    return 3;
+}
+
+struct S
+{
+    void opAdd(S s) { }   // an addable struct type
+}
+
+void main()
+{
+    Foo(4);   // succeeds
+    S s;
+    Foo(s);   // succeeds
+    Foo("a"); // fails to match
+}
+---
+
+	$(P Since any expression that can be computed at compile time
+	is allowed as a constraint, constraints can be composed:
+	)
+
+---
+int Foo(T)(T t)
+    if (isAddable!(T) && isMultipliable!(T))
+{
+    return 3;
+}
+---
+
+	$(P A more complex constraint can specify a list of operations
+	that must be doable with the type, such as $(CODE isStack) which
+	specifies the constraints that a stack type must have:)
+
+----
+template isStack(T)
+{
+    const isStack =
+        __traits(compiles,
+          (T t)
+          {   T.value_type v = top(t);
+              push(t, v);
+              pop(t);
+              if (empty(t)) { }
+          });
+}
+
+template Foo(T)
+    if (isStack!(T))
+{
+    ...
+}
+----
+
+	$(P and constraints can deal with multiple parameters:)
+
+---
+template Foo(T, int N)
+    if (isAddable!(T) && isprime(N))
+{
+    ...
+}
+---
+
+<h2>Overloading based on Constraints</h2>
+
+	$(P Given a list of overloaded templates with the same name,
+	constraints act as a yes/no filter to determine the list
+	of candidates for a match.
+	Overloading based on constraints can thus be achieved by
+	setting up constraint expressions that are mutually exclusive.
+	For example, overloading template $(CODE Foo) so that one
+	takes odd integers and the other even:
+	)
+---
+template Foo(int N) if (N & 1)    { ... } // A
+template Foo(int N) if (!(N & 1)) { ... } // B
+...
+Foo!(3)    // instantiates A
+Foo!(64)   // instantiates B
+---
+
+	$(P Constraints are not involved with determining which
+	template is more specialized than another.
+	)
+
+---
+void foo(T, int N)()        if (N & 1) { ... } // A
+void foo(T : int, int N)()  if (N > 3) { ... } // B
+...
+foo!(int, 7)();   // picks B, more specialized
+foo!(int, 1)();   // picks A, as it fails B's constraint
+foo!("a", 7)();   // picks A
+foo!("a", 4)();   // error, no match
+---
+
+<h2>References</h2>
+
+	$(UL
+	$(LI $(LINK2 http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2081.pdf, Concepts (Revision 1))
+	 by Douglas Gregor and Bjarne Stroustrup
+	)
+	)
+
+)
+
+Macros:
+	TITLE=Template Constraints
+	WIKI=Constraints
+META_KEYWORDS=D Programming Language, constraints, template, concepts, C++
+META_DESCRIPTION=Going beyond type patterns to constrain template instantiations.
+
+
+
