@@ -1,0 +1,264 @@
+Ddoc
+
+$(D_S SafeD&mdash;The Safe Subset of D,
+
+	$(P
+	$(SMALL by Bartosz Milewski, a member of the D design team)
+	)
+
+<div align="right">$(DIGG)</div>
+
+	$(P
+	I've seen some very good programmers move away from C++ in favor of languages like Java or C#. Being a hard-core C++ programmer myself, I wondered why anyone would want to switch to a less powerful and less efficient language. Mind you, I could understand why a newcomer would opt for a simpler, flatter-learning-curve language but, once somebody invested the time and effort to become proficient in C++, why in the world would they want to abandon it? 
+	)
+
+	$(P
+	The universal reason I've heard from the turncoats was "productivity." The consensus seems to be that programmers are more productive using Java, C#, Ruby, or Python then they are using C++. 
+	)
+
+	$(P
+	What are the major impediments to productive programming in C++? 
+	)
+
+	$(P
+	$(B Horrible syntax) is one. This is actually more serious than it sounds. A good programmer can probably master some pretty horrible syntaxes given enough time. The problem is that C++ syntax and grammar is not only human-unfriendly but also parser-hostile. The fact that the Java market is saturated with productivity boosting tools is the reflection of the language's parseability. I have to yet see a C++ programming environment that would offer such powerful refactoring tools as are commonplace in Java. 
+	)
+
+	$(P
+	Language safety is the other major factor. C++ is notorious for presenting a never ending gallery of opportunities to shoot yourself in the foot. In fact C++ not only provides the opportunity to write dangerous code, it $(I encourages ) it. At some point a major C++ compiler vendor marked a portion of STL algorithms as "deprecated" because of safety concerns. In particular the C++ Standard Library, in accordance with the spirit of C++, extends the number of ways a buffer overflow bug might sneak into your program. 
+	)
+
+	$(P
+	One notorious example is the $(CODE std::swap_ranges) algorithm, which takes three iterators. The first two iterators are supposed to delimit one range, the third one marks the beginning of the second range. No testing is done whether the second range doesn't extend past the end of the container. When it does, virus writers rejoice!
+	)
+	
+	$(P
+	The pipe dream of programming language designers is to be able to guarantee that if a program compiles successfully, it will work. Of course you have to be reasonable about your definition of a "working" program. For instance, you might require that the program will never get "stuck"&mdash;a term which has a precise meaning in computer science, but loosely means that the program will not GP-fault on you (it is stuck in the sense that there is no well-defined system-independent next step). Languages that have such a property are called "sound". 
+	)
+
+	$(P
+	Guess what, there is a well-defined (and meaningful) subset of Java that is sound. Real-life Java programs, for practical reasons, stray outside of this sound subset; but at least the use of unsafe features is less prevalent and easier to spot in a Java program than it is in a C++ program. In practice, a Java compiler will detect more bugs in your program than a C++ compiler, and that translates directly into less time spent debugging&mdash;ergo, higher productivity. 
+	)
+
+	$(P
+	So what are the good features of C++?
+	)
+
+	$(P
+	Performance is one. It's really hard to beat C++ performance. If your program has to be fast and responsive you have little choice but to write it in C++ (or, in rare cases, in C or assembly). 
+	)
+
+	$(P
+	Then there are the low-level features of C++ that let you write programs interacting directly with hardware. For instance, C and C++ are still kings of embedded programming.
+	)
+
+	$(P
+	C++ offers powerful abstractions, in particular the ability to write generic code. Java and C# have their own generics but they are feeble compared to what C++ has to offer. 
+	)
+
+	$(P
+	All these features make C++ an ideal language for writing operating
+	systems. Operating systems are huge programs that have to be fast and
+	interact directly with hardware. But even outside operating systems
+	there are a lot of applications that have to be large and fast.
+	)
+
+	$(P
+	So it looks like the programming world could be nicely partitioned between C++, Java, C# and the likes. And it all makes sense as long as you believe in the unavoidability of tradeoffs. But there is no law of nature that says, $(I You have to trade productivity for power).
+	)
+	
+	$(P
+	What about a language that is built like an onion. It has a reasonably simple and safe core, which is not unlike Java or C#. A programmer can quickly master a safe subset of it and be as productive as a Java programmer (if not more). And what if the safe subset offered performance that was comparable to C++? 
+	)
+	
+	$(P
+	And then, the same language has outer layers that can be mastered gradually, as the need arises. It offers low-level features to grind the hardware, and high-level features to generate code on demand. It offers modularity and implementation hiding. It has unrivaled compile time features that enable lightning fast runtime performance.
+	)
+	
+	$(P
+	I'll let you in on a secret, this language is D. 
+	)
+	
+	$(SECTION2 Programming Pitfalls,
+
+	
+	$(P
+	Did you know that the famous $(CODE"Hello World!") program, which is usually the first program people write in C, exposes some of the most dangerous features of the language? It contains this statement:
+	)
+	
+	$(CCODE
+printf ("Hello World!\n");)
+	
+	Consider the signature of $(CODE printf):
+	
+	$(CCODE
+int printf (const char * restrict format, ...);	)
+	
+	$(P
+	($(CODE restrict) is a new C keyword.) First of all, it's a function that takes a variable number of arguments. The number and the types of arguments are encoded in the format string. 
+	)
+	
+	$(P
+	When is the match between the format and the argument list checked? Not at compile time&mdash;the compiler has no understanding of the format string (although some compilers may issue warnings if the string is statically known). At runtime then? Well, guess again. Consider this: If the programmer makes a mistake of calling printf with too few arguments, he or she will not get a nice error code or exception. Here's what the C Standard says about this situation:
+	)
+	
+<table border="1" cellpadding="4" cellspacing="0"><tr><td bgcolor="#ffffcc">
+  	If there are insufficient arguments for the format, the behavior is undefined.
+</td></tr></table>
+	
+	$(P
+	Undefined behavior is the worst thing that may happen to a program. If you're lucky, the program will fault and terminate without prejudice. If you're not so lucky, the program will continue in a compromised state and, in the worst case, it will execute malicious code that will take over your computer.
+	)
+	
+	$(P
+	The second dangerous feature of $(CODE printf) is its use of a pointer. It is up to the diligence of the programmer to ensure that a pointer points to a valid piece of data. In the $(CODE"Hello World!") example, the pointer points to a null-terminated static string, so we're fine. But the following program will compile too:
+	)
+	
+	
+	$(CCODE
+char * format = 0;
+printf (format);	)
+	
+	$(P
+	Guess what happens. Inside $(CODE printf) the pointer is dereferenced and then all bets are off. Again, citing the C Standard,
+	)
+	
+<table border="1" cellpadding="4" cellspacing="0"><tr><td bgcolor="#ffffcc">
+	If an invalid value has been assigned to the pointer, the behavior of the unary * operator is undefined.
+</td></tr></table>
+	
+	$(P
+	Let's talk about pointers some more. Every memory allocation returns a valid pointer (unless the program runs out of memory). You might think that dereferencing such a pointer would be safe. That is correct as long as your program doesn't free the allocated memory thus ending the lifetime of the object. After that, you are dealing with a dangling pointer and all bets are off. Again, C Standard is pretty upfront about it.
+	)
+	
+<table border="1" cellpadding="4" cellspacing="0"><tr><td bgcolor="#ffffcc">
+	Among the invalid values for dereferencing a pointer by the unary * operator are a null pointer, an address inappropriately aligned for the type of object pointed to, and the address of an object after the end of its lifetime.
+</td></tr></table>
+	
+	$(P
+	As you can see, C was not designed for the faint of heart. It's a low-level language and the programmer better know what he or she is doing or suffer the consequences. 
+	)
+	
+	$(P
+	C++ is different though, right?
+	)
+	
+	$(P
+	Throughout its history, C++ has been struggling with C legacy. A lot of constructs have been provided to patch the unsafe features of C. For instance, the $(CODE"Hello World!") program in C++ might be transformed to a safer version.
+	)
+	
+	
+	$(CCODE
+std:cout &lt;&lt; "Hello World!" &lt;&lt; std::endl;	)
+	
+	$(P
+	There is no variable argument count, and the $(CODE std::cout) object is smart enough to understand the types of arguments passed to it (still, many programmers continue using $(CODE printf) in C++, if only for its syntactic simplicity).
+	)
+	
+	$(P
+	Unlike in C, memory allocation in C++ is typed and combined with object construction (as long as you stay away from $(CODE malloc) and $(CODE free)). That's the good part. However, objects still have to be explicitly recycled (deleted). And after recycling, the program is still left with dangling pointers, whose dereferencing&mdash;you guessed it&mdash;leads to undefined behavior. 
+	)
+	
+	$(P
+	Whereas pointers were important in C, C++ embraced them as the main vehicle for the Standard Library. STL algorithms use iterators, objects that are either pointers themselves or imitate the behavior (and the pitfalls) of pointers. Just like with pointers, a programmer's error in using iterators leads to undefined behavior (see the $(CODE swap_range) example).
+	)
+	
+	$(P
+	In response to C/C++'s inherent lack of safety, languages like Java and C# took a different path. They either ban pointers altogether or relegate them to special "unsafe" blocks. Memory management, with its risk of accessing recycled data, is taken away from the programmer and dealt with by automatic garbage collection. There are many other simplifications and safety improvements over C++. Unfortunately they all come at the expense of expressive power and performance.
+	)
+)
+	
+	
+$(SECTION2 The SafeD Subset,
+	
+
+	$(P
+	In D, we expect the  vast majority of programmers to operate within the safe subset of D, which we call SafeD. The safety and the ease of use of SafeD is comparable to Java&mdash;in fact Java programs can be machine-translated  into this safe subset of D. SafeD is easy to learn and it keeps the programmers away from undefined behaviors. It is also very efficient.
+	)
+	
+	$(P
+	When you enter SafeD, you  leave your pointers, unchecked casts and unions at the door. Memory management is provided to you courtesy of Garbage Collection. Class objects are passed around using opaque handles. Arrays and strings are bound-checked (it's possible to turn the checks off with a compiler switch, but then you're no longer in SafeD). You may still write code that will throw a runtime exception (e.g., array out-of-bounds error, or uninitialized-class-object error), but you won't be able to overwrite memory that hasn't been allocated to you or that has already been recycled. 
+	)
+	
+	$(P
+	Let's look at the $(CODE "Hello World!") program in D. On the face of it, it's not much different than its C counterpart: 
+	)
+	
+	---
+writeln ("Hello Safe World!");
+	---
+	
+	$(P
+	The function $(CODE writeln) is the equivalent of the C $(CODE printf) (more precisely, it's the representative of a family of output functions including $(CODE write) and its formatting versions, $(CODE writef) and $(CODE writefln)). Just like $(CODE printf),  $(CODE writeln) accepts a variable number of arguments of arbitrary types. But here the similarity ends. As long as you pass SafeD-arguments to $(CODE writeln), you are guaranteed not to encounter any undefined behavior. Here, $(CODE writeln) is called with a single argument of the type $(CODE string). In contrast to C, D $(CODE string) is not a pointer. It is an array of $(CODE invariant char), and arrays are a built into the safe subset of D. 
+	)
+	
+	$(P
+	You might be interested to know how the safety of $(CODE writeln) is accomplished in D. One possible approach would have been to make $(CODE writeln) a compiler intrinsic, so that correct code would be generated on a case-by-case basis. The beauty of D is that it gives a sophisticated programmer tools that allow such case-by-case code generation of code. The advanced features used in the implementation of writeln are:
+	$(UL
+	$(LI Compile-time code generation using templates, and)
+	$(LI A safe mechanism for dealing with variable number of arguments using tuples.)
+	)
+	
+)
+
+$(SECTION2 SafeD Libraries,
+	
+	$(P
+	One of the major differences between Java and D is that D has enough power to let an advanced programmer implement libraries that can be used within SafeD.
+	)
+	
+	$(P
+	A lot of advanced features of D are compatible with SafeD, as long as they don't force the user to use unsafe types. For instance, a library may provide the implementation of a generic list. The list can be instantiated with any type, in particular with a pointer type. A list of pointers, by definition, cannot be safe, because pointer arithmetic is unsound. However, a list of ints or class objects can and should be safe. That's why such ageneric lists  can be used in SafeD, even though their usage outside of SafeD may be unsafe.
+	)
+	
+	$(P
+	Moreover, it might be more efficient to base the internal implementation of a list on pointers. As long as these pointers are not exposed to the client, such an implementation might be certified to be SafeD compatible<sup>1</sup> . You can have a cake (advanced features of D) and eat it too (take advantage of them in SafeD).
+	)
+)
+
+	
+$(SECTION2 One User's Experience,
+	
+	$(P
+	Even before I came up with the idea of SafeD<sup>2</sup>, I tried to
+	restrict myself to the safe subset of D for most of my projects. I was
+	surprised how much could be accomplished and how my productivity soared.
+	I also showed SafeD to my co-worker, a C++ programmer, and he was able
+	to learn it in a very short time. 
+	)
+	
+	$(P
+	So far my experience has been that if a SafeD program compiles without
+	errors then, in a vast majority of cases, it runs without errors, and
+	does what I want it to do. That definitely hasn't been my experience
+	with C++. 
+	)
+	
+	$(P
+	What is even more surprising to me is that I was able to accomplish all
+	that with almost non-existing support from tools and with a compiler
+	that excels in cryptic error messages. D is still lacking a lot of
+	infrastructure, but I can imagine how easy programming will be when a
+	critical mass of productivity tools sprouts around it. And unlike C++, D
+	is  easy to parse and its front end is open source. So there are no
+	barriers to entry for tool writers.
+	)
+	
+$(SECTION2 Footnotes,
+	$(P 
+		$(OL
+			$(LI There is no central authority to issue such certifications, each library provider has to establish a level of trust with its clients.  In particular, you should expect the D standard library to be SafeD certified by the compiler provider.)
+			$(LI The name, SafeD, was proposed by David B. Held.)
+		)
+	)
+)
+)
+$(SECTION2 Acknowledgments,
+$(P Many thanks go to the rest of the D design team for valuable feedback and corrections to this article)
+)
+)
+)
+
+Macros:
+	TITLE=SafeD
+	WIKI=SafeD
