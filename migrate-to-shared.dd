@@ -1,0 +1,231 @@
+Ddoc
+
+$(D_S $(TITLE),
+
+	$(P Starting with $(LINK2 changelog.html#new2_030, dmd version 2.030),
+	the default storage class
+	for statics and globals will be
+	$(LINK2 glossary.html#tls, thread local storage (TLS)), rather
+	than the classic global data segment.
+	While most D code should just compile and run successfully without
+	change, there can be some issues.
+	)
+
+$(OL
+	$(LI $(LINK2 #performance, Performance of TLS variables).)
+	$(LI $(LINK2 #vtls, Identifying TLS variables).)
+	$(LI $(LINK2 #immutable, Switch to Immutable).)
+	$(LI $(LINK2 #shared, Marking as shared).)
+	$(LI $(LINK2 #__gshared, Cowboying with __gshared).)
+	$(LI $(LINK2 #compile-errors, Compile errors).)
+	$(LI $(LINK2 #link-errors, Link errors).)
+)
+
+$(H3 $(LNAME2 performance, Performance of TLS variables))
+
+	$(P Yes, reading or writing TLS variables will be slower
+	than for classic global variables. It'll be about 3
+	instructions rather than one.
+	But on Linux, at least, TLS will be slightly faster
+	than accessing classic globals using PIC (position
+	independent code) compiler code generation settings.
+	So it's hard to see that this would be an unacceptable
+	problem. But let's presume it is. What can we do about it?
+	)
+
+	$(OL
+	$(LI Minimize use of global variables. Reducing the use
+	of globals can improve the modularization and maintainability
+	of the code anyway, so this is a worthy goal.)
+	$(LI Make them immutable. Immutable data doesn't have
+	synchronization problems, so the compiler doesn't place it
+	in TLS.)
+	$(LI Cache a reference to the global. Making a local cache
+	of it, and then accessing the cached value rather than the
+	original, can speed things up especially if the cached value
+	gets enregistered by the compiler.)
+	$(LI Cowboy it with $(B __gshared).)
+	)
+
+$(H3 $(LNAME2 vtls, Identifying TLS variables))
+
+	$(P The first step is to find all the global variables,
+	so they can be reviewed for disposition.
+	)
+
+	$(P Given the complexity of source code, it isn't always
+	easy to identify the global variables. Since it (used to be)
+	implicit, there's no way to grep for them. It's hard
+	to be sure you've found them all.
+	)
+
+	$(P A new dmd compiler switch was added, $(B -vtls).
+	Compiling with it on will print a list of all the global
+	variables that are now defaulting to thread local storage.
+	)
+
+---
+int x;
+
+void main()
+{
+    static int y;
+}
+---
+
+$(CONSOLE
+dmd test $(B -vtls)
+test.d(2): x is thread local
+test.d(6): y is thread local
+)
+
+$(H3 $(LNAME2 #immutable, Switch to Immutable))
+
+	$(P Immutable data, once initialized, never changes.
+	This means that there are no synchronization issues
+	with multithreading, and so no need to put immutable data
+	into TLS. The compiler will put immutable data into
+	classic global storage, not TLS.
+	)
+
+	$(P A good chunk of global data falls into this category.
+	Just mark it as $(B immutable) and it's done.
+	)
+
+---
+int[3] table = [6, 123, 0x87];
+---
+	$(P becomes:)
+---
+immutable table[3] x = [6, 123, 0x87];
+---
+
+	$(P Immutability is also nice because it opens the door
+	for further compiler optimizations.
+	)
+
+$(H3 $(LNAME2 shared, Marking As Shared))
+
+	$(P Global data that is meant to be shared among multiple
+	threads should be marked with the $(B shared) keyword:
+	)
+
+---
+shared int flag;
+---
+
+	$(P Not only does this cause $(CODE flag) to be put into
+	classic global storage, it is also typed as being shared:
+	)
+
+---
+int* p = &flags;           // error, flags is shared
+shared(int)* q = &flags;   // ok
+---
+
+	$(P The $(CODE shared) type attribute is transitive (like
+	$(CODE const) and $(CODE immutable)) are. This enables
+	static checking and sharing correctness.
+	)
+
+$(H3 $(LNAME2 __gshared, Cowboying With __gshared))
+
+	$(P Sometimes, none of the above solutions will be
+	acceptable:
+	)
+
+	$(OL
+	$(LI interfacing with C code that uses classic globals)
+	$(LI just get it working, and go back and fix it later)
+	$(LI the app is single threaded only, so no sharing issues)
+	$(LI you need every erg of performance)
+	$(LI you want to handle all the synchronization issues
+	yourself)
+	)
+
+	$(P As D is a systems language, of course there's a way to
+	do this. Use the storage class $(B __gshared):
+	)
+
+---
+__gshared x;
+
+void main()
+{
+    __gshared int y;
+}
+---
+
+	$(P $(B __gshared) stores the variable in the classic global
+	data segment.
+	)
+
+	$(P Naturally, $(B __gshared) is not allowed in safe mode.
+	)
+
+	$(P Using $(B __gshared) makes such code easily searchable
+	when doing QA code reviews or when going back later to
+	fix any workarounds.
+	)
+
+$(H3 $(LNAME2 #compile-errors, Compile Errors))
+
+	$(P The most common compiler error related to TLS will be:
+	)
+
+---
+int x;
+int* p = &x;
+---
+$(CONSOLE
+test.d(2): Error: non-constant expression & x
+)
+
+	$(P While this works with classic global variables, it
+	won't work with TLS variables. The reason is because
+	TLS variables don't have a location in memory known to
+	either the linker or the loader. It's a runtime computed
+	value.)
+
+	$(P The solution is to initialize such things in
+	a static constructor.)
+
+$(H3 $(LNAME2 link-errors, Link Errors))
+
+	$(P Sometimes you may encounter strange error messages from the linker
+	about the global variables.
+	These are nearly always caused by one module putting the variable
+	in TLS, and another putting that same variable in classic global
+	storage.
+	This can happen when linking code with libraries that were built
+	with earlier versions of dmd. Check that libphobos2.a was properly
+	replaced with the latest.
+	It can also happen when interfacing with C. C globals default
+	to being classic global, although C does support TLS declarations.
+	Make sure the corresponding D declarations match the C ones in
+	terms of TLS or classic global.
+	)
+
+$(CCODE
+int x;
+extern int y;
+__thread int z;
+)
+
+---
+extern (C)
+{
+    extern shared int x;
+    shared int y;
+    extern int z;
+}
+---
+
+)
+
+Macros:
+	H2=<h2>$0</h2>
+	H3=<h3>$0</h3>
+	TITLE=Migrating to Shared
+	WIKI=Migrating To Shared
+
