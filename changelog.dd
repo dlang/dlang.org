@@ -4,7 +4,7 @@ $(D_S D Change Log,
 
 
 $(UL
-    $(NEW 031)
+	$(NEW 031)
 	$(NEW 030)
 	$(NEW 029)
 	$(NEW 028)
@@ -45,31 +45,66 @@ $(UL
 	$(LI $(LINK2 http://www.digitalmars.com/pnews/index.php?category=2, tech support))
 )
 
-$(VERSION 031, Apr 29, 2009, =================================================,
+$(VERSION 031, May 14, 2009, =================================================,
 
+    $(WHATSNEW
+	$(LI Renamed root directory \dmd to \dmd2)
+	$(LI Use of with symbols that shadow local symbols is no longer allowed)
+	$(LI Added $(LINK2 final switch statements, statement.html#FinalSwitchStatement))
+	$(LI Added $(LINK2 case range statements, statement.html#CaseRangeStatement))
+	$(LI Implicit integral conversions that could result in loss of significant
+	bits are no longer allowed.)
+	$(LI $(BUGZILLA 3080): dmd should output compilation errors to stderr, not stdout)
+    )
     $(BUGSFIXED
-	    $(LI $(BUGZILLA 2900): Array appending slowed drastically since integration of druntime)
-	    $(LI $(BUGZILLA 2952): Segfault on exit when using array ops with arrays of doubles larger than 8 elements)
+	$(LI $(BUGZILLA 852): Various errors with static initialization of structs and arrays)
+	$(LI $(BUGZILLA 1343): Various errors with static initialization of structs and arrays)
+	$(LI $(BUGZILLA 1358): ICE(root.c) on Unicode codepoints greater than 0x7FFFFFFF)
+	$(LI $(BUGZILLA 1524): ICE(constfold.c) on using "is" with strings in CTFE)
+	$(LI $(BUGZILLA 1984): Assertion failure: 'e1->type' on line 1198 in file 'constfold.c')
+	$(LI $(BUGZILLA 2323): ICE(cgcs.c): taking address of a method of a temporary struct)
+	$(LI $(BUGZILLA 2399): ICE(cgcod.c) on casting function to delegate)
+	$(LI $(BUGZILLA 2429): std.stream.File incorrect flag parsing and sharing mode)
+	$(LI $(BUGZILLA 2432): complex alias -> mtype.c:125: virtual Type* Type::syntaxCopy(): Assertion `0' failed.)
+	$(LI $(BUGZILLA 2603): ICE(cgcs.c) on subtracting string literals)
+	$(LI $(BUGZILLA 2843): ICE(constfold.c) with is-expression with invalid dot-expression in is-expression involving typeid)
+	$(LI $(BUGZILLA 2875): ICE(cgcod.c) setting delegate = &Struct.func)
+	$(LI $(BUGZILLA 2884): ICE: Assert: 'template.c', line 3773, 'global.errors')
+	$(LI $(BUGZILLA 2900): Array appending slowed drastically since integration of druntime)
+	$(LI $(BUGZILLA 2923): -O generates bad code for ?:)
+	$(LI $(BUGZILLA 2952): Segfault on exit when using array ops with arrays of doubles larger than 8 elements)
+	$(LI $(BUGZILLA 2974): Segfault(mtype.c) on auto function)
+	$(LI $(BUGZILLA 2981): Bad code generation for structs containing invariants)
+	$(LI $(BUGZILLA 2982): Assertion failure in function if() clause)
+	$(LI $(BUGZILLA 3003): Need to implicitly add () on member template function calls)
+	$(LI $(BUGZILLA 3014): ICE(template.c) instantiating template with tuple)
+	$(LI $(BUGZILLA 3016): Errors in the documentation of std.math.acos)
+	$(LI $(BUGZILLA 3026): Segfault with incomplete static array initializer)
+	$(LI $(BUGZILLA 3078): NaN reported as equal to zero)
     )
 )
 
-$(VERSION 030, Apr 29, 2009, =================================================,
+$(VERSION 030, May 11, 2009, =================================================,
 
-$(WHATSNEW
+    $(WHATSNEW
+	$(LI added $(B -vtls) compiler switch)
+	$(LI $(RED classic global storage now defaults to TLS (Thread Local Storage)).
+	This is a big change, see $(LINK2 migrate-to-shared.html, Migrating To Shared).)
         $(LI std.algorithm: added minPos. Improvements to Splitter suggested by Brad Roberts. Splitter now is bidirectional. Also Splitter has one extra trailing element if it ends with a separator. Added variadic arguments for setUnion and setIntersection. Added functions setSymmetricDifference and largestPartialIntersection. Improved BinaryHeap's interface and implementation.)
 	$(LI std.array: Improvements to Appender. Now it works with string and other immutable-element arrays, and accepts ranges in put().)
         $(LI std.format: added raw specifier for reading)
 	$(LI std.range: Added iota with two arguments. Added FrontTransversal and Transversal.)
-        $(LI std.stdio: added File.byChunk))
+        $(LI std.stdio: added File.byChunk)
 	$(LI std.traits: Added isImplicitlyConvertible.)
 	$(LI std.tuple: Added Tuple.opComp.)
 	$(LI Folded in compiler changes by Unknown W. Brackets
 	to support Solaris.)
-	$(LI added .typeinfo to ClassInfo)
+	$(LI added .typeinfo to ClassInfo $(BUGZILLA 2836): Navigate from ClassInfo to TypeInfo)
     )
     $(BUGSFIXED
-	$(LI Fix scheduler bug on Linux)
-        $(LI unlisted: made std.numeric.entropy work on const/immutable arrays)
+	$(LI Fix instruction scheduler bug on Linux)
+	$(LI unlisted: made std.numeric.entropy work on const/immutable arrays)
+	$(LI Fixed several problems associated with thread local storage)
         $(LI $(BUGZILLA 642): error: mixin "static this" into where it cannot be)
         $(LI $(BUGZILLA 713): circular const definitions with module operator "." cause the compiler to segfault)
         $(LI $(BUGZILLA 752): Assertion failure: 'e->type->ty != Ttuple' on line 4518 in file 'mtype.c')
@@ -90,11 +125,13 @@ $(WHATSNEW
         $(LI $(BUGZILLA 2215): Forward reference enum with base type within a struct causes Segmentation Fault in the compiler)
         $(LI $(BUGZILLA 2309): Crash on a template mixing in a variadic template with an undefined template identifier)
         $(LI $(BUGZILLA 2346): ICE when comparing typedef'd class)
-        $(LI $(BUGZILLA 2580): Documented WinMain for D2 is wrong)
-        $(LI $(BUGZILLA 2633): incorrect ModuleInfo declaration in object.di)
+	$(LI $(BUGZILLA 2580): Documented WinMain for D2 is wrong)
+	$(LI $(BUGZILLA 2633): incorrect ModuleInfo declaration in object.di)
+	$(LI $(BUGZILLA 2695): pure functions can invoke impure function pointers)
+	$(LI $(BUGZILLA 2807): Marking a nested function as 'pure' may cause bad code generations silently accepted)
         $(LI $(BUGZILLA 2821): struct alignment inconsistent with C for { int, long })
         $(LI $(BUGZILLA 2851): Segfault using C-style struct initializer with too few arguments)
-        $(LI $(BUGZILLA 2865): RandomCover not random)
+	$(LI $(BUGZILLA 2865): RandomCover not random)
         $(LI $(BUGZILLA 2882): std.random.MersenneTwisterEngine without seed)
 	$(LI $(BUGZILLA 2890): deadlock in std.stdio)
         $(LI $(BUGZILLA 2893): qualified types don't have an Unsigned counterpart)
