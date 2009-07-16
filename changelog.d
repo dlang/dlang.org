@@ -65,7 +65,10 @@ $(VERSION 043, Xyz 99, 2009, =================================================,
 $(WHATSNEW
         $(LI std.algorithm: added minPos)
         $(LI std.format: added raw specifier for reading)
-        $(LI added File.byChunk))
+        $(LI added File.byChunk)
+		$(LI Improved exception message for assert(0) in Windows -release builds)
+		)
+		
 $(BUGSFIXED
         $(LI $(BUGZILLA 2882): std.random.MersenneTwisterEngine without no seed))
         $(LI unlisted: made entropy work on const/immutable arrays))
