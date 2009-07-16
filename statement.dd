@@ -35,8 +35,10 @@ $(GNAME NonEmptyStatement):
     $(GLINK ForStatement)
     $(GLINK ForeachStatement)
     $(GLINK SwitchStatement)
-    $(GLINK CaseStatement)
-    $(GLINK DefaultStatement)
+$(V2      $(GLINK FinalSwitchStatement)
+)    $(GLINK CaseStatement)
+$(V2      $(GLINK CaseRangeStatement)
+)    $(GLINK DefaultStatement)
     $(GLINK ContinueStatement)
     $(GLINK BreakStatement)
     $(GLINK ReturnStatement)
@@ -120,14 +122,14 @@ $(P	Statements can be labeled. A label is an identifier that
 )
 
 $(GRAMMAR
-$(I LabelledStatement):
+$(I LabeledStatement):
     $(I Identifier) : $(PSSEMI)
 )
 
 $(P
-	Any statement can be labelled, including empty statements,
+	Any statement can be labeled, including empty statements,
 	and so can serve as the target
-	of a goto statement. Labelled statements can also serve as the
+	of a goto statement. Labeled statements can also serve as the
 	target of a break or continue statement.
 )
 $(P
@@ -322,7 +324,7 @@ do
 
 $(GRAMMAR
 $(I ForStatement):
-	$(B for $(LPAREN))$(I Initialize) $(I Test)$(B ;) $(I Increment)$(B $(RPAREN)) $(PSSCOPE)
+	$(B for $(LPAREN))$(I Initialize) $(I Test) $(B ;) $(I Increment)$(B $(RPAREN)) $(PSSCOPE)
 
 $(GNAME Initialize):
 	$(B ;)
@@ -395,7 +397,7 @@ for (int i = 0; i < 10; i++)
 
 $(GRAMMAR
 $(I ForeachStatement):
-    $(I Foreach $(LPAREN))$(I ForeachTypeList)$(B ;) $(I Aggregate)$(B $(RPAREN)) $(PS0)
+    $(I Foreach) $(B $(LPAREN))$(I ForeachTypeList) $(B ;) $(I Aggregate)$(B $(RPAREN)) $(PS0)
 
 $(GNAME Foreach):
     $(B foreach)
@@ -806,8 +808,17 @@ $(I SwitchStatement):
 $(GNAME CaseStatement):
 	$(B case) $(I ExpressionList) $(B :) $(PSSEMI_PSCURLYSCOPE)
 
+$(V2 $(GNAME CaseRangeStatement):
+	$(B case) $(I FirstExp) $(B : .. case) $(I LastExp) $(B :) $(PSSEMI_PSCURLYSCOPE)
+
+$(I FirstExp):
+	$(I AssignExpression)
+
+$(I LastExp):
+	$(I AssignExpression)
+)
 $(GNAME DefaultStatement):
-	$(B default:) $(PSSEMI_PSCURLYSCOPE)
+	$(B default :) $(PSSEMI_PSCURLYSCOPE)
 )
 
 	$(P $(EXPRESSION) is evaluated. The result type T must be
@@ -820,6 +831,12 @@ $(GNAME DefaultStatement):
 	$(P The case expressions, $(I ExpressionList), are a comma separated
 	list of expressions.
 	)
+
+$(V2
+	$(P A $(I CaseRangeStatement) is a shorthand for listing a series
+	of case statements from $(I FirstExp) to $(I LastExp).
+	)
+)
 
 	$(P If none of the case expressions match, and there is a default
 	statement, the default statement is transferred to.
@@ -842,7 +859,7 @@ $(V1
 )
 $(V2
 	The case expressions must all evaluate to a constant value
-	or array, or a runtime initialized const or invariant variable of
+	or array, or a runtime initialized const or immutable variable of
 	integral type.
 )
 	They must be implicitly convertible to the type of the
@@ -851,7 +868,7 @@ $(V2
 
 	$(P Case expressions must all evaluate to distinct values.
 $(V2
-	Const or invariant variables must all have different names.
+	Const or immutable variables must all have different names.
 	If they share a value, the first case statement with that value
 	gets control.
 )
@@ -925,6 +942,27 @@ switch (name)
 	performance interest.
 	)
 
+$(V2
+<h2>$(LNAME2 FinalSwitchStatement, Final Switch Statement)</h2>
+
+$(GRAMMAR
+$(I FinalSwitchStatement):
+	$(B final switch $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
+)
+
+	$(P A final switch statement is just like a switch statement,
+	except that:)
+
+	$(UL
+	$(LI No $(GLINK DefaultStatement) is allowed.)
+	$(LI No $(GLINK CaseRangeStatement)s are allowed.)
+	$(LI If the switch $(EXPRESSION) is of enum type, all
+	the enum members must appear in the $(GLINK CaseStatement)s.)
+	$(LI The case expressions cannot evaluate to a run time
+	initialized value.)
+	)
+
+)
 
 <h2>$(LNAME2 ContinueStatement, Continue Statement)</h2>
 
@@ -1064,7 +1102,7 @@ $(I GotoStatement):
     $(B goto) $(B case) $(EXPRESSION) $(B ;)
 )
 
-	A goto transfers to the statement labelled with
+	A goto transfers to the statement labeled with
 	$(I Identifier).
 
 ---
@@ -1169,6 +1207,30 @@ with (Foo)
     Y y;	// same as Foo.Y y;
 }
 --------------
+
+$(V2
+	$(P Use of with object symbols that shadow local symbols with
+	the same identifier are not allowed.
+	This is to reduce the risk of inadvertant breakage of with
+	statements when new members are added to the object declaration.
+	)
+---
+struct S
+{
+    float x;
+}
+
+void main()
+{
+    int x;
+    S s;
+    with (s)
+    {
+        x++;  // error, shadows the int x declaration
+    }
+}
+---
+)
 
 <h2>$(LNAME2 SynchronizedStatement, Synchronized Statement)</h2>
 
@@ -1522,6 +1584,11 @@ else
 }
 --------------
 
+	$(P Semantically consecutive $(I AsmStatement)s shall not have
+	any other instructions (such as register save or restores) inserted
+	between them by the compiler.
+	)
+
 <h2>$(LNAME2 PragmaStatement, Pragma Statement)</h2>
 
 $(GRAMMAR
@@ -1574,7 +1641,7 @@ $(V2
 
 $(GRAMMAR
 $(I ForeachRangeStatement):
-    $(GLINK Foreach) $(LPAREN)$(GLINK ForeachType)$(B ;) $(I LwrExpression) $(B ..) $(I UprExpression) $(B $(RPAREN)) $(PSSCOPE)
+    $(GLINK Foreach) $(LPAREN)$(GLINK ForeachType) $(B ;) $(I LwrExpression) $(B ..) $(I UprExpression) $(B $(RPAREN)) $(PSSCOPE)
 
 $(GNAME LwrExpression):
     $(EXPRESSION)

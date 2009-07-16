@@ -1,22 +1,22 @@
 Ddoc
 
-$(D_S Const and Invariant,
+$(D_S Const and Immutable,
 
 	$(P When examining a data structure or interface, it is very
 	helpful to be able to easily tell which data can be expected to not
 	change, which data might change, and who may change that data.
 	This is done with the aid of the language typing system.
-	Data can be marked as const or invariant, with the default being
+	Data can be marked as const or immutable, with the default being
 	changeable (or $(I mutable)).
 	)
 
-	$(P $(I invariant) applies to data that cannot change.
-	Invariant data values, once constructed, remain the same for
+	$(P $(I immutable) applies to data that cannot change.
+	Immutable data values, once constructed, remain the same for
 	the duration of the program's
 	execution.
-	Invariant data can be placed in ROM (Read Only Memory) or in
+	Immutable data can be placed in ROM (Read Only Memory) or in
 	memory pages marked by the hardware as read only.
-	Since invariant data does not change, it enables many opportunities
+	Since immutable data does not change, it enables many opportunities
 	for program optimization, and has applications in functional
 	style programming.
 	)
@@ -28,49 +28,49 @@ $(D_S Const and Invariant,
 	that promise not to modify them.
 	)
 
-	$(P Both invariant and const are $(I transitive), which means
-	that any data reachable through an invariant reference is also
-	invariant, and likewise for const.
+	$(P Both immutable and const are $(I transitive), which means
+	that any data reachable through an immutable reference is also
+	immutable, and likewise for const.
 	)
 
-$(SECTION2 Invariant Storage Class,
+$(SECTION2 Immutable Storage Class,
 
 	$(P
-	The simplest invariant declarations use it as a storage class.
+	The simplest immutable declarations use it as a storage class.
 	It can be used to declare manifest constants.
 	)
 
 ---
-invariant int x = 3;	// x is set to 3
-x = 4;			// error, x is invariant
+immutable int x = 3;	// x is set to 3
+x = 4;			// error, x is immutable
 char[x] s;		// s is an array of 3 char's
 ---
 
 	$(P The type can be inferred from the initializer:
 	)
 ---
-invariant y = 4;	// y is of type int
-y = 5;			// error, y is invariant
+immutable y = 4;	// y is of type int
+y = 5;			// error, y is immutable
 ---
 
-	$(P If the initializer is not present, the invariant can
+	$(P If the initializer is not present, the immutable can
 	be initialized from the corresponding constructor:
 	)
 
 ---
-invariant int z;
+immutable int z;
 void test()
 {
-    z = 3;		// error, z is invariant
+    z = 3;		// error, z is immutable
 }
 static this()
 {
-    z = 3;    // ok, can set invariant that doesn't have
+    z = 3;    // ok, can set immutable that doesn't have
               // static initializer
 }
 ---
 	$(P
-	The initializer for a non-local invariant declaration must be
+	The initializer for a non-local immutable declaration must be
 	evaluatable
 	at compile time:
 	)
@@ -78,34 +78,34 @@ static this()
 ---
 int foo(int f) { return f * 3; }
 int i = 5;
-invariant x = 3 * 4;      // ok, 12
-invariant y = i + 1;      // error, cannot evaluate at compile time
-invariant z = foo(2) + 1; // ok, foo(2) can be evaluated at compile time, 7
+immutable x = 3 * 4;      // ok, 12
+immutable y = i + 1;      // error, cannot evaluate at compile time
+immutable z = foo(2) + 1; // ok, foo(2) can be evaluated at compile time, 7
 ---
 
-	$(P The initializer for a non-static local invariant declaration
+	$(P The initializer for a non-static local immutable declaration
 	is evaluated at run time:
 	)
 ---
 int foo(int f)
 {
-  invariant x = f + 1;  // evaluated at run time
-  x = 3;                // error, x is invariant
+  immutable x = f + 1;  // evaluated at run time
+  x = 3;                // error, x is immutable
 }
 ---
 
 	$(P
-	Because invariant is transitive, data referred to by an invariant is
-	also invariant:
+	Because immutable is transitive, data referred to by an immutable is
+	also immutable:
 	)
 
 ---
-invariant char[] s = "foo";
-s[0] = 'a';  // error, s refers to invariant data
-s = "bar";   // error, s is invariant
+immutable char[] s = "foo";
+s[0] = 'a';  // error, s refers to immutable data
+s = "bar";   // error, s is immutable
 ---
 
-	$(P Invariant declarations can appear as lvalues, i.e. they can
+	$(P Immutable declarations can appear as lvalues, i.e. they can
 	have their address taken, and occupy storage.
 	)
 )
@@ -113,7 +113,7 @@ s = "bar";   // error, s is invariant
 $(SECTION2 Const Storage Class,
 
 	$(P
-	A const declaration is exactly like an invariant declaration,
+	A const declaration is exactly like an immutable declaration,
 	with the following differences:
 	)
 
@@ -179,11 +179,11 @@ constant folding.)
 
 $(TABLE1
 <caption>Template Argument Deduced Type</caption>
-$(TR $(TH &nbsp;)               $(TH mutable $(CODE T)) $(TH1 const(T)) $(TH1 invariant(T)))
+$(TR $(TH &nbsp;)               $(TH mutable $(CODE T)) $(TH1 const(T)) $(TH1 immutable(T)))
 $(TR $(TD1 foo(U))              $(TDE T) $(TDE T) $(TDE T))
-$(TR $(TD1 foo(U:U))            $(TDE T) $(TDE const(T)) $(TDE invariant(T)))
+$(TR $(TD1 foo(U:U))            $(TDE T) $(TDE const(T)) $(TDE immutable(T)))
 $(TR $(TD1 foo(U:const(U)))     $(TDI T) $(TDE T) $(TDI T))
-$(TR $(TD1 foo(U:invariant(U))) $(NM) $(NM) $(TDE T))
+$(TR $(TD1 foo(U:immutable(U))) $(NM) $(NM) $(TDE T))
 )
 
 $(P Where:)
@@ -195,95 +195,95 @@ $(TR $(TD $(ORANGE orange)) $(TD implicit conversion))
 )
 )
 
-$(SECTION2 Invariant Type,
+$(SECTION2 Immutable Type,
 
 	$(P
-	Data that will never change its value can be typed as invariant.
-	The invariant keyword can be used as a $(I type constructor):
+	Data that will never change its value can be typed as immutable.
+	The immutable keyword can be used as a $(I type constructor):
 	)
 
 ---
-invariant(char)[] s = "hello";
+immutable(char)[] s = "hello";
 ---
 
 	$(P
-	The invariant applies to the type within the following parentheses.
+	The immutable applies to the type within the following parentheses.
 	So, while $(CODE s) can be assigned new values,
 	the contents of $(CODE s[]) cannot be:
 	)
 
 ---
-s[0] = 'b';  // error, s[] is invariant
-s = null;    // ok, s itself is not invariant
+s[0] = 'b';  // error, s[] is immutable
+s = null;    // ok, s itself is not immutable
 ---
 
 	$(P
-	Invariantness is transitive, meaning it applies to anything that
-	can be referenced from the invariant type:
+	Immutableness is transitive, meaning it applies to anything that
+	can be referenced from the immutable type:
 	)
 
 ---
-invariant(char*)** p = ...;
-p = ...;        // ok, p is not invariant
-*p = ...;       // ok, *p is not invariant
-**p = ...;      // error, **p is invariant
-***p = ...;     // error, ***p is invariant
+immutable(char*)** p = ...;
+p = ...;        // ok, p is not immutable
+*p = ...;       // ok, *p is not immutable
+**p = ...;      // error, **p is immutable
+***p = ...;     // error, ***p is immutable
 ---
 
-	$(P Invariant used as a storage class is equivalent to using
-	invariant as a type constructor for the entire type of a
+	$(P Immutable used as a storage class is equivalent to using
+	immutable as a type constructor for the entire type of a
 	declaration:)
 
 ---
-invariant int x = 3;   // x is typed as invariant(int)
-invariant(int) y = 3;  // y is invariant
+immutable int x = 3;   // x is typed as immutable(int)
+immutable(int) y = 3;  // y is immutable
 ---
 )
 
 
-$(SECTION2 Creating Invariant Data,
+$(SECTION2 Creating Immutable Data,
 
 	$(P
-	The first way is to use a literal that is already invariant,
-	such as string literals. String literals are always invariant.
+	The first way is to use a literal that is already immutable,
+	such as string literals. String literals are always immutable.
 	)
 
 ---
-auto s = "hello";   // s is invariant(char)[5]
-char[] p = "world"; // error, cannot implicitly convert invariant
+auto s = "hello";   // s is immutable(char)[5]
+char[] p = "world"; // error, cannot implicitly convert immutable
 		    // to mutable
 ---
 
 	$(P
-	The second way is to cast data to invariant.
+	The second way is to cast data to immutable.
 	When doing so, it is up to the programmer to ensure that no
 	other mutable references to the same data exist.
 	)
 
 ---
 char[] s = ...;
-invariant(char)[] p = cast(invariant)s;     // undefined behavior
-invariant(char)[] p = cast(invariant)s.dup; // ok, unique reference
+immutable(char)[] p = cast(immutable)s;     // undefined behavior
+immutable(char)[] p = cast(immutable)s.dup; // ok, unique reference
 ---
 
 	$(P
-	The $(CODE .idup) property is a convenient way to create an invariant
+	The $(CODE .idup) property is a convenient way to create an immutable
 	copy of an array:
 	)
 
 ---
 auto p = s.idup;
-p[0] = ...;	  // error, p[] is invariant
+p[0] = ...;	  // error, p[] is immutable
 ---
 
-<h2>Removing Invariant With A Cast</h2>
+<h2>Removing Immutable With A Cast</h2>
 
 	$(P
-	The invariant type can be removed with a cast:
+	The immutable type can be removed with a cast:
 	)
 
 ---
-invariant int* p = ...;
+immutable int* p = ...;
 int* q = cast(int*)p;
 ---
 
@@ -296,22 +296,22 @@ int* q = cast(int*)p;
 ---
 
 	$(P
-	The ability to cast away invariant-correctness is necessary in
+	The ability to cast away immutable-correctness is necessary in
 	some cases where the static typing is incorrect and not fixable, such
 	as when referencing code in a library one cannot change.
 	Casting is, as always, a blunt and effective instrument, and
-	when using it to cast away invariant-correctness, one must assume
-	the responsibility to ensure the invariantness of the data, as
+	when using it to cast away immutable-correctness, one must assume
+	the responsibility to ensure the immutableness of the data, as
 	the compiler will no longer be able to statically do so.
 	)
 )
 
 
-$(SECTION2 Invariant Member Functions,
+$(SECTION2 Immutable Member Functions,
 
 	$(P
-	Invariant member functions are guaranteed that the object
-	and anything referred to by the $(CODE this) reference is invariant.
+	Immutable member functions are guaranteed that the object
+	and anything referred to by the $(CODE this) reference is immutable.
 	They are declared as:
 	)
 
@@ -319,14 +319,14 @@ $(SECTION2 Invariant Member Functions,
 struct S
 {   int x;
 
-    invariant void foo()
+    immutable void foo()
     {
-	x = 4;	    // error, x is invariant
-	this.x = 4; // error, x is invariant
+	x = 4;	    // error, x is immutable
+	this.x = 4; // error, x is immutable
     }
 ---
 
-    $(P The $(D_KEYWORD const) and $(D_KEYWORD invariant) function
+    $(P The $(D_KEYWORD const) and $(D_KEYWORD immutable) function
     attributes
     can also appear after the closing parenthesis of
     the parameter list:
@@ -335,7 +335,7 @@ struct S
 ---
 struct S
 {
-    void bar() invariant
+    void bar() immutable
     {
     }
 }
@@ -346,7 +346,7 @@ struct S
 $(SECTION2 Const Type,
 
 	$(P
-	Const types are like invariant types, except that const
+	Const types are like immutable types, except that const
 	forms a read-only $(I view) of data. Other aliases to that
 	same data may change it at any time.
 	)
@@ -366,17 +366,17 @@ $(SECTION2 Const Member Functions,
 $(SECTION2 Implicit Conversions,
 
 	$(P
-	Mutable and invariant types can be implicitly converted to const.
-	Mutable types cannot be implicitly converted to invariant,
+	Mutable and immutable types can be implicitly converted to const.
+	Mutable types cannot be implicitly converted to immutable,
 	and vice versa.
 	)
 )
 
 
-$(SECTION2 Comparing D Invariant and Const with C++ Const,
+$(SECTION2 Comparing D Immutable and Const with C++ Const,
 
 	<table border=2 cellpadding=4 cellspacing=0 class="comp">
-	<caption>Const, Invariant Comparison</caption>
+	<caption>Const, Immutable Comparison</caption>
 
 	<thead>
 	$(TR
@@ -395,7 +395,7 @@ $(SECTION2 Comparing D Invariant and Const with C++ Const,
 	)
 
 	$(TR
-	$(TD invariant keyword)
+	$(TD immutable keyword)
 	$(TD Yes)
 	$(TD No)
 	)
@@ -519,10 +519,10 @@ foo(&i, &i);
 	)
 
 	$(TR
-	$(TD aliasing of invariant with mutable)
+	$(TD aliasing of immutable with mutable)
 	$(TD No:
 ---
-void foo(invariant int* x, int* y)
+void foo(immutable int* x, int* y)
 {
    bar(*x); // bar(3)
    *y = 4;  // undefined behavior
@@ -530,15 +530,15 @@ void foo(invariant int* x, int* y)
 }
 ...
 int i = 3;
-foo(cast(invariant)&i, &i);
+foo(cast(immutable)&i, &i);
 ---
 	)
-	$(TD No invariants)
+	$(TD No immutables)
 	)
 
 	$(TR
 	$(TD type of string literal)
-	$(TD invariant(char)[])
+	$(TD immutable(char)[])
 	$(TD const char*)
 	)
 
@@ -564,7 +564,7 @@ Macros:
 	NM=$(TD $(RED no match))
 	Y=$(TD $(GREEN Yes))
 	N=$(TD $(RED No))
-	TITLE=Const and Invariant
+	TITLE=Const and Immutable
 	WIKI=ConstInvariant
 	NO=<td class="compNo">No</td>
 	NO1=<td class="compNo"><a href="$1">No</a></td>
@@ -574,7 +574,7 @@ Macros:
 	CPPCODE2 = <pre class="cppcode2">$0</pre>
 	ERROR = $(RED $(B error))
 	COMMA=,
-META_KEYWORDS=D Programming Language, const, invariant
+META_KEYWORDS=D Programming Language, const, immutable
 META_DESCRIPTION=Comparison of const between the
 D programming language, C++, and C++0x
 

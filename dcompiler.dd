@@ -1,6 +1,6 @@
 Ddoc
 
-$(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX) D Compiler,
+$(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX)$(FREEBSD FreeBSD) D Compiler,
 
 	$(UL 
 	$(WINDOWS $(LI dmd for $(LINK2 dmd-linux.html,   Linux)))
@@ -81,19 +81,19 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX) D Compiler,
 	$(DD Sample D programs)
 	)
     $(WINDOWS
-	$(DT $(TT \dmd\windows\bin\dmd.exe)
+	$(DT $(TT $(DMDDIR)\windows\bin\dmd.exe)
 	$(DD D compiler executable)
 	)
 
-	$(DT $(TT \dmd\windows\bin\$(LINK2 http://www.digitalmars.com/ctg/shell.html, shell.exe))
+	$(DT $(TT $(DMDDIR)\windows\bin\$(LINK2 http://www.digitalmars.com/ctg/shell.html, shell.exe))
 	$(DD Simple command line shell)
 	)
 
-	$(DT $(TT \dmd\windows\bin\sc.ini)
+	$(DT $(TT $(DMDDIR)\windows\bin\sc.ini)
 	$(DD Global compiler settings)
 	)
 
-	$(DT $(TT \dmd\windows\lib\$(LIB))
+	$(DT $(TT $(DMDDIR)\windows\lib\$(LIB))
 	$(DD D runtime library)
 	)
     )
@@ -173,7 +173,7 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX) D Compiler,
 	Switch to the root directory.
 	Unzip the files in the root directory.
 	$(TT dmd.zip) will create
-	a $(TT \dmd) directory with all the files in it.
+	a $(TT $(DMDDIR)) directory with all the files in it.
 	$(TT dmc.zip) will create
 	a $(TT \dm) directory with all the files in it.
 	)
@@ -399,6 +399,9 @@ $(WINDOWS
 		link in $(I libname) as the default library when
 		not compiling for symbolic debugging instead of $(B $(LIB))
 	  )
+	  $(SWITCH $(B -deps=)$(I filename),
+		write module dependencies as text to $(I filename)
+	  )
 
     $(UNIX
 	  $(SWITCH $(B -fPIC),
@@ -427,7 +430,7 @@ $(WINDOWS
     $(WINDOWS
 		add CodeView 4 symbolic debug info in C format
 		for debuggers such as
-		$(TT \dmd\bin\windbg)
+		$(TT $(DMDDIR)\bin\windbg)
     )
     $(UNIX
 		add Dwarf symbolic debug info in C format
@@ -583,6 +586,12 @@ $(V2
 	  $(SWITCH $(B -v),
 		verbose
 	  )
+$(V2
+	  $(SWITCH $(B -vtls),
+		print informational messages identifying variables defaulting
+		to thread local storage. Handy for migrating to shared model.
+	  )
+)
 	  $(SWITCH $(B -version=)$(I level),
 		compile in $(LINK2 version.html#version, version level) >= $(I level)
 	  )
@@ -614,7 +623,7 @@ $(V2
 	)
 
 $(CONSOLE
-set LIB=\dmd\lib;\dm\lib
+set LIB=$(DMDDIR)\lib;\dm\lib
 )
 
 	$(P If the $(B dmd) command is used to both compile and link
@@ -652,7 +661,7 @@ set LIB=\dmd\lib;\dm\lib
 	normally be set to:
 
 $(CONSOLE
-set LIB=\dmd\lib;\dm\lib
+set LIB=$(DMDDIR)\lib;\dm\lib
 )
 
 	<dt>$(B LINKCMD)
@@ -661,7 +670,7 @@ set LIB=\dmd\lib;\dm\lib
 	$(B LINKCMD) environment variable to it. For example:
 
 $(CONSOLE
-set LINKCMD=\dm\bin\link
+set LINKCMD=\dmd\windows\bin\link
 )
 
 	<dt>$(B PATH)
@@ -743,17 +752,17 @@ DDOCFILE=mysettings.ddoc
 
 	$(P The $(B %@P%) is replaced with the path to $(TT sc.ini).
 	Thus, if the fully qualified file name $(TT sc.ini) is
-	$(TT c:\dmd\bin\sc.ini), then $(B %@P%) will be replaced with
-	$(TT c:\dmd\bin), and the above $(TT sc.ini) will be
+	$(TT c:$(DMDDIR)\bin\sc.ini), then $(B %@P%) will be replaced with
+	$(TT c:$(DMDDIR)\bin), and the above $(TT sc.ini) will be
 	interpreted as:
 	)
 
 $(SCINI
 [Environment]
-LIB="c:\dmd\bin\..\lib";\dm\lib
-$(V1 DFLAGS="-Ic:\dmd\bin\..\src\phobos")
-$(V2 DFLAGS="-Ic:\dmd\bin\..\src\phobos" "-Ic:\dmd\bin\..\src\druntime\import")
-LINKCMD="c:\dmd\bin\..\..\dm\bin"
+LIB="c:$(DMDDIR)\bin\..\lib";\dm\lib
+$(V1 DFLAGS="-Ic:$(DMDDIR)\bin\..\src\phobos")
+$(V2 DFLAGS="-Ic:$(DMDDIR)\bin\..\src\phobos" "-Ic:$(DMDDIR)\bin\..\src\druntime\import")
+LINKCMD="c:$(DMDDIR)\bin\..\..\dm\bin"
 DDOCFILE=mysettings.ddoc
 )
 
