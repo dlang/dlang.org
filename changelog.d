@@ -4,6 +4,10 @@ $(D_S D Change Log,
 
 
 $(UL 
+	$(NEW1 047)
+	$(NEW1 046)
+	$(NEW1 045)
+	$(NEW1 044)
 	$(NEW1 043)
 	$(NEW1 042)
 	$(NEW1 041)
@@ -61,18 +65,149 @@ $(COMMENT
 )
 )
 
-$(VERSION 043, Xyz 99, 2009, =================================================,
-$(WHATSNEW
-		$(LI Improved exception message for assert(0) in Windows -release builds)
-		)
-		
-$(BUGSFIXED
-        $(LI $(BUGZILLA 2398): writef("%x") for a pointer is always uppercase)
-)
-        
-$(VERSION 042, Mar 12, 2009, =================================================,
+$(VERSION 047, July 7, 2009, =================================================,
 
-$(WHATSNEW
+    $(WHATSNEW
+	$(LI $(BUGZILLA 3122): [patch] Adding support for fast and reliable build tools to the frontend)
+	$(LI Added support for:
+---
+a[i].var = e2
+---
+	and:
+---
+a[] = e
+---
+	in CTFE. $(I (thanks, Don!)))
+	$(LI Member functions can now be used in CTFE)
+	$(LI Operator overloading can now be used in CTFE)
+	$(LI Nested functions can now be used in CTFE)
+	$(LI CTFE error messages now explain why the function could not be
+	interpreted at compile time)
+    )
+    $(BUGSFIXED
+	$(LI Fixed bug processing spaces in dmd's directory)
+	$(LI $(BUGZILLA 601): statement.html - Formatting/markup errors in BNF)
+	$(LI $(BUGZILLA 1461): Local variable as template alias parameter breaks CTFE)
+	$(LI $(BUGZILLA 1605): break in switch with goto breaks in ctfe)
+	$(LI $(BUGZILLA 1948): CTFE fails when mutating a struct in an array)
+	$(LI $(BUGZILLA 1950): CTFE doesn't work correctly for structs passed by ref)
+	$(LI $(BUGZILLA 2569): static arrays in CTFE functions don't compile)
+	$(LI $(BUGZILLA 2604): DW_TAG_module and GDB)
+	$(LI $(BUGZILLA 2940): null is null cannot be evaluated at compile time)
+	$(LI $(BUGZILLA 2960): CTFE rejects static array to dynamic array casts)
+	$(LI $(BUGZILLA 3170): Forward reference of nested class fails if outer class is not plain)
+	$(LI $(BUGZILLA 3186): Declaring structs as incomplete types no longer works)
+	$(LI $(BUGZILLA 3192): asm in a anonymous delegate crash the compiler)
+	$(LI $(BUGZILLA 3196): Segfault(mtype.c) after almost any error involving a delegate literal)
+	$(LI $(BUGZILLA 3205): CTFE: $ cannot be used in lvalues)
+	$(LI $(BUGZILLA 3246): ICE(init.c) using indexed array initializer on local array)
+	$(LI $(BUGZILLA 3264): -O causes wrong "used before set" error when using enum.)
+    )
+)
+
+$(VERSION 046, Jul 6, 2009, =================================================,
+
+    $(WHATSNEW
+	$(LI $(BUGZILLA 3080): dmd should output compilation errors to stderr, not stdout)
+    )
+    $(BUGSFIXED
+	$(LI Fix dmd crash on multicore Windows.)
+	$(LI $(BUGZILLA 106): template - mixin sequence)
+	$(LI $(BUGZILLA 852): Various errors with static initialization of structs and arrays)
+	$(LI $(BUGZILLA 854): TypeTuple in anonymous delegate causes ice in glue.c)
+	$(LI $(BUGZILLA 1054): regression: circular aliases cause compiler stack overflow)
+	$(LI $(BUGZILLA 1343): Various errors with static initialization of structs and arrays)
+	$(LI $(BUGZILLA 1358): ICE(root.c) on Unicode codepoints greater than 0x7FFFFFFF)
+	$(LI $(BUGZILLA 1459): ICE(cgcs.c) on attempt to set value of non-lvalue return struct)
+	$(LI $(BUGZILLA 1524): ICE(constfold.c) on using "is" with strings in CTFE)
+	$(LI $(BUGZILLA 1984): Assertion failure: 'e1->type' on line 1198 in file 'constfold.c')
+	$(LI $(BUGZILLA 2323): ICE(cgcs.c): taking address of a method of a temporary struct)
+	$(LI $(BUGZILLA 2429): std.stream.File incorrect flag parsing and sharing mode)
+	$(LI $(BUGZILLA 2432): complex alias -> mtype.c:125: virtual Type* Type::syntaxCopy(): Assertion `0' failed.)
+	$(LI $(BUGZILLA 2603): ICE(cgcs.c) on subtracting string literals)
+	$(LI $(BUGZILLA 2843): ICE(constfold.c) with is-expression with invalid dot-expression in is-expression involving typeid)
+	$(LI $(BUGZILLA 2884): ICE: Assert: 'template.c', line 3773, 'global.errors')
+	$(LI $(BUGZILLA 2888): [PATCH] speedup for float * 2.0)
+	$(LI $(BUGZILLA 2915): [Patch]: Optimize -a*-b into a*b)
+	$(LI $(BUGZILLA 2923): -O generates bad code for ?:)
+	$(LI $(BUGZILLA 2932): bad e_ehsize (36 != 52))
+	$(LI $(BUGZILLA 2952): Segfault on exit when using array ops with arrays of doubles larger than 8 elements)
+	$(LI $(BUGZILLA 3003): Need to implicitly add () on member template function calls)
+	$(LI $(BUGZILLA 3014): ICE(template.c) instantiating template with tuple)
+	$(LI $(BUGZILLA 3016): Errors in the documentation of std.math.acos)
+	$(LI $(BUGZILLA 3026): Segfault with incomplete static array initializer)
+	$(LI $(BUGZILLA 3044): Segfault(template.c) instantiating struct tuple constructor with zero arguments.)
+	$(LI $(BUGZILLA 3078): NaN reported as equal to zero)
+	$(LI $(BUGZILLA 3114): optlink failing on multicore machines)
+	$(LI $(BUGZILLA 3117): dmd crash by *1)
+	$(LI $(BUGZILLA 3128): Internal error: ..\ztc\cod4.c 2737)
+	$(LI $(BUGZILLA 3130): Crashed with triple stars)
+    )
+)
+
+$(VERSION 045, May 11, 2009, =================================================,
+
+    $(WHATSNEW
+	$(LI Folded in compiler/library changes by Unknown W. Brackets
+	to support Solaris.)
+	$(LI Migrate Posix uses of std.c.linux.linux to std.c.posix.posix)
+	$(LI added .typeinfo to ClassInfo $(BUGZILLA 2836): Navigate from ClassInfo to TypeInfo)
+    )
+    $(BUGSFIXED
+	$(LI Fix instruction scheduler bug on Linux)
+        $(LI $(BUGZILLA 642): error: mixin "static this" into where it cannot be)
+        $(LI $(BUGZILLA 713): circular const definitions with module operator "." cause the compiler to segfault)
+        $(LI $(BUGZILLA 752): Assertion failure: 'e->type->ty != Ttuple' on line 4518 in file 'mtype.c')
+        $(LI $(BUGZILLA 858): Forward reference to struct inside class crashes the compiler)
+        $(LI $(BUGZILLA 884): Segfault in recursive template)
+        $(LI $(BUGZILLA 934): Segfault taking mangleof a forward reference in a  template.)
+        $(LI $(BUGZILLA 1011): illegal import declaration causes compile time segfault)
+        $(LI $(BUGZILLA 1054): regression: circular aliases cause segfaults)
+        $(LI $(BUGZILLA 1061): "asm inc [;" segfaults compiler.)
+        $(LI $(BUGZILLA 1195): regression: aliasing an enum member causes compile time segfaults)
+        $(LI $(BUGZILLA 1305): Compiler hangs with templated opCmp returning templated class)
+        $(LI $(BUGZILLA 1385): Stack Overflow with huge array literal.)
+        $(LI $(BUGZILLA 1428): Segfault on template specialization with delegates and tuples)
+        $(LI $(BUGZILLA 1586): DMD and GDC segfaults on incomplete code segment.)
+        $(LI $(BUGZILLA 1791): Segmentation fault with anon class in anon class and non-constant variable init)
+        $(LI $(BUGZILLA 1916): segfault on invalid string concat)
+        $(LI $(BUGZILLA 1946): Compiler crashes on attempt to implicit cast const typedef to non-const.)
+        $(LI $(BUGZILLA 2048): DMD crash on CTFE that involves assigning to member variables of void-initialized struct)
+        $(LI $(BUGZILLA 2061): wrong vtable call with multiple interface inheritance)
+        $(LI $(BUGZILLA 2215): Forward reference enum with base type within a struct causes Segmentation Fault in the compiler)
+        $(LI $(BUGZILLA 2309): Crash on a template mixing in a variadic template with an undefined template identifier)
+        $(LI $(BUGZILLA 2346): ICE when comparing typedef'd class)
+        $(LI $(BUGZILLA 2821): struct alignment inconsistent with C for { int, long })
+	$(LI $(BUGZILLA 2920): recursive templates blow compiler stack)
+    )
+)
+
+$(VERSION 044, Apr 9, 2009, =================================================,
+
+    $(WHATSNEW
+	$(LI Added std.c.posix.* to Phobos.)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 675): %a format has an out-by-1 bug for denormals.)
+	$(LI $(BUGZILLA 2064): Segfault with mixin(for/foreach) with empty loop body)
+	$(LI $(BUGZILLA 2199): Segfault using array operation in function call)
+	$(LI $(BUGZILLA 2203): typeof(class.template.foo) crashes compiler)
+    )
+)
+
+$(VERSION 043, Apr 6, 2009, =================================================,
+
+    $(WHATSNEW
+	$(LI Added FreeBSD 7.1 support.)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 2796): Dependency on libstdc++-v3)
+    )
+)
+
+$(VERSION 042, Mar 31, 2009, =================================================,
+
+    $(WHATSNEW
 	$(LI Added response files for Linux and OSX)
 	$(LI On Windows, if there are multiple source files on the command
 	 line they are now read with a background thread. This may speed up
@@ -83,19 +218,26 @@ $(WHATSNEW
 	 try to set it.)
     )
     $(BUGSFIXED
+	$(LI std.math.hypot is wrong for subnormal arguments)
 	$(LI Fix bug where / wasn't recognized as a path separator on Windows.)
 	$(LI $(BUGZILLA 920): Fix one more out of date reference to 'auto' rather than 'scope')
 	$(LI $(BUGZILLA 1923): GC optimization for contiguous pointers to the same page)
+	$(LI $(BUGZILLA 2319): "Win32 Exception" not very useful)
 	$(LI $(BUGZILLA 2570): Patch for some mistakes in Ddoc comments)
+	$(LI $(BUGZILLA 2591): custom allocator new argument should be size_t instead of uint)
+	$(LI $(BUGZILLA 2689): seek behaves incorrectly on MAC OSX)
+	$(LI $(BUGZILLA 2692): alignment of double on x86 linux is incorrect)
 	$(LI $(BUGZILLA 2705): Response file size cannot exceed 64kb)
 	$(LI $(BUGZILLA 2711): -H produces bad headers files if function defintion is templated and have auto return value)
 	$(LI $(BUGZILLA 2731): Errors in associative array example)
+	$(LI $(BUGZILLA 2743): dumpobj gives "buss error" on Tiger)
 	$(LI $(BUGZILLA 2744): wrong init tocbuffer of forstatement)
 	$(LI $(BUGZILLA 2745): missing token tochars in lexer.c)
 	$(LI $(BUGZILLA 2747): improper toCBuffer of funcexp)
 	$(LI $(BUGZILLA 2750): Optimize slice copy with size known at compile time)
 	$(LI $(BUGZILLA 2751): incorrect scope storage class vardeclaration tocbuffer)
 	$(LI $(BUGZILLA 2767): DMD incorrectly mangles NTFS stream names)
+	$(LI $(BUGZILLA 2772): lib can't open response file)
     )
 )
 
