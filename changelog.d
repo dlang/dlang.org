@@ -83,6 +83,7 @@ a[] = e
 	$(LI Nested functions can now be used in CTFE)
 	$(LI CTFE error messages now explain why the function could not be
 	interpreted at compile time)
+	$(LI Improved exception message for assert(0) in Windows -release builds)
     )
     $(BUGSFIXED
 	$(LI Fixed bug processing spaces in dmd's directory)
@@ -91,6 +92,7 @@ a[] = e
 	$(LI $(BUGZILLA 1605): break in switch with goto breaks in ctfe)
 	$(LI $(BUGZILLA 1948): CTFE fails when mutating a struct in an array)
 	$(LI $(BUGZILLA 1950): CTFE doesn't work correctly for structs passed by ref)
+	$(LI $(BUGZILLA 2398): writef("%x") for a pointer is always uppercase)
 	$(LI $(BUGZILLA 2569): static arrays in CTFE functions don't compile)
 	$(LI $(BUGZILLA 2604): DW_TAG_module and GDB)
 	$(LI $(BUGZILLA 2940): null is null cannot be evaluated at compile time)
