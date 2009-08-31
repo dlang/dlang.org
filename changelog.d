@@ -115,6 +115,7 @@ $(VERSION 046, Jul 6, 2009, =================================================,
     $(BUGSFIXED
 	$(LI Fix dmd crash on multicore Windows.)
 	$(LI $(BUGZILLA 106): template - mixin sequence)
+	$(LI $(BUGZILLA 810): Cannot forward reference template)
 	$(LI $(BUGZILLA 852): Various errors with static initialization of structs and arrays)
 	$(LI $(BUGZILLA 854): TypeTuple in anonymous delegate causes ice in glue.c)
 	$(LI $(BUGZILLA 1054): regression: circular aliases cause compiler stack overflow)
