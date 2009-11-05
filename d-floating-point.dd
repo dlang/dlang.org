@@ -50,14 +50,14 @@ $(P Most problems arise from the distribution of these representable numbers. Th
 
 ---
 
-     +     +-----------+------------+ .. +.. +----------+----------+     +       #
--infinity -float.max  -1    -float.min   0   float.min   1   float.max infinity  NaN
+     +     +-----------+------------+    ..   +    ..    +----------+----------+     +       #
+-infinity -float.max  -1  -float.min_normal   0   float.min_normal  1  float.max infinity  NaN
 
 ---
 
 $(P Notice that half of the IEEE number line lies between -1 and +1. There are 1000 million representable floats between 0 and 0.5, but only 8 million between 0.5 and 1. This has important implications for accuracy: the effective precision is incredibly high near zero. Several examples will be presented where numbers in the range -1 to +1 are treated seperately to take advantage of this.)
 
-$(P Notice also the special numbers: $(PLUSMNINF); the so-called "subnormals" between $(PLUSMN)float.min and 0, which are represented at reduced precision; the fact that there are TWO zeros, +0 and -0, and finally "NaN"("Not-a-Number"), the nonsense value, which caused so much grief in Listing 1.)
+$(P Notice also the special numbers: $(PLUSMNINF); the so-called "subnormals" between $(PLUSMN)float.min_normal and 0, which are represented at reduced precision; the fact that there are TWO zeros, +0 and -0, and finally "NaN"("Not-a-Number"), the nonsense value, which caused so much grief in Listing 1.)
 
 $(P Why does NaN exist? It serves a valuable role: it $(I eradicates undefined behaviour) from floating-point arithmetic. This makes floating-point completely predictable. Unlike the $(D int) type, where 3/0 invokes a hardware division by zero trap handler, possibly ending your program, the floating-point division 3.0/0.0 results in $(INFIN). Numeric overflow (eg, $(D real.max*2)) also creates $(INFIN). Depending on the application, $(INFIN) may be a perfectly valid result; more typically, it indicates an error. Nonsensical operations, such as $(D 0.0 / 0.0), result in NaN; but $(I your program does not lose control). At first glance, infinity and NaN may appear unnecessary -- why not just make it an error, just as in the integer case? After all, it is easy to avoid division by zero, simply by checking for a zero denominator before every division. The real difficulty comes from overflow: it is extremely difficult to determine in advance whether an overflow will occur in a multiplication.)
 
@@ -155,12 +155,12 @@ $(P By using $(D real) for intermediate values, we are guaranteed that our resul
 
 $(H2 Properties of the Built-in Types)
 
-$(P The fundamental floating-point properties are $(D epsilon), $(D min) and $(D max). The six integral properties are simply the log2 or log10 of these three.)
+$(P The fundamental floating-point properties are $(D epsilon), $(D min_normal) and $(D max). The six integral properties are simply the log2 or log10 of these three.)
 
 $(TABLE1
 $(TR $(TH &nbsp;) $(TH float) $(TH double) $(TH real80) $(TH quadruple) $(TH decimal64) $(TH decimal128))
 $(TR $(TD epsilon) $(TD 0x1p-23) $(TD 0x1p-52) $(TD 0x1p-63) $(TD 0x1p-112) $(TD 1e-16 (1p-54)) $(TD 1e-34 (1p-113)))
-$(TR $(TD [min) $(TD 0x1p-126) $(TD 0x1p-1022) $(TD 0x1p-16382) $(TD 0x1p-16382) $(TD 1e-383) $(TD 1e-6143))
+$(TR $(TD [min_normal) $(TD 0x1p-126) $(TD 0x1p-1022) $(TD 0x1p-16382) $(TD 0x1p-16382) $(TD 1e-383) $(TD 1e-6143))
 $(TR $(TD ..max$(RPAREN)) $(TD 0x1p+128) $(TD 0x1p+1024) $(TD 0x1p+16384) $(TD 0x1p+16384) $(TD 1e+385) $(TD 1e+6145))
 $(TR <td colspan=7>binary properties</td>)
 $(TR $(TD mant_dig) $(TD 24) $(TD 53) $(TD 64) $(TD 113) $(TD 53) $(TD 112))
@@ -179,14 +179,14 @@ For binary types, the $(D dig) property gives only the $(I minimum) number of va
 $(H2 Useful relations for a floating point type $(D F), where $(D x) and $(D y) are of type $(D F))
 
 $(UL
-$(LI The smallest representable number is $(D F.min * F.epsilon))
+$(LI The smallest representable number is $(D F.min_normal * F.epsilon))
 $(LI Any integer between 0 and $(D (1/F.epsilon)) can be stored in F without loss of precision.
   $(D 1/F.epsilon) is always a exact power of the base.)
 $(LI If a number $(D x) is subnormal, $(D x*(1/F.epsilon)) is normal, and
   $(D exponent(x) = exponent(x*(1/F.epsilon)) - (mant_dig-1)).)
 $(LI $(D x>0) if and only if $(D 1/(1/x) > 0); $(D x<0) if and only if $(D 1/(1/x) < 0).)
 $(LI If $(D x-y==0), then $(D x==y  && isFinite(x) && isFinite(y)). Note that if $(D x==y==infinity), then $(D isNaN(x-y)).)
-$(LI $(D F.max * F.min = 4.0) for binary types, $(D 10.0) for decimal types.)
+$(LI $(D F.max * F.min_normal = 4.0) for binary types, $(D 10.0) for decimal types.)
 )
 
 $(H3  Addition and subtraction)
@@ -210,7 +210,7 @@ $(LI Multiplication and division are $(I always) at risk of overflow or underflo
   For any $(D abs(x) > 1), there is at least one finite $(D y) such that $(D x*y) will overflow to $(INFIN).
   For any $(D abs(x) < 1), there is at least one finite $(D y) such that $(D x*y) will underflow to zero.
 )
-$(LI $(D x*x) will overflow if $(D abs(x)>sqrt(F.max)), and underflow to zero if $(D abs(x) < sqrt(F.min*F.epsilon))  )
+$(LI $(D x*x) will overflow if $(D abs(x)>sqrt(F.max)), and underflow to zero if $(D abs(x) < sqrt(F.min_normal*F.epsilon))  )
 $(LI Multiplication is commutative. $(D a * b == b * a)).
 $(LI Multiplication is not associative in general: $(D a*(b*c) != (a*b)*c), because (1) there is a risk of overflow or underflow and (2) $(D b*c) may be an exact calculation, so that $(D a*(b*c)) contains only one round-off error, whereas $(D (a*b)*c) contains two. The roundoff errors may therefore accumulate at the rate of just under 1 ulp per multiplication.)
 $(LI However, a limited form of associativity is possible if the type used for intermediate results is larger than any of the operands (which happens on x87 and Itanium machines). If $(D R) is the intermediate type, and $(D F) is the type being multiplied, up to $(D min(R.max_exp/F.max_exp, R.epsilon/F.epsilon)) values of type $(D F) can be multiplied together in any order without influencing the result. For example, if $(D R) is $(D double), multiplication of 8 floats $(D f1*f2*f3*f4*f5*f6*f7*f8) is completely associative. On x87, 130 floats can be safely multiplied together in any order, and 16 doubles can similarly be multiplied together safely.
