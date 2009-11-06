@@ -1,0 +1,104 @@
+Ddoc
+
+$(D_S $(TITLE),
+
+	$(P There are many changes to the D programming language that affect
+	migrating source code from D1 to D2.
+	This is an outline of changes to look for and a guide to how to modify
+	the code.
+	See $(LINK2 features2.html, D 2.0 Enhancements) for a complete list
+	of changes to the language.
+	)
+
+	$(P This document is incomplete.)
+
+$(UL
+    $(LI Core Language
+    $(UL
+	$(ITEMR new_keywords, New Keywords)
+	$(ITEMR global_variables, Global Variables)
+	$(ITEMR static_arrays, Static Arrays are now Value Types)
+	$(ITEMR immutable_string, String Literals are Immutable)
+    )
+    )
+
+    $(LI Phobos Library
+    $(UL
+    )
+    )
+)
+
+$(ITEM new_keywords, New Keywords)
+
+	$(P D2 adds the following keywords:
+	$(D_KEYWORD pure)
+	$(D_KEYWORD nothrow)
+	$(D_KEYWORD shared)
+	$(D_KEYWORD immutable)
+	Any use of them in D1 code must be renamed.
+	Any variable names starting with two underscores
+	should be renamed.
+	)
+
+$(ITEM global_variables, Global Variables)
+
+	$(P Global variables are now, by default, stored in thread local
+	storage. To put them back in global storage, use the $(D_KEYWORD __gshared)
+	storage class:)
+
+---
+int foo = 7; // D1 code
+$(B __gshared) int foo = 7; // D2 equivalent
+---
+
+	$(P Carefully consider whether or not those variables actually should
+	go into thread local storage, rather than being implicitly shared
+	among all threads.
+	)
+
+$(ITEM static_arrays, Static Arrays are now Value Types)
+
+	$(P In D1, a static array function parameter is passed by
+	reference, meaning a pointer to the start of the static array
+	is passed as an argument.
+	This means that any changes to the array contents made by the
+	function will be visible to the function's caller.
+	In D2, a copy of the whole static
+	array is passed as an argument. Changes to the array contents by
+	the function are not visible to the function's caller, as it is
+	a separate copy.)
+
+	$(P To migrate, add the keyword $(D_KEYWORD ref) to the parameter
+	declaration:)
+
+---
+void foo(int[3] array);      // D1 code
+void foo($(B ref) int[3] array);  // D2 equivalent
+---
+
+$(ITEM immutable_string, String Literals are Immutable)
+
+	$(P String literals in D1 have type $(D_CODE char[]), but in
+	D2 they have type $(D_CODE immutable(char)[]).
+	To migrate usually involves doing a global search replace:
+	)
+
+	$(TABLE1
+	$(TR $(TH from)$(TH to))
+	$(TR $(TD char[])$(TD string))
+	$(TR $(TD wchar[])$(TD wstring))
+	$(TR $(TD dchar[])$(TD dstring))
+	)
+
+	$(P This will take care of most of the issues.
+	For the rest, where mutable strings are desired, there will
+	be some work necessary.
+	)
+
+)
+
+Macros:
+	TITLE=Migrating D1 Code to D2
+	WIKI=D1toD2
+	ITEMR=$(LI $(LINK2 #$1, $+))
+	ITEM=<hr><h3><a name="$1">$+</a></h3>
