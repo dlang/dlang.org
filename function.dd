@@ -60,11 +60,15 @@ pure int foo(int i,     // ok, implicitly convertible to immutable
 }
 ---
 
+	$(P Pure functions are covariant with impure ones.)
+
 <h3>$(LNAME2 nothrow-functions, Nothrow Functions)</h3>
 
 	$(P Nothrow functions do not throw any exceptions derived
 	from class $(I Exception).
 	)
+
+	$(P Nothrow functions are covariant with throwing ones.)
 
 <h3>$(LNAME2 ref-functions, Ref Functions)</h3>
 
@@ -79,6 +83,31 @@ ref int foo()
 }
 ...
 foo() = 3;  // reference returns can be lvalues
+---
+
+<h3>$(LNAME2 property-functions, Property Functions)</h3>
+
+	$(P Property functions are tagged with the $(CODE @property)
+	attribute. They can be called without parentheses (hence
+	acting like properties).
+	)
+
+---
+struct S
+{
+    int m_x;
+    @property
+    {   int x() { return m_x; }
+        int x(int newx) { return m_x = newx; }
+    }
+}
+
+void foo()
+{
+    S s;
+    s.x = 3;   // calls s.x(int)
+    bar(s.x);  // calls bar(s.x())
+}
 ---
 )
 
@@ -1517,6 +1546,81 @@ const int x = foo("1");
 	$(P is illegal, because the runtime code for foo() cannot be
 	generated. A function template would be the appropriate
 	method to implement this sort of thing.)
+
+$(V2
+<h2>$(LNAME2 function-safety, Function Safety)</h2>
+
+	$(P $(I Safe functions) are functions that are statically checked
+	to exhibit no possibility of
+	$(LINK2 glossary.html#undefined_behavior, $(I undefined behavior)).
+	Undefined behavior is often used as a vector for malicious
+	attacks.
+	)
+
+<h3>$(LNAME2 safe-functions, Safe Functions)</h3>
+
+	$(P Safe functions are marked with the $(CODE @safe) attribute.)
+
+	$(P The following operations are not allowed in safe
+	functions:)
+
+	$(UL
+	$(LI No casting from a pointer type to any type other than $(CODE void*).)
+	$(LI No casting from any non-pointer type to a pointer type.)
+	$(LI No modification of pointer values.)
+	$(LI Cannot access unions that have pointers or references overlapping
+	with other types.)
+	$(LI Calling any unsafe functions.)
+	$(LI No catching of exceptions that are not derived from $(CODE class Exception).)
+	$(LI No inline assembler.)
+	$(LI No explicit casting of mutable objects to immutable.)
+	$(LI No explicit casting of immutable objects to mutable.)
+	$(LI No explicit casting of thread local objects to shared.)
+	$(LI No explicit casting of shared objects to thread local.)
+	$(LI No taking the address of a local variable or function parameter.)
+	$(LI Cannot access $(D_KEYWORD __gshared) variables.)
+	)
+
+	$(P Functions nested inside safe functions default to being
+	safe functions.
+	)
+
+	$(P Safe functions are covariant with trusted or unsafe functions.)
+
+	$(P $(B Note:) The verifiable safety of functions may be compromised by
+	bugs in the compiler and specification. Please report all such errors
+	so they can be corrected.
+	)
+
+<h3>$(LNAME2 trusted-functions, Trusted Functions)</h3>
+
+	$(P Trusted functions are marked with the $(CODE @trusted) attribute.)
+
+	$(P Trusted functions are guaranteed by the programmer to not exhibit
+	any undefined behavior if called by a safe function.
+	Generally, trusted functions should be kept small so that they are
+	easier to manually verify.
+	)
+
+	$(P Trusted functions may call safe, trusted, or unsafe functions.
+	)
+
+	$(P Trusted functions are covariant with safe or unsafe functions.)
+
+<h3>$(LNAME2 unsafe-functions, Unsafe Functions)</h3>
+
+	$(P Unsafe functions are functions not marked with $(CODE @safe) or
+	$(CODE @trusted)
+	and are not nested inside $(CODE @safe) functions.
+	A function being unsafe does not mean it actually is unsafe, it just
+	means that the compiler is unable to verify that it cannot exhibit
+	undefined behavior.
+	)
+
+	$(P Unsafe functions are $(B not) covariant with trusted or safe functions.
+	)
+)
+
 )
 
 Macros:
