@@ -995,7 +995,7 @@ $(V2
 	$(GLINK MixinExpression)
 	$(GLINK ImportExpression)
 	$(I BasicType) $(B .) $(I Identifier)
-	$(B typeid $(LPAREN)) $(I Type) $(B $(RPAREN))
+	$(GLINK TypeidExpression)
 	$(GLINK IsExpression)
 	$(B $(LPAREN)) $(I Expression) $(B $(RPAREN))
 $(V2
@@ -1446,12 +1446,48 @@ void foo()
 $(GRAMMAR
 $(GNAME TypeidExpression):
     $(B typeid $(LPAREN)) $(I Type) $(B $(RPAREN))
+$(V2      $(B typeid $(LPAREN)) $(I Expression) $(B $(RPAREN)))
 )
 
-	Returns an instance of class
+$(V1
+	$(P Returns an instance of class
 	$(LINK2 phobos/object.html, $(B TypeInfo))
 	corresponding
 	to $(I Type).
+	)
+)
+$(V2
+	$(P If $(I Type), returns an instance of class
+	$(LINK2 phobos/object.html, $(B TypeInfo))
+	corresponding
+	to $(I Type).
+	)
+
+	$(P If $(I Expression), returns an instance of class
+	$(LINK2 phobos/object.html, $(B TypeInfo))
+	corresponding
+	to the type of the $(I Expression).
+	If the type is a class, it returns the $(B TypeInfo)
+	of the dynamic type (i.e. the most derived type).
+	The $(I Expression) is always executed.
+	)
+
+---
+class A { }
+class B : A { }
+
+void main()
+{
+    writeln(typeid(int));  // int
+    uint i;
+    writeln(typeid(i++));  // uint
+    writeln(i);            // 1
+    A a = new B();
+    writeln(typeid(a));    // B
+    writeln(typeid(typeof(a)));  // A
+}
+---
+)
 
 <h3><a name="IsExpression">IsExpression</a></h3>
 
@@ -1469,8 +1505,8 @@ $(GNAME IsExpression):
 
 $(GNAME TypeSpecialization):
 	$(I Type)
-	$(B typedef)
-	$(B struct)
+$(V1	$(B typedef)
+)	$(B struct)
 	$(B union)
 	$(B class)
 	$(B interface)
@@ -1555,8 +1591,8 @@ void foo(bar x)
 	<p>
 
 	If $(I TypeSpecialization) is one of
-		$(B typedef)
-		$(B struct)
+$(V1		$(B typedef)
+)		$(B struct)
 		$(B union)
 		$(B class)
 		$(B interface)
@@ -1571,7 +1607,7 @@ $(V2		$(B const)
 
 -------------
 alias short bar;
-typedef char foo;
+$(V1 typedef char foo;)
 void test(bar x)
 {
     if ( $(B is)(bar == int) )	// not satisfied because short is not
@@ -1579,12 +1615,12 @@ void test(bar x)
 	writefln("satisfied");
     else
 	writefln("not satisfied");
-
+$(V1
     if ( $(B is)(foo == typedef) ) // satisfied because foo is a typedef
 	writefln("satisfied");
     else
 	writefln("not satisfied");
-}
+)}
 -------------
 	)
 
@@ -1658,8 +1694,8 @@ void foo(bar x, abc a)
 	)
 
 	$(P If $(I TypeSpecialization) is one of
-		$(B typedef)
-		$(B struct)
+$(V1		$(B typedef)
+)		$(B struct)
 		$(B union)
 		$(B class)
 		$(B interface)
@@ -1679,10 +1715,11 @@ $(V2		$(B const)
 	$(TH keyword)
 	$(TH alias type for $(I Identifier))
 	)
-	$(TR
+$(V1	$(TR
 	$(TD $(CODE typedef))
 	$(TD the type that $(I Type) is a typedef of)
 	)
+)
 	$(TR
 	$(TD $(CODE struct))
 	$(TD $(I Type))
@@ -1749,6 +1786,7 @@ void foo(bar x)
 }
 -------------
 
+$(V1
 	$(P For example, to test to see if $(CODE X) is a typedef and
 	its base type is int:
 	)
@@ -1764,6 +1802,7 @@ else
     static assert(0, "X is not a typedef");
 }
 ---
+)
 	)
 
 $(V2
