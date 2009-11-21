@@ -4,8 +4,8 @@ $(SPEC_S Declarations,
 
 $(GRAMMAR
 $(GNAME Declaration):
-        $(B typedef) $(I Decl)
-        $(B alias) $(I Decl)
+$(V1        $(B typedef) $(I Decl)
+)        $(B alias) $(I Decl)
         $(I Decl)
 
 $(GNAME Decl):
@@ -61,8 +61,8 @@ $(GNAME BasicType):
 $(GNAME BasicType2):
         $(B *)
         $(B [ ])
-        $(B [) $(I Expression) $(B ])
-        $(B [) $(I Expression) .. $(I Expression) $(B ])
+        $(B [) $(VEXPRESSION) $(B ])
+        $(B [) $(VEXPRESSION) .. $(VEXPRESSION) $(B ])
         $(B [) $(I Type) $(B ])
         $(B delegate) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
         $(B function) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
@@ -77,7 +77,7 @@ $(GNAME DeclaratorSuffixes):
 
 $(GNAME DeclaratorSuffix):
         $(B [ ])
-        $(B [) $(I Expression) $(B ])
+        $(B [) $(VEXPRESSION) $(B ])
         $(B [) $(I Type) $(B ])
 	$(I TemplateParameterList)$(OPT) $(GLINK Parameters) $(V2 $(GLINK MemberFunctionAttributes)<sub>opt</sub>)
 
@@ -282,12 +282,23 @@ class C { ... }
 auto c = new C();  // c is a handle to an instance of class C
 ----------
 
-	The $(I NonVoidInitializer) cannot contain forward references
+	$(P The $(I NonVoidInitializer) cannot contain forward references
 	(this restriction may be removed in the future).
 	The implicitly inferred type is statically bound
 	to the declaration at compile time, not run time.
+	)
 
+$(V2
+	$(P An $(LINK2 expression.html#ArrayLiteral, $(I ArrayLiteral))
+	is inferred to be a dynamic array
+	type rather than a static array:)
 
+---
+auto v = ["hello", "world"];   // type is string[], not string[2]
+---
+)
+
+$(V1
 <h3><a name="typedef">Type Defining</a></h3>
 
 	$(P 
@@ -313,7 +324,7 @@ default initializer of the underlying type:
 typedef int myint = 7;
 myint m;        // initialized to 7
 --------------------
-
+)
 
 <h3><a name="alias">Type Aliasing</a></h3>
 
@@ -340,9 +351,11 @@ void foo(int x) { . }
 void foo(myint m) { . }	// error, multiply defined function foo
 --------------------
 
+$(V1
 	$(P 
 	Type aliases are equivalent to the C typedef.
 	)
+)
 
 <h3>Alias Declarations</h3>
 
@@ -472,7 +485,7 @@ b = 4;		// sets S.i to 4
 
 $(GRAMMAR
 $(GNAME Typeof):
-        $(B typeof $(LPAREN)) $(I Expression) $(B $(RPAREN))
+        $(B typeof $(LPAREN)) $(EXPRESSION) $(B $(RPAREN))
         $(B typeof $(LPAREN)) $(B return) $(B $(RPAREN))
 )
 
@@ -578,4 +591,7 @@ Macros:
 	TITLE=Declarations
 	WIKI=Declaration
 	OPT=<sub>opt</sub>
+	ASSIGNEXPRESSION=$(LINK2 expression.html#AssignExpression, $(I AssignExpression))
+	EXPRESSION=$(LINK2 expression.html#Expression, $(I Expression))
+	VEXPRESSION=$(V1 $(EXPRESSION))$(V2 $(ASSIGNEXPRESSION))
 	FOO=
