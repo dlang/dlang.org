@@ -14,7 +14,8 @@ $(SPEC_S Operator Overloading,
 	$(LI $(LINK2 #Array, Array Operator Overloading))
 	$(LI $(LINK2 #Assignment, Assignment Operator Overloading))
 $(V2
-	$(LI $(LINK2 #Dot, Forwarding))
+	$(DOT $(LI $(LINK2 #Dot, Forwarding)))
+	$(LI $(LINK2 #Dispatch, Forwarding))
 )
 	$(LI $(LINK2 #Future, Future Directions))
 	)
@@ -159,7 +160,9 @@ void test()
 	$(TR $(TD /) $(TD no) $(TD $(CODE opDiv)) $(TD $(CODE opDiv_r)))
 
 	$(TR $(TD %) $(TD no) $(TD $(CODE opMod)) $(TD $(CODE opMod_r)))
-
+$(V2
+	$(TR $(TD ^^) $(TD no) $(TD $(CODE opPow)) $(TD $(CODE opPow_r)))
+)
 	$(TR $(TD &) $(TD yes) $(TD $(CODE opAnd)) $(TD $(CODE opAnd_r)))
 
 	$(TR $(TD |) $(TD yes) $(TD $(CODE opOr)) $(TD $(CODE opOr_r)))
@@ -559,6 +562,7 @@ opAssign(T, U = defaultValue, etc.)
 	)
 
 $(V2
+$(DOT
 <h2><a name="Dot">Forwarding</a></h2>
 
 	$(P Providing a struct or class member function $(CODE opDot) enables
@@ -615,7 +619,57 @@ void main() {
 }
 ---
 )
+)
 
+$(V2
+<h2><a name="Dispatch">Forwarding</a></h2>
+
+	$(P Member names not found in a class or struct can be forwarded
+	to a template function named $(CODE opDispatch) for resolution.
+	)
+
+---
+import std.stdio;
+
+struct S
+{
+    void opDispatch(string s, T)(T i)
+    {
+	writefln("S.opDispatch('%s', %s)", s, i);
+    }
+}
+
+class C
+{
+    void opDispatch(string s)(int i)
+    {
+	writefln("S.opDispatch('%s', %s)", s, i);
+    }
+}
+
+struct D
+{
+    template opDispatch(string s)
+    {
+	enum int opDispatch = 8;
+    }
+}
+
+void main()
+{
+    S s;
+    s.opDispatch!("hello")(7);
+    s.foo(7);
+
+    auto c = new C();
+    c.foo(8);
+
+    D d;
+    writefln("d.foo = %s", d.foo);
+    assert(d.foo == 8);
+}
+---
+)
 <h2><a name="Future">Future Directions</a></h2>
 
 	$(P The operators $(CODE ! && || ?:) and a few others will
