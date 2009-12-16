@@ -28,6 +28,9 @@ $(GNAME TraitsKeyword):
     $(B isVirtualFunction)
     $(B isAbstractFunction)
     $(B isFinalFunction)
+    $(LINK2 #isRef, $(B isRef))
+    $(LINK2 #isOut, $(B isOut))
+    $(LINK2 #isLazy, $(B isLazy))
     $(B hasMember)
     $(B getMember)
     $(B getVirtualFunctions)
@@ -232,6 +235,36 @@ void main()
     writefln(__traits(isFinalFunction, S.bar));	  // false
     writefln(__traits(isFinalFunction, C.foo));	  // true
     writefln(__traits(isFinalFunction, FC.foo));  // true
+}
+---
+
+$(H2 $(GNAME isRef), $(GNAME isOut), $(GNAME isLazy))
+
+	$(P Takes one argument. If that argument is a declaration,
+	$(B true) is returned if it is $(D_KEYWORD ref), $(D_KEYWORD out),
+	$(D_KEYWORD lazy), otherwise $(B false).
+	)
+
+---
+void fooref(ref int x)
+{
+    static assert(__traits(isRef, x));
+    static assert(!__traits(isOut, x));
+    static assert(!__traits(isLazy, x));
+}
+
+void fooout(out int x)
+{
+    static assert(!__traits(isRef, x));
+    static assert(__traits(isOut, x));
+    static assert(!__traits(isLazy, x));
+}
+
+void foolazy(lazy int x)
+{
+    static assert(!__traits(isRef, x));
+    static assert(!__traits(isOut, x));
+    static assert(__traits(isLazy, x));
 }
 ---
 
