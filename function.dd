@@ -85,6 +85,55 @@ ref int foo()
 foo() = 3;  // reference returns can be lvalues
 ---
 
+<h3>$(LNAME2 auto-functions, Auto Functions)</h3>
+
+	$(P Auto functions have their return type inferred from any
+	$(LINK2 statement.html#ReturnStatement, $(I ReturnStatement))s
+	in the function body.
+	)
+
+	$(P An auto function is declared without a return type.
+	If it does not already have a storage class, use the
+	$(D_KEYWORD auto) storage class.
+	)
+
+	$(P If there are multiple $(I ReturnStatement)s, the types
+	of them must match exactly. If there are no $(I ReturnStatement)s,
+	the return type is inferred to be $(D_KEYWORD void).
+	)
+
+---
+auto foo(int i)
+{
+    return i + 3;  // return type is inferred to be int
+}
+---
+
+$(V2
+<h3>$(LNAME2 auto-ref-functions, Auto Ref Functions)</h3>
+
+	$(P Auto ref functions infer their return type just as
+	$(LINK2 auto-functions, auto functions) do.
+	In addition, they become $(LINK2 ref-functions, ref functions)
+	if the return expression is an lvalue.
+	)
+
+---
+ref foo(ref int x) { return 3; }  // value return
+ref foo(ref int x) { return x; }  // ref return
+ref foo(int x)     { return x; }  // error, cannot return reference to local parameter
+---
+
+	$(P The lexically first $(LINK2 statement.html#ReturnStatement, $(I ReturnStatement))
+	determines the ref-ness of a function:
+	)
+
+---
+ref foo(ref int x) { return 3; return x; }  // ok, value return
+ref foo(ref int x) { return x; return 3; }  // error, ref return, 3 is not an lvalue
+---
+)
+
 <h3>$(LNAME2 property-functions, Property Functions)</h3>
 
 	$(P Property functions are tagged with the $(CODE @property)
