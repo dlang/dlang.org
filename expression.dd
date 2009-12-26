@@ -26,6 +26,7 @@ $(V2
 	$(GLINK AddExpression),
 	$(GLINK CatExpression),
 	$(GLINK MulExpression),
+	$(GLINK PowExpression),
 )
 	$(GLINK CommaExpression),
 	$(GLINK OrOrExpression),
@@ -96,6 +97,8 @@ $(GNAME AssignExpression):
 	$(GLINK ConditionalExpression) $(B &lt;&lt;=) $(I AssignExpression)
 	$(GLINK ConditionalExpression) $(B &gt;&gt;=) $(I AssignExpression)
 	$(GLINK ConditionalExpression) $(B &gt;&gt;&gt;=) $(I AssignExpression)
+$(V2
+	$(GLINK ConditionalExpression) $(B ^^=) $(I AssignExpression))
 )
 
 	The right operand is implicitly converted to the type of the
@@ -627,12 +630,23 @@ $(GNAME CatExpression):
 
 <h2>Mul Expressions</h2>
 
+$(V1
 $(GRAMMAR
 $(GNAME MulExpression):
 	$(GLINK UnaryExpression)
 	$(I MulExpression) $(B *) $(GLINK UnaryExpression)
 	$(I MulExpression) $(B /) $(GLINK UnaryExpression)
 	$(I MulExpression) $(B %) $(GLINK UnaryExpression)
+)
+)
+$(V2
+$(GRAMMAR
+$(GNAME MulExpression):
+	$(GLINK PowExpression)
+	$(I MulExpression) $(B *) $(GLINK PowExpression)
+	$(I MulExpression) $(B /) $(GLINK PowExpression)
+	$(I MulExpression) $(B %) $(GLINK PowExpression)
+)
 )
 
 	$(P The operands must be arithmetic types. They undergo integral
@@ -660,6 +674,20 @@ $(GNAME MulExpression):
 
 	$(P Mul expressions for floating point operands are not associative.
 	)
+
+$(V2
+<h2><a name="PowExpression">Pow Expressions</a></h2>
+
+$(GRAMMAR
+$(GNAME PowExpression):
+	$(GLINK UnaryExpression)
+	$(GLINK UnaryExpression) ^^ $(I PowExpression)
+)
+
+	$(P $(I PowExpression) raises its left operand to the power of its
+	right operand.
+	)
+)
 
 <h2><a name="UnaryExpression">Unary Expressions</a></h2>
 
@@ -1000,7 +1028,7 @@ $(V2
 	$(GLINK IsExpression)
 	$(B $(LPAREN)) $(I Expression) $(B $(RPAREN))
 $(V2
-	$(I TraitsExpression))
+	$(LINK2 traits.html#TraitsExpression, $(I TraitsExpression)))
 )
 
 <h3>.Identifier</h3>
