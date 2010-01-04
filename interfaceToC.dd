@@ -297,6 +297,47 @@ extern (C)
 	does not pin down the sizes of the types, so some care is needed.
 	)
 
+$(V2
+<h2>Passing D Array Arguments to C Functions</h2>
+
+	$(P In C, arrays are passed to functions as pointers even if the function
+	prototype says its an array. In D, static arrays are passed by value,
+	not by reference. Thus, the function prototype must be adjusted to match
+	what C expects.)
+
+	$(TABLE1
+	<caption>D And C Function Prototype Equivalence</caption>
+
+	$(TR
+	$(TH D type)
+	$(TH C type)
+	)
+
+	$(TR
+	$(TD $(I T)$(B *))
+	$(TD $(I T)$(B []))
+	)
+
+	$(TR
+	$(TD $(B ref) $(I T)$(B [)$(I dim)$(B ]))
+	$(TD $(I T)$(B [)$(I dim)$(B ]))
+	)
+
+	)
+
+	$(P For example:)
+
+$(CCODE
+void foo(int a[3]) { ... } // C code
+)
+---
+extern (C)
+{
+  void foo(ref int[3] a); // D prototype
+}
+---
+)
+
 <h2>Calling printf()</h2>
 
 	$(P This mostly means checking that the printf format specifier
