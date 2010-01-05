@@ -25,7 +25,10 @@ $(GNAME DeclDef):
 	$(I UnitTest)
 	$(I StaticConstructor)
 	$(I StaticDestructor)
-	$(LINK2 version.html#ConditionalDeclaration, $(I ConditionalDeclaration))
+$(V2
+	$(I SharedStaticConstructor)
+	$(I SharedStaticDestructor)
+)	$(LINK2 version.html#ConditionalDeclaration, $(I ConditionalDeclaration))
 	$(LINK2 version.html#StaticAssert, $(I StaticAssert))
 	$(LINK2 template.html#TemplateDeclaration, $(I TemplateDeclaration))
 	$(LINK2 template-mixin.html#TemplateMixin, $(I TemplateMixin))
@@ -404,20 +407,37 @@ int foo(int x)
 	within one module. The static constructors are run in lexical order,
 	the static destructors are run in reverse lexical order.)
 
+$(V2
+	$(P Static constructors and static destructors run on thread local
+	data, and are run whenever threads are created or destroyed.)
+
+	$(P Shared static constructors and shared static destructors are run
+	on global shared data, and constructors are run once on program startup
+	and destructors are run once on program termination.
+	)
+)
+
 <h3>Order of Static Construction</h3>
 
-	The order of static initialization is implicitly determined by
+$(V2
+	$(P Shared static constructors on all modules are run before any static
+	constructors.
+	)
+)
+
+	$(P The order of static initialization is implicitly determined by
 	the $(I import) declarations in each module. Each module is
 	assumed to depend on any imported modules being statically
 	constructed first.
 	Other than following that rule, there is no imposed order
 	on executing the module static constructors.
-	<p>
+	)
 
-	Cycles (circular dependencies) in the import declarations are
+	$(P Cycles (circular dependencies) in the import declarations are
 	allowed as long as not both of the modules contain static constructors
 	or static destructors. Violation of this rule will result
 	in a runtime exception.
+	)
 
 <h3>Order of Static Construction within a Module</h3>
 
@@ -426,10 +446,16 @@ int foo(int x)
 
 <h3>Order of Static Destruction</h3>
 
-	It is defined to be exactly the reverse order that static
+	$(P It is defined to be exactly the reverse order that static
 	construction was performed in. Static destructors for individual
 	modules will only be run if the corresponding static constructor
 	successfully completed.
+	)
+$(V2
+	$(P Shared static destructors are executed after static destructors.
+	)
+)
+
 
 <h3>Order of Unit tests</h3>
 
