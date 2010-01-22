@@ -21,9 +21,10 @@ SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd \
 	tuple.dd template-comparison.dd template-mixin.dd \
 	final-const-invariant.dd const.dd traits.dd COM.dd cpp_interface.dd \
 	hijack.dd const3.dd features2.dd safed.dd cpp0x.dd const-faq.dd \
-	concepts.dd memory-safe-d.dd d-floating-point.dd
+	concepts.dd memory-safe-d.dd d-floating-point.dd \
+	migrate-to-shared.dd D1toD2.dd unittest.dd
 
-DDOC=macros.ddoc doc.ddoc
+DDOC=macros.ddoc windows.ddoc doc.ddoc
 
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 
@@ -48,7 +49,8 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html \
 	final-const-invariant.html const.html traits.html COM.html cpp_interface.html \
 	hijack.html const3.html features2.html safed.html cpp0x.html const-faq.html \
 	dmd-windows.html dmd-linux.html dmd-osx.html dmd-freebsd.html \
-	concepts.html memory-safe-d.html d-floating-point.html
+	concepts.html memory-safe-d.html d-floating-point.html \
+	migrate-to-shared.html D1toD2.html unittest.html
 
 
 target: $(TARGETS)
@@ -114,6 +116,8 @@ cppstrings.html : $(DDOC) cppstrings.dd
 cpptod.html : $(DDOC) cpptod.dd
 
 ctod.html : $(DDOC) ctod.dd
+
+D1toD2.html : $(DDOC) D1toD2.dd
 
 d-floating-point.html : $(DDOC) d-floating-point.dd
 
@@ -183,6 +187,8 @@ memory.html : $(DDOC) memory.dd
 
 memory-safe-d.html : $(DDOC) memory-safe-d.dd
 
+migrate-to-shared.html : $(DDOC) migrate-to-shared.dd
+
 mixin.html : $(DDOC) mixin.dd
 
 module.html : $(DDOC) module.dd
@@ -225,6 +231,8 @@ tuple.html : $(DDOC) tuple.dd
 
 type.html : $(DDOC) type.dd
 
+unittest.html : $(DDOC) unittest.dd
+
 variadic-function-templates.html : $(DDOC) variadic-function-templates.dd
 
 version.html : $(DDOC) version.dd
@@ -233,9 +241,9 @@ warnings.html : $(DDOC) warnings.dd
 
 wc.html : $(DDOC) wc.dd
 
-windbg.html : $(DDOC) windbg.dd
+windbg.html : $(DDOC) windows.ddoc windbg.dd
 
-windows.html : $(DDOC) windows.dd
+windows.html : $(DDOC) windows.ddoc windows.dd
 
 zip:
 	del doc.zip

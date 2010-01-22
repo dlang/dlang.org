@@ -21,20 +21,30 @@ $(D_S $(TITLE),
 
 	$(LI I suggested a great feature. Why was the suggestion ignored?)
 
-	$(LI Why const and invariant?)
+	$(LI Why const and immutable?)
 
-	$(LI Why the *names* const and invariant?)
+	$(LI Why the $(I names) const and immutable?)
 
-	$(LI How exactly is invariant related to multicores?)
+	$(LI How exactly is immutable related to multicores?)
 
-	$(LI Ok, I'm fine with invariant for safe data sharing among threads. But why do we need the uninformative const?)
+	$(LI Ok, I'm fine with immutable for safe data sharing among threads. But why do we need the uninformative const?)
 
-	$(LI Why are invariant strings favored in D 2.0?)
+	$(LI Why are immutable strings favored in D 2.0?)
 
 	$(LI I want to contribute to D 2.0. How can I effect that?)
 
 	$(ITEMR case_range, Why doesn't the case range statement
 	 use the $(TT case X..Y:) syntax?)
+
+	$(ITEMR shared_guarantees, What guarantees is shared supposed to provide?)
+
+	$(ITEMR shared_synchronized, What does shared have to do with synchronization?)
+
+	$(ITEMR shared_memory_barriers, What does shared have to do with memory barriers?)
+
+	$(ITEMR casting_to_shared, What are the semantics of casting FROM unshared TO shared?)
+
+	$(ITEMR casting_from_shared, What are the semantics of casting FROM shared TO unshared?)
 
 	)
 
@@ -94,6 +104,34 @@ $(ITEM case_range, Why doesn't the case range statement
 	Case (1) has a VERY DIFFERENT meaning from (2) and (3).
 	(1) is inclusive of Y, and (2) and (3) are exclusive of Y.
 	Having a very different meaning means it should have a distinctly different syntax. 
+	)
+
+$(ITEM shared_guarantees, What guarantees is shared supposed to provide?)
+
+	$(P Shared means that multiple threads can access the data. The guarantee is that if it is
+	not shared, and not immutable, that only the current thread can see it.
+	)
+
+$(ITEM shared_synchronized, What does shared have to do with synchronization?)
+
+	$(P Only shared data can be synchronized. It makes no sense to synchronize thread local
+	data.
+	)
+
+$(ITEM shared_memory_barriers, What does shared have to do with memory barriers?)
+
+	$(P Reading/writing shared data emits memory barriers to ensure sequential consistency (not
+	implemented).
+	)
+
+$(ITEM casting_to_shared, What are the semantics of casting FROM unshared TO shared?)
+
+	$(P Make sure there are no other unshared references to that same data.
+	)
+
+$(ITEM casting_from_shared, What are the semantics of casting FROM shared TO unshared?)
+
+	$(P Make sure there are no other shared references to that same data.
 	)
 
 $(ITEM q1, Why the name D?)
@@ -631,7 +669,7 @@ $(V2
 	Object.)
 
 	$(LI C++ overloads based on const and volatile. D overloads
-	based on const and invariant.)
+	based on const and immutable.)
 
 	$(LI C++ overloads operators in significantly different ways - for
 	example, operator[]() overloading for lvalue and rvalue is based on
@@ -664,7 +702,7 @@ $(V2
 
 	$(LI C++ name mangling depends on const and volatile being type
 	modifiers.
-	D name mangling depends on const and invariant being type modifiers.
+	D name mangling depends on const and immutable being type modifiers.
 	D's const is also transitive, unlike C++. One cannot have a const
 	pointer to mutable in D.
 	)

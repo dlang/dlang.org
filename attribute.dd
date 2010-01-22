@@ -23,7 +23,8 @@ $(GNAME Attribute):
 $(V2    $(LINK2 #gshared, $(B __gshared))
     $(LINK2 #shared, $(B shared))
     $(LINK2 #immutable, $(B immutable))
-
+    $(LINK2 #inout, $(B inout))
+    $(LINK2 #disable, $(B @disable))
 )
 
 $(GNAME DeclarationBlock):
@@ -36,32 +37,32 @@ $(GNAME DeclarationBlock):
 	The general forms are:
 	)
 
-<pre>
-attribute declaration;		affects the declaration
+---
+attribute declaration;		// affects the declaration
 
-attribute:			affects all declarations until the end of
-				the current scope
+attribute:			// affects all declarations until the end of
+				// the current scope
     declaration;
     declaration;
     ...
 
-attribute			affects all declarations in the block
+attribute			// affects all declarations in the block
 {
     declaration;
     declaration;
     ...
 }
-</pre>
+---
 
 	$(P For attributes with an optional else clause:)
 
-<pre>
+---
 attribute
     declaration;
 else
     declaration;
 
-attribute			affects all declarations in the block
+attribute			// affects all declarations in the block
 {
     declaration;
     declaration;
@@ -73,7 +74,7 @@ else
     declaration;
     ...
 }
-</pre>
+---
 
 <h2>$(LNAME2 linkage, Linkage Attribute)</h2>
 
@@ -355,6 +356,37 @@ $(V2
 <h2>$(LNAME2 gshared, __gshared Attribute)</h2>
 
 <h2>$(LNAME2 shared, shared Attribute)</h2>
+
+<h2>$(LNAME2 inout, inout Attribute)</h2>
+
+<h2>$(LNAME2 disable, @disable Attribute)</h2>
+
+	$(P A reference to a declaration marked with the $(CODE @disable) attribute causes
+	a compile time error.
+	This can be used to explicitly disallow certain operations or overloads
+	at compile time rather than relying on generating a runtime error.
+	)
+
+---
+struct T
+{
+    @disable this(this) { }   // disabling this makes T not copyable
+}
+
+struct S
+{
+    T t;        // uncopyable member makes S also not copyable
+}
+
+@disable void foo() { }
+
+void main()
+{
+    S s;
+    S t = s;    // error, S is not copyable
+    foo();      // error, foo is disabled
+}
+---
 )
 
 <h2>$(LNAME2 override, Override Attribute)</h2>

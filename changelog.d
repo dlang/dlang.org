@@ -4,6 +4,14 @@ $(D_S D Change Log,
 
 
 $(UL 
+	$(NEW1 055)
+	$(NEW1 054)
+	$(NEW1 053)
+	$(NEW1 052)
+	$(NEW1 051)
+	$(NEW1 050)
+	$(NEW1 049)
+	$(NEW1 048)
 	$(NEW1 047)
 	$(NEW1 046)
 	$(NEW1 045)
@@ -65,7 +73,198 @@ $(COMMENT
 )
 )
 
-$(VERSION 047, July 7, 2009, =================================================,
+$(VERSION 055, Jan 1, 2010, =================================================,
+
+    $(WHATSNEW
+	$(LI Add $(B -map) command line switch)
+	$(LI Delegates and function pointers may be used in CTFE)
+	$(LI Delegate literals and function literals may be used in CTFE)
+	$(LI Lazy function parameters may now be used in CTFE)
+	$(LI Slicing of char[] arrays may now be used in CTFE)
+    )
+    $(BUGSFIXED
+	$(LI $(CPPBUGZILLA 48): Internal error: cgreg 784)
+	$(LI $(BUGZILLA 1298): CTFE: tuple foreach bugs)
+	$(LI $(BUGZILLA 1790): CTFE: foreach(Tuple) won't compile if Tuple contains string)
+	$(LI $(BUGZILLA 2101): CTFE: Please may I use mutable arrays at compile time?)
+	$(LI Partial fix for $(BUGZILLA 3569), stops the stack overflow)
+	$(LI $(BUGZILLA 3663): struct forward reference regresssion)
+	$(LI $(BUGZILLA 3664): struct forward declaration causes enum to conflict with itself)
+	$(LI $(BUGZILLA 3674): forward reference error with multiple overloads with same name)
+	$(LI $(BUGZILLA 3719): forward references can cause out-of-memory error)
+	$(LI $(BUGZILLA 3726): Regression: ICE(mangle.c 81): struct forward reference with static this)
+    )
+)
+
+$(VERSION 054, Dec 30, 2009, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
+	$(LI $(CPPBUGZILLA 45): Internal error: cgcod 1594)
+	$(LI $(CPPBUGZILLA 46): Constant folding with long doubles)
+	$(LI $(NG_digitalmars_D 103391): D1 garbage collector + threads + malloc = garbage?)
+	$(LI $(BUGZILLA 282): Bizarre circular import nested name invisibility issue)
+	$(LI $(BUGZILLA 390): Cannot forward reference enum nested in struct)
+	$(LI $(BUGZILLA 400): forward reference error; no propety X for type Y (struct within struct))
+	$(LI $(BUGZILLA 1160): enums can not be forward referenced)
+	$(LI $(BUGZILLA 1564): Forward reference error for enum in circular import)
+	$(LI $(BUGZILLA 2029): Typesafe variadic functions don't work in CTFE)
+	$(LI $(BUGZILLA 2816): Sudden-death static assert is not very useful)
+	$(LI $(BUGZILLA 3455): Some Unicode characters not allowed in identifiers)
+	$(LI $(BUGZILLA 3575): CTFE: member structs not initialized correctly)
+	$(LI $(BUGZILLA 3584): DeclDef rule is missing entries)
+	$(LI $(BUGZILLA 3585): Duplicate clauses in EqualExpression and RelExpression rules)
+	$(LI $(BUGZILLA 3587): Aggregate rule references undefined Tuple)
+	$(LI $(BUGZILLA 3588): WithStatement rule references unspecified Symbol)
+	$(LI $(BUGZILLA 3589): BaseClassList and InterfaceClasses rules are incorrect, missing ',')
+	$(LI $(BUGZILLA 3590): FunctionParameterList rule is missing)
+	$(LI $(BUGZILLA 3591): TemplateIdentifier rule is misspelled)
+	$(LI $(BUGZILLA 3592): ClassTemplateDeclaration and FunctionTemplateDeclaration rules are unreferenced)
+	$(LI $(BUGZILLA 3593): IntegerExpression rule unspecified)
+	$(LI $(BUGZILLA 3594): AsmPrimaryExp rule references unspecified rules)
+	$(LI $(BUGZILLA 3595): Several rules are missing ':' after rule name)
+	$(LI $(BUGZILLA 3601): Debug and Release builds of DMD produce different object files)
+	$(LI $(BUGZILLA 3611): Enum forward referencing regression)
+	$(LI $(BUGZILLA 3612): ExpressionList is undefined)
+	$(LI $(BUGZILLA 3617): CTFE: wrong code for if(x) where x is int or smaller)
+	$(LI $(BUGZILLA 3628): can't cast null to int)
+	$(LI $(BUGZILLA 3633): Optimizer causes access violation)
+	$(LI $(BUGZILLA 3645): manifest constant (enum) crashes dmd)
+    )
+)
+
+$(VERSION 053, Dec 3, 2009, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 111): appending a dchar to a char[])
+	$(LI $(BUGZILLA 370): Compiler stack overflow on recursive typeof in function declaration.)
+	$(LI $(BUGZILLA 2229): ICE(template.c) instantiating an invalid variadic template with more than one argument)
+	$(LI $(BUGZILLA 2967): spec does not mention that inline asm is a valid "return" statement)
+	$(LI $(BUGZILLA 3115): &gt;&gt;&gt; and &gt;&gt;&gt;= generate wrong code)
+	$(LI $(BUGZILLA 3171): % not implemented correctly for floats)
+	$(LI $(BUGZILLA 3381): [tdpl] Incorrect assessment of overriding in triangular-shaped hierarchy)
+	$(LI $(BUGZILLA 3469): ICE(func.c): Regression. Calling non-template function as a template, from another module)
+	$(LI $(BUGZILLA 3495): Segfault(typinf.c) instantiating D variadic function with too few arguments)
+	$(LI $(BUGZILLA 3496): ICE(cgelem.c, optimizer bug) cast(void *)(x&1)== null.)
+	$(LI $(BUGZILLA 3502): Fix for dropped Mac OS X 10.5)
+	$(LI $(BUGZILLA 3521): Optimized code access popped register)
+	$(LI $(BUGZILLA 3540): Another DWARF line number fix)
+    )
+)
+
+$(VERSION 052, Nov 12, 2009, =================================================,
+
+    $(WHATSNEW
+	$(LI OSX versions 10.5 and older are no longer supported.)
+    )
+    $(BUGSFIXED
+	$(LI Works on OSX 10.6 now.)
+    )
+)
+
+$(VERSION 051, Nov 5, 2009, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
+	$(LI Problem with complicated array op expressions)
+	$(LI $(BUGZILLA 195): DDoc generates bad output when example contains "protected" attribute)
+	$(LI $(BUGZILLA 424): Unexpected OPTLINK Termination at EIP=0044C37B (too many fixups))
+	$(LI $(BUGZILLA 874): Bad codegen: wrong value variable in tuple foreach, D1 only)
+	$(LI $(BUGZILLA 1117): ddoc generates corrupted docs if code examples contain attributes with colons)
+	$(LI $(BUGZILLA 1812): DDOC - Unicode identifiers are not correctly marked.)
+	$(LI $(BUGZILLA 2862): ICE(template.c) using type tuple as function argument)
+	$(LI $(BUGZILLA 3292): ICE(todt.c) when using a named mixin with an initializer as template alias parameter)
+	$(LI $(BUGZILLA 3397): Unintended function call to static opCall)
+	$(LI $(BUGZILLA 3401): Compiler crash on invariant + method overload)
+	$(LI $(BUGZILLA 3422): ICE(cgcod.c) Structs with default initializers bigger than register size cannot be default parameters)
+	$(LI $(BUGZILLA 3426): ICE(optimize.c): struct literal with cast, as function default parameter.)
+	$(LI $(BUGZILLA 3432): ICE(e2ir.c): casting template expression)
+    )
+)
+
+$(VERSION 050, Oct 14, 2009, =================================================,
+
+    $(WHATSNEW
+	$(LI Use $(B -X) to generate JSON files.)
+    )
+    $(BUGSFIXED
+	$(LI Fold in patch from $(BUGZILLA 1170))
+	$(LI $(BUGZILLA 923): No constant folding for template value default arguments, D1 only)
+	$(LI $(BUGZILLA 1534): Can't mix in a case statement.)
+	$(LI $(BUGZILLA 2423): Erroneous unreachable statement warning)
+	$(LI $(BUGZILLA 3392): a cast of this to void in tango.core.Thread is not allowed)
+    )
+)
+
+$(VERSION 049, Oct 11, 2009, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 258): Undefined identifier error for circular import)
+	$(LI $(BUGZILLA 928): nested struct definition in unittest section of a templated class, hangs DMD)
+	$(LI $(BUGZILLA 1140): ICE(cod1.c) casting last function parameter to 8 byte value)
+	$(LI $(BUGZILLA 1592): dmd fail to resolve class symbol when i put files in a package)
+	$(LI $(BUGZILLA 1787): Compiler segfaults on circular references.)
+	$(LI $(BUGZILLA 1897): ICE(template.c) with tuple delegate)
+	$(LI $(BUGZILLA 1934): ICE(e2ir.c) using static array as AA key)
+	$(LI $(BUGZILLA 2229): ICE(template.c) instantiating an invalid variadic template with more than one argument)
+	$(LI $(BUGZILLA 2687): ICE(statement.c): tuple foreach in an erroneous template.)
+	$(LI $(BUGZILLA 2773): ICE(go.c) array assignment through a pointer, only with -O.)
+	$(LI $(BUGZILLA 2829): ICE(expression.c) static array block-initialized in struct literal)
+	$(LI $(BUGZILLA 2851): Segfault(expression.c) using C-style struct initializer with too few arguments)
+	$(LI $(BUGZILLA 3006): ICE(e2ir.c, tocsym.c) template module using array operation)
+	$(LI $(BUGZILLA 3041): Array slices can be compared to their element type: bad codegen or ICE)
+	$(LI $(BUGZILLA 3101): Stack overflow: declaring aggregate member twice with static if)
+	$(LI $(BUGZILLA 3174): ICE(mtype.c): Compiler crash or compiler error with auto returns and const / immutable / invarient / pure)
+	$(LI $(BUGZILLA 3176): Compiler hangs on poorly formed mixin in variadic template)
+	$(LI $(BUGZILLA 3261): compiler crash with mixin and forward reference)
+	$(LI $(BUGZILLA 3286): Default parameter prevents to resolve inter-module circular dependency)
+	$(LI $(BUGZILLA 3301): Undefined identifier error dependent on order of imports when a circular import is involved)
+	$(LI $(BUGZILLA 3325): ICE(func.c) function literal with post-contract)
+	$(LI $(BUGZILLA 3343): Crash by "auto main(){}")
+	$(LI $(BUGZILLA 3344): ICE(e2ir.c) returning an invalid function from main())
+	$(LI $(BUGZILLA 3357): ICE(cod1.c) using 'in' with a static char array as AA key)
+	$(LI $(BUGZILLA 3366): Segfault(declaration.c) variadic template with unmatched constraint)
+	$(LI $(BUGZILLA 3374): [tdpl] ICE(init.c): Associative array type not inferred)
+    )
+)
+
+$(VERSION 048, Oct 5, 2009, =================================================,
+
+    $(WHATSNEW
+	$(LI Compiler now detects some cases of illegal null dereferencing when compiled with -O)
+	$(LI $(BUGZILLA 2905): Faster +-*/ involving a floating-pointing literal)
+    )
+    $(BUGSFIXED
+	$(LI gdb stack trace should work now)
+	$(LI $(BUGZILLA 302): in/out contract inheritance yet to be implemented)
+	$(LI $(BUGZILLA 718): ICE(cgcod.c) with int /= cast(creal))
+	$(LI $(BUGZILLA 814): lazy argument + variadic arguments = segfault)
+	$(LI $(BUGZILLA 1168): Passing a .stringof of an expression as a template value parameter results in the string of the type)
+	$(LI $(BUGZILLA 1571): Segfault(class.c) const on function parameters not carried through to .di file)
+	$(LI $(BUGZILLA 1731): forward reference of function type alias resets calling convention)
+	$(LI $(BUGZILLA 2202): Error getting type of non-static member of a class)
+	$(LI $(BUGZILLA 2469): ICE(cod1.c) arbitrary struct accepted as struct initializer)
+	$(LI $(BUGZILLA 2697): Cast of float function return to ulong or uint gives bogus value)
+	$(LI $(BUGZILLA 2702): Struct initialisation silently inserts deadly casts)
+	$(LI $(BUGZILLA 2839): ICE(cgcs.c) with int /= imaginary)
+	$(LI $(BUGZILLA 3049): ICE(cod4.c) or segfault: Array operation on void[] array)
+	$(LI $(BUGZILLA 3059): Nonsensical complex op= should be illegal)
+	$(LI $(BUGZILLA 3160): ICE(cgcod.c 1511-D1) or bad code-D2 returning string from void main)
+	$(LI $(BUGZILLA 3304): Segfault using 'is' with a pointer enum.)
+	$(LI $(BUGZILLA 3305): Segfault(expression.c) with recursive struct template alias expressions)
+	$(LI $(BUGZILLA 3335): minor warning cleanups)
+	$(LI $(BUGZILLA 3336): ICE(glue.c) declaring AA with tuple key, only with -g)
+	$(LI $(BUGZILLA 3353): storage class of a member function is propagated to default arguments)
+    )
+)
+
+$(VERSION 047, Sep 2, 2009, =================================================,
 
     $(WHATSNEW
 	$(LI $(BUGZILLA 3122): [patch] Adding support for fast and reliable build tools to the frontend)
@@ -83,7 +282,6 @@ a[] = e
 	$(LI Nested functions can now be used in CTFE)
 	$(LI CTFE error messages now explain why the function could not be
 	interpreted at compile time)
-	$(LI Improved exception message for assert(0) in Windows -release builds)
     )
     $(BUGSFIXED
 	$(LI Fixed bug processing spaces in dmd's directory)
@@ -92,13 +290,18 @@ a[] = e
 	$(LI $(BUGZILLA 1605): break in switch with goto breaks in ctfe)
 	$(LI $(BUGZILLA 1948): CTFE fails when mutating a struct in an array)
 	$(LI $(BUGZILLA 1950): CTFE doesn't work correctly for structs passed by ref)
-	$(LI $(BUGZILLA 2398): writef("%x") for a pointer is always uppercase)
 	$(LI $(BUGZILLA 2569): static arrays in CTFE functions don't compile)
+	$(LI $(BUGZILLA 2575): gdb can not show code)
 	$(LI $(BUGZILLA 2604): DW_TAG_module and GDB)
 	$(LI $(BUGZILLA 2940): null is null cannot be evaluated at compile time)
 	$(LI $(BUGZILLA 2960): CTFE rejects static array to dynamic array casts)
+	$(LI $(BUGZILLA 3039): -vtls compiler flag not listed in man file)
+	$(LI $(BUGZILLA 3165): What kind of integer division does D use?)
+	$(LI $(BUGZILLA 3166): "positive" -> "non-negative" in modulo operator description)
+	$(LI $(BUGZILLA 3168): Declaring structs as incomplete types no longer works)
 	$(LI $(BUGZILLA 3170): Forward reference of nested class fails if outer class is not plain)
-	$(LI $(BUGZILLA 3186): Declaring structs as incomplete types no longer works)
+	$(LI $(BUGZILLA 3183): Spec of align attribute needs work)
+	$(LI $(BUGZILLA 3186): corrections for http://www.digitalmars.com/d/2.0/dmd-osx.html)
 	$(LI $(BUGZILLA 3192): asm in a anonymous delegate crash the compiler)
 	$(LI $(BUGZILLA 3196): Segfault(mtype.c) after almost any error involving a delegate literal)
 	$(LI $(BUGZILLA 3205): CTFE: $ cannot be used in lvalues)
@@ -116,7 +319,7 @@ $(VERSION 046, Jul 6, 2009, =================================================,
 	$(LI Fix dmd crash on multicore Windows.)
 	$(LI $(BUGZILLA 106): template - mixin sequence)
 	$(LI $(BUGZILLA 810): Cannot forward reference template)
-	$(LI $(BUGZILLA 852): Various errors with static initialization of structs and arrays)
+	$(LI $(BUGZILLA 852): ICE(toir.c) using local class in non-static nested function in nested static function)
 	$(LI $(BUGZILLA 854): TypeTuple in anonymous delegate causes ice in glue.c)
 	$(LI $(BUGZILLA 1054): regression: circular aliases cause compiler stack overflow)
 	$(LI $(BUGZILLA 1343): Various errors with static initialization of structs and arrays)
@@ -1195,6 +1398,7 @@ Macros:
 	</div>
 
 	BUGZILLA = <a href="http://d.puremagic.com/issues/show_bug.cgi?id=$0">Bugzilla $0</a>
+	CPPBUGZILLA = <a href="http://bugzilla.digitalmars.com/issues/show_bug.cgi?id=$0">Bugzilla $0</a>
 	DSTRESS = dstress $0
 	BUGSFIXED = <h4>Bugs Fixed</h4> $(UL $0 )
 	WHATSNEW = <h4>New/Changed Features</h4> $(UL $0 )
