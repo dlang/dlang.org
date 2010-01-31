@@ -4,6 +4,7 @@ $(D_S D Change Log,
 
 
 $(UL 
+	$(NEW1 056)
 	$(NEW1 055)
 	$(NEW1 054)
 	$(NEW1 053)
@@ -73,9 +74,10 @@ $(COMMENT
 )
 )
 
-$(VERSION 055, Jan 1, 2010, =================================================,
+$(VERSION 056, Jan 29, 2010, =================================================,
 
     $(WHATSNEW
+	$(LI Clarification: function returns are not lvalues)
 	$(LI Add $(B -map) command line switch)
 	$(LI Delegates and function pointers may be used in CTFE)
 	$(LI Delegate literals and function literals may be used in CTFE)
@@ -88,11 +90,25 @@ $(VERSION 055, Jan 1, 2010, =================================================,
 	$(LI $(BUGZILLA 1790): CTFE: foreach(Tuple) won't compile if Tuple contains string)
 	$(LI $(BUGZILLA 2101): CTFE: Please may I use mutable arrays at compile time?)
 	$(LI Partial fix for $(BUGZILLA 3569), stops the stack overflow)
+	$(LI $(BUGZILLA 3668): foreach over typedef'd array crashes dmd)
+	$(LI $(BUGZILLA 3674): forward reference error with multiple overloads with same name)
+	$(LI $(BUGZILLA 3685): Regression(D1 only): DMD silently exits on valid code)
+	$(LI $(BUGZILLA 3687): Array operation "slice times scalar" tramples over memory)
+	$(LI $(BUGZILLA 3719): forward references can cause out-of-memory error)
+	$(LI $(BUGZILLA 3723): Regression: forward referenced enum)
+	$(LI $(BUGZILLA 3724): bug in Expression::arraySyntaxCopy (null pointer dereference on struct->union->struct))
+	$(LI $(BUGZILLA 3726): Regression: ICE(mangle.c 81): struct forward reference with static this)
+	$(LI $(BUGZILLA 3740): Regression: class with fwd reference of a nested struct breaks abstract)
+    )
+)
+
+$(VERSION 055, Jan 1, 2010, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
 	$(LI $(BUGZILLA 3663): struct forward reference regresssion)
 	$(LI $(BUGZILLA 3664): struct forward declaration causes enum to conflict with itself)
-	$(LI $(BUGZILLA 3674): forward reference error with multiple overloads with same name)
-	$(LI $(BUGZILLA 3719): forward references can cause out-of-memory error)
-	$(LI $(BUGZILLA 3726): Regression: ICE(mangle.c 81): struct forward reference with static this)
     )
 )
 

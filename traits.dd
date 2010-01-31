@@ -28,12 +28,15 @@ $(GNAME TraitsKeyword):
     $(B isVirtualFunction)
     $(B isAbstractFunction)
     $(B isFinalFunction)
-    $(LINK2 #isRef, $(B isRef))
-    $(LINK2 #isOut, $(B isOut))
-    $(LINK2 #isLazy, $(B isLazy))
+$(V2      $(GBLINK isStaticFunction)
+)    $(GBLINK isRef)
+    $(GBLINK isOut)
+    $(GBLINK isLazy)
     $(B hasMember)
-    $(B getMember)
-    $(B getVirtualFunctions)
+$(V2      $(GBLINK identifier)
+)    $(B getMember)
+$(V2      $(GBLINK getOverloads)
+)    $(GBLINK getVirtualFunctions)
     $(B classInstanceSize)
     $(B allMembers)
     $(B derivedMembers)
@@ -238,6 +241,15 @@ void main()
 }
 ---
 
+$(V2
+$(H2 $(GNAME isStaticFunction))
+
+	$(P Takes one argument. If that argument is a static function,
+	meaning it has no context pointer,
+	$(B true) is returned, otherwise $(B false).
+	)
+)
+
 $(H2 $(GNAME isRef), $(GNAME isOut), $(GNAME isLazy))
 
 	$(P Takes one argument. If that argument is a declaration,
@@ -295,6 +307,14 @@ void main()
 }
 ---
 
+$(V2
+$(H2 $(GNAME identifier))
+
+	$(P Takes one argument, a symbol. Returns the identifier
+	for that symbol as a string literal.
+	)
+)
+
 $(H2 getMember)
 
 	$(P Takes two arguments, the second must be a string.
@@ -323,7 +343,55 @@ void main()
 }
 ---
 
-$(H2 getVirtualFunctions)
+$(V2
+$(H2 $(GNAME getOverloads))
+
+	$(P The first argument is a class type or an expression of
+	class type.
+	The second argument is a string that matches the name of
+	one of the functions of that class.
+	The result is an array of all the overloads of that function.
+	)
+
+---
+import std.stdio;
+
+class D
+{
+    this() { }
+    ~this() { }
+    void foo() { }
+    int foo(int) { return 2; }
+}
+
+void main()
+{
+    D d = new D();
+
+    foreach (t; __traits(getOverloads, D, "foo"))
+	writefln(typeid(typeof(t)));
+
+    alias typeof(__traits(getOverloads, D, "foo")) b;
+    foreach (t; b)
+	writefln(typeid(t));
+
+    auto i = __traits(getOverloads, d, "foo")[1](1);
+    writefln(i);
+}
+---
+
+	$(P Prints:)
+
+$(CONSOLE
+void()
+int()
+void()
+int()
+2
+)
+)
+
+$(H2 $(GNAME getVirtualFunctions))
 
 	$(P The first argument is a class type or an expression of
 	class type.
@@ -524,5 +592,5 @@ void main()
 Macros:
 	TITLE=Traits
 	WIKI=Traits
+	GBLINK=$(LINK2 #$0, $(B $0))
 	H2=<h2>$0</h2>
-

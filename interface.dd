@@ -60,7 +60,8 @@ interface D
 D d = new D();		// error, cannot create instance of interface
 ------
 
-	Interface member functions do not have implementations.
+$(V1
+	$(P Interface member functions do not have implementations.)
 
 ------
 interface D
@@ -68,10 +69,42 @@ interface D
     void bar() { }	// error, implementation not allowed
 }
 ------
+)
+$(V2
+	$(P Virtual interface member functions do not have implementations.
+	Interfaces are expected to implement static or final functions.
+	)
 
-	All interface functions must be defined in a class that inherits
+------
+interface D
+{
+    void bar() { }	// error, implementation not allowed
+    static void foo() { } // ok
+    final void abc() { } // ok
+}
+------
+
+	$(P Classes that inherit from an interface may not override final or
+	static interface member functions.)
+
+------
+interface D {
+    void bar();
+    static void foo() { }
+    final void abc() { }
+}
+
+class C : D {
+    void bar() { } // ok
+    void foo() { } // error, cannot override static D.foo()
+    void abc() { } // error, cannot override final D.abc()
+}
+------
+
+)
+	$(P All interface functions must be defined in a class that inherits
 	from that interface:
-
+	)
 ------
 interface D
 {
