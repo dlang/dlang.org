@@ -38,8 +38,8 @@ $(V2      $(GBLINK identifier)
 $(V2      $(GBLINK getOverloads)
 )    $(GBLINK getVirtualFunctions)
     $(B classInstanceSize)
-    $(B allMembers)
-    $(B derivedMembers)
+    $(GBLINK allMembers)
+    $(GBLINK derivedMembers)
     $(B isSame)
     $(B compiles)
 
@@ -448,11 +448,13 @@ $(H2 classInstanceSize)
 	polymorphic type.
 	)
 
-$(H2 allMembers)
+$(H2 $(GNAME allMembers))
 
 	$(P Takes a single argument, which must evaluate to either
 	a type or an expression of type.
-	An array of string literals is returned, each of which
+	$(V1 An array)
+	$(V2 A tuple)
+	of string literals is returned, each of which
 	is the name of a member of that type combined with all
 	of the members of the base classes (if the class is a type).
 	No name is repeated.
@@ -474,18 +476,24 @@ void main()
 {
     auto a = __traits(allMembers, D);
     writefln(a);
-    // [_ctor,_dtor,foo,print,toString,toHash,opCmp,opEquals]
+$(V2      // _ctor,_dtor,foo,print,toString,toHash,opCmp,opEquals
+
+    auto b = [ __traits(allMembers, D) ];
+    writefln(b);
+)    // [_ctor,_dtor,foo,print,toString,toHash,opCmp,opEquals]
 }
 ---
 
 	$(P The order in which the strings appear in the result
 	is not defined.)
 
-$(H2 derivedMembers)
+$(H2 $(GNAME derivedMembers))
 
 	$(P Takes a single argument, which must evaluate to either
 	a type or an expression of type.
-	An array of string literals is returned, each of which
+	$(V1 An array)
+	$(V2 A tuple)
+	of string literals is returned, each of which
 	is the name of a member of that type.
 	No name is repeated.
 	Base class member names are not included.
@@ -506,7 +514,8 @@ class D
 void main()
 {
     auto a = __traits(derivedMembers, D);
-    writefln(a);	// [_ctor,_dtor,foo]
+$(V1      writefln(a);	// [_ctor,_dtor,foo])
+$(V2      writefln(a);	// _ctor,_dtor,foo)
 }
 ---
 
