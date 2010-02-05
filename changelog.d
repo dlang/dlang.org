@@ -4,6 +4,7 @@ $(D_S D Change Log,
 
 
 $(UL 
+	$(NEW1 057)
 	$(NEW1 056)
 	$(NEW1 055)
 	$(NEW1 054)
@@ -72,6 +73,20 @@ $(UL
 $(COMMENT
 	$(LI $(LINK2 http://www.digitalmars.com/drn-bin/wwwnews?newsgroups=*, tech support))
 )
+)
+
+$(VERSION 057, Feb 4, 2010, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 2321): spec on inline asm can be misunderstood)
+	$(LI $(BUGZILLA 2463): No line number in "statement is not reachable" warning)
+	$(LI $(BUGZILLA 3306): bad function/delegate literal generated into header files)
+	$(LI $(BUGZILLA 3373): bad codeview debug info for long and ulong)
+	$(LI $(BUGZILLA 3737): SEG-V at expression.c:6255 from bad opDispatch)
+	$(LI $(BUGZILLA 3768): reapeted quotes in ddoc.html)
+    )
 )
 
 $(VERSION 056, Jan 29, 2010, =================================================,
