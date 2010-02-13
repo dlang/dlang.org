@@ -9,26 +9,26 @@ $(V1        $(B typedef) $(I Decl)
         $(I Decl)
 
 $(GNAME Decl):
-        $(I StorageClasses) $(I Decl)
-        $(GLINK BasicType) $(I Declarators) $(B ;)
+        $(GLINK StorageClasses) $(I Decl)
+        $(GLINK BasicType) $(GLINK Declarators) $(B ;)
         $(GLINK BasicType) $(GLINK Declarator) $(LINK2 function.html#FunctionBody, $(I FunctionBody))
 	$(GLINK AutoDeclaration)
 
 $(GNAME Declarators):
         $(I DeclaratorInitializer)
-        $(I DeclaratorInitializer) $(B ,) $(I DeclaratorIdentifierList)
+        $(I DeclaratorInitializer) $(B ,) $(GLINK DeclaratorIdentifierList)
 
 $(GNAME DeclaratorInitializer):
         $(GLINK Declarator)
-        $(GLINK Declarator) $(B =) $(I Initializer)
+        $(GLINK Declarator) $(B =) $(GLINK Initializer)
 
 $(GNAME DeclaratorIdentifierList):
-        $(I DeclaratorIdentifier)
-        $(I DeclaratorIdentifier) $(B ,) $(I DeclaratorIdentifierList)
+        $(GLINK DeclaratorIdentifier)
+        $(GLINK DeclaratorIdentifier) $(B ,) $(I DeclaratorIdentifierList)
 
 $(GNAME DeclaratorIdentifier):
         $(I Identifier)
-        $(I Identifier) $(B =) $(I Initializer)
+        $(I Identifier) $(B =) $(GLINK Initializer)
 
 $(GNAME BasicType):
         $(B bool)
@@ -53,10 +53,15 @@ $(GNAME BasicType):
         $(B cdouble)
         $(B creal)
         $(B void)
-        $(B .)$(I IdentifierList)
-        $(I IdentifierList)
+        $(B .)$(GLINK IdentifierList)
+        $(GLINK IdentifierList)
         $(GLINK Typeof)
-        $(GLINK Typeof) $(B .) $(I IdentifierList)
+        $(GLINK Typeof) $(B .) $(GLINK IdentifierList)
+$(V2          $(B const$(LPAREN)) $(GLINK type) $(B $(RPAREN))
+        $(B immutable$(LPAREN)) $(GLINK type) $(B $(RPAREN))
+        $(B shared$(LPAREN)) $(GLINK type) $(B $(RPAREN))
+        $(B inout$(LPAREN)) $(GLINK type) $(B $(RPAREN))
+)
 
 $(GNAME BasicType2):
         $(B *)
@@ -68,12 +73,12 @@ $(GNAME BasicType2):
         $(B function) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
 
 $(GNAME Declarator):
-        $(GLINK BasicType2)$(OPT) $(I Declarator) $(I DeclaratorSuffixes)$(OPT)
-        $(GLINK BasicType2)$(OPT) $(I Identifier) $(I DeclaratorSuffixes)$(OPT)
+        $(GLINK BasicType2)$(OPT) $(I Declarator) $(GLINK DeclaratorSuffixes)$(OPT)
+        $(GLINK BasicType2)$(OPT) $(I Identifier) $(GLINK DeclaratorSuffixes)$(OPT)
 
 $(GNAME DeclaratorSuffixes):
-        $(I DeclaratorSuffix)
-        $(I DeclaratorSuffix) $(I DeclaratorSuffixes)
+        $(GLINK DeclaratorSuffix)
+        $(GLINK DeclaratorSuffix) $(I DeclaratorSuffixes)
 
 $(GNAME DeclaratorSuffix):
         $(B [ ])
@@ -88,8 +93,8 @@ $(GNAME IdentifierList):
         $(I TemplateInstance) $(B .) $(I IdentifierList)
 
 $(GNAME StorageClasses):
-	$(I StorageClass)
-	$(I StorageClass) $(I StorageClasses)
+	$(GLINK StorageClass)
+	$(GLINK StorageClass) $(I StorageClasses)
 
 $(GNAME StorageClass):
         $(B abstract)
@@ -100,6 +105,7 @@ $(GNAME StorageClass):
         $(B final)
 $(V2
         $(B immutable)
+        $(B inout)
         $(B shared)
 	$(B nothrow)
         $(B override)
@@ -109,22 +115,22 @@ $(V2
         $(B synchronized)
 
 $(GNAME Type):
-        $(I BasicType)
-        $(I BasicType) $(I Declarator2)
+        $(GLINK BasicType)
+        $(GLINK BasicType) $(GLINK Declarator2)
 
 $(GNAME Declarator2):
-        $(I BasicType2) $(I Declarator2)
+        $(GLINK BasicType2) $(I Declarator2)
         $(B $(LPAREN)) $(I Declarator2) $(B $(RPAREN))
-        $(B $(LPAREN)) $(I Declarator2) $(B $(RPAREN)) $(I DeclaratorSuffixes)
+        $(B $(LPAREN)) $(I Declarator2) $(B $(RPAREN)) $(GLINK DeclaratorSuffixes)
 
 $(GNAME Parameters):
-	$(B $(LPAREN)) $(I ParameterList) $(B $(RPAREN))
+	$(B $(LPAREN)) $(GLINK ParameterList) $(B $(RPAREN))
 	$(B ( ))
 
 $(GNAME ParameterList):
-        $(I Parameter)
-        $(I Parameter) $(B ,) $(I ParameterList)
-        $(I Parameter) $(B ...)
+        $(GLINK Parameter)
+        $(GLINK Parameter) $(B ,) $(I ParameterList)
+        $(GLINK Parameter) $(B ...)
         $(B ...)
 
 $(GNAME Parameter):
@@ -141,20 +147,21 @@ $(GNAME InOut):
 
 $(V2
 $(GNAME FunctionAttributes):
-	$(I FunctionAttribute)
-	$(I FunctionAttribute) $(I FunctionAttributes)
+	$(GLINK FunctionAttribute)
+	$(GLINK FunctionAttribute) $(I FunctionAttributes)
 
 $(GNAME FunctionAttribute):
 	$(B nothrow)
 	$(B pure)
 )
 $(GNAME MemberFunctionAttributes):
-	$(I MemberFunctionAttribute)
-	$(I MemberFunctionAttribute) $(I MemberFunctionAttributes)
+	$(GLINK MemberFunctionAttribute)
+	$(GLINK MemberFunctionAttribute) $(I MemberFunctionAttributes)
 
 $(GNAME MemberFunctionAttribute):
 	$(B const)
 	$(B immutable)
+	$(B inout)
 	$(B shared)
 	$(GLINK FunctionAttribute)
 
@@ -166,38 +173,38 @@ $(V2
 
 $(GNAME Initializer):
         $(GLINK VoidInitializer)
-	$(I NonVoidInitializer)
+	$(GLINK NonVoidInitializer)
 
 $(GNAME NonVoidInitializer):
         $(ASSIGNEXPRESSION)
-        $(I ArrayInitializer)
-        $(I StructInitializer)
+        $(GLINK ArrayInitializer)
+        $(GLINK StructInitializer)
 
 $(GNAME ArrayInitializer):
 	$(B [ ])
-	$(B [) $(I ArrayMemberInitializations) $(B ])
+	$(B [) $(GLINK ArrayMemberInitializations) $(B ])
 
 $(GNAME ArrayMemberInitializations):
-	$(I ArrayMemberInitialization)
-	$(I ArrayMemberInitialization) $(B ,)
-	$(I ArrayMemberInitialization) $(B ,) $(I ArrayMemberInitializations)
+	$(GLINK ArrayMemberInitialization)
+	$(GLINK ArrayMemberInitialization) $(B ,)
+	$(GLINK ArrayMemberInitialization) $(B ,) $(I ArrayMemberInitializations)
 
 $(GNAME ArrayMemberInitialization):
-	$(I NonVoidInitializer)
-	$(ASSIGNEXPRESSION) $(B :) $(I NonVoidInitializer)
+	$(GLINK NonVoidInitializer)
+	$(ASSIGNEXPRESSION) $(B :) $(GLINK NonVoidInitializer)
 
 $(GNAME StructInitializer):
 	$(B {  })
-	$(B {) $(I StructMemberInitializers) $(B })
+	$(B {) $(GLINK StructMemberInitializers) $(B })
 
 $(GNAME StructMemberInitializers):
-	$(I StructMemberInitializer)
-	$(I StructMemberInitializer) $(B ,)
-	$(I StructMemberInitializer) $(B ,) $(I StructMemberInitializers)
+	$(GLINK StructMemberInitializer)
+	$(GLINK StructMemberInitializer) $(B ,)
+	$(GLINK StructMemberInitializer) $(B ,) $(I StructMemberInitializers)
 
 $(GNAME StructMemberInitializer):
-	$(I NonVoidInitializer)
-	$(I Identifier) $(B :) $(I NonVoidInitializer)
+	$(GLINK NonVoidInitializer)
+	$(I Identifier) $(B :) $(GLINK NonVoidInitializer)
 )
 
 <h3>Declaration Syntax</h3>
