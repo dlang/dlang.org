@@ -7,11 +7,15 @@ $(SPEC_S Template Mixins,
 	into the current context.
 
 $(GRAMMAR
+$(GNAME TemplateMixinDeclaration):
+	$(V2 $(B mixin)) $(B template) $(TEMPLATEIDENTIFIER) $(B $(LPAREN)) $(TEMPLATEPARAMETERLIST) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(SUB $(I opt)))
+		$(B {) DeclDefs $(B })
+
 $(GNAME TemplateMixin):
-	$(B mixin) $(I TemplateIdentifier) $(B ;)
-	$(B mixin) $(I TemplateIdentifier) $(I MixinIdentifier) $(B ;)
-	$(B mixin) $(I TemplateIdentifier) $(B !$(LPAREN)) $(I TemplateArgumentList) $(B $(RPAREN)) $(B ;)
-	$(B mixin) $(I TemplateIdentifier) $(B !$(LPAREN)) $(I TemplateArgumentList) $(B $(RPAREN)) $(I MixinIdentifier) $(B ;)
+	$(B mixin) $(TEMPLATEIDENTIFIER) $(B ;)
+	$(B mixin) $(TEMPLATEIDENTIFIER) $(GLINK MixinIdentifier) $(B ;)
+	$(B mixin) $(TEMPLATEIDENTIFIER) $(B !$(LPAREN)) $(TEMPLATEARGUMENTLIST) $(B $(RPAREN)) $(B ;)
+	$(B mixin) $(TEMPLATEIDENTIFIER) $(B !$(LPAREN)) $(TEMPLATEARGUMENTLIST) $(B $(RPAREN)) $(GLINK MixinIdentifier) $(B ;)
 
 $(GNAME MixinIdentifier):
 	$(I Identifier)
@@ -35,7 +39,7 @@ $(GNAME MixinIdentifier):
 	)
 
 ------
-template Foo()
+$(V2 mixin) template Foo()
 {
     int x = 5;
 }
@@ -70,7 +74,7 @@ void test()
 	Mixins can be parameterized:
 
 ------
-template Foo(T)
+$(V2 mixin) template Foo(T)
 {
     T x = 5;
 }
@@ -81,7 +85,7 @@ $(B mixin Foo!(int);)		// create x of type int
 	Mixins can add virtual functions to a class:
 
 ------
-template Foo()
+$(V2 mixin) template Foo()
 {
     void func() { writefln("Foo.func()"); }
 }
@@ -112,7 +116,7 @@ void test()
 ------
 int y = 3;
 
-template Foo()
+$(V2 mixin) template Foo()
 {
     int abc() { return y; }
 }
@@ -128,7 +132,7 @@ void test()
 	Mixins can parameterize symbols using alias parameters:
 
 ------
-template Foo(alias b)
+$(V2 mixin) template Foo(alias b)
 {
     int abc() { return b; }
 }
@@ -147,7 +151,7 @@ void test()
 	delegate literal, these can be inlined by the compiler:
 
 ------
-template duffs_device(alias id1, alias id2, alias s)
+$(V2 mixin) template duffs_device(alias id1, alias id2, alias s)
 {
     void duff_loop()
     {
@@ -192,7 +196,7 @@ void test()
 ------
 int x = 3;
 
-template Foo()
+$(V2 mixin) template Foo()
 {
     int x = 5;
     int y = 5;
@@ -213,13 +217,13 @@ void test()
 	error when the declaration is referenced:
 
 ------
-template Foo()
+$(V2 mixin) template Foo()
 {
     int x = 5;
     void func(int x) { }
 }
 
-template Bar()
+$(V2 mixin) template Bar()
 {
     int x = 4;
     void func() { }
@@ -244,14 +248,14 @@ void test()
 ------
 int x = 6;
 
-template Foo()
+$(V2 mixin) template Foo()
 {
     int x = 5;
     int y = 7;
     void func() { }
 }
 
-template Bar()
+$(V2 mixin) template Bar()
 {
     int x = 4;
     void func() { }
@@ -274,12 +278,12 @@ void test()
 	functions declared in different mixins:)
 
 -----
-template Foo()
+$(V2 mixin) template Foo()
 {
     void func(int x) {  }
 }
 
-template Bar()
+$(V2 mixin) template Bar()
 {
     void func() {  }
 }
@@ -304,7 +308,7 @@ void main()
 ------
 int x = 4;
 
-template Foo()
+$(V2 mixin) template Foo()
 {
     int x = 5;
     int bar() { return x; }
@@ -324,4 +328,7 @@ void test()
 Macros:
 	TITLE=Mixins
 	WIKI=Mixin
-
+	TEMPLATEIDENTIFIER=$(LINK2 template.html#TemplateIdentifier, $(I TemplateIdentifier))
+	TEMPLATEPARAMETERLIST=$(LINK2 template.html#TemplateParameterList, $(I TemplateParameterList))
+	TEMPLATEARGUMENTLIST=$(LINK2 template.html#TemplateArgumentList, $(I TemplateArgumentList))
+	FOO=
