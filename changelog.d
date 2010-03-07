@@ -2,7 +2,42 @@ Ddoc
 
 $(D_S D Change Log,
 
+$(VERSION 057, Mar 6, 2010, =================================================,
 
+    $(WHATSNEW
+	$(LI Warnings no longer halt the parsing/semantic passes, though they still return
+	 an error status and still do not generate output files. They also no longer count
+	 as errors when testing with "compiles" traits.)
+	$(LI Added $(B -wi) switch for $(BUGZILLA 2567))
+	$(LI Associative array contents can now be compared for equality)
+	$(LI Add simple spell checking.)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 2321): spec on inline asm can be misunderstood)
+	$(LI $(BUGZILLA 2463): No line number in "statement is not reachable" warning)
+	$(LI $(BUGZILLA 3029): Bug in array value mangling rule)
+	$(LI $(BUGZILLA 3306): bad function/delegate literal generated into header files)
+	$(LI $(BUGZILLA 3373): bad codeview debug info for long and ulong)
+	$(LI Posix only, $(BUGZILLA 3420): [PATCH] Allow string import of files using subdirectories)
+	$(LI $(BUGZILLA 3450): incorrect result for is (typeof({ ... }())) inside a struct)
+	$(LI $(BUGZILLA 3500): super behaves differently with -inline)
+	$(LI $(BUGZILLA 3558): Optimizer bug results in false if condition being taken)
+	$(LI $(BUGZILLA 3670): Declarator grammar rule is broken)
+	$(LI $(BUGZILLA 3710): Typo in allMembers description?)
+	$(LI $(BUGZILLA 3736): corrupted struct returned by function with optimizations (-O))
+	$(LI $(BUGZILLA 3737): SEG-V at expression.c:6255 from bad opDispatch)
+	$(LI $(BUGZILLA 3768): reapeted quotes in ddoc.html)
+	$(LI $(BUGZILLA 3769): Regression: Segfault(constfold.c) array literals and case statements)
+	$(LI $(BUGZILLA 3775): Segfault(cast.c): casting no-parameter template function using property syntax)
+	$(LI $(BUGZILLA 3781): ICE(interpret.c): using no-argument C-style variadic function in CTFE)
+	$(LI $(BUGZILLA 3792): Regression: "non-constant expression" for a template inside a struct using a struct initializer)
+	$(LI $(BUGZILLA 3803): compiler segfaults)
+	$(LI $(BUGZILLA 3840): Jump to: section in the docs should be sorted)
+    )
+)
+
+
+<div id=version>
 $(UL 
 	$(NEW1 057)
 	$(NEW1 056)
@@ -74,20 +109,7 @@ $(COMMENT
 	$(LI $(LINK2 http://www.digitalmars.com/drn-bin/wwwnews?newsgroups=*, tech support))
 )
 )
-
-$(VERSION 057, Feb 4, 2010, =================================================,
-
-    $(WHATSNEW
-    )
-    $(BUGSFIXED
-	$(LI $(BUGZILLA 2321): spec on inline asm can be misunderstood)
-	$(LI $(BUGZILLA 2463): No line number in "statement is not reachable" warning)
-	$(LI $(BUGZILLA 3306): bad function/delegate literal generated into header files)
-	$(LI $(BUGZILLA 3373): bad codeview debug info for long and ulong)
-	$(LI $(BUGZILLA 3737): SEG-V at expression.c:6255 from bad opDispatch)
-	$(LI $(BUGZILLA 3768): reapeted quotes in ddoc.html)
-    )
-)
+</div>
 
 $(VERSION 056, Jan 29, 2010, =================================================,
 
