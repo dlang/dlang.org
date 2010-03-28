@@ -22,7 +22,7 @@ SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd \
 	final-const-invariant.dd const.dd traits.dd COM.dd cpp_interface.dd \
 	hijack.dd const3.dd features2.dd safed.dd cpp0x.dd const-faq.dd \
 	concepts.dd memory-safe-d.dd d-floating-point.dd \
-	migrate-to-shared.dd D1toD2.dd unittest.dd
+	migrate-to-shared.dd D1toD2.dd unittest.dd hash-map.dd
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
@@ -50,7 +50,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html \
 	hijack.html const3.html features2.html safed.html cpp0x.html const-faq.html \
 	dmd-windows.html dmd-linux.html dmd-osx.html dmd-freebsd.html \
 	concepts.html memory-safe-d.html d-floating-point.html \
-	migrate-to-shared.html D1toD2.html unittest.html
+	migrate-to-shared.html D1toD2.html unittest.html hash-map.html
 
 
 target: $(TARGETS)
@@ -158,6 +158,8 @@ future.html : $(DDOC) future.dd
 garbage.html : $(DDOC) garbage.dd
 
 glossary.html : $(DDOC) glossary.dd
+
+hash-map.html : $(DDOC) hash-map.dd
 
 hijack.html : $(DDOC) hijack.dd
 
