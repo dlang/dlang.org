@@ -1,0 +1,313 @@
+Ddoc
+
+$(SPEC_S Associative Arrays,
+
+	$(P Associative arrays have an index that is not necessarily an integer,
+	and can be sparsely populated. The index for an associative array
+	is called the $(I key), and its type is called the $(I KeyType).
+	)
+
+	$(P Associative arrays are declared by placing the $(I KeyType)
+	within the [] of an array declaration:
+	)
+
+---------
+int[char[]] b;		// associative array b of ints that are
+			// indexed by an array of characters.
+			// The $(I KeyType) is char[]
+b["hello"] = 3;		// set value associated with key "hello" to 3
+func(b["hello"]);	// pass 3 as parameter to func()
+---------
+
+	$(P Particular keys in an associative array can be removed with the
+	remove function:
+	)
+
+---------
+b.$(B remove)("hello");
+---------
+
+	$(P The $(I InExpression) yields a pointer to the value
+	if the key is in the associative array, or $(B null) if not:
+	)
+
+---------
+int* p;
+p = ("hello" $(B in) b);
+if (p != $(B null))
+	...
+---------
+
+	$(P $(I KeyType)s cannot be functions or voids.
+	)
+
+<h3>Using Classes as the KeyType</h3>
+
+	$(P Classes can be used as the $(I KeyType). For this to work,
+	the class definition must override the following member functions
+	of class $(TT Object):)
+
+	$(UL
+	$(LI $(TT hash_t toHash()))
+$(V1	$(LI $(TT int opEquals(Object))))
+$(V2	$(LI $(TT bool opEquals(Object))))
+	$(LI $(TT int opCmp(Object)))
+	)
+
+	$(P $(TT hash_t) is an alias to an integral type.)
+
+	$(P Note that the parameter to $(TT opCmp) and $(TT opEquals) is
+	of type
+	$(TT Object), not the type of the class in which it is defined.)
+
+	$(P For example:)
+
+---
+class Foo
+{
+    int a, b;
+
+    hash_t $(B toHash)() { return a + b; }
+
+$(V1      int $(B opEquals)(Object o))$(V2      bool $(B opEquals)(Object o))
+    {	Foo f = cast(Foo) o;
+	return f && a == foo.a && b == foo.b;
+    }
+
+    int $(B opCmp)(Object o)
+    {	Foo f = cast(Foo) o;
+	if (!f)
+	    return -1;
+	if (a == foo.a)
+	    return b - foo.b;
+	return a - foo.a;
+    }
+}
+---
+
+	$(P The implementation may use either $(TT opEquals) or $(TT opCmp) or
+	both. Care should be taken so that the results of
+	$(TT opEquals) and $(TT opCmp) are consistent with each other when
+	the class objects are the same or not.)
+
+<h3>Using Structs or Unions as the KeyType</h3>
+
+	$(P If the $(I KeyType) is a struct or union type,
+	a default mechanism is used
+	to compute the hash and comparisons of it based on the binary
+	data within the struct value. A custom mechanism can be used
+	by providing the following functions as struct members:
+	)
+
+---------
+$(V2 const) hash_t $(B toHash)();
+$(V1 int $(B opEquals)($(I KeyType)* s);)$(V2 const bool $(B opEquals)(ref const $(I KeyType) s);)
+$(V1 int $(B opCmp)($(I KeyType)* s);)$(V2 const int $(B opCmp)(ref const $(I KeyType) s);)
+---------
+
+	$(P For example:)
+
+---------
+import std.string;
+
+struct MyString
+{
+    string str;
+
+$(V1      hash_t $(B toHash)()
+    {   hash_t hash;
+	foreach (char c; s)
+	    hash = (hash * 9) + c;
+	return hash;
+    }
+
+    bool $(B opEquals)(MyString* s)
+    {
+	return std.string.cmp(this.str, s.str) == 0;
+    }
+
+    int $(B opCmp)(MyString* s)
+    {
+	return std.string.cmp(this.str, s.str);
+    })
+$(V2      const hash_t $(B toHash)()
+    {   hash_t hash;
+	foreach (char c; s)
+	    hash = (hash * 9) + c;
+	return hash;
+    }
+
+    const bool $(B opEquals)(ref const MyString s)
+    {
+	return std.string.cmp(this.str, s.str) == 0;
+    }
+
+    const int $(B opCmp)(ref const MyString s)
+    {
+	return std.string.cmp(this.str, s.str);
+    })
+}
+---------
+
+
+	$(P The implementation may use either $(TT opEquals) or $(TT opCmp) or
+	both. Care should be taken so that the results of
+	$(TT opEquals) and $(TT opCmp) are consistent with each other when
+	the struct/union objects are the same or not.)
+
+<h3>Properties</h3>
+
+Properties for associative arrays are:
+
+    $(TABLE2 Associative Array Properties,
+	$(TR $(TH Property) $(TH Description))
+
+	$(TR
+	$(TD $(B .sizeof))
+	$(TD Returns the size of the reference to the associative
+	array; it is typically 8.
+	)
+	)
+
+	$(TR
+	$(TD $(B .length))
+	$(TD Returns number of values in the associative array.
+	Unlike for dynamic arrays, it is read-only.
+	)
+	)
+
+	$(TR
+	$(TD $(B .keys))
+	$(TD Returns dynamic array, the elements of which are the keys in
+	the associative array.
+	)
+	)
+
+	$(TR
+	$(TD $(B .values))
+	$(TD Returns dynamic array, the elements of which are the values in
+	the associative array.
+	)
+	)
+
+	$(TR
+	$(TD $(B .rehash))
+	$(TD Reorganizes the associative array in place so that lookups
+	are more efficient. rehash is effective when, for example,
+	the program is done loading up a symbol table and now needs
+	fast lookups in it.
+	Returns a reference to the reorganized array.
+	)
+	)
+
+$(V2
+	$(TR
+	$(TD $(B .byKey()))
+	$(TD Returns a delegate suitable for use as an $(I Aggregate) to
+	a $(LINK2 statement.html#ForeachStatement, $(I ForeachStatement))
+	which will iterate over the keys
+	of the associative array.
+	)
+	)
+
+	$(TR
+	$(TD $(B .byValue()))
+	$(TD Returns a delegate suitable for use as an $(I Aggregate) to
+	a $(LINK2 statement.html#ForeachStatement, $(I ForeachStatement))
+	which will iterate over the values
+	of the associative array.
+	)
+	)
+
+	$(TR
+	$(TD $(B .get(Key key, lazy Value defaultValue)))
+	$(TD Looks up $(I key); if it exists returns corresponding $(I value)
+	else evaluates and returns $(I defaultValue).
+	)
+	)
+)
+    )
+
+<hr>
+<h3>Associative Array Example: word count</h3>
+
+---------
+import std.file;         // D file I/O
+import std.stdio;
+
+int main (string[] args)
+{
+    int word_total;
+    int line_total;
+    int char_total;
+    int[char[]] dictionary;
+
+    writefln("   lines   words   bytes file");
+    for (int i = 1; i < args.length; ++i)      // program arguments
+    {
+	char[] input;            // input buffer
+	int w_cnt, l_cnt, c_cnt; // word, line, char counts
+	int inword;
+	int wstart;
+
+	// read file into input[]
+	input = cast(char[])std.file.read(args[i]);
+
+	foreach (j, char c; input)
+	{
+	    if (c == '\n')
+		    ++l_cnt;
+	    if (c >= '0' && c <= '9')
+	    {
+	    }
+	    else if (c >= 'a' && c <= 'z' ||
+		    c >= 'A' && c <= 'Z')
+	    {
+		if (!inword)
+		{
+		    wstart = j;
+		    inword = 1;
+		    ++w_cnt;
+		}
+	    }
+	    else if (inword)
+	    {
+		char[] word = input[wstart .. j];
+		dictionary[word]++;        // increment count for word
+		inword = 0;
+	    }
+	    ++c_cnt;
+	}
+	if (inword)
+	{
+	    char[] word = input[wstart .. input.length];
+	    dictionary[word]++;
+	}
+	writefln("%8d%8d%8d %s", l_cnt, w_cnt, c_cnt, args[i]);
+	line_total += l_cnt;
+	word_total += w_cnt;
+	char_total += c_cnt;
+    }
+
+    if (args.length > 2)
+    {
+	writef("-------------------------------------\n%8d%8d%8d total",
+		line_total, word_total, char_total);
+    }
+
+    writefln("-------------------------------------");
+    foreach (word; dictionary.keys.sort)
+    {
+	writefln("%3d %s", dictionary[word], word);
+    }
+    return 0;
+}
+---------
+
+)
+
+Macros:
+	TITLE=Associative Arrays
+	WIKI=AssociativeArrays
+	DOLLAR=$
+	FOO=
