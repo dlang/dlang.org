@@ -34,35 +34,48 @@ $(D_S Writing Win32 DLLs in D,
 	)
 
 --------------------------------
-import core.runtime;
 import std.c.windows.windows;
-HINSTANCE g_hInst;
+import core.dll_helper;
+
+__gshared HINSTANCE g_hInst;
 
 extern (Windows)
-BOOL $(B DllMain)(HINSTANCE hInstance, ULONG ulReason, LPVOID pvReserved)
+BOOL DllMain(HINSTANCE hInstance, ULONG ulReason, LPVOID pvReserved)
 {
     switch (ulReason)
     {
 	case DLL_PROCESS_ATTACH:
-	    Runtime.initialize();
+	    g_hInst = hInstance;
+	    dll_process_attach( hInstance, true );
 	    break;
 
 	case DLL_PROCESS_DETACH:
-	    Runtime.terminate();
+	    dll_process_detach( hInstance, true );
 	    break;
 
 	case DLL_THREAD_ATTACH:
+	    dll_thread_attach( true, true );
+	    break;
+
 	case DLL_THREAD_DETACH:
-	    // Multiple threads not supported yet
-	    return false;
+	    dll_thread_detach( true, true );
+	    break;
     }
-    g_hInst=hInstance;
     return true;
 }
+
 -------------------------------
 
 	$(P Notes:)
 	$(UL 
+	$(LI DllMain simply forwards to the appropriate helper functions. These setup
+	     the runtime, create thread objects for interaction with the garbage collector
+	     and initialize thread local storage data.)
+	$(LI The DLL does not share its runtime or memory with other DLLs.)
+	$(LI The first boolean argument to the dll-helper functions specify whether all threads
+	     should be controlled by the garbage collector. You might need more control over
+	     this behaviour if there are threads in the process that must not be suspended.
+	     In this case pass false to disable the automatic handling of all threads.)
 	$(LI The presence of $(TT DllMain()) is recognized by the compiler
 		causing it to emit a reference to
 		$(LINK2 http://www.digitalmars.com/ctg/acrtused.html, __acrtused_dll)
@@ -79,7 +92,7 @@ DESCRIPTION     'My DLL written in D'
 
 EXETYPE		NT
 CODE            PRELOAD DISCARDABLE
-DATA            PRELOAD SINGLE
+DATA            WRITE
 
 EXPORTS
 		DllGetClassObject       @2
@@ -96,9 +109,10 @@ EXPORTS
 	which prints a string:
 	)
 
-	<h4>mydll2.d:</h4>
+	<h4>mydll.d:</h4>
 -------------------------------
 module mydll;
+import std.c.stdio;
 export void dllprint() { printf("hello dll world\n"); }
 -------------------------------
 
@@ -123,8 +137,7 @@ DATA WRITE
 	)
 
 $(CONSOLE
-C:>dmd -ofmydll.dll mydll2.d dll.d mydll.def
-C:>implib/system mydll.lib mydll.dll
+C:>dmd -ofmydll.dll -L/IMPLIB mydll.d dll.d mydll.def
 C:>
 )
 
@@ -143,9 +156,9 @@ int main()
 }
 -------------------------------
 
-	$(P Create a clone of mydll2.d that doesn't have the function bodies:)
+	$(P Create an interface file mydll.di that doesn't have the function bodies:)
 
-	<h4>mydll.d:</h4>
+	<h4>mydll.di:</h4>
 -------------------------------
 export void dllprint();
 -------------------------------
@@ -188,6 +201,9 @@ C:>
 	$(LI Retain a pointer to the data within the D DLL so the GC will not free
 	it. Establish a protocol where the caller informs the D DLL when it is
 	safe to free the data.)
+
+	$(LI Notify the GC about external references to a memory block by
+	calling GC.addRange.)
 
 	$(LI Use operating system primitives like VirtualAlloc() to allocate
 	memory to be transferred between DLLs.)
