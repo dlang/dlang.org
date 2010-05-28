@@ -12,7 +12,7 @@ $(P	Templates are D's approach to generic programming.
 
 $(GRAMMAR
 $(GNAME TemplateDeclaration):
-	$(B template) $(I TemplateIdentifier) $(B $(LPAREN)) $(I TemplateParameterList) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(SUB $(I opt)))
+	$(B template) $(GLINK TemplateIdentifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(SUB $(I opt)))
 		$(B {) DeclDefs $(B })
 
 $(GNAME TemplateIdentifier):
@@ -65,14 +65,14 @@ $(P
 
 $(GRAMMAR
 $(GNAME TemplateInstance):
-	$(I TemplateIdentifier) $(B !$(LPAREN)) $(I TemplateArgumentList) $(B $(RPAREN))
-
-$(GNAME TemplateIdentifier):
-	$(I Identifier)
+	$(GLINK TemplateIdentifier) $(B !$(LPAREN)) $(GLINK TemplateArgumentList) $(B $(RPAREN))
+$(V2
+	$(GLINK TemplateIdentifier) $(B !) $(GLINK TemplateSingleArgument)
+)
 
 $(GNAME TemplateArgumentList):
-	$(I TemplateArgument)
-	$(I TemplateArgument) , $(I TemplateArgumentList)
+	$(GLINK TemplateArgument)
+	$(GLINK TemplateArgument) , $(I TemplateArgumentList)
 
 $(GNAME TemplateArgument):
 	$(I Type)
@@ -88,6 +88,21 @@ $(GNAME SymbolTail):
 	$(I Identifier) $(B .) $(I SymbolTail)
 	$(GLINK TemplateInstance)
 	$(GLINK TemplateInstance) $(B .) $(I SymbolTail)
+
+$(V2
+$(GNAME TemplateSingleArgument):
+	$(I Identifier)
+	$(GLINK2 declaration, BasicTypeX)
+	$(GLINK2 lex, CharacterLiteral)
+	$(GLINK2 lex, StringLiteral)
+	$(GLINK2 lex, IntegerLiteral)
+	$(GLINK2 lex, FloatLiteral)
+	$(B true)
+	$(B false)
+	$(B null)
+	$(B __FILE__)
+	$(B __LINE__)
+)
 )
 
 $(P
@@ -101,6 +116,14 @@ template TFoo(T) { alias T* t; }
 ...
 TFoo!(int).t x;	// declare x to be of type int*
 ------
+
+$(V2
+	$(P If the $(GLINK TemplateArgument) is one token long, the parentheses can be omitted:
+	)
+---
+TFoo!int.t x;   // same as TFoo!(int).t x;
+---
+)
 
 $(P
 	A template instantiation can be aliased:
