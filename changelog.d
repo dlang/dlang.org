@@ -2,43 +2,54 @@ Ddoc
 
 $(D_S D Change Log,
 
-$(VERSION 057, Mar 6, 2010, =================================================,
+$(VERSION 062, Jun 9, 2010, =================================================,
 
     $(WHATSNEW
-	$(LI Warnings no longer halt the parsing/semantic passes, though they still return
-	 an error status and still do not generate output files. They also no longer count
-	 as errors when testing with "compiles" traits.)
-	$(LI Added $(B -wi) switch for $(BUGZILLA 2567))
-	$(LI Associative array contents can now be compared for equality)
-	$(LI Add simple spell checking.)
+	$(LI $(BUGZILLA 2008): Poor optimization of functions with ref parameters)
+	$(LI $(BUGZILLA 4296): Reduce parasitic error messages)
     )
     $(BUGSFIXED
-	$(LI $(BUGZILLA 2321): spec on inline asm can be misunderstood)
-	$(LI $(BUGZILLA 2463): No line number in "statement is not reachable" warning)
-	$(LI $(BUGZILLA 3029): Bug in array value mangling rule)
-	$(LI $(BUGZILLA 3306): bad function/delegate literal generated into header files)
-	$(LI $(BUGZILLA 3373): bad codeview debug info for long and ulong)
-	$(LI Posix only, $(BUGZILLA 3420): [PATCH] Allow string import of files using subdirectories)
-	$(LI $(BUGZILLA 3450): incorrect result for is (typeof({ ... }())) inside a struct)
-	$(LI $(BUGZILLA 3500): super behaves differently with -inline)
-	$(LI $(BUGZILLA 3558): Optimizer bug results in false if condition being taken)
-	$(LI $(BUGZILLA 3670): Declarator grammar rule is broken)
-	$(LI $(BUGZILLA 3710): Typo in allMembers description?)
-	$(LI $(BUGZILLA 3736): corrupted struct returned by function with optimizations (-O))
-	$(LI $(BUGZILLA 3737): SEG-V at expression.c:6255 from bad opDispatch)
-	$(LI $(BUGZILLA 3768): reapeted quotes in ddoc.html)
-	$(LI $(BUGZILLA 3769): Regression: Segfault(constfold.c) array literals and case statements)
-	$(LI $(BUGZILLA 3775): Segfault(cast.c): casting no-parameter template function using property syntax)
-	$(LI $(BUGZILLA 3781): ICE(interpret.c): using no-argument C-style variadic function in CTFE)
-	$(LI $(BUGZILLA 3792): Regression: "non-constant expression" for a template inside a struct using a struct initializer)
-	$(LI $(BUGZILLA 3803): compiler segfaults)
-	$(LI $(BUGZILLA 3840): Jump to: section in the docs should be sorted)
+	$(LI $(BUGZILLA 1193): regression: "matches more than one template declaration" doesn't list the location of the conflicting templates)
+	$(LI $(BUGZILLA 1894): scope(exit) is ignored except in compound statements)
+	$(LI $(BUGZILLA 1941): missing line on inaccesable external private module member)
+	$(LI $(BUGZILLA 2127): inliner turns struct "return *this" from by-value into by-ref)
+	$(LI $(BUGZILLA 2276): Error message missing line number on array operation)
+	$(LI $(BUGZILLA 2546): Array Ops silently fail when no slice symbol is used.)
+	$(LI $(BUGZILLA 2881): x.stringof returns typeof(x).stringof when x is an enum)
+	$(LI $(BUGZILLA 3064): Invalid array operation accepted, generates bad code)
+	$(LI $(BUGZILLA 3323): Segfault or ICE(e2ir.c) using struct with destructor almost anywhere)
+	$(LI $(BUGZILLA 3398): Attributes inside a union screws data alignment)
+	$(LI $(BUGZILLA 3547): for option -od for relative path the path is added twice)
+	$(LI $(BUGZILLA 3548): ICE occurs when an array is returned from a function is incorrectly used in an array op expression.)
+	$(LI $(BUGZILLA 3651): mangleof broken for enums)
+	$(LI $(BUGZILLA 3854): Error on static initialization of arrays with trailing comma.)
+	$(LI $(BUGZILLA 4003): The result changes only with the order of source files.)
+	$(LI $(BUGZILLA 4045): [CTFE] increasing array length)
+	$(LI $(BUGZILLA 4052): [CTFE] increment from array item)
+	$(LI $(BUGZILLA 4078): [CTFE] Failed return of dynamic array item)
+	$(LI $(BUGZILLA 4084): Ignored missing main() closing bracket)
+	$(LI $(BUGZILLA 4143): fix warnings in dmd build)
+	$(LI $(BUGZILLA 4156): Segfault with array+=array)
+	$(LI $(BUGZILLA 4169): building dmd with a modern gcc produces a buggy compiler)
+	$(LI $(BUGZILLA 4175): linux.mak doesn't declare sufficient dependencies to support parallel builds)
+	$(LI $(BUGZILLA 4210): Random crashes / heisenbugs caused by dmd commit 478: compiler messes up vtables)
+	$(LI $(BUGZILLA 4212): DWARF: void arrays cause gdb errors)
+	$(LI $(BUGZILLA 4213): Strange behaviour with static void[] arrays)
+	$(LI $(BUGZILLA 4242): ICE(module.c): importing a module with same name as package)
+	$(LI $(BUGZILLA 4252): [CTFE] No array bounds checking in assignment to char[] array)
+	$(LI $(BUGZILLA 4257): ICE(interpret.c): passing parameter into CTFE as ref parameter)
+	$(LI $(BUGZILLA 4259): Header generation omits leading '@' for properties)
+	$(LI $(BUGZILLA 4270): Missing line number in 'can only catch class objects' error message)
     )
 )
 
-
 <div id=version>
 $(UL 
+	$(NEW1 062)
+	$(NEW1 061)
+	$(NEW1 060)
+	$(NEW1 059)
+	$(NEW1 058)
 	$(NEW1 057)
 	$(NEW1 056)
 	$(NEW1 055)
@@ -110,6 +121,126 @@ $(COMMENT
 )
 )
 </div>
+
+$(VERSION 061, May 10, 2010, =================================================,
+
+    $(WHATSNEW
+	$(LI Add hints for missing import declarations.)
+	$(LI Speed up compilation.)
+    )
+    $(BUGSFIXED
+	$(LI Fix hanging problem on undefined identifiers.)
+	$(LI $(BUGZILLA 461): Constant not understood to be constant when circular module dependency exists.)
+	$(LI $(BUGZILLA 945): template forward reference with named nested struct only)
+	$(LI $(BUGZILLA 1055): union forward reference "overlapping initialization" error)
+	$(LI $(BUGZILLA 2085): CTFE fails if the function is forward referenced)
+	$(LI $(BUGZILLA 2386): Array of forward referenced struct doesn't compile)
+	$(LI $(BUGZILLA 4015): forward reference in alias causes error)
+	$(LI $(BUGZILLA 4016): const initializer cannot forward reference other const initializer)
+	$(LI $(BUGZILLA 4042): Unable to instantiate a struct template.)
+	$(LI $(BUGZILLA 4100): Break and continue to label should mention foreach)
+    )
+)
+
+
+$(VERSION 060, May 4, 2010, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
+	$(LI Another try at fixing the Dwarf issues.)
+    )
+)
+
+$(VERSION 059, Apr 30, 2010, =================================================,
+
+    $(WHATSNEW
+	$(LI Improve spelling checking distance to 2.)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 1079): gdb: Dwarf Error: Cannot find DIE at 0xb705 referenced from DIE at 0x250)
+	$(LI $(BUGZILLA 2549): Segfault on array multiplication.)
+	$(LI $(BUGZILLA 3066): Array operation without a slice as the lvalue accepted, bad codegen)
+	$(LI $(BUGZILLA 3207): gdb: Push D patches upstream)
+	$(LI $(BUGZILLA 3415): broken JSON output)
+	$(LI $(BUGZILLA 3522): ICE(cg87.c): variable*array[].)
+	$(LI $(BUGZILLA 3974): ICE(init.c): Static array initializer with more elements than destination array)
+	$(LI $(BUGZILLA 3987): [gdb] Invalid DWARF output for function pointers)
+	$(LI $(BUGZILLA 4036): Segfault with -inline and literal of struct containing union)
+	$(LI $(BUGZILLA 4037): [gdb] Invalid DWARF output for wchar)
+	$(LI $(BUGZILLA 4038): [gdb] Invalid DWARF output for function pointers with ref args)
+	$(LI $(BUGZILLA 4067): [CTFE] Code inside try-catch blocks is silently ignored)
+	$(LI $(BUGZILLA 4089): crash when creating JSON output for incomplete struct)
+	$(LI $(BUGZILLA 4093): Segfault(interpret.c): with recursive struct templates)
+	$(LI $(BUGZILLA 4105): Stack overflow involving alias template parameters and undefined identifier)
+    )
+)
+
+$(VERSION 058, Apr 6, 2010, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 122): DDoc newline behaviour produces suboptimal results)
+	$(LI $(BUGZILLA 1628): Ddoc produces invalid documentation for --- blocks)
+	$(LI $(BUGZILLA 2609): No documentation generated for destructor)
+	$(LI $(BUGZILLA 3808): Assertion Failure : Assertion failure: 'classinfo->structsize == CLASSINFO_SIZE' on line 870 in file 'toobj.c')
+	$(LI $(BUGZILLA 3842): ICE(expression.c) using pointer in CTFE)
+	$(LI $(BUGZILLA 3884): Segfault: defining a typedef with an invalid object.d)
+	$(LI $(BUGZILLA 3885): No multithread support for Windows DLL)
+	$(LI $(BUGZILLA 3899): CTFE: poor error message for use of uninitialized variable)
+	$(LI $(BUGZILLA 3900): CTFE: Wrong return value for array.var assignment)
+	$(LI $(BUGZILLA 3901): PATCH: Nested struct assignment for CTFE)
+	$(LI $(BUGZILLA 3914): Struct as argument that fits in register has member accessed wrong)
+	$(LI $(BUGZILLA 3919): ICE(expression.c, 9944): * or / with typedef ireal)
+	$(LI $(BUGZILLA 3920): Assertion failure: '0' on line 10018 in file 'expression.c')
+	$(LI $(BUGZILLA 3958): mixin(non-static method) crashes compiler)
+	$(LI $(BUGZILLA 3972): Regarding module with name different from its file name)
+	$(LI $(BUGZILLA 4002): dmd.conf and binary path in dmd -v output)
+	$(LI $(BUGZILLA 4004): DMD 2.042 CTFE regression with functions taking ref parameters)
+	$(LI $(BUGZILLA 4005): std.c.stdlib.exit in CTFE and more)
+	$(LI $(BUGZILLA 4011): Incorrect function overloading using mixins)
+	$(LI $(BUGZILLA 4019): [CTFE] Adding an item to an empty AA)
+	$(LI $(BUGZILLA 4020): [ICE][CTFE] struct postblit in CTFE)
+	$(LI $(BUGZILLA 4027): Closures in CTFE generate wrong code)
+	$(LI $(BUGZILLA 4029): CTFE: cannot invoke delegate returned from function)
+    )
+)
+
+
+$(VERSION 057, Mar 7, 2010, =================================================,
+
+    $(WHATSNEW
+	$(LI Warnings no longer halt the parsing/semantic passes, though they still return
+	 an error status and still do not generate output files. They also no longer count
+	 as errors when testing with "compiles" traits.)
+	$(LI Added $(B -wi) switch for $(BUGZILLA 2567))
+	$(LI Associative array contents can now be compared for equality)
+	$(LI Add simple spell checking.)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 2321): spec on inline asm can be misunderstood)
+	$(LI $(BUGZILLA 2463): No line number in "statement is not reachable" warning)
+	$(LI $(BUGZILLA 3029): Bug in array value mangling rule)
+	$(LI $(BUGZILLA 3306): bad function/delegate literal generated into header files)
+	$(LI $(BUGZILLA 3373): bad codeview debug info for long and ulong)
+	$(LI Posix only, $(BUGZILLA 3420): [PATCH] Allow string import of files using subdirectories)
+	$(LI $(BUGZILLA 3450): incorrect result for is (typeof({ ... }())) inside a struct)
+	$(LI $(BUGZILLA 3500): super behaves differently with -inline)
+	$(LI $(BUGZILLA 3558): Optimizer bug results in false if condition being taken)
+	$(LI $(BUGZILLA 3670): Declarator grammar rule is broken)
+	$(LI $(BUGZILLA 3710): Typo in allMembers description?)
+	$(LI $(BUGZILLA 3736): corrupted struct returned by function with optimizations (-O))
+	$(LI $(BUGZILLA 3737): SEG-V at expression.c:6255 from bad opDispatch)
+	$(LI $(BUGZILLA 3768): reapeted quotes in ddoc.html)
+	$(LI $(BUGZILLA 3769): Regression: Segfault(constfold.c) array literals and case statements)
+	$(LI $(BUGZILLA 3775): Segfault(cast.c): casting no-parameter template function using property syntax)
+	$(LI $(BUGZILLA 3781): ICE(interpret.c): using no-argument C-style variadic function in CTFE)
+	$(LI $(BUGZILLA 3792): Regression: "non-constant expression" for a template inside a struct using a struct initializer)
+	$(LI $(BUGZILLA 3803): compiler segfaults)
+	$(LI $(BUGZILLA 3840): Jump to: section in the docs should be sorted)
+    )
+)
 
 $(VERSION 056, Jan 29, 2010, =================================================,
 
