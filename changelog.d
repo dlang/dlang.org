@@ -2,6 +2,14 @@ Ddoc
 
 $(D_S D Change Log,
 
+$(VERSION 063, XXX x, 2010, =================================================,
+
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 978): std.utf's toUTF* functions accept some invalid and reject some valid UTF)
+	$(LI $(BUGZILLA 2835): std.socket.TcpSocket doesn't actually connect)
+    )
+)
+
 $(VERSION 062, Jun 9, 2010, =================================================,
 
     $(WHATSNEW
