@@ -134,7 +134,7 @@ int (*e)[];
 	easy migration path for programmers used to it.
 	)
 
-<h2>Usage</h2>
+<h2>$(LNAME2 usage, Usage)</h2>
 
 	$(P There are two broad kinds of operations to do on an array -
 	affecting
@@ -170,7 +170,7 @@ a = s;		// a is initialized to point to the s array
 a = b;		// a points to the same array as b does
 ---------
 
-<h2><a name="slicing">Slicing</a></h2>
+<h2>$(LNAME2 slicing, Slicing)</h2>
 
 	$(P $(I Slicing) an array means to specify a subarray of it.
 	An array slice does not copy the data, it is only another
@@ -215,7 +215,7 @@ int* p;
 int[] b = p[0..8];
 ---------
 
-<h2>Array Copying</h2>
+<h2>$(LNAME2 array-copying, Array Copying)</a></h2>
 
 	$(P When the slice operator appears as the lvalue of an assignment
 	expression, it means that the contents of the array are the
@@ -248,7 +248,7 @@ s[1..3] = s[0..2];	// error, overlapping copy
 	semantics of C.
 	)
 
-<h2>Array Setting</h2>
+<h2>$(LNAME2 array-setting, Array Setting)</h2>
 
 	$(P If a slice operator appears as the lvalue of an assignment
 	expression, and the type of the rvalue is the same as the element
@@ -264,7 +264,7 @@ s[] = 3;		// same as s[0] = 3, s[1] = 3, s[2] = 3
 p[0..2] = 3;		// same as p[0] = 3, p[1] = 3
 ---------
 
-<h2>Array Concatenation</h2>
+<h2>$(LNAME2 array-concatenation, Array Concatenation)</a></h2>
 
 	$(P The binary operator ~ is the $(I cat) operator. It is used
 	to concatenate arrays:
@@ -284,14 +284,15 @@ a = b ~ c;	// Create an array from the concatenation of the
 	)
 
 ---------
-"10" + 3
+"10" + 3 + 4
 ---------
 
-	$(P produce the number 13 or the string "103" as the result? It isn't
-	obvious, and the language designers wind up carefully writing rules
-	to disambiguate it - rules that get incorrectly implemented,
-	overlooked, forgotten, and ignored. It's much better to have + mean
-	addition, and a separate operator to be array concatenation.
+        $(P produce the number 17, the string "1034" or the string "107" as the
+        result? It isn't obvious, and the language designers wind up carefully
+        writing rules to disambiguate it - rules that get incorrectly
+        implemented, overlooked, forgotten, and ignored. It's much better to
+        have + mean addition, and a separate operator to be array
+        concatenation.
 	)
 
 	$(P Similarly, the ~= operator means append, as in:
@@ -310,44 +311,9 @@ a = b;			// a refers to b
 a = b ~ c[0..0];	// a refers to a copy of b
 ---------
 
-
-$(COMMENT
-<h2>Array Operations</h2>
-
-	$(P $(B Note): Array operations are not implemented.
+        $(P Appending does not always create a copy, see $(LINK2 #resize,
+        setting dynamic array length) for details.
 	)
-
-	$(P In general, (a[n..m] $(I op) e) is defined as:
-	)
-
----------
-for (i = n; i < m; i++)
-    a[i] $(I op) e;
----------
-
-	$(P So, for the expression:
-	)
-
----------
-a[] = b[] + 3;
----------
-
-	$(P the result is equivalent to:)
-
----------
-for (i = 0; i < a.length; i++)
-    a[i] = b[i] + 3; 
----------
-
-	$(P When more than one [] operator appears in an expression, the range
-	represented by all must match.
-	)
-
----------
-a[1..3] = b[] + 3;	// error, 2 elements not same as 3 elements
----------
-)
-
 
 <h2>$(LNAME2 array-operations, Array Operations)</h2>
 
@@ -401,7 +367,7 @@ a[] = b[] + 4;
 	math instructions available on the target computer.
 	)
 
-<h2>Pointer Arithmetic</h2>
+<h2>$(LNAME2 pointer-arithmetic, Pointer Arithmetic)</h2>
 
 ---------
 int[3] abc;			// static array of 3 ints
@@ -426,7 +392,7 @@ void ditt(int[3] array)
 }
 ---------
 
-<h2>Rectangular Arrays</h2>
+<h2>$(LNAME2 rectangular-arrays, Rectangular Arrays)</h2>
 
 	$(P Experienced FORTRAN numerics programmers know that multidimensional 
 	"rectangular" arrays for things like matrix operations are much faster than trying to 
@@ -456,7 +422,7 @@ double[3][3] matrix;
 double matrix[3,3];
 ---------
 
-<h2>Array Length</h2>
+<h2>$(LNAME2 array-length, Array Length)</h2>
 
 $(V1
 	$(P Within the [ ] of a static or a dynamic array,
@@ -496,7 +462,7 @@ bar[$(B $(DOLLAR))-1]	// retrieves last element of the array
 )
 ---------
 
-<h2>Array Properties</h2>
+<h2>$(LNAME2 array-properties, Array Properties)</h2>
 
 	$(P Static array properties are:)
 
@@ -646,18 +612,22 @@ $(V2	$(TD Returns an array literal with each element of the literal being the $(
     $(P Examples:)
 
 ---------
-p.length	// error, length not known for pointer
-s.length	// compile time constant 3
-a.length	// runtime value
+int* p;
+int[3] s;
+int[] a;
 
-p.dup		// error, length not known
-s.dup		// creates an array of 3 elements, copies
+p.length;	// error, length not known for pointer
+s.length;	// compile time constant 3
+a.length;	// runtime value
+
+p.dup;  	// error, length not known
+s.dup;		// creates an array of 3 elements, copies
 		// elements s into it
-a.dup		// creates an array of a.length elements, copies
+a.dup;		// creates an array of a.length elements, copies
 		// elements of a into it
 ---------
 
-<h3><a name="resize">Setting Dynamic Array Length</a></h3>
+<h3>$(LNAME2 resize, Setting Dynamic Array Length)</h3>
 
 	$(P The $(B $(TT .length)) property of a dynamic array can be set
 	as the lvalue of an = operator:
@@ -669,19 +639,27 @@ array.length = 7;
 
 	$(P This causes the array to be reallocated in place, and the existing
 	contents copied over to the new array. If the new array length is
-	shorter,
-	only enough are copied to fill the new array. If the new array length
-	is longer, the remainder is filled out with the default initializer.
+        shorter, the array is not reallocated, and no data is copied.  It is
+        equivalent to slicing the array:
+
+---------
+array = array[0..7];
+---------
+
+        If the new array length is longer, the remainder is filled out with the
+        default initializer.
 	)
 
 	$(P To maximize efficiency, the runtime always tries to resize the
-	array in place to avoid extra copying. It will always do a copy
-	if the new size is larger and the array was not allocated via the
-	new operator or a previous
-	resize operation.
+	array in place to avoid extra copying.
+        $(V1 It will always do a copy if the new size is larger and the array
+        was not allocated via the new operator or a previous resize operation.)
+        $(V2 It will always do a copy if the new size is larger and the array
+        was not allocated via the new operator or resizing in place would
+        overwrite valid data in the array.)
 	)
 
-	$(P This means that if there is an array slice immediately following the
+$(V1	$(P This means that if there is an array slice immediately following the
 	array being resized, the resized array could overlap the slice; i.e.:
 	)
 
@@ -705,13 +683,47 @@ a.length = 25;	// may or may not do a copy
 a[3] = 'z';	// may or may not affect b[3] which still overlaps
 		// the old a[3]
 ---------
+)
+
+$(V2
+        For example:
+
+---------
+char[] a = new char[20];
+char[] b = a[0..10];
+char[] c = a[10..20];
+char[] d = a;
+
+b.length = 15;    // always reallocates because extending in place would
+                  // overwrite other data in a.
+b[11] = 'x';      // a[11] and c[1] are not affected
+
+d.length = 1;
+d.length = 20;    // also reallocates, because doing this will overwrite a and
+                  // c
+
+c.length = 12;    // may reallocate in place if space allows, because nothing
+                  // was allocated after c.
+c[5] = 'y';       // may affect contents of a, but not b or d because those
+                  // were reallocated. 
+
+a.length = 25;    // This always reallocates because if c extended in place,
+                  // then extending a would overwrite c.  If c didn't
+                  // reallocate in place, it means there was not enough space,
+                  // which will still be true for a.
+a[15] = 'z';      // does not affect c, because either a or c has reallocated.
+---------
+)
 
 	$(P To guarantee copying behavior, use the .dup property to ensure
-	a unique array that can be resized.
+        a unique array that can be resized. $(V2 Also, one may use the phobos
+        $(TT .capacity) property to determine how many elements can be appended
+        to the array without reallocating.)
 	)
 
-	$(P These issues also apply to concatenating arrays with the ~ and ~=
-	operators.
+        $(P These issues also apply to appending arrays with the ~= operator.
+        Concatenation using the ~ operator is not affected since it always
+        reallocates.
 	)
 
 	$(P Resizing a dynamic array is a relatively expensive operation.
@@ -753,7 +765,10 @@ array.length = i;
 	input from the console - it's unlikely to be longer than 80.
 	)
 
-<h3>Functions as Array Properties</h3>
+        $(V2 $(P Also, you may wish to utilize the phobos $(TT reserve)
+        function to pre-allocate array data to use with the append operator.))
+
+<h3>$(LNAME2 func-as-property, Functions as Array Properties)</h3>
 
 	$(P If the first parameter to a function is an array, the
 	function can be called as if it were a property of the array:
@@ -767,14 +782,14 @@ foo(array, 3);
 array.foo(3);	// means the same thing
 ---
 
-<h2><a name="bounds">Array Bounds Checking</a></h2>
+<h2>$(LNAME2 bounds, Array Bounds Checking)</h2>
 
 	$(P It is an error to index an array with an index that is less than
 	0 or greater than or equal to the array length. If an index is
-	out of bounds, an ArrayBoundsError exception is raised if detected
-	at runtime, and an error if detected at compile time.
-	A program may not rely on array bounds checking happening, for
-	example, the following program is incorrect:
+        out of bounds, $(V1 an ArrayBoundsError)$(V2 a RangeError) exception is
+        raised if detected at runtime, and an error if detected at compile
+        time.  A program may not rely on array bounds checking happening, for
+        example, the following program is incorrect:
 	)
 
 ---------
@@ -814,9 +829,9 @@ int x = foo[3];		// error, out of bounds
 	with a compile time switch.
 	)
 
-<h2>Array Initialization</h2>
+<h2>$(LNAME2 array-initialization, Array Initialization)</h2>
 
-<h3>Default Initialization</h3>
+<h3>$(LNAME2 default-initialization, Default Initialization)</h3>
 
 	$(UL 
 	$(LI Pointers are initialized to $(B null).)
@@ -826,7 +841,7 @@ int x = foo[3];		// error, out of bounds
 	$(LI Associative arrays are initialized to having 0 elements.)
 	)
 
-<h3>Void Initialization</h3>
+<h3>$(LNAME2 void-initialization, Void Initialization)</h3>
 
 	$(P Void initialization happens when the $(I Initializer) for
 	an array is $(B void). What it means is that no initialization
@@ -836,7 +851,7 @@ int x = foo[3];		// error, out of bounds
 	when profiling indicates that it matters.
 	)
 
-<h3>Static Initialization of Static Arrays</h3>
+<h3>$(LNAME2 static-init-static, Static Initialization of Static Arrays)</h3>
 
 	$(P Static initalizations are supplied by a list of array
 	element values enclosed in [ ]. The values can be optionally
@@ -862,9 +877,9 @@ int value[Color.max + 1] = [ Color.blue:6, Color.green:2, Color.red:5 ];
 	storage classes to make them static arrays.)
 
 
-<h2>Special Array Types</h2>
+<h2>$(LNAME2 special-array, Special Array Types)</h2>
 
-<a name="strings"><h3>Strings</h3></a>
+<h3>$(LNAME2 strings, Strings)</h3>
 
 	$(P A string is
 	an array of characters. String literals are just
@@ -958,8 +973,14 @@ str ~= "\0";
 	)
 
 ---------
+$(V1
 cast(wchar [])"abc"	// this is an array of wchar characters
 "abc"w			// so is this
+)
+$(V2
+cast(immutable(wchar) [])"abc"	// this is an array of wchar characters
+"abc"w			        // so is this
+)
 ---------
 
 	$(P String literals that do not have a postfix character and that
@@ -976,11 +997,11 @@ c = 'b';		// c is assigned the character 'b'
 w = 'b';		// w is assigned the wchar character 'b'
 w = 'bc';		// error - only one wchar character at a time
 w = "b"[0];		// w is assigned the wchar character 'b'
-w = \r[0];		// w is assigned the carriage return wchar character
+w = "\r"[0];		// w is assigned the carriage return wchar character
 d = 'd';		// d is assigned the character 'd'
 ---------
 
-<h4>C's printf() and Strings</h4>
+<h4>$(LNAME2 printf, C's printf() and Strings)</h4>
 
 	$(P $(B printf()) is a C function and is not part of D. $(B printf())
 	will print C strings, which are 0 terminated. There are two ways
@@ -1030,7 +1051,7 @@ import std.stdio;
 writefln("the string is '%s'", str);
 ---------
 
-<h3>Implicit Conversions</h3>
+<h3>$(LNAME2 implicit-conversions, Implicit Conversions)</h3>
 
 	$(P A pointer $(TT $(I T)*) can be implicitly converted to
 	one of the following:)
@@ -1062,7 +1083,7 @@ writefln("the string is '%s'", str);
 	$(P Where $(I U) is a base class of $(I T).)
 
 <hr>
-<h1><a name="associative">Associative Arrays</a></h1>
+<h1>$(LNAME2 associative, Associative Arrays)</h1>
 
 	$(P Associative arrays have an index that is not necessarily an integer,
 	and can be sparsely populated. The index for an associative array
@@ -1103,7 +1124,7 @@ if (p != $(B null))
 	$(P $(I KeyType)s cannot be functions or voids.
 	)
 
-<h3>Using Classes as the KeyType</h3>
+<h3>$(LNAME2 classes-as-keys, Using Classes as the KeyType)</h3>
 
 	$(P Classes can be used as the $(I KeyType). For this to work,
 	the class definition must override the following member functions
@@ -1132,13 +1153,13 @@ class Foo
     hash_t $(B toHash)() { return a + b; }
 
 $(V1      int $(B opEquals)(Object o))$(V2      bool $(B opEquals)(Object o))
-    {	Foo f = cast(Foo) o;
-	return f && a == foo.a && b == foo.b;
+    {	Foo foo = cast(Foo) o;
+	return foo && a == foo.a && b == foo.b;
     }
 
     int $(B opCmp)(Object o)
-    {	Foo f = cast(Foo) o;
-	if (!f)
+    {	Foo foo = cast(Foo) o;
+	if (!foo)
 	    return -1;
 	if (a == foo.a)
 	    return b - foo.b;
@@ -1152,7 +1173,7 @@ $(V1      int $(B opEquals)(Object o))$(V2      bool $(B opEquals)(Object o))
 	$(TT opEquals) and $(TT opCmp) are consistent with each other when
 	the class objects are the same or not.)
 
-<h3>Using Structs or Unions as the KeyType</h3>
+<h3>$(LNAME2 structs-as-keys, Using Structs or Unions as the KeyType)</h3>
 
 	$(P If the $(I KeyType) is a struct or union type,
 	a default mechanism is used
@@ -1178,7 +1199,7 @@ struct MyString
 
 $(V1      hash_t $(B toHash)()
     {   hash_t hash;
-	foreach (char c; s)
+	foreach (char c; str)
 	    hash = (hash * 9) + c;
 	return hash;
     }
@@ -1194,7 +1215,7 @@ $(V1      hash_t $(B toHash)()
     })
 $(V2      const hash_t $(B toHash)()
     {   hash_t hash;
-	foreach (char c; s)
+	foreach (char c; str)
 	    hash = (hash * 9) + c;
 	return hash;
     }
@@ -1217,7 +1238,7 @@ $(V2      const hash_t $(B toHash)()
 	$(TT opEquals) and $(TT opCmp) are consistent with each other when
 	the struct/union objects are the same or not.)
 
-<h3>Properties</h3>
+<h3>$(LNAME2 aa-properties, Properties)</h3>
 
 Properties for associative arrays are:
 
@@ -1291,7 +1312,7 @@ $(V2
     )
 
 <hr>
-<h3>Associative Array Example: word count</h3>
+<h3>$(LNAME2 aa-example, Associative Array Example: word count)</h3>
 
 ---------
 import std.file;         // D file I/O
