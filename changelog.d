@@ -2,57 +2,36 @@ Ddoc
 
 $(D_S D Change Log,
 
-$(VERSION 063, XXX x, 2010, =================================================,
-
-    $(BUGSFIXED
-	$(LI $(BUGZILLA 978): std.utf's toUTF* functions accept some invalid and reject some valid UTF)
-	$(LI $(BUGZILLA 2835): std.socket.TcpSocket doesn't actually connect)
-    )
-)
-
-$(VERSION 062, Jun 9, 2010, =================================================,
+$(VERSION 063, Aug 8, 2010, =================================================,
 
     $(WHATSNEW
-	$(LI $(BUGZILLA 2008): Poor optimization of functions with ref parameters)
-	$(LI $(BUGZILLA 4296): Reduce parasitic error messages)
+	$(LI $(BUGZILLA 4080): Patch for building dynamic libraries on Mac OS X)
     )
     $(BUGSFIXED
-	$(LI $(BUGZILLA 1193): regression: "matches more than one template declaration" doesn't list the location of the conflicting templates)
-	$(LI $(BUGZILLA 1894): scope(exit) is ignored except in compound statements)
-	$(LI $(BUGZILLA 1941): missing line on inaccesable external private module member)
-	$(LI $(BUGZILLA 2127): inliner turns struct "return *this" from by-value into by-ref)
-	$(LI $(BUGZILLA 2276): Error message missing line number on array operation)
-	$(LI $(BUGZILLA 2546): Array Ops silently fail when no slice symbol is used.)
-	$(LI $(BUGZILLA 2881): x.stringof returns typeof(x).stringof when x is an enum)
-	$(LI $(BUGZILLA 3064): Invalid array operation accepted, generates bad code)
-	$(LI $(BUGZILLA 3323): Segfault or ICE(e2ir.c) using struct with destructor almost anywhere)
-	$(LI $(BUGZILLA 3398): Attributes inside a union screws data alignment)
-	$(LI $(BUGZILLA 3547): for option -od for relative path the path is added twice)
-	$(LI $(BUGZILLA 3548): ICE occurs when an array is returned from a function is incorrectly used in an array op expression.)
-	$(LI $(BUGZILLA 3651): mangleof broken for enums)
-	$(LI $(BUGZILLA 3854): Error on static initialization of arrays with trailing comma.)
-	$(LI $(BUGZILLA 4003): The result changes only with the order of source files.)
-	$(LI $(BUGZILLA 4045): [CTFE] increasing array length)
-	$(LI $(BUGZILLA 4052): [CTFE] increment from array item)
-	$(LI $(BUGZILLA 4078): [CTFE] Failed return of dynamic array item)
-	$(LI $(BUGZILLA 4084): Ignored missing main() closing bracket)
-	$(LI $(BUGZILLA 4143): fix warnings in dmd build)
-	$(LI $(BUGZILLA 4156): Segfault with array+=array)
-	$(LI $(BUGZILLA 4169): building dmd with a modern gcc produces a buggy compiler)
-	$(LI $(BUGZILLA 4175): linux.mak doesn't declare sufficient dependencies to support parallel builds)
-	$(LI $(BUGZILLA 4210): Random crashes / heisenbugs caused by dmd commit 478: compiler messes up vtables)
-	$(LI $(BUGZILLA 4212): DWARF: void arrays cause gdb errors)
-	$(LI $(BUGZILLA 4213): Strange behaviour with static void[] arrays)
-	$(LI $(BUGZILLA 4242): ICE(module.c): importing a module with same name as package)
-	$(LI $(BUGZILLA 4252): [CTFE] No array bounds checking in assignment to char[] array)
-	$(LI $(BUGZILLA 4257): ICE(interpret.c): passing parameter into CTFE as ref parameter)
-	$(LI $(BUGZILLA 4259): Header generation omits leading '@' for properties)
-	$(LI $(BUGZILLA 4270): Missing line number in 'can only catch class objects' error message)
+	$(LI $(BUGZILLA 1418): tupleof bug on nested classes)
+	$(LI $(BUGZILLA 1678): ref with varargs generates invalid code)
+	$(LI $(BUGZILLA 2931): Initialization struct with array from another struct)
+	$(LI $(BUGZILLA 3560): foreach over nested function generates wrong code)
+	$(LI $(BUGZILLA 3569): DMD Stack Overflow with a struct member function inside a C-style struct initializer)
+	$(LI $(BUGZILLA 3706): delegates of interfaces with multiple inheritance fail)
+	$(LI $(BUGZILLA 4191): [FreeBSD] real constants are rounded to double precision)
+	$(LI $(BUGZILLA 4198): [FreeBSD] imprecision in decimal floating-point literals)
+	$(LI $(BUGZILLA 4238): Segfault(statement.c): with(typeof(int)))
+	$(LI $(BUGZILLA 4303): __traits(compiles) returns wrong result when used recursively)
+	$(LI $(BUGZILLA 4314): Regression(1.062): Expression array1 && array2 doesn't compile)
+	$(LI $(BUGZILLA 4339): Struct destructor + invariant + struct parameter = horrific error message)
+	$(LI $(BUGZILLA 4396): mkdir race prevents concurrent compiling with DMD using make -j)
+	$(LI $(BUGZILLA 4443): Optimizer produces wrong code for || or && with struct arrays)
+	$(LI $(BUGZILLA 4506): Regression(2.034): -O flag breaks some recursive functions)
+	$(LI $(BUGZILLA 4514): Regression: Cannot cast from X* to X)
+	$(LI $(BUGZILLA 4569): extern(c++) doesn't understand const types, produces bad mangled symbol)
+	$(LI $(BUGZILLA 4578): Regression(2.047,1.062): ICE(cgcod.c): var+arr[])
     )
 )
 
 <div id=version>
 $(UL 
+	$(NEW1 063)
 	$(NEW1 062)
 	$(NEW1 061)
 	$(NEW1 060)
@@ -129,6 +108,47 @@ $(COMMENT
 )
 )
 </div>
+
+$(VERSION 062, Jun 9, 2010, =================================================,
+
+    $(WHATSNEW
+	$(LI $(BUGZILLA 2008): Poor optimization of functions with ref parameters)
+	$(LI $(BUGZILLA 4296): Reduce parasitic error messages)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 1193): regression: "matches more than one template declaration" doesn't list the location of the conflicting templates)
+	$(LI $(BUGZILLA 1894): scope(exit) is ignored except in compound statements)
+	$(LI $(BUGZILLA 1941): missing line on inaccesable external private module member)
+	$(LI $(BUGZILLA 2127): inliner turns struct "return *this" from by-value into by-ref)
+	$(LI $(BUGZILLA 2276): Error message missing line number on array operation)
+	$(LI $(BUGZILLA 2546): Array Ops silently fail when no slice symbol is used.)
+	$(LI $(BUGZILLA 2881): x.stringof returns typeof(x).stringof when x is an enum)
+	$(LI $(BUGZILLA 3064): Invalid array operation accepted, generates bad code)
+	$(LI $(BUGZILLA 3323): Segfault or ICE(e2ir.c) using struct with destructor almost anywhere)
+	$(LI $(BUGZILLA 3398): Attributes inside a union screws data alignment)
+	$(LI $(BUGZILLA 3547): for option -od for relative path the path is added twice)
+	$(LI $(BUGZILLA 3548): ICE occurs when an array is returned from a function is incorrectly used in an array op expression.)
+	$(LI $(BUGZILLA 3651): mangleof broken for enums)
+	$(LI $(BUGZILLA 3854): Error on static initialization of arrays with trailing comma.)
+	$(LI $(BUGZILLA 4003): The result changes only with the order of source files.)
+	$(LI $(BUGZILLA 4045): [CTFE] increasing array length)
+	$(LI $(BUGZILLA 4052): [CTFE] increment from array item)
+	$(LI $(BUGZILLA 4078): [CTFE] Failed return of dynamic array item)
+	$(LI $(BUGZILLA 4084): Ignored missing main() closing bracket)
+	$(LI $(BUGZILLA 4143): fix warnings in dmd build)
+	$(LI $(BUGZILLA 4156): Segfault with array+=array)
+	$(LI $(BUGZILLA 4169): building dmd with a modern gcc produces a buggy compiler)
+	$(LI $(BUGZILLA 4175): linux.mak doesn't declare sufficient dependencies to support parallel builds)
+	$(LI $(BUGZILLA 4210): Random crashes / heisenbugs caused by dmd commit 478: compiler messes up vtables)
+	$(LI $(BUGZILLA 4212): DWARF: void arrays cause gdb errors)
+	$(LI $(BUGZILLA 4213): Strange behaviour with static void[] arrays)
+	$(LI $(BUGZILLA 4242): ICE(module.c): importing a module with same name as package)
+	$(LI $(BUGZILLA 4252): [CTFE] No array bounds checking in assignment to char[] array)
+	$(LI $(BUGZILLA 4257): ICE(interpret.c): passing parameter into CTFE as ref parameter)
+	$(LI $(BUGZILLA 4259): Header generation omits leading '@' for properties)
+	$(LI $(BUGZILLA 4270): Missing line number in 'can only catch class objects' error message)
+    )
+)
 
 $(VERSION 061, May 10, 2010, =================================================,
 
