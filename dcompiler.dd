@@ -1,6 +1,6 @@
 Ddoc
 
-$(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX)$(FREEBSD FreeBSD) D Compiler,
+$(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OS X)$(FREEBSD FreeBSD) D Compiler,
 
 	$(UL 
 	$(WINDOWS $(LI dmd for $(LINK2 dmd-linux.html,   Linux)))
@@ -23,11 +23,13 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX)$(FREEBSD FreeBSD) D C
 	$(LI $(LINK2 #linking, Linking))
 	$(LI $(LINK2 #environment, Environment Variables))
 	$(WINDOWS $(LI $(LINK2 #sc_ini, sc.ini Initialization File)))
-	$(UNIX $(LI $(LINK2 #dmd_conf, dmd.conf Initialization File)))
+	$(UNIX $(LI $(DMD_CONF) Initialization File))
 	$(WINDOWS $(LI $(LINK2 #problems, Common Installation Problems)))
 	$(LI $(LINK2 #differences, Differences between Windows and Linux versions))
 	$(LI $(LINK2 #interface_files, D Interface Files))
 	$(LI $(LINK2 #library, Building Libraries))
+	$(LI $(LINK2 #compiling_dmd, Compiling dmd))
+	$(LI $(LINK2 #compiling_phobos, Compiling Phobos))
 	)
 
 <h2>$(LNAME2 requirements, Requirements and Downloads)</h2>
@@ -102,19 +104,19 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX)$(FREEBSD FreeBSD) D C
 	$(DD D compiler executable)
 	)
 
-	$(DT $(TT $(DMDDIR)/linux/bin/$(LINK2 http://www.digitalmars.com/ctg/dumpobj.html, dumpobj))
+	$(DT $(TT $(DMDDIR)/linux/bin/$(DUMPOBJ))
 	$(DD Elf file dumper)
 	)
 
-	$(DT $(TT $(DMDDIR)/linux/bin/$(LINK2 http://www.digitalmars.com/ctg/obj2asm.html, obj2asm))
+	$(DT $(TT $(DMDDIR)/linux/bin/$(OBJ2ASM))
 	$(DD Elf file disassembler)
 	)
 
-	$(DT $(TT $(DMDDIR)/linux/bin/$(LINK2 http://www.digitalmars.com/ctg/shell.html, shell))
+	$(DT $(TT $(DMDDIR)/linux/bin/$(SHELL))
 	$(DD Simple command line shell)
 	)
 
-	$(DT $(TT $(DMDDIR)/linux/bin/dmd.conf)
+	$(DT $(TT $(DMDDIR)/linux/bin/$(DMD_CONF))
 	$(DD Global compiler settings (copy to $(TT /etc/dmd.conf)))
 	)
 
@@ -127,19 +129,19 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX)$(FREEBSD FreeBSD) D C
 	$(DD D compiler executable)
 	)
 
-	$(DT $(TT $(DMDDIR)/freebsd/bin/$(LINK2 http://www.digitalmars.com/ctg/dumpobj.html, dumpobj))
+	$(DT $(TT $(DMDDIR)/freebsd/bin/$(DUMPOBJ))
 	$(DD Elf file dumper)
 	)
 
-	$(DT $(TT $(DMDDIR)/freebsd/bin/$(LINK2 http://www.digitalmars.com/ctg/obj2asm.html, obj2asm))
+	$(DT $(TT $(DMDDIR)/freebsd/bin/$(OBJ2ASM))
 	$(DD Elf file disassembler)
 	)
 
-	$(DT $(TT $(DMDDIR)/freebsd/bin/$(LINK2 http://www.digitalmars.com/ctg/shell.html, shell))
+	$(DT $(TT $(DMDDIR)/freebsd/bin/$(SHELL))
 	$(DD Simple command line shell)
 	)
 
-	$(DT $(TT $(DMDDIR)/freebsd/bin/dmd.conf)
+	$(DT $(TT $(DMDDIR)/freebsd/bin/$(DMD_CONF))
 	$(DD Global compiler settings (copy to $(TT /etc/dmd.conf)))
 	)
 
@@ -152,19 +154,19 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OSX)$(FREEBSD FreeBSD) D C
 	$(DD D compiler executable)
 	)
 
-	$(DT $(TT $(DMDDIR)/osx/bin/$(LINK2 http://www.digitalmars.com/ctg/dumpobj.html, dumpobj))
+	$(DT $(TT $(DMDDIR)/osx/bin/$(DUMPOBJ))
 	$(DD Mach-O file dumper)
 	)
 
-	$(DT $(TT $(DMDDIR)/osx/bin/$(LINK2 http://www.digitalmars.com/ctg/obj2asm.html, obj2asm))
+	$(DT $(TT $(DMDDIR)/osx/bin/$(OBJ2ASM))
 	$(DD Mach-O file disassembler)
 	)
 
-	$(DT $(TT $(DMDDIR)/osx/bin/$(LINK2 http://www.digitalmars.com/ctg/shell.html, shell))
+	$(DT $(TT $(DMDDIR)/osx/bin/$(SHELL))
 	$(DD Simple command line shell)
 	)
 
-	$(DT $(TT $(DMDDIR)/osx/bin/dmd.conf)
+	$(DT $(TT $(DMDDIR)/osx/bin/$(DMD_CONF))
 	$(DD Global compiler settings (copy to $(TT /etc/dmd.conf)))
 	)
 
@@ -205,17 +207,17 @@ C:\&gt;unzip dmc.zip
 	All the tools are command line tools, which means
 	they are run from a console window.)
 
-	$(LI Copy $(TT dmd.conf) to $(TT /etc):
+	$(LI Copy $(TT $(DMD_CONF)) to $(TT /etc):
 
 $(CONSOLE
-cp $(DMDDIR)/linux/bin/dmd.conf /etc
+cp $(DMDDIR)/linux/bin/$(DMD_CONF) /etc
 )
 	)
 
 	$(LI Give execute permission to the following files:
 
 $(CONSOLE
-chmod u+x $(DMDDIR)/linux/bin/{dmd,dumpobj,obj2asm,rdmd}
+chmod u+x $(DMDDIR)/linux/bin/{dmd,$(DUMPOBJ),$(OBJ2ASM),rdmd}
 )
 	)
 
@@ -237,7 +239,7 @@ cp $(DMDDIR)/linux/lib/$(LIB) /usr/lib
 	All the tools are command line tools, which means
 	they are run from a console window.)
 
-	$(LI Copy $(TT dmd.conf) to $(TT /etc):
+	$(LI Copy $(TT $(DMD_CONF)) to $(TT /etc):
 
 $(CONSOLE
 cp $(DMDDIR)/freebsd/bin/dmd.conf /etc
@@ -247,7 +249,7 @@ cp $(DMDDIR)/freebsd/bin/dmd.conf /etc
 	$(LI Give execute permission to the following files:
 
 $(CONSOLE
-chmod u+x $(DMDDIR)/freebsd/bin/{dmd,dumpobj,obj2asm,rdmd}
+chmod u+x $(DMDDIR)/freebsd/bin/{dmd,$(DUMPOBJ),$(OBJ2ASM),rdmd}
 )
 	)
 
@@ -263,29 +265,57 @@ cp $(DMDDIR)/freebsd/lib/$(LIB) /usr/lib
 	)
     )
     $(OSX
-	$(LI Unzip the archive into your home directory.
-	It will create
+	$(LI Put the dmd zip file into your home directory,
+	and unzip it:
+
+$(CONSOLE
+unzip dmd.$(I VERSION).zip
+)
+	where $(I VERSION) is the particular version of the zip file.
+	)
+
+	$(LI It will create
 	a $(TT ~/$(DMDDIR)) directory with all the files in it.
 	All the tools are command line tools, which means
 	they are run from a console window.)
 
-	$(LI Copy $(TT dmd.conf) to $(TT /etc):
+	$(LI Give execute permission to the binaries:
 
 $(CONSOLE
-sudo cp $(DMDDIR)/osx/bin/dmd.conf /etc
+chmod u+x $(DMDDIR)/osx/bin/{dmd,$(DUMPOBJ),$(OBJ2ASM),$(SHELL)$(V2 ,rdmd)}
 )
 	)
 
-	$(LI Give execute permission to the following files:
+	$(LI Verify that this works by creating $(TT hello.d) in your home directory
+	with these contents:
+---
+import std.stdio;
 
+void main() {
+    writeln("hello world!");
+}
+---
+	and compile and run it with:
 $(CONSOLE
-chmod u+x $(DMDDIR)/osx/bin/{dmd,dumpobj,obj2asm,shell}
+$(DMDDIR)/osx/bin/dmd hello
+./hello
+)
+	and it should print:
+$(CONSOLE
+hello world!
 )
 	)
 
-	$(LI Put $(TT $(DMDDIR)/osx/bin) on your $(B PATH),
-	or copy the OSX executables
-	to $(TT /usr/local/bin))
+	$(LI To install a global copy:)
+
+	$(LI Copy binaries to $(TT /usr/local/bin):
+
+$(CONSOLE
+sudo cp $(DMDDIR)/osx/bin/{dmd,$(DUMPOBJ),$(OBJ2ASM),$(SHELL)$(V2 ,rdmd)} /usr/local/bin
+sudo cp $(DMDDIR)/osx/bin/dmdx.conf /usr/local/bin/$(DMD_CONF)
+sudo chmod +x /usr/local/bin/{dmd,$(DUMPOBJ),$(OBJ2ASM),$(SHELL)$(V2 ,rdmd)}
+)
+	)
 
 	$(LI Copy the library to $(TT /usr/lib):
 
@@ -324,16 +354,17 @@ sudo dpkg -i --force-architecture dmd_X.XXX-0_i386.deb
 
 )
 
-
+$(WINDOWS
 <h2>Example</h2>
 
 	$(P Run:)
 
 $(CONSOLE
-$(DMDDIR)$(SEP)bin$(SEP)shell all.sh
+$(DMDDIR)$(SEP)$(OS)$(SEP)bin$(SEP)$(SHELL) all.sh
 )
 
 	$(P in the $(TT $(DMDDIR)$(SEP)samples$(SEP)d) directory for several small examples.)
+)
 
 
 <h2>$(LNAME2 switches, Compiler Arguments and Switches)</h2>
@@ -955,7 +986,7 @@ $(WINDOWS
 	all to be combined into a library $(TT foo.$(LIBEXT)):)
 
 	$(OL
-	$(LI Compile modules separately and then run librarian on them:
+	$(LI Compile modules separately and then run the librarian on them:
 $(WINDOWS
 $(CONSOLE
 dmd -c foo.d
@@ -976,7 +1007,7 @@ rm foo.o bar.o
 	This option is typical when using a makefile to avoid compiling
 	modules that have already been compiled.
 	)
-	$(LI Compile modules together and then run librarian on them:
+	$(LI Compile modules together and then run the librarian on them:
 $(WINDOWS
 $(CONSOLE
 dmd -c foo.d bar.d
@@ -1005,11 +1036,55 @@ dmd -lib foo.d bar.d abc.$(OBJEXT) def.$(LIBEXT)
 	)
 	)
 
+<h2>$(LNAME2 compiling_dmd, Compiling dmd)</h2>
+
+	$(P Complete source code is provided to build the compiler.
+	Follow these steps:)
+
+$(CONSOLE
+cd ~/$(DMDDIR)/src/dmd
+make -f $(OS).mak
+)
+
+<h2>$(LNAME2 compiling_phobos, Compiling Phobos)</h2>
+
+	$(P Complete source code is provided to build Phobos, the D runtime library.
+	Follow these steps:)
+
+$(V1
+$(WINDOWS
+cd \$(DMDDIR)\src\phobos
+make -f $(OS).mak DMD=~\$(DMDDIR)\$(OS)\bin\dmd
+)
+$(UNIX
+$(CONSOLE
+cd ~/$(DMDDIR)/src/phobos
+make -f $(OS).mak DMD=~/$(DMDDIR)/$(OS)/bin/dmd
+)
+)
+)
+$(V2
+$(WINDOWS
+cd \$(DMDDIR)\src\druntime
+make -f $(OS).mak DMD=~\$(DMDDIR)\$(OS)\bin\dmd
+cd ..\phobos
+make -f $(OS).mak DMD=~\$(DMDDIR)\$(OS)\bin\dmd
+)
+$(UNIX
+$(CONSOLE
+cd ~/$(DMDDIR)/src/druntime
+make -f posix.mak DMD=~/$(DMDDIR)/$(OS)/bin/dmd
+cd ../phobos
+make -f $(OS).mak DMD=~/$(DMDDIR)/$(OS)/bin/dmd
+)
+)
+)
+
 )
 
 Macros:
 	TITLE=DMD Compiler for $(WINDOWS Windows)$(LINUX Linux)$(OSX OSX)$(FREEBSD FreeBSD)
 	WIKI=DCompiler
 	LIB=$(WINDOWS phobos.lib)$(UNIX $(V1 libphobos.a)$(V2 libphobos2.a))
+	DMD_CONF=$(LINK2 #dmd_conf, dmd.conf)
 	SWITCH=$(DT $1)$(DD $+)
-
