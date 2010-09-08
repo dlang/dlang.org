@@ -2,7 +2,8 @@
 
 DMD=dmd
 
-IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif 
+IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif	\
+download.png d.png home.png search.png wiki.png
 #favicon.gif
 
 TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
@@ -28,15 +29,20 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 
 DOC_OUTPUT_DIR = ../web/2.0
 
-TARGETS:=$(addprefix $(DOC_OUTPUT_DIR)/,$(TARGETS)) 
+TARGETS:=$(addprefix $(DOC_OUTPUT_DIR)/,$(TARGETS))
 
-all : $(TARGETS) $(DOC_OUTPUT_DIR)/style.css \
+ALL_FILES = $(TARGETS) $(DOC_OUTPUT_DIR)/style.css \
         $(addprefix $(DOC_OUTPUT_DIR)/,$(IMG))
+
+all : $(ALL_FILES)
 
 $(DOC_OUTPUT_DIR)/style.css : style.css
 	cp $< $@
 
 $(DOC_OUTPUT_DIR)/%.gif : %.gif
+	cp $< $@
+
+$(DOC_OUTPUT_DIR)/%.png : %.png
 	cp $< $@
 
 $(DOC_OUTPUT_DIR)/%.ico : %.ico
@@ -53,4 +59,13 @@ zip:
 
 clean:
 	rm -rf $(TARGETS) $(DOC_OUTPUT_DIR)/style.css
+
+html-upload : all
+	scp $(ALL_FILES) erdani.com:erdani.com/d/
+	make -C ../phobos/ html-upload
+#	scp $(DOC_OUTPUT_DIR)/* d-programming@digitalmars.com:data/
+
+html-upload-sshfs : all
+	cp -uv $(ALL_FILES) \
+		--target-directory /ssh/erdani.com/home/sandandrei/erdani.com/d/
 
