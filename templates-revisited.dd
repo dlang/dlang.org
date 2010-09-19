@@ -278,7 +278,7 @@ class Foo(
                 // from B
   U:I,          // U must be a class that
                 // implements interface I
-  char[] string = "hello",
+  string str = "hello",
                 // string literal,
                 // default is "hello"
   alias A = B   // A is any symbol
@@ -294,7 +294,7 @@ class Foo(
 
 $(P
 Partial and explicit specialization work as they do in C++, except that
-there is no notion of a 'primary' template. All the templates with the
+there is no notion of a $(SINGLEQUOTE primary) template. All the templates with the
 same name are examined upon template instantiation, and the one with the
 best fit of arguments to parameters is instantiated.
 )
@@ -629,20 +629,20 @@ converts an integer to a string at compile time:
 ---
 template decimalDigit(int n)	// [3]
 {
-  const char[] decimalDigit = "0123456789"[n..n+1];
+  const string decimalDigit = "0123456789"[n..n+1];
 } 
 
 template itoa(long n)
 {   
   static if (n < 0)
-     const char[] itoa = "-" ~ itoa!(-n);  
+     const string itoa = "-" ~ itoa!(-n);  
   else static if (n < 10)
-     const char[] itoa = decimalDigit!(n); 
+     const string itoa = decimalDigit!(n); 
   else
-     const char[] itoa = itoa!(n/10L) ~ decimalDigit!(n%10L); 
+     const string itoa = itoa!(n/10L) ~ decimalDigit!(n%10L); 
 }
 
-char[] foo()
+string foo()
 {
   return itoa!(264);   // returns "264"
 }
@@ -727,11 +727,11 @@ const int testFail = -1;
  * regular expression to it, returning an array of matches.
  */
 
-template regexMatch(char[] pattern)
+template regexMatch(string pattern)
 {
-  char[][] regexMatch(char[] str)
+  string[] regexMatch(string str)
   {
-    char[][] results;
+    string[] results;
     int n = regexCompile!(pattern).fn(str);
     if (n != testFail && n > 0)
       results ~= str[0..n];
@@ -744,7 +744,7 @@ template regexMatch(char[] pattern)
  * to match each predicate of the regular expression.
  *
  * Params:
- *	char[] str	the input string to match against
+ *	string str	the input string to match against
  *
  * Returns:
  *	testFail	failed to have a match
@@ -754,13 +754,13 @@ template regexMatch(char[] pattern)
 /// Always match
 template testEmpty()
 {
-  int testEmpty(char[] str) { return 0; }
+  int testEmpty(string str) { return 0; }
 }
 
 /// Match if testFirst(str) and testSecond(str) match
 template testUnion(alias testFirst, alias testSecond)
 {
-  int testUnion(char[] str)
+  int testUnion(string str)
   {
     int n1 = testFirst(str);
     if (n1 != testFail)
@@ -774,9 +774,9 @@ template testUnion(alias testFirst, alias testSecond)
 }
 
 /// Match if first part of str[] matches text[]
-template testText(char[] text)
+template testText(string text)
 {
-  int testText(char[] str)
+  int testText(string str)
   {
     if (str.length &&
         text.length <= str.length &&
@@ -790,7 +790,7 @@ template testText(char[] text)
 /// Match if testPredicate(str) matches 0 or more times
 template testZeroOrMore(alias testPredicate)
 {
-  int testZeroOrMore(char[] str)
+  int testZeroOrMore(string str)
   {
     if (str.length == 0)
       return 0;
@@ -807,9 +807,9 @@ template testZeroOrMore(alias testPredicate)
 }
 
 /// Match if term1[0] <= str[0] <= term2[0]
-template testRange(char[] term1, char[] term2)
+template testRange(string term1, string term2)
 {
-  int testRange(char[] str)
+  int testRange(string str)
   {
     if (str.length && str[0] >= term1[0]
                    && str[0] <= term2[0])
@@ -819,9 +819,9 @@ template testRange(char[] term1, char[] term2)
 }
 
 /// Match if ch[0]==str[0]
-template testChar(char[] ch)
+template testChar(string ch)
 {
-  int testChar(char[] str)
+  int testChar(string str)
   {
     if (str.length && str[0] == ch[0])
       return 1;
@@ -832,7 +832,7 @@ template testChar(char[] ch)
 /// Match if str[0] is a word character
 template testWordChar()
 {
-  int testWordChar(char[] str)
+  int testWordChar(string str)
   {
     if (str.length &&
         (
@@ -856,18 +856,18 @@ template testWordChar()
  * the end or a special character.
  */
 
-template parseTextToken(char[] pattern)
+template parseTextToken(string pattern)
 {
   static if (pattern.length > 0)
   {
     static if (isSpecial!(pattern))
-      const char[] parseTextToken = "";
+      const string parseTextToken = "";
     else
-      const char[] parseTextToken =
+      const string parseTextToken =
            pattern[0..1] ~ parseTextToken!(pattern[1..$]);
   }	
   else
-    const char[] parseTextToken="";
+    const string parseTextToken="";
 }
 
 /**
@@ -876,7 +876,7 @@ template parseTextToken(char[] pattern)
  *	token[]	 	everything up to terminator.
  *	consumed	number of characters in pattern[] parsed
  */
-template parseUntil(char[] pattern,char terminator,bool fuzzy=false)
+template parseUntil(string pattern,char terminator,bool fuzzy=false)
 {
   static if (pattern.length > 0)
   {
@@ -884,9 +884,9 @@ template parseUntil(char[] pattern,char terminator,bool fuzzy=false)
     {
       static if (pattern.length > 1)
       {
-        const char[] nextSlice = pattern[2 .. $];
+        const string nextSlice = pattern[2 .. $];
         alias parseUntil!(nextSlice,terminator,fuzzy) next;
-        const char[] token = pattern[0 .. 2] ~ next.token;
+        const string token = pattern[0 .. 2] ~ next.token;
         const uint consumed = next.consumed+2;
       }
       else
@@ -897,20 +897,20 @@ template parseUntil(char[] pattern,char terminator,bool fuzzy=false)
     }
     else static if (pattern[0] == terminator)
     {
-      const char[] token="";
+      const string token="";
       const uint consumed = 1;
     }
     else
     {
-      const char[] nextSlice = pattern[1 .. $];
+      const string nextSlice = pattern[1 .. $];
       alias parseUntil!(nextSlice,terminator,fuzzy) next;
-      const char[] token = pattern[0..1] ~ next.token;
+      const string token = pattern[0..1] ~ next.token;
       const uint consumed = next.consumed+1;
     }
   }
   else static if (fuzzy)
   {
-    const char[] token = "";
+    const string token = "";
     const uint consumed = 0;
   }
   else
@@ -931,7 +931,7 @@ template parseUntil(char[] pattern,char terminator,bool fuzzy=false)
  *   consumed = number of characters in pattern[] parsed
  */
 
-template regexCompileCharClass2(char[] pattern)
+template regexCompileCharClass2(string pattern)
 {
   static if (pattern.length > 0)
   {
@@ -943,7 +943,7 @@ template regexCompileCharClass2(char[] pattern)
         {
           alias testRange!(pattern[0..1], pattern[2..3]) termFn;
           const uint thisConsumed = 3;
-          const char[] remaining = pattern[3 .. $];
+          const string remaining = pattern[3 .. $];
         }
         else // length is 2
         {
@@ -956,14 +956,14 @@ template regexCompileCharClass2(char[] pattern)
       {
         alias testChar!(pattern[0..1]) termFn;
         const uint thisConsumed = 1;
-        const char[] remaining = pattern[1 .. $];
+        const string remaining = pattern[1 .. $];
       }
     }
     else
     {
       alias testChar!(pattern[0..1]) termFn;
       const uint thisConsumed = 1;
-      const char[] remaining = pattern[1 .. $];
+      const string remaining = pattern[1 .. $];
     }
     alias regexCompileCharClassRecurse!(termFn,remaining) recurse;
     alias recurse.fn fn;
@@ -987,7 +987,7 @@ template regexCompileCharClass2(char[] pattern)
  *  consumed = number of characters in pattern[] parsed
  */
 
-template regexCompileCharClassRecurse(alias termFn,char[] pattern)
+template regexCompileCharClassRecurse(alias termFn,string pattern)
 {
   static if (pattern.length > 0 && pattern[0] != ']')
   {
@@ -1011,7 +1011,7 @@ template regexCompileCharClassRecurse(alias termFn,char[] pattern)
  *  consumed = number of characters in pattern[] parsed
  */
 
-template regexCompileCharClass(char[] pattern)
+template regexCompileCharClass(string pattern)
 {	
   static if (pattern.length > 0)
   {
@@ -1044,7 +1044,7 @@ template regexCompileCharClass(char[] pattern)
  *  consumed = number of characters in pattern[] parsed
  */
 
-template regexCompilePredicate(alias test, char[] pattern)
+template regexCompilePredicate(alias test, string pattern)
 {
   static if (pattern.length > 0 && pattern[0] == '*')
   {
@@ -1067,7 +1067,7 @@ template regexCompilePredicate(alias test, char[] pattern)
  *  consumed = number of characters in pattern[] parsed
  */
 
-template regexCompileEscape(char[] pattern)
+template regexCompileEscape(string pattern)
 {
   static if (pattern.length > 0)
   {
@@ -1102,37 +1102,37 @@ template regexCompileEscape(char[] pattern)
  *  fn = generated function
  */
 
-template regexCompile(char[] pattern)
+template regexCompile(string pattern)
 {
   static if (pattern.length > 0)
   {
     static if (pattern[0] == '[')
     {
-      const char[] charClassToken =
+      const string charClassToken =
           parseUntil!(pattern[1 .. $],']').token;
       alias regexCompileCharClass!(charClassToken) charClass;
-      const char[] token = pattern[0 .. charClass.consumed+2];
-      const char[] next = pattern[charClass.consumed+2 .. $];
+      const string token = pattern[0 .. charClass.consumed+2];
+      const string next = pattern[charClass.consumed+2 .. $];
       alias charClass.fn test;
     }
     else static if (pattern[0] == '\\')
     {
       alias regexCompileEscape!(pattern[1..pattern.length]) escapeSequence;
-      const char[] token = pattern[0 .. escapeSequence.consumed+1];
-      const char[] next =
+      const string token = pattern[0 .. escapeSequence.consumed+1];
+      const string next =
           pattern[escapeSequence.consumed+1 .. $];
       alias escapeSequence.fn test;
     }
     else
     {
-      const char[] token = parseTextToken!(pattern);
+      const string token = parseTextToken!(pattern);
       static assert(token.length > 0);
-      const char[] next = pattern[token.length .. $];
+      const string next = pattern[token.length .. $];
       alias testText!(token) test;
     }
     
     alias regexCompilePredicate!(test, next) term;
-    const char[] remaining = next[term.consumed .. next.length];
+    const string remaining = next[term.consumed .. next.length];
     
     alias regexCompileRecurse!(term,remaining).fn fn;
   }
@@ -1140,7 +1140,7 @@ template regexCompile(char[] pattern)
     alias testEmpty!() fn;
 }
 
-template regexCompileRecurse(alias term,char[] pattern)
+template regexCompileRecurse(alias term,string pattern)
 {
   static if (pattern.length > 0)
   {
@@ -1152,7 +1152,7 @@ template regexCompileRecurse(alias term,char[] pattern)
 }
 
 /// Utility function for parsing
-template isSpecial(char[] pattern)
+template isSpecial(string pattern)
 {
   static if (
     pattern[0] == '*' ||
