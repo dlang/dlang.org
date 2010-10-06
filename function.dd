@@ -38,25 +38,35 @@ $(V2
 	)
 
 	$(UL
-	$(LI has parameters that are all immutable or are implicitly
-	convertible to immutable)
 	$(LI does not read or write any global mutable state)
+	$(LI cannot call functions that are not pure)
+	$(LI can override an impure function, but an impure function
+	cannot override a pure one)
+	$(LI is covariant with an impure function)
+	$(LI cannot perform I/O)
 	)
 
-	$(P A pure function can throw exceptions and allocate memory
-	via a $(LINK2 expression.html#NewExpression, $(I NewExpression)).
+	$(P As a concession to practicality, a pure function can:)
+
+	$(UL
+	$(LI allocate memory via a $(LINK2 expression.html#NewExpression, $(I NewExpression)))
+	$(LI terminate the program)
+	$(LI read and write the floating point exception flags)
+	$(LI read and write the floating point mode flags, as long as those flags
+	are restored to their initial state upon function entry)
 	)
+
+	$(P A pure function can throw exceptions.)
 
 ---
 int x;
 immutable int y;
 const int* pz;
 
-pure int foo(int i,     // ok, implicitly convertible to immutable
-             char* p,         // error, not immutable
-             const char* q,   // error, not immutable
-             immutable int* s // ok, immutable
-            )
+pure int foo(int i,
+             char* p,
+             const char* q,
+             immutable int* s)
 {
     x = i;    // error, modifying global state
     i = x;    // error, reading mutable global state
@@ -66,7 +76,6 @@ pure int foo(int i,     // ok, implicitly convertible to immutable
 }
 ---
 
-	$(P Pure functions are covariant with impure ones.)
 
 <h3>$(LNAME2 nothrow-functions, Nothrow Functions)</h3>
 
