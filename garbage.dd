@@ -294,6 +294,13 @@ align (1) struct Foo
 	implementation is not guaranteed by the C standard, use
 	$(TT memcpy()) only with extreme caution.
 	)
+
+	$(LI Do not have pointers in a struct instance that point back
+	to the same instance. The trouble with this is if the instance
+	gets moved in memory, the pointer will point back to where it
+	came from, with likely disastrous results.
+	)
+
 	)
 
 	$(P Things that are reliable and can be done:)
@@ -342,6 +349,15 @@ char[] q = p[3..6];
 	inside other objects. There is not much point for such stored on the
 	stack to be nulled, since the collector doesn't scan for roots past the
 	top of the stack, and because new stack frames are initialized anyway.
+	)
+
+<h2>Object Pinning and a Moving Garbage Collector</h2>
+
+	$(P Although D does not currently use a moving garbage collector, by following
+	the rules listed above one can be implemented. No special action is required
+	to pin objects. A moving collector will only move objects for which there
+	are no ambiguous references, and for which it can update those references.
+	All other objects will be automatically pinned.
 	)
 
 <h2>References</h2>
