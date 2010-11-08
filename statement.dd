@@ -25,6 +25,12 @@ $(GNAME NonEmptyOrScopeBlockStatement):
     $(GLINK ScopeBlockStatement)
 
 $(GNAME NonEmptyStatement):
+    $(GLINK NonEmptyStatementNoCaseNoDefault)
+    $(GLINK CaseStatement)
+$(V2      $(GLINK CaseRangeStatement)
+)    $(GLINK DefaultStatement)
+
+$(GNAME NonEmptyStatementNoCaseNoDefault):
     $(GLINK LabeledStatement)
     $(GLINK ExpressionStatement)
     $(GLINK DeclarationStatement)
@@ -35,10 +41,7 @@ $(GNAME NonEmptyStatement):
     $(GLINK ForeachStatement)
     $(GLINK SwitchStatement)
 $(V2      $(GLINK FinalSwitchStatement)
-)    $(GLINK CaseStatement)
-$(V2      $(GLINK CaseRangeStatement)
-)    $(GLINK DefaultStatement)
-    $(GLINK ContinueStatement)
+)    $(GLINK ContinueStatement)
     $(GLINK BreakStatement)
     $(GLINK ReturnStatement)
     $(GLINK GotoStatement)
@@ -807,10 +810,10 @@ $(I SwitchStatement):
 	$(B switch $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
 
 $(GNAME CaseStatement):
-	$(B case) $(LINK2 expression.html#ArgumentList, $(I ArgumentList)) $(B :) $(PSSEMI_PSCURLYSCOPE)
+	$(B case) $(LINK2 expression.html#ArgumentList, $(I ArgumentList)) $(B :) $(PSSEMI_PSCURLYSCOPE_LIST)
 
 $(V2 $(GNAME CaseRangeStatement):
-	$(B case) $(I FirstExp) $(B : .. case) $(I LastExp) $(B :) $(PSSEMI_PSCURLYSCOPE)
+	$(B case) $(I FirstExp) $(B : .. case) $(I LastExp) $(B :) $(PSSEMI_PSCURLYSCOPE_LIST)
 
 $(I FirstExp):
 	$(I AssignExpression)
@@ -819,7 +822,19 @@ $(I LastExp):
 	$(I AssignExpression)
 )
 $(GNAME DefaultStatement):
-	$(B default :) $(PSSEMI_PSCURLYSCOPE)
+	$(B default :) $(PSSEMI_PSCURLYSCOPE_LIST)
+
+$(GNAME ScopeStatementList):
+	$(GLINK StatementListNoCaseNoDefault)
+
+$(GNAME StatementListNoCaseNoDefault):
+	$(GLINK StatementNoCaseNoDefault)
+	$(GLINK StatementNoCaseNoDefault) $(I StatementListNoCaseNoDefault)
+
+$(GNAME StatementNoCaseNoDefault):
+    $(B ;)
+    $(GLINK NonEmptyStatementNoCaseNoDefault)
+    $(GLINK ScopeBlockStatement)
 )
 
 	$(P $(EXPRESSION) is evaluated. The result type T must be
@@ -874,6 +889,9 @@ $(V2
 	gets control.
 )
 	There may not be two or more default statements.
+	)
+
+	$(P The $(GLINK ScopeStatementList) introduces a new scope.
 	)
 
 	$(P Case statements and default statements associated with the switch
@@ -1703,6 +1721,7 @@ Macros:
 	GNAME=$(LNAME2 $0, $0)
 	EXPRESSION=$(LINK2 expression.html#Expression, $(I Expression))
 	PSSEMI_PSCURLYSCOPE=$(GLINK Statement)
+	PSSEMI_PSCURLYSCOPE_LIST=$(GLINK ScopeStatementList)
 	PS0=$(GLINK NoScopeNonEmptyStatement)
 	PSSCOPE=$(GLINK ScopeStatement)
 	PSCURLY=$(GLINK BlockStatement)
