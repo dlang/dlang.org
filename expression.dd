@@ -665,15 +665,6 @@ $(GNAME MulExpression):
 	$(I MulExpression) $(B %) $(GLINK UnaryExpression)
 )
 )
-$(V2
-$(GRAMMAR
-$(GNAME MulExpression):
-	$(GLINK PowExpression)
-	$(I MulExpression) $(B *) $(GLINK PowExpression)
-	$(I MulExpression) $(B /) $(GLINK PowExpression)
-	$(I MulExpression) $(B %) $(GLINK PowExpression)
-)
-)
 
 	$(P The operands must be arithmetic types. They undergo integral
 	promotions, and then are brought to a common type using the
@@ -701,25 +692,11 @@ $(GNAME MulExpression):
 	$(P Mul expressions for floating point operands are not associative.
 	)
 
-$(V2
-<h2><a name="PowExpression">Pow Expressions</a></h2>
-
-$(GRAMMAR
-$(GNAME PowExpression):
-	$(GLINK UnaryExpression)
-	$(GLINK UnaryExpression) ^^ $(I PowExpression)
-)
-
-	$(P $(I PowExpression) raises its left operand to the power of its
-	right operand.
-	)
-)
-
 <h2><a name="UnaryExpression">Unary Expressions</a></h2>
 
 $(GRAMMAR
 $(GNAME UnaryExpression):
-	$(GLINK PostfixExpression)
+	$(V1 $(GLINK PostfixExpression))$(V2 $(GLINK PowExpression))
 	$(B &amp;) $(I UnaryExpression)
 	$(B ++) $(I UnaryExpression)
 	$(B --) $(I UnaryExpression)
@@ -728,7 +705,7 @@ $(GNAME UnaryExpression):
 	$(B +) $(I UnaryExpression)
 	$(B !) $(I UnaryExpression)
 	$(B ~) $(I UnaryExpression)
-	$(B $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(B $(RPAREN) .) $(I Identifier)
+	$(B $(LPAREN)) $(GLINK2 declaration, Type) $(B $(RPAREN) .) $(I Identifier)
 	$(GLINK NewExpression)
 	$(GLINK DeleteExpression)
 	$(GLINK CastExpression)
@@ -949,13 +926,28 @@ void test()
 S(v)
 ---
 
+$(V2
+<h2><a name="PowExpression">Pow Expressions</a></h2>
+
+$(GRAMMAR
+$(GNAME PowExpression):
+	$(GLINK PostfixExpression)
+	$(GLINK PostfixExpression) ^^ $(GLINK UnaryExpression)
+)
+
+	$(P $(I PowExpression) raises its left operand to the power of its
+	right operand.
+	)
+)
+
+
 <h2>Postfix Expressions</h2>
 
 $(GRAMMAR
 $(GNAME PostfixExpression):
 	$(GLINK PrimaryExpression)
 	$(I PostfixExpression) $(B .) $(I Identifier)
-	$(I PostfixExpression) $(B .) $(LINK2 template.html#TemplateInstance, $(I TemplateInstance))
+	$(I PostfixExpression) $(B .) $(GLINK2 template, TemplateInstance)
 	$(I PostfixExpression) $(B .) $(GLINK NewExpression)
 	$(I PostfixExpression) $(B ++)
 	$(I PostfixExpression) $(B --)
