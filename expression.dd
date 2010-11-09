@@ -291,7 +291,7 @@ $(GNAME EqualExpression):
 	initialization).
 	Equality for floating point types is more complicated. -0 and
 	+0 compare as equal. If either or both operands are NAN, then
-	== returns false and != returns true. Otherwise, the bit
+	both the == returns false and != returns true. Otherwise, the bit
 	patterns are compared for equality.
 	<p>
 
@@ -728,7 +728,7 @@ $(GNAME UnaryExpression):
 	$(B +) $(I UnaryExpression)
 	$(B !) $(I UnaryExpression)
 	$(B ~) $(I UnaryExpression)
-	$(B $(LPAREN)) $(I Type) $(B $(RPAREN) .) $(I Identifier)
+	$(B $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(B $(RPAREN) .) $(I Identifier)
 	$(GLINK NewExpression)
 	$(GLINK DeleteExpression)
 	$(GLINK CastExpression)
@@ -740,10 +740,10 @@ $(GNAME UnaryExpression):
 
 $(GRAMMAR
 $(GNAME NewExpression):
-	$(I NewArguments) $(I Type) $(B [) $(GLINK AssignExpression) $(B ])
-	$(I NewArguments) $(I Type) $(B $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
-	$(I NewArguments) $(I Type)
-	$(I NewArguments) $(I ClassArguments) $(I BaseClasslist)<sub>opt</sub> $(B {) $(I DeclDefs) $(B } )
+	$(I NewArguments) $(LINK2 declaration.html#Type, $(I Type)) $(B [) $(GLINK AssignExpression) $(B ])
+	$(I NewArguments) $(LINK2 declaration.html#Type, $(I Type)) $(B $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
+	$(I NewArguments) $(LINK2 declaration.html#Type, $(I Type))
+	$(I NewArguments) $(I ClassArguments) $(GLINK BaseClasslist)$(OPT) $(B {) $(GLINK DeclDefs) $(B } )
 
 $(GNAME NewArguments):
 	$(B new $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
@@ -860,11 +860,23 @@ $(GNAME DeleteExpression):
 
 $(GRAMMAR
 $(GNAME CastExpression):
-	$(B cast $(LPAREN)) $(I Type) $(B $(RPAREN)) $(GLINK UnaryExpression)
+	$(B cast $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(B $(RPAREN)) $(GLINK UnaryExpression)
+	$(B cast $(LPAREN)) $(I CastParam) $(B $(RPAREN)) $(GLINK UnaryExpression)
+
+$(GNAME CastParam):
+        $(LINK2 declaration.html#Type, $(I Type))
+	$(B const)
+	$(B const shared)
+	$(B shared const)
+	$(B inout)
+	$(B inout shared)
+	$(B shared inout)
+	$(B immutable)
+	$(B shared)
 )
 
 	$(P A $(I CastExpression) converts the $(I UnaryExpression)
-	to $(I Type).
+	to $(LINK2 declaration.html#Type, $(I Type)).
 	)
 
 -------------
@@ -943,6 +955,7 @@ $(GRAMMAR
 $(GNAME PostfixExpression):
 	$(GLINK PrimaryExpression)
 	$(I PostfixExpression) $(B .) $(I Identifier)
+	$(I PostfixExpression) $(B .) $(LINK2 template.html#TemplateInstance, $(I TemplateInstance))
 	$(I PostfixExpression) $(B .) $(GLINK NewExpression)
 	$(I PostfixExpression) $(B ++)
 	$(I PostfixExpression) $(B --)
@@ -1037,8 +1050,7 @@ $(GNAME PrimaryExpression):
 	$(B true)
 	$(B false)
 	$(B $)
-$(V2
-	$(B __FILE__)
+$(V2          $(B __FILE__)
 	$(B __LINE__))
 	$(GLINK2 lex, IntegerLiteral)
 	$(GLINK2 lex, FloatLiteral)
@@ -1050,13 +1062,12 @@ $(V2
 	$(GLINK AssertExpression)
 	$(GLINK MixinExpression)
 	$(GLINK ImportExpression)
-	$(I BasicType) $(B .) $(I Identifier)
+	$(LINK2 declaration.html#BasicTypeX, $(I BasicType)) $(B .) $(I Identifier)
 	$(LINK2 declaration.html#Typeof, $(I Typeof))
 	$(GLINK TypeidExpression)
 	$(GLINK IsExpression)
 	$(B $(LPAREN)) $(I Expression) $(B $(RPAREN))
-$(V2
-	$(LINK2 traits.html#TraitsExpression, $(I TraitsExpression)))
+$(V2          $(LINK2 traits.html#TraitsExpression, $(I TraitsExpression)))
 )
 
 <h3>.Identifier</h3>
@@ -1251,10 +1262,10 @@ $(GNAME KeyValuePair):
 	$(I KeyExpression) $(B :) $(I ValueExpression)
 
 $(GNAME KeyExpression):
-	$(GLINK ConditionalExpression)
+	$(GLINK AssignExpression)
 
 $(GNAME ValueExpression):
-	$(GLINK ConditionalExpression)
+	$(GLINK AssignExpression)
 )
 
 	$(P Associative array literals are a comma-separated list of
@@ -1285,16 +1296,14 @@ $(GNAME ValueExpression):
 
 $(GRAMMAR
 $(GNAME FunctionLiteral):
-	$(B function) $(I Type)<sub>opt</sub> $(I ParameterAttributes) <sub>opt</sub> $(I FunctionBody)
-	$(B delegate) $(I Type)<sub>opt</sub> $(I ParameterAttributes) <sub>opt</sub> $(I FunctionBody)
-	$(I ParameterAttributes) $(I FunctionBody)
-	$(I FunctionBody)
+	$(B function) $(LINK2 declaration.html#Type, $(I Type))$(OPT) $(I ParameterAttributes) $(OPT) $(LINK2 function.html#FunctionBody, $(I FunctionBody))
+	$(B delegate) $(LINK2 declaration.html#Type, $(I Type))$(OPT) $(I ParameterAttributes) $(OPT) $(LINK2 function.html#FunctionBody, $(I FunctionBody))
+	$(I ParameterAttributes) $(LINK2 function.html#FunctionBody, $(I FunctionBody))
+	$(LINK2 function.html#FunctionBody, $(I FunctionBody))
 
 $(GNAME ParameterAttributes):
 	$(LINK2 declaration.html#Parameters, $(I Parameters))
-$(V2
-	$(LINK2 declaration.html#Parameters, $(I Parameters)) $(LINK2 declaration.html#FunctionAttributes, $(I FunctionAttributes))
-)
+$(V2         $(LINK2 declaration.html#Parameters, $(I Parameters)) $(LINK2 declaration.html#FunctionAttributes, $(I FunctionAttributes)))
 )
 
 	$(I FunctionLiteral)s enable embedding anonymous functions
@@ -1507,8 +1516,8 @@ void foo()
 
 $(GRAMMAR
 $(GNAME TypeidExpression):
-    $(B typeid $(LPAREN)) $(I Type) $(B $(RPAREN))
-$(V2      $(B typeid $(LPAREN)) $(I Expression) $(B $(RPAREN)))
+    $(B typeid $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(B $(RPAREN))
+$(V2      $(B typeid $(LPAREN)) $(GLINK Expression) $(B $(RPAREN)))
 )
 
 $(V1
@@ -1555,18 +1564,18 @@ void main()
 
 $(GRAMMAR
 $(GNAME IsExpression):
-	$(B is $(LPAREN)) $(I Type) $(B $(RPAREN))
-	$(B is $(LPAREN)) $(I Type) $(B :) $(I TypeSpecialization) $(B $(RPAREN))
-	$(B is $(LPAREN)) $(I Type) $(B ==) $(I TypeSpecialization) $(B $(RPAREN))
-	$(B is $(LPAREN)) $(I Type) $(I Identifier) $(B $(RPAREN))
-	$(B is $(LPAREN)) $(I Type) $(I Identifier) $(B :) $(I TypeSpecialization) $(B $(RPAREN))
-	$(B is $(LPAREN)) $(I Type) $(I Identifier) $(B ==) $(I TypeSpecialization) $(B $(RPAREN))
-	$(V2 $(B is $(LPAREN)) $(I Type) $(I Identifier) $(B :) $(I TypeSpecialization) $(B ,) $(I TemplateParameterList) $(B $(RPAREN))
-	$(B is $(LPAREN)) $(I Type) $(I Identifier) $(B ==) $(I TypeSpecialization) $(B ,) $(I TemplateParameterList) $(B $(RPAREN))
+	$(B is $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(B $(RPAREN))
+	$(B is $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(B :) $(I TypeSpecialization) $(B $(RPAREN))
+	$(B is $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(B ==) $(I TypeSpecialization) $(B $(RPAREN))
+	$(B is $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(I Identifier) $(B $(RPAREN))
+	$(B is $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(I Identifier) $(B :) $(I TypeSpecialization) $(B $(RPAREN))
+	$(B is $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(I Identifier) $(B ==) $(I TypeSpecialization) $(B $(RPAREN))
+	$(V2 $(B is $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(I Identifier) $(B :) $(I TypeSpecialization) $(B ,) $(I TemplateParameterList) $(B $(RPAREN))
+	$(B is $(LPAREN)) $(LINK2 declaration.html#Type, $(I Type)) $(I Identifier) $(B ==) $(I TypeSpecialization) $(B ,) $(I TemplateParameterList) $(B $(RPAREN))
 )
 
 $(GNAME TypeSpecialization):
-	$(I Type)
+	$(LINK2 declaration.html#Type, $(I Type))
 $(V1	$(B typedef)
 )	$(B struct)
 	$(B union)
@@ -1576,8 +1585,7 @@ $(V1	$(B typedef)
 	$(B function)
 	$(B delegate)
 	$(B super)
-$(V2
-	$(B const)
+$(V2          $(B const)
 	$(B immutable)
 	$(B inout)
 	$(B shared)

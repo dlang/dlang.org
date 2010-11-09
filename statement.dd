@@ -215,7 +215,7 @@ $(I IfStatement):
 $(GNAME IfCondition):
 	$(EXPRESSION)
 	$(B auto) $(I Identifier) $(B =) $(EXPRESSION)
-	$(I Declarator) $(B =) $(EXPRESSION)
+	$(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(B =) $(EXPRESSION)
 
 $(GNAME ThenStatement):
 	$(PSSCOPE)
@@ -329,18 +329,16 @@ do
 
 $(GRAMMAR
 $(I ForStatement):
-	$(B for $(LPAREN))$(I Initialize) $(I Test) $(B ;) $(I Increment)$(B $(RPAREN)) $(PSSCOPE)
+	$(B for $(LPAREN))$(I Initialize) $(I Test)$(OPT) $(B ;) $(I Increment)$(OPT)$(B $(RPAREN)) $(PSSCOPE)
 
 $(GNAME Initialize):
 	$(B ;)
 	$(PS0)
 
 $(GNAME Test):
-	$(I empty)
 	$(EXPRESSION)
 
 $(GNAME Increment):
-	$(I empty)
 	$(EXPRESSION)
 )
 
@@ -413,8 +411,8 @@ $(GNAME ForeachTypeList):
     $(I ForeachType) , $(I ForeachTypeList)
 
 $(GNAME ForeachType):
-    $(B ref) $(I Type) $(I Identifier)
-    $(I Type) $(I Identifier)
+    $(B ref) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
+    $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
     $(B ref) $(I Identifier)
     $(I Identifier)
 
@@ -816,10 +814,10 @@ $(V2 $(GNAME CaseRangeStatement):
 	$(B case) $(I FirstExp) $(B : .. case) $(I LastExp) $(B :) $(PSSEMI_PSCURLYSCOPE_LIST)
 
 $(I FirstExp):
-	$(I AssignExpression)
+	$(ASSIGNEXPRESSION)
 
 $(I LastExp):
-	$(I AssignExpression)
+	$(ASSIGNEXPRESSION)
 )
 $(GNAME DefaultStatement):
 	$(B default :) $(PSSEMI_PSCURLYSCOPE_LIST)
@@ -1318,7 +1316,7 @@ $(GNAME Catch):
 	$(B catch $(LPAREN)) $(I CatchParameter) $(B $(RPAREN)) $(PS0)
 
 $(GNAME CatchParameter):
-	$(I BasicType) $(I Identifier)
+	$(GLINK2 declaration, BasicType) $(I Identifier)
 
 $(GNAME FinallyStatement):
 	$(B finally) $(PS0)

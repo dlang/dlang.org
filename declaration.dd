@@ -71,12 +71,13 @@ $(GNAME BasicType2):
         $(B [ ])
         $(B [) $(VEXPRESSION) $(B ])
         $(B [) $(VEXPRESSION) .. $(VEXPRESSION) $(B ])
-        $(B [) $(I Type) $(B ])
+        $(B [) $(GLINK Type) $(B ])
         $(B delegate) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
         $(B function) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
 
 $(GNAME Declarator):
         $(GLINK BasicType2)$(OPT) $(I Declarator) $(GLINK DeclaratorSuffixes)$(OPT)
+        $(GLINK BasicType2)$(OPT) $(B $(LPAREN)) $(I Declarator) $(B $(RPAREN)) $(GLINK DeclaratorSuffixes)$(OPT)
         $(GLINK BasicType2)$(OPT) $(I Identifier) $(GLINK DeclaratorSuffixes)$(OPT)
 
 $(GNAME DeclaratorSuffixes):
@@ -86,14 +87,14 @@ $(GNAME DeclaratorSuffixes):
 $(GNAME DeclaratorSuffix):
         $(B [ ])
         $(B [) $(VEXPRESSION) $(B ])
-        $(B [) $(I Type) $(B ])
-	$(LINK2 template.html#TemplateParameterList, $(I TemplateParameterList))$(OPT) $(GLINK Parameters) $(V2 $(GLINK MemberFunctionAttributes)<sub>opt</sub>)
+        $(B [) $(GLINK Type) $(B ])
+	$(GLINK2 template, TemplateParameterList)$(OPT) $(GLINK Parameters) $(V2 $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT))
 
 $(GNAME IdentifierList):
         $(I Identifier)
         $(I Identifier) $(B .) $(I IdentifierList)
-        $(I TemplateInstance)
-        $(I TemplateInstance) $(B .) $(I IdentifierList)
+        $(GLINK2 template, TemplateInstance)
+        $(GLINK2 template, TemplateInstance) $(B .) $(I IdentifierList)
 
 $(GNAME StorageClasses):
 	$(GLINK StorageClass)
@@ -106,25 +107,28 @@ $(GNAME StorageClass):
         $(B deprecated)
         $(B extern)
         $(B final)
-$(V2
-        $(B immutable)
+$(V2          $(B immutable)
         $(B inout)
         $(B shared)
 	$(B nothrow)
         $(B override)
 	$(B pure)
+	$(B __gshared)
+	$(GLINK Property)
 )        $(B scope)
         $(B static)
         $(B synchronized)
+
+$(GNAME Property):
+	$(B @) $(I Identifier)
 
 $(GNAME Type):
         $(GLINK BasicType)
         $(GLINK BasicType) $(GLINK Declarator2)
 
 $(GNAME Declarator2):
-        $(GLINK BasicType2) $(I Declarator2)
-        $(B $(LPAREN)) $(I Declarator2) $(B $(RPAREN))
-        $(B $(LPAREN)) $(I Declarator2) $(B $(RPAREN)) $(GLINK DeclaratorSuffixes)
+        $(GLINK BasicType2)$(OPT) $(I Declarator2)$(OPT) $(GLINK DeclaratorSuffixes)$(OPT)
+        $(GLINK BasicType2)$(OPT) $(B $(LPAREN)) $(I Declarator2) $(B $(RPAREN)) $(GLINK DeclaratorSuffixes)$(OPT)
 
 $(GNAME Parameters):
 	$(B $(LPAREN)) $(GLINK ParameterList) $(B $(RPAREN))
@@ -133,20 +137,31 @@ $(GNAME Parameters):
 $(GNAME ParameterList):
         $(GLINK Parameter)
         $(GLINK Parameter) $(B ,) $(I ParameterList)
-        $(GLINK Parameter) $(B ...)
         $(B ...)
 
 $(GNAME Parameter):
-        $(GLINK Declarator)
-        $(GLINK Declarator) = $(I DefaultInitializerExpression)
-        $(I InOut) $(GLINK Declarator)
-        $(I InOut) $(GLINK Declarator) = $(I DefaultInitializerExpression)
+        $(I InOut)$(OPT) $(GLINK BasicType) $(GLINK Declarator)
+        $(I InOut)$(OPT) $(GLINK BasicType) $(GLINK Declarator) $(B ...)
+        $(I InOut)$(OPT) $(GLINK BasicType) $(GLINK Declarator) = $(GLINK DefaultInitializerExpression)
+        $(I InOut)$(OPT) $(GLINK Type)
+        $(I InOut)$(OPT) $(GLINK Type) $(B ...)
 
-$(GNAME InOut):
-        $(B in)
+ $(GNAME InOut):
+        $(I InOutX)
+        $(I InOut InOutX)
+
+$(GNAME InOutX):
+        $(B auto)
+        $(B const)
+        $(B final)
+$(V2          $(B immutable)
+)        $(B in)
+        $(B inout)
+        $(B lazy)
         $(B out)
         $(B ref)
-        $(B lazy)
+        $(B scope)
+        $(B shared)
 
 $(V2
 $(GNAME FunctionAttributes):
@@ -156,6 +171,7 @@ $(GNAME FunctionAttributes):
 $(GNAME FunctionAttribute):
 	$(B nothrow)
 	$(B pure)
+	$(GLINK Property)
 )
 $(GNAME MemberFunctionAttributes):
 	$(GLINK MemberFunctionAttribute)
@@ -170,8 +186,7 @@ $(GNAME MemberFunctionAttribute):
 
 $(GNAME DefaultInitializerExpression):
 	$(ASSIGNEXPRESSION)
-$(V2
-	$(B __FILE__)
+$(V2          $(B __FILE__)
 	$(B __LINE__))
 
 $(GNAME Initializer):
@@ -273,7 +288,11 @@ int x[],y;	// error, multiple types
 
 $(GRAMMAR
 $(GNAME AutoDeclaration):
-	$(I StorageClasses) $(I Identifier) $(B =) $(ASSIGNEXPRESSION) $(B ;)
+	$(GLINK StorageClasses) $(I AutoDeclarationX) $(B ;)
+
+$(GNAME AutoDeclarationX):
+        $(I Identifier) $(B =) $(GLINK Initializer)
+        $(I AutoDeclarationX) $(B ,) $(I Identifier) $(B =) $(GLINK Initializer)
 )
 
 	$(P If a declaration starts with a $(I StorageClass) and has
