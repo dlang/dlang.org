@@ -91,19 +91,45 @@ $(SECTION3 Classes,
 	$(P An object consists of:)
 
 $(TABLE2 Class Object Layout,
-$(TR $(TH offset) $(TH property) $(TH contents))
-$(TR $(TD 0) $(TD $(CODE .__vptr)) $(TD pointer to vtable))
+$(TR $(TH size) $(TH property) $(TH contents))
+$(TR $(TD $(I ptrsize)) $(TD $(CODE .__vptr)) $(TD pointer to vtable))
 $(TR $(TD $(I ptrsize)) $(TD $(CODE .__monitor)) $(TD monitor))
-$(TR $(TD $(I ptrsize*2)...) $(TD named members ) $(TD non-static members))
+$(TR $(TD ...) $(TD ...) $(TD super's non-static fields and super's interface vptrs, from least to most derived))
+$(TR $(TD ...) $(TD named fields) $(TD non-static fields))
+$(TR $(TD $(I ptrsize)...) $(TD &nbsp;) $(TD vptr's for any interfaces implemented by this class in left to right, most to least derived, order))
 )
 
 	$(P The vtable consists of:)
 
 $(TABLE2 Virtual Function Pointer Table Layout,
-$(TR $(TH offset)		$(TH contents))
-$(TR $(TD 0)			$(TD pointer to instance of ClassInfo))
-$(TR $(TD $(I ptrsize)...)	$(TD pointers to virtual member functions))
+$(TR $(TH size)		$(TH contents))
+$(TR $(TD $(I ptrsize)) $(TD pointer to instance of $(V1 ClassInfo)$(V2 TypeInfo)))
+$(TR $(TD $(I ptrsize)...) $(TD pointers to virtual member functions))
 )
+
+	$(P Casting a class object to an interface consists of adding the offset of
+	the interface's corresponding vptr to the address of the base of the object.
+	Casting an interface ptr back to the class type it came from involves getting
+	the correct offset to subtract from it from the object.Interface entry at vtbl[0].
+	Adjustor thunks are created and pointers to them stored in the method entries in the vtbl[]
+	in order to set the this pointer to the start of the object instance corresponding
+	to the implementing method.
+	)
+
+	$(P An adjustor thunk looks like:)
+
+$(CCODE
+    ADD EAX,offset
+    JMP method
+)
+
+	$(P The leftmost side of the inheritance graph of the interfaces all share
+	their vptrs, this is the single inheritance model.
+	Every time the inheritance graph forks (for multiple inheritance) a new vptr is created
+	and stored in the class' instance.
+	Every time a virtual method is overridden, a new vtbl[] must be created with
+	the updated method pointers in it.
+	)
 
 	$(P The class definition:)
 
@@ -181,7 +207,10 @@ $(SECTION3 Associative Arrays,
 
 	$(P Associative arrays consist of a pointer to an opaque, implementation
 	defined type.
-	The current implementation is contained in phobos/internal/aaA.d.
+	$(V1 The current implementation is contained in and defined by
+	 $(PHOBOSSRC internal/aaA.d).)
+	$(V2 The current implementation is contained in and defined by
+	 $(DRUNTIMESRC rt/aaA.d).)
 	)
 )
 
