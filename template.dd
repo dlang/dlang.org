@@ -778,14 +778,21 @@ void test()
 }
 ------
 
+<h2>Template Constructors</h2>
+
+$(GRAMMAR
+$(GNAME TemplatedConstructor):
+    $(B this) $(B $(LPAREN)) $(GLINK2 template, TemplateParameterList) $(B $(RPAREN)) $(GLINK2 declaration, Parameters) $(GLINK Constraint)$(OPT) $(GLINK2 function, FunctionBody)
+)
+
+	$(P Templates can be used to form constructors for classes$(V2   and structs).
+	)
+
 <h2>Class Templates</h2>
 
 $(GRAMMAR
 $(GNAME ClassTemplateDeclaration):
     $(B class) $(I Identifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK2 class, BaseClassList) $(GLINK2 class, ClassBody)
-
-$(GNAME TemplatedConstructor):
-    $(B this) $(B $(LPAREN)) $(GLINK2 template, TemplateParameterList) $(B $(RPAREN)) $(GLINK2 declaration, Parameters) $(GLINK Constraint)$(OPT) $(GLINK2 function, FunctionBody))
 )
 
 	$(P If a template declares exactly one member, and that member is a class
@@ -863,6 +870,12 @@ writefln("The square of %s is %s", 3, Square!(int)(3));
 ----
 writefln("The square of %s is %s", 3, Square(3));  // T is deduced to be int
 ----
+
+	$(P If there are fewer arguments supplied in the $(I TemplateArgumentList)
+	than parameters in the $(I TemplateParameterList), the arguments fulfill
+	parameters from left to right, and the rest of the parameters are then deduced
+	from the function arguments.
+	)
 
 	$(P Function template type parameters that are to be implicitly
 	deduced may not have specializations:
@@ -992,7 +1005,7 @@ $(GNAME Constraint):
     $(B if) $(B $(LPAREN)) $(I ConstraintExpression) $(B $(RPAREN))
 
 $(I ConstraintExpression):
-    $(I Expression)
+    $(I $(GLINK2 expression, Expression))
 ---
 
 	$(P $(I Constraint)s are used to impose additional constraints
