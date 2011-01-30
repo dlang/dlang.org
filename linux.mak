@@ -11,8 +11,6 @@ globe.gif pen.gif search-left.gif)
 
 STYLES=css/style.css css/print.css
 
-ASSETS=$(IMAGES) $(STYLES)
-
 PREMADE=download.html dcompiler.html language-reference.html	\
 appendices.html howtos.html articles.html
 
@@ -86,8 +84,8 @@ PDFOPTIONS=--header-left [section] --header-right [page]			\
 
 PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
-ALL_FILES_BUT_MAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS) $(STYLES)	\
-$(IMAGES))
+ALL_FILES_BUT_MAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
+$(PREMADE) $(STYLES) $(IMAGES))
 
 ALL_FILES = $(ALL_FILES_BUT_MAP) $(DOC_OUTPUT_DIR)/siteindex.html
 
@@ -112,6 +110,7 @@ $(DOC_OUTPUT_DIR)/siteindex.html : $(ALL_FILES_BUT_MAP)
 	  && echo "<a href=$F>`sed -n 's/<title>\(.*\)<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`" \
 	     "</a><p>" >> siteindex.dd)
 	$(DMD) -c -o- -Df$@ doc.ddoc siteindex.dd
+	rm -rf siteindex.dd
 
 zip:
 	rm doc.zip
@@ -150,4 +149,5 @@ rsync : all
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
 
 commit-phobos:
-	ssh d-programming@digitalmars.com "rm -rf data/phobos/* && cp -fr data/phobos-prerelease/* data/phobos/"
+	ssh d-programming@digitalmars.com "rm -rf data/phobos/* && \
+      cp -fr data/phobos-prerelease/* data/phobos/"
