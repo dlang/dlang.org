@@ -2,56 +2,91 @@
 
 DMD=dmd
 
-SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd \
-	cppdbc.dd index.dd overview.dd lex.dd module.dd dnews.dd \
-	declaration.dd type.dd property.dd attribute.dd pragma.dd \
-	expression.dd statement.dd arrays.dd struct.dd class.dd enum.dd \
-	function.dd operatoroverloading.dd template.dd mixin.dd dbc.dd \
-	version.dd errors.dd garbage.dd memory.dd float.dd iasm.dd \
-	interface.dd portability.dd html.dd entity.dd \
-	abi.dd windows.dd dll.dd htomodule.dd faq.dd \
-	dstyle.dd wc.dd future.dd changelog.dd glossary.dd \
-	acknowledgements.dd dcompiler.dd builtin.dd interfaceToC.dd \
-	comparison.dd rationale.dd \
-	ddoc.dd code_coverage.dd exception-safe.dd rdmd.dd \
-	templates-revisited.dd warnings.dd ascii-table.dd \
-	windbg.dd htod.dd \
-	regular-expression.dd lazy-evaluation.dd \
-	lisp-java-d.dd variadic-function-templates.dd howto-promote.dd \
-	tuple.dd template-comparison.dd template-mixin.dd \
-	final-const-invariant.dd const.dd traits.dd COM.dd cpp_interface.dd \
-	hijack.dd const3.dd features2.dd safed.dd cpp0x.dd const-faq.dd \
-	concepts.dd memory-safe-d.dd d-floating-point.dd \
-	migrate-to-shared.dd D1toD2.dd unittest.dd hash-map.dd
+SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd cppdbc.dd	\
+	index.dd overview.dd lex.dd module.dd dnews.dd declaration.dd		\
+	type.dd property.dd attribute.dd pragma.dd expression.dd			\
+	statement.dd arrays.dd struct.dd class.dd enum.dd function.dd		\
+	operatoroverloading.dd template.dd mixin.dd dbc.dd version.dd		\
+	errors.dd garbage.dd memory.dd float.dd iasm.dd interface.dd		\
+	portability.dd html.dd entity.dd abi.dd windows.dd dll.dd			\
+	htomodule.dd faq.dd dstyle.dd wc.dd future.dd changelog.dd			\
+	glossary.dd acknowledgements.dd dcompiler.dd builtin.dd				\
+	interfaceToC.dd comparison.dd rationale.dd ddoc.dd					\
+	code_coverage.dd exception-safe.dd rdmd.dd templates-revisited.dd	\
+	warnings.dd ascii-table.dd windbg.dd htod.dd regular-expression.dd	\
+	lazy-evaluation.dd lisp-java-d.dd variadic-function-templates.dd	\
+	howto-promote.dd tuple.dd template-comparison.dd template-mixin.dd	\
+	final-const-invariant.dd const.dd traits.dd COM.dd					\
+	cpp_interface.dd hijack.dd const3.dd features2.dd safed.dd			\
+	cpp0x.dd const-faq.dd concepts.dd memory-safe-d.dd					\
+	d-floating-point.dd migrate-to-shared.dd D1toD2.dd unittest.dd		\
+	hash-map.dd pdf-intro-cover.dd pdf-spec-cover.dd					\
+	pdf-tools-cover.dd
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
+ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 
-TARGETS=cpptod.html ctod.html pretod.html cppstrings.html \
-	cppcomplex.html cppdbc.html index.html overview.html lex.html \
-	module.html dnews.html declaration.html type.html property.html \
-	attribute.html pragma.html expression.html statement.html arrays.html \
-	struct.html class.html enum.html function.html \
-	operatoroverloading.html template.html mixin.html dbc.html \
-	version.html errors.html garbage.html memory.html float.html iasm.html \
-	interface.html portability.html html.html entity.html \
-	abi.html windows.html dll.html htomodule.html faq.html \
-	dstyle.html wc.html future.html changelog.html glossary.html \
-	acknowledgements.html builtin.html interfaceToC.html \
-	comparison.html rationale.html \
-	ddoc.html code_coverage.html exception-safe.html rdmd.html \
-	templates-revisited.html warnings.html ascii-table.html \
-	windbg.html htod.html \
-	regular-expression.html lazy-evaluation.html \
-	lisp-java-d.html variadic-function-templates.html howto-promote.html \
-	tuple.html template-comparison.html template-mixin.html \
-	final-const-invariant.html const.html traits.html COM.html cpp_interface.html \
-	hijack.html const3.html features2.html safed.html cpp0x.html const-faq.html \
-	dmd-windows.html dmd-linux.html dmd-osx.html dmd-freebsd.html \
-	concepts.html memory-safe-d.html d-floating-point.html \
-	migrate-to-shared.html D1toD2.html unittest.html hash-map.html
+PREMADE=download.html dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
+TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
+	cppcomplex.html cppdbc.html index.html overview.html lex.html		\
+	module.html dnews.html declaration.html type.html property.html		\
+	attribute.html pragma.html expression.html statement.html			\
+	arrays.html struct.html class.html enum.html function.html			\
+	operatoroverloading.html template.html mixin.html dbc.html			\
+	version.html errors.html garbage.html memory.html float.html		\
+	iasm.html interface.html portability.html html.html entity.html		\
+	abi.html windows.html dll.html htomodule.html faq.html dstyle.html	\
+	wc.html future.html changelog.html glossary.html					\
+	acknowledgements.html builtin.html interfaceToC.html				\
+	comparison.html rationale.html ddoc.html code_coverage.html			\
+	exception-safe.html rdmd.html templates-revisited.html				\
+	warnings.html ascii-table.html windbg.html htod.html				\
+	regular-expression.html lazy-evaluation.html lisp-java-d.html		\
+	variadic-function-templates.html howto-promote.html tuple.html		\
+	template-comparison.html template-mixin.html						\
+	final-const-invariant.html const.html traits.html COM.html			\
+	cpp_interface.html hijack.html const3.html features2.html			\
+	safed.html cpp0x.html const-faq.html dmd-windows.html				\
+	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html			\
+	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
+	D1toD2.html unittest.html hash-map.html pdf-intro-cover.html		\
+	pdf-spec-cover.html pdf-tools-cover.html
+
+PDFINTRO=index.html overview.html wc.html warnings.html builtin.html \
+	ctod.html cpptod.html pretod.html template-comparison.html cppstrings.html \
+	cppcomplex.html cppdbc.html lisp-java-d.html cpp0x.html
+
+PDFFEATURES=comparison.html features2.html
+
+PDFFAQ=faq.html const-faq.html rationale.html future.html
+
+PDFSPEC=lex.html module.html declaration.html type.html property.html \
+	attribute.html pragma.html expression.html statement.html arrays.html \
+	hash-map.html struct.html class.html interface.html enum.html const3.html \
+	function.html operatoroverloading.html template.html template-mixin.html \
+	dbc.html version.html traits.html errors.html unittest.html garbage.html \
+	float.html iasm.html ddoc.html interfaceToC.html cpp_interface.html \
+	portability.html html.html entity.html memory-safe-d.html abi.html
+
+PDFHOWTOS=windows.html dll.html COM.html htomodule.html
+
+PDFARTICLES=d-floating-point.html migrate-to-shared.html hijack.html const3.html \
+	memory.html exception-safe.html templates-revisited.html regular-expression.html \
+	lazy-evaluation.html variadic-function-templates.html tuple.html mixin.html \
+	safed.html
+
+PDFTOOLS=dmd-linux.html dmd-freebsd.html dmd-osx.html dmd-windows.html \
+	http://www.digitalmars.com/ctg/optlink.html http://www.digitalmars.com/ctg/trace.html \
+	code_coverage.html rdmd.html windbg.html htod.html
+
+PDFAPPENDICES=dstyle.html glossary.html ascii-table.html acknowledgements.html
+
+PDFOPTIONS=--header-left [section] --header-right [page] --header-spacing 3 --header-font-name Georgia --print-media-type --outline
+
+PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
 target: $(TARGETS)
 
@@ -199,6 +234,12 @@ operatoroverloading.html : $(DDOC) operatoroverloading.dd
 
 overview.html : $(DDOC) overview.dd
 
+pdf-intro-cover.html : $(DDOC) pdf-intro-cover.dd
+
+pdf-spec-cover.html : $(DDOC) pdf-spec-cover.dd
+
+pdf-tools-cover.html : $(DDOC) pdf-tools-cover.dd
+
 portability.html : $(DDOC) portability.dd
 
 pragma.html : $(DDOC) pragma.dd
@@ -247,12 +288,25 @@ windbg.html : $(DDOC) windows.ddoc windbg.dd
 
 windows.html : $(DDOC) windows.ddoc windows.dd
 
+pdf : $(PDFTARGETS)
+
+d-intro.pdf:
+	wkhtmltopdf $(PDFOPTIONS) cover pdf-intro-cover.html toc $(PDFINTRO) $(PDFFEATURES) $(PDFFAQ) $(PDFAPPENDICES) d-intro.pdf
+
+d-spec.pdf:
+	wkhtmltopdf $(PDFOPTIONS) cover pdf-spec-cover.html toc $(PDFSPEC) $(PDFAPPENDICES) d-spec.pdf
+
+d-tools.pdf:
+	wkhtmltopdf $(PDFOPTIONS) cover pdf-tools-cover.html toc $(PDFTOOLS) $(PDFHOWTOS) $(PDFARTICLES) $(PDFAPPENDICES) d-tools.pdf
+
 zip:
 	del doc.zip
-	zip32 doc win32.mak style.css print.css $(DDOC) windows.ddoc linux.ddoc osx.ddoc freebsd.ddoc
-	zip32 doc $(SRC) download.html dcompiler.html
-	zip32 doc $(IMG)
+	zip32 doc win32.mak $(DDOC) windows.ddoc linux.ddoc osx.ddoc freebsd.ddoc
+	zip32 doc $(SRC) $(PREMADE)
+	zip32 doc $(ASSETS)
 
 clean:
 	del $(TARGETS)
+	del $(PDFTARGETS)
+
 

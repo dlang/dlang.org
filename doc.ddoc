@@ -13,8 +13,8 @@ DDOC=
 <meta name="keywords" content="$(META_KEYWORDS)" />
 <meta name="description" content="$(META_DESCRIPTION)" />
 <title>$(TITLE) - D Programming Language $(VER) - Digital Mars</title>
-<link rel="stylesheet" type="text/css" href="style.css" />
-<link rel="stylesheet" type="text/css" href="print.css" media="print" />
+<link rel="stylesheet" type="text/css" href="css/style.css" />
+<link rel="stylesheet" type="text/css" href="css/print.css" media="print" />
 <link rel="shortcut icon" href="favicon.ico" />
 
 <!-- enable this for automated hyphenation, see http://code.google.com/p/hyphenator/ -->
@@ -22,27 +22,45 @@ DDOC=
 <script src="http://erdani.com/js/Hyphenator.js" type="text/javascript"></script>
 <script type="text/javascript">Hyphenator.run();</script>
 -->
-
+<script type="text/javascript">
+function bodyLoad()
+{
+	var links = document.getElementById("navigation").getElementsByTagName("a");
+	for (var i = 0; i < links.length; i++)
+	{
+		var url = "/" + links[i].getAttribute("href");
+		if (window.location.href.match(url + "\x24") == url)
+		{
+			var cls = links[i].getAttribute("class");
+			links[i].setAttribute("class", cls ? cls + " active" : "active");
+			break;
+		}
+	}
+}
+</script>
 </head>
 
-<body class="hyphenate">
-<div id="heading">
-	<a href="http://www.digitalmars.com/"><img src="dmlogo.gif" width="270" height="53" style="border-style:none" alt="www.digitalmars.com" align="left"></a>
-	<p align="right">D Programming Language $(VER)</p>
-	<br>
-
-	<div id="headingNav">
-	$(UL
-	$(LI <a href="http://www.digitalmars.com/NewsGroup.html" title="User Forums">$(NEWSIMG) Forum</a>)
-	$(LI <a href="http://www.prowiki.org/wiki4d/wiki.cgi?DocComments/$(WIKI)" title="Read/write comments and feedback">$(WIKIIMG) Wiki</a>)
-	$(LI <a href="index.html" title="D Programming Language" class="dlink">&nbsp;$(DIMG)&nbsp;</a>)
-	$(LI <a href="http://www.digitalmars.com/advancedsearch.html" title="Search Digital Mars web site">$(SEARCHIMG)Search</a>)
-	$(LI <a href="http://www.digitalmars.com/d/download.html" title="download D">$(DOWNLOADIMG)Downloads</a>)
-	$(LI <a href="http://www.digitalmars.com/" title="www.digitalmars.com">$(HOMEIMG)Home</a>)
-	)
+<body onload="bodyLoad()">
+	<div id="top">
+		<form method="get" action="http://www.google.com/search">
+			<div id="search-box">
+				<img src="images/search-left.gif" width="11" height="22" /><input id="q" name="q" /><input type="image" id="search-submit" name="submit" src="images/search-button.gif" />
+				<input type="hidden" id="domains" name="domains" value="www.digitalmars.com" />
+				<input type="hidden" id="sourceid" name="sourceid" value="google-search" />
+				<div id="search-dropdown">
+					<select id="sitesearch" name="sitesearch" size="1">
+						<option value="www.digitalmars.com/d/$(VER)">Entire D $(VER) Site</option>
+						<option value="www.digitalmars.com/d/$(VER)/phobos">Library Reference</option>
+						<option value="www.digitalmars.com/d/archives">Newsgroup Archives</option>
+					</select>
 	</div>
+			</div>
+		</form>
 
-	<div id="lastupdate">Last update $(DATETIME)</div>
+		<div id="header">
+			<!--a href="http://www.digitalmars.com"><img id="logo" width="253" height="37" border="0" alt="Digital Mars" src="images/dmlogo.gif"></a-->
+			<div id="d-language"><a href="">D Programming Language $(VER)</a></div>
+		</div>
 </div>
 
 $(BODY)
@@ -50,9 +68,27 @@ $(FOOTER)
 </body>
 </html>
 
+PAGE_TOOLS=
+<div id="tools">
+	<span id="lastupdate">Last update $(DATETIME)</span>
+	<span id="wiki"><a href="http://www.prowiki.org/wiki4d/wiki.cgi?DocComments/$(WIKI)">Comment on this page</a></span>
+</div>
+
+GOOGLE_TRANSLATE=
+<div id="translate" class="tool"><script type="text/javascript">document.write("Translate this page:")</script>
+	<div id="google_translate_element"></div><script type="text/javascript">
+	function googleTranslateElementInit() {
+	  new google.translate.TranslateElement({
+	    pageLanguage: 'en',
+	    autoDisplay: false,
+	    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+	  }, 'google_translate_element');
+	}
+	</script><script type="text/javascript" src="http://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</div>
+
 GOOGLE_FOOTER=
-<br><br>
-<br><br>
+<div id="google_ad">
 <!-- Google ad -->
 <script type="text/javascript"><!--
 /**/google_ad_client = "pub-5628673096434613";
@@ -64,6 +100,7 @@ GOOGLE_FOOTER=
 //--></script>
 <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </script>
+</div>
 
 GOOGLE_REFERRAL=
 <br><br>
@@ -90,34 +127,12 @@ FOOTER=
 <a href="http://www.prowiki.org/wiki4d/wiki.cgi?DocComments/$(WIKI)" title="Read/write comments and feedback">Comments</a> |
 <a href="index.html" title="D Programming Language" class="dlink">&nbsp;D&nbsp;</a> |
 <a href="http://www.digitalmars.com/advancedsearch.html" title="Search Digital Mars web site">Search</a> |
-<a href="http://www.digitalmars.com/d/download.html" title="download D">Downloads</a> |
+<a href="download.html" title="Download D">Downloads</a> |
 <a href="http://www.digitalmars.com/" title="www.digitalmars.com">Home</a>
 </div>
 <div id="copyright">
 $(COPYRIGHT) |
-Page generated by $(LINK2 http://www.digitalmars.com/d/$(VER)/ddoc.html, Ddoc).
-</div>
-
-TOP=
-<div class="navblock">
-<form method="get" action="http://www.google.com/search">
-<div id="searchbox">
-<input id="q" name="q" size="10" value="Search" onFocus='if(this.value == "Search"){this.value="";}'>
-<input type="hidden" id="domains" name="domains" value="www.digitalmars.com">
-<input type="hidden" id="sitesearch" name="sitesearch" value="www.digitalmars.com/d/$(VER)">
-<input type="hidden" id="sourceid" name="sourceid" value="google-search">
-<input type="submit" id="submit" name="submit" value="Go">
-</div>
-</form>
-<div id="toctop">
-    $(UL
-	$(LI <a href="index.html" title="D Programming Language">D $(VER) Home</a>)
-	$(LI <a href="lex.html" title="D Language Specification">Language Reference</a>)
-	$(LI <a href="phobos/phobos.html" title="D Runtime Library">Library Reference</a>)
-	$(LI <a href="comparison.html" title="Language Comparisons">Comparisons</a>)
-	$(LI <a href="http://www.digitalmars.com/d/1.0/index.html" title="D Programming Language 1.0">D 1.0 Home</a>)
-    )
-</div>
+Page generated by $(LINK2 ddoc.html, Ddoc).
 </div>
 
 NAVIGATION_COMMUNITY=
@@ -140,9 +155,89 @@ NAVIGATION_COMMUNITY=
     $(TRANSLATIONS)
     $(GOOGLE_REFERRAL)
 
-NAVIGATION_SPEC=
-    <div class="navblock">
-    $(UL
+NAVIGATION=
+$(NAVBLOCK_HEADER $(TOCHEADERL index.html, D Programming Language, D $(VER) Home),
+	$(TOCENTRYTH overview.html, D language overview, Overview, $(CATEGORY_OVERVIEW $(SUBNAV_OVERVIEW)))
+	$(TOCENTRYTH comparison.html, D feature list, Features, $(CATEGORY_FEATURES $(SUBNAV_FEATURES)))
+	$(TOCENTRYTH download.html, Download a D compiler, Downloads &amp; Tools, $(CATEGORY_TOOLS $(SUBNAV_DOWNLOADS_TOOLS)))
+	$(TOCENTRYTH faq.html, Frequently Asked Questions, FAQ, $(CATEGORY_FAQ $(SUBNAV_FAQ)))
+	$(TOCENTRYH appendices.html, Appendices, $(CATEGORY_APPENDICES $(SUBNAV_APPENDICES)))
+	$(TOCENTRYT acknowledgements.html, Thank-you to these people who have helped with D, Acknowledgements)
+	$(TOCENTRYT http://www.digitalmars.com/d/1.0/index.html, D Programming Language 1.0, D1 Home)
+)
+$(NAVBLOCK_HEADER $(TOCHEADER Documentation),
+	$(TOCENTRYH language-reference.html, Language Reference, $(CATEGORY_SPEC $(SUBNAV_SPEC)))
+	$(TOCENTRY phobos/index.html, Library Reference)
+	$(TOCENTRYTH howtos.html, Helps for using D, Howtos, $(CATEGORY_HOWTOS $(SUBNAV_HOWTOS)))
+	$(TOCENTRYH articles.html, Articles, $(CATEGORY_ARTICLES $(SUBNAV_ARTICLES)))
+)
+$(NAVBLOCK_HEADER $(TOCHEADER Community),
+	$(TOCENTRYT http://www.digitalmars.com/NewsGroup.html, User forums, Forums)
+	$(TOCENTRYT http://www.prowiki.org/wiki4d/wiki.cgi?FrontPage, Wiki for the D Programming Language, Wiki)
+	$(TOCENTRYT http://www.dsource.org/, D projects and libraries at dsource.org, Projects &amp; Libraries)
+	$(TOCENTRYT http://twitter.com/#search?q=%23d_lang, #d_lang on twitter.com, Twitter)
+	$(TOCENTRYT http://www.digitalmars.com/d/dlinks.html, External D related links, Links)
+	$(TOCENTRYX http://www.digitalmars.com/d/dnews.html, News Digest)
+	$(TOCENTRYX http://d.puremagic.com/conference2008/, D Programming Language Conference, Conference)
+)
+
+SUBNAV_OVERVIEW=
+$(NAVBLOCK
+	$(TOCENTRYT wc.html, wc - the wordcount program, Example: wc)
+	$(TOCENTRYT warnings.html, Explanation of D compiler generated warning messages, Warnings)
+	$(TOCENTRY builtin.html,    Rationale for Builtins)
+	$(TOCENTRY ctod.html,       Converting C to D)
+	$(TOCENTRY cpptod.html,     Converting C++ to D)
+	$(TOCENTRY pretod.html, The C Preprocessor vs D)
+	$(TOCENTRY template-comparison.html, D templates compared)
+	$(TOCENTRY cppstrings.html, D strings vs C++ std::string)
+	$(TOCENTRY cppcomplex.html, D complex vs C++ std::complex)
+	$(TOCENTRY cppdbc.html,     D Contract Programming vs C++)
+	$(TOCENTRY lisp-java-d.html, Lisp vs. Java... D?)
+	$(TOCENTRY cpp0x.html, D and C++0x)
+)
+
+SUBNAV_FEATURES=
+$(NAVBLOCK
+	$(TOCENTRYT features2.html, Language changes for D $(VER), $(VER) Features)
+)
+
+SUBNAV_DOWNLOADS_TOOLS=
+$(NAVBLOCK
+	$(TOCENTRYT dmd-linux.html, dmd - the Digital Mars D compiler, DMD D Compiler (Linux))
+	$(TOCENTRYT dmd-freebsd.html, dmd - the Digital Mars D compiler, DMD D Compiler (FreeBSD))
+	$(TOCENTRYT dmd-osx.html, dmd - the Digital Mars D compiler, DMD D Compiler (Mac OSX))
+	$(TOCENTRYT dmd-windows.html, dmd - the Digital Mars D compiler, DMD D Compiler (Windows))
+	$(TOCENTRYT changelog.html, History of changes to D, D Change Log)
+	$(TOCENTRYT http://bitbucket.org/goshawk/gdc/wiki/Home, gdc - the Gnu D compiler, GDC D Compiler)
+	$(TOCENTRYT http://dnet.codeplex.com/, D Compiler for .NET, D.NET Compiler)
+	$(TOCENTRYT http://www.digitalmars.com/ctg/optlink.html, Optlink - the Digital Mars Linker, Linker)
+	$(TOCENTRYT http://www.digitalmars.com/ctg/trace.html, DMD's builtin code profiling tool, Profiler)
+	$(TOCENTRYT code_coverage.html, DMD's builtin code coverage analysis tool, Code Coverage)
+	$(TOCENTRYT rdmd.html, rdmd - run D programs as if they were scripts, DMD Script Shell)
+	$(TOCENTRYT windbg.html, windbg - debugging Windows programs, Windows Debugger)
+	$(TOCENTRYT htod.html, htod - mechanically convert C .h header files to D, C .h to D .d)
+	$(TOCENTRYT http://www.prowiki.org/wiki4d/wiki.cgi?EditorSupport, Editors with support for D, Editors)
+	$(TOCENTRYT http://www.prowiki.org/wiki4d/wiki.cgi?ReferenceForTools, Even more tools for D, More Tools)
+	$(TOCENTRYT http://d.puremagic.com/issues/, D issue and bug tracking system, Issues &amp; Bugs)
+)
+
+SUBNAV_FAQ=
+$(NAVBLOCK
+	$(TOCENTRYT const-faq.html, Frequently Asked Questions about const, const(FAQ))
+	$(TOCENTRYT rationale.html, Answers to questions about D design decisions, Rationale)
+	$(TOCENTRYT future.html, Future directions, Future)
+)
+
+SUBNAV_APPENDICES=
+$(NAVBLOCK
+	$(TOCENTRYT dstyle.html, Recommended programming style conventions, Style Guide)
+	$(TOCENTRYT glossary.html, D acronyms and jargon explained, Glossary)
+	$(TOCENTRYT ascii-table.html, Handy ascii chart, Ascii Table)
+)
+
+SUBNAV_SPEC=
+$(NAVBLOCK
 	$(TOCENTRY lex.html, Lexical)
 	$(TOCENTRY module.html, Modules)
 	$(TOCENTRY declaration.html, Declarations)
@@ -180,37 +275,18 @@ NAVIGATION_SPEC=
 	$(TOCENTRY memory-safe-d.html, Memory Safe D Spec)
 	$(TOCENTRY abi.html, Application Binary Interface)
     )
-    </div>
-    $(BOOKS)
-    $(TRANSLATIONS)
-    $(GOOGLE_REFERRAL)
 
-
-NAVIGATION_D=
-    <div class="navblock">
-	$(UL
-		$(TOCENTRYT overview.html, D language overview, Overview)
+SUBNAV_HOWTOS=
+$(NAVBLOCK
 		$(TOCENTRYT windows.html, D implementation for 32 bit Windows systems, D for Win32)
 		$(TOCENTRYT dll.html, Writing 32 bit Windows DLLs in D, Win32 DLLs in D)
 		$(TOCENTRYT COM.html, Windows COM Programming, COM Programming)
 		$(TOCENTRYT htomodule.html, converting C .h header files to D modules, C .h to D Modules)
-		$(TOCENTRYT faq.html, Frequently Asked Questions, FAQ)
-		$(TOCENTRYT const-faq.html, Frequently Asked Questions about const, const(FAQ))
-		$(TOCENTRYT dstyle.html, Recommended programming style conventions, Style Guide)
-		$(TOCENTRYT wc.html, wc - the wordcount program, Example: wc)
-		$(TOCENTRYT future.html, Future directions, Future)
-		$(TOCENTRYT changelog.html, History of changes to D, D Change Log)
-		$(TOCENTRYT features2.html, Language changes for D $(VER), $(VER) Features)
 		$(TOCENTRYT http://www.digitalmars.com/techtips/index.html, Programming tips, Tech Tips)
-		$(TOCENTRYT rationale.html, Answers to questions about D design decisions, Rationale)
-		$(TOCENTRYT warnings.html, Explanation of D compiler generated warning messages, Warnings)
-		$(TOCENTRYT http://d.puremagic.com/issues/, D issue and bug tracking system, Issues &amp; Bugs)
-	)
-    </div>
+)
 
-    <div class="navblock">
-	<h2>Articles</h2>
-	$(UL
+SUBNAV_ARTICLES=
+$(NAVBLOCK
 		$(TOCENTRYT d-floating-point.html, D Floating Point, Floating Point)
 		$(TOCENTRYT migrate-to-shared.html, Migrating to Shared, Migrating to Shared)
 		$(TOCENTRYT hijack.html, Function Hijacking Mitigation, Hijacking)
@@ -225,98 +301,41 @@ NAVIGATION_D=
 		$(TOCENTRYT mixin.html, String mixins compile string literals into D programs, Mixins)
 		$(TOCENTRYT safed.html, SafeD - The Safe Subset of D, SafeD)
 	)
-    </div>
 
-    <div class="navblock">
-	<h2>Tools</h2>
-	$(UL
-		$(TOCENTRYT dmd-linux.html, dmd - the Digital Mars D compiler, DMD D Compiler (Linux))
-		$(TOCENTRYT dmd-freebsd.html, dmd - the Digital Mars D compiler, DMD D Compiler (FreeBSD))
-		$(TOCENTRYT dmd-osx.html, dmd - the Digital Mars D compiler, DMD D Compiler (Mac OSX))
-		$(TOCENTRYT dmd-windows.html, dmd - the Digital Mars D compiler, DMD D Compiler (Windows))
-		$(TOCENTRYT http://bitbucket.org/goshawk/gdc/wiki/Home, gdc - the Gnu D compiler, GDC D Compiler)
-		$(TOCENTRYT http://www.digitalmars.com/ctg/optlink.html, Optlink - the Digital Mars Linker, Linker)
-		$(TOCENTRYT http://www.digitalmars.com/ctg/trace.html, DMD's builtin code profiling tool, Profiler)
-		$(TOCENTRYT code_coverage.html, DMD's builtin code coverage analysis tool, Code Coverage)
-		$(TOCENTRYT rdmd.html, rdmd - run D programs as if they were scripts, DMD Script Shell)
-		$(TOCENTRYT windbg.html, windbg - debugging Windows programs, Windows Debugger)
-		$(TOCENTRYT htod.html, htod - mechanically convert C .h header files to D, C .h to D .d)
-		$(TOCENTRYT http://www.prowiki.org/wiki4d/wiki.cgi?EditorSupport, Editors with support for D, Editors)
-		$(TOCENTRYT http://www.prowiki.org/wiki4d/wiki.cgi?ReferenceForTools, Even more tools for D, More Tools)
-	)
-    </div>
-
-    <div class="navblock">
-	<h2>Forums</h2>
-	$(UL
-		$(TOCENTRYT http://www.digitalmars.com/NewsGroup.html, User Forums, All Forums)
-		$(TOCENTRY http://www.digitalmars.com/d/archives/digitalmars/D/index.html, digitalmars.D)
-		$(TOCENTRY http://www.digitalmars.com/d/archives/digitalmars/D/announce/index.html, digitalmars.D.announce)
-		$(TOCENTRY http://www.digitalmars.com/d/archives/digitalmars/D/dwt/index.html, digitalmars.D.dwt)
-		$(TOCENTRY http://www.digitalmars.com/d/archives/digitalmars/D/learn/index.html, digitalmars.D.learn)
-		$(TOCENTRY http://www.digitalmars.com/d/archives/digitalmars/D/bugs/index.html, digitalmars.D.bugs)
-		$(TOCENTRY http://www.digitalmars.com/d/archives/digitalmars/D/debugger/index.html, digitalmars.D.debugger)
-		$(TOCENTRY http://www.digitalmars.com/d/archives/digitalmars/D/ide/index.html, digitalmars.D.ide)
-		$(TOCENTRY http://www.digitalmars.com/d/archives/digitalmars/D/dtl/index.html, digitalmars.D.dtl)
-		$(TOCENTRY http://www.digitalmars.com/d/archives/D/gnu/index.html, D.gnu)
-		$(TOCENTRY http://www.digitalmars.com/d/archives/index.html, Old D)
-	)
-    </div>
-
-    <div class="navblock">
-	<h2>Community</h2>
-	$(UL
-		$(TOCENTRYT http://www.prowiki.org/wiki4d/wiki.cgi?FrontPage, Wiki for the D Programming Language, Wiki)
-		$(TOCENTRYT http://stackoverflow.com/questions/tagged/d, D on stackoverflow.com, Stackoverflow)
-		$(TOCENTRYT http://twitter.com/#search?q=%23d_lang, #d_lang on twitter.com, Twitter)
-		$(TOCENTRYT http://www.digitalmars.com/d/dlinks.html, External D related links, Links)
-		$(TOCENTRYX http://www.digitalmars.com/d/dnews.html, News Digest)
-		$(TOCENTRYX http://d.puremagic.com/conference2008/, D Programming Language Conference, Conference)
-	)
-    </div>
-
-    <div class="navblock">
-	<h2>Appendices</h2>
-	$(UL
-		$(TOCENTRYT glossary.html, D acronyms and jargon explained, Glossary)
-		$(TOCENTRYT ascii-table.html, Handy ascii chart, Ascii Table)
-		$(TOCENTRYT acknowledgements.html, Thank-you to these people who have helped with D, Acknowledgements)
-	)
-    </div>
-
-    $(BOOKS)
-    $(TRANSLATIONS)
-    $(GOOGLE_REFERRAL)
-    <p><center>$(SLASHDOT)</center></p>
-
-D_S      = $(LAYOUT $(NAVIGATION_D),         $1, $(ARGS $+))
-SPEC_S   = $(LAYOUT $(NAVIGATION_SPEC),      $1, $(ARGS $+))
-COMMUNITY= $(LAYOUT $(NAVIGATION_COMMUNITY), $1, $(ARGS $+))
+D_S      = $(LAYOUT $(NAVIGATION),           $1, $(ARGS $+))
+SPEC_S   = $(LAYOUT $(NAVIGATION),           $1, $(ARGS $+))
+COMMUNITY= $(LAYOUT $(NAVIGATION),           $1, $(ARGS $+))
+PDF_COVER= $0
 
 LAYOUT=
 <div id="navigation">
-  $(TOP)
   $1
+  $(GOOGLE_TRANSLATE)
 </div>
 <div id="content">
+  $(PAGE_TOOLS)
   <h1>$2</h1>
   $3
   $(GOOGLE_FOOTER)
 </div>
 
-BOOKS=
+
+NAVBLOCK=
     <div class="navblock">
-	<h2>Books</h2>
-	$(UL
-		$(LI $(AMAZONLINK 0321635361, D Programming Language))
-		$(LI $(AMAZONLINK 1590599608, Learn to Tango with D))
-		$(LI $(AMAZONLINK 0596520123, Version Control with Git))
-	)
+$(UL $0)
+</div>
+NAVBLOCK_HEADER=
+<div class="navblock">
+$1
+$(UL $(ARGS $+))
     </div>
 
-
-TOCENTRY = $(LI $(LINK2 $1, $+))
+TOCHEADER = <h2>$0</h2>
+TOCHEADERL = <h2><a href="$1" title="$2">$3</a></h2>
+TOCENTRY = $(LI $(LINK2 $1, $2))
 TOCENTRYT = $(LI <a href="$1" title="$2">$3</a>)
+TOCENTRYH = $(LI $(LINK2 $1, $2)$3)
+TOCENTRYTH = $(LI <a href="$1" title="$2">$3</a>$4)
 
 D = $(RED $(B D))
 
@@ -326,7 +345,8 @@ LPAREN = (
 TABLE1 = <table border=1 cellpadding=4 cellspacing=0>$0</table>
 TABLE2 = <table border=1 cellpadding=4 cellspacing=0><caption>$1</caption>$+</table>
 TH=<th scope="col">$0</th>
-BLOCKQUOTE = <blockquote><p>$0</p></blockquote>
+BLOCKQUOTE = <blockquote><p>$+</p><cite>$1</cite></blockquote>
+BLOCKQUOTE_PLAIN = <blockquote><p>$0</p></blockquote>
 TT=<tt>$0</tt>
 SUB=<sub>$0</sub>
 LNAME2=<a name="$1">$+</a>
