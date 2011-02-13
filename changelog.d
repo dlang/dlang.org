@@ -6,7 +6,7 @@ $(UPCOMING
 	$(LI Shared libraries for Linux)
 )
 
-$(VERSION 067, Jan 15, 2011, =================================================,
+$(VERSION 067, Feb 13, 2011, =================================================,
 
     $(WHATSNEW
 	$(LI 64 bit support for Linux)
@@ -21,19 +21,31 @@ $(VERSION 067, Jan 15, 2011, =================================================,
 	$(LI $(BUGZILLA 4245): Declaring conflicting symbols in single function scope allowed)
 	$(LI $(BUGZILLA 4379): ICE(blockopt.c): foreach over huge tuple, only with -O)
 	$(LI $(BUGZILLA 4389): ICE(constfold.c, expression.c), or wrong code: string~=dchar in CTFE)
+	$(LI $(BUGZILLA 4486): CodeView debug info should contain absolute path names)
 	$(LI $(BUGZILLA 4753): fail_compilation/fail116.d sends dmd into a loop, exhausting memory)
 	$(LI $(BUGZILLA 4878): Ddoc: Default arguments can break Ddoc output)
+	$(LI $(BUGZILLA 4973): map file with spaces in file name passed without quotes to linker)
 	$(LI $(BUGZILLA 5015): Regression(1.061): Cyclic import breaks is() in a static if)
 	$(LI $(BUGZILLA 5090): ICE(todt.c) struct literal initializing zero length array)
 	$(LI $(BUGZILLA 5105): Member function template cannot be synchronized)
 	$(LI $(BUGZILLA 5221): entity.c: Merge Walter's list with Thomas')
+	$(LI $(BUGZILLA 5241): dmd: ABI breakage/regression (TypeInfo.toString() returns partially corrupted string))
 	$(LI $(BUGZILLA 5242): self referencing template constraint crashes compiler)
 	$(LI $(BUGZILLA 5244): PATCH: fix use of uninitialised variable in toObj.c)
 	$(LI $(BUGZILLA 5246): PATCH(s): fix a couple more uninitialised variables)
 	$(LI $(BUGZILLA 5349): ICE(toir.c): nested class in static member function)
 	$(LI $(BUGZILLA 5391): Crash with recursive alias declaration)
 	$(LI $(BUGZILLA 5439): 64bit struct alignment inconsistent with C ABI)
+	$(LI $(BUGZILLA 5455): ICE(cgcod.c): Optimization (register allocation?) regression in DMD 1.065)
 	$(LI $(BUGZILLA 5486): Missing define for running dmd as 64 bit)
+	$(LI $(BUGZILLA 5534): [64-bit] Inexplicable segfault in small code snippet, -O -release -m64 only)
+	$(LI $(BUGZILLA 5536): Array append with dollar op on 64-bit)
+	$(LI $(BUGZILLA 5545): [64-bit] DMD fails to postincrement ubytes.)
+	$(LI $(BUGZILLA 5549): [64-bit] Internal error: backend/cgcod.c 1845)
+	$(LI $(BUGZILLA 5556): [64-bit] Wrong Implicit Conversion to Double)
+	$(LI $(BUGZILLA 5557): [64-Bit] FP (alignment?) issues with Rvalues)
+	$(LI $(BUGZILLA 5565): [64-bit] Wrong Floating Point Results, Related to Mixing With size_t)
+	$(LI $(BUGZILLA 5566): [64-bit] More erratic FP results with size_t)
     )
 )
 
@@ -1758,6 +1770,7 @@ Macros:
 	CPPBUGZILLA = <a href="http://bugzilla.digitalmars.com/issues/show_bug.cgi?id=$0">Bugzilla $0</a>
 	DSTRESS = dstress $0
 	BUGSFIXED = <h4>Bugs Fixed</h4> $(UL $0 )
+	UPCOMING = <h4>Under Construction</h4> $(OL $0 )
 	WHATSNEW = <h4>New/Changed Features</h4> $(UL $0 )
 	LARGE=<font size=4>$0</font>
 
