@@ -84,10 +84,10 @@ PDFOPTIONS=--header-left [section] --header-right [page]			\
 
 PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
-ALL_FILES_BUT_MAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
+ALL_FILES_BUT_SITEINDEX = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
 $(PREMADE) $(STYLES) $(IMAGES))
 
-ALL_FILES = $(ALL_FILES_BUT_MAP) $(DOC_OUTPUT_DIR)/siteindex.html
+ALL_FILES = $(ALL_FILES_BUT_SITEINDEX) $(DOC_OUTPUT_DIR)/siteindex.html
 
 # Pattern rulez
 
@@ -101,10 +101,11 @@ $(DOC_OUTPUT_DIR)/% : %
 # Rulez
 
 all : $(ALL_FILES)
+	$(MAKE) $(MAKEFLAGS) --directory=../phobos/ -f posix.mak html DOC_OUTPUT_DIR=$(DOC_OUTPUT_DIR)/phobos-prerelease
 
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
 
-$(DOC_OUTPUT_DIR)/siteindex.html : $(ALL_FILES_BUT_MAP)
+$(DOC_OUTPUT_DIR)/siteindex.html : $(ALL_FILES_BUT_SITEINDEX)
 	cp -f siteindex-template.dd siteindex.dd
 	true $(foreach F, $(sort $(TARGETS) $(IMAGES)), \
 	  && echo "<a href=$F>`sed -n 's/<title>\(.*\)<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`" \
