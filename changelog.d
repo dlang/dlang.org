@@ -2,35 +2,25 @@ Ddoc
 
 $(D_S D Change Log,
 
-$(VERSION 063, Aug 8, 2010, =================================================,
+$(UPCOMING
+	$(LI Shared libraries for Linux)
+)
+
+$(VERSION 068, Feb 20, 2011, =================================================,
 
     $(WHATSNEW
-	$(LI $(BUGZILLA 4080): Patch for building dynamic libraries on Mac OS X)
     )
     $(BUGSFIXED
-	$(LI $(BUGZILLA 1418): tupleof bug on nested classes)
-	$(LI $(BUGZILLA 1678): ref with varargs generates invalid code)
-	$(LI $(BUGZILLA 2931): Initialization struct with array from another struct)
-	$(LI $(BUGZILLA 3560): foreach over nested function generates wrong code)
-	$(LI $(BUGZILLA 3569): DMD Stack Overflow with a struct member function inside a C-style struct initializer)
-	$(LI $(BUGZILLA 3706): delegates of interfaces with multiple inheritance fail)
-	$(LI $(BUGZILLA 4191): [FreeBSD] real constants are rounded to double precision)
-	$(LI $(BUGZILLA 4198): [FreeBSD] imprecision in decimal floating-point literals)
-	$(LI $(BUGZILLA 4238): Segfault(statement.c): with(typeof(int)))
-	$(LI $(BUGZILLA 4303): __traits(compiles) returns wrong result when used recursively)
-	$(LI $(BUGZILLA 4314): Regression(1.062): Expression array1 && array2 doesn't compile)
-	$(LI $(BUGZILLA 4339): Struct destructor + invariant + struct parameter = horrific error message)
-	$(LI $(BUGZILLA 4396): mkdir race prevents concurrent compiling with DMD using make -j)
-	$(LI $(BUGZILLA 4443): Optimizer produces wrong code for || or && with struct arrays)
-	$(LI $(BUGZILLA 4506): Regression(2.034): -O flag breaks some recursive functions)
-	$(LI $(BUGZILLA 4514): Regression: Cannot cast from X* to X)
-	$(LI $(BUGZILLA 4569): extern(c++) doesn't understand const types, produces bad mangled symbol)
-	$(LI $(BUGZILLA 4578): Regression(2.047,1.062): ICE(cgcod.c): var+arr[])
     )
 )
 
 <div id=version>
 $(UL 
+	$(NEW1 068)
+	$(NEW1 067)
+	$(NEW1 066)
+	$(NEW1 065)
+	$(NEW1 064)
 	$(NEW1 063)
 	$(NEW1 062)
 	$(NEW1 061)
@@ -108,6 +98,188 @@ $(COMMENT
 )
 )
 </div>
+
+$(VERSION 067, Feb 17, 2011, =================================================,
+
+    $(WHATSNEW
+	$(LI 64 bit support for Linux)
+	$(LI Support HTML5 entities)
+	$(LI FreeBSD version upgraded to FreeBSD 8.1)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 190): Cannot forward reference typedef/alias in default value for function parameter)
+	$(LI $(BUGZILLA 1914): Array initialisation from const array yields memory trample)
+	$(LI $(BUGZILLA 3198): wrong initializer for structs arrays)
+	$(LI $(BUGZILLA 3681): ICE(go.c): when function takes too long to optimize, only with -O.)
+	$(LI $(BUGZILLA 4245): Declaring conflicting symbols in single function scope allowed)
+	$(LI $(BUGZILLA 4379): ICE(blockopt.c): foreach over huge tuple, only with -O)
+	$(LI $(BUGZILLA 4389): ICE(constfold.c, expression.c), or wrong code: string~=dchar in CTFE)
+	$(LI $(BUGZILLA 4486): CodeView debug info should contain absolute path names)
+	$(LI $(BUGZILLA 4753): fail_compilation/fail116.d sends dmd into a loop, exhausting memory)
+	$(LI $(BUGZILLA 4878): Ddoc: Default arguments can break Ddoc output)
+	$(LI $(BUGZILLA 4973): map file with spaces in file name passed without quotes to linker)
+	$(LI $(BUGZILLA 5015): Regression(1.061): Cyclic import breaks is() in a static if)
+	$(LI $(BUGZILLA 5090): ICE(todt.c) struct literal initializing zero length array)
+	$(LI $(BUGZILLA 5105): Member function template cannot be synchronized)
+	$(LI $(BUGZILLA 5221): entity.c: Merge Walter's list with Thomas')
+	$(LI $(BUGZILLA 5241): dmd: ABI breakage/regression (TypeInfo.toString() returns partially corrupted string))
+	$(LI $(BUGZILLA 5242): self referencing template constraint crashes compiler)
+	$(LI $(BUGZILLA 5244): PATCH: fix use of uninitialised variable in toObj.c)
+	$(LI $(BUGZILLA 5246): PATCH(s): fix a couple more uninitialised variables)
+	$(LI $(BUGZILLA 5349): ICE(toir.c): nested class in static member function)
+	$(LI $(BUGZILLA 5391): Crash with recursive alias declaration)
+	$(LI $(BUGZILLA 5439): 64bit struct alignment inconsistent with C ABI)
+	$(LI $(BUGZILLA 5455): ICE(cgcod.c): Optimization (register allocation?) regression in DMD 1.065)
+	$(LI $(BUGZILLA 5486): Missing define for running dmd as 64 bit)
+	$(LI $(BUGZILLA 5534): [64-bit] Inexplicable segfault in small code snippet, -O -release -m64 only)
+	$(LI $(BUGZILLA 5536): Array append with dollar op on 64-bit)
+	$(LI $(BUGZILLA 5545): [64-bit] DMD fails to postincrement ubytes.)
+	$(LI $(BUGZILLA 5549): [64-bit] Internal error: backend/cgcod.c 1845)
+	$(LI $(BUGZILLA 5556): [64-bit] Wrong Implicit Conversion to Double)
+	$(LI $(BUGZILLA 5557): [64-Bit] FP (alignment?) issues with Rvalues)
+	$(LI $(BUGZILLA 5564): [64-bit] loading of wrong constant byte value)
+	$(LI $(BUGZILLA 5565): [64-bit] Wrong Floating Point Results, Related to Mixing With size_t)
+	$(LI $(BUGZILLA 5566): [64-bit] More erratic FP results with size_t)
+	$(LI $(BUGZILLA 5571): [64-bit] new bool returns bogus address)
+	$(LI $(BUGZILLA 5572): [64-bit] Global Hidden Mutexes Seem to share Addresses W/ Global Variables)
+	$(LI $(BUGZILLA 5580): [64-bit] String switch statements broken in 64-bit mode)
+	$(LI $(BUGZILLA 5581): [64-bit] Wrong code with bitwise operations on bools)
+	$(LI $(BUGZILLA 5592): Previous definition different: __arrayExpSliceMulSliceAddass_d)
+    )
+)
+
+$(VERSION 066, Dec 21, 2010, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 603): Undocumented behaviour: case and default create a scope)
+	$(LI $(BUGZILLA 632): Typedef/enum promotions spec ambiguous - ultimate base type or lowest common denominator?)
+	$(LI $(BUGZILLA 679): Spec needs allowances for copying garbage collection)
+	$(LI $(BUGZILLA 690): ABI not fully documented)
+	$(LI $(BUGZILLA 1351): Discrepancies in the language specification)
+	$(LI $(BUGZILLA 1466): Spec claims maximal munch technique always works: not for "1..3")
+	$(LI $(BUGZILLA 2206): unnamed template mixin of class inside function or class has incorrect classinfo and mangleof)
+	$(LI $(BUGZILLA 2385): spec says all structs are returned via hidden pointer on linux, but it uses registers)
+	$(LI $(BUGZILLA 2392): Parsing ambiguity between function pointer declaration and function call)
+	$(LI $(BUGZILLA 2406): Declarator2 definition error)
+	$(LI $(BUGZILLA 2556): Property classinfo needs better documentation (RTTI, typeof, typeid, runtime type information))
+	$(LI $(BUGZILLA 2616): Undocumented behaviour: part-explicit, part-implicit instantiations of function templates are accepted)
+	$(LI $(BUGZILLA 2651): class body declaration grammar incorrect)
+	$(LI $(BUGZILLA 2652): DeclDef grammar is wrong)
+	$(LI $(BUGZILLA 2734): Ambiguity in tokenizing: _._ as a float literal)
+	$(LI $(BUGZILLA 2994): Incomplete "Predefined Versions" documentation)
+	$(LI $(BUGZILLA 3112): Specification on what operations call the GC is missing)
+	$(LI $(BUGZILLA 3276): Recursion broken by alias template parameter)
+	$(LI $(BUGZILLA 3554): Ddoc generates invalid output for documentation comments with non paired parantheses)
+	$(LI $(BUGZILLA 4529): Segfault(typinf.c) involving typeid(typeof(functionName)))
+	$(LI $(BUGZILLA 4728): Segfault(toctype.c) by protected/private constructor in an other module)
+	$(LI $(BUGZILLA 4864): ICE(statement.c) Crash on invalid 'if statement' body inside mixin)
+	$(LI $(BUGZILLA 5110): Excess attribute propagation of structs and classes)
+	$(LI $(BUGZILLA 5117): [CTFE] Member function call with rather complex this: side effects ignored)
+	$(LI $(BUGZILLA 5120): ICE(mtype.c) void associative arrays)
+	$(LI $(BUGZILLA 5145): Regression(2.050, 1.065) override error with forward ref of superclass)
+	$(LI $(BUGZILLA 5159): Segfault(interpret.c): calling a static function pointer variable in CTFE)
+	$(LI $(BUGZILLA 5164): Error without line number using "is (T...)")
+	$(LI $(BUGZILLA 5180): ICE(arrayop.c) in-place array operation on incompatible types)
+	$(LI $(BUGZILLA 5182): ICE(expression.c): calling unittest from a function)
+	$(LI $(BUGZILLA 5195): Forward references ignore const)
+	$(LI $(BUGZILLA 5230): Regression(2.041, 1.057) ICE(tocsym.c) overriding a method that has an out contract)
+	$(LI $(BUGZILLA 5238): PATCH: fix return of uninitialised var in interpret.c)
+	$(LI $(BUGZILLA 5275): x86_64 related hidden function parameter mishandled)
+	$(LI $(BUGZILLA 5294): -O optimization breaks for loop)
+	$(LI $(BUGZILLA 5331): mach format problem)
+    )
+)
+
+$(VERSION 065, Oct 29, 2010, =================================================,
+
+    $(WHATSNEW
+	$(LI added talign() and argTypes() to TypeInfo)
+	$(LI Upgrade zlib support to zlib 1.2.5)
+    )
+    $(BUGSFIXED
+	$(LI Unlisted bug:  signed long comparisons under OS X)
+	$(LI $(BUGZILLA 3602): ICE(tocsym.c) compiling a class, if its super class has preconditions)
+	$(LI $(BUGZILLA 3665): Regression(1.051, 2.036) Assignment with array slicing does not work)
+	$(LI $(BUGZILLA 4398): dmd always uses Windows name mangling for _d_throw
+	$(RED may require update to Tango))
+	$(LI $(BUGZILLA 4623): Non-integer type allowed as static array size)
+	$(LI $(BUGZILLA 4768): Regression(1.056): wrong code with forward declaration of enum)
+	$(LI $(BUGZILLA 4825): Regression(1.057, 2.040) "Error: non-constant expression" with -inline)
+	$(LI $(BUGZILLA 4873): Assertion failure: '0' on line 1483 in file 'expression.c')
+	$(LI $(BUGZILLA 4897): CodeView: No locals or parameters are shown when debugging, because of missing function info)
+	$(LI $(BUGZILLA 4925): [ICE] segfault with module-scope assert(0))
+	$(LI $(BUGZILLA 4926): ICE: PREC_zero assertion failure due to unset precedence)
+	$(LI $(BUGZILLA 4941): Built-in tuple slice boundaries are not CTFE'd)
+	$(LI $(BUGZILLA 4949): ICE on invalid static if using value of 'this')
+	$(LI $(BUGZILLA 5026): ICE(expression.c) Incomplete mixin expression + char[] to char assignment)
+    )
+)
+
+$(VERSION 064, Sep 13, 2010, =================================================,
+
+    $(WHATSNEW
+    )
+    $(BUGSFIXED
+	$(xxLI $(BUGZILLA 190): Cannot forward reference typedef/alias in default value for function parameter)
+	$(LI $(BUGZILLA 1715): Template specialization checks for equality rather than convertibility)
+	$(LI $(BUGZILLA 1970): Templated interfaces not matched)
+	$(LI $(BUGZILLA 2511): Covariant return type doesn't work with circular import)
+	$(LI $(BUGZILLA 2716): Confusion of auto and scope as the class attribute)
+	$(LI $(BUGZILLA 3046): Segfault with C++ static variable (Linux only))
+	$(LI $(BUGZILLA 3418): link error with cast(ulong)(ulong*real))
+	$(xxLI $(BUGZILLA 3493): Segfault(cast.c) Forward reference with type inference, D1 only.)
+	$(LI $(BUGZILLA 3544): optlink termination 0041338f with recursive nested functions)
+	$(LI $(BUGZILLA 3554): Ddoc generats invalid output for documentation comments with non paired paranthasis)
+	$(LI $(BUGZILLA 3627): -of with a filename with a double extension confuses linker)
+	$(LI $(BUGZILLA 4009): OPTLINK ruins the day yet again)
+	$(LI $(BUGZILLA 4173): Regression(2.037) Explicitly instantiated templates still try to do IFTI in some cases)
+	$(LI $(BUGZILLA 4278): allow inlining of super calls (undo limitations of bug3500's fix))
+	$(LI $(BUGZILLA 4302): Regression(2.046, 1.061): compiler errors using startsWith in CTFE)
+	$(LI $(BUGZILLA 4645): to!string(const char*) in library causes Optlink to issue warning)
+	$(LI $(BUGZILLA 4652): Compiler hangs on template with zero-length tuple and another argument)
+	$(LI $(BUGZILLA 4655): Regression(1.063, 2.048) goto to a try block ICEs)
+	$(LI $(BUGZILLA 4676): Overload resolution rejects valid code when mixing variadics, non-variadics)
+	$(LI $(BUGZILLA 4691): Incorrect comparison of double and long)
+	$(LI $(BUGZILLA 4721): compilation slow when compiling unittests on dcollections)
+	$(LI $(BUGZILLA 4751): Regression(1.062, 2.047) ICE(constfold.c) >> after error)
+	$(LI $(BUGZILLA 4752): fail_compilation/fail345.d asserts in expression.c)
+	$(LI $(BUGZILLA 4771): fail_compilation/fail274.d hits a halt in iasm.c)
+	$(LI $(BUGZILLA 4828): ICE w/ non-boolean dot expression sth.template_instance in static if)
+    )
+)
+
+$(VERSION 063, Aug 8, 2010, =================================================,
+
+    $(WHATSNEW
+	$(LI $(BUGZILLA 4080): Patch for building dynamic libraries on Mac OS X)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 1418): tupleof bug on nested classes)
+	$(LI $(BUGZILLA 1678): ref with varargs generates invalid code)
+	$(LI $(BUGZILLA 2931): Initialization struct with array from another struct)
+	$(LI $(BUGZILLA 3326): $ in delegate literal causes Access Violation)
+	$(LI $(BUGZILLA 3560): foreach over nested function generates wrong code)
+	$(LI $(BUGZILLA 3569): DMD Stack Overflow with a struct member function inside a C-style struct initializer)
+	$(LI $(BUGZILLA 3679): Regression(2.031) template forward reference regression)
+	$(LI $(BUGZILLA 3706): delegates of interfaces with multiple inheritance fail)
+	$(LI $(BUGZILLA 4191): [FreeBSD] real constants are rounded to double precision)
+	$(LI $(BUGZILLA 4198): [FreeBSD] imprecision in decimal floating-point literals)
+	$(LI $(BUGZILLA 4238): Segfault(statement.c): with(typeof(int)))
+	$(LI $(BUGZILLA 4303): __traits(compiles) returns wrong result when used recursively)
+	$(LI $(BUGZILLA 4314): Regression(1.062): Expression array1 && array2 doesn't compile)
+	$(LI $(BUGZILLA 4339): Struct destructor + invariant + struct parameter = horrific error message)
+	$(LI $(BUGZILLA 4396): mkdir race prevents concurrent compiling with DMD using make -j)
+	$(LI $(BUGZILLA 4443): Optimizer produces wrong code for || or && with struct arrays)
+	$(LI $(BUGZILLA 4503): forward reference to aliased template instance)
+	$(LI $(BUGZILLA 4506): Regression(2.034): -O flag breaks some recursive functions)
+	$(LI $(BUGZILLA 4514): Regression: Cannot cast from X* to X)
+	$(LI $(BUGZILLA 4569): extern(c++) doesn't understand const types, produces bad mangled symbol)
+	$(LI $(BUGZILLA 4578): Regression(2.047,1.062): ICE(cgcod.c): var+arr[])
+    )
+)
+
 
 $(VERSION 062, Jun 9, 2010, =================================================,
 
@@ -1613,6 +1785,7 @@ Macros:
 	CPPBUGZILLA = <a href="http://bugzilla.digitalmars.com/issues/show_bug.cgi?id=$0">Bugzilla $0</a>
 	DSTRESS = dstress $0
 	BUGSFIXED = <h4>Bugs Fixed</h4> $(UL $0 )
+	UPCOMING = <h4>Under Construction</h4> $(OL $0 )
 	WHATSNEW = <h4>New/Changed Features</h4> $(UL $0 )
 	LARGE=<font size=4>$0</font>
 
