@@ -1,6 +1,10 @@
 # makefile to build html files for DMD
 
+# Configurable macros {
 DMD=dmd
+PHOBOSDIR=../phobos
+DOC_OUTPUT_DIR=../web
+# }
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
@@ -15,8 +19,6 @@ PREMADE=download.html dcompiler.html language-reference.html	\
 appendices.html howtos.html articles.html
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
-
-DOC_OUTPUT_DIR=../web
 
 TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 	cppcomplex.html cppdbc.html index.html overview.html lex.html		\
@@ -42,7 +44,6 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
 	D1toD2.html unittest.html hash-map.html pdf-intro-cover.html		\
 	pdf-spec-cover.html pdf-tools-cover.html
-#TARGETS:=$(addprefix $(DOC_OUTPUT_DIR)/,$(TARGETS))
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html			\
@@ -100,8 +101,7 @@ $(DOC_OUTPUT_DIR)/% : %
 
 # Rulez
 
-all : $(ALL_FILES)
-	$(MAKE) $(MAKEFLAGS) --directory=../phobos/ -f posix.mak html DOC_OUTPUT_DIR=$(DOC_OUTPUT_DIR)/phobos-prerelease
+all : $(ALL_FILES) phobos-prerelease phobos
 
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
 
@@ -146,9 +146,21 @@ d-tools.pdf:
 	  $(DOC_OUTPUT_DIR)/d-tools.pdf
 
 rsync : all
-	cd ../phobos && make -f posix.mak html -j 4
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
 
-commit-phobos:
-	ssh d-programming@digitalmars.com "rm -rf data/phobos/* && \
-      cp -fr data/phobos-prerelease/* data/phobos/"
+# phobos-prerelease:
+# 	cd $(PHOBOSDIR) && \
+# 		git stash save && \
+# 		git pull && \
+# 		git stash pop && \
+# 		make -j 4 -f posix.mak html DOC_OUTPUT_DIR=$(DOC_OUTPUT_DIR)/phobos-prerelease
+
+phobos-prerelease:
+	make --directory $(PHOBOSDIR) -j 4 -f posix.mak html DOC_OUTPUT_DIR=$(DOC_OUTPUT_DIR)/phobos-prerelease
+
+phobos:
+	# cd $(PHOBOSDIR) && \
+	# 	git stash save && \
+	# 	git checkout $$(git tag -l | grep 'phobos-2' | tail -n 1) && \
+	# 	make -j 4 -f posix.mak html DOC_OUTPUT_DIR=$(DOC_OUTPUT_DIR)/phobos && \
+	# 	git stash pop
