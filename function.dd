@@ -54,11 +54,15 @@ $(V2
 	$(LI read and write the floating point exception flags)
 	$(LI read and write the floating point mode flags, as long as those flags
 	are restored to their initial state upon function entry)
+	$(LI perform impure operations in statements that are in a
+	$(LINK2 version.html#ConditionalStatement, $(I ConditionalStatement))
+	controlled by a $(LINK2 version.html#debug, $(I DebugCondition)).)
 	)
 
 	$(P A pure function can throw exceptions.)
 
 ---
+import std.stdio;
 int x;
 immutable int y;
 const int* pz;
@@ -68,6 +72,7 @@ pure int foo(int i,
              const char* q,
              immutable int* s)
 {
+    debug writeln("in foo()");   // ok, impure code allowed in debug statement
     x = i;    // error, modifying global state
     i = x;    // error, reading mutable global state
     i = y;    // ok, reading immutable global state
