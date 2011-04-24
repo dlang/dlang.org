@@ -1,6 +1,12 @@
 # makefile to build html files for DMD
 
+# Externals
 DMD=dmd
+PHOBOS=../phobos
+DRUNTIME=../druntime
+DOC_OUTPUT_DIR=../web
+
+# Documents
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
@@ -16,18 +22,16 @@ appendices.html howtos.html articles.html
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
-DOC_OUTPUT_DIR=../web
-
 TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
-	cppcomplex.html cppdbc.html index.html overview.html lex.html		\
-	module.html dnews.html declaration.html type.html property.html		\
-	attribute.html pragma.html expression.html statement.html			\
-	arrays.html struct.html class.html enum.html function.html			\
-	operatoroverloading.html template.html mixin.html dbc.html			\
-	version.html errors.html garbage.html memory.html float.html		\
-	iasm.html interface.html portability.html html.html entity.html		\
-	abi.html windows.html dll.html htomodule.html faq.html dstyle.html	\
-	wc.html future.html changelog.html glossary.html					\
+	cppcomplex.html cppdbc.html gsoc2011.html index.html overview.html	\
+	lex.html module.html dnews.html declaration.html type.html			\
+	property.html attribute.html pragma.html expression.html			\
+	statement.html arrays.html struct.html class.html enum.html			\
+	function.html operatoroverloading.html template.html mixin.html		\
+	dbc.html version.html errors.html garbage.html memory.html			\
+	float.html iasm.html interface.html portability.html html.html		\
+	entity.html abi.html windows.html dll.html htomodule.html faq.html	\
+	dstyle.html wc.html future.html changelog.html glossary.html		\
 	acknowledgements.html builtin.html interfaceToC.html				\
 	comparison.html rationale.html ddoc.html code_coverage.html			\
 	exception-safe.html rdmd.html templates-revisited.html				\
@@ -71,9 +75,9 @@ PDFARTICLES=d-floating-point.html migrate-to-shared.html hijack.html	\
 	mixin.html safed.html
 
 PDFTOOLS=dmd-linux.html dmd-freebsd.html dmd-osx.html dmd-windows.html	\
-	http://www.digitalmars.com/ctg/optlink.html							\
-	http://www.digitalmars.com/ctg/trace.html code_coverage.html		\
-	rdmd.html windbg.html htod.html
+	http://digitalmars.com/ctg/optlink.html								\
+	http://digitalmars.com/ctg/trace.html code_coverage.html rdmd.html	\
+	windbg.html htod.html
 
 PDFAPPENDICES=dstyle.html glossary.html ascii-table.html	\
 acknowledgements.html
@@ -84,10 +88,10 @@ PDFOPTIONS=--header-left [section] --header-right [page]			\
 
 PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
-ALL_FILES_BUT_MAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
+ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
 $(PREMADE) $(STYLES) $(IMAGES))
 
-ALL_FILES = $(ALL_FILES_BUT_MAP) $(DOC_OUTPUT_DIR)/siteindex.html
+ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
 # Pattern rulez
 
@@ -100,17 +104,17 @@ $(DOC_OUTPUT_DIR)/% : %
 
 # Rulez
 
-all : $(ALL_FILES)
+all : $(ALL_FILES) phobos druntime phobos-last-release
 
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
 
-$(DOC_OUTPUT_DIR)/siteindex.html : $(ALL_FILES_BUT_MAP)
-	cp -f siteindex-template.dd siteindex.dd
+$(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
+	cp -f sitemap-template.dd sitemap.dd
 	true $(foreach F, $(sort $(TARGETS) $(IMAGES)), \
 	  && echo "<a href=$F>`sed -n 's/<title>\(.*\)<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`" \
-	     "</a><p>" >> siteindex.dd)
-	$(DMD) -c -o- -Df$@ doc.ddoc siteindex.dd
-	rm -rf siteindex.dd
+	     "</a><p>" >> sitemap.dd)
+	$(DMD) -c -o- -Df$@ doc.ddoc sitemap.dd
+	rm -rf sitemap.dd
 
 zip:
 	rm doc.zip
@@ -144,10 +148,42 @@ d-tools.pdf:
 	  $(DOC_OUTPUT_DIR)/, $(PDFAPPENDICES))						\
 	  $(DOC_OUTPUT_DIR)/d-tools.pdf
 
-rsync : all
-	cd ../phobos && make -f posix.mak html -j 4
+phobos: 
+	cd ${PHOBOS} && make -f posix.mak \
+		DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
+
+phobos-last-release:
+	cd ${PHOBOS} && \
+	  TAG=$$(git tag | sed 's/phobos.*-//' | sort -nr | head -n 1) && \
+	  git checkout master && \
+	  (git branch -D last-release || true) && \
+	  git checkout -b last-release phobos-$$TAG && \
+	  ln -sf index.d phobos.d && \
+	  make -f posix.mak \
+		DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos html -j 4 && \
+	  git checkout master
+
+druntime: 
+	cd ${DRUNTIME} && make -f posix.mak \
+		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease doc -j 4
+
+druntime-last-release: 
+	cd ${DRUNTIME} && \
+	  TAG=$$(git tag | sed 's/druntime.*-//' | sort -nr | head -n 1) && \
+	  git checkout master && \
+	  (git branch -D last-release || true) && \
+	  git checkout -b last-release druntime-$$TAG && \
+	  make -f posix.mak \
+		DOCDIR=${DOC_OUTPUT_DIR}/phobos \
+	    DOCFMT=../d-programming-language.org/std.ddoc doc -j 4 && \
+	  git checkout master
+
+rsync : all 
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
 
 commit-phobos:
 	ssh d-programming@digitalmars.com "rm -rf data/phobos/* && \
       cp -fr data/phobos-prerelease/* data/phobos/"
+
+copy-digitalmars-phobos : phobos
+
