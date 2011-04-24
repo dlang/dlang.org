@@ -10,8 +10,8 @@ DOC_OUTPUT_DIR=../web
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
-IMAGES=$(addprefix images/, c1.gif d3.gif dmlogo.gif					\
-gradient-green.jpg search-bg.gif Thumbs.db cpp1.gif d4.gif				\
+IMAGES=favicon.ico $(addprefix images/, c1.gif d3.gif dlogo.png			\
+dmlogo.gif gradient-green.jpg search-bg.gif Thumbs.db cpp1.gif d4.gif	\
 dmlogo-smaller.gif gradient-red.jpg search-button.gif d002.ico d5.gif	\
 globe.gif pen.gif search-left.gif)
 
@@ -46,7 +46,6 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
 	D1toD2.html unittest.html hash-map.html pdf-intro-cover.html		\
 	pdf-spec-cover.html pdf-tools-cover.html
-#TARGETS:=$(addprefix $(DOC_OUTPUT_DIR)/,$(TARGETS))
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html			\
@@ -180,10 +179,3 @@ druntime-last-release:
 
 rsync : all 
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
-
-commit-phobos:
-	ssh d-programming@digitalmars.com "rm -rf data/phobos/* && \
-      cp -fr data/phobos-prerelease/* data/phobos/"
-
-copy-digitalmars-phobos : phobos
-
