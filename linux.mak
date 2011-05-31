@@ -45,7 +45,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html			\
 	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
 	D1toD2.html unittest.html hash-map.html pdf-intro-cover.html		\
-	pdf-spec-cover.html pdf-tools-cover.html
+	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html			\
@@ -71,7 +71,7 @@ PDFARTICLES=d-floating-point.html migrate-to-shared.html hijack.html	\
 	const3.html memory.html exception-safe.html							\
 	templates-revisited.html regular-expression.html					\
 	lazy-evaluation.html variadic-function-templates.html tuple.html	\
-	mixin.html safed.html
+	mixin.html safed.html intro-to-datetime.html
 
 PDFTOOLS=dmd-linux.html dmd-freebsd.html dmd-osx.html dmd-windows.html	\
 	http://digitalmars.com/ctg/optlink.html								\

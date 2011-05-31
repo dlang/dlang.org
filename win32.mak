@@ -21,7 +21,7 @@ SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd cppdbc.dd	\
 	cpp0x.dd const-faq.dd concepts.dd memory-safe-d.dd					\
 	d-floating-point.dd migrate-to-shared.dd D1toD2.dd unittest.dd		\
 	hash-map.dd pdf-intro-cover.dd pdf-spec-cover.dd					\
-	pdf-tools-cover.dd
+	pdf-tools-cover.dd intro-to-datetime.dd
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
@@ -53,7 +53,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html			\
 	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
 	D1toD2.html unittest.html hash-map.html pdf-intro-cover.html		\
-	pdf-spec-cover.html pdf-tools-cover.html
+	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html \
 	ctod.html cpptod.html pretod.html template-comparison.html cppstrings.html \
@@ -76,7 +76,7 @@ PDFHOWTOS=windows.html dll.html COM.html htomodule.html
 PDFARTICLES=d-floating-point.html migrate-to-shared.html hijack.html const3.html \
 	memory.html exception-safe.html templates-revisited.html regular-expression.html \
 	lazy-evaluation.html variadic-function-templates.html tuple.html mixin.html \
-	safed.html
+	safed.html intro-to-datetime.html
 
 PDFTOOLS=dmd-linux.html dmd-freebsd.html dmd-osx.html dmd-windows.html \
 	http://www.digitalmars.com/ctg/optlink.html http://www.digitalmars.com/ctg/trace.html \
@@ -213,6 +213,8 @@ interface.html : $(DDOC) interface.dd
 interfaceToC.html : $(DDOC) interfaceToC.dd
 
 index.html : $(DDOC) index.dd
+
+intro-to-datetime.html : $(DDOC) intro-to-datetime.dd
 
 lazy-evaluation.html : $(DDOC) lazy-evaluation.dd
 
