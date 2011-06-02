@@ -317,25 +317,44 @@ $(SECTION2 Immutable Member Functions,
 
 ---
 struct S
-{   int x;
+{   
+    int x;
 
-    immutable void foo()
+    void foo() immutable
     {
-	x = 4;	    // error, x is immutable
-	this.x = 4; // error, x is immutable
+        x = 4;	    // error, x is immutable
+        this.x = 4; // error, x is immutable
     }
+}
 ---
-
-    $(P The $(D_KEYWORD const) and $(D_KEYWORD immutable) function
-    attributes
-    can also appear after the closing parenthesis of
-    the parameter list:
+    $(P Note that using $(D_KEYWORD immutable) on the left hand side of a method does not apply to the return type:
     )
 
 ---
 struct S
 {
-    void bar() immutable
+    immutable int[] bar()  // bar is still immutable, return type is not!
+    {
+    }
+}
+---
+    $(P To make the return type $(D_KEYWORD immutable), you need to surround the return type with parentheses:
+    )
+
+---
+struct S
+{
+    immutable(int[]) bar()  // bar is now mutable, return type is immutable.
+    {
+    }
+}
+---
+    $(P To make both the return type and the method $(D_KEYWORD immutable), you can write:
+    )
+---
+struct S
+{
+    immutable(int[]) bar() immutable
     {
     }
 }

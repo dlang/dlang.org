@@ -35,7 +35,7 @@ DDOC = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 <title>$(TITLE) - D Programming Language - Digital Mars</title>
 <link rel="stylesheet" type="text/css" href="../css/style.css">
 
-<script>
+<script type="text/javascript">
 function listanchors()
 {
     if (typeof inhibitQuickIndex !== 'undefined') return;
@@ -52,17 +52,17 @@ function listanchors()
         var text = a.name;
         if (hash[text] > 0) continue;
         hash[text] = 1;
-    values[n++] = a.name
+        values[n++] = a.name
     }
 
     values.sort();
 
     for(var i = 0; i < values.length; i++) {
         var a = values[i];
-        newText += '<a href="#' + a + '"><span class="d_psymbol">'
-                + a + '</span></a> ';
+        newText += ' \x3Ca href="\x23' + a +
+            '"\x3E\x3Cspan class="d_psymbol"\x3E' + a + '\x3C/span\x3E\x3C/a\x3E';
     }
-    if (newText != "") newText = "<p><b>Jump to:</b> " + newText + '</p>';
+    if (newText != "") newText = "\x3Cp\x3E\x3Cb\x3EJump to:\x3C/b\x3E" + newText + "\x3C/p\x3E";
     var a = document.getElementById("quickindex");
     a.innerHTML = newText;
 }
@@ -77,9 +77,9 @@ function listanchors()
 <div id="top">
 	<div id="search-box">
 		<form method="get" action="http://google.com/search">
-			<img src="/images/search-left.gif" width="11" height="22" /><input id="q" name="q" /><input type="image" id="search-submit" name="submit" src="/images/search-button.gif" />
-			<input type="hidden" id="domains" name="domains" value="d-programming-language.org" />
-			<input type="hidden" id="sourceid" name="sourceid" value="google-search" />
+			<img src="/images/search-left.gif" width="11" height="22" alt=""><input id="q" name="q"><input type="image" id="search-submit" name="submit" src="/images/search-button.gif">
+			<input type="hidden" id="domains" name="domains" value="d-programming-language.org">
+			<input type="hidden" id="sourceid" name="sourceid" value="google-search">
 			<div id="search-dropdown">
 				<select id="sitesearch" name="sitesearch" size="1">
 					<option value="d-programming-language.org">Entire D $(VER) Site</option>
@@ -134,11 +134,11 @@ TOP=
 <div class="navblock">
 <form method="get" action="http://www.google.com/search">
 <div id="searchbox">
-<input id="q" name="q" size="10" value="RTL Search" onFocus='if(this.value == "RTL Search"){this.value="";}'>
-<input type="hidden" id="domains" name="domains" value="www.digitalmars.com">
-<input type="hidden" id="sitesearch" name="sitesearch" value="www.digitalmars.com/d/2.0/phobos">
-<input type="hidden" id="sourceid" name="sourceid" value="google-search">
-<input type="submit" id="submit" name="submit" value="Go">
+<input name="q" size="10" value="RTL Search" onFocus='if(this.value == "RTL Search"){this.value="";}'>
+<input type="hidden" name="domains" value="www.digitalmars.com">
+<input type="hidden" name="sitesearch" value="www.digitalmars.com/d/2.0/phobos">
+<input type="hidden" name="sourceid" value="google-search">
+<input type="submit" name="submit" value="Go">
 </div>
 </form>
 <div id="toctop">
@@ -233,6 +233,11 @@ NAVIGATION_PHOBOS=
 	$(LI <a href="phobos.html#std_c_windows" title="C Windows API">std.c.windows</a>)
 	$(LI <a href="phobos.html#std_c_linux" title="C Linux API">std.c.linux</a>)
     )
+    <h2><a href="phobos.html#etc" title="D etc modules">etc</a></h2>
+    $(UL
+	$(LI <a href="etc_c_curl.html" title="Interface to libcurl library">etc.c.curl</a>)
+	$(LI <a href="etc_c_zlib.html" title="Interface to zlib library">etc.c.zlib</a>)
+    )
     <h2><a href="phobos.html#core" title="D core modules">core</a></h2>
     $(UL
 	$(LI <a href="core_atomic.html" title="Atomic operations">core.atomic</a>)
@@ -276,14 +281,14 @@ LESS = &lt;
 GREATER = &gt;
 WEB = $(LINK2 http://$1,$2)
 LUCKY = $(WEB
-google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=$0,$0)
+google.com/search?btnI=I%27m+Feeling+Lucky&amp;ie=UTF-8&amp;oe=UTF-8&amp;q=$0,$0)
 D = <font face=Courier><b>$0</b></font>
 D = <span class="d_inlinecode">$0</span>
 BIGOH = <b><i>&Omicron;</i>(</b>$(D $0)<b><i>)</i></b>
 GLOSSARY = $(LINK2 ../glossary.html#$0, $0)
 
 DDOC_PSYMBOL = <a name="$0"></a><span class="ddoc_psymbol">$0</span>
-DDOC_DECL  = $(DT <div class="d_decl">$0</div>)
+DDOC_DECL  = <dt class="d_decl">$0</dt>
 XREF = <a href="std_$1.html#$2">$(D std.$1.$2)</a>
 CXREF = <a href="core_$1.html#$2">$(D core.$1.$2)</a>
 LREF = <a href="#$1">$(D $1)</a>
@@ -292,8 +297,8 @@ PRE = <pre>$0</pre>
 PHOBOSSRC=$(LINK2 https://github.com/D-Programming-Language/phobos/blob/master/$0, $0)
 DRUNTIMESRC=$(LINK2 https://github.com/D-Programming-Language/phobos/blob/master/$0, $0)
 
-BOOKTABLE = <center><table cellspacing=0 cellpadding=5 valign=top class=book><caption>$1</caption>$2</table></center>
-LEADINGROW = <tr class=leadingrow><td colspan=3><b><em>&nbsp;&nbsp;&nbsp;&nbsp;$0</em></b></td></tr>
+BOOKTABLE = <center><table cellspacing=0 cellpadding=5 class=book><caption>$1</caption>$2</table></center>
+LEADINGROW = <tr class=leadingrow><td colspan=2><b><em>&nbsp;&nbsp;&nbsp;&nbsp;$0</em></b></td></tr>
 TABLE = <table cellspacing=0 cellpadding=5><caption>$1</caption>$2</table>
 TD = <td valign=top>$0</td>
 TDNW = <td valign=top class="donthyphenate">$0</td>
