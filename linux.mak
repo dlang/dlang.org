@@ -147,26 +147,28 @@ d-tools.pdf:
 	  $(DOC_OUTPUT_DIR)/, $(PDFAPPENDICES))						\
 	  $(DOC_OUTPUT_DIR)/d-tools.pdf
 
-phobos: 
+phobos:
 	cd ${PHOBOS} && make -f posix.mak \
 		DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-last-release:
-	cd ${PHOBOS} && \
-	  TAG=$$(git tag | sed 's/phobos.*-//' | sort -nr | head -n 1) && \
-	  git checkout master && \
-	  (git branch -D last-release || true) && \
-	  git checkout -b last-release phobos-$$TAG && \
-	  ln -sf index.d phobos.d && \
+	TAG=$$(cd ${PHOBOS} && git tag | sed 's/phobos.*-//' | sort -nr | head -n 1) && \
+	  if [ ! -d ${PHOBOS}-$$TAG ]; then \
+	    mkdir ${PHOBOS}-$$TAG && \
+	    cd ${PHOBOS}-$$TAG && \
+	    git clone git@github.com:D-Programming-Language/phobos . ; \
+	  else \
+	    cd ${PHOBOS}-$$TAG ; \
+	  fi && \
+	  git checkout phobos-$$TAG && \
 	  make -f posix.mak \
-		DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos html -j 4 && \
-	  git checkout master
+		DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos html -j 4
 
-druntime: 
+druntime:
 	cd ${DRUNTIME} && make -f posix.mak \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease doc -j 4
 
-druntime-last-release: 
+druntime-last-release:
 	cd ${DRUNTIME} && \
 	  TAG=$$(git tag | sed 's/druntime.*-//' | sort -nr | head -n 1) && \
 	  git checkout master && \
@@ -177,5 +179,5 @@ druntime-last-release:
 	    DOCFMT=../d-programming-language.org/std.ddoc doc -j 4 && \
 	  git checkout master
 
-rsync : all 
+rsync : all
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
