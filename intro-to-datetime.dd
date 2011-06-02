@@ -1,0 +1,799 @@
+Ddoc
+
+$(D_S $(TITLE),
+
+    $(P $(I by Jonathan M Davis))
+
+    $(H2 Introduction)
+
+    $(P In dmd 2.052, the module $(STD_DATETIME) was introduced. It will be
+        replacing $(STD_DATE) entirely. As such, $(STD_DATE) is currently
+        scheduled for deprecation. At a later date it will be deprecated
+        (at which point, you'll have to compile with -d for it to work rather
+        than simply having the compiler complain when you use it), and
+        eventually it will be fully removed from Phobos. What this means is that
+        all new code should be written to use $(STD_DATETIME) and that any code
+        which currently uses $(STD_DATE) is going to need to be refactored to
+        use $(STD_DATETIME) (unless you want to copy $(STD_DATE) to your own
+        code and continue to use it as a non-Phobos module). This article
+        attempts to familiarize you with $(STD_DATETIME) as well as give some
+        advice on how to migrate code from $(STD_DATE) to $(STD_DATETIME) for
+        those who have been using $(STD_DATE).)
+
+    $(P $(STD_DATE) is essentially a C-based solution for dates and times. It
+        uses $(D d_time) to hold time where $(D d_time) is a 64-bit integral
+        value holding the number of milliseconds which have passed since
+        midnight, January 1st, 1970 A.D. in UTC. C, on the other hand, uses
+        $(D time_t) to hold time where $(D time_t) is an integral value holding
+        the number of seconds which have passed since midnight, January 1st,
+        1970 A.D. in UTC. Its size varies from architecture to architecture
+        (typically 32 bits on a 32-bit machine and 64 bits on a 64-bit machine,
+        but it varies with the OS and compiler). The exact set of functions that
+        $(STD_DATE) provides for using with $(D d_time) aren't the same as what
+        C provides for using with $(D time_t), but their representation of time
+        is virtually the same.)
+
+    $(P $(STD_DATETIME), on the other hand, is very much an object-oriented
+        solution, and it's not C-based at all. Rather, its API is based on
+        $(WEB www.boost.org/doc/libs/release/doc/html/date_time.html, Boost)'s
+        types for handling dates and times (though they're far from identical).
+        So, it's a bit of a paradigm shift to move from $(STD_DATE) to
+        $(STD_DATETIME). Don't expect much to be the same between the two.
+        However, $(STD_DATETIME) is not plagued with the same bugs that
+        $(STD_DATE) is plagued with ($(STD_DATE) being quite buggy in general),
+        and it provides much more functionality than $(STD_DATE) does. So, in
+        the long run at least, dealing with $(STD_DATETIME) should be much more
+        pleasant - though migration is likely to present a bit of a hurdle in
+        the short term.)
+
+    $(H2 Basic Concepts of std.datetime)
+
+    $(P Most things in $(STD_DATETIME) are based on and/or use three concepts:)
+
+    $(UL
+        $(LI $(B Duration): A duration of time with units. e.g. 4 days or 72
+             seconds.)
+        $(LI $(B Time Point): A specific point in time. e.g. 21:00 or May 7th,
+             2013.)
+        $(LI $(B Time Interval): A fixed period of time. e.g. [02:44 -
+             12:22$(RPAREN) or [February 4th, 1922 - January 17th,
+             1955$(RPAREN).)
+     )
+
+    $(H3 Durations)
+
+    $(P The duration types can actually be found in $(CORE_TIME). They are
+        $(DURATION) and $(TICK_DURATION). $(TICK_DURATION) is intended for
+        precision timing and is used primarily with $(XREF datetime, StopWatch)
+        and the benchmarking functions found in $(STD_DATETIME) - such as
+        $(XREF datetime, benchmark) - and you're unlikely to use it outside of
+        using them. $(DURATION), on the other hand, you're likely to use quite a
+        bit.)
+
+    $(P $(DURATION) holds its time internally as hecto-nanoseconds (100 ns), so
+        that's its maximum precision. It has property functions for both
+        returning the duration of time truncated to a particular unit (such as
+        the $(D days) and $(D seconds) property functions) as well as a function
+        for returning the total number of a particular unit in that $(DURATION)
+        (the $(D total) function).)
+
+    $(P Generally, a $(DURATION) is created in one of two ways: by subtracting
+        two time points or with the $(FULL_CXREF time, dur) function. So, for
+        instance, if you subtracted a time point which represented 17:02 from
+        a time point which represented 6:07, you'd get a $(DURATION) which
+        represented 10 hours and 55 minutes. Or, if you wanted to create a
+        $(DURATION) directly, then you'd use the $(D dur) function and make
+        a call like $(D dur!"hours"(17)) or $(D dur!"seconds"(234)).)
+
+--------------------
+auto duration = TimeOfDay(17, 2) - TimeOfDay(6, 7);
+assert(duration == dur!"hours"(10) + dur!"minutes"(55));
+assert(duration.hours == 10);
+assert(duration.minutes == 55);
+assert(duration.total!"hours"() == 10);
+assert(duration.total!"minutes"() == 655);
+assert(duration.total!"hnsecs"() == 393_000_000_000);
+--------------------
+
+    $(P Like any number, $(DURATION)s can be added together or
+        subtracted from. However, unlike a naked number, they have units
+        associated with them and will handle the appropriate conversions.
+        Also, it should be noted that the various functions in druntime and
+        Phobos which take a duration of time take an actual $(DURATION) rather
+        than a naked number (most currently take both, though the versions which
+        take a naked number are going to be deprecated). For instance,
+        $(FULL_CXREF thread, sleep) takes a $(DURATION), as does
+        $(FULL_XREF concurrency, receiveTimeout). So, durations are used outside
+        of just interacting with $(CORE_TIME) and $(STD_DATETIME).)
+
+    $(P One particular thing to note here is how both $(D dur) and $(D total)
+        take a string representing the units of time to be used. This is an
+        idiom used throughout $(CORE_TIME) and $(STD_DATETIME). The possible
+        units are $(D "years"), $(D "months"), $(D "weeks"), $(D "days"),
+        $(D "hours"), $(D "minutes"), $(D "seconds"), $(D "msecs"),
+        $(D "usecs"), $(D "hnsecs"), and $(D "nsecs"). It should be noted
+        however that very few functions take $(D "nsecs"), because nothing in
+        $(STD_DATETIME), and very little in $(CORE_TIME), has precision
+        greater than hnsecs (100 ns). Also, a number of functions (such as
+        $(FULL_CXREF time, dur)) do not take $(D "years") or $(D "months"),
+        because it is not possible to convert between years or months and
+        smaller units without a specific date. So, while you can add a
+        $(DURATION) to a time point, if you want to add years or months to one,
+        you must use a separate function (such as $(D add)) to do that - and
+        those $(I will) take $(D "years") and $(D "months").)
+
+    $(H3 Time Points)
+
+    $(P $(STD_DATETIME) has 4 types which represent time points.)
+
+    $(UL
+        $(LI $(DATE))
+        $(LI $(TIMEOFDAY))
+        $(LI $(DATETIME))
+        $(LI $(SYSTIME))
+     )
+
+    $(P A $(DATE) represents a date and holds its year, month, and day as
+        separate values internally. A $(TIMEOFDAY) represents a time of day,
+        00:00:00 - 23:59:59, and holds its hour, minute, and second as separate
+        values internally. A $(DATETIME) represents a date and time and holds
+        its values as a $(DATE) and $(TIMEOFDAY) internally. None of these types
+        have any concept of time zone. They represent generic dates and/or times
+        and are best-suited for cases where you need a date and/or time but
+        don't care about time zone. Also, because they hold their values
+        separated internally, those values don't have to be calculated every
+        time that you ask for them.)
+
+--------------------
+auto date = Date(1992, 12, 27);
+auto tod = TimeOfDay(7, 0, 22);
+auto dateTime = DateTime(1992, 12, 27, 7, 0, 22);
+assert(date == dateTime.date);
+assert(tod == dateTime.timeOfDay);
+--------------------
+
+    $(P A $(SYSTIME), however, is an entirely different beast. It represents
+        a date and time - similar to $(DATETIME) - but it goes to hnsec
+        precision instead of only second precision, and it incorporates the
+        concept of time zone. Its time is held internally as a 64-bit integral
+        value which holds the number of hnsecs which have passed since midnight,
+        January 1st, 1 A.D. in UTC. It also has a $(TIMEZONE) object which it
+        uses to polymorphically adjust its UTC value to the appropriate time
+        zone when querying for values such as its year or hour.)
+
+    $(P $(SYSTIME) is the type which is used to interface with the system's
+        clock. When you ask for the current time, you get a $(SYSTIME). And
+        because it always holds its internal value in UTC, it never has problems
+        with DST or time zone changes. It has most of the functions that
+        $(DATETIME) has as well as a number of functions specific to it. It can
+        be cast to the other 3 time point types as well as be constructed from
+        them, but you do risk problems with DST when creating a $(SYSTIME) from
+        the other 3 time points unless you specifically create the $(SYSTIME)
+        with a $(TIMEZONE) which doesn't have DST (such as
+        $(FULL_XREF datetime, UTC)), since when a time zone has DST, one hour of
+        the year does not exist, and another exists twice. You can also convert
+        to and from unix time, which is what you're dealing with in C with
+        $(D time_t).)
+
+    $(P The one other related type which I should mention at this point is
+        $(FULL_CXREF time, FracSec). It holds fractional seconds, and it is
+        what you get from a $(DURATION) or $(SYSTIME) when you specifically
+        ask for the fractional portion of the time.)
+
+--------------------
+auto st1 = Clock.currTime(); //Current time in local time.
+auto st2 = Clock.currTime(UTC()); //Current time in UTC.
+auto st3 = SysTime(DateTime(1992, 12, 27, 7, 0, 22), FracSec.from!"usecs"(5));
+assert((cast(Date)st3) == Date(1992, 12, 27));
+assert((cast(TimeOfDay)st3) == TimeOfDay(7, 0, 22));
+assert((cast(DateTime)st3) == DateTime(1992, 12, 27, 7, 0, 22));
+assert(st3.fracSec == FracSec.from!"hnsecs"(50));
+--------------------
+
+    $(H3 Time Intervals)
+
+    $(P $(STD_DATE) has nothing to correspond to time intervals, so I won't
+        go over them in great detail. Essentially, they're constructed from
+        either two time points or a time point and a duration. $(INTERVAL)
+        is a finite time interval with two end points, whereas
+        $(POSINF_INTERVAL) is an infinite time interval starting at a specific
+        time point and going to positive infinity, and $(NEGINF_INTERVAL)
+        is an infinite time interval starting at negative infinity and going
+        to a specific time point. They have various operations for dealing
+        with intersections and the like. It is also possible to create ranges
+        over them if you want to operate on a range of time points. Take a
+        look at the documentation for more details.)
+
+    $(H2 Interfacing with C)
+
+    $(P Hopefully, you can do everything that you need to do using the types in
+        $(CORE_TIME) and $(STD_DATETIME), but if you do need to interface with C
+        code, then you can. C's $(D time_t) uses "unix time" (seconds since
+        midnight, January 1st, 1970 A.D. in UTC), whereas $(SYSTIME) uses what
+        it calls "std time" (hnsecs since midnight January 1st, 1 A.D. in UTC).
+        Translating between the two is fairly straightforward. To get a
+        $(D time_t) from a $(SYSTIME), simply call $(D toUnixTime) on the
+        $(SYSTIME). To convert the other way around, you first need to convert
+        a $(D time_t) to std time, then pass that value to $(SYSTIME)'s
+        constructor. And if you ever simply need a $(SYSTIME)'s std time for
+        any reason, then use its $(D stdTime) property.)
+
+--------------------
+time_t unixTime = core.stdc.time.time(null);
+auto stdTime = unixTimeToStdTime(unixTime);
+auto st = SysTime(stdTime);
+assert(unixTime == st.toUnixTime());
+assert(stdTime == st.stdTime);
+--------------------
+
+    $(P Hecto-nanoseconds were chosen as the internal representation of
+        $(DURATION) and $(SYSTIME), because that is the highest precision that
+        you can use with a 64-bit integer and still cover a reasonable amount
+        of time ($(SYSTIME) covers from around 29,000 B.C. to around 29,000
+        A.D.). It also happens to be the same internal representation that
+        C# uses, so if you need to interface with C# for any reason, converting
+        between its representation of time and $(STD_DATETIME)'s representation
+        is extremely easy, since no conversion is necessary.
+        $(WEB msdn.microsoft.com/en-us/library/system.datetime.aspx,
+        C#'s $(D DateTime)) uses both the same units and epoch for its internal
+        representation (which it calls $(D Ticks)) as $(SYSTIME), though unlike
+        $(SYSTIME), it doesn't work with negative values (which would be B.C.)
+        and doesn't go past the end of 9,999 A.D. Most programs are unlikely to
+        care about values outside that range however. Regardless, hnsecs make
+        the most sense for $(STD_DATETIME), which tries to have the highest
+        precision that it reasonably can, so that's why they were picked.)
+
+    $(H2 Recommendations on Using std.datetime)
+
+    $(P Whether $(DATE), $(TIMEOFDAY), $(DATETIME), or $(SYSTIME) is more
+        appropriate in a particular situation depends very much on that
+        situation. $(DATE), $(TIMEOFDAY), and $(DATETIME) generally make the
+        most sense when you're dealing with generic dates and times that have
+        nothing to do with time zones, but if you're dealing with time zones
+        at all or are dealing with anything which needs to worry about DST,
+        you should use $(SYSTIME). Because it keeps its time internally in UTC,
+        it avoids problems with DST. And while it does have a time zone
+        component, it defaults to $(FULL_XREF datetime, LocalTime) (which
+        is the time zone type for the local time of the system), so you don't
+        generally have to deal directly with time zones if you don't want to.)
+
+    $(P If you $(I do) want to deal with time zones, then the time zone types
+        in $(STD_DATETIME) are $(LOCALTIME), $(UTC), $(SIMPLETZ), $(POSIXTZ),
+        and $(WINDOWSTZ) - or if for some reason, they don't do what you need,
+        you can always create your own time zone class derived from $(TIMEZONE).
+        That's unlikely to be necessary, however (and if you think that you
+        have come up with such a class which would be generally useful, please
+        bring it up in the
+        $(WEB www.digitalmars.com/NewsGroup.html, digitalmars.D newsgroup),
+        since if it's truly generally useful, we may want some version of it in
+        $(STD_DATETIME)). Read their documentation for more details. Most
+        applications shouldn't have to worry about time zones though, beyond
+        perhaps using $(UTC) instead of $(LOCALTIME) in some cases.)
+
+    $(P When it comes to saving a time point to disk or a database or something
+        similar, I would generally recommend using the $(D toISOString) or
+        $(D toISOExtString) functions, since both are standard ISO formats
+        for date-time strings ($(D toISOExtString) is likely better in the
+        general case, since it's more humanly readable, but they're both
+        standard). You can then use $(D fromISOString) or $(D fromISOExtString)
+        to recreate the appropriate time type later. $(D toString) uses the
+        $(D toSimpleString) function, which is an invention of Boost and is
+        somewhat more humanly readable, but it isn't standard, so you probably
+        shouldn't use it for saving time point values.)
+
+--------------------
+auto dateTime = DateTime(1997, 5, 4, 12, 22, 3);
+assert(dateTime.toISOString() == "19970504T122203");
+assert(dateTime.toISOExtString() == "1997-05-04T12:22:03");
+assert(dateTime.toSimpleString() == "1997-May-04 12:22:03");
+auto restored = DateTime.fromISOExtString(dateTime.toISOExtString());
+assert(dateTime == restored);
+--------------------
+
+    $(P One area with saving times as strings which gets a bit awkward is time
+        zones. The time zone is included in the string as part of the ISO
+        standard, but all it contains is the total offset from UTC at that
+        particular date and time, so you can't generally use an ISO string
+        (extended or otherwise) to get the exact time zone which the $(SYSTIME)
+        originally had. Rather, it will be restored with a $(SIMPLETZ) with the
+        given offset from UTC (except in the case of UTC, where it can restore
+        $(UTC)). On the other hand, if you're using $(LOCALTIME), then the time
+        zone is not part of the string (per the ISO standard), and restoring the
+        $(SYSTIME) will restore it to whatever the current time zone is on the
+        box, regardless of what the original time zone was. However, because in
+        all cases, except for $(LOCALTIME), the UTC offset is included in the
+        string, it is generally possible to get the exact UTC time that the
+        $(SYSTIME) was for. But you can't usually restore the original time zone
+        from just the ISO string.)
+
+--------------------
+auto local = SysTime(629_983_705_230_000_035);
+auto utc = local.toUTC();
+auto other = local.toOtherTZ(TimeZone.getTimeZone("America/New_York"));
+
+//This assumes that you're in "America/Los_Angeles". You'd get a different
+//time if you're in a different time zone.
+assert(local.toISOExtString() == "1997-05-04T12:22:03.0000035");
+
+assert(utc.toISOExtString() == "1997-05-04T19:22:03.0000035Z");
+assert(other.toISOExtString() == "1997-05-04T15:22:03.0000035-04:00");
+
+auto restLocal = SysTime.fromISOExtString(local.toISOExtString());
+auto restUTC = SysTime.fromISOExtString(utc.toISOExtString());
+auto restOther = SysTime.fromISOExtString(other.toISOExtString());
+
+//Only guaranteed because it's on the same machine.
+assert(restLocal == local);
+
+//Guaranteed regardless of machine. Their internal values could differ however.
+assert(cast(DateTime)restLocal == cast(DateTime)local);
+
+//Time zone is UTC for both.
+assert(restUTC == utc);
+
+//Time zone for restOther is SimpleTimeZone(-4 * 60), not "America/New_York".
+assert(restOther == other);
+--------------------
+
+    $(P To summarize, $(UTC) and $(SIMPLETZ) can be restored exactly using an
+        ISO or ISO extended string. However, none of the other $(TIMEZONE)s can
+        be. $(LOCALTIME) is restored with the same date and time but in the
+        local time zone of the computer it's restored on, so its std time may
+        differ. Other time zones end up with the restored $(SYSTIME) having the
+        same std time as the original, but the new time zone is a $(SIMPLETZ)
+        with the same total UTC offset which the original time zone had at the
+        given std time, but you don't get the original time zone back. That
+        works just fine if you don't ever need to change the value of that
+        $(SYSTIME) or need to know the name of the original time zone, but it is
+        inadequate if you need to do either of those, since the rules for
+        the new time zone won't match those of the original.)
+
+    $(P So, if you don't care about the time zone or if the restored $(SYSTIME)
+        has the same std time as the original, then $(LOCALTIME) is fine.
+        However, if you want the std time to be consistent, then avoid
+        $(LOCALTIME). In most cases, I'd advise simply using $(UTC) as the
+        time zone when saving the time. And if you want to restore the time zone
+        such that it's the same time zone with the same rules as it was prior to
+        saving the time, then you're going to need to save that information
+        yourself. With a $(POSIXTZ) or a $(WINDOWSTZ), all you have to do is
+        save the time zone's $(D name) (which for them is the TZ database name
+        and the Windows time zone name of that time zone respectively). That can
+        be used to restore the time zone. If it's a $(SIMPLETZ) or $(UTC), then
+        you don't have to do anything, because the ISO string will be enough. If
+        you're using $(LOCALTIME), however, you're in a bit of a bind.)
+
+    $(P The restored time zone will be $(LOCALTIME), so if you want it to be
+        whatever the local time of the computer you're doing the restoring on
+        is, then you're fine. But if you want to be able to have the same actual
+        time zone restored regardless of the local time of the computer
+        restoring the time, you'll need to figure out what the time zone's TZ
+        database name or Windows time zone name is on the original computer so
+        that you can use it to get its corresponding $(POSIXTZ) or $(WINDOWSTZ)
+        on the computer that's doing the restoring. But it's actually
+        $(I really) hard to accurately determine the TZ database name or Windows
+        time zone name of the local time zone on any OS other than on Windows,
+        so $(STD_DATETIME) doesn't currently provide a way to do that. I expect
+        that such a requirement would be quite rare however. In most cases,
+        you'll care about $(LOCALTIME) and/or $(UTC), and even if you're using
+        $(POSIXTZ) or $(WINDOWSTZ), odds are that restoring the time with the
+        correct std time value and correct UTC offset will be enough (and if
+        it's not, you can always save the time zone's name to restore the
+        correct $(POSIXTZ) or $(WINDOWSTZ)). It's just $(LOCALTIME) that has
+        the problem. However, if a function to accurately determine the TZ
+        database name of the local time zone on Posix systems is ever devised,
+        then it will be added to $(STD_DATETIME).)
+
+    $(P The other, more compact, option for saving a $(SYSTIME) is to just save
+        its std time as a 64-bit integer. It's not really humanly readable
+        like an ISO or ISO extended string would be, but it takes up less space
+        if saved as an actual number rather than a string. However, you do then
+        have to worry about the time zone yourself entirely if you wish to be
+        able to restore it. But if you save the current UTC offset (meaning
+        the UTC offset with the DST offset applied - such as an ISO string would
+        include), that would be enough to correctly give what the time would
+        have been in the original time zone even if you can't restore that time
+        zone.)
+
+    $(P Well, that's probably more than enough on time zones. In most cases, you
+        shouldn't need to care about them ($(SYSTIME) is designed to make it
+        so that you shouldn't have to worry about them if you don't want to),
+        but $(STD_DATETIME) strives to give the best tools possible for handling
+        time zones when you actually want to. Regardless, by far the biggest
+        gain that $(SYSTIME) gives you is that its internal time is always in
+        UTC, so regardless of whether you try and do anything with time zones
+        explicitly, you won't have any problems with DST changes when dealing
+        with $(SYSTIME).)
+
+    $(P One last suggestion on using $(SYSTIME) would be that if you need to
+        query it for more than one of its properties (e.g. $(D day) or
+        $(D hour)), or if you need to do it many times in a row, and the
+        $(SYSTIME) isn't going to change, then you should probably cast it to
+        another time point type (probably $(DATETIME)) and query $(I it) for
+        those values. The reason for this is that every time that you call a
+        property function on a $(SYSTIME), it has to convert its internal std
+        time to the value of the property that you're asking for, whereas if you
+        convert it to a $(DATETIME), the $(DATETIME) holds those values
+        separately, and you only have to do the calculations once - when you
+        do the conversion from the $(SYSTIME) to a $(DATETIME). If what you're
+        doing doesn't need that extra boost of efficiency, then you might as
+        well not bother, but it is good to be aware that it's less efficient to
+        query each of $(SYSTIME)'s properties individually rather than
+        converting it to a $(DATETIME) and then querying it.)
+
+--------------------
+auto st = Clock.currTime();
+
+//Each value must be individually calculated.
+{
+    auto year = st.year;
+    auto month = st.month;
+    auto day = st.day;
+    auto hour = st.hour;
+    auto minute = st.minute;
+    auto second = st.second;
+    auto fracSec = st.fracSec;
+}
+
+/+
+    You do the calculations only twice if you convert to a DateTime
+    (twice instead of once, because you're still asking for FracSec
+    separately, though that particular calculation is fairly cheap).
+ +/
+auto dateTime = cast(DateTime)st;
+{
+    auto year = dateTime.year;
+    auto month = dateTime.month;
+    auto day = dateTime.day;
+    auto hour = dateTime.hour;
+    auto minute = dateTime.minute;
+    auto second = dateTime.second;
+    auto fracSec = st.fracSec;
+}
+--------------------
+
+    $(H2 Migrating to std.datetime)
+
+    $(P Okay, hopefully you have a fair idea of the basics of $(STD_DATETIME)
+        at this point (though there's plenty more which is covered in the
+        documentation), but the big question for many is how best to handle
+        converting your code from using $(STD_DATE) to using $(STD_DATETIME).
+        When using $(STD_DATE), you would have been using $(D d_time), and if
+        you had to worry about time zones, you were probably either using C
+        functions to deal with conversions or just doing them yourself, since
+        the functionality in $(STD_DATE) which relates to time zones is rather
+        broken. As a result, most of what you would have done would likely be in
+        UTC.)
+
+    $(P $(SYSTIME) holds its time internally in UTC in a manner similar to
+        $(D d_time) (albeit with different units and a different epoch), and it
+        is the type intended for dealing with the time from the system's clock,
+        so $(SYSTIME) is generally what $(D d_time) should be replaced with.
+        Functions in Phobos which previously took or returned a $(D d_time) now
+        take or return a $(SYSTIME) or are scheduled to be deprecated and have
+        replacement functions which take or return a $(SYSTIME). Generally, in
+        the case where a function took a $(D d_time), that function is now
+        overloaded with a version which takes a $(SYSTIME), but in cases where a
+        function could not be overloaded (such as when it simply returned a
+        $(D d_time)), a new function has been added to replace the old one (so
+        as to avoid breaking existing code). The module that this impacts the
+        most is $(STD_FILE). For example,)
+
+--------------------
+d_time dTime = "myfile.txt".lastModified();
+SysTime sysTime = "myfile.txt".timeLastModified();
+
+setTimes("yourfile.txt", dTime, dTime + 5);
+setTimes("yourfile.txt", sysTime, sysTime + dur!"msecs"(5));
+--------------------
+
+    $(P With all such functions, it's simply a matter of changing the type of
+        the argument that you're passing to the function or assigning its
+        return value to and possibly changing the function name that you're
+        calling so that it's the version that returns a $(SYSTIME). Those
+        changes are quite straightforward and not particularly disruptive. Of
+        greater concern are the formats that times are printed or saved in
+        and how time zones are dealt with.)
+
+    $(P If you were saving the integral $(D d_time) value anywhere, then you're
+        either going to have to switch to saving a value that $(SYSTIME) would
+        use as discussed previously (such as its std time or its ISO string),
+        or you're going to have be converting between $(D d_time) and
+        $(SYSTIME). At present, the functions
+        $(FULL_XREF datetime, sysTimeToDTime) and
+        $(FULL_XREF datetime, dTimeToSysTime) will do those conversions for you.
+        So, converting between the two formats is easy. However, because
+        $(D d_time) is going away, those functions will be going away. That
+        means that you either need to refactor your code so that those functions
+        aren't necessary, or you need to copy them to your own code to continue
+        to use them.)
+
+     $(P As for formatted strings, $(STD_DATETIME) currently only supports
+         ISO strings, ISO extended strings, and Boost's simple string.
+         Eventually, it should have functions for custom strings, but a
+         well-designed function for creating custom strings based on format
+         strings is not easy to design, and it hasn't been done for
+         $(STD_DATETIME) yet (it's on my todo list, but it could be a while
+         before I get to it). So, in general, you're either going to have to
+         switch to using one of the string formats that $(STD_DATETIME)
+         supports, or you're going to have to generate and parse the string
+         format that you want yourself. In some cases, you should be able to
+         adjust the string that $(FULL_CXREF stdc.time, ctime) gives you, and in
+         others, you may be able to use $(D toISOExtString) and adjust what
+         $(I it) gives you, but there's a decent chance that you're going to
+         have to just create and parse the strings yourself using the various
+         properties on $(SYSTIME). One major difference between the string
+         functions in $(STD_DATE) and those in $(STD_DATETIME) to note is that
+         unlike $(STD_DATE), aside from Boost's simple strings, nothing in
+         $(STD_DATETIME) prints the names of months or weekdays, because that
+         poses a localization issue. So, unless you're using
+         $(CXREF stdc.time, ctime) to get those values, you're going to have
+         to create the names yourself.)
+
+     $(P Now, if you were doing anything with time zones with $(STD_DATE), odds
+         are that you were doing all of those conversions yourself (since that's
+         one of the areas where $(STD_DATE) is buggy). That being the case,
+         you probably have the offset from UTC and the offset adjustment for
+         DST for whatever time zone you're dealing with. What is likely the
+         best way to handle that is to create a $(SIMPLETZ) using those values.
+         Simply calculate the total UTC offset (so add in the DST offset if
+         it applies for the date in question) in minutes and create a $(SIMPLETZ)
+         with that. Note that $(STD_DATETIME) treats west of UTC as
+         $(I negative) (for some reason, some systems - particularly Posix stuff
+         - use a positive offset from UTC when west of UTC, in spite of the fact
+         that when talking about time zones, negative is always used for west of
+         UTC, and that's what the ISO standard strings do). So, you may have to
+         adjust your values accordingly. Regardless, be very careful to make
+         sure that you understand what the values you've been using represent
+         in units of time and whether you need to be adding or subtracting them
+         to convert them to what $(SIMPLETZ) expects for its offset from UTC:
+         the minutes to $(I add) to the time in UTC to get the time in the
+         target time zone.)
+
+--------------------
+//These are the same offsets as America/Los_Angeles.
+auto utcOffset = -8 * 60;
+auto dstOffset = 60;
+
+immutable tzWithDST = new SimpleTimeZone(utcOffset + dstOffset);
+immutable tzWithoutDST = new SimpleTimeZone(utcOffset);
+--------------------
+
+     $(P The last thing that I have to note is some differences in numerical
+         values between $(STD_DATE) and $(STD_DATETIME).
+         $(FULL_XREF date, Date)'s $(D weekday) property gives Sunday a value of
+         1, but $(FULL_XREF date, weekDay) gives Sunday a value of 0.
+         $(FULL_XREF datetime, DayOfWeek) gives Sunday a value of 0. So,
+         depending on which part of $(STD_DATE) you're dealing with it, it
+         may or may not match what $(STD_DATETIME) is doing for the numerical
+         values of weekdays. Months have a similar problem.
+         $(FULL_XREF date, Date)'s $(D month) property gives January a value of
+         1 - which matches what $(FULL_XREF datetime, Month) does - but
+         $(FULL_XREF date, monthFromTime) gives January a value of 0. So,
+         just as with the days of the week, you have to be careful with the
+         numerical values of the months. Whether $(STD_DATETIME) matches what
+         $(STD_DATE) is doing depends on which part of $(STD_DATE) you're using.
+         And as you'll notice, it's not even consistent as to whether
+         $(FULL_XREF date, Date) or the free function in $(STD_DATE) is the one
+         which matches $(STD_DATETIME). So, you should be very careful when
+         converting code which uses numerical values for either the days of the
+         week or the months of the year.)
+
+    $(BOOKTABLE $(H3 std.date symbols and their std.datetime counterparts),
+        $(TR $(TD $(B $(STD_DATE)))
+             $(TD $(B $(STD_DATETIME) Equivalent)))
+        $(TR $(TD $(XREF date, d_time))
+             $(TD The closest would be $(SYSTIME).))
+        $(TR $(TD $(XREF date, d_time_nan))
+             $(TD There is no equivalent. $(SYSTIME).$(D init), which has a
+                  $(D null) $(TIMEZONE) object, would be the closest, but once
+                  CTFE advances to the point that you can new up class objects
+                  with it, $(SYSTIME).$(D init)'s $(D timezone) will be
+                  $(LOCALTIME), so don't rely on $(SYSTIME).$(D init) being
+                  invalid. $(STD_DATETIME) in general tries to avoid having any
+                  invalid states for any of its types. It's intended that
+                  creating such values be impossible.))
+        $(TR $(TD $(XREF date, Date))
+             $(TD $(SYSTIME)))
+        $(TR $(TD $(XREF date, Date).$(D year))
+             $(TD $(SYSTIME).$(D year)))
+        $(TR $(TD $(XREF date, Date).$(D month))
+             $(TD $(SYSTIME).$(D month)))
+        $(TR $(TD $(XREF date, Date).$(D day))
+             $(TD $(SYSTIME).$(D day)))
+        $(TR $(TD $(XREF date, Date).$(D hour))
+             $(TD $(SYSTIME).$(D hour)))
+        $(TR $(TD $(XREF date, Date).$(D minute))
+             $(TD $(SYSTIME).$(D minute)))
+        $(TR $(TD $(XREF date, Date).$(D second))
+             $(TD $(SYSTIME).$(D second)))
+        $(TR $(TD $(XREF date, Date).$(D ms))
+             $(TD $(SYSTIME).$(D fracSec.msecs)))
+        $(TR $(TD $(XREF date, Date).$(D weekday))
+             $(TD $(SYSTIME).$(D dayOfWeek) - but note that the values are off
+                  by 1.))
+        $(TR $(TD $(XREF date, Date).$(D tzcorrection))
+             $(TD
+--------------------
+immutable tz = sysTime.timezone;
+auto diff = tz.utcToTZ(sysTime.stdTime) - sysTime.stdTime;
+auto tzcorrection = convert!("hnsecs", "minutes")(diff);
+--------------------
+However, it looks like $(D tzcorrection) is broken, so you're probably not using
+it in your code anyway.
+              ))
+        $(TR $(TD $(XREF date, Date).$(D parse))
+             $(TD $(SYSTIME).$(D fromISOString),
+                  $(SYSTIME).$(D fromISOExtString), and
+                  $(SYSTIME).$(D fromSimpleString), but the formats of the
+                  strings differ from what $(FULL_XREF date, Date).$(D parse)
+                  accepts.))
+        $(TR $(TD $(XREF date, ticksPerSecond))
+             $(TD There is no equivalent. It's only relevant to $(D d_time).))
+        $(TR $(TD $(XREF date, toISO8601YearWeek))
+             $(TD $(SYSTIME).$(D isoWeek)))
+        $(TR $(TD $(XREF date, hourFromTime))
+             $(TD $(SYSTIME).$(D hour)))
+        $(TR $(TD $(XREF date, minFromTime))
+             $(TD $(SYSTIME).$(D minute)))
+        $(TR $(TD $(XREF date, secFromTime))
+             $(TD $(SYSTIME).$(D second)))
+        $(TR $(TD $(XREF date, daysInYear))
+             $(TD $(D sysTime.isLeapYear ? 366 : 365)))
+        $(TR $(TD $(XREF date, dayFromYear))
+             $(TD $(D (sysTime - SysTime(Date(1970, 1, 1), UTC())).total!"days"())))
+        $(TR $(TD $(XREF date, yearFromTime))
+             $(TD $(SYSTIME).$(D year)))
+        $(TR $(TD $(XREF date, inLeapYear))
+             $(TD $(SYSTIME).$(D isLeapYear)))
+        $(TR $(TD $(XREF date, monthFromTime))
+             $(TD $(SYSTIME).$(D month) - but note that the values are off by
+                  1.))
+        $(TR $(TD $(XREF date, dateFromTime))
+             $(TD $(SYSTIME).$(D day)))
+        $(TR $(TD $(XREF date, weekDay))
+             $(TD $(SYSTIME).$(D dayOfWeek)))
+        $(TR $(TD $(XREF date, UTCtoLocalTime))
+             $(TD $(SYSTIME).$(D toUTC)))
+        $(TR $(TD $(XREF date, dateFromNthWeekdayOfMonth))
+             $(TD
+--------------------
+//There is no equivalent. This is a possible implementation.
+int dateFromNthWeekdayOfMonth(int year, Month month,
+                              DayOfWeek dow, int n)
+{
+    auto first = Date(year, month, 1);
+    auto target = first;
+    immutable targetDOTW = target.dayOfWeek;
+
+    if(targetDOTW != dow)
+    {
+        if(targetDOTW < dow)
+            target += dur!"days"(dow - targetDOTW);
+        else
+        {
+            target += dur!"days"((DayOfWeek.sat - targetDOTW) +
+                                 dow + 1);
+        }
+    }
+
+    target += dur!"weeks"(n - 1);
+
+    if(target.month != first.month)
+        target -= dur!"weeks"(1);
+
+    return cast(int)((target - first).total!"days"()) + 1;
+}
+--------------------
+              ))
+        $(TR $(TD $(XREF date, daysInMonth))
+             $(TD $(SYSTIME).$(D endOfMonthDay); Actually, this name is overly
+                  easy to confuse with $(D endOfMonth) - which returns a
+                  $(SYSTIME) of the last day of the month. I will probably
+                  rename this to $(D daysInMonth). But if I do, it won't be
+                  until the next release (2.054), and this name will be around
+                  until it's gone through the full deprecation cycle.))
+        $(TR $(TD $(XREF date, UTCtoString))
+             $(TD There is no equivalent. You could probably parse and recombine
+                  $(FULL_CXREF stdc.time, ctime) and
+                  $(SYSTIME).$(D toISOExtString) to create it though. However,
+                  this function appears to be fairly buggy in the first place,
+                  so odds are that your code isn't using it anyway.))
+        $(TR $(TD $(XREF date, toUTCString))
+             $(TD There is no equivalent. You could probably parse and recombine
+                  $(FULL_CXREF stdc.time, ctime) and
+                  $(SYSTIME).$(D toISOExtString) to create it though.))
+        $(TR $(TD $(XREF date, toDateString))
+             $(TD There is no equivalent. You could probably parse and recombine
+                  $(FULL_CXREF stdc.time, ctime) and
+                  $(SYSTIME).$(D toISOExtString) to create it though. However,
+                  this function appears to be fairly buggy in the first place,
+                  so odds are that your code isn't using it anyway.))
+        $(TR $(TD $(XREF date, toTimeString))
+             $(TD There is no equivalent. You could probably parse and recombine
+                  $(FULL_CXREF stdc.time, ctime) and
+                  $(SYSTIME).$(D toISOExtString) to create it though. However,
+                  this function appears to be fairly buggy in the first place,
+                  so odds are that your code isn't using it anyway.))
+        $(TR $(TD $(XREF date, parse).$(D parse))
+             $(TD $(SYSTIME).$(D fromISOString),
+                  $(SYSTIME).$(D fromISOExtString), and
+                  $(SYSTIME).$(D fromSimpleString), but the formats of the
+                  strings differ from what $(FULL_XREF date, parse) accepts.))
+        $(TR $(TD $(XREF date, getUTCtime))
+             $(TD $(D Clock.currTime(UTC())) if you want the $(SYSTIME) to have
+                  its time zone be $(UTC). More likely though, you'll just use
+                  $(D Clock.currTime()). Its internal time is in UTC
+                  regardless.))
+        $(TR $(TD $(XREF date, DosFileTime))
+             $(TD $(XREF datetime, DosFileTime)))
+        $(TR $(TD $(XREF date, toDtime))
+             $(TD $(XREF datetime, DosFileTimeToSysTime)))
+        $(TR $(TD $(XREF date, toDosFileTime))
+             $(TD $(XREF datetime, SysTimeToDosFileTime)))
+        $(TR $(TD $(XREF date, benchmark))
+             $(TD $(XREF datetime, benchmark)))
+    )
+
+    $(P Note that I'm not an expert on what does and doesn't work in
+        $(STD_DATE), so while I have noted some of the functions that I know to
+        be broken, just because a function isn't labeled as broken in the above
+        table does not mean that it works correctly. And any function which
+        doesn't work correctly is obviously not going to give the same results
+        as the $(STD_DATETIME) equivalent, since it's almost certain that the
+        $(STD_DATETIME) version isn't buggy, let alone buggy in the same way (if
+        it is buggy, the bug is almost certainly going to be far more subtle
+        than any bug in $(STD_DATE), since $(STD_DATETIME) is quite thoroughly
+        unit tested).)
+
+    $(H2 Conclusion)
+
+    $(P Hopefully this article has improved your understanding of
+        $(STD_DATETIME) and will get you well on your way to being able to
+        migrate your code from $(STD_DATE) to $(STD_DATETIME). If you have any
+        further questions, please ask them on the
+        $(WEB www.digitalmars.com/NewsGroup.html, digitalmars.D.learn newsgroup).
+        And if there's a major use case of $(STD_DATE) which is not easy to
+        convert over to $(STD_DATETIME) which I missed in this
+        article and you think should be in it, please feel free to bring it up
+        on the
+        $(WEB www.digitalmars.com/NewsGroup.html, digitalmars.D newsgroup),
+        and if need be, I'll update this article with the relevant information.)
+ )
+
+Macros:
+    CATEGORY_ARTICLES=$0
+    BOOKTABLE = <center><table cellspacing=0 cellpadding=5 valign=top class=book><caption>$1</caption>$2</table></center>
+    D = <font face=Courier><b>$0</b></font>
+    D = <span class="d_inlinecode">$0</span>
+    H2 = <h2>$0</h2>
+    H3 = <h3>$0</h3>
+    RED = <span style="color:red">$0</span>
+    TITLE = Introduction to std.datetime
+    WEB = $(LINK2 http://$1,$2)
+
+    CXREF = <a href="phobos/core_$1.html#$2">$(D $2)</a>
+    FULL_CXREF = <a href="phobos/core_$1.html#$2">$(D core.$1.$2)</a>
+    XREF = <a href="phobos/std_$1.html#$2">$(D $2)</a>
+    FULL_XREF = <a href="phobos/std_$1.html#$2">$(D std.$1.$2)</a>
+    CORE_TIME=<a href="phobos/core_time.html">$(D core.time)</a>
+    STD_DATETIME=<a href="phobos/std_datetime.html">$(D std.datetime)</a>
+    STD_DATE=<a href="phobos/std_date.html">$(D std.date)</a>
+    STD_FILE=<a href="phobos/std_file.html">$(D std.file)</a>
+
+    DATE=$(XREF datetime, Date)
+    DATETIME=$(XREF datetime, DateTime)
+    DURATION=$(CXREF time, Duration)
+    FRACSEC=$(CXREF time, FracSec)
+    INTERVAL=$(XREF datetime, Interval)
+    LOCALTIME=$(XREF datetime, LocalTime)
+    NEGINF_INTERVAL=$(XREF datetime, NegInfInterval)
+    POSINF_INTERVAL=$(XREF datetime, PosInfInterval)
+    POSIXTZ=$(XREF datetime, PosixTimeZone)
+    STOPWATCH=$(XREF datetime, StopWatch)
+    SIMPLETZ=$(XREF datetime, SimpleTimeZone)
+    SYSTIME=$(XREF datetime, SysTime)
+    TIMEOFDAY=$(XREF datetime, TimeOfDay)
+    TICK_DURATION=$(CXREF time, TickDuration)
+    TIMEZONE=$(XREF datetime, TimeZone)
+    UTC=$(XREF datetime, UTC)
+    WINDOWSTZ=$(XREF datetime, WindowsTimeZone)
