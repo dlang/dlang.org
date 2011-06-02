@@ -921,15 +921,21 @@ $(V2
 	statement, the default statement is transferred to.
 	)
 
+$(V1
 	$(P If none of the case expressions match, and there is not a default
 	statement, a
+$(V1
+	$(LINK2 phobos/std_switcherr.html, $(CODE std.switcherr.SwitchError))
+)
+$(V2
 	$(LINK2 core_exception.html, $(CODE core.exception.SwitchError))
+)
 	is thrown.
-	The reason for this is
-	to catch the common programming error of adding a new value to
-	an enum, but failing to account for the extra value in
-	switch statements. This behavior is unlike C or C++.
 	)
+)
+$(V2
+	$(P A switch statement must have a default statement.)
+)
 
 	$(P
 $(V1
@@ -1528,6 +1534,19 @@ $(I ScopeGuardStatement):
 	scope, they also are interleaved with the $(I ScopeGuardStatement)s
 	in the reverse lexical order in which they appear.
 
+$(V1
+----
+writef("1");
+{
+    writef("2");
+    scope(exit) writef("3");
+    scope(exit) writef("4");
+    writef("5");
+}
+writefln();
+----
+)
+$(V2
 ----
 write("1");
 {
@@ -1538,13 +1557,25 @@ write("1");
 }
 writeln();
 ----
-
+)
 	writes:
 
 $(CONSOLE
 12543
 )
 
+$(V1
+----
+{
+    scope(exit) writef("1");
+    scope(success) writef("2");
+    scope(exit) writef("3");
+    scope(success) writef("4");
+}
+writefln();
+----
+)
+$(V2
 ----
 {
     scope(exit) write("1");
@@ -1554,13 +1585,39 @@ $(CONSOLE
 }
 writeln();
 ----
-
+)
 	writes:
 
 $(CONSOLE
 4321
 )
 
+$(V1
+----
+class Foo
+{
+    this() { writef("0"); }
+    ~this() { writef("1"); }
+}
+
+try
+{
+    scope(exit) writef("2");
+    scope(success) writef("3");
+    scope Foo f = new Foo();
+    scope(failure) writef("4");
+    throw new Exception("msg");
+    scope(exit) writef("5");
+    scope(success) writef("6");
+    scope(failure) writef("7");
+}
+catch (Exception e)
+{
+}
+writefln();
+----
+)
+$(V2
 ----
 class Foo
 {
@@ -1584,7 +1641,7 @@ catch (Exception e)
 }
 writeln();
 ----
-
+)
 	writes:
 
 $(CONSOLE
