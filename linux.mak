@@ -103,7 +103,7 @@ $(DOC_OUTPUT_DIR)/% : %
 
 # Rulez
 
-all : $(ALL_FILES) phobos druntime phobos-last-release
+all : $(ALL_FILES) phobos druntime phobos-last-release druntime-last-release
 
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
 
@@ -166,7 +166,9 @@ phobos-last-release:
 
 druntime:
 	cd ${DRUNTIME} && make -f posix.mak \
-		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease doc -j 4
+		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
+		DOCFMT=../d-programming-language.org/std.ddoc \
+		doc -j 4
 
 druntime-last-release:
 	cd ${DRUNTIME} && \
