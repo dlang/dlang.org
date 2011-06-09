@@ -183,9 +183,3 @@ druntime-last-release:
 
 rsync : all
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
-
-bightml :
-	mkdir -p /tmp/cacat
-	MYDIR=`pwd` && cd ${PHOBOS} && $(MAKE) DOC_OUTPUT_DIR=/tmp/cacat STDDOC=$$MYDIR/std_consolidated.dd html -j 8
-	cat $(DOC_OUTPUT_DIR)/std_consolidated_header.html $(BIGHTMLS)	\
-	$(DOCSRC)/std_allinone_footer.frag.html >big.html
