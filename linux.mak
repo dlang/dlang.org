@@ -45,7 +45,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html			\
 	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
 	D1toD2.html unittest.html hash-map.html pdf-intro-cover.html		\
-	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html
+	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html std_consolidated_header.html
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html			\
@@ -183,3 +183,9 @@ druntime-last-release:
 
 rsync : all
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
+
+bightml :
+	mkdir -p /tmp/cacat
+	MYDIR=`pwd` && cd ${PHOBOS} && $(MAKE) DOC_OUTPUT_DIR=/tmp/cacat STDDOC=$$MYDIR/std_consolidated.dd html -j 8
+	cat $(DOC_OUTPUT_DIR)/std_consolidated_header.html $(BIGHTMLS)	\
+	$(DOCSRC)/std_allinone_footer.frag.html >big.html
