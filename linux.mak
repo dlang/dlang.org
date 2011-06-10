@@ -13,7 +13,7 @@ DDOC=macros.ddoc windows.ddoc doc.ddoc
 IMAGES=favicon.ico $(addprefix images/, c1.gif d3.gif dlogo.png			\
 dmlogo.gif gradient-green.jpg search-bg.gif Thumbs.db cpp1.gif d4.gif	\
 dmlogo-smaller.gif gradient-red.jpg search-button.gif d002.ico d5.gif	\
-globe.gif pen.gif search-left.gif)
+globe.gif pen.gif search-left.gif tdpl.jpg)
 
 STYLES=css/style.css css/print.css
 
