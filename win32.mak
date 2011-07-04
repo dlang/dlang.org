@@ -2,26 +2,33 @@
 
 DMD=dmd
 
-SRC= cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd cppdbc.dd	\
-	index.dd overview.dd lex.dd module.dd dnews.dd declaration.dd		\
-	type.dd property.dd attribute.dd pragma.dd expression.dd			\
-	statement.dd arrays.dd struct.dd class.dd enum.dd function.dd		\
-	operatoroverloading.dd template.dd mixin.dd dbc.dd version.dd		\
-	errors.dd garbage.dd memory.dd float.dd iasm.dd interface.dd		\
-	portability.dd html.dd entity.dd abi.dd windows.dd dll.dd			\
+SRC= $(SPECSRC) \
+	cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd cppdbc.dd	\
+	index.dd overview.dd dnews.dd		\
+	mixin.dd \
+	memory.dd interface.dd		\
+	windows.dd dll.dd			\
 	htomodule.dd faq.dd dstyle.dd wc.dd future.dd changelog.dd			\
 	glossary.dd acknowledgements.dd dcompiler.dd builtin.dd				\
-	interfaceToC.dd comparison.dd rationale.dd ddoc.dd					\
+	comparison.dd rationale.dd					\
 	code_coverage.dd exception-safe.dd rdmd.dd templates-revisited.dd	\
 	warnings.dd ascii-table.dd windbg.dd htod.dd regular-expression.dd	\
 	lazy-evaluation.dd lisp-java-d.dd variadic-function-templates.dd	\
-	howto-promote.dd tuple.dd template-comparison.dd template-mixin.dd	\
-	final-const-invariant.dd const.dd traits.dd COM.dd					\
-	cpp_interface.dd hijack.dd const3.dd features2.dd safed.dd			\
-	cpp0x.dd const-faq.dd concepts.dd memory-safe-d.dd					\
-	d-floating-point.dd migrate-to-shared.dd D1toD2.dd unittest.dd		\
-	hash-map.dd pdf-intro-cover.dd pdf-spec-cover.dd					\
+	howto-promote.dd tuple.dd template-comparison.dd \
+	final-const-invariant.dd const.dd COM.dd					\
+	hijack.dd features2.dd safed.dd			\
+	cpp0x.dd const-faq.dd concepts.dd		\
+	d-floating-point.dd migrate-to-shared.dd D1toD2.dd		\
+	pdf-intro-cover.dd pdf-spec-cover.dd					\
 	pdf-tools-cover.dd intro-to-datetime.dd
+
+SPECSRC=lex.dd module.dd declaration.dd type.dd property.dd \
+	attribute.dd pragma.dd expression.dd statement.dd arrays.dd \
+	hash-map.dd struct.dd class.dd interface.dd enum.dd const3.dd \
+	function.dd operatoroverloading.dd template.dd template-mixin.dd \
+	dbc.dd version.dd traits.dd errors.dd unittest.dd garbage.dd \
+	float.dd iasm.dd ddoc.dd interfaceToC.dd cpp_interface.dd \
+	portability.dd html.dd entity.dd memory-safe-d.dd abi.dd
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
@@ -290,6 +297,24 @@ windbg.html : $(DDOC) windows.ddoc windbg.dd
 
 windows.html : $(DDOC) windows.ddoc windows.dd
 
+################ Ebook ########################
+
+specbook.d : $(SPECSRC) win32.mak
+	catdoc -o=specbook.d $(SPECSRC)
+
+specbook.html : $(DDOC) ebook.ddoc specbook.d
+	$(DMD) $(DDOC) ebook.ddoc specbook.d
+
+specbook.zip : specbook.html style.css win32.mak
+	del specbook.zip
+	zip32 specbook specbook.html style.css
+
+specbook.mobi : specbook.html style.css win32.mak
+	del specbook.mobi
+	\kindlegen\kindlegen specbook.html
+
+################# Pdf #########################
+
 pdf : $(PDFTARGETS)
 
 d-intro.pdf:
@@ -301,9 +326,11 @@ d-spec.pdf:
 d-tools.pdf:
 	wkhtmltopdf $(PDFOPTIONS) cover pdf-tools-cover.html toc $(PDFTOOLS) $(PDFHOWTOS) $(PDFARTICLES) $(PDFAPPENDICES) d-tools.pdf
 
+################# Other #########################
+
 zip:
 	del doc.zip
-	zip32 doc win32.mak $(DDOC) windows.ddoc linux.ddoc osx.ddoc freebsd.ddoc
+	zip32 doc win32.mak $(DDOC) windows.ddoc linux.ddoc osx.ddoc freebsd.ddoc ebook.ddoc
 	zip32 doc $(SRC) $(PREMADE)
 	zip32 doc $(ASSETS)
 
