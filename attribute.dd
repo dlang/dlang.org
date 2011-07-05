@@ -4,8 +4,8 @@ $(SPEC_S Attributes,
 
 $(GRAMMAR
 $(GNAME AttributeSpecifier):
-    $(I Attribute) $(B :)
-    $(I Attribute) $(I DeclarationBlock)
+    $(GLINK Attribute) $(B :)
+    $(GLINK Attribute) $(GLINK DeclarationBlock)
 
 $(GNAME Attribute):
     $(LINK2 #linkage, $(I LinkageAttribute))
@@ -39,19 +39,18 @@ $(GNAME DeclarationBlock):
         )
 
 ---
-attribute declaration;          // affects the declaration
+attribute declaration; // affects the declaration
 
-attribute:                      // affects all declarations until the end of
-                                // the current scope
-    declaration;
-    declaration;
-    ...
+attribute:     // affects all declarations until the end of
+               // the current scope
+  declaration;
+  declaration;
+  ...
 
-attribute                       // affects all declarations in the block
-{
-    declaration;
-    declaration;
-    ...
+attribute {    // affects all declarations in the block
+  declaration;
+  declaration;
+  ...
 }
 ---
 
@@ -59,21 +58,19 @@ attribute                       // affects all declarations in the block
 
 ---
 attribute
-    declaration;
+  declaration;
 else
-    declaration;
+  declaration;
 
-attribute                       // affects all declarations in the block
-{
-    declaration;
-    declaration;
-    ...
+attribute {    // affects all declarations in the block
+  declaration;
+  declaration;
+  ...
 }
-else
-{
-    declaration;
-    declaration;
-    ...
+else {
+  declaration;
+  declaration;
+  ...
 }
 ---
 
@@ -81,16 +78,16 @@ else
 
 $(GRAMMAR
 $(GNAME LinkageAttribute):
-        $(B extern)
-        $(B extern) $(B $(LPAREN)) $(I LinkageType) $(B $(RPAREN))
+    $(B extern)
+    $(B extern) $(B $(LPAREN)) $(GLINK LinkageType) $(B $(RPAREN))
 
 $(GNAME LinkageType):
-        $(B C)
-        $(B C++)
-        $(B D)
-        $(B Windows)
-        $(B Pascal)
-        $(B System)
+    $(B C)
+    $(B C++)
+    $(B D)
+    $(B Windows)
+    $(B Pascal)
+    $(B System)
 )
 
         $(P D provides an easy way to call C functions and operating
@@ -112,7 +109,7 @@ $(GNAME LinkageType):
 
 ---------------
 extern (C):
-        int foo();      // call foo() with C conventions
+  int foo(); // call foo() with C conventions
 ---------------
 
         $(P D conventions are:)
@@ -132,7 +129,7 @@ extern:
 
 ---------------
 extern (Windows):
-    void *VirtualAlloc(
+  void *VirtualAlloc(
     void *lpAddress,
     uint dwSize,
     uint flAllocationType,
@@ -144,8 +141,8 @@ extern (Windows):
 
 $(GRAMMAR
 $(GNAME AlignAttribute):
-        $(B align)
-        $(B align) $(B $(LPAREN)) $(LINK2 lex.html#IntegerLiteral, $(I IntegerLiteral)) $(B $(RPAREN))
+    $(B align)
+    $(B align) $(B $(LPAREN)) $(LINK2 lex.html#IntegerLiteral, $(I IntegerLiteral)) $(B $(RPAREN))
 )
 
         $(P Specifies the alignment of struct members. $(B align) by itself
@@ -160,9 +157,9 @@ $(GNAME AlignAttribute):
         )
 
 ---------------
-struct S
-{   align(4) byte a;    // placed at offset 0
-    align(4) byte b;    // placed at offset 1
+struct S {
+  align(4) byte a; // placed at offset 0
+  align(4) byte b; // placed at offset 1
 }
 ---------------
 
@@ -172,11 +169,11 @@ struct S
         )
 
 ---------------
-align (1) struct S
-{   byte a;     // placed at offset 0
-    byte[3] filler1;
-    byte b;     // placed at offset 4
-    byte[3] filler2;
+align (1) struct S {
+  byte a;     // placed at offset 0
+  byte[3] filler1;
+  byte b;     // placed at offset 4
+  byte[3] filler2;
 }
 ---------------
 
@@ -216,7 +213,7 @@ align (1) struct S
 ---------------
 deprecated
 {
-        void oldFoo();
+  void oldFoo();
 }
 ---------------
 
@@ -288,9 +285,8 @@ $(B const)
 ---------------
 const int foo = 7;
 
-const
-{
-    double bar = foo + 6;
+const {
+  double bar = foo + 6;
 }
 ---------------
 
@@ -306,41 +302,39 @@ const int y;
 
 static this()
 {
-    x = 3;      // ok
-    // error: y not initialized
+  x = 3;   // ok
+  // error: y not initialized
 }
 
 void foo()
 {
-    x = 4;      // error, x is const and not in static constructor
+  x = 4; // error, x is const and not in static constructor
 }
 
 class C
 {
-    const int a;
-    const int b;
-    static const int c;
-    static const int d;
+  const int a;
+  const int b;
+  static const int c;
+  static const int d;
 
-    this()
-    {   a = 3;          // ok
-        a = 4;          // ok, multiple initialization allowed
-        C p = this;
-        p.a = 4;        // error, only members of this instance
-        c = 5;          // error, should initialize in static constructor
-        // error, b is not initialized
-    }
+  this() {
+    a = 3;      // ok
+    a = 4;      // ok, multiple initialization allowed
+    C p = this;
+    p.a = 4;    // error, only members of this instance
+    c = 5;      // error, should initialize in static constructor
+    // error, b is not initialized
+  }
 
-    this(int x)
-    {
-        this();         // ok, forwarding constructor
-    }
+  this(int x) {
+    this();      // ok, forwarding constructor
+  }
 
-    static this()
-    {
-        c = 3;          // ok
-        // error, d is not initialized
-    }
+  static this() {
+    c = 3;       // ok
+    // error, d is not initialized
+  }
 }
 ---------------
 
@@ -369,23 +363,20 @@ $(V2
         )
 
 ---
-struct T
-{
-    @disable this(this) { }   // disabling this makes T not copyable
+struct T {
+  @disable this(this) { } // disabling this makes T not copyable
 }
 
-struct S
-{
-    T t;        // uncopyable member makes S also not copyable
+struct S {
+  T t;   // uncopyable member makes S also not copyable
 }
 
 @disable void foo() { }
 
-void main()
-{
-    S s;
-    S t = s;    // error, S is not copyable
-    foo();      // error, foo is disabled
+void main() {
+  S s;
+  S t = s; // error, S is not copyable
+  foo();   // error, foo is disabled
 }
 ---
 )
@@ -405,19 +396,16 @@ $(B override)
         )
 
 ---------------
-class Foo
-{
-    int bar();
-    int abc(int x);
+class Foo {
+  int bar();
+  int abc(int x);
 }
 
-class Foo2 : Foo
-{
-    override
-    {
-        int bar(char c);        // error, no bar(char) in Foo
-        int abc(int x);         // ok
-    }
+class Foo2 : Foo {
+  override {
+    int bar(char c); // error, no bar(char) in Foo
+    int abc(int x);  // ok
+  }
 }
 ---------------
 
@@ -435,10 +423,9 @@ $(B static)
         )
 
 ---------------
-class Foo
-{
-    static int bar() { return 6; }
-    int foobar() { return 7; }
+class Foo {
+  static int bar() { return 6; }
+  int foobar() { return 7; }
 }
 
 ...
@@ -465,8 +452,8 @@ $(P
 
 ---------------
 module foo;
-int x = 3;              // x is global
-private int y = 4;      // y is local to module foo
+int x = 3;         // x is global
+private int y = 4; // y is local to module foo
 ---------------
 
 
