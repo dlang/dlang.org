@@ -88,26 +88,25 @@ $(I ScopeStatement):
         )
 
 --------------
-void func1(int x)
-{   int x;      // illegal, x shadows parameter x
+void func1(int x) {
+  int x;    // illegal, x shadows parameter x
 
-    int y;
+  int y;
 
-    { int y; }  // illegal, y shadows enclosing scope's y
+  { int y; } // illegal, y shadows enclosing scope's y
 
-    void delegate() dg;
-    dg = { int y; };    // ok, this y is not in the same function
+  void delegate() dg;
+  dg = { int y; }; // ok, this y is not in the same function
 
-    struct S
-    {
-        int y;          // ok, this y is a member, not a local
-    }
+  struct S {
+    int y;    // ok, this y is a member, not a local
+  }
 
-    { int z; }
-    { int z; }  // ok, this z is not shadowing the other z
+  { int z; }
+  { int z; }  // ok, this z is not shadowing the other z
 
-    { int t; }
-    { t++;   }  // illegal, t is undefined
+  { int t; }
+  { t++;   }  // illegal, t is undefined
 }
 --------------
 
@@ -160,7 +159,7 @@ $(P
 $(GRAMMAR
 $(I BlockStatement):
     $(B { })
-    $(B {) $(I StatementList) $(B })
+    $(B {) $(GLINK StatementList) $(B })
 
 $(GNAME StatementList):
     $(PSSEMI_PSCURLYSCOPE)
@@ -189,10 +188,10 @@ $(I ExpressionStatement):
 
 ----
 int x;
-x++;                // ok
-x;                  // illegal
-1+1;                // illegal
-cast(void)(x + x);  // ok
+x++;               // ok
+x;                 // illegal
+1+1;               // illegal
+cast(void)(x + x); // ok
 ----
 
 <h2>$(LNAME2 DeclarationStatement, Declaration Statement)</h2>
@@ -207,8 +206,8 @@ $(I DeclarationStatement):
         $(P Some declaration statements:)
 
 ----
-int a;           // declare a as type int and initialize it to 0
-struct S { }     // declare struct s
+int a;        // declare a as type int and initialize it to 0
+struct S { }  // declare struct s
 alias int myint;
 ----
 
@@ -218,19 +217,19 @@ alias int myint;
 
 $(GRAMMAR
 $(I IfStatement):
-        $(B if $(LPAREN)) $(I IfCondition) $(B $(RPAREN)) $(I ThenStatement)
-        $(B if $(LPAREN)) $(I IfCondition) $(B $(RPAREN)) $(I ThenStatement) $(B else) $(I ElseStatement)
+    $(B if $(LPAREN)) $(GLINK IfCondition) $(B $(RPAREN)) $(GLINK ThenStatement)
+    $(B if $(LPAREN)) $(GLINK IfCondition) $(B $(RPAREN)) $(GLINK ThenStatement) $(B else) $(GLINK ElseStatement)
 
 $(GNAME IfCondition):
-        $(EXPRESSION)
-        $(B auto) $(I Identifier) $(B =) $(EXPRESSION)
-        $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(B =) $(EXPRESSION)
+    $(EXPRESSION)
+    $(B auto) $(I Identifier) $(B =) $(EXPRESSION)
+    $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(B =) $(EXPRESSION)
 
 $(GNAME ThenStatement):
-        $(PSSCOPE)
+    $(PSSCOPE)
 
 $(GNAME ElseStatement):
-        $(PSSCOPE)
+    $(PSSCOPE)
 )
 
         $(EXPRESSION) is evaluated and must have a type that
@@ -261,15 +260,15 @@ import std.regexp;
 ...
 if (auto m = std.regexp.search("abcdef", "b(c)d"))
 {
-    writefln("[%s]", m.pre);      // prints [a]
-    writefln("[%s]", m.post);     // prints [ef]
-    writefln("[%s]", m.match(0)); // prints [bcd]
-    writefln("[%s]", m.match(1)); // prints [c]
-    writefln("[%s]", m.match(2)); // prints []
+  writefln("[%s]", m.pre);      // prints [a]
+  writefln("[%s]", m.post);     // prints [ef]
+  writefln("[%s]", m.match(0)); // prints [bcd]
+  writefln("[%s]", m.match(1)); // prints [c]
+  writefln("[%s]", m.match(2)); // prints []
 }
 else
 {
-    writefln(m.post);    // error, m undefined
+  writefln(m.post);    // error, m undefined
 }
 writefln(m.pre);         // error, m undefined
 ---
@@ -292,10 +291,9 @@ $(I WhileStatement):
 
 ---
 int i = 0;
-while (i < 10)
-{
-    foo(i);
-    i++;
+while (i < 10) {
+  foo(i);
+  i++;
 }
 ---
 
@@ -321,9 +319,8 @@ $(I DoStatement):
 
 ---
 int i = 0;
-do
-{
-    foo(i);
+do {
+  foo(i);
 } while (++i < 10);
 ---
 
@@ -338,17 +335,17 @@ do
 
 $(GRAMMAR
 $(I ForStatement):
-        $(B for $(LPAREN))$(I Initialize) $(I Test)$(OPT) $(B ;) $(I Increment)$(OPT)$(B $(RPAREN)) $(PSSCOPE)
+    $(B for $(LPAREN))$(GLINK Initialize) $(I Test)$(OPT) $(B ;) $(GLINK Increment)$(OPT)$(B $(RPAREN)) $(PSSCOPE)
 
 $(GNAME Initialize):
-        $(B ;)
-        $(PS0)
+    $(B ;)
+    $(PS0)
 
 $(GNAME Test):
-        $(EXPRESSION)
+    $(EXPRESSION)
 
 $(GNAME Increment):
-        $(EXPRESSION)
+    $(EXPRESSION)
 )
 
         $(P $(I Initialize) is executed.
@@ -373,15 +370,16 @@ $(GNAME Increment):
 
 --------------
 for (int i = 0; i < 10; i++)
-        foo(i);
+  foo(i);
 --------------
 
         is equivalent to:
 
 --------------
-{   int i;
-    for (i = 0; i < 10; i++)
-        foo(i);
+{
+  int i;
+  for (i = 0; i < 10; i++)
+    foo(i);
 }
 --------------
 
@@ -389,7 +387,7 @@ for (int i = 0; i < 10; i++)
 
 --------------
 for (int i = 0; i < 10; i++)
-        ;       // illegal
+  ;       // illegal
 --------------
 
         Use instead:
@@ -409,15 +407,15 @@ for (int i = 0; i < 10; i++)
 
 $(GRAMMAR
 $(I ForeachStatement):
-    $(I Foreach) $(B $(LPAREN))$(I ForeachTypeList) $(B ;) $(I Aggregate)$(B $(RPAREN)) $(PS0)
+    $(I Foreach) $(B $(LPAREN))$(GLINK ForeachTypeList) $(B ;) $(GLINK Aggregate)$(B $(RPAREN)) $(PS0)
 
 $(GNAME Foreach):
     $(B foreach)
     $(B foreach_reverse)
 
 $(GNAME ForeachTypeList):
-    $(I ForeachType)
-    $(I ForeachType) , $(I ForeachTypeList)
+    $(GLINK ForeachType)
+    $(GLINK ForeachType) , $(I ForeachTypeList)
 
 $(GNAME ForeachType):
     $(B ref) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
@@ -468,7 +466,7 @@ char[] a;
 ...
 foreach (int i, char c; a)
 {
-    writefln("a[%d] = '%c'", i, c);
+  writefln("a[%d] = '%c'", i, c);
 }
 --------------
 
@@ -494,14 +492,14 @@ char[] a = "\xE2\x89\xA0".dup;  // \u2260 encoded as 3 UTF-8 bytes
 
 foreach (dchar c; a)
 {
-    writefln("a[] = %x", c);    // prints 'a[] = 2260'
+  writefln("a[] = %x", c); // prints 'a[] = 2260'
 }
 
 dchar[] b = "\u2260"d.dup;
 
 foreach (char c; b)
 {
-    writef("%x, ", c);  // prints 'e2, 89, a0, '
+  writef("%x, ", c);  // prints 'e2, 89, a0, '
 }
 --------------
 
@@ -511,16 +509,13 @@ foreach (char c; b)
         )
 
 --------------
-void test()
-{
-    foreach (char c; "ab")
-    {
-        writefln("'%s'", c);
-    }
-    foreach (wchar w; "xy")
-    {
-        writefln("'%s'", w);
-    }
+void test() {
+  foreach (char c; "ab") {
+    writefln("'%s'", c);
+  }
+  foreach (wchar w; "xy") {
+    writefln("'%s'", w);
+  }
 }
 --------------
 
@@ -552,11 +547,11 @@ $(CONSOLE
         )
 
 --------------
-double[string] a;       // $(I index) type is string, $(I value) type is double
+double[string] a; // $(I index) type is string, $(I value) type is double
 ...
 foreach (string s, double d; a)
 {
-    writefln("a['%s'] = %g", s, d);
+  writefln("a['%s'] = %g", s, d);
 }
 --------------
 
@@ -586,8 +581,9 @@ foreach (e; range) { ... }
 
 ---
 for (auto __r = range; !__r.empty; __r.next)
-{   auto e = __r.head;
-   ...
+{
+  auto e = __r.head;
+  ...
 }
 ---
 
@@ -601,8 +597,9 @@ foreach_reverse (e; range) { ... }
 
 ---
 for (auto __r = range; !__r.empty; __r.retreat)
-{   auto e = __r.toe;
-   ...
+{
+  auto e = __r.toe;
+  ...
 }
 ---
 
@@ -650,38 +647,36 @@ int $(B opApplyReverse)(int delegate(ref $(I Type) [, ...]) $(I dg));
         )
 
 --------------
-class Foo
-{
-    uint array[2];
+class Foo {
+  uint array[2];
 
-    int $(B opApply)(int delegate(ref uint) $(I dg))
-    {   int result = 0;
+  int $(B opApply)(int delegate(ref uint) $(I dg))
+  { int result = 0;
 
-        for (int i = 0; i < array.length; i++)
-        {
-            result = $(I dg)(array[i]);
-            if (result)
-                break;
-        }
-        return result;
+    for (int i = 0; i < array.length; i++)
+    {
+      result = $(I dg)(array[i]);
+      if (result)
+        break;
     }
+    return result;
+  }
 }
 --------------
 
         An example using this might be:
 
 --------------
-void test()
-{
-    Foo a = new Foo();
+void test() {
+  Foo a = new Foo();
 
-    a.array[0] = 73;
-    a.array[1] = 82;
+  a.array[0] = 73;
+  a.array[1] = 82;
 
-    foreach (uint u; a)
-    {
-        writefln("%d", u);
-    }
+  foreach (uint u; a)
+  {
+    writefln("%d", u);
+  }
 }
 --------------
 
@@ -724,16 +719,15 @@ $(P
 
 -----
 import std.stdio;
-import std.typetuple;   // for TypeTuple
+import std.typetuple; // for TypeTuple
 
-void main()
-{
-    alias TypeTuple!(int, long, double) TL;
+void main() {
+  alias TypeTuple!(int, long, double) TL;
 
-    foreach (T; TL)
-    {
-        writeln(typeid(T));
-    }
+  foreach (T; TL)
+  {
+    writeln(typeid(T));
+  }
 }
 -----
 
@@ -751,18 +745,17 @@ double
         )
 
 --------------
-void test()
-{
-    static uint[2] a = [7, 8];
+void test() {
+  static uint[2] a = [7, 8];
 
-    foreach (ref uint u; a)
-    {
-        u++;
-    }
-    foreach (uint u; a)
-    {
-        writefln("%d", u);
-    }
+  foreach (ref uint u; a)
+  {
+    u++;
+  }
+  foreach (uint u; a)
+  {
+    writefln("%d", u);
+  }
 }
 --------------
 
@@ -791,11 +784,11 @@ int[] a;
 int[] b;
 foreach (int i; a)
 {
-    a = null;                   // error
-    a.length = a.length + 10;   // error
-    a = b;                      // error
+  a = null;                 // error
+  a.length = a.length + 10; // error
+  a = b;                    // error
 }
-a = null;                       // ok
+a = null;                   // ok
 --------------
 
 $(V2
@@ -805,7 +798,7 @@ $(V2
 
 $(GRAMMAR
 $(I ForeachRangeStatement):
-    $(GLINK Foreach) $(LPAREN)$(GLINK ForeachType) $(B ;) $(I LwrExpression) $(B ..) $(I UprExpression) $(B $(RPAREN)) $(PSSCOPE)
+    $(GLINK Foreach) $(LPAREN)$(GLINK ForeachType) $(B ;) $(GLINK LwrExpression) $(B ..) $(GLINK UprExpression) $(B $(RPAREN)) $(PSSCOPE)
 
 $(GNAME LwrExpression):
     $(EXPRESSION)
@@ -833,18 +826,16 @@ $(GNAME UprExpression):
 ---
 import std.stdio;
 
-int foo()
-{
-    write("foo");
-    return 10;
+int foo() {
+  write("foo");
+  return 10;
 }
 
-void main()
-{
-    foreach (i; 0 .. foo())
-    {
-        write(i);
-    }
+void main() {
+  foreach (i; 0 .. foo())
+  {
+    write(i);
+  }
 }
 ---
 
@@ -871,29 +862,29 @@ foo0123456789
 
 $(GRAMMAR
 $(I SwitchStatement):
-        $(B switch $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
+    $(B switch $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
 
 $(GNAME CaseStatement):
-        $(B case) $(LINK2 expression.html#ArgumentList, $(I ArgumentList)) $(B :) $(PSSEMI_PSCURLYSCOPE_LIST)
+    $(B case) $(GLINK2 expression, ArgumentList) $(B :) $(PSSEMI_PSCURLYSCOPE_LIST)
 
 $(V2 $(GNAME CaseRangeStatement):
-        $(B case) $(I FirstExp) $(B : .. case) $(I LastExp) $(B :) $(PSSEMI_PSCURLYSCOPE_LIST)
+    $(B case) $(GLINK FirstExp) $(B : .. case) $(GLINK LastExp) $(B :) $(PSSEMI_PSCURLYSCOPE_LIST)
 
-$(I FirstExp):
-        $(ASSIGNEXPRESSION)
+$(GNAME FirstExp):
+    $(ASSIGNEXPRESSION)
 
-$(I LastExp):
-        $(ASSIGNEXPRESSION)
+$(GNAME LastExp):
+    $(ASSIGNEXPRESSION)
 )
 $(GNAME DefaultStatement):
-        $(B default :) $(PSSEMI_PSCURLYSCOPE_LIST)
+    $(B default :) $(PSSEMI_PSCURLYSCOPE_LIST)
 
 $(GNAME ScopeStatementList):
-        $(GLINK StatementListNoCaseNoDefault)
+    $(GLINK StatementListNoCaseNoDefault)
 
 $(GNAME StatementListNoCaseNoDefault):
-        $(GLINK StatementNoCaseNoDefault)
-        $(GLINK StatementNoCaseNoDefault) $(I StatementListNoCaseNoDefault)
+    $(GLINK StatementNoCaseNoDefault)
+    $(GLINK StatementNoCaseNoDefault) $(I StatementListNoCaseNoDefault)
 
 $(GNAME StatementNoCaseNoDefault):
     $(B ;)
@@ -970,14 +961,13 @@ $(V2
         )
 
 --------------
-    switch (i)
-    {
-        case 1:
-        {
-            case 2:
-        }
-            break;
-    }
+switch (i) {
+  case 1:
+  {
+    case 2:
+  }
+    break;
+}
 --------------
 
         $(P Case statements 'fall through' to subsequent
@@ -986,17 +976,16 @@ $(V2
         )
 
 --------------
-switch (i)
-{
-    case 1:
-        x = 3;
-    case 2:
-        x = 4;
-        break;
+switch (i) {
+  case 1:
+    x = 3;
+  case 2:
+    x = 4;
+    break;
 
-    case 3,4,5:
-        x = 5;
-        break;
+  case 3,4,5:
+    x = 5;
+    break;
 }
 --------------
 
@@ -1010,11 +999,10 @@ switch (i)
 --------------
 char[] name;
 ...
-switch (name)
-{
-    case "fred":
-    case "sally":
-        ...
+switch (name) {
+  case "fred":
+  case "sally":
+    ...
 }
 --------------
 
@@ -1036,7 +1024,7 @@ $(V2
 
 $(GRAMMAR
 $(I FinalSwitchStatement):
-        $(B final switch $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
+    $(B final switch $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
 )
 
         $(P A final switch statement is just like a switch statement,
@@ -1086,9 +1074,9 @@ $(I ContinueStatement):
 ---
 for (i = 0; i < 10; i++)
 {
-    if (foo(i))
-        continue;
-    bar();
+  if (foo(i))
+    continue;
+  bar();
 }
 ---
 
@@ -1123,8 +1111,8 @@ $(I BreakStatement):
 ---
 for (i = 0; i < 10; i++)
 {
-    if (foo(i))
-        break;
+  if (foo(i))
+    break;
 }
 ---
 
@@ -1197,11 +1185,11 @@ $(I GotoStatement):
         $(I Identifier).
 
 ---
-    if (foo)
-        goto L1;
-    x = 3;
+  if (foo)
+    goto L1;
+  x = 3;
 L1:
-    x++;
+  x++;
 ---
 
         The second form, $(CODE goto default;), transfers to the
@@ -1211,7 +1199,7 @@ L1:
 
         The third form, $(CODE goto case;), transfers to the
         next $(GLINK CaseStatement) of the innermost enclosing
-        $(I SwitchStatement).
+        $(GLINK SwitchStatement).
         <p>
 
         The fourth form, $(CODE goto case $(EXPRESSION);), transfers to the
@@ -1222,15 +1210,15 @@ L1:
 ---
 switch (x)
 {
-    case 3:
-        goto case;
-    case 4:
-        goto default;
-    case 5:
-        goto case 4;
-    default:
-        x = 4;
-        break;
+  case 3:
+    goto case;
+  case 4:
+    goto default;
+  case 5:
+    goto case 4;
+  default:
+    x = 4;
+    break;
 }
 ---
         Any intervening finally clauses are executed, along with
@@ -1247,9 +1235,9 @@ switch (x)
 
 $(GRAMMAR
 $(I WithStatement):
-        $(B with) $(B $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
-        $(B with) $(B $(LPAREN)) $(LINK2 template.html#Symbol, $(I Symbol)) $(B $(RPAREN)) $(PSSCOPE)
-        $(B with) $(B $(LPAREN)) $(LINK2 template.html#TemplateInstance, $(I TemplateInstance)) $(B $(RPAREN)) $(PSSCOPE)
+    $(B with) $(B $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
+    $(B with) $(B $(LPAREN)) $(LINK2 template.html#Symbol, $(I Symbol)) $(B $(RPAREN)) $(PSSCOPE)
+    $(B with) $(B $(LPAREN)) $(LINK2 template.html#TemplateInstance, $(I TemplateInstance)) $(B $(RPAREN)) $(PSSCOPE)
 )
 
         where $(EXPRESSION) evaluates to a class reference or struct
@@ -1260,8 +1248,8 @@ $(I WithStatement):
 --------------
 $(B with) (expression)
 {
-    ...
-    ident;
+  ...
+  ident;
 }
 --------------
 
@@ -1269,10 +1257,10 @@ $(B with) (expression)
 
 --------------
 {
-    Object tmp;
-    tmp = expression;
-    ...
-    tmp.ident;
+  Object tmp;
+  tmp = expression;
+  ...
+  tmp.ident;
 }
 --------------
 
@@ -1287,15 +1275,13 @@ $(B with) (expression)
         )
 
 --------------
-struct Foo
-{
-    alias int Y;
+struct Foo {
+  alias int Y;
 }
 ...
-Y y;            // error, Y undefined
-with (Foo)
-{
-    Y y;        // same as Foo.Y y;
+Y y;        // error, Y undefined
+with (Foo) {
+  Y y;      // same as Foo.Y y;
 }
 --------------
 
@@ -1306,19 +1292,16 @@ $(V2
         statements when new members are added to the object declaration.
         )
 ---
-struct S
-{
-    float x;
+struct S {
+  float x;
 }
 
-void main()
-{
-    int x;
-    S s;
-    with (s)
-    {
-        x++;  // error, shadows the int x declaration
-    }
+void main() {
+  int x;
+  S s;
+  with (s) {
+    x++;  // error, shadows the int x declaration
+  }
 }
 ---
 )
@@ -1372,26 +1355,26 @@ synchronized { ... }
 
 $(GRAMMAR
 $(I TryStatement):
-        $(B try) $(PSSCOPE) $(I Catches)
-        $(B try) $(PSSCOPE) $(I Catches) $(I FinallyStatement)
-        $(B try) $(PSSCOPE) $(I FinallyStatement)
+    $(B try) $(PSSCOPE) $(GLINK Catches)
+    $(B try) $(PSSCOPE) $(GLINK Catches) $(GLINK FinallyStatement)
+    $(B try) $(PSSCOPE) $(GLINK FinallyStatement)
 
 $(GNAME Catches):
-        $(I LastCatch)
-        $(I Catch)
-        $(I Catch) $(I Catches)
+    $(GLINK LastCatch)
+    $(GLINK Catch)
+    $(GLINK Catch) $(I Catches)
 
 $(GNAME LastCatch):
-        $(B catch) $(PS0)
+    $(B catch) $(PS0)
 
 $(GNAME Catch):
-        $(B catch $(LPAREN)) $(I CatchParameter) $(B $(RPAREN)) $(PS0)
+    $(B catch $(LPAREN)) $(GLINK CatchParameter) $(B $(RPAREN)) $(PS0)
 
 $(GNAME CatchParameter):
-        $(GLINK2 declaration, BasicType) $(I Identifier)
+    $(GLINK2 declaration, BasicType) $(I Identifier)
 
 $(GNAME FinallyStatement):
-        $(B finally) $(PS0)
+    $(B finally) $(PS0)
 )
 
         $(P $(I CatchParameter) declares a variable v of type T, where T is
@@ -1446,26 +1429,21 @@ $(V2
 --------------
 import std.stdio;
 
-int main()
-{
-    try
-    {
-        try
-        {
-            throw new Exception("first");
-        }
-        finally
-        {
-            writefln("finally");
-            throw new Exception("second");
-        }
+int main() {
+  try {
+    try {
+      throw new Exception("first");
     }
-    catch(Exception e)
-    {
-        writefln("catch %s", e.msg);
+    finally {
+      writefln("finally");
+      throw new Exception("second");
     }
-    writefln("done");
-    return 0;
+  }
+  catch(Exception e) {
+    writefln("catch %s", e.msg);
+  }
+  writefln("done");
+  return 0;
 }
 --------------
 
@@ -1499,7 +1477,7 @@ done
 
 $(GRAMMAR
 $(I ThrowStatement):
-        $(B throw) $(EXPRESSION) $(B ;)
+    $(B throw) $(EXPRESSION) $(B ;)
 )
 
         $(EXPRESSION) is evaluated and must be $(V1 an Object) $(V2 a Throwable) reference.
@@ -1513,9 +1491,9 @@ throw new Exception("message");
 
 $(GRAMMAR
 $(I ScopeGuardStatement):
-        $(B scope(exit)) $(PSCURLYSCOPE)
-        $(B scope(success)) $(PSCURLYSCOPE)
-        $(B scope(failure)) $(PSCURLYSCOPE)
+    $(B scope(exit)) $(PSCURLYSCOPE)
+    $(B scope(success)) $(PSCURLYSCOPE)
+    $(B scope(failure)) $(PSCURLYSCOPE)
 )
 
         The $(I ScopeGuardStatement) executes $(PSCURLYSCOPE) at the close
@@ -1537,24 +1515,22 @@ $(I ScopeGuardStatement):
 
 $(V1
 ----
-writef("1");
-{
-    writef("2");
-    scope(exit) writef("3");
-    scope(exit) writef("4");
-    writef("5");
+writef("1"); {
+  writef("2");
+  scope(exit) writef("3");
+  scope(exit) writef("4");
+  writef("5");
 }
 writefln();
 ----
 )
 $(V2
 ----
-write("1");
-{
-    write("2");
-    scope(exit) write("3");
-    scope(exit) write("4");
-    write("5");
+write("1"); {
+  write("2");
+  scope(exit) write("3");
+  scope(exit) write("4");
+  write("5");
 }
 writeln();
 ----
@@ -1568,10 +1544,10 @@ $(CONSOLE
 $(V1
 ----
 {
-    scope(exit) writef("1");
-    scope(success) writef("2");
-    scope(exit) writef("3");
-    scope(success) writef("4");
+  scope(exit) writef("1");
+  scope(success) writef("2");
+  scope(exit) writef("3");
+  scope(success) writef("4");
 }
 writefln();
 ----
@@ -1579,10 +1555,10 @@ writefln();
 $(V2
 ----
 {
-    scope(exit) write("1");
-    scope(success) write("2");
-    scope(exit) write("3");
-    scope(success) write("4");
+  scope(exit) write("1");
+  scope(success) write("2");
+  scope(exit) write("3");
+  scope(success) write("4");
 }
 writeln();
 ----
@@ -1595,50 +1571,44 @@ $(CONSOLE
 
 $(V1
 ----
-class Foo
-{
-    this() { writef("0"); }
-    ~this() { writef("1"); }
+class Foo {
+  this() { writef("0"); }
+  ~this() { writef("1"); }
 }
 
-try
-{
-    scope(exit) writef("2");
-    scope(success) writef("3");
-    scope Foo f = new Foo();
-    scope(failure) writef("4");
-    throw new Exception("msg");
-    scope(exit) writef("5");
-    scope(success) writef("6");
-    scope(failure) writef("7");
+try {
+  scope(exit) writef("2");
+  scope(success) writef("3");
+  scope Foo f = new Foo();
+  scope(failure) writef("4");
+  throw new Exception("msg");
+  scope(exit) writef("5");
+  scope(success) writef("6");
+  scope(failure) writef("7");
 }
-catch (Exception e)
-{
+catch (Exception e) {
 }
 writefln();
 ----
 )
 $(V2
 ----
-class Foo
-{
-    this() { write("0"); }
-    ~this() { write("1"); }
+class Foo {
+  this() { write("0"); }
+  ~this() { write("1"); }
 }
 
-try
-{
-    scope(exit) write("2");
-    scope(success) write("3");
-    scope Foo f = new Foo();
-    scope(failure) write("4");
-    throw new Exception("msg");
-    scope(exit) write("5");
-    scope(success) write("6");
-    scope(failure) write("7");
+try {
+  scope(exit) write("2");
+  scope(success) write("3");
+  scope Foo f = new Foo();
+  scope(failure) write("4");
+  throw new Exception("msg");
+  scope(exit) write("5");
+  scope(success) write("6");
+  scope(failure) write("7");
 }
-catch (Exception e)
-{
+catch (Exception e) {
 }
 writeln();
 ----
@@ -1660,8 +1630,8 @@ $(V1
 
 $(GRAMMAR
 $(I VolatileStatement):
-        $(B volatile) $(PSSEMI_PSCURLYSCOPE)
-        $(B volatile) $(B ;)
+    $(B volatile) $(PSSEMI_PSCURLYSCOPE)
+    $(B volatile) $(B ;)
 )
 
         $(PSSEMI_PSCURLYSCOPE) is evaluated.
@@ -1681,12 +1651,12 @@ $(I VolatileStatement):
 
 $(GRAMMAR
 $(GNAME AsmStatement):
-        $(B asm { })
-        $(B asm {) $(I AsmInstructionList) $(B })
+    $(B asm { })
+    $(B asm {) $(GLINK AsmInstructionList) $(B })
 
 $(GNAME AsmInstructionList):
-        $(I AsmInstruction) $(B ;)
-        $(I AsmInstruction) $(B ;) $(I AsmInstructionList)
+    $(GLINK AsmInstruction) $(B ;)
+    $(GLINK AsmInstruction) $(B ;) $(I AsmInstructionList)
 )
 
         An asm statement enables the direct use of assembly language
@@ -1717,21 +1687,18 @@ $(GNAME AsmInstructionList):
 
 --------------
 int x = 3;
-asm
-{
-    mov EAX,x;          // load x and put it in register EAX
+asm {
+  mov EAX,x; // load x and put it in register EAX
 }
 --------------
 
         Inline assembler can be used to access hardware directly:
 
 --------------
-int gethardware()
-{
-    asm
-    {
-            mov EAX, dword ptr 0x1234;
-    }
+int gethardware() {
+  asm {
+    mov EAX, dword ptr 0x1234;
+  }
 }
 --------------
 
@@ -1742,14 +1709,13 @@ int gethardware()
 --------------
 version (D_InlineAsm_X86)
 {
-    asm
-    {
-        ...
-    }
+  asm {
+    ...
+  }
 }
 else
 {
-    /* ... some workaround ... */
+  /* ... some workaround ... */
 }
 --------------
 
@@ -1762,7 +1728,7 @@ else
 
 $(GRAMMAR
 $(I PragmaStatement):
-    $(LINK2 pragma.html, $(I Pragma)) $(PSSEMI)
+    $(GLINK2 pragma, Pragma) $(PSSEMI)
 )
 
 <h2>$(LNAME2 MixinStatement, Mixin Statement)</h2>
@@ -1781,25 +1747,24 @@ $(I MixinStatement):
 ---
 import std.stdio;
 
-void main()
-{
-    int j;
-    mixin("
-        int x = 3;
-        for (int i = 0; i < 3; i++)
-            writefln(x + i, ++j);
-        ");    // ok
+void main() {
+  int j;
+  mixin("
+    int x = 3;
+    for (int i = 0; i < 3; i++)
+      writefln(x + i, ++j);
+    ");    // ok
 
-    const char[] s = "int y;";
-    mixin(s);  // ok
-    y = 4;     // ok, mixin declared y
+  const char[] s = "int y;";
+  mixin(s);  // ok
+  y = 4;     // ok, mixin declared y
 
-    char[] t = "y = 3;";
-    mixin(t);  // error, t is not evaluatable at compile time
+  char[] t = "y = 3;";
+  mixin(t);  // error, t is not evaluatable at compile time
 
-    mixin("y =") 4; // error, string must be complete statement
+  mixin("y =") 4; // error, string must be complete statement
 
-    mixin("y =" ~ "4;");  // ok
+  mixin("y =" ~ "4;");  // ok
 }
 ---
 
