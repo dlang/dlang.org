@@ -8,15 +8,15 @@ $(SPEC_S Associative Arrays,
         )
 
         $(P Associative arrays are declared by placing the $(I KeyType)
-        within the [] of an array declaration:
+        within the [ ] of an array declaration:
         )
 
 ---------
-int[char[]] b;          // associative array b of ints that are
-                        // indexed by an array of characters.
-                        // The $(I KeyType) is char[]
-b["hello"] = 3;         // set value associated with key "hello" to 3
-func(b["hello"]);       // pass 3 as parameter to func()
+int[char[]] b;    // associative array b of ints that are
+                  // indexed by an array of characters.
+                  // The $(I KeyType) is char[]
+b["hello"] = 3;   // set value associated with key "hello" to 3
+func(b["hello"]); // pass 3 as parameter to func()
 ---------
 
         $(P Particular keys in an associative array can be removed with the
@@ -65,25 +65,24 @@ $(V2    $(LI $(TT bool opEquals(Object))))
         $(P For example:)
 
 ---
-class Foo
-{
-    int a, b;
+class Foo {
+  int a, b;
 
-    hash_t $(B toHash)() { return a + b; }
+  hash_t $(B toHash)() { return a + b; }
 
-$(V1      int $(B opEquals)(Object o))$(V2      bool $(B opEquals)(Object o))
-    {   Foo f = cast(Foo) o;
-        return f && a == foo.a && b == foo.b;
-    }
+$(V1    int $(B opEquals)(Object o))$(V2    bool $(B opEquals)(Object o))
+  { Foo f = cast(Foo) o;
+    return f && a == foo.a && b == foo.b;
+  }
 
-    int $(B opCmp)(Object o)
-    {   Foo f = cast(Foo) o;
-        if (!f)
-            return -1;
-        if (a == foo.a)
-            return b - foo.b;
-        return a - foo.a;
-    }
+  int $(B opCmp)(Object o)
+  { Foo f = cast(Foo) o;
+    if (!f)
+      return -1;
+    if (a == foo.a)
+      return b - foo.b;
+    return a - foo.a;
+  }
 }
 ---
 
@@ -109,47 +108,58 @@ $(V1 int $(B opCmp)($(I KeyType)* s);)$(V2 const int $(B opCmp)(ref const $(I Ke
 
         $(P For example:)
 
+$(V1
 ---------
 import std.string;
 
-struct MyString
-{
-    string str;
+struct MyString {
+  string str;
 
-$(V1      hash_t $(B toHash)()
-    {   hash_t hash;
-        foreach (char c; s)
-            hash = (hash * 9) + c;
-        return hash;
-    }
+  hash_t $(B toHash)()
+  { hash_t hash;
+    foreach (char c; s)
+      hash = (hash * 9) + c;
+    return hash;
+  }
 
-    bool $(B opEquals)(MyString* s)
-    {
-        return std.string.cmp(this.str, s.str) == 0;
-    }
+  bool $(B opEquals)(MyString* s)
+  {
+    return std.string.cmp(this.str, s.str) == 0;
+  }
 
-    int $(B opCmp)(MyString* s)
-    {
-        return std.string.cmp(this.str, s.str);
-    })
-$(V2      const hash_t $(B toHash)()
-    {   hash_t hash;
-        foreach (char c; s)
-            hash = (hash * 9) + c;
-        return hash;
-    }
-
-    const bool $(B opEquals)(ref const MyString s)
-    {
-        return std.string.cmp(this.str, s.str) == 0;
-    }
-
-    const int $(B opCmp)(ref const MyString s)
-    {
-        return std.string.cmp(this.str, s.str);
-    })
+  int $(B opCmp)(MyString* s)
+  {
+    return std.string.cmp(this.str, s.str);
+  }
 }
 ---------
+)
+$(V2
+---------
+import std.string;
+
+struct MyString {
+  string str;
+
+  const hash_t $(B toHash)()
+  { hash_t hash;
+    foreach (char c; s)
+      hash = (hash * 9) + c;
+    return hash;
+  }
+
+  const bool $(B opEquals)(ref const MyString s)
+  {
+    return std.string.cmp(this.str, s.str) == 0;
+  }
+
+  const int $(B opCmp)(ref const MyString s)
+  {
+    return std.string.cmp(this.str, s.str);
+  }
+}
+---------
+)
 
 
         $(P The implementation may use either $(TT opEquals) or $(TT opCmp) or
@@ -237,72 +247,71 @@ $(V2
 import std.file;         // D file I/O
 import std.stdio;
 
-int main (string[] args)
-{
-    int word_total;
-    int line_total;
-    int char_total;
-    int[char[]] dictionary;
+int main (string[] args) {
+  int word_total;
+  int line_total;
+  int char_total;
+  int[char[]] dictionary;
 
-    writefln("   lines   words   bytes file");
-    for (int i = 1; i < args.length; ++i)      // program arguments
+  writefln("   lines   words   bytes file");
+  for (int i = 1; i < args.length; ++i)      // program arguments
+  {
+    char[] input;            // input buffer
+    int w_cnt, l_cnt, c_cnt; // word, line, char counts
+    int inword;
+    int wstart;
+
+    // read file into input[]
+    input = cast(char[])std.file.read(args[i]);
+
+    foreach (j, char c; input)
     {
-        char[] input;            // input buffer
-        int w_cnt, l_cnt, c_cnt; // word, line, char counts
-        int inword;
-        int wstart;
-
-        // read file into input[]
-        input = cast(char[])std.file.read(args[i]);
-
-        foreach (j, char c; input)
+      if (c == '\n')
+        ++l_cnt;
+      if (c >= '0' && c <= '9')
+      {
+      }
+      else if (c >= 'a' && c <= 'z' ||
+               c >= 'A' && c <= 'Z')
+      {
+        if (!inword)
         {
-            if (c == '\n')
-                    ++l_cnt;
-            if (c >= '0' && c <= '9')
-            {
-            }
-            else if (c >= 'a' && c <= 'z' ||
-                    c >= 'A' && c <= 'Z')
-            {
-                if (!inword)
-                {
-                    wstart = j;
-                    inword = 1;
-                    ++w_cnt;
-                }
-            }
-            else if (inword)
-            {
-                char[] word = input[wstart .. j];
-                dictionary[word]++;        // increment count for word
-                inword = 0;
-            }
-            ++c_cnt;
+          wstart = j;
+          inword = 1;
+          ++w_cnt;
         }
-        if (inword)
-        {
-            char[] word = input[wstart .. input.length];
-            dictionary[word]++;
-        }
-        writefln("%8d%8d%8d %s", l_cnt, w_cnt, c_cnt, args[i]);
-        line_total += l_cnt;
-        word_total += w_cnt;
-        char_total += c_cnt;
+      }
+      else if (inword)
+      {
+        char[] word = input[wstart .. j];
+        dictionary[word]++;        // increment count for word
+        inword = 0;
+      }
+      ++c_cnt;
     }
-
-    if (args.length > 2)
+    if (inword)
     {
-        writef("-------------------------------------\n%8d%8d%8d total",
-                line_total, word_total, char_total);
+      char[] word = input[wstart .. input.length];
+      dictionary[word]++;
     }
+    writefln("%8d%8d%8d %s", l_cnt, w_cnt, c_cnt, args[i]);
+    line_total += l_cnt;
+    word_total += w_cnt;
+    char_total += c_cnt;
+  }
 
-    writefln("-------------------------------------");
-    foreach (word; dictionary.keys.sort)
-    {
-        writefln("%3d %s", dictionary[word], word);
-    }
-    return 0;
+  if (args.length > 2)
+  {
+    writef("-------------------------------------\n%8d%8d%8d total",
+            line_total, word_total, char_total);
+  }
+
+  writefln("-------------------------------------");
+  foreach (word; dictionary.keys.sort)
+  {
+    writefln("%3d %s", dictionary[word], word);
+  }
+  return 0;
 }
 ---------
 
