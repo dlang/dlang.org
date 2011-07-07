@@ -12,23 +12,23 @@ $(P     Templates are D's approach to generic programming.
 
 $(GRAMMAR
 $(GNAME TemplateDeclaration):
-        $(B template) $(GLINK TemplateIdentifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(SUB $(I opt)))
-                $(B {) $(GLINK2 module, DeclDefs) $(B })
+    $(B template) $(GLINK TemplateIdentifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(SUB $(I opt)))
+	    $(B {) $(GLINK2 module, DeclDefs) $(B })
 
 $(GNAME TemplateIdentifier):
-        $(I Identifier)
+    $(I Identifier)
 
 $(GNAME TemplateParameterList):
-        $(I TemplateParameter)
-$(V2          $(I TemplateParameter) ,
-)       $(I TemplateParameter) , $(I TemplateParameterList)
+    $(GLINK TemplateParameter)
+$(V2      $(GLINK TemplateParameter) ,
+)    $(GLINK TemplateParameter) , $(I TemplateParameterList)
 
 $(GNAME TemplateParameter):
-        $(GLINK TemplateTypeParameter)
-        $(GLINK TemplateValueParameter)
-        $(GLINK TemplateAliasParameter)
-        $(GLINK TemplateTupleParameter)
-$(V2          $(GLINK TemplateThisParameter))
+    $(GLINK TemplateTypeParameter)
+    $(GLINK TemplateValueParameter)
+    $(GLINK TemplateAliasParameter)
+    $(GLINK TemplateTupleParameter)
+$(V2      $(GLINK TemplateThisParameter))
 )
 
 $(P     The body of the $(I TemplateDeclaration) must be syntactically correct
@@ -65,42 +65,42 @@ $(P
 
 $(GRAMMAR
 $(GNAME TemplateInstance):
-        $(GLINK TemplateIdentifier) $(B !$(LPAREN)) $(GLINK TemplateArgumentList) $(B $(RPAREN))
-$(V2          $(GLINK TemplateIdentifier) $(B !) $(GLINK TemplateSingleArgument))
+    $(GLINK TemplateIdentifier) $(B !$(LPAREN)) $(GLINK TemplateArgumentList) $(B $(RPAREN))
+$(V2      $(GLINK TemplateIdentifier) $(B !) $(GLINK TemplateSingleArgument))
 
 $(GNAME TemplateArgumentList):
-        $(GLINK TemplateArgument)
-$(V2          $(GLINK TemplateArgument) ,
-)       $(GLINK TemplateArgument) , $(I TemplateArgumentList)
+    $(GLINK TemplateArgument)
+$(V2      $(GLINK TemplateArgument) ,
+)    $(GLINK TemplateArgument) , $(I TemplateArgumentList)
 
 $(GNAME TemplateArgument):
-        $(GLINK2 declaration, Type)
-        $(ASSIGNEXPRESSION)
-        $(I Symbol)
+    $(GLINK2 declaration, Type)
+    $(ASSIGNEXPRESSION)
+    $(GLINK Symbol)
 
 $(GNAME Symbol):
-        $(I SymbolTail)
-        $(B .) $(I SymbolTail)
+    $(GLINK SymbolTail)
+    $(B .) $(GLINK SymbolTail)
 
 $(GNAME SymbolTail):
-        $(I Identifier)
-        $(I Identifier) $(B .) $(I SymbolTail)
-        $(GLINK TemplateInstance)
-        $(GLINK TemplateInstance) $(B .) $(I SymbolTail)
+    $(I Identifier)
+    $(I Identifier) $(B .) $(I SymbolTail)
+    $(GLINK TemplateInstance)
+    $(GLINK TemplateInstance) $(B .) $(I SymbolTail)
 
 $(V2
 $(GNAME TemplateSingleArgument):
-        $(I Identifier)
-        $(GLINK2 declaration, BasicTypeX)
-        $(GLINK2 lex, CharacterLiteral)
-        $(GLINK2 lex, StringLiteral)
-        $(GLINK2 lex, IntegerLiteral)
-        $(GLINK2 lex, FloatLiteral)
-        $(B true)
-        $(B false)
-        $(B null)
-        $(B __FILE__)
-        $(B __LINE__)
+    $(I Identifier)
+    $(GLINK2 declaration, BasicTypeX)
+    $(GLINK2 lex, CharacterLiteral)
+    $(GLINK2 lex, StringLiteral)
+    $(GLINK2 lex, IntegerLiteral)
+    $(GLINK2 lex, FloatLiteral)
+    $(B true)
+    $(B false)
+    $(B null)
+    $(B __FILE__)
+    $(B __LINE__)
 )
 )
 
@@ -147,7 +147,7 @@ alias TFoo!(int) a;
 alias TFoo!(int) b;
 ...
 a.f = 3;
-assert(b.f == 3);       // a and b refer to the same instance of TFoo
+assert(b.f == 3);  // a and b refer to the same instance of TFoo
 ------
 
 $(P
@@ -162,8 +162,8 @@ $(P
 
 -----
 struct TFoo(int x) { }
-static assert(is(TFoo!(3) == TFoo!(2 + 1)));   // 3 and 2+1 are both 3 of type int
-static assert(!is(TFoo!(3) == TFoo!(3u)));     // 3u and 3 are different types
+static assert(is(TFoo!(3) == TFoo!(2 + 1))); // 3 and 2+1 are both 3 of type int
+static assert(!is(TFoo!(3) == TFoo!(3u)));   // 3u and 3 are different types
 -----
 $(P
         If multiple templates with the same $(I TemplateIdentifier) are
@@ -175,12 +175,10 @@ $(P
 )
 
 ------
-template TCopy(T)
-{
-    void copy(out T to, T from)
-    {
-        to = from;
-    }
+template TCopy(T) {
+  void copy(out T to, T from) {
+    to = from;
+  }
 }
 ------
 
@@ -216,7 +214,7 @@ $(U module b)
 import a;
 
 void func() { }
-alias TFoo!(int) f;     // error: func not defined in module a
+alias TFoo!(int) f; // error: func not defined in module a
 ------
 
 $(P
@@ -237,7 +235,7 @@ import a;
 void func(int i) { }
 alias TFoo!(int) f;
 ...
-f.bar();        // will call a.func(double)
+f.bar();  // will call a.func(double)
 ------
 
 $(P
@@ -277,19 +275,19 @@ $(P
 
 ------
 template TFoo(T) { }
-alias TFoo!(int) Foo1;          // (1) T is deduced to be int
-alias TFoo!(char*) Foo2;        // (1) T is deduced to be char*
+alias TFoo!(int) Foo1;     // (1) T is deduced to be int
+alias TFoo!(char*) Foo2;   // (1) T is deduced to be char*
 
 template TBar(T : T*) { }
-alias TBar!(char*) Foo3;        // (2) T is deduced to be char
+alias TBar!(char*) Foo3;   // (2) T is deduced to be char
 
 template TAbc(D, U : D[]) { }
-alias TAbc!(int, int[]) Bar1;   // (2) D is deduced to be int, U is int[]
-alias TAbc!(char, int[]) Bar2;  // (4) error, D is both char and int
+alias TAbc!(int, int[]) Bar1;  // (2) D is deduced to be int, U is int[]
+alias TAbc!(char, int[]) Bar2; // (4) error, D is both char and int
 
 template TDef(D : E*, E) { }
-alias TDef!(int*, int) Bar3;    // (1) E is int
-                                // (3) D is int*
+alias TDef!(int*, int) Bar3; // (1) E is int
+                             // (3) D is int*
 ------
 
         $(P Deduction from a specialization can provide values
@@ -297,9 +295,8 @@ alias TDef!(int*, int) Bar3;    // (1) E is int
         )
 
 ---
-template Foo(T: T[U], U)
-{
-    ...
+template Foo(T: T[U], U) {
+  ...
 }
 
 Foo!(int[long])  // instantiates Foo with T set to int, U set to long
@@ -314,27 +311,27 @@ class A { }
 class B : A { }
 
 template TFoo(T : A) { }
-alias TFoo!(B) Foo4;            // (3) T is B
+alias TFoo!(B) Foo4;    // (3) T is B
 
 template TBar(T : U*, U : A) { }
-alias TBar!(B*, B) Foo5;        // (2) T is B*
-                                // (3) U is B
+alias TBar!(B*, B) Foo5; // (2) T is B*
+                         // (3) U is B
 ------
 
 <h2>Template Type Parameters</h2>
 
 $(GRAMMAR
 $(GNAME TemplateTypeParameter):
-        $(I Identifier)
-        $(I Identifier) $(I TemplateTypeParameterSpecialization)
-        $(I Identifier) $(I TemplateTypeParameterDefault)
-        $(I Identifier) $(I TemplateTypeParameterSpecialization) $(I TemplateTypeParameterDefault)
+    $(I Identifier)
+    $(I Identifier) $(GLINK TemplateTypeParameterSpecialization)
+    $(I Identifier) $(GLINK TemplateTypeParameterDefault)
+    $(I Identifier) $(GLINK TemplateTypeParameterSpecialization) $(GLINK TemplateTypeParameterDefault)
 
 $(GNAME TemplateTypeParameterSpecialization):
-         $(B :) $(GLINK2 declaration, Type)
+     $(B :) $(GLINK2 declaration, Type)
 
 $(GNAME TemplateTypeParameterDefault):
-         $(B =) $(GLINK2 declaration, Type)
+     $(B =) $(GLINK2 declaration, Type)
 )
 
 <h3>Specialization</h3>
@@ -371,7 +368,7 @@ $(V2
 
 $(GRAMMAR
 $(GNAME TemplateThisParameter):
-        $(B this) $(I TemplateTypeParameter)
+    $(B this) $(I TemplateTypeParameter)
 )
 
         $(P $(I TemplateThisParameter)s are used in member function templates
@@ -380,22 +377,19 @@ $(GNAME TemplateThisParameter):
 ---
 import std.stdio;
 
-struct S
-{
-    const void foo(this T)(int i)
-    {
-        writeln(typeid(T));
-    }
+struct S {
+  const void foo(this T)(int i) {
+    writeln(typeid(T));
+  }
 }
 
-void main()
-{
-    const(S) s;
-    (&s).foo(1);
-    S s2;
-    s2.foo(2);
-    immutable(S) s3;
-    s3.foo(3);
+void main() {
+  const(S) s;
+  (&s).foo(1);
+  S s2;
+  s2.foo(2);
+  immutable(S) s3;
+  s3.foo(3);
 }
 ---
         $(P Prints:)
@@ -412,15 +406,15 @@ immutable(S)
 $(GRAMMAR
 $(GNAME TemplateValueParameter):
     $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
-    $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(I TemplateValueParameterSpecialization)
-    $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(I TemplateValueParameterDefault)
-    $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(I TemplateValueParameterSpecialization) $(I TemplateValueParameterDefault)
+    $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(GLINK TemplateValueParameterSpecialization)
+    $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(GLINK TemplateValueParameterDefault)
+    $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(GLINK TemplateValueParameterSpecialization) $(GLINK TemplateValueParameterDefault)
 
 $(GNAME TemplateValueParameterSpecialization):
-    $(B :) $(LINK2 expression.html#ConditionalExpression, $(I ConditionalExpression))
+    $(B :) $(GLINK2 expression, ConditionalExpression)
 
 $(GNAME TemplateValueParameterDefault):
-$(V2      $(B = __FILE__)
+$(V2     $(B = __FILE__)
     $(B = __LINE__))
     $(B =) $(ASSIGNEXPRESSION)
 )
@@ -437,14 +431,12 @@ $(V2
         )
 
 -----
-template foo(string s)
-{
-    string bar() { return s ~ " betty"; }
+template foo(string s) {
+  string bar() { return s ~ " betty"; }
 }
 
-void main()
-{
-    writefln("%s", foo!("hello").bar()); // prints: hello betty
+void main() {
+  writefln("%s", foo!("hello").bar()); // prints: hello betty
 }
 -----
 
@@ -453,14 +445,12 @@ void main()
         )
 
 ------
-template foo(U : int, int T : 10)
-{
-    U x = T;
+template foo(U : int, int T : 10) {
+  U x = T;
 }
 
-void main()
-{
-    assert(foo!(int, 10).x == 10);
+void main() {
+  assert(foo!(int, 10).x == 10);
 }
 ------
 
@@ -469,16 +459,16 @@ void main()
 
 $(GRAMMAR
 $(GNAME TemplateAliasParameter):
-    $(B alias) $(I Identifier) $(I TemplateAliasParameterSpecialization)$(OPT) $(I TemplateAliasParameterDefault)$(OPT)
-    $(B alias) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(I TemplateAliasParameterSpecialization)$(OPT) $(I TemplateAliasParameterDefault)$(OPT)
+    $(B alias) $(I Identifier) $(GLINK TemplateAliasParameterSpecialization)$(OPT) $(GLINK TemplateAliasParameterDefault)$(OPT)
+    $(B alias) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(GLINK TemplateAliasParameterSpecialization)$(OPT) $(GLINK TemplateAliasParameterDefault)$(OPT)
 
 $(GNAME TemplateAliasParameterSpecialization):
-     $(B :) $(GLINK2 declaration, Type)
-     $(B :) $(GLINK2 expression, ConditionalExpression)
+    $(B :) $(GLINK2 declaration, Type)
+    $(B :) $(GLINK2 expression, ConditionalExpression)
 
 $(GNAME TemplateAliasParameterDefault):
-     $(B =) $(GLINK2 declaration, Type)
-     $(B =) $(GLINK2 expression, ConditionalExpression)
+    $(B =) $(GLINK2 declaration, Type)
+    $(B =) $(GLINK2 expression, ConditionalExpression)
 )
 
         $(P Alias parameters enable templates to be parameterized with
@@ -493,18 +483,16 @@ $(GNAME TemplateAliasParameterDefault):
 ------
 int x;
 
-template Foo(alias X)
-{
-    static int* p = &X;
+template Foo(alias X) {
+  static int* p = &X;
 }
 
-void test()
-{
-    alias Foo!(x) bar;
-    *bar.p = 3;         // set x to 3
-    static int y;
-    alias Foo!(y) abc;
-    *abc.p = 3;         // set y to 3
+void test() {
+  alias Foo!(x) bar;
+  *bar.p = 3;       // set x to 3
+  static int y;
+  alias Foo!(y) abc;
+  *abc.p = 3;       // set y to 3
 }
 ------
         )
@@ -512,20 +500,17 @@ void test()
         $(LI Type names
 
 ------
-class Foo
-{
-    static int p;
+class Foo {
+  static int p;
 }
 
-template Bar(alias T)
-{
-    alias T.p q;
+template Bar(alias T) {
+  alias T.p q;
 }
 
-void test()
-{
-    alias Bar!(Foo) bar;
-    bar.q = 3;  // sets Foo.p to 3
+void test() {
+  alias Bar!(Foo) bar;
+  bar.q = 3;  // sets Foo.p to 3
 }
 ------
         )
@@ -535,15 +520,13 @@ void test()
 ------
 import std.string;
 
-template Foo(alias X)
-{
-        alias X.toString y;
+template Foo(alias X) {
+  alias X.toString y;
 }
 
-void test()
-{
-    alias Foo!(std.string) bar;
-    bar.y(3);   // calls std.string.toString(3)
+void test() {
+  alias Foo!(std.string) bar;
+  bar.y(3);   // calls std.string.toString(3)
 }
 ------
         )
@@ -553,20 +536,17 @@ void test()
 ------
 int x;
 
-template Foo(alias X)
-{
-    static int* p = &X;
+template Foo(alias X) {
+  static int* p = &X;
 }
 
-template Bar(alias T)
-{
-    alias T!(x) abc;
+template Bar(alias T) {
+  alias T!(x) abc;
 }
 
-void test()
-{
-    alias Bar!(Foo) bar;
-    *bar.abc.p = 3;     // sets x to 3
+void test() {
+  alias Bar!(Foo) bar;
+  *bar.abc.p = 3;  // sets x to 3
 }
 ------
         )
@@ -576,21 +556,18 @@ void test()
 ------
 int x;
 
-template Foo(alias X)
-{
-    static int* p = &X;
+template Foo(alias X) {
+  static int* p = &X;
 }
 
-template Bar(alias T)
-{
-    alias T.p q;
+template Bar(alias T) {
+  alias T.p q;
 }
 
-void test()
-{
-    alias Foo!(x) foo;
-    alias Bar!(foo) bar;
-    *bar.q = 3;         // sets x to 3
+void test() {
+  alias Foo!(x) foo;
+  alias Bar!(foo) bar;
+  *bar.q = 3;  // sets x to 3
 }
 ------
         )
@@ -598,16 +575,14 @@ void test()
         $(V2 $(LI Literals
 ------
 
-template Foo(alias X, alias Y)
-{
-    static int i = X;
-    static string s = Y;
+template Foo(alias X, alias Y) {
+  static int i = X;
+  static string s = Y;
 }
 
-void test()
-{
-    alias Foo!(3, "bar") foo;
-    writeln(foo.i, foo.s);  // prints 3bar
+void test() {
+  alias Foo!(3, "bar") foo;
+  writeln(foo.i, foo.s);  // prints 3bar
 }
 ------
         ))
@@ -639,27 +614,23 @@ $(GNAME TemplateTupleParameter):
         )
 
 ---
-template Print(A ...)
-{
-    void print()
-    {
-        writefln("args are ", A);
-    }
+template Print(A ...) {
+  void print() {
+    writefln("args are ", A);
+  }
 }
 
-template Write(A ...)
-{
-    void write(A a)     // A is a $(I TypeTuple)
-                        // a is an $(I ExpressionTuple)
-    {
-        writefln("args are ", a);
-    }
+template Write(A ...) {
+  void write(A a) // A is a $(I TypeTuple)
+                  // a is an $(I ExpressionTuple)
+  {
+    writefln("args are ", a);
+  }
 }
 
-void main()
-{
-    Print!(1,'a',6.8).print();                    // prints: args are 1a6.8
-    Write!(int, char, double).write(1, 'a', 6.8); // prints: args are 1a6.8
+void main() {
+  Print!(1,'a',6.8).print();                    // prints: args are 1a6.8
+  Write!(int, char, double).write(1, 'a', 6.8); // prints: args are 1a6.8
 }
 ---
 
@@ -668,19 +639,16 @@ void main()
         of an implicitly instantiated function template:)
 
 ---
-template Foo(T, R...)
-{
-    void Foo(T t, R r)
-    {
-        writefln(t);
-        static if (r.length)    // if more arguments
-            Foo(r);             // do the rest of the arguments
-    }
+template Foo(T, R...) {
+  void Foo(T t, R r) {
+    writefln(t);
+    static if (r.length) // if more arguments
+      Foo(r);            // do the rest of the arguments
+  }
 }
 
-void main()
-{
-    Foo(1, 'a', 6.8);
+void main() {
+  Foo(1, 'a', 6.8);
 }
 ---
         $(P prints:)
@@ -702,32 +670,32 @@ import std.stdio;
  */
 R delegate(U) Curry(R, A, U...)(R delegate(A, U) dg, A arg)
 {
-    struct Foo
+  struct Foo
+  {
+    typeof(dg) dg_m;
+    typeof(arg) arg_m;
+
+    R bar(U u)
     {
-        typeof(dg) dg_m;
-        typeof(arg) arg_m;
-
-        R bar(U u)
-        {
-            return dg_m(arg_m, u);
-        }
+      return dg_m(arg_m, u);
     }
+  }
 
-    Foo* f = new Foo;
-    f.dg_m = dg;
-    f.arg_m = arg;
-    return &f.bar;
+  Foo* f = new Foo;
+  f.dg_m = dg;
+  f.arg_m = arg;
+  return &f.bar;
 }
 
 void main()
 {
-    int plus(int x, int y, int z)
-    {
-        return x + y + z;
-    }
+  int plus(int x, int y, int z)
+  {
+    return x + y + z;
+  }
 
-    auto plus_two = Curry(&plus, 2);
-    writefln("%d", plus_two(6, 8));     // prints 16
+  auto plus_two = Curry(&plus, 2);
+  writefln("%d", plus_two(6, 8)); // prints 16
 }
 ----
 
@@ -767,14 +735,12 @@ Foo!(uint);      // instantiate Foo with T as uint, and U as uint*
         )
 
 ------
-template $(B Foo)(T)
-{
-    T $(B Foo); // declare variable Foo of type T
+template $(B Foo)(T) {
+  T $(B Foo); // declare variable Foo of type T
 }
 
-void test()
-{
-    $(B Foo)!(int) = 6; // instead of Foo!(int).Foo
+void test() {
+  $(B Foo)!(int) = 6; // instead of Foo!(int).Foo
 }
 ------
 
@@ -800,12 +766,10 @@ $(GNAME ClassTemplateDeclaration):
         )
 
 ------
-template $(B Bar)(T)
-{
-    class $(B Bar)
-    {
-        T member;
-    }
+template $(B Bar)(T) {
+  class $(B Bar) {
+    T member;
+  }
 }
 ------
 
@@ -814,9 +778,8 @@ template $(B Bar)(T)
         )
 
 ------
-class $(B Bar)(T)
-{
-    T member;
+class $(B Bar)(T) {
+  T member;
 }
 ------
 
@@ -849,9 +812,8 @@ $(GNAME InterfaceTemplateDeclaration):
         $(P A function template to compute the square of type $(I T) is:
         )
 ------
-T $(B Square)(T)(T t)
-{
-    return t * t;
+T $(B Square)(T)(T t) {
+  return t * t;
 }
 ------
 
@@ -906,9 +868,8 @@ $(V2    $(P Function templates can have their return types deduced based
         )
 
 ---
-auto $(B Square)(T)(T t)
-{
-    return t * t;
+auto $(B Square)(T)(T t) {
+  return t * t;
 }
 ---
         $(P If there is more than one return statement, then the
@@ -926,28 +887,28 @@ auto $(B Square)(T)(T t)
         )
 
 ---
-int foo(T...)(auto ref T x)
-{   int result;
+int foo(T...)(auto ref T x) {
+  int result;
 
-    foreach (i, v; x)
-    {
-        if (v == 10)
-            assert(__traits(isRef, x[i]));
-        else
-            assert(!__traits(isRef, x[i]));
-        result += v;
-    }
-    return result;
+  foreach (i, v; x)
+  {
+    if (v == 10)
+      assert(__traits(isRef, x[i]));
+    else
+      assert(!__traits(isRef, x[i]));
+    result += v;
+  }
+  return result;
 }
 
-void main()
-{   int y = 10;
-    int r;
-    r = foo(8);         // returns 8
-    r = foo(y);         // returns 10
-    r = foo(3, 4, y);   // returns 17
-    r = foo(4, 5, y);   // returns 19
-    r = foo(y, 6, y);   // returns 26
+void main() {
+  int y = 10;
+  int r;
+  r = foo(8);       // returns 8
+  r = foo(y);       // returns 10
+  r = foo(3, 4, y); // returns 17
+  r = foo(4, 5, y); // returns 19
+  r = foo(y, 6, y); // returns 26
 }
 ---
 
@@ -958,18 +919,19 @@ void main()
 ---
 auto ref min(T, U)(auto ref T lhs, auto ref U rhs)
 {
-    return lhs > rhs ? rhs : lhs;
+  return lhs > rhs ? rhs : lhs;
 }
 
 void main()
-{   int x = 7, y = 8;
-    int i;
+{
+  int x = 7, y = 8;
+  int i;
 
-    i = min(4, 3);     // returns 3
-    i = min(x, y);     // returns 7
-    min(x, y) = 10;    // sets x to 10
-    static assert(!__traits(compiles, min(3, y) = 10));
-    static assert(!__traits(compiles, min(y, 3) = 10));
+  i = min(4, 3);     // returns 3
+  i = min(x, y);     // returns 7
+  min(x, y) = 10;    // sets x to 10
+  static assert(!__traits(compiles, min(3, y) = 10));
+  static assert(!__traits(compiles, min(y, 3) = 10));
 }
 ---
 
@@ -981,19 +943,16 @@ void main()
         )
 
 ------
-template factorial(int n : 1)
-{
-    enum { factorial = 1 }
+template factorial(int n : 1) {
+  enum { factorial = 1 }
 }
 
-template factorial(int n)
-{
-    enum { factorial = n* factorial!(n-1) }
+template factorial(int n) {
+  enum { factorial = n* factorial!(n-1) }
 }
 
-void test()
-{
-    writefln("%s", factorial!(4));      // prints 24
+void test() {
+  writefln("%s", factorial!(4)); // prints 24
 }
 ------
 
@@ -1025,7 +984,7 @@ $(I ConstraintExpression):
 void foo(int N)()
         if (N & 1)
 {
-    ...
+  ...
 }
 ...
 foo!(3)();  // ok, matches
@@ -1041,16 +1000,14 @@ foo!(4)();  // error, no match
         )
 
 ------
-class Foo
-{
-    template TBar(T)
-    {
-        T xx;                   // becomes a static member of Foo
-        int func(T) { ... }     // non-virtual
+class Foo {
+  template TBar(T) {
+    T xx;               // becomes a static member of Foo
+    int func(T) { ... } // non-virtual
 
-        static T yy;                            // Ok
-        static int func(T t, int y) { ... }     // Ok
-    }
+    static T yy;                        // Ok
+    static int func(T t, int y) { ... } // Ok
+  }
 }
 ------
 
