@@ -22,7 +22,7 @@ SRC= $(SPECSRC) \
 	pdf-intro-cover.dd pdf-spec-cover.dd					\
 	pdf-tools-cover.dd intro-to-datetime.dd
 
-SPECSRC=lex.dd module.dd declaration.dd type.dd property.dd \
+SPECSRC=spec.dd lex.dd module.dd declaration.dd type.dd property.dd \
 	attribute.dd pragma.dd expression.dd statement.dd arrays.dd \
 	hash-map.dd struct.dd class.dd interface.dd enum.dd const3.dd \
 	function.dd operatoroverloading.dd template.dd template-mixin.dd \
@@ -305,11 +305,11 @@ specbook.d : $(SPECSRC) win32.mak
 specbook.html : $(DDOC) ebook.ddoc specbook.d
 	$(DMD) $(DDOC) ebook.ddoc specbook.d
 
-specbook.zip : specbook.html style.css win32.mak
+specbook.zip : specbook.html ebook.css win32.mak
 	del specbook.zip
-	zip32 specbook specbook.html style.css
+	zip32 specbook specbook.html ebook.css
 
-specbook.mobi : specbook.html style.css win32.mak
+specbook.mobi : specbook.html ebook.css win32.mak
 	del specbook.mobi
 	\kindlegen\kindlegen specbook.html
 
@@ -333,6 +333,7 @@ zip:
 	zip32 doc win32.mak $(DDOC) windows.ddoc linux.ddoc osx.ddoc freebsd.ddoc ebook.ddoc
 	zip32 doc $(SRC) $(PREMADE)
 	zip32 doc $(ASSETS)
+	zip32 doc ebook.css
 
 clean:
 	del $(TARGETS)
