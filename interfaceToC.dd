@@ -32,9 +32,8 @@ extern (C) int strcmp(char* string1, char* string2);
 
 ------
 import std.string;
-int myDfunction(char[] s)
-{
-    return strcmp(std.string.toStringz(s), "foo");
+int myDfunction(char[] s) {
+  return strcmp(std.string.toStringz(s), "foo");
 }
 ------
 
@@ -67,12 +66,10 @@ int myDfunction(char[] s)
 
 ------
 // myfunc() can be called from any C function
-extern (C)
-{
-    void myfunc(int a, int b)
-    {
-	...
-    }
+extern (C) {
+  void myfunc(int a, int b) {
+    ...
+  }
 }
 ------
 
@@ -123,188 +120,191 @@ extern (C)
 
 <h2>Data Type Compatibility</h2>
 
-	$(TABLE1
-	<caption>D And C Type Equivalence</caption>
+	$(TABLE2 D And C Type Equivalence,
 
-	$(TR
-	$(TH D type)
-	$(TH C type)
-	)
+	$(TR <th rowspan=2>D</th><th colspan=2>C</th>)
+	$(TR $(TH 32 bit) $(TH 64 bit))
 
 	$(TR
 	$(TD $(B void))
-	$(TD $(B void))
+	$(TD2 $(B void))
 	)
 
 	$(TR
 	$(TD $(B byte))
-	$(TD $(B signed char))
+	$(TD2 $(B signed char))
 	)
 
 	$(TR
 	$(TD $(B ubyte))
-	$(TD $(B unsigned char))
+	$(TD2 $(B unsigned char))
 	)
 
 	$(TR
 	$(TD $(B char))
-	$(TD $(B char) (chars are unsigned in D))
+	$(TD2 $(B char) (chars are unsigned in D))
 	)
 
 	$(TR
 	$(TD $(B wchar))
-	$(TD $(B wchar_t) (when sizeof(wchar_t) is 2))
+	$(TD2 $(B wchar_t) (when sizeof(wchar_t) is 2))
 	)
 
 	$(TR
 	$(TD $(B dchar))
-	$(TD $(B wchar_t) (when sizeof(wchar_t) is 4))
+	$(TD2 $(B wchar_t) (when sizeof(wchar_t) is 4))
 	)
 
 	$(TR
 	$(TD $(B short))
-	$(TD $(B short))
+	$(TD2 $(B short))
 	)
 
 	$(TR
 	$(TD $(B ushort))
-	$(TD $(B unsigned short))
+	$(TD2 $(B unsigned short))
 	)
 
 	$(TR
 	$(TD $(B int))
-	$(TD $(B int))
+	$(TD2 $(B int))
 	)
 
 	$(TR
 	$(TD $(B uint))
-	$(TD $(B unsigned))
+	$(TD2 $(B unsigned))
 	)
 
-
-	$(TR
-	$(TD $(B c_long (in core.stdc.config)))
-	$(TD $(B long))
-	)
-    
-	$(TR
-	$(TD $(B c_ulong (in core.stdc.config)))
-	$(TD $(B ulong))
-	)
-    
 	$(TR
 	$(TD $(B long))
 	$(TD $(B long long))
+	$(TD $(B long))
+	)
+
+	$(TR
+	$(TD $(B c_ulong (in core.stdc.config)))
+	$(TD2 $(B ulong))
 	)
 
 	$(TR
 	$(TD $(B ulong))
 	$(TD $(B unsigned long long))
+	$(TD $(B unsigned long))
 	)
 
 	$(TR
 	$(TD $(B float))
-	$(TD $(B float))
+	$(TD2 $(B float))
 	)
 
 	$(TR
 	$(TD $(B double))
-	$(TD $(B double))
+	$(TD2 $(B double))
 	)
 
 	$(TR
 	$(TD $(B real))
-	$(TD $(B long double))
+	$(TD2 $(B long double))
 	)
-
+$(V1
 	$(TR
 	$(TD $(B ifloat))
-	$(TD $(B float _Imaginary))
+	$(TD2 $(B float _Imaginary))
 	)
 
 	$(TR
 	$(TD $(B idouble))
-	$(TD $(B double _Imaginary))
+	$(TD2 $(B double _Imaginary))
 	)
 
 	$(TR
 	$(TD $(B ireal))
-	$(TD $(B long double _Imaginary))
+	$(TD2 $(B long double _Imaginary))
 	)
 
 	$(TR
 	$(TD $(B cfloat))
-	$(TD $(B float _Complex))
+	$(TD2 $(B float _Complex))
 	)
 
 	$(TR
 	$(TD $(B cdouble))
-	$(TD $(B double _Complex))
+	$(TD2 $(B double _Complex))
 	)
 
 	$(TR
 	$(TD $(B creal))
-	$(TD $(B long double _Complex))
+	$(TD2 $(B long double _Complex))
 	)
-
+)
 	$(TR
 	$(TD $(B struct))
-	$(TD $(B struct))
+	$(TD2 $(B struct))
 	)
 
 	$(TR
 	$(TD $(B union))
-	$(TD $(B union))
+	$(TD2 $(B union))
 	)
 
 	$(TR
 	$(TD $(B enum))
-	$(TD $(B enum))
+	$(TD2 $(B enum))
 	)
 
 	$(TR
 	$(TD $(B class))
-	$(TD no equivalent)
+	$(TD2 no equivalent)
 	)
 
 	$(TR
 	$(TD $(I type)$(B *))
-	$(TD $(I type) $(B *))
+	$(TD2 $(I type) $(B *))
 	)
 
 	$(TR
 	$(TD $(I type)$(B [)$(I dim)$(B ]))
-	$(TD $(I type)$(B [)$(I dim)$(B ]))
+	$(TD2 $(I type)$(B [)$(I dim)$(B ]))
 	)
 
 	$(TR
 	$(TD $(I type)$(B [)$(I dim)$(B ]*))
-	$(TD $(I type)$(B (*)[)$(I dim)$(B ]))
+	$(TD2 $(I type)$(B (*)[)$(I dim)$(B ]))
 	)
 
 	$(TR
 	$(TD $(I type)$(B []))
-	$(TD no equivalent)
+	$(TD2 no equivalent)
 	)
 
 	$(TR
 	$(TD $(I type)$(B [)$(I type)$(B ]))
-	$(TD no equivalent)
+	$(TD2 no equivalent)
 	)
 
 	$(TR
 	$(TD $(I type) $(B function)$(B $(LPAREN))$(I parameters)$(B $(RPAREN)))
-	$(TD $(I type)$(B (*))$(B $(LPAREN))$(I parameters)$(B $(RPAREN)))
+	$(TD2 $(I type)$(B (*))$(B $(LPAREN))$(I parameters)$(B $(RPAREN)))
 	)
 
 	$(TR
 	$(TD $(I type) $(B delegate)$(B $(LPAREN))$(I parameters)$(B $(RPAREN)))
-	$(TD no equivalent)
+	$(TD2 no equivalent)
+	)
+
+	$(TR
+	$(TD $(B size_t))
+	$(TD2 $(B size_t))
+	)
+
+	$(TR
+	$(TD $(B ptrdiff_t))
+	$(TD2 $(B ptrdiff_t))
 	)
 
 	)
 
-	$(P These equivalents hold for most 32 bit C compilers. The C standard
+	$(P These equivalents hold for most C compilers. The C standard
 	does not pin down the sizes of the types, so some care is needed.
 	)
 
@@ -316,8 +316,7 @@ $(V2
 	not by reference. Thus, the function prototype must be adjusted to match
 	what C expects.)
 
-	$(TABLE1
-	<caption>D And C Function Prototype Equivalence</caption>
+	$(TABLE2 D And C Function Prototype Equivalence,
 
 	$(TR
 	$(TH D type)
@@ -356,13 +355,12 @@ extern (C)
 	Although printf is designed to handle 0 terminated strings,
 	not D dynamic arrays of chars, it turns out that since D
 	dynamic arrays are a length followed by a pointer to the data,
-	the $(TT %.*s) format works perfectly:
+	the $(TT %.*s) format works:
 	)
 
 ------
-void foo(char[] string)
-{
-    printf("my string is: %.*s\n", string);
+void foo(char[] string) {
+  printf("my string is: %.*s\n", string.length, string.ptr);
 }
 ------
 
@@ -412,7 +410,7 @@ $(V1
 )
 
 Macros:
+	TD2=<td colspan=2>$0</td>
 	TITLE=Interfacing to C
 	WIKI=InterfaceToC
-	CATEGORY_SPEC=$0
 
