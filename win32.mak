@@ -299,19 +299,19 @@ windows.html : $(DDOC) windows.ddoc windows.dd
 
 ################ Ebook ########################
 
-specbook.d : $(SPECSRC) win32.mak
-	catdoc -o=specbook.d $(SPECSRC)
+dlangspec.d : $(SPECSRC) win32.mak
+	catdoc -o=dlangspec.d $(SPECSRC)
 
-specbook.html : $(DDOC) ebook.ddoc specbook.d
-	$(DMD) $(DDOC) ebook.ddoc specbook.d
+dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d
+	$(DMD) $(DDOC) ebook.ddoc dlangspec.d
 
-specbook.zip : specbook.html ebook.css win32.mak
-	del specbook.zip
-	zip32 specbook specbook.html ebook.css
+dlangspec.zip : dlangspec.html ebook.css win32.mak
+	del dlangspec.zip
+	zip32 dlangspec dlangspec.html ebook.css
 
-specbook.mobi : specbook.html ebook.css win32.mak
-	del specbook.mobi
-	\kindlegen\kindlegen specbook.html
+dlangspec.mobi : dlangspec.opf dlangspec.html dlangspec.png ebook.css win32.mak
+	del dlangspec.mobi
+	\kindlegen\kindlegen dlangspec.opf
 
 ################# Pdf #########################
 
@@ -333,7 +333,7 @@ zip:
 	zip32 doc win32.mak $(DDOC) windows.ddoc linux.ddoc osx.ddoc freebsd.ddoc ebook.ddoc
 	zip32 doc $(SRC) $(PREMADE)
 	zip32 doc $(ASSETS)
-	zip32 doc ebook.css
+	zip32 doc ebook.css dlangspec.opf dlangspec.png
 
 clean:
 	del $(TARGETS)
