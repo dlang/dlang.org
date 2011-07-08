@@ -945,12 +945,24 @@ $(V2
 
         $(P Case expressions must all evaluate to distinct values.
 $(V2
+<<<<<<< HEAD
         Const or immutable variables must all have different names.
         If they share a value, the first case statement with that value
         gets control.
 )
         There may not be two or more default statements.
         )
+=======
+	Const or immutable variables must all have different names.
+	If they share a value, the first case statement with that value
+	gets control.
+    There must be exactly one default statement. 
+)
+$(V1
+	There may not be two or more default statements.
+)
+	)
+>>>>>>> origin/master
 
         $(P The $(GLINK ScopeStatementList) introduces a new scope.
         )
@@ -970,10 +982,18 @@ switch (i) {
 }
 --------------
 
+<<<<<<< HEAD
         $(P Case statements 'fall through' to subsequent
         case values. A break statement will exit the switch $(I BlockStatement).
         For example:
         )
+=======
+$(V1
+	$(P Case statements 'fall through' to subsequent
+	case values. A break statement will exit the switch $(I BlockStatement).
+	For example:
+	)
+>>>>>>> origin/master
 
 --------------
 switch (i) {
@@ -991,6 +1011,48 @@ switch (i) {
 
         $(P will set $(CODE x) to $(CODE 4) if $(CODE i) is $(CODE 1).
         )
+)
+
+$(V2
+    $(P A $(GLINK ScopeStatementList) must either be empty, or be ended with 
+    a $(GLINK ContinueStatement), $(GLINK BreakStatement),
+    $(GLINK ReturnStatement), $(GLINK GotoStatement), $(GLINK ThrowStatement)
+    or assert(0) expression unless this is the last case. This is to
+    set apart with C's error-prone implicit fall-through behavior.
+    $(B goto case;) could be used for explicit fall-through:
+    )
+
+--------------
+int number;
+string message;
+switch (number)
+{
+    default:    // valid: ends with 'throw'
+        throw new Exception("unknown number"); 
+
+    case 3:     // valid: ends with 'break' (break out of the 'switch' only)
+        message ~= "three ";
+        break;
+
+    case 4:     // valid: ends with 'continue' (continue the enclosing loop)
+        message ~= "four ";
+        continue;
+
+    case 5:     // valid: ends with 'goto' (explicit fall-through to next case.)
+        message ~= "five ";
+        goto case;
+
+    case 6:     // $(B ERROR): implicit fall-through
+        message ~= "six ";
+
+    case 1:     // valid: the body is empty
+    case 2:     // valid: this is the last case in the switch statement.
+        message = "one or two";
+}
+--------------
+
+    $(P A break statement will exit the switch $(I BlockStatement).)
+)
 
         $(P $(LNAME2 string-switch, Strings can be used in switch expressions).
         For example:

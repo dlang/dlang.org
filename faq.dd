@@ -62,11 +62,10 @@ $(D_S $(TITLE),
 	$(ITEMR backend, How do I write my own D compiler for CPU X?)
 	$(ITEMR gui, Where can I get a GUI library for D?)
 	$(ITEMR ide, Where can I get an IDE for D?)
-	$(ITEMR q2, What about templates?)
 	$(ITEMR q3, Why emphasize implementation ease?)
 	$(ITEMR q4, Why is [expletive deleted] printf left in?)
 	$(ITEMR q5, Will D be open source?)
-	$(ITEMR q6, Why fall through on switch statements?)
+	$(ITEMR q6, Why $(I no) fall through on switch statements?)
 	$(ITEMR q7, Why should I use D instead of Java?)
 	$(ITEMR q7_2, Doesn't C++ support strings, etc. with STL?)
 	$(ITEMR q7_3, Can't garbage collection be done in C++ with an add-on library?)
@@ -165,20 +164,13 @@ $(ITEM gui, Where can I get a GUI library for D?)
 
 	$(P Since D can call C functions, any GUI library with a C interface is 
 	accessible from D. Various D GUI libraries and ports can be found at 
-	<a href="http://www.prowiki.org/wiki4d/wiki.cgi?AvailableGuiLibraries">AvailableGuiLibraries</a>.
+	$(LINK2 http://www.prowiki.org/wiki4d/wiki.cgi?GuiLibraries, the D wiki).
 	)
 
 $(ITEM ide, Where can I get an IDE for D?)
 
-	$(P Try
-	$(LINK2 http://www.dsource.org/projects/elephant/, Elephant),
-	$(LINK2 http://www.dsource.org/projects/poseidon/, Poseidon),
-	or $(LINK2 http://www.dsource.org/projects/leds/, LEDS).
-	)
-
-$(ITEM q2, What about templates?)
-
-	$(P D now supports advanced templates.
+	$(P A list of IDEs and editors that support D can be found on
+    $(LINK2 http://prowiki.org/wiki4d/wiki.cgi?EditorSupport, the D wiki).
 	)
 
 $(ITEM q3, Why emphasize implementation ease?)
@@ -212,7 +204,7 @@ $(ITEM q4, Why is printf in D?)
 	$(P $(B printf) is not part of D, it is part of C's standard
 	runtime library which is accessible from D.
 	D's standard runtime library has $(B std.stdio.writefln),
-	which is as powerful as $(B printf) but much easier to use.
+	which is as powerful as $(B printf) but is much easier to use.
 	)
 
 
@@ -226,14 +218,21 @@ $(ITEM q5, Will D be open source?)
 	to create $(B gdc), a completely open source implementation of D.
 	)
 
-$(ITEM q6, Why fall through on switch statements?)
+$(ITEM q6, Why $(I no) fall through on switch statements?)
 
 	$(P Many people have asked for a requirement that there be a break between
 	cases in a switch statement, that C's behavior of silently falling through
 	is the cause of many bugs.
 	)
 
-	$(P The reason D doesn't change this is for the same reason that integral
+    $(P In D2, implicit fall through is disallowed. You have to add a
+    $(LINK2 statement.html#GotoStatement, goto case;) statement to explicitly
+    state the intention of falling through. 
+    )
+
+	$(P There was further request that the $(B break) statement be made
+    implicit.
+    The reason D doesn't change this is for the same reason that integral
 	promotion rules and operator precedence rules were kept the same - to
 	make code that looks the same as in C operate the same. If it had subtly
 	different semantics, it will cause frustratingly subtle bugs.
@@ -764,7 +763,10 @@ $(ITEM reference-counting, Why doesn't D use reference counting for garbage coll
 
 	$(P That said, D may in the future optionally support some form of ref
 	counting, as rc is better for managing scarce resources like file
-	handles. 
+	handles.
+    Furthermore, if ref counting is a must, Phobos has the
+    $(LINK2 phobos/std_typecons.html#RefCounted, std.typecons.RefCounted) type
+    which implements it as a library, similar to C++'s shared_ptr&lt;&gt;.
 	)
 
 $(ITEM gc_1, Isn't garbage collection slow and non-deterministic?)
