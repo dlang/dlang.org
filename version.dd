@@ -10,22 +10,22 @@ $(SPEC_S Conditional Compilation,
 
 $(GRAMMAR
 $(GNAME ConditionalDeclaration):
-    $(GLINK Condition) $(I CCDeclarationBlock)
-    $(GLINK Condition) $(I CCDeclarationBlock) $(B else) $(I CCDeclarationBlock)
-    $(GLINK Condition) $(B :) $(I Declarations)
+    $(GLINK Condition) $(GLINK CCDeclarationBlock)
+    $(GLINK Condition) $(GLINK CCDeclarationBlock) $(B else) $(GLINK CCDeclarationBlock)
+    $(GLINK Condition) $(B :) $(GLINK Declarations)
 
 $(GNAME CCDeclarationBlock):
-    $(LINK2 declaration.html#Declaration, $(I Declaration))
-    $(B {) $(I Declarations) $(B })
+    $(GLINK2 declaration, Declaration)
+    $(B {) $(GLINK Declarations) $(B })
     $(B { })
 
 $(GNAME Declarations):
-    $(LINK2 declaration.html#Declaration, $(I Declaration))
-    $(LINK2 declaration.html#Declaration, $(I Declaration)) $(I Declarations)
+    $(GLINK2 declaration, Declaration)
+    $(GLINK2 declaration, Declaration) $(I Declarations)
 
 $(GNAME ConditionalStatement):
-    $(GLINK Condition) $(LINK2 statement.html#NoScopeNonEmptyStatement, $(I NoScopeNonEmptyStatement))
-    $(GLINK Condition) $(LINK2 statement.html#NoScopeNonEmptyStatement, $(I NoScopeNonEmptyStatement)) $(B else) $(LINK2 statement.html#NoScopeNonEmptyStatement, $(I NoScopeNonEmptyStatement))
+    $(GLINK Condition) $(GLINK2 statement, NoScopeNonEmptyStatement)
+    $(GLINK Condition) $(GLINK2 statement, NoScopeNonEmptyStatement) $(B else) $(GLINK2 statement, NoScopeNonEmptyStatement)
 )
 
 	$(P If the $(GLINK Condition) is satisfied, then the following
@@ -70,10 +70,10 @@ $(GNAME Condition):
 
 $(GRAMMAR
 $(GNAME VersionCondition):
-	$(B version $(LPAREN)) $(LINK2 lex.html#IntegerLiteral, $(I IntegerLiteral)) $(B $(RPAREN))
-	$(B version $(LPAREN)) $(I Identifier) $(B $(RPAREN))
+    $(B version $(LPAREN)) $(GLINK2 lex, IntegerLiteral) $(B $(RPAREN))
+    $(B version $(LPAREN)) $(I Identifier) $(B $(RPAREN))
 $(V2
-	$(B version $(LPAREN)) $(B unittest) $(B $(RPAREN)))
+    $(B version $(LPAREN)) $(B unittest) $(B $(RPAREN)))
 )
 
 	$(P The $(I VersionCondition) is satisfied if the $(I IntegerLiteral)
@@ -95,23 +95,23 @@ $(V2
 
 ------
 int k;
-version (Demo)	// compile in this code block for the demo version
-{   int i;
-    int k;	// error, k already defined
+version (Demo) // compile in this code block for the demo version
+{ int i;
+  int k;    // error, k already defined
 
-    i = 3;
+  i = 3;
 }
-x = i;		// uses the i declared above
+x = i;      // uses the i declared above
 ------
 
 ------
 version (X86)
 {
-    ... // implement custom inline assembler version
+  ... // implement custom inline assembler version
 }
 else
 {
-    ... // use default, but slow, version
+  ... // use default, but slow, version
 }
 ------
 
@@ -125,7 +125,7 @@ $(V2	$(P The $(B version(unittest)) is satisfied if and only if the code is
 $(GRAMMAR
 $(GNAME VersionSpecification):
     $(B version =) $(I Identifier) $(B ;)
-    $(B version =) $(LINK2 lex.html#IntegerLiteral, $(I IntegerLiteral)) $(B ;)
+    $(B version =) $(GLINK2 lex, IntegerLiteral) $(B ;)
 )
 
 	$(P The version specification makes it straightforward to group
@@ -135,18 +135,18 @@ $(GNAME VersionSpecification):
 ------
 version (ProfessionalEdition)
 {
-    version = FeatureA;
-    version = FeatureB;
-    version = FeatureC;
+  version = FeatureA;
+  version = FeatureB;
+  version = FeatureC;
 }
 version (HomeEdition)
 {
-    version = FeatureA;
+  version = FeatureA;
 }
 ...
 version (FeatureB)
 {
-    ... implement Feature B ...
+  ... implement Feature B ...
 }
 ------
 
@@ -156,7 +156,7 @@ version (FeatureB)
 ------
 version (Foo)
 {
-    int x;
+  int x;
 }
 version = Foo;	// error, Foo already used
 ------
@@ -174,25 +174,24 @@ version = Foo;	// error, Foo already used
 	a $(I demo) version:)
 
 ------
-class Foo
-{
-    int a, b;
+class Foo {
+  int a, b;
 
-    version(full)
+  version(full)
+  {
+    int extrafunctionality()
     {
-	int extrafunctionality()
-	{
-	    ...
-	    return 1;		// extra functionality is supported
-	}
+      ...
+      return 1;  // extra functionality is supported
     }
-    else // demo
+  }
+  else // demo
+  {
+    int extrafunctionality()
     {
-	int extrafunctionality()
-	{
-	    return 0;		// extra functionality is not supported
-	}
+      return 0;  // extra functionality is not supported
     }
+  }
 }
 ------
 
@@ -324,11 +323,10 @@ $(GNAME DebugCondition):
 	)
 
 ------
-class Foo
-{
-	int a, b;
-    debug:
-	int flag;
+class Foo {
+  int a, b;
+ debug:
+  int flag;
 }
 ------
 
@@ -405,34 +403,33 @@ int j = 4;
 $(B static if) (i == 3)	// ok, at module scope
     int x;
 
-class C
-{   const int k = 5;
+class C {
+  const int k = 5;
 
-    $(B static if) (i == 3)	// ok
-	int x;
-    $(B else)
-	long x;
+  $(B static if) (i == 3) // ok
+    int x;
+  $(B else)
+    long x;
 
-    $(B static if) (j == 3)	// error, j is not a constant
-	int y;
+  $(B static if) (j == 3) // error, j is not a constant
+    int y;
 
-    $(B static if) (k == 5)	// ok, k is in current scope
-	int z;
+  $(B static if) (k == 5) // ok, k is in current scope
+    int z;
 }
 
-template INT(int i)
-{
-    $(B static if) (i == 32)
-	alias int INT;
-    $(B else static if) (i == 16)
-	alias short INT;
-    $(B else)
-	static assert(0);	// not supported
+template INT(int i) {
+  $(B static if) (i == 32)
+    alias int INT;
+  $(B else static if) (i == 16)
+    alias short INT;
+  $(B else)
+    static assert(0); // not supported
 }
 
-INT!(32) a;	// a is an int
-INT!(16) b;	// b is a short
-INT!(17) c;	// error, static assert trips
+INT!(32) a;  // a is an int
+INT!(16) b;  // b is a short
+INT!(17) c;  // error, static assert trips
 ------
 
 	$(P A $(I StaticIfConditional) condition differs from an
@@ -475,20 +472,19 @@ $(GNAME StaticAssert):
 	)
 
 ------
-void foo()
-{
-    if (0)
-    {
-	assert(0);	  // never trips
-	static assert(0); // always trips
-    }
-    version (BAR)
-    {
-    }
-    else
-    {
-	static assert(0); // trips when version BAR is not defined
-    }
+void foo() {
+  if (0)
+  {
+    assert(0);  // never trips
+    static assert(0); // always trips
+  }
+  version (BAR)
+  {
+  }
+  else
+  {
+    static assert(0); // trips when version BAR is not defined
+  }
 }
 ------
 
