@@ -8,17 +8,17 @@ $(SPEC_S Template Mixins,
 
 $(GRAMMAR
 $(GNAME TemplateMixinDeclaration):
-        $(V2 $(B mixin)) $(B template) $(TEMPLATEIDENTIFIER) $(B $(LPAREN)) $(TEMPLATEPARAMETERLIST) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(SUB $(I opt)))
-                $(B {) $(LINK2 module.html#DeclDefs, DeclDefs) $(B })
+    $(V2 $(B mixin)) $(B template) $(TEMPLATEIDENTIFIER) $(B $(LPAREN)) $(TEMPLATEPARAMETERLIST) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(SUB $(I opt)))
+	    $(B {) $(GLINK2 module, DeclDefs) $(B })
 
 $(GNAME TemplateMixin):
-        $(B mixin) $(TEMPLATEIDENTIFIER) $(B ;)
-        $(B mixin) $(TEMPLATEIDENTIFIER) $(GLINK MixinIdentifier) $(B ;)
-        $(B mixin) $(TEMPLATEIDENTIFIER) $(B !$(LPAREN)) $(TEMPLATEARGUMENTLIST) $(B $(RPAREN)) $(B ;)
-        $(B mixin) $(TEMPLATEIDENTIFIER) $(B !$(LPAREN)) $(TEMPLATEARGUMENTLIST) $(B $(RPAREN)) $(GLINK MixinIdentifier) $(B ;)
+    $(B mixin) $(TEMPLATEIDENTIFIER) $(B ;)
+    $(B mixin) $(TEMPLATEIDENTIFIER) $(GLINK MixinIdentifier) $(B ;)
+    $(B mixin) $(TEMPLATEIDENTIFIER) $(B !$(LPAREN)) $(TEMPLATEARGUMENTLIST) $(B $(RPAREN)) $(B ;)
+    $(B mixin) $(TEMPLATEIDENTIFIER) $(B !$(LPAREN)) $(TEMPLATEARGUMENTLIST) $(B $(RPAREN)) $(GLINK MixinIdentifier) $(B ;)
 
 $(GNAME MixinIdentifier):
-        $(I Identifier)
+    $(I Identifier)
 )
 
         $(P A $(I TemplateMixin) can occur in declaration lists of modules,
@@ -39,44 +39,41 @@ $(GNAME MixinIdentifier):
         )
 
 ------
-$(V2 mixin) template Foo()
-{
-    int x = 5;
+$(V2 mixin) template Foo() {
+  int x = 5;
 }
 
 $(B mixin Foo;)
 
-struct Bar
-{
-    $(B mixin Foo;)
+struct Bar {
+  $(B mixin Foo;)
 }
 
-void test()
-{
-    writefln("x = %d", x);              // prints 5
-    {   Bar b;
-        int x = 3;
+void test() {
+  writefln("x = %d", x);  // prints 5
+  {
+    Bar b;
+    int x = 3;
 
-        writefln("b.x = %d", b.x);      // prints 5
-        writefln("x = %d", x);          // prints 3
-        {
-            $(B mixin Foo;)
-            writefln("x = %d", x);      // prints 5
-            x = 4;
-            writefln("x = %d", x);      // prints 4
-        }
-        writefln("x = %d", x);          // prints 3
+    writefln("b.x = %d", b.x); // prints 5
+    writefln("x = %d", x);     // prints 3
+    {
+      $(B mixin Foo;)
+      writefln("x = %d", x);   // prints 5
+      x = 4;
+      writefln("x = %d", x);   // prints 4
     }
-    writefln("x = %d", x);              // prints 5
+    writefln("x = %d", x);     // prints 3
+  }
+  writefln("x = %d", x);       // prints 5
 }
 ------
 
         Mixins can be parameterized:
 
 ------
-$(V2 mixin) template Foo(T)
-{
-    T x = 5;
+$(V2 mixin) template Foo(T) {
+  T x = 5;
 }
 
 $(B mixin Foo!(int);)           // create x of type int
@@ -85,28 +82,24 @@ $(B mixin Foo!(int);)           // create x of type int
         Mixins can add virtual functions to a class:
 
 ------
-$(V2 mixin) template Foo()
-{
-    void func() { writefln("Foo.func()"); }
+$(V2 mixin) template Foo() {
+  void func() { writefln("Foo.func()"); }
 }
 
-class Bar
-{
-    $(B mixin Foo);
+class Bar {
+  $(B mixin Foo);
 }
 
-class Code : Bar
-{
-    void func() { writefln("Code.func()"); }
+class Code : Bar {
+  void func() { writefln("Code.func()"); }
 }
 
-void test()
-{
-    Bar b = new Bar();
-    b.func();           // calls Foo.func()
+void test() {
+  Bar b = new Bar();
+  b.func();      // calls Foo.func()
 
-    b = new Code();
-    b.func();           // calls Code.func()
+  b = new Code();
+  b.func();      // calls Code.func()
 }
 ------
 
@@ -116,32 +109,28 @@ void test()
 ------
 int y = 3;
 
-$(V2 mixin) template Foo()
-{
-    int abc() { return y; }
+$(V2 mixin) template Foo() {
+  int abc() { return y; }
 }
 
-void test()
-{
-    int y = 8;
-    $(B mixin Foo;)     // local y is picked up, not global y
-    assert(abc() == 8);
+void test() {
+  int y = 8;
+  $(B mixin Foo;) // local y is picked up, not global y
+  assert(abc() == 8);
 }
 ------
 
         Mixins can parameterize symbols using alias parameters:
 
 ------
-$(V2 mixin) template Foo(alias b)
-{
-    int abc() { return b; }
+$(V2 mixin) template Foo(alias b) {
+  int abc() { return b; }
 }
 
-void test()
-{
-    int y = 8;
-    $(B mixin Foo!(y);)
-    assert(abc() == 8);
+void test() {
+  int y = 8;
+  $(B mixin Foo!(y);)
+  assert(abc() == 8);
 }
 ------
 
@@ -153,36 +142,35 @@ void test()
 ------
 $(V2 mixin) template duffs_device(alias id1, alias id2, alias s)
 {
-    void duff_loop()
+  void duff_loop()
+  {
+    if (id1 < id2)
     {
-        if (id1 < id2)
-        {
-            typeof(id1) n = (id2 - id1 + 7) / 8;
-            switch ((id2 - id1) % 8)
-            {
-                case 0:        do {  s();
-                case 7:              s();
-                case 6:              s();
-                case 5:              s();
-                case 4:              s();
-                case 3:              s();
-                case 2:              s();
-                case 1:              s();
-                                  } while (--n > 0);
-            }
+      typeof(id1) n = (id2 - id1 + 7) / 8;
+      switch ((id2 - id1) % 8)
+      {
+        case 0: do { s();
+        case 7:      s();
+        case 6:      s();
+        case 5:      s();
+        case 4:      s();
+        case 3:      s();
+        case 2:      s();
+        case 1:      s();
+                } while (--n > 0);
         }
     }
+  }
 }
 
 void foo() { writefln("foo"); }
 
-void test()
-{
-    int i = 1;
-    int j = 11;
+void test() {
+  int i = 1;
+  int j = 11;
 
-    mixin duffs_device!(i, j, $(B delegate { foo(); }) );
-    duff_loop();        // executes foo() 10 times
+  mixin duffs_device!(i, j, $(B delegate { foo(); }) );
+  duff_loop();  // executes foo() 10 times
 }
 ------
 
@@ -196,19 +184,17 @@ void test()
 ------
 int x = 3;
 
-$(V2 mixin) template Foo()
-{
-    int x = 5;
-    int y = 5;
+$(V2 mixin) template Foo() {
+  int x = 5;
+  int y = 5;
 }
 
 $(B mixin Foo;)
 int y = 3;
 
-void test()
-{
-    writefln("x = %d", x);      // prints 3
-    writefln("y = %d", y);      // prints 3
+void test() {
+  writefln("x = %d", x);  // prints 3
+  writefln("y = %d", y);  // prints 3
 }
 ------
 
@@ -217,25 +203,22 @@ void test()
         error when the declaration is referenced:
 
 ------
-$(V2 mixin) template Foo()
-{
-    int x = 5;
-    void func(int x) { }
+$(V2 mixin) template Foo() {
+  int x = 5;
+  void func(int x) { }
 }
 
-$(V2 mixin) template Bar()
-{
-    int x = 4;
-    void func() { }
+$(V2 mixin) template Bar() {
+  int x = 4;
+  void func() { }
 }
 
 $(B mixin Foo;)
 $(B mixin Bar;)
 
-void test()
-{
-    writefln("x = %d", x);      // error, x is ambiguous
-    func();             // error, func is ambiguous
+void test() {
+  writefln("x = %d", x); // error, x is ambiguous
+  func();             // error, func is ambiguous
 }
 ------
         $(P The call to $(B func()) is ambiguous because
@@ -248,44 +231,39 @@ void test()
 ------
 int x = 6;
 
-$(V2 mixin) template Foo()
-{
-    int x = 5;
-    int y = 7;
-    void func() { }
+$(V2 mixin) template Foo() {
+  int x = 5;
+  int y = 7;
+  void func() { }
 }
 
-$(V2 mixin) template Bar()
-{
-    int x = 4;
-    void func() { }
+$(V2 mixin) template Bar() {
+  int x = 4;
+  void func() { }
 }
 
 $(B mixin Foo F;)
 $(B mixin Bar B;)
 
-void test()
-{
-    writefln("y = %d", y);      // prints 7
-    writefln("x = %d", x);      // prints 6
-    writefln("F.x = %d", F.x);  // prints 5
-    writefln("B.x = %d", B.x);  // prints 4
-    F.func();                   // calls Foo.func
-    B.func();                   // calls Bar.func
+void test() {
+  writefln("y = %d", y);     // prints 7
+  writefln("x = %d", x);     // prints 6
+  writefln("F.x = %d", F.x); // prints 5
+  writefln("B.x = %d", B.x); // prints 4
+  F.func();                  // calls Foo.func
+  B.func();                  // calls Bar.func
 }
 ------
         $(P Alias declarations can be used to overload together
         functions declared in different mixins:)
 
 -----
-$(V2 mixin) template Foo()
-{
-    void func(int x) {  }
+$(V2 mixin) template Foo() {
+  void func(int x) {  }
 }
 
-$(V2 mixin) template Bar()
-{
-    void func() {  }
+$(V2 mixin) template Bar() {
+  void func() {  }
 }
 
 mixin Foo!() F;
@@ -294,10 +272,9 @@ mixin Bar!() B;
 $(B alias F.func func;)
 $(B alias B.func func;)
 
-void main()
-{
-    func();     // calls B.func
-    func(1);    // calls F.func
+void main() {
+  func();  // calls B.func
+  func(1); // calls F.func
 }
 -----
 
@@ -308,18 +285,16 @@ void main()
 ------
 int x = 4;
 
-$(V2 mixin) template Foo()
-{
-    int x = 5;
-    int bar() { return x; }
+$(V2 mixin) template Foo() {
+  int x = 5;
+  int bar() { return x; }
 }
 
 $(B mixin Foo;)
 
-void test()
-{
-    writefln("x = %d", x);              // prints 4
-    writefln("bar() = %d", bar());      // prints 5
+void test() {
+  writefln("x = %d", x);         // prints 4
+  writefln("bar() = %d", bar()); // prints 5
 }
 ------
 
@@ -329,7 +304,7 @@ Macros:
         TITLE=Mixins
         WIKI=Mixin
         CATEGORY_SPEC=$0
-        TEMPLATEIDENTIFIER=$(LINK2 template.html#TemplateIdentifier, $(I TemplateIdentifier))
-        TEMPLATEPARAMETERLIST=$(LINK2 template.html#TemplateParameterList, $(I TemplateParameterList))
-        TEMPLATEARGUMENTLIST=$(LINK2 template.html#TemplateArgumentList, $(I TemplateArgumentList))
+        TEMPLATEIDENTIFIER=$(GLINK2 template, TemplateIdentifier)
+        TEMPLATEPARAMETERLIST=$(GLINK2 template, TemplateParameterList)
+        TEMPLATEARGUMENTLIST=$(GLINK2 template, TemplateArgumentList)
         FOO=
