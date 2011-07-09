@@ -309,7 +309,7 @@ dlangspec.zip : dlangspec.html ebook.css win32.mak
 	del dlangspec.zip
 	zip32 dlangspec dlangspec.html ebook.css
 
-dlangspec.mobi : dlangspec.opf dlangspec.html dlangspec.png ebook.css win32.mak
+dlangspec.mobi : dlangspec.opf dlangspec.html dlangspec.png dlangspec.ncx ebook.css win32.mak
 	del dlangspec.mobi
 	\kindlegen\kindlegen dlangspec.opf
 
@@ -333,7 +333,7 @@ zip:
 	zip32 doc win32.mak $(DDOC) windows.ddoc linux.ddoc osx.ddoc freebsd.ddoc ebook.ddoc
 	zip32 doc $(SRC) $(PREMADE)
 	zip32 doc $(ASSETS)
-	zip32 doc ebook.css dlangspec.opf dlangspec.png
+	zip32 doc ebook.css dlangspec.opf dlangspec.ncx dlangspec.png
 
 clean:
 	del $(TARGETS)
