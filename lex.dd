@@ -2,72 +2,14 @@ Ddoc
 
 $(SPEC_S Lexical,
 
-	In D, the lexical analysis is independent of the syntax parsing and the
+	The lexical analysis is independent of the syntax parsing and the
 	semantic analysis. The lexical analyzer splits the source text up into
-	tokens. The lexical grammar describes what those tokens are. The D
-	lexical grammar is designed to be suitable for high speed scanning, it
+	tokens. The lexical grammar describes what those tokens are. The
+	grammar is designed to be suitable for high speed scanning, it
 	has a minimum of special case rules, there is only one phase of
 	translation, and to make it easy to write a correct scanner
 	for. The tokens are readily recognizable by those familiar with C and
 	C++.
-
-<h3>Phases of Compilation</h3>
-
-	The process of compiling is divided into multiple phases. Each phase
-	has no dependence on subsequent phases. For example, the scanner is
-	not perturbed by the semantic analyzer. This separation of the passes
-	makes language tools like syntax
-	directed editors relatively easy to produce.
-	It also is possible to compress D source by storing it in
-	$(SINGLEQUOTE tokenized) form.
-
-$(OL
-	$(LI $(B source character set)$(BR)
-
-	The source file is checked to see what character set it is,
-	and the appropriate scanner is loaded. ASCII and UTF
-	formats are accepted.
-	)
-
-	$(LI $(B script line) $(BR)
-
-	If the first line starts with $(GREEN #!) then the first line
-	is ignored.
-	)
-
-	$(LI $(B lexical analysis)$(BR)
-
-	The source file is divided up into a sequence of tokens.
-	$(LINK2 #specialtokens, Special tokens) are replaced with other tokens.
-	$(LINK2 #specialtokenseq, Special token sequences)
-	are processed and removed.
-	)
-
-	$(LI $(B syntax analysis)$(BR)
-
-	The sequence of tokens is parsed to form syntax trees.
-	)
-
-	$(LI $(B semantic analysis)$(BR)
-
-	The syntax trees are traversed to declare variables, load symbol tables, assign
-	types, and in general determine the meaning of the program.
-	)
-
-	$(LI $(B optimization)$(BR)
-
-	Optimization is an optional pass that tries to rewrite the program
-	in a semantically equivalent, but faster executing, version.
-	)
-
-	$(LI $(B code generation)$(BR)
-
-	Instructions are selected from the target architecture to implement
-	the semantics of the program. The typical result will be
-	an object file, suitable for input to a linker.
-	)
-)
-
 
 <h3>Source Text</h3>
 
@@ -296,12 +238,12 @@ $(GNAME Token):
 
 $(GRAMMAR
 $(GNAME Identifier):
-    $(GLINK IdentiferStart)
-    $(GLINK IdentiferStart) $(GLINK IdentifierChars)
+    $(GLINK IdentifierStart)
+    $(GLINK IdentifierStart) $(GLINK IdentifierChars)
 
 $(GNAME IdentifierChars):
-    $(GLINK IdentiferChar)
-    $(GLINK IdentiferChar) $(I IdentifierChars)
+    $(GLINK IdentifierChar)
+    $(GLINK IdentifierChar) $(I IdentifierChars)
 
 $(GNAME IdentifierStart):
     $(B _)
@@ -309,7 +251,7 @@ $(GNAME IdentifierStart):
     $(I UniversalAlpha)
 
 $(GNAME IdentifierChar):
-    $(GLINK IdentiferStart)
+    $(GLINK IdentifierStart)
     $(B 0)
     $(GLINK NonZeroDigit)
 )
@@ -822,8 +764,8 @@ $(GNAME DecimalFloat):
     $(GLINK LeadingDecimal) $(B .)
     $(GLINK LeadingDecimal) $(B .) $(GLINK DecimalDigits)
     $(GLINK DecimalDigits) $(B .) $(GLINK DecimalDigits) $(GLINK DecimalExponent)
-    $(B .) $(GLINK Decimal)
-    $(B .) $(GLINK Decimal) $(GLINK DecimalExponent)
+    $(B .) $(GLINK DecimalInteger)
+    $(B .) $(GLINK DecimalInteger) $(GLINK DecimalExponent)
     $(GLINK LeadingDecimal) $(GLINK DecimalExponent)
 
 $(GNAME DecimalExponent)
