@@ -117,13 +117,15 @@ $(GNAME Space):
 
 $(GRAMMAR
 $(GNAME Comment):
-    $(B /*) $(GLINK Characters) $(B */)
-    $(B //) $(GLINK Characters) $(GLINK EndOfLine)
+    $(GLINK BlockComment)
+    $(GLINK LineComment)
     $(GLINK NestingBlockComment)
 
-$(GNAME Characters):
-    $(GLINK Character)
-    $(GLINK Character) $(I Characters)
+$(GNAME BlockComment)
+    $(B /*) $(GLINK Characters) $(B */)
+
+$(GNAME LineComment)
+    $(B //) $(GLINK Characters) $(GLINK EndOfLine)
 
 $(GNAME NestingBlockComment):
     $(B /+) $(GLINK NestingBlockCommentCharacters) $(B +/)
@@ -135,13 +137,18 @@ $(GNAME NestingBlockCommentCharacters):
 $(GNAME NestingBlockCommentCharacter):
     $(GLINK Character)
     $(GLINK NestingBlockComment)
+
+$(GNAME Characters):
+    $(GLINK Character)
+    $(GLINK Character) $(I Characters)
 )
 
-	D has three kinds of comments:
+	$(P D has three kinds of comments:)
+
 	$(OL
 	$(LI Block comments can span multiple lines, but do not nest.)
 	$(LI Line comments terminate at the end of the line.)
-	$(LI Nesting comments can span multiple lines and can nest.)
+	$(LI Nesting block comments can span multiple lines and can nest.)
 	)
 
 	$(P
@@ -163,7 +170,7 @@ a = /+ /* +/ */ 3; // parses as if 'a = */ 3;'
 	<code>abc/**/def</code> is two tokens, $(TT abc) and $(TT def),
 	not one $(TT abcdef) token.
 
-<h3>$(LNAME2 tokens, Tokens)</h3>
+<h3>Tokens</h3>
 
 $(GRAMMAR
 $(GNAME Token):
@@ -234,7 +241,7 @@ $(GNAME Token):
     $(V2 $(B @))
 )
 
-<h3>$(LNAME2 identifier, Identifiers)</h3>
+<h3>Identifiers</h3>
 
 $(GRAMMAR
 $(GNAME Identifier):
@@ -280,10 +287,10 @@ $(V2
     $(GLINK TokenString))
 
 $(GNAME WysiwygString):
-    $(B r") $(GLINK WysiwygCharacters) $(B ") $(GLINK Postfix)<sub>opt</sub>
+    $(B r") $(GLINK WysiwygCharacters) $(B ") $(GLINK StringPostfix)<sub>opt</sub>
 
 $(GNAME AlternateWysiwygString):
-    $(B `) $(GLINK WysiwygCharacters) $(B `) $(GLINK Postfix)<sub>opt</sub>
+    $(B `) $(GLINK WysiwygCharacters) $(B `) $(GLINK StringPostfix)<sub>opt</sub>
 
 $(GNAME WysiwygCharacters):
     $(GLINK WysiwygCharacter)
@@ -294,7 +301,7 @@ $(GNAME WysiwygCharacter):
     $(GLINK EndOfLine)
 
 $(GNAME DoubleQuotedString):
-    $(B ") $(GLINK DoubleQuotedCharacters) $(B ") $(GLINK Postfix)<sub>opt</sub>
+    $(B ") $(GLINK DoubleQuotedCharacters) $(B ") $(GLINK StringPostfix)<sub>opt</sub>
 
 $(GNAME DoubleQuotedCharacters):
     $(GLINK DoubleQuotedCharacter)
@@ -324,10 +331,10 @@ $(GNAME EscapeSequence):
     $(B \) $(GLINK OctalDigit) $(GLINK OctalDigit) $(GLINK OctalDigit)
     $(B \u) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit)
     $(B \U) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit)
-    $(B \&amp;) $(GLINK2 entity, NamedCharacterEntity) $(B ;)
+    $(GLINK2 entity, NamedCharacterEntity)
 
 $(GNAME HexString):
-    $(B x") $(GLINK HexStringChars) $(B ") $(GLINK Postfix)<sub>opt</sub>
+    $(B x") $(GLINK HexStringChars) $(B ") $(GLINK StringPostfix)<sub>opt</sub>
 
 $(GNAME HexStringChars):
     $(GLINK HexStringChar)
@@ -338,7 +345,7 @@ $(GNAME HexStringChar):
     $(GLINK WhiteSpace)
     $(GLINK EndOfLine)
 
-$(GNAME Postfix):
+$(GNAME StringPostfix):
     $(B c)
     $(B w)
     $(B d)
@@ -348,7 +355,7 @@ $(GNAME DelimitedString):
     $(B q") $(I Delimiter) $(GLINK WysiwygCharacters) $(I MatchingDelimiter) $(B ")
 
 $(GNAME TokenString):
-    $(B q{) $(GLINK Tokens) $(B })
+    $(B q{) $(GLINK Token)s $(B })
 )
 )
 
@@ -364,7 +371,7 @@ $(GNAME TokenString):
 	$(P
 	Wysiwyg quoted strings are enclosed by r" and ".
 	All characters between
-	the r" and " are part of the string except for $(I EndOfLine) which is
+	the r" and " are part of the string except for $(GLINK EndOfLine) which is
 	regarded as a single \n character.
 	There are no escape sequences inside r" ":
 	)
@@ -395,7 +402,7 @@ r"ab\n" // string is 4 characters,
 
 	Double quoted strings are enclosed by "". Escape sequences can be
 	embedded into them with the typical \ notation.
-	$(I EndOfLine) is regarded as a single \n character.
+	$(GLINK EndOfLine) is regarded as a single \n character.
 
 ---------------
 "hello"
@@ -471,7 +478,7 @@ r"a" "bc"
 \x61"bc"
 -----------------
 
-	The optional $(I Postfix) character gives a specific type
+	The optional $(I StringPostfix) character gives a specific type
 	to the string, rather than it being inferred from the context.
 	This is useful when the type cannot be unambiguously inferred,
 	such as when overloading based on string type. The types corresponding
@@ -480,9 +487,9 @@ r"a" "bc"
 
 	$(TABLE2 String Literal Postfix Characters,
 	$(THEAD Postfix, Type)
-	$(TROW $(B c), char[ ])
-	$(TROW $(B w), wchar[ ])
-	$(TROW $(B d), dchar[ ])
+	$(TROW $(B c), $(CODE char[]))
+	$(TROW $(B w), $(CODE wchar[]))
+	$(TROW $(B d), $(CODE dchar[]))
 	)
 
 ---
@@ -590,8 +597,8 @@ $(GNAME IntegerLiteral):
 $(GNAME Integer):
     $(GLINK DecimalInteger)
     $(GLINK BinaryInteger)
-    $(GLINK OctalInteger)
-    $(GLINK HexadecimalInteger)
+$(V1    $(GLINK OctalInteger)
+)    $(GLINK HexadecimalInteger)
 
 $(GNAME IntegerSuffix):
     $(B L)
@@ -611,10 +618,10 @@ $(GNAME BinaryInteger):
     $(B 0b) $(GLINK BinaryDigits)
     $(B 0B) $(GLINK BinaryDigits)
 
-$(GNAME OctalInteger):
+$(V1 $(GNAME OctalInteger):
     $(B 0) $(GLINK OctalDigits)
 
-$(GNAME HexadecimalInteger):
+)$(GNAME HexadecimalInteger):
     $(B 0x) $(GLINK HexDigits)
     $(B 0X) $(GLINK HexDigits)
 
@@ -683,32 +690,36 @@ $(GNAME HexDigit):
     $(B _)
 )
 
-	Integers can be specified in decimal, binary, octal, or hexadecimal.
-<p>
-	Decimal integers are a sequence of decimal digits.
-<p>
-	$(LNAME2 binary-literals, Binary integers) are a sequence of binary digits preceded
+	$(P Integers can be specified in decimal, binary, octal, or hexadecimal.)
+
+	$(P Decimal integers are a sequence of decimal digits.)
+
+	$(P $(LNAME2 binary-literals, Binary integers) are a sequence of binary digits preceded
 	by a $(SINGLEQUOTE 0b).
-<p>
-	Octal integers are a sequence of octal digits preceded by a $(SINGLEQUOTE 0).
-<p>
-	Hexadecimal integers are a sequence of hexadecimal digits preceded
+	)
+
+	$(V1 $(P Octal integers are a sequence of octal digits preceded by a $(SINGLEQUOTE 0).))
+
+	$(P Hexadecimal integers are a sequence of hexadecimal digits preceded
 	by a $(SINGLEQUOTE 0x).
-<p>
-	Integers can have embedded $(SINGLEQUOTE _) characters, which are ignored.
+	)
+
+	$(P Integers can have embedded $(SINGLEQUOTE _) characters, which are ignored.
 	The embedded $(SINGLEQUOTE _) are useful for formatting long literals, such
 	as using them as a thousands separator:
+	)
 
 -------------
 123_456       // 123456
 1_2_3_4_5_6_  // 123456
 -------------
 
-	Integers can be immediately followed by one $(SINGLEQUOTE L) or one
-	$(SINGLEQUOTE u) or both.
-<p>
-	The type of the integer is resolved as follows:
-	<p>
+	$(P Integers can be immediately followed by one $(SINGLEQUOTE L) or one of
+	$(SINGLEQUOTE u) or $(SINGLEQUOTE U) or both.
+	Note that there is no $(SINGLEQUOTE l) suffix.
+	)
+
+	$(P The type of the integer is resolved as follows:)
 
 	$(TABLE2 Decimal Literal Types,
 
@@ -815,20 +826,19 @@ $(GNAME LeadingDecimal):
     $(B 0) $(GLINK DecimalDigits)
 )
 
-	Floats can be in decimal or hexadecimal format,
-	as in standard C.
-	<p>
+	$(P Floats can be in decimal or hexadecimal format.)
 
-	Hexadecimal floats are preceded with a $(B 0x) and the
+	$(P Hexadecimal floats are preceded with a $(B 0x) and the
 	exponent is a $(B p)
 	or $(B P) followed by a decimal number serving as the exponent
 	of 2.
-	<p>
+	)
 
-	Floating literals can have embedded $(SINGLEQUOTE _) characters, which are ignored.
+	$(P Floating literals can have embedded $(SINGLEQUOTE _) characters, which are ignored.
 	The embedded $(SINGLEQUOTE _) are useful for formatting long literals to
 	make them more readable, such
 	as using them as a thousands separator:
+	)
 
 ---------
 123_456.567_8         // 123456.5678
@@ -836,18 +846,18 @@ $(GNAME LeadingDecimal):
 1_2_3_4_5_6_._5e-6_   // 123456.5e-6
 ---------
 
-	Floating literals with no suffix are of type double.
+	$(P Floating literals with no suffix are of type double.
 	Floats can be followed by one $(B f), $(B F),
 	or $(B L) suffix.
 	The $(B f) or $(B F) suffix means it is a
 	float, and $(B L) means it is a real.
-	<p>
+	)
 
-	If a floating literal is followed by $(B i), then it is an
+	$(P If a floating literal is followed by $(B i), then it is an
 	$(I ireal) (imaginary) type.
-	<p>
+	)
 
-	Examples:
+	$(P Examples:)
 
 ---------
 0x1.FFFFFFFFFFFFFp1023 // double.max
@@ -858,19 +868,20 @@ $(GNAME LeadingDecimal):
 6.3Li                  // ireal 6.3
 ---------
 
-	It is an error if the literal exceeds the range of the type.
+	$(P It is an error if the literal exceeds the range of the type.
 	It is not an error if the literal is rounded to fit into
 	the significant digits of the type.
-	<p>
+	)
 
-	Complex literals are not tokens, but are assembled from
-	real and imaginary expressions in the semantic analysis:
+	$(P Complex literals are not tokens, but are assembled from
+	real and imaginary expressions during semantic analysis:
+	)
 
 ---------
 4.5 + 6.2i  // complex number
 ---------
 
-<h3>$(LNAME2 keyword, Keywords)</h3>
+<h3>Keywords</h3>
 
 	Keywords are reserved identifiers.
 
@@ -1018,17 +1029,17 @@ $(V2
 	$(TABLE2 Special Tokens,
 	$(THEAD Special Token, Replaced with...)
 $(V1
-	$(TROW $(B __FILE__), string literal containing source file name)
-	$(TROW $(B __LINE__), integer literal of the current source line number)
+	$(TROW $(CODE __FILE__), string literal containing source file name)
+	$(TROW $(CODE __LINE__), integer literal of the current source line number)
 )
-	$(TROW $(B __DATE__), string literal of the date of compilation "$(I mmm dd yyyy)")
+	$(TROW $(CODE __DATE__), string literal of the date of compilation "$(I mmm dd yyyy)")
 $(V2
-	$(TROW $(B __EOF__), sets the scanner to the end of the file)
+	$(TROW $(CODE __EOF__), sets the scanner to the end of the file)
 )
-	$(TROW $(B __TIME__), string literal of the time of compilation "$(I hh:mm:ss)")
-	$(TROW $(B __TIMESTAMP__), string literal of the date and time of compilation "$(I www mmm dd hh:mm:ss yyyy)")
-	$(TROW $(B __VENDOR__), $(ARGS Compiler vendor string, such as "Digital Mars D"))
-	$(TROW $(B __VERSION__), $(ARGS Compiler version as an integer, such as 2001))
+	$(TROW $(CODE __TIME__), string literal of the time of compilation "$(I hh:mm:ss)")
+	$(TROW $(CODE __TIMESTAMP__), string literal of the date and time of compilation "$(I www mmm dd hh:mm:ss yyyy)")
+	$(TROW $(CODE __VENDOR__), $(ARGS Compiler vendor string, such as "Digital Mars D"))
+	$(TROW $(CODE __VERSION__), $(ARGS Compiler version as an integer, such as 2001))
 	)
 
 <h3>Special Token Sequences</h3>
