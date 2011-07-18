@@ -152,7 +152,8 @@ phobos:
 		DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-last-release:
-	TAG=$$(cd ${PHOBOS} && git tag | sed 's/phobos.*-//' | sort -nr | head -n 1) && \
+	export TAG=$$(cd ${PHOBOS} && git tag | grep '^v' | sed 's/^v//' | sort -nr | head -n 1) && \
+	  echo "Buidling Phobos version $$TAG in ${PHOBOS}-$$TAG" && \
 	  if [ ! -d ${PHOBOS}-$$TAG ]; then \
 	    mkdir ${PHOBOS}-$$TAG && \
 	    cd ${PHOBOS}-$$TAG && \
@@ -160,7 +161,7 @@ phobos-last-release:
 	  else \
 	    cd ${PHOBOS}-$$TAG ; \
 	  fi && \
-	  git checkout phobos-$$TAG && \
+	  git checkout v$$TAG && \
 	  make -f posix.mak \
 		DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos html -j 4
 
