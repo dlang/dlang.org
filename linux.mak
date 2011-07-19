@@ -20,8 +20,6 @@ STYLES=css/style.css css/print.css
 PREMADE=download.html dcompiler.html language-reference.html	\
 appendices.html howtos.html articles.html
 
-DDOC=macros.ddoc windows.ddoc doc.ddoc
-
 TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 	cppcomplex.html cppdbc.html gsoc2011.html index.html overview.html	\
 	lex.html module.html dnews.html declaration.html type.html			\
@@ -94,8 +92,8 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
 # Pattern rulez
 
-$(DOC_OUTPUT_DIR)/%.html : %.dd doc.ddoc
-	$(DMD) -c -o- -Df$@ doc.ddoc $<
+$(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC)
+	$(DMD) -c -o- -Df$@ $(DDOC) $<
 
 $(DOC_OUTPUT_DIR)/% : %
 	@mkdir -p $(dir $@)
@@ -112,12 +110,12 @@ $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
 	true $(foreach F, $(sort $(TARGETS) $(IMAGES)), \
 	  && echo "<a href=$F>`sed -n 's/<title>\(.*\)<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`" \
 	     "</a><p>" >> sitemap.dd)
-	$(DMD) -c -o- -Df$@ doc.ddoc sitemap.dd
+	$(DMD) -c -o- -Df$@ $(DDOC) sitemap.dd
 	rm -rf sitemap.dd
 
 zip:
 	rm doc.zip
-	zip32 doc win32.mak style.css doc.ddoc
+	zip32 doc win32.mak style.css $(DDOC)
 	zip32 doc $(SRC) download.html
 	zip32 doc $(IMG)
 
