@@ -22,6 +22,7 @@ appendices.html howtos.html articles.html
 
 TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 	cppcomplex.html cppdbc.html gsoc2011.html index.html overview.html	\
+	spec.html intro.html \
 	lex.html module.html dnews.html declaration.html type.html			\
 	property.html attribute.html pragma.html expression.html			\
 	statement.html arrays.html struct.html class.html enum.html			\
@@ -54,7 +55,8 @@ PDFFEATURES=comparison.html features2.html
 
 PDFFAQ=faq.html const-faq.html rationale.html future.html
 
-PDFSPEC=lex.html module.html declaration.html type.html property.html	\
+PDFSPEC=spec.html intro.html \
+	lex.html module.html declaration.html type.html property.html	\
 	attribute.html pragma.html expression.html statement.html			\
 	arrays.html hash-map.html struct.html class.html interface.html		\
 	enum.html const3.html function.html operatoroverloading.html		\
