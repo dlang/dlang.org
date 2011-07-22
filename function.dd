@@ -1487,95 +1487,97 @@ int main(char[][] args) { ... }
 
 <h2>$(LNAME2 interpretation, Compile Time Function Execution (CTFE))</h2>
 
-        $(P A subset of functions can be executed at compile time.
-        This is useful when constant folding algorithms need to
-        include recursion and looping.
-        In order to be executed at compile time, a function must
-        meet the following criteria:
-        )
+    $(P A subset of functions can be executed at compile time.
+    This is useful when constant folding algorithms need to
+    include recursion and looping. Compile time function execution is
+    subject to the following restrictions:
+    )
 
-        $(OL
+    $(OL
+    $(LI the function source code must be available to the compiler. Functions
+        which exist in the source code only as $(D_KEYWORD extern) declarations
+        cannot be executed at compile time)
 
-        $(LI function arguments must all be:
-            $(UL
-                $(LI integer literals)
-                $(LI floating point literals)
-                $(LI character literals)
-                $(LI string literals)
-                $(LI array literals where the members are all items
-                in this list)
-                $(LI associative array literals where the members are all items
-                in this list)
-                $(LI struct literals where the members are all items
-                in this list)
-                $(LI const variables initialized with a member of
-                this list)
-                $(LI delegates)
-                $(LI pointers to functions)
-                $(LI delegate literals)
-                $(LI function literals)
-            )
-        )
+    $(LI executed expressions may not reference any global or local
+        static variables)
 
-        $(LI function parameters may not be C-style variadic)
-
-        $(LI the function may not be synchronized)
-
-        $(LI expressions in the function may not:
-            $(UL
-                $(LI throw exceptions)
-                $(LI use pointers or classes)
-                $(LI reference any global state or variables)
-                $(LI reference any local static variables)
-                $(LI delete)
-                $(LI call any function that is not
-                executable at compile time)
-            )
-        )
-
-        $(LI the following statement types are not allowed:
-            $(UL
-                $(LI synchronized statements)
-                $(LI throw statements)
-                $(LI with statements)
-                $(LI scope statements)
-                $(LI try-catch-finally statements)
-                $(LI labeled break and continue statements)
-             )
-        )
-
-        $(LI as a special case, the following properties
-        can be executed at compile time:
-                $(TABLE1
-                $(TR $(TD $(CODE .dup)))
-                $(TR $(TD $(CODE .length)))
-                $(TR $(TD $(CODE .keys)))
-                $(TR $(TD $(CODE .values)))
-                )
-        )
-
-        )
-
-        $(P In order to be executed at compile time, the function
-        must appear in a context where it must be so executed, for
-        example:)
-
+    $(LI the following statement types are not allowed:
         $(UL
-        $(LI initialization of a static variable)
-        $(LI dimension of a static array)
-        $(LI argument for a template value parameter)
+            $(LI asm statements)
+            $(LI synchronized statements)
+            $(LI throw statements)
+            $(LI with statements)
+            $(LI scope statements)
+            $(LI try-catch-finally statements)
         )
+    )
+
+    $(LI delete expressions are not permitted)
+
+    $(LI casts which involve a reinterpretation of the underlying pattern of
+        bits (eg, from int[] to float[]) are not permitted)
+
+    $(LI C-style semantics on pointer arithmetic are strictly enforced.
+        Pointer arithmetic is permitted only on pointers which point to static
+        or dynamic array elements. Such pointers must point to an element of
+        the array, or to the first element past the array.
+        Ordered comparison (<, <=, >, >=) between pointers is permitted only
+        between pointers which point to the same array.
+        Pointer arithmetic is completely forbidden on pointers which are null,
+        or which point to a non-array.
+        Equality comparisons (==, !=, is, !is) are permitted between all
+        pointers, without restriction.
+    )
+
+    $(LI function parameters may not be C-style variadic)
+
+    $(LI classes and interfaces are not yet supported)
+    )
+
+    $(P Note that the above restrictions apply only to expressions which are
+        actually executed. For example:
+    )
+---
+static int y = 0;
+
+int countTen(int x)
+{
+    if (x > 10)
+        ++y;
+    return x;
+}
+
+static assert( countTen( 6 ) == 6 ); // OK
+static assert( countTen( 12 ) == 12 );  // invalid, modifies y.
+---
+$(V2
+    $(P The $(D_KEYWORD __ctfe) boolean pseudo-variable, which evaluates to $(D_KEYWORD true)
+        at compile time, but $(D_KEYWORD false) at run time, can be used to provide
+        an alternative execution path to avoid operations which are forbidden
+        at compile time.
+    )
+)
+
+	$(P In order to be executed at compile time, the function
+	must appear in a context where it must be so executed, for
+	example:)
+
+	$(UL
+	$(LI initialization of a static variable)
+	$(LI dimension of a static array)
+	$(LI argument for a template value parameter)
+	)
 
 ---
-template eval( A... ) {
-  const typeof(A[0]) eval = A[0];
+template eval( A... )
+{
+    const typeof(A[0]) eval = A[0];
 }
 
-int square(int i) {
-   return i * i;
-}
+int square(int i) { return i * i; }
 
-void foo() {
+void foo()
+{
   static j = square(3);     // compile time
   writefln(j);
   writefln(square(4));      // run time
@@ -1583,27 +1585,27 @@ void foo() {
 }
 ---
 
-        $(P Executing functions at compile time can take considerably
-        longer than executing it at run time.
-        If the function goes into an infinite loop, it will hang at
-        compile time (rather than hanging at run time).
-        )
+    $(P Executing functions at compile time can take considerably
+    longer than executing it at run time.
+    If the function goes into an infinite loop, it will hang at
+    compile time (rather than hanging at run time).
+    )
 
-        $(P Functions executed at compile time can give different results
-        from run time in the following scenarios:
-        )
+    $(P Functions executed at compile time can give different results
+    from run time in the following scenarios:
+    )
 
-        $(UL
+    $(UL
 
-        $(LI floating point computations may be done at a higher
-        precision than run time)
-        $(LI dependency on implementation defined order of evaluation)
-        $(LI use of uninitialized variables)
+    $(LI floating point computations may be done at a higher
+    precision than run time)
+    $(LI dependency on implementation defined order of evaluation)
+    $(LI use of uninitialized variables)
 
-        )
+    )
 
-        $(P These are the same kinds of scenarios where different
-        optimization settings affect the results.)
+    $(P These are the same kinds of scenarios where different
+    optimization settings affect the results.)
 
 <h3>String Mixins and Compile Time Function Execution</h3>
 
