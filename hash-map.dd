@@ -12,9 +12,9 @@ $(SPEC_S Associative Arrays,
         )
 
 ---------
-int[char[]] b;    // associative array b of ints that are
+int[string] b;    // associative array b of ints that are
                   // indexed by an array of characters.
-                  // The $(I KeyType) is char[]
+                  // The $(I KeyType) is string
 b["hello"] = 3;   // set value associated with key "hello" to 3
 func(b["hello"]); // pass 3 as parameter to func()
 ---------
@@ -34,7 +34,7 @@ b.$(B remove)("hello");
 ---------
 int* p;
 p = ("hello" $(B in) b);
-if (p !is §(B null))
+if (p !is (B null))
         ...
 ---------
 
@@ -251,65 +251,69 @@ int main (string[] args) {
   int word_total;
   int line_total;
   int char_total;
-  int[char[]] dictionary;
+  int[string] dictionary;
+  // dash separator
+  string separator = replicate("-", 42);
 
-  writefln("   lines   words   bytes file");
-  for (int i = 1; i < args.length; ++i)      // program arguments
-  {
-    char[] input;            // input buffer
-    int w_cnt, l_cnt, c_cnt; // word, line, char counts
-    int inword;
-    int wstart;
+  args.popFront;  // remove program name 
+  foreach (arg; args) { 
+    string input;  // input buffer 
+    int word_count, line_count, char_count; 
+    int inword; 
+    int wstart; 
 
-    // read file into input[]
-    input = cast(char[])std.file.read(args[i]);
+    // read text file into buffer 
+    input = std.file.readText(arg); 
+    foreach (j, dchar c; input) { 
+      if (c == '\n') 
+        ++line_count; 
 
-    foreach (j, char c; input)
-    {
-      if (c == '\n')
-        ++l_cnt;
-      if (c >= '0' && c <= '9')
-      {
-      }
-      else if (c >= 'a' && c <= 'z' ||
-               c >= 'A' && c <= 'Z')
-      {
-        if (!inword)
-        {
-          wstart = j;
-          inword = 1;
-          ++w_cnt;
-        }
-      }
-      else if (inword)
-      {
-        char[] word = input[wstart .. j];
-        dictionary[word]++;        // increment count for word
-        inword = 0;
-      }
-      ++c_cnt;
-    }
-    if (inword)
-    {
-      char[] word = input[wstart .. input.length];
-      dictionary[word]++;
-    }
-    writefln("%8d%8d%8d %s", l_cnt, w_cnt, c_cnt, args[i]);
-    line_total += l_cnt;
-    word_total += w_cnt;
-    char_total += c_cnt;
-  }
+      if (isdigit(c)) { 
+      } 
+      else if (isalpha(c)) { 
+        if (!inword) { 
+          wstart = j; 
+          inword = 1; 
+          ++word_count; 
+        } 
+      } 
+      else if (inword) { 
+        string word = input[wstart .. j]; 
+        dictionary[word]++; // increment count for word 
+        inword = 0; 
+      } 
 
-  if (args.length > 2)
-  {
-    writef("-------------------------------------\n%8d%8d%8d total",
-            line_total, word_total, char_total);
-  }
+      ++char_count; 
+    } 
 
-  writefln("-------------------------------------");
-  foreach (word; dictionary.keys.sort)
-  {
-    writefln("%3d %s", dictionary[word], word);
+    if (inword) { 
+      string word = input[wstart .. input.length]; 
+      dictionary[word]++; 
+    } 
+
+    writeln(separator); 
+    writeln("   lines   words   bytes   file"); 
+    writefln("   %-8s%-8s%-8s%-8s",
+      line_count, word_count, char_count, arg); 
+    writeln(separator); 
+
+    line_total += line_count; 
+    word_total += word_count; 
+    char_total += char_count; 
+  } 
+
+  if (args.length) { 
+    writeln(separator); 
+    writeln("total:\n   lines   words   bytes   files"); 
+    writefln("   %-8s%-8s%-8s%-8s",
+       line_total, word_total, char_total, args.length); 
+    writeln(separator); 
+  } 
+
+  if (dictionary.length) { 
+    writefln("\nCount of each word occurrence:\n"); 
+    foreach (word; dictionary.keys.sort) { 
+      writefln("%3d %s", dictionary[word], word);
   }
   return 0;
 }
