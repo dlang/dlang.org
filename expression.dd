@@ -74,7 +74,7 @@ $(GNAME Expression):
 
 $(GNAME CommaExpression):
     $(GLINK AssignExpression)
-    $(GLINK AssignExpression) $(B ,) $(I Expression)
+    $(GLINK AssignExpression) $(B ,) $(I CommaExpression)
 )
 
         The left operand of the $(B ,) is evaluated, then the right operand
@@ -707,7 +707,6 @@ $(GNAME UnaryExpression):
     $(GLINK NewExpression)
     $(GLINK DeleteExpression)
     $(GLINK CastExpression)
-    $(GLINK2 class, NewAnonClassExpression)
 )
 
 
@@ -715,20 +714,13 @@ $(GNAME UnaryExpression):
 
 $(GRAMMAR
 $(GNAME NewExpression):
-    $(I NewArguments) $(GLINK2 declaration, Type) $(B [) $(GLINK AssignExpression) $(B ])
-    $(I NewArguments) $(GLINK2 declaration, Type) $(B $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
-    $(I NewArguments) $(GLINK2 declaration, Type)
-    $(I NewArguments) $(I ClassArguments) $(GLINK BaseClasslist)$(OPT) $(B {) $(GLINK DeclDefs) $(B } )
+	$(B new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(B [) $(GLINK AssignExpression) $(B ])
+	$(B new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(B $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
+	$(B new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type)
+	$(GLINK2 class, NewAnonClassExpression)
 
-$(GNAME NewArguments):
-    $(B new $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
-    $(B new ( ))
-    $(B new)
-
-$(GNAME ClassArguments):
-    $(B class $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
-    $(B class ( ))
-    $(B class)
+$(GNAME AllocatorArguments):
+	$(B $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(B $(RPAREN))
 
 $(GNAME ArgumentList):
     $(GLINK AssignExpression)
