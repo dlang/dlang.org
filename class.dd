@@ -25,18 +25,16 @@ $(SPEC_S Classes,
 
 $(GRAMMAR
 $(GNAME ClassDeclaration):
-    $(B class) $(I Identifier) $(I BaseClassList) $(I ClassBody)
+    $(B class) $(I Identifier) $(I BaseClassList)$(OPT) $(I ClassBody)
     $(GLINK2 template, ClassTemplateDeclaration)
 
 $(GNAME BaseClassList):
-    $(I Empty)
     $(B :) $(I SuperClass)
     $(B :) $(I SuperClass) $(B ,) $(I InterfaceClasses)
     $(B :) $(I InterfaceClass)
 
 $(GNAME SuperClass):
     $(I Identifier)
-    $(I Protection) $(I Identifier)
 
 $(GNAME InterfaceClasses):
     $(I InterfaceClass)
@@ -44,13 +42,6 @@ $(GNAME InterfaceClasses):
 
 $(GNAME InterfaceClass):
     $(I Identifier)
-    $(I Protection) $(I Identifier)
-
-$(GNAME Protection):
-    $(B private)
-    $(B package)
-    $(B public)
-    $(B export)
 
 $(GNAME ClassBody):
     $(B {) $(B })
@@ -399,7 +390,7 @@ $(OL
 
 $(GRAMMAR
 $(GNAME Destructor):
-    $(B ~this()) $(GLINK2 function, FunctionBody)
+    $(B ~ this ( )) $(GLINK2 function, FunctionBody)
 )
 
         The garbage collector calls the destructor function when the object
@@ -458,7 +449,7 @@ class Foo {
 
 $(GRAMMAR
 $(GNAME StaticConstructor):
-    $(B static this()) $(GLINK2 function, FunctionBody)
+    $(B static this ( )) $(GLINK2 function, FunctionBody)
 )
 
         A static constructor is defined as a function that performs
@@ -548,7 +539,7 @@ class Foo {
 
 $(GRAMMAR
 $(GNAME StaticDestructor):
-    $(B static ~this()) $(GLINK2 function, FunctionBody)
+    $(B static ~ this ( )) $(GLINK2 function, FunctionBody)
 )
 
         A static destructor is defined as a special static function with the
@@ -591,7 +582,7 @@ $(V2
 
 $(GRAMMAR
 $(GNAME SharedStaticConstructor):
-    $(B shared static this()) $(GLINK2 function, FunctionBody)
+    $(B shared static this ( )) $(GLINK2 function, FunctionBody)
 )
 
         $(P Shared static constructors are executed before any $(GLINK StaticConstructor)s,
@@ -602,7 +593,7 @@ $(GNAME SharedStaticConstructor):
 
 $(GRAMMAR
 $(GNAME SharedStaticDestructor):
-    $(B shared static ~this()) $(GLINK2 function, FunctionBody)
+    $(B shared static ~ this ( )) $(GLINK2 function, FunctionBody)
 )
 
         $(P Shared static destructors are executed at program termination
@@ -615,7 +606,7 @@ $(GNAME SharedStaticDestructor):
 
 $(GRAMMAR
 $(GNAME Invariant):
-    $(B invariant()) $(GLINK2 statement, BlockStatement)
+    $(B invariant ( )) $(GLINK2 statement, BlockStatement)
 )
 
     Class invariants are used to specify characteristics of a class that always
@@ -1083,11 +1074,11 @@ void test() {
 
 $(GRAMMAR
 $(GNAME NewAnonClassExpression):
-    $(B new) $(GLINK ParenArgumentList)$(OPT) $(B class) $(I ParenArgumentList)$(OPT) $(GLINK SuperClass)$(OPT) $(GLINK InterfaceClasses)$(OPT) $(GLINK ClassBody)
+    $(B new) $(GLINK2 expression, AllocatorArguments)$(OPT) $(B class) $(I ClassArguments)$(OPT) $(GLINK SuperClass)$(OPT) $(GLINK InterfaceClasses)$(OPT) $(GLINK ClassBody)
 
-$(GNAME ParenArgumentList):
-    $(B $(LPAREN)) $(I ArgumentList) $(B $(RPAREN))
-)
+$(GNAME ClassArguments):
+	$(B $(LPAREN)) $(GLINK2 expression, ArgumentList)$(OPT) $(B $(RPAREN))
+
 
         $(P which is equivalent to:
         )
