@@ -733,7 +733,7 @@ while (1) {
   c = getinput();
   if (!c)
     break;
-  array.length = array.length + 1;
+  $(V2 ++array.length;)$(V1 array.length = array.length + 1;)
   array[array.length - 1] = c;
 }
 ---------
@@ -745,12 +745,12 @@ while (1) {
 ---------
 int[] array;
 array.length = 100;        // guess
-for (i = 0; 1; i++) {
+for (i = 0; ; i++) {
   c = getinput();
   if (!c)
     break;
   if (i == array.length)
-    array.length = array.length * 2;
+    $(V2 array.length *= 2;)$(V1 array.length = array.length * 2;)
   array[i] = c;
 }
 array.length = i;
@@ -1250,7 +1250,7 @@ Properties for associative arrays are:
         $(TR
         $(TD $(B .sizeof))
         $(TD Returns the size of the reference to the associative
-        array; it is typically 8.
+        array; it is 4 on 32 bit machines.
         )
         )
 
@@ -1320,71 +1320,70 @@ $(V2
 import std.file;         // D file I/O
 import std.stdio;
 
-int main (string[] args) {
-  int word_total;
-  int line_total;
-  int char_total;
+void main (string[] args) {
+  int totalWords, totalLines, totalChars;
   int[string] dictionary;
 
   writefln("   lines   words   bytes file");
-  for (int i = 1; i < args.length; ++i)      // program arguments
+  foreach (arg; args[1 .. $]) // for each argument except the first one
   {
-    char[] input;            // input buffer
-    int w_cnt, l_cnt, c_cnt; // word, line, char counts
-    int inword;
-    int wstart;
+    int wordCount, lineCount, charCount;
+    bool inWord;
+    size_t wordStart;
 
-    // read file into input[]
-    input = cast(char[])std.file.read(args[i]);
+    // read file into input buffer
+    string input = $(V1 cast(string))std.file.read$(V2 Text)(arg);
 
-    foreach (j, char c; input)
+    // let's consider the file is ASCII encoded with LF EOL 
+    // in general case we should use `dchar c` for iteration
+    // over code points and functions from $(STD_UNI)
+    foreach (i, char c; input)
     {
       if (c == '\n')
-              ++l_cnt;
+        ++lineCount;
       if (c >= '0' && c <= '9')
       {
       }
       else if (c >= 'a' && c <= 'z' ||
                c >= 'A' && c <= 'Z')
       {
-        if (!inword)
+        if (!inWord)
         {
-          wstart = j;
-          inword = 1;
-          ++w_cnt;
+          wordStart = i;
+          inWord = true;
+          ++wordCount;
         }
       }
-      else if (inword)
+      else if (inWord)
       {
-        char[] word = input[wstart .. j];
-        dictionary[word]++;   // increment count for word
-        inword = 0;
+        string word = input[wordStart .. i];
+        ++dictionary[word];   // increment count for word
+        inWord = false;
       }
-      ++c_cnt;
+      ++charCount;
     }
-    if (inword)
+    if (inWord)
     {
-      char[] word = input[wstart .. input.length];
-      dictionary[word]++;
+      string word = input[wordStart .. input.length];
+      ++dictionary[word];
     }
-    writefln("%8d%8d%8d %s", l_cnt, w_cnt, c_cnt, args[i]);
-    line_total += l_cnt;
-    word_total += w_cnt;
-    char_total += c_cnt;
+    writefln("%8d%8d%8d %s", lineCount, wordCount, charCount, arg);
+    totalWords += wordCount;
+    totalLines += lineCount;
+    totalChars += charCount;
   }
 
   if (args.length > 2)
   {
-    writef("-------------------------------------\n%8d%8d%8d total",
-            line_total, word_total, char_total);
+    writefln("-------------------------------------\n%8d%8d%8d total",
+            totalLines, totalWords, totalChars);
   }
 
-  writefln("-------------------------------------");
+  write$(V1 f)ln("-------------------------------------");
   foreach (word; dictionary.keys.sort)
   {
     writefln("%3d %s", dictionary[word], word);
   }
-  return 0;
 }
 ---------
 
@@ -1395,4 +1394,5 @@ Macros:
         WIKI=Arrays
         CATEGORY_SPEC=$0
         FOO=
+        STD_UNI=<a href="phobos/std_uni.html">std.uni</a>
 

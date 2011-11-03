@@ -586,9 +586,9 @@ foreach (e; range) { ... }
         $(P translates to:)
 
 ---
-for (auto __r = range; !__r.empty; __r.next)
+for (auto __r = range; !__r.empty; __r.popFront)
 {
-  auto e = __r.head;
+  auto e = __r.front;
   ...
 }
 ---
@@ -602,9 +602,9 @@ foreach_reverse (e; range) { ... }
         $(P translates to:)
 
 ---
-for (auto __r = range; !__r.empty; __r.retreat)
+for (auto __r = range; !__r.empty; __r.popBack)
 {
-  auto e = __r.toe;
+  auto e = __r.back;
   ...
 }
 ---
@@ -654,10 +654,11 @@ int $(B opApplyReverse)(int delegate(ref $(I Type) [, ...]) $(I dg));
 
 --------------
 class Foo {
-  uint array[2];
+  uint[2] array;
 
   int $(B opApply)(int delegate(ref uint) $(I dg))
-  { int result = 0;
+  {
+    int result = 0;
 
     for (int i = 0; i < array.length; i++)
     {
@@ -790,11 +791,11 @@ int[] a;
 int[] b;
 foreach (int i; a)
 {
-  a = null;                 // error
-  a.length = a.length + 10; // error
-  a = b;                    // error
+  a = null;       $(V1            )// error
+  $(V2 a.length += 10;)$(V1 a.length = a.length + 10;) // error
+  a = b;          $(V1            )// error
 }
-a = null;                   // ok
+a = null;         $(V1            )// ok
 --------------
 
 $(V2
@@ -1672,8 +1673,7 @@ $(GNAME AsmInstructionList):
 
         The format of the instructions is, of course, highly dependent
         on the native instruction set of the target CPU, and so is
-        $(WEB $(LINK2 iasm.html, implementation defined).)
-        $(EBOOK $(LINK2 #Inline Assembler, implementation defined).)
+        $(LINK2 $(WEB iasm.html)$(EBOOK #Inline Assembler), implementation defined).)
         But, the format will follow the following
         conventions:
 
