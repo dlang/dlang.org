@@ -177,7 +177,7 @@ Properties for associative arrays are:
         $(TR
         $(TD $(B .sizeof))
         $(TD Returns the size of the reference to the associative
-        array; it is typically 8.
+        array; it is 4 in 32-bit builds and 8 on 64-bit builds.
         )
         )
 
@@ -243,79 +243,116 @@ $(V2
 <hr>
 <h3>Associative Array Example: word count</h3>
 
+        $(P Let's consider the file is ASCII encoded with LF EOL.
+        In general case we should use $(I dchar c) for iteration
+        over code points and functions from $(STD_UNI).
+        )
+
 ---------
 import std.file;         // D file I/O
 import std.stdio;
+import std.$(V1 ctype)$(V2 ascii);
 
-int main (string[] args) {
-  int word_total;
-  int line_total;
-  int char_total;
-  int[string] dictionary;
-  // dash separator
-  string separator = replicate("-", 42);
+void main (string[] args) {
+  ulong totalWords, totalLines, totalChars;
+  ulong[string] dictionary;
 
-  args.popFront;  // remove program name 
-  foreach (arg; args) { 
-    string input;  // input buffer 
-    int word_count, line_count, char_count; 
-    int inword; 
-    int wstart; 
+  writefln("   lines   words   bytes file");
+  foreach (arg; args[1 .. $]) // for each argument except the first one
+  {
+    ulong wordCount, lineCount, charCount;
 
-    // read text file into buffer 
-    input = std.file.readText(arg); 
-    foreach (j, dchar c; input) { 
-      if (c == '\n') 
-        ++line_count; 
+    $(V1 bool inWord;
+    size_t wordStart;
 
-      if (isdigit(c)) { 
-      } 
-      else if (isalpha(c)) { 
-        if (!inword) { 
-          wstart = j; 
-          inword = 1; 
-          ++word_count; 
-        } 
-      } 
-      else if (inword) { 
-        string word = input[wstart .. j]; 
-        dictionary[word]++; // increment count for word 
-        inword = 0; 
-      } 
+    // read file into input buffer
+    auto input = cast(string)std.file.read(arg);
 
-      ++char_count; 
-    } 
+    foreach (i, char c; input)
+    {
+      if (std.ctype.isdigit(c))
+      { // c is a digit (0..9)
+      }
+      else if (std.ctype.isalpha(c))
+      { // c is an ASCII letter (A..Z, a..z)
+        if (!inWord)
+        {
+          wordStart = i;
+          inWord = true;
+          ++wordCount;
+        }
+      }
+      else if (inWord)
+      {
+        auto word = input[wordStart .. i];
+        ++dictionary[word];   // increment count for word
+        inWord = false;
+      }
+      ++charCount;
+      
+      // Let's consider the file has LF EOL.
+      if (c == '\n')
+        ++lineCount;
+    }
+    if (inWord)
+    {
+      auto word = input[wordStart .. $];
+      ++dictionary[word];
+    }
+)$(V2 foreach(line; File(arg).byLine())
+    {
+      bool inWord;
+      size_t wordStart;
 
-    if (inword) { 
-      string word = input[wstart .. input.length]; 
-      dictionary[word]++; 
-    } 
+      void tryFinishWord(size_t wordEnd)
+      {
+        if (inWord)
+        {
+          auto word = line[wordStart .. wordEnd];
+          ++dictionary[word.idup];   // increment count for word
+          inWord = false;
+        }
+      }
 
-    writeln(separator); 
-    writeln("   lines   words   bytes   file"); 
-    writefln("   %-8s%-8s%-8s%-8s",
-      line_count, word_count, char_count, arg); 
-    writeln(separator); 
-
-    line_total += line_count; 
-    word_total += word_count; 
-    char_total += char_count; 
-  } 
-
-  if (args.length) { 
-    writeln(separator); 
-    writeln("total:\n   lines   words   bytes   files"); 
-    writefln("   %-8s%-8s%-8s%-8s",
-       line_total, word_total, char_total, args.length); 
-    writeln(separator); 
-  } 
-
-  if (dictionary.length) { 
-    writefln("\nCount of each word occurrence:\n"); 
-    foreach (word; dictionary.keys.sort) { 
-      writefln("%3d %s", dictionary[word], word);
+      foreach (i, char c; line)
+      {
+        if (std.ascii.isDigit(c))
+        { // c is a digit (0..9)
+        }
+        else if (std.ascii.isAlpha(c))
+        { // c is an ASCII letter (A..Z, a..z)
+          if (!inWord)
+          {
+            wordStart = i;
+            inWord = true;
+            ++wordCount;
+          }
+        }
+        else
+          tryFinishWord(i);
+        ++charCount;
+      }
+      tryFinishWord(line.length);
+      ++lineCount;
+    }
+)
+    writefln("%8s%8s%8s %s", lineCount, wordCount, charCount, arg);
+    totalWords += wordCount;
+    totalLines += lineCount;
+    totalChars += charCount;
   }
-  return 0;
+
+  if (args.length > 2)
+  {
+    writefln("-------------------------------------\n%8s%8s%8s total",
+            totalLines, totalWords, totalChars);
+  }
+
+  write$(V1 f)ln("-------------------------------------");
+  foreach (word; dictionary.keys.sort)
+  {
+    writefln("%3s %s", dictionary[word], word);
+  }
 }
 ---------
 
@@ -325,4 +362,5 @@ Macros:
         TITLE=Associative Arrays
         WIKI=AssociativeArrays
         DOLLAR=$
+        STD_UNI=<a href="phobos/std_uni.html">std.uni</a>
         FOO=
