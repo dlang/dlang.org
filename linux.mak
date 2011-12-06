@@ -103,9 +103,11 @@ $(DOC_OUTPUT_DIR)/% : %
 
 # Rulez
 
-all : $(ALL_FILES) phobos druntime phobos-last-release druntime-last-release
+all : html phobos druntime phobos-last-release druntime-last-release
 
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
+
+html : $(ALL_FILES)
 
 $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
 	cp -f sitemap-template.dd sitemap.dd
@@ -183,4 +185,4 @@ druntime-last-release:
 	  git checkout master
 
 rsync : all
-	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
+	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/new/
