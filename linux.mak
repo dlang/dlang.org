@@ -20,22 +20,22 @@ STYLES=css/style.css css/print.css
 PREMADE=download.html dcompiler.html language-reference.html	\
 appendices.html howtos.html articles.html
 
-TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
-	cppcomplex.html cppdbc.html gsoc2011.html index.html overview.html	\
-	spec.html intro.html \
+TARGETS=cpptod.html ctod.html pretod.html cppstrings.html cppdbc.html	\
+	gsoc2011.html index.html overview.html spec.html intro.html			\
 	lex.html module.html dnews.html declaration.html type.html			\
 	property.html attribute.html pragma.html expression.html			\
 	statement.html arrays.html struct.html class.html enum.html			\
 	function.html operatoroverloading.html template.html mixin.html		\
 	dbc.html version.html errors.html garbage.html memory.html			\
 	float.html iasm.html interface.html portability.html html.html		\
-	entity.html abi.html windows.html dll.html htomodule.html faq.html	\
-	dstyle.html wc.html future.html changelog.html glossary.html		\
-	acknowledgements.html builtin.html interfaceToC.html				\
-	comparison.html rationale.html ddoc.html code_coverage.html			\
-	exception-safe.html rdmd.html templates-revisited.html				\
-	warnings.html ascii-table.html windbg.html htod.html				\
-	regular-expression.html lazy-evaluation.html lisp-java-d.html		\
+	entity.html abi.html windows.html dll.html htomodule.html			\
+	faq.html dstyle.html wc.html future.html changelog.html				\
+	glossary.html acknowledgements.html builtin.html					\
+	interfaceToC.html comparison.html rationale.html ddoc.html			\
+	code_coverage.html exception-safe.html rdmd.html					\
+	templates-revisited.html warnings.html ascii-table.html				\
+	windbg.html htod.html regular-expression.html						\
+	lazy-evaluation.html lisp-java-d.html								\
 	variadic-function-templates.html howto-promote.html tuple.html		\
 	template-comparison.html template-mixin.html						\
 	final-const-invariant.html const.html traits.html COM.html			\
@@ -44,12 +44,12 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html			\
 	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
 	D1toD2.html unittest.html hash-map.html pdf-intro-cover.html		\
-	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html std_consolidated_header.html
+	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
+	std_consolidated_header.html
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html			\
-	cppstrings.html cppcomplex.html cppdbc.html lisp-java-d.html		\
-	cpp0x.html
+	cppstrings.html cppdbc.html lisp-java-d.html cpp0x.html
 
 PDFFEATURES=comparison.html features2.html
 
@@ -103,7 +103,7 @@ $(DOC_OUTPUT_DIR)/% : %
 
 # Rulez
 
-all : html phobos druntime phobos-last-release druntime-last-release
+all : html #phobos druntime phobos-last-release druntime-last-release
 
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
 
@@ -185,4 +185,4 @@ druntime-last-release:
 	  git checkout master
 
 rsync : all
-	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/new/
+	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/

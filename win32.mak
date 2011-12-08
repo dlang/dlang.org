@@ -3,7 +3,7 @@
 DMD=dmd
 
 SRC= $(SPECSRC) \
-	cpptod.dd ctod.dd pretod.dd cppstrings.dd cppcomplex.dd cppdbc.dd	\
+	cpptod.dd ctod.dd pretod.dd cppstrings.dd cppdbc.dd	\
 	index.dd overview.dd dnews.dd		\
 	mixin.dd \
 	memory.dd interface.dd		\
@@ -38,7 +38,7 @@ IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 PREMADE=download.html dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
 TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
-	cppcomplex.html cppdbc.html index.html overview.html lex.html		\
+	cppdbc.html index.html overview.html lex.html		\
 	module.html dnews.html declaration.html type.html property.html		\
 	attribute.html pragma.html expression.html statement.html			\
 	arrays.html struct.html class.html enum.html function.html			\
@@ -64,7 +64,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppstrings.html				\
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html \
 	ctod.html cpptod.html pretod.html template-comparison.html cppstrings.html \
-	cppcomplex.html cppdbc.html lisp-java-d.html cpp0x.html
+	cppdbc.html lisp-java-d.html cpp0x.html
 
 PDFFEATURES=comparison.html features2.html
 
@@ -148,8 +148,6 @@ const-faq.html : $(DDOC) const-faq.dd
 cpp_interface.html : $(DDOC) cpp_interface.dd
 
 cppdbc.html : $(DDOC) cppdbc.dd
-
-cppcomplex.html : $(DDOC) cppcomplex.dd
 
 cpp0x.html : $(DDOC) cpp0x.dd
 
