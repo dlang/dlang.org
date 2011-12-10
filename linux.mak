@@ -10,41 +10,42 @@ DOC_OUTPUT_DIR=../web
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
-IMAGES=favicon.ico $(addprefix images/, c1.gif d3.gif dlogo.png			\
-dmlogo.gif gradient-green.jpg search-bg.gif Thumbs.db cpp1.gif d4.gif	\
-dmlogo-smaller.gif gradient-red.jpg search-button.gif d002.ico d5.gif	\
-globe.gif pen.gif search-left.gif tdpl.jpg)
+IMAGES=favicon.ico $(addprefix images/, c1.gif d3.gif dlogo.png		\
+dmlogo.gif download.png gradient-green.jpg search-bg.gif Thumbs.db	\
+cpp1.gif d4.gif dmlogo-smaller.gif fedora_logo.png gradient-red.jpg	\
+search-button.gif d002.ico d5.gif globe.gif pen.gif search-left.gif	\
+tdpl.jpg ubuntu_logo.png)
 
 STYLES=css/style.css css/print.css
 
-PREMADE=download.html dcompiler.html language-reference.html	\
-appendices.html howtos.html articles.html
+PREMADE=dcompiler.html language-reference.html appendices.html	\
+howtos.html articles.html
 
-TARGETS=cpptod.html ctod.html pretod.html cppstrings.html cppdbc.html	\
-	gsoc2011.html index.html overview.html spec.html intro.html			\
-	lex.html module.html dnews.html declaration.html type.html			\
-	property.html attribute.html pragma.html expression.html			\
-	statement.html arrays.html struct.html class.html enum.html			\
-	function.html operatoroverloading.html template.html mixin.html		\
-	dbc.html version.html errors.html garbage.html memory.html			\
-	float.html iasm.html interface.html portability.html html.html		\
-	entity.html abi.html windows.html dll.html htomodule.html			\
-	faq.html dstyle.html wc.html future.html changelog.html				\
-	glossary.html acknowledgements.html builtin.html					\
-	interfaceToC.html comparison.html rationale.html ddoc.html			\
-	code_coverage.html exception-safe.html rdmd.html					\
-	templates-revisited.html warnings.html ascii-table.html				\
-	windbg.html htod.html regular-expression.html						\
-	lazy-evaluation.html lisp-java-d.html								\
-	variadic-function-templates.html howto-promote.html tuple.html		\
-	template-comparison.html template-mixin.html						\
-	final-const-invariant.html const.html traits.html COM.html			\
-	cpp_interface.html hijack.html const3.html features2.html			\
-	safed.html cpp0x.html const-faq.html dmd-windows.html				\
-	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html			\
-	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
-	D1toD2.html unittest.html hash-map.html pdf-intro-cover.html		\
-	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
+TARGETS=cpptod.html ctod.html download.html pretod.html				\
+	cppstrings.html cppdbc.html gsoc2011.html index.html			\
+	overview.html spec.html intro.html lex.html module.html			\
+	dnews.html declaration.html type.html property.html				\
+	attribute.html pragma.html expression.html statement.html		\
+	arrays.html struct.html class.html enum.html function.html		\
+	operatoroverloading.html template.html mixin.html dbc.html		\
+	version.html errors.html garbage.html memory.html float.html	\
+	iasm.html interface.html portability.html html.html entity.html	\
+	abi.html windows.html dll.html htomodule.html faq.html			\
+	dstyle.html wc.html future.html changelog.html glossary.html	\
+	acknowledgements.html builtin.html interfaceToC.html			\
+	comparison.html rationale.html ddoc.html code_coverage.html		\
+	exception-safe.html rdmd.html templates-revisited.html			\
+	warnings.html ascii-table.html windbg.html htod.html			\
+	regular-expression.html lazy-evaluation.html lisp-java-d.html	\
+	variadic-function-templates.html howto-promote.html tuple.html	\
+	template-comparison.html template-mixin.html					\
+	final-const-invariant.html const.html traits.html COM.html		\
+	cpp_interface.html hijack.html const3.html features2.html		\
+	safed.html cpp0x.html const-faq.html dmd-windows.html			\
+	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html		\
+	memory-safe-d.html d-floating-point.html migrate-to-shared.html	\
+	D1toD2.html unittest.html hash-map.html pdf-intro-cover.html	\
+	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html	\
 	std_consolidated_header.html
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
