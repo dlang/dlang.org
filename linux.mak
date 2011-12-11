@@ -156,7 +156,7 @@ phobos:
 
 phobos-last-release:
 	export TAG=$$(cd ${PHOBOS} && git tag | grep '^v' | sed 's/^v//' | sort -nr | head -n 1) && \
-	  echo "Buidling Phobos version $$TAG in ${PHOBOS}-$$TAG" && \
+	  echo "Building Phobos version $$TAG in ${PHOBOS}-$$TAG" && \
 	  if [ ! -d ${PHOBOS}-$$TAG ]; then \
 	    mkdir ${PHOBOS}-$$TAG && \
 	    cd ${PHOBOS}-$$TAG && \
