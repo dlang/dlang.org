@@ -159,7 +159,7 @@ $(VERSION 070, Sep 4, 2011, =================================================,
 	$(LI $(BUGZILLA 6558): [CTFE] UTF-decoding foreach gives wrong index (1-indexed))
 	$(LI $(BUGZILLA 6563): wrong code when using at least 8 XMM regs)
 	$(LI $(BUGZILLA 6601): Regression(2.053): CTFE segfault taking address of function template)
-	$(LI $(BUGZILLA 6602): Invalid template instantiations leake by is(typeof())/__traits(compiles, )/Type::trySemantic)
+	$(LI $(BUGZILLA 6602): Invalid template instantiations leaked by is(typeof())/__traits(compiles, )/Type::trySemantic)
     )
 )
 
