@@ -10,11 +10,11 @@ DOC_OUTPUT_DIR=../web
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
-IMAGES=favicon.ico $(addprefix images/, c1.gif d3.gif dlogo.png		\
-dmlogo.gif download.png gradient-green.jpg search-bg.gif Thumbs.db	\
-cpp1.gif d4.gif dmlogo-smaller.gif fedora_logo.png gradient-red.jpg	\
-search-button.gif d002.ico d5.gif globe.gif pen.gif search-left.gif	\
-tdpl.jpg ubuntu_logo.png)
+IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico		\
+d3.gif d4.gif d5.gif dlogo.png dmlogo.gif dmlogo-smaller.gif			\
+download.png fedora_logo.png gradient-green.jpg gradient-red.jpg		\
+globe.gif opensuse_logo.png pen.gif search-left.gif search-bg.gif		\
+search-button.gif Thumbs.db tdpl.jpg ubuntu_logo.png win32_logo.png)
 
 STYLES=css/style.css css/print.css
 
