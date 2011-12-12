@@ -28,7 +28,7 @@ int* p;
         is no length associated with it, and so there is no way for the
         compiler or runtime to do bounds checking, etc., on it.
         Most conventional uses for pointers can be replaced with
-        dynamic arrays, $(TT out) and $(TT ref) parameters,
+        dynamic arrays, $(D out) and $(D ref) parameters,
         and reference types.
         )
 
@@ -593,16 +593,16 @@ $(V2    $(TD Returns an array literal with each element of the literal being the
 
         $(P For the $(B .sort) property to work on arrays of class
         objects, the class definition must define the function:
-        $(TT int opCmp(Object)). This is used to determine the
+        $(D int opCmp(Object)). This is used to determine the
         ordering of the class objects. Note that the parameter
-        is of type $(TT Object), not the type of the class.)
+        is of type $(D Object), not the type of the class.)
 
         $(P For the $(B .sort) property to work on arrays of
         structs or unions, the struct or union definition must
         define the function:
-        $(TT int opCmp(S)) or
-        $(TT int opCmp(S*)).
-        The type $(TT S) is the type of the struct or union.
+        $(D int opCmp(S)) or
+        $(D int opCmp(S*)).
+        The type $(D S) is the type of the struct or union.
         This function will determine the sort ordering.
         )
 
@@ -626,7 +626,7 @@ a.dup;    // creates an array of a.length elements, copies
 
 <h3>$(LNAME2 resize, Setting Dynamic Array Length)</h3>
 
-        $(P The $(B $(TT .length)) property of a dynamic array can be set
+        $(P The $(B $(D .length)) property of a dynamic array can be set
         as the lvalue of an = operator:
         )
 
@@ -714,7 +714,7 @@ a[15] = 'z';   // does not affect c, because either a or c has reallocated.
 
         $(P To guarantee copying behavior, use the .dup property to ensure
         a unique array that can be resized. $(V2 Also, one may use the phobos
-        $(TT .capacity) property to determine how many elements can be appended
+        $(D .capacity) property to determine how many elements can be appended
         to the array without reallocating.)
         )
 
@@ -762,7 +762,7 @@ array.length = i;
         input from the console - it's unlikely to be longer than 80.
         )
 
-        $(V2 $(P Also, you may wish to utilize the phobos $(TT reserve)
+        $(V2 $(P Also, you may wish to utilize the phobos $(D reserve)
         function to pre-allocate array data to use with the append operator.))
 
 <h3>$(LNAME2 func-as-property, Functions as Array Properties)</h3>
@@ -956,7 +956,7 @@ char* p = str;     // pointer to 1st element
 str ~= "\0";
 ---------
 
-        $(P or use the function $(TT std.string.toStringz).)
+        $(P or use the function $(D std.string.toStringz).)
 
         $(P The type of a string is determined by the semantic phase of
         compilation. The type is
@@ -1049,31 +1049,31 @@ writefln("the string is '%s'", str);
 
 <h3>$(LNAME2 implicit-conversions, Implicit Conversions)</h3>
 
-        $(P A pointer $(TT $(I T)*) can be implicitly converted to
+        $(P A pointer $(D $(I T)*) can be implicitly converted to
         one of the following:)
 
         $(UL
-        $(LI $(TT void*))
+        $(LI $(D void*))
         )
 
-        $(P A static array $(TT $(I T)[$(I dim)]) can be implicitly
+        $(P A static array $(D $(I T)[$(I dim)]) can be implicitly
         converted to
         one of the following:
         )
 
         $(UL
-        $(LI $(TT $(I T)[]))
-        $(LI $(TT $(I U)[]))
-        $(LI $(TT void[]))
+        $(LI $(D $(I T)[]))
+        $(LI $(D $(I U)[]))
+        $(LI $(D void[]))
         )
 
-        $(P A dynamic array $(TT $(I T)[]) can be implicitly converted to
+        $(P A dynamic array $(D $(I T)[]) can be implicitly converted to
         one of the following:
         )
 
         $(UL
-        $(LI $(TT $(I U)[]))
-        $(LI $(TT void[]))
+        $(LI $(D $(I U)[]))
+        $(LI $(D void[]))
         )
 
         $(P Where $(I U) is a base class of $(I T).)
@@ -1124,20 +1124,20 @@ if (p != $(B null))
 
         $(P Classes can be used as the $(I KeyType). For this to work,
         the class definition must override the following member functions
-        of class $(TT Object):)
+        of class $(D Object):)
 
         $(UL
-        $(LI $(TT hash_t toHash()))
-$(V1    $(LI $(TT int opEquals(Object))))
-$(V2    $(LI $(TT bool opEquals(Object))))
-        $(LI $(TT int opCmp(Object)))
+        $(LI $(D hash_t toHash()))
+$(V1    $(LI $(D int opEquals(Object))))
+$(V2    $(LI $(D bool opEquals(Object))))
+        $(LI $(D int opCmp(Object)))
         )
 
-        $(P $(TT hash_t) is an alias to an integral type.)
+        $(P $(D hash_t) is an alias to an integral type.)
 
-        $(P Note that the parameter to $(TT opCmp) and $(TT opEquals) is
+        $(P Note that the parameter to $(D opCmp) and $(D opEquals) is
         of type
-        $(TT Object), not the type of the class in which it is defined.)
+        $(D Object), not the type of the class in which it is defined.)
 
         $(P For example:)
 
@@ -1163,9 +1163,9 @@ $(V1   int $(B opEquals)(Object o))$(V2   bool $(B opEquals)(Object o)) {
 }
 ---
 
-        $(P The implementation may use either $(TT opEquals) or $(TT opCmp) or
+        $(P The implementation may use either $(D opEquals) or $(D opCmp) or
         both. Care should be taken so that the results of
-        $(TT opEquals) and $(TT opCmp) are consistent with each other when
+        $(D opEquals) and $(D opCmp) are consistent with each other when
         the class objects are the same or not.)
 
 <h3>$(LNAME2 structs-as-keys, Using Structs or Unions as the KeyType)</h3>
@@ -1235,9 +1235,9 @@ struct MyString {
 )
 
 
-        $(P The implementation may use either $(TT opEquals) or $(TT opCmp) or
+        $(P The implementation may use either $(D opEquals) or $(D opCmp) or
         both. Care should be taken so that the results of
-        $(TT opEquals) and $(TT opCmp) are consistent with each other when
+        $(D opEquals) and $(D opCmp) are consistent with each other when
         the struct/union objects are the same or not.)
 
 <h3>$(LNAME2 aa-properties, Properties)</h3>
@@ -1362,7 +1362,7 @@ void main (string[] args) {
         inWord = false;
       }
       ++charCount;
-      
+
       // Let's consider the file has LF EOL.
       if (c == '\n')
         ++lineCount;
