@@ -425,26 +425,19 @@ void main()
 <h2>$(LNAME2 stackclass, Allocating Class Instances On The Stack)</h2>
 
 	$(P Class instances are normally allocated on the garbage
-	collected heap. However, if they:)
+	collected heap. However, they can be allocated on the stack
+	using the <a href="/phobos/std_typecons.html#scoped">scoped</a>
+	type constructor.)
 
-	$(UL
-	$(LI are allocated as local symbols in a function)
-	$(LI are allocated using $(B new))
-	$(LI use $(B new) with no arguments (constructor arguments are allowed))
-	$(LI have the $(B scope) storage class)
-	)
-
-	$(P then they are allocated on the stack. This is more efficient
-	than doing an allocate/free cycle on the instance. But be
-	careful that any reference to the object does not survive
-	the return of the function.)
+	$(P This is more efficient than doing an allocate/free cycle
+	on the instance. But be careful that any reference to the
+	object does not survive the return of the function.)
 
 ---
 class C { ... }
 
-scope c = new C();	// c is allocated on the stack
-scope c2 = new C(5);    // allocated on stack
-scope c3 = new(5) C();  // allocated by a custom allocator
+auto c = scoped!C();    // c is allocated on the stack
+auto c2 = scoped!C(5);  // allocated on stack
 ---
 
 	$(P If the class has a destructor, then that destructor is
