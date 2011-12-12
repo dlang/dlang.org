@@ -30,17 +30,17 @@ $(GNAME ClassDeclaration):
 
 $(GNAME BaseClassList):
     $(B :) $(I SuperClass)
-    $(B :) $(I SuperClass) $(B ,) $(I InterfaceClasses)
-    $(B :) $(I InterfaceClass)
+    $(B :) $(I SuperClass) $(B ,) $(I Interfaces)
+    $(B :) $(I Interfaces)
 
 $(GNAME SuperClass):
     $(I Identifier)
 
-$(GNAME InterfaceClasses):
-    $(I InterfaceClass)
-    $(I InterfaceClass) $(B ,) $(I InterfaceClasses)
+$(GNAME Interfaces):
+    $(I Interface)
+    $(I Interface) $(B ,) $(I Interfaces)
 
-$(GNAME InterfaceClass):
+$(GNAME Interface):
     $(I Identifier)
 
 $(GNAME ClassBody):
@@ -1074,17 +1074,17 @@ void test() {
 
 $(GRAMMAR
 $(GNAME NewAnonClassExpression):
-    $(B new) $(GLINK2 expression, AllocatorArguments)$(OPT) $(B class) $(I ClassArguments)$(OPT) $(GLINK SuperClass)$(OPT) $(GLINK InterfaceClasses)$(OPT) $(GLINK ClassBody)
+    $(B new) $(GLINK2 expression, AllocatorArguments)$(OPT) $(B class) $(I ClassArguments)$(OPT) $(GLINK SuperClass)$(OPT) $(GLINK Interfaces)$(OPT) $(GLINK ClassBody)
 
 $(GNAME ClassArguments):
 	$(B $(LPAREN)) $(GLINK2 expression, ArgumentList)$(OPT) $(B $(RPAREN))
-
+)
 
         $(P which is equivalent to:
         )
 
 ------
-class $(I Identifier) : $(I SuperClass) $(I InterfaceClasses)
+class $(I Identifier) : $(I SuperClass) $(I Interfaces)
         $(I ClassBody)
 
 new ($(I ArgumentList)) $(I Identifier) ($(I ArgumentList));
@@ -1095,10 +1095,9 @@ new ($(I ArgumentList)) $(I Identifier) ($(I ArgumentList));
         )
 
 $(V2
-$(SECTION3 <a name="ConstClass">Const, Immutable and Shared Classes</a>,
+$(SECTION3 <a name="ConstClass">Const, Immutable and Shared Classes</a>
         $(P If a $(I ClassDeclaration) has a $(CODE const), $(CODE immutable)
-        or $(CODE shared)
-        storage class, then it is as if each member of the class
+        or $(CODE shared) storage class, then it is as if each member of the class
         was declared with that storage class.
         If a base class is const, immutable or shared, then all classes derived
         from it are also const, immutable or shared.

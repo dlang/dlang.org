@@ -1480,17 +1480,17 @@ void test() {
 
 ----
 void main() { ... }
-void main(char[][] args) { ... }
+void main(string[] args) { ... }
 int main() { ... }
-int main(char[][] args) { ... }
+int main(string[] args) { ... }
 ----
 
 <h2>$(LNAME2 interpretation, Compile Time Function Execution (CTFE))</h2>
 
-    $(P A subset of functions can be executed at compile time.
-    This is useful when constant folding algorithms need to
-    include recursion and looping. Compile time function execution is
-    subject to the following restrictions:
+    $(P Functions which are both portable and free of side-effects can be
+    executed at compile time. This is useful when constant folding
+    algorithms need to include recursion and looping. Compile time function
+    execution is subject to the following restrictions:
     )
 
     $(OL
@@ -1501,23 +1501,18 @@ int main(char[][] args) { ... }
     $(LI executed expressions may not reference any global or local
         static variables)
 
-    $(LI the following statement types are not allowed:
-        $(UL
-            $(LI asm statements)
-            $(LI synchronized statements)
-            $(LI throw statements)
-            $(LI with statements)
-            $(LI scope statements)
-            $(LI try-catch-finally statements)
+    $(LI $(D_KEYWORD asm) statements are not permitted)
+
+    $(LI non-portable casts (eg, from $(I int[]) to $(I float[])), including
+        casts which depend on endianness, are not permitted.
+        Casts between signed and unsigned types are permitted.
+        Any pointer may be cast to $(I void *) and from $(I void *) back to
+        its original type. Casting between pointer and non-pointer types is
+        prohibited.
         )
-    )
-
-    $(LI delete expressions are not permitted)
-
-    $(LI casts which involve a reinterpretation of the underlying pattern of
-        bits (eg, from int[] to float[]) are not permitted)
 
     $(LI C-style semantics on pointer arithmetic are strictly enforced.
+        $(P
         Pointer arithmetic is permitted only on pointers which point to static
         or dynamic array elements. Such pointers must point to an element of
         the array, or to the first element past the array.
@@ -1525,13 +1520,15 @@ int main(char[][] args) { ... }
         between pointers which point to the same array.
         Pointer arithmetic is completely forbidden on pointers which are null,
         or which point to a non-array.
-        Equality comparisons (==, !=, is, !is) are permitted between all
-        pointers, without restriction.
+        )
+        $(P
+        Equality comparisons (==, !=, $(D_KEYWORD is), $(D_KEYWORD !is)) are
+        permitted between all pointers, without restriction.
+        )
     )
-
-    $(LI function parameters may not be C-style variadic)
-
-    $(LI classes and interfaces are not yet supported)
+    $(LI Non-recoverable errors (such as $(D_KEYWORD assert) failures) do not
+        throw exceptions; instead, they end interpretation immediately.
+    )
     )
 
     $(P Note that the above restrictions apply only to expressions which are

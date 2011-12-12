@@ -565,16 +565,20 @@ $(V2
 <h3>$(LNAME2 foreach_with_ranges, Foreach over Structs and Classes with Ranges)</h3>
 
         $(P Iteration over struct and class objects can be done with
-        ranges, which means the following properties must be defined:
+        ranges, which means the following properties and methods must be defined:
         )
 
         $(TABLE2 Foreach Range Properties,
         $(TR $(TH Property) $(TH Purpose ))
         $(TR $(TD $(TT .empty)) $(TD returns true if no more elements))
-        $(TR $(TD $(TT .popFront)) $(TD move the left edge of the range right one))
-        $(TR $(TD $(TT .popBack)) $(TD move the right edge of the range left one))
         $(TR $(TD $(TT .front)) $(TD return the leftmost element of the range))
         $(TR $(TD $(TT .back)) $(TD return the rightmost element of the range))
+        )
+
+        $(TABLE2 Foreach Range Methods,
+        $(TR $(TH Method) $(TH Purpose ))
+        $(TR $(TD $(TT .popFront())) $(TD move the left edge of the range right one))
+        $(TR $(TD $(TT .popBack())) $(TD move the right edge of the range left one))
         )
 
         $(P Meaning:)
@@ -586,9 +590,9 @@ foreach (e; range) { ... }
         $(P translates to:)
 
 ---
-for (auto __r = range; !__r.empty; __r.next)
+for (auto __r = range; !__r.empty; __r.popFront())
 {
-  auto e = __r.head;
+  auto e = __r.front;
   ...
 }
 ---
@@ -602,9 +606,9 @@ foreach_reverse (e; range) { ... }
         $(P translates to:)
 
 ---
-for (auto __r = range; !__r.empty; __r.retreat)
+for (auto __r = range; !__r.empty; __r.popBack())
 {
-  auto e = __r.toe;
+  auto e = __r.back;
   ...
 }
 ---
@@ -654,10 +658,11 @@ int $(B opApplyReverse)(int delegate(ref $(I Type) [, ...]) $(I dg));
 
 --------------
 class Foo {
-  uint array[2];
+  uint[2] array;
 
   int $(B opApply)(int delegate(ref uint) $(I dg))
-  { int result = 0;
+  {
+    int result = 0;
 
     for (int i = 0; i < array.length; i++)
     {
@@ -790,11 +795,11 @@ int[] a;
 int[] b;
 foreach (int i; a)
 {
-  a = null;                 // error
-  a.length = a.length + 10; // error
-  a = b;                    // error
+  a = null;       $(V1            )// error
+  $(V2 a.length += 10;)$(V1 a.length = a.length + 10;) // error
+  a = b;          $(V1            )// error
 }
-a = null;                   // ok
+a = null;         $(V1            )// ok
 --------------
 
 $(V2
@@ -1141,13 +1146,14 @@ $(I ReturnStatement):
         unless the function contains inline assembler code.
         <p>
 
+$(COMMENT
         $(EXPRESSION) is allowed even if the function specifies
         a $(D_KEYWORD void) return type. The $(EXPRESSION) will be evaluated,
         but nothing will be returned.
         If the $(EXPRESSION) has no side effects, and the return
         type is $(D_KEYWORD void), then it is illegal.
         <p>
-
+)
         Before the function actually returns,
         any objects with scope storage duration are destroyed,
         any enclosing finally clauses are executed,
@@ -1671,8 +1677,7 @@ $(GNAME AsmInstructionList):
 
         The format of the instructions is, of course, highly dependent
         on the native instruction set of the target CPU, and so is
-        $(WEB $(LINK2 iasm.html, implementation defined).)
-        $(EBOOK $(LINK2 #Inline Assembler, implementation defined).)
+        $(LINK2 $(WEB iasm.html)$(EBOOK #Inline Assembler), implementation defined).)
         But, the format will follow the following
         conventions:
 

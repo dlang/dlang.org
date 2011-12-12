@@ -542,7 +542,7 @@ $(V2    $(TD Returns an array literal with each element of the literal being the
         $(TR
         $(TD $(B .sizeof))
         $(TD Returns the size of the dynamic array reference,
-        which is 8 on 32 bit machines.
+        which is 8 in 32-bit builds and 16 on 64-bit builds.
         )
         )
 
@@ -733,7 +733,7 @@ while (1) {
   c = getinput();
   if (!c)
     break;
-  array.length = array.length + 1;
+  $(V2 ++array.length;)$(V1 array.length = array.length + 1;)
   array[array.length - 1] = c;
 }
 ---------
@@ -745,12 +745,12 @@ while (1) {
 ---------
 int[] array;
 array.length = 100;        // guess
-for (i = 0; 1; i++) {
+for (i = 0; ; i++) {
   c = getinput();
   if (!c)
     break;
   if (i == array.length)
-    array.length = array.length * 2;
+    $(V2 array.length *= 2;)$(V1 array.length = array.length * 2;)
   array[i] = c;
 }
 array.length = i;
@@ -1250,7 +1250,7 @@ Properties for associative arrays are:
         $(TR
         $(TD $(B .sizeof))
         $(TD Returns the size of the reference to the associative
-        array; it is typically 8.
+        array; it is 4 in 32-bit builds and 8 on 64-bit builds.
         )
         )
 
@@ -1316,75 +1316,116 @@ $(V2
 <hr>
 <h3>$(LNAME2 aa-example, Associative Array Example: word count)</h3>
 
+        $(P Let's consider the file is ASCII encoded with LF EOL.
+        In general case we should use $(I dchar c) for iteration
+        over code points and functions from $(STD_UNI).
+        )
+
 ---------
 import std.file;         // D file I/O
 import std.stdio;
+import std.$(V1 ctype)$(V2 ascii);
 
-int main (string[] args) {
-  int word_total;
-  int line_total;
-  int char_total;
-  int[string] dictionary;
+void main (string[] args) {
+  ulong totalWords, totalLines, totalChars;
+  ulong[string] dictionary;
 
   writefln("   lines   words   bytes file");
-  for (int i = 1; i < args.length; ++i)      // program arguments
+  foreach (arg; args[1 .. $]) // for each argument except the first one
   {
-    char[] input;            // input buffer
-    int w_cnt, l_cnt, c_cnt; // word, line, char counts
-    int inword;
-    int wstart;
+    ulong wordCount, lineCount, charCount;
 
-    // read file into input[]
-    input = cast(char[])std.file.read(args[i]);
+    $(V1 bool inWord;
+    size_t wordStart;
 
-    foreach (j, char c; input)
+    // read file into input buffer
+    auto input = cast(string)std.file.read(arg);
+
+    foreach (i, char c; input)
     {
-      if (c == '\n')
-              ++l_cnt;
-      if (c >= '0' && c <= '9')
-      {
+      if (std.ctype.isdigit(c))
+      { // c is a digit (0..9)
       }
-      else if (c >= 'a' && c <= 'z' ||
-               c >= 'A' && c <= 'Z')
-      {
-        if (!inword)
+      else if (std.ctype.isalpha(c))
+      { // c is an ASCII letter (A..Z, a..z)
+        if (!inWord)
         {
-          wstart = j;
-          inword = 1;
-          ++w_cnt;
+          wordStart = i;
+          inWord = true;
+          ++wordCount;
         }
       }
-      else if (inword)
+      else if (inWord)
       {
-        char[] word = input[wstart .. j];
-        dictionary[word]++;   // increment count for word
-        inword = 0;
+        auto word = input[wordStart .. i];
+        ++dictionary[word];   // increment count for word
+        inWord = false;
       }
-      ++c_cnt;
+      ++charCount;
+      
+      // Let's consider the file has LF EOL.
+      if (c == '\n')
+        ++lineCount;
     }
-    if (inword)
+    if (inWord)
     {
-      char[] word = input[wstart .. input.length];
-      dictionary[word]++;
+      auto word = input[wordStart .. $];
+      ++dictionary[word];
     }
-    writefln("%8d%8d%8d %s", l_cnt, w_cnt, c_cnt, args[i]);
-    line_total += l_cnt;
-    word_total += w_cnt;
-    char_total += c_cnt;
+)$(V2 foreach(line; File(arg).byLine())
+    {
+      bool inWord;
+      size_t wordStart;
+
+      void tryFinishWord(size_t wordEnd)
+      {
+        if (inWord)
+        {
+          auto word = line[wordStart .. wordEnd];
+          ++dictionary[word.idup];   // increment count for word
+          inWord = false;
+        }
+      }
+
+      foreach (i, char c; line)
+      {
+        if (std.ascii.isDigit(c))
+        { // c is a digit (0..9)
+        }
+        else if (std.ascii.isAlpha(c))
+        { // c is an ASCII letter (A..Z, a..z)
+          if (!inWord)
+          {
+            wordStart = i;
+            inWord = true;
+            ++wordCount;
+          }
+        }
+        else
+          tryFinishWord(i);
+        ++charCount;
+      }
+      tryFinishWord(line.length);
+      ++lineCount;
+    }
+)
+    writefln("%8s%8s%8s %s", lineCount, wordCount, charCount, arg);
+    totalWords += wordCount;
+    totalLines += lineCount;
+    totalChars += charCount;
   }
 
   if (args.length > 2)
   {
-    writef("-------------------------------------\n%8d%8d%8d total",
-            line_total, word_total, char_total);
+    writefln("-------------------------------------\n%8s%8s%8s total",
+            totalLines, totalWords, totalChars);
   }
 
-  writefln("-------------------------------------");
+  write$(V1 f)ln("-------------------------------------");
   foreach (word; dictionary.keys.sort)
   {
-    writefln("%3d %s", dictionary[word], word);
+    writefln("%3s %s", dictionary[word], word);
   }
-  return 0;
 }
 ---------
 
@@ -1394,5 +1435,6 @@ Macros:
         TITLE=Arrays
         WIKI=Arrays
         CATEGORY_SPEC=$0
+        STD_UNI=<a href="phobos/std_uni.html">std.uni</a>
         FOO=
 
