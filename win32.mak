@@ -89,11 +89,11 @@ PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
 target: $(TARGETS)
 
-.d.html:
-	$(DMD) -o- -c -D $(DDOC) $*.d
-
 .dd.html:
 	$(DMD) -o- -c -D $(DDOC) $*.dd
+
+.d.html:
+	$(DMD) -o- -c -D $(DDOC) $*.d
 
 dmd-linux.html : $(DDOC) linux.ddoc dcompiler.dd
 	$(DMD) -o- -c -D $(DDOC) linux.ddoc dcompiler.dd -Dfdmd-linux.html
