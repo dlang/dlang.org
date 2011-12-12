@@ -251,9 +251,9 @@ Transaction abc()
 <h3>Example</h3>
 
 The next example involves temporarily changing the state of some object.
-Suppose there's a class data member $(TT verbose), which controls the
+Suppose there's a class data member $(D verbose), which controls the
 emission of messages logging the activity of the class.
-Inside one of the methods, $(TT verbose) needs to be turned off because
+Inside one of the methods, $(D verbose) needs to be turned off because
 there's a loop that would otherwise cause a blizzard of messages to be output:
 
 ---
@@ -271,7 +271,7 @@ class Foo
 }
 ---
 
-There's a problem if $(TT Foo.bar()) exits via an exception - the verbose
+There's a problem if $(D Foo.bar()) exits via an exception - the verbose
 flag state is not restored.
 That's easily fixed with $(D_KEYWORD scope)(exit):
 
@@ -291,7 +291,7 @@ class Foo
 }
 ---
 
-$(P It also neatly solves the problem if $(TT ...lots of code...) goes on at
+$(P It also neatly solves the problem if $(D ...lots of code...) goes on at
 some length, and in the future a maintenance programmer inserts a
 return statement in it, not realizing that verbose must be reset upon
 exit. The reset code is where it belongs conceptually, rather than where
@@ -316,7 +316,7 @@ Sending an email consists of two operations:
 
 $(OL
 $(LI Perform the SMTP send operation.)
-$(LI Copy the email to the $(DOUBLEQUOTE Sent) folder, which in POP is on the local 
+$(LI Copy the email to the $(DOUBLEQUOTE Sent) folder, which in POP is on the local
 disk, and in IMAP is also remote.)
 )
 
@@ -324,25 +324,25 @@ $(P Messages should not appear in $(DOUBLEQUOTE Sent) that haven't been actually
 and sent messages must actually appear in $(DOUBLEQUOTE Sent).
 )
 
-$(P Operation (1) is not undoable because it's a well-known distributed 
-computing issue. Operation (2) is undoable with some degree of 
+$(P Operation (1) is not undoable because it's a well-known distributed
+computing issue. Operation (2) is undoable with some degree of
 reliability. So we break the job down into three steps:
 )
 
 $(OL
-$(LI Copy the message to $(DOUBLEQUOTE Sent) with a changed title $(DOUBLEQUOTE [Sending] 
-&lt;Subject&gt;). This operation ensures there's space in the client's IMAP 
-account (or on the local disk), the rights are proper, the connection 
+$(LI Copy the message to $(DOUBLEQUOTE Sent) with a changed title $(DOUBLEQUOTE [Sending]
+&lt;Subject&gt;). This operation ensures there's space in the client's IMAP
+account (or on the local disk), the rights are proper, the connection
 exists and works, etc.)
 
 $(LI Send the message via SMTP.)
 
-$(LI If sending fails, delete the message from $(DOUBLEQUOTE Sent). If the message 
+$(LI If sending fails, delete the message from $(DOUBLEQUOTE Sent). If the message
 succeeds,
-change its title from $(DOUBLEQUOTE [Sending] &lt;Subject&gt;) to $(DOUBLEQUOTE &lt;Subject&gt;). 
-Both of these operation have a high probability to succeed. If the 
-folder is local, the probability of success is very high. If the folder 
-is remote, probability is still vastly higher than that of step (1) 
+change its title from $(DOUBLEQUOTE [Sending] &lt;Subject&gt;) to $(DOUBLEQUOTE &lt;Subject&gt;).
+Both of these operation have a high probability to succeed. If the
+folder is local, the probability of success is very high. If the folder
+is remote, probability is still vastly higher than that of step (1)
 because it doesn't involve an arbitrarily large data transfer.)
 
 )
@@ -366,18 +366,18 @@ class Mailer
 ---
 
 This is a compelling solution to a complex problem.
-Rewriting it with RAII would require two extra silly classes, 
+Rewriting it with RAII would require two extra silly classes,
 MessageTitleSaver and MessageRemover.
 Rewriting the example with try-finally would require nested try-finally
 statements or use of an extra variable to track state evolution.
 
 <h3>Example</h3>
 
-Consider giving feedback to the user about a lengthy 
-operation (mouse changes to an hourglass, window title is 
+Consider giving feedback to the user about a lengthy
+operation (mouse changes to an hourglass, window title is
 red/italicized, ...).
-With $(D_KEYWORD scope)(exit) that can be easily done without 
-needing to make an artificial resource out of whatever UI state element 
+With $(D_KEYWORD scope)(exit) that can be easily done without
+needing to make an artificial resource out of whatever UI state element
 used for the cues:
 
 --------------
@@ -405,8 +405,8 @@ void LongFunction()
 
 <h2>When to use RAII, try-catch-finally, and Scope</h2>
 
-RAII is for managing resources, which is different from managing state 
-or transactions. try-catch is still needed, as scope doesn't catch 
+RAII is for managing resources, which is different from managing state
+or transactions. try-catch is still needed, as scope doesn't catch
 exceptions. It's try-finally that becomes redundant.
 
 <h2>Acknowledgements</h2>

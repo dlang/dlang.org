@@ -23,50 +23,47 @@ STYLES=css/style.css css/print.css
 PREMADE=dcompiler.html language-reference.html appendices.html	\
 howtos.html articles.html
 
-TARGETS=cpptod.html ctod.html download.html pretod.html				\
-	cppstrings.html cppdbc.html gsoc2011.html index.html			\
-	overview.html spec.html intro.html lex.html module.html			\
-	dnews.html declaration.html type.html property.html				\
-	attribute.html pragma.html expression.html statement.html		\
-	arrays.html struct.html class.html enum.html function.html		\
-	operatoroverloading.html template.html mixin.html dbc.html		\
-	version.html errors.html garbage.html memory.html float.html	\
-	iasm.html interface.html portability.html html.html entity.html	\
-	abi.html windows.html dll.html htomodule.html faq.html			\
-	dstyle.html wc.html future.html changelog.html glossary.html	\
-	acknowledgements.html builtin.html interfaceToC.html			\
-	comparison.html rationale.html ddoc.html code_coverage.html		\
-	exception-safe.html rdmd.html templates-revisited.html			\
-	warnings.html ascii-table.html windbg.html htod.html			\
-	regular-expression.html lazy-evaluation.html lisp-java-d.html	\
-	variadic-function-templates.html howto-promote.html tuple.html	\
-	template-comparison.html template-mixin.html					\
-	final-const-invariant.html const.html traits.html COM.html		\
-	cpp_interface.html hijack.html const3.html features2.html		\
-	safed.html cpp0x.html const-faq.html dmd-windows.html			\
-	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html		\
-	memory-safe-d.html d-floating-point.html migrate-to-shared.html	\
-	D1toD2.html unittest.html hash-map.html pdf-intro-cover.html	\
-	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html	\
+TARGETS=32-64-portability.html cpptod.html ctod.html download.html		\
+	pretod.html gsoc2011.html index.html overview.html spec.html		\
+	intro.html lex.html module.html declaration.html type.html			\
+	property.html attribute.html pragma.html expression.html			\
+	statement.html arrays.html struct.html class.html enum.html			\
+	function.html operatoroverloading.html template.html mixin.html		\
+	dbc.html version.html errors.html garbage.html memory.html			\
+	float.html iasm.html interface.html portability.html entity.html	\
+	abi.html windows.html dll.html htomodule.html faq.html				\
+	dstyle.html wc.html changelog.html glossary.html					\
+	acknowledgements.html builtin.html interfaceToC.html				\
+	comparison.html rationale.html ddoc.html code_coverage.html			\
+	exception-safe.html rdmd.html templates-revisited.html				\
+	warnings.html ascii-table.html windbg.html htod.html				\
+	regular-expression.html lazy-evaluation.html						\
+	variadic-function-templates.html howto-promote.html tuple.html		\
+	template-comparison.html template-mixin.html traits.html COM.html	\
+	cpp_interface.html hijack.html const3.html features2.html			\
+	safed.html const-faq.html dmd-windows.html dmd-linux.html			\
+	dmd-osx.html dmd-freebsd.html concepts.html memory-safe-d.html		\
+	d-floating-point.html migrate-to-shared.html D1toD2.html			\
+	unittest.html hash-map.html pdf-intro-cover.html					\
+	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
 	std_consolidated_header.html
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
-	ctod.html cpptod.html pretod.html template-comparison.html			\
-	cppstrings.html cppdbc.html lisp-java-d.html cpp0x.html
+	ctod.html cpptod.html pretod.html template-comparison.html
 
 PDFFEATURES=comparison.html features2.html
 
-PDFFAQ=faq.html const-faq.html rationale.html future.html
+PDFFAQ=faq.html const-faq.html rationale.html
 
-PDFSPEC=spec.html intro.html \
-	lex.html module.html declaration.html type.html property.html	\
-	attribute.html pragma.html expression.html statement.html			\
-	arrays.html hash-map.html struct.html class.html interface.html		\
-	enum.html const3.html function.html operatoroverloading.html		\
-	template.html template-mixin.html dbc.html version.html				\
-	traits.html errors.html unittest.html garbage.html float.html		\
-	iasm.html ddoc.html interfaceToC.html cpp_interface.html			\
-	portability.html html.html entity.html memory-safe-d.html abi.html
+PDFSPEC=spec.html intro.html lex.html module.html declaration.html		\
+	type.html property.html attribute.html pragma.html					\
+	expression.html statement.html arrays.html hash-map.html			\
+	struct.html class.html interface.html enum.html const3.html			\
+	function.html operatoroverloading.html template.html				\
+	template-mixin.html dbc.html version.html traits.html errors.html	\
+	unittest.html garbage.html float.html iasm.html ddoc.html			\
+	interfaceToC.html cpp_interface.html portability.html entity.html	\
+	memory-safe-d.html abi.html
 
 PDFHOWTOS=windows.html dll.html COM.html htomodule.html
 
@@ -115,7 +112,7 @@ html : $(ALL_FILES)
 $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
 	cp -f sitemap-template.dd sitemap.dd
 	true $(foreach F, $(sort $(TARGETS) $(IMAGES)), \
-	  && echo "<a href=$F>`sed -n 's/<title>\(.*\)<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`" \
+	  && echo "<a href=$F>`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`" \
 	     "</a><p>" >> sitemap.dd)
 	$(DMD) -c -o- -Df$@ $(DDOC) sitemap.dd
 	rm -rf sitemap.dd
