@@ -3,7 +3,7 @@
 DMD=dmd
 
 SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
-	overview.dd dnews.dd mixin.dd memory.dd interface.dd windows.dd		\
+	overview.dd mixin.dd memory.dd interface.dd windows.dd		\
 	dll.dd htomodule.dd faq.dd dstyle.dd wc.dd changelog.dd				\
 	glossary.dd acknowledgements.dd dcompiler.dd builtin.dd				\
 	comparison.dd rationale.dd code_coverage.dd exception-safe.dd		\
@@ -31,7 +31,7 @@ IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 PREMADE=download.html dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
 TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
-	overview.html lex.html module.html dnews.html declaration.html		\
+	overview.html lex.html module.html declaration.html		\
 	type.html property.html attribute.html pragma.html					\
 	expression.html statement.html arrays.html struct.html class.html	\
 	enum.html function.html operatoroverloading.html template.html		\
@@ -154,8 +154,6 @@ ddoc.html : $(DDOC) ddoc.dd
 declaration.html : $(DDOC) declaration.dd
 
 dll.html : $(DDOC) dll.dd
-
-dnews.html : $(DDOC) dnews.dd
 
 dstyle.html : $(DDOC) dstyle.dd
 
