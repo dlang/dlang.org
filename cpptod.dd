@@ -2,7 +2,7 @@ Ddoc
 
 $(COMMUNITY Programming in D for C++ Programmers,
 
-<img src="images/cpp1.gif" border=0 align=right alt="C++">
+<!--img src="images/cpp1.gif" border=0 align=right alt="C++"-->
 
 Every experienced C++ programmer accumulates a series of idioms and techniques
 which become second nature. Sometimes, when learning a new language, those
@@ -40,7 +40,7 @@ $(UL
 $(CPPCODE
 class Foo
 {
-	Foo(int x); 
+	Foo(int x);
 };
 )
 
@@ -51,7 +51,7 @@ class Foo
 ------
 class Foo
 {
-	this(int x) { } 
+	this(int x) { }
 }
 ------
 
@@ -69,7 +69,7 @@ class A { A() {... } };
 class B : A
 {
      B(int x)
-	: A()		// call base constructor 
+	: A()		// call base constructor
      {	...
      }
 };)
@@ -84,20 +84,20 @@ class B : A
 {
      this(int x)
      {	...
-	super();	// call base constructor 
+	super();	// call base constructor
 	...
      }
 }
 ------
 
-	It's superior to C++ in that the base constructor call can be flexibly placed anywhere in the derived 
+	It's superior to C++ in that the base constructor call can be flexibly placed anywhere in the derived
 	constructor. D can also have one constructor call another one:
 
 ------
 class A
 {	int a;
 	int b;
-	this() { a = 7; b = foo(); } 
+	this() { a = 7; b = foo(); }
 	this(int x)
 	{
 	    this();
@@ -106,14 +106,14 @@ class A
 }
 ------
 
-	Members can also be initialized to constants before the constructor is ever called, so the above example is 
+	Members can also be initialized to constants before the constructor is ever called, so the above example is
 	equivalently written as:
 
 ------
 class A
 {	int a = 7;
 	int b;
-	this() { b = foo(); } 
+	this() { b = foo(); }
 	this(int x)
 	{
 	    this();
@@ -130,7 +130,7 @@ class A
 	While C++ defines struct assignment in a simple, convenient manner:
 
 $(CPPCODE
-struct A x, y; 
+struct A x, y;
 ...
 x = y;
 )
@@ -145,7 +145,7 @@ struct A x, y;
 
 inline bool operator==(const A&amp; x, const A&amp; y)
 {
-    return (memcmp(&amp;x, &amp;y, sizeof(struct A)) == 0); 
+    return (memcmp(&amp;x, &amp;y, sizeof(struct A)) == 0);
 }
 ...
 if (x == y)
@@ -184,7 +184,7 @@ if (x == y)
 ------
 A x, y;
 ...
-if (x == y) 
+if (x == y)
     ...
 ------
 
@@ -204,7 +204,7 @@ void foo(void *);
 void bar(Handle);
 
 Handle h = HANDLE_INIT;
-foo(h);			// coding bug not caught 
+foo(h);			// coding bug not caught
 bar(h);			// ok
 )
 
@@ -212,7 +212,7 @@ bar(h);			// ok
 	purpose is to get type checking and overloading on the new type.
 
 $(CPPCODE
-#define HANDLE_INIT	((void *)(-1)) 
+#define HANDLE_INIT	((void *)(-1))
 struct Handle
 {   void *ptr;
 
@@ -221,7 +221,7 @@ struct Handle
 
     Handle(int i) { ptr = (void *)i; }
 
-    // conversion to underlying type 
+    // conversion to underlying type
     operator void*() { return ptr; }
 };
 void bar(Handle);
@@ -238,7 +238,7 @@ if (h != HANDLE_INIT)
 	No need for idiomatic constructions like the above. Just write:
 
 ------
-typedef void* Handle = cast(void*)-1; 
+typedef void* Handle = cast(void*)-1;
 void bar(Handle);
 
 Handle h;
@@ -258,7 +258,7 @@ if (h != Handle.init)
 
 	Sometimes two classes are tightly related but not by inheritance,
 	but need to access each other's private members. This is done
-	using $(TT friend) declarations:
+	using $(D friend) declarations:
 
 $(CPPCODE
 class A
@@ -283,7 +283,7 @@ class B
 };
 
 int A::foo(B *j) { return j->b; }
-int B::bar(A *j) { return j->a; } 
+int B::bar(A *j) { return j->a; }
 
 int abc(A *p) { return p->a; }
 )
@@ -313,13 +313,13 @@ class B
 	static int b;
 
     public:
-	int bar(A j) { return j.a; } 
+	int bar(A j) { return j.a; }
 }
 
 int abc(A p) { return p.a; }
 ------
 
-	The $(TT private) attribute prevents other modules from
+	The $(D private) attribute prevents other modules from
 	accessing the members.
 
 <hr><!-- -------------------------------------------- -->
@@ -343,7 +343,7 @@ struct A
 int operator &lt;  (int i, A &a) { return a &gt;  i; }
 int operator &lt;= (int i, A &a) { return a &gt;= i; }
 int operator &gt;  (int i, A &a) { return a &lt;  i; }
-int operator &gt;= (int i, A &a) { return a &lt;= i; } 
+int operator &gt;= (int i, A &a) { return a &lt;= i; }
 )
 
 	A total of 8 functions are necessary.
@@ -356,13 +356,13 @@ int operator &gt;= (int i, A &a) { return a &lt;= i; }
 ------
 struct A
 {
-	int opCmp(int i); 
+	int opCmp(int i);
 }
 ------
 
 	The compiler automatically interprets all the
 	&lt;, &lt;=, &gt; and &gt;=
-	operators in terms of the $(TT cmp) function, as well
+	operators in terms of the $(D cmp) function, as well
 	as handling the cases where the left operand is not an
 	object reference.
 	<p>
@@ -398,7 +398,7 @@ using foo::x;
 module foo;
 int x;
 
-/** Another module **/ 
+/** Another module **/
 import foo;
 alias foo.x x;
 ------
@@ -423,7 +423,7 @@ class File
 
     ~File()
     {
-	h->release(); 
+	h->release();
     }
 };
 )
@@ -433,7 +433,7 @@ class File
 	The bulk of resource release problems are simply keeping track
 	of and freeing memory. This is handled automatically in D by
 	the garbage collector. The second common resources used are semaphores
-	and locks, handled automatically with D's $(TT synchronized)
+	and locks, handled automatically with D's $(D synchronized)
 	declarations and statements.
 	<p>
 
@@ -455,7 +455,7 @@ void test()
     if (...)
     {   scope f = new File();
 	...
-    } // f.~this() gets run at closing brace, even if 
+    } // f.~this() gets run at closing brace, even if
       // scope was exited via a thrown exception
 }
 ------
@@ -473,7 +473,7 @@ $(CPPCODE
 class Abc
 {
   public:
-    void setProperty(int newproperty) { property = newproperty; } 
+    void setProperty(int newproperty) { property = newproperty; }
     int getProperty() { return property; }
 
   private:
@@ -497,7 +497,7 @@ int x = a.getProperty();
 ------
 class Abc
 {
-    // set 
+    // set
     void property(int newproperty) { myprop = newproperty; }
 
     // get
@@ -513,14 +513,14 @@ class Abc
 ------
 Abc a;
 a.property = 3;		// equivalent to a.property(3)
-int x = a.property;	// equivalent to int x = a.property() 
+int x = a.property;	// equivalent to int x = a.property()
 ------
 
 	Thus, in D a property can be treated like it was a simple field name.
 	A property can start out actually being a simple field name,
-	but if later if becomes 
+	but if later if becomes
 	necessary to make getting and setting it function calls,
-	no code needs to be modified other 
+	no code needs to be modified other
 	than the class definition.
 	It obviates the wordy practice of defining get and set properties
 	$(SINGLEQUOTE just in case) a derived class should need to override them.
@@ -540,7 +540,7 @@ $(CPPCODE
 template&lt;int n&gt; class factorial
 {
     public:
-	enum { result = n * factorial&lt;n - 1&gt;::result }; 
+	enum { result = n * factorial&lt;n - 1&gt;::result };
 };
 
 template&lt;&gt; class factorial&lt;1&gt;
@@ -574,7 +574,7 @@ template factorial(int n : 1)
 
 void test()
 {
-    writefln("%d", factorial!(4));	// prints 24 
+    writefln("%d", factorial!(4));	// prints 24
 }
 ------
 
@@ -623,12 +623,12 @@ struct Integer&lt; 8 &gt;
     typedef signed char int_type ;
 } ;
 
-struct Integer&lt; 16 &gt; 
+struct Integer&lt; 16 &gt;
 {
     typedef short int_type ;
 } ;
 
-struct Integer&lt; 32 &gt; 
+struct Integer&lt; 32 &gt;
 {
     typedef int int_type ;
 } ;
@@ -640,15 +640,15 @@ struct Integer&lt; 64 &gt;
 
 // If the required size is not supported, the metaprogram
 // will increase the counter until an internal error is
-// signaled, or INT_MAX is reached. The INT_MAX 
-// specialization does not define a int_type, so a 
+// signaled, or INT_MAX is reached. The INT_MAX
+// specialization does not define a int_type, so a
 // compiling error is always generated
 struct Integer&lt; INT_MAX &gt;
 {
 } ;
 
 // A bit of syntactic sugar
-#define Integer( nbits ) Integer&lt; nbits &gt; :: int_type 
+#define Integer( nbits ) Integer&lt; nbits &gt; :: int_type
 
 #include &lt;stdio.h&gt;
 
@@ -659,7 +659,7 @@ int main()
     Integer( 29 ) k ;
     Integer( 64 ) l ;
     printf("%d %d %d %d\n",
-	sizeof(i), sizeof(j), sizeof(k), sizeof(l)); 
+	sizeof(i), sizeof(j), sizeof(k), sizeof(l));
     return 0 ;
 }
 )
@@ -691,7 +691,7 @@ int main()
     Integer&lt; 29 &gt; k ;
     Integer&lt; 64 &gt; l ;
     printf("%d %d %d %d\n",
-	sizeof(i), sizeof(j), sizeof(k), sizeof(l)); 
+	sizeof(i), sizeof(j), sizeof(k), sizeof(l));
     return 0 ;
 }
 )
@@ -729,7 +729,7 @@ int main()
     Integer!(29) k ;
     Integer!(64) l ;
     writefln("%d %d %d %d",
-	i.sizeof, j.sizeof, k.sizeof, l.sizeof); 
+	i.sizeof, j.sizeof, k.sizeof, l.sizeof);
     return 0;
 }
 ------

@@ -1,21 +1,21 @@
 Ddoc
 
-$(D_S Converting C $(TT .h) Files to D Modules,
+$(D_S Converting C $(D .h) Files to D Modules,
 
 	While D cannot directly compile C source code, it can easily
 	interface to C code, be linked with C object files, and call
 	C functions in DLLs.
-	The interface to C code is normally found in C $(TT .h) files.
+	The interface to C code is normally found in C $(D .h) files.
 	So, the trick to connecting with C code is in converting C
-	$(TT .h) files to D modules.
+	$(D .h) files to D modules.
 	This turns out to be difficult to do mechanically since
 	inevitably some human judgement must be applied.
 	This is a guide to doing such conversions.
 
 <h4>Preprocessor</h4>
 
-	$(TT .h) files can sometimes be a bewildering morass of layers of
-	macros, $(TT #include) files, $(TT #ifdef)'s, etc. D doesn't
+	$(D .h) files can sometimes be a bewildering morass of layers of
+	macros, $(D #include) files, $(D #ifdef)'s, etc. D doesn't
 	include a text preprocessor like the C preprocessor,
 	so the first step is to remove the need for
 	it by taking the preprocessed output. For DMC (the Digital
@@ -25,11 +25,11 @@ $(CONSOLE
 <a href="http://www.digitalmars.com/ctg/sc.html">dmc</a> <a href="http://www.digitalmars.com/ctg/sc.html#dashc">-c</a> program.h <a href="http://www.digitalmars.com/ctg/sc.html#dashe">-e</a> <a href="http://www.digitalmars.com/ctg/sc.html#dashl">-l</a>
 )
 
-	will create a file $(TT program.lst) which is the source file after
+	will create a file $(D program.lst) which is the source file after
 	all text preprocessing.
 	<p>
 
-	Remove all the $(TT #if), $(TT #ifdef), $(TT #include),
+	Remove all the $(D #if), $(D #ifdef), $(D #include),
 	etc. statements.
 
 <h4>Linkage</h4>
@@ -100,13 +100,13 @@ extern (C)
 
 <h4>NULL</h4>
 
-	$(TT NULL) and $(TT ((void*)0)) should be replaced
-	with $(TT null).
+	$(D NULL) and $(D ((void*)0)) should be replaced
+	with $(D null).
 
 <h4>Numeric Literals</h4>
 
 	Any $(SINGLEQUOTE L) or $(SINGLEQUOTE l) numeric literal suffixes should be removed,
-	as a C $(TT long) is (usually) the same size as a D $(TT int).
+	as a C $(D long) is (usually) the same size as a D $(D int).
 	Similarly, $(SINGLEQUOTE LL) suffixes should be replaced with a
 	single $(SINGLEQUOTE L).
 	Any $(SINGLEQUOTE u) suffix will work the same in D.
@@ -248,8 +248,8 @@ $(V1
 
 <h4>Const Type Modifiers</h4>
 
-	D has $(TT const) as a storage class, not a type modifier. Hence, just
-	drop any $(TT const) used as a type modifier:
+	D has $(D const) as a storage class, not a type modifier. Hence, just
+	drop any $(D const) used as a type modifier:
 
 $(CCODE
 void foo(const int *p, char *const q);
@@ -268,14 +268,14 @@ void foo(int* p, char* q);
 	there will be a multiple definition error. To fix this problem,
 	use the extern storage class.
 	For example, given a C header file named
-	$(TT foo.h):
+	$(D foo.h):
 
 $(CCODE
 struct Foo { };
 struct Foo bar;
 )
 
-	It can be replaced with the D modules, $(TT foo.d):
+	It can be replaced with the D modules, $(D foo.d):
 
 ---------------------------
 struct Foo { }
@@ -288,7 +288,7 @@ extern (C)
 
 <h4>Typedef</h4>
 
-	$(TT alias) is the D equivalent to the C $(TT typedef):
+	$(D alias) is the D equivalent to the C $(D typedef):
 
 $(CCODE
 typedef int foo;
@@ -325,8 +325,8 @@ alias Foo* pFoo, lpFoo;
 
 	A good D implementation by default will align struct members the
 	same way as the C compiler it was designed to work with. But
-	if the $(TT .h) file has some $(TT #pragma)'s to control alignment, they
-	can be duplicated with the D $(TT align) attribute:
+	if the $(D .h) file has some $(D #pragma)'s to control alignment, they
+	can be duplicated with the D $(D align) attribute:
 
 $(CCODE
 #pragma pack(1)
@@ -394,7 +394,7 @@ struct Abc
 }
 ---------------------------
 
-<h4>$(TT __cdecl), $(TT __pascal), $(TT __stdcall)</h4>
+<h4>$(D __cdecl), $(D __pascal), $(D __stdcall)</h4>
 
 $(CCODE
 int __cdecl x;
@@ -412,7 +412,7 @@ extern (Pascal) int bar(int b);
 extern (Windows) int abc(int c);
 ---------------------------
 
-<h4>$(TT __declspec(dllimport))</h4>
+<h4>$(D __declspec(dllimport))</h4>
 
 $(CCODE
 __declspec(dllimport) int __stdcall foo(int a);
@@ -424,9 +424,9 @@ __declspec(dllimport) int __stdcall foo(int a);
 export extern (Windows) int foo(int a);
 ---------------------------
 
-<h4>$(TT __fastcall)</h4>
+<h4>$(D __fastcall)</h4>
 
-	Unfortunately, D doesn't support the $(TT __fastcall) convention.
+	Unfortunately, D doesn't support the $(D __fastcall) convention.
 	Therefore, a shim will be needed, either written in C:
 
 $(CCODE
@@ -438,10 +438,10 @@ int myfoo(int a)
 }
 )
 
-	and compiled with a C compiler that supports $(TT __fastcall) and
+	and compiled with a C compiler that supports $(D __fastcall) and
 	linked in, or compile the above, disassemble it with
 	<a href="http://www.digitalmars.com/ctg/obj2asm.html">obj2asm</a>
-	and insert it in a D $(TT myfoo) shim with
+	and insert it in a D $(D myfoo) shim with
 	<a href="iasm.html">inline assembler</a>.
 
 )
