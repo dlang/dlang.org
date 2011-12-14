@@ -68,13 +68,13 @@ a&lt;b&lt;c&gt;&gt;d;
 
 $(P
 are syntactically ambiguous, both to the compiler and the programmer.
-If you run across $(TT a&lt;b,c&gt;d;) in unfamiliar code, you've got to slog through
-an arbitrarily large amount of declarations and $(TT .h) files to figure out
+If you run across $(D a&lt;b,c&gt;d;) in unfamiliar code, you've got to slog through
+an arbitrarily large amount of declarations and $(D .h) files to figure out
 if it is a template or not.
 How much effort has been expended by programmers, compiler writers, and
 language standard writers to deal with this?
 )
- 
+
 $(P
 There's got to be a better way. D solves it by noticing that ! is not used
 as a binary operator, so replacing:
@@ -95,7 +95,7 @@ a!(b,c)
 $(P
 is syntactically unambiguous. This makes it easy to parse, easy to generate
 reasonable error messages for, and makes it easy for someone inspecting the
-code to determine that yes, $(TT a) must be a template.
+code to determine that yes, $(D a) must be a template.
 )
 
 
@@ -137,7 +137,7 @@ template Foo(T, U)
 ----
 
 $(P
-The $(TT Foo) forms a name space for the templates, which are accessed by,
+The $(D Foo) forms a name space for the templates, which are accessed by,
 for example:
 )
 
@@ -193,7 +193,7 @@ definition, and an exported template.
 Because D has a true module system, rather than textual #include files,
 there are only template definitions in D. The need for template declarations
 and export is irrelevant. For example, given a template definition in
-module $(TT A):
+module $(D A):
 )
 
 ---
@@ -206,7 +206,7 @@ template Foo(T)
 ---
 
 $(P
-it can be accessed from module $(TT B) like:
+it can be accessed from module $(D B) like:
 )
 
 ---
@@ -394,7 +394,7 @@ template&lt;int n&gt; class factorial
     enum
     {
       result = n * factorial&lt;n - 1&gt;::result
-    }; 
+    };
 };
 
 template&lt;&gt; class factorial&lt;1&gt;
@@ -427,7 +427,7 @@ template factorial(int n : 1)
 
 void test()
 {
-  writefln(factorial!(4));  // prints 24 
+  writefln(factorial!(4));  // prints 24
 }
 ---
 
@@ -448,11 +448,11 @@ template factorial(int n)
 
 $(P
 reducing 13 lines of code to an arguably much cleaner 7 lines.
-$(TT static if)'s are the equivalent of C++'s $(TT #if).
-But $(TT #if) cannot access template
+$(D static if)'s are the equivalent of C++'s $(D #if).
+But $(D #if) cannot access template
 arguments, so all template conditional compilation must be handled with
 partial and explicitly specialized templates.
-$(TT static if) dramatically simplifies
+$(D static if) dramatically simplifies
 such constructions.
 )
 
@@ -503,14 +503,14 @@ void test()
 )
 
 $(P
-Template $(TT IsFunctionT) relies on two side effects to achieve its result.
+Template $(D IsFunctionT) relies on two side effects to achieve its result.
 First, it relies on arrays of functions being an invalid C++ type.
-Thus, if $(TT U) is a function type, the second $(TT test) will not be selected
+Thus, if $(D U) is a function type, the second $(D test) will not be selected
 since to do so would cause an error ($(SFINAE)).
-The first $(TT test) will be selected.
-If $(TT U) is not a function type, the second $(TT test) is a better fit than ... .
-Next, it is determined which $(TT test) was selected by examining the size
-of the return value, i.e. $(TT sizeof(One)) or $(TT sizeof(Two)).
+The first $(D test) will be selected.
+If $(D U) is not a function type, the second $(D test) is a better fit than ... .
+Next, it is determined which $(D test) was selected by examining the size
+of the return value, i.e. $(D sizeof(One)) or $(D sizeof(Two)).
 Unfortunately, template metaprogramming in C++ often seems to be relying
 on side effects rather than being able to expressly code what is desired.
 )
@@ -537,10 +537,10 @@ void test()
 ---
 
 $(P
-The $(TT is(T[])) is the equivalent of $(SFINAE).
-It tries to build an array of $(TT T),
-and if $(TT T) is a function type, it is an array of functions. Since this is
-an invalid type, the $(TT T[]) fails and $(TT is(T[])) returns false.
+The $(D is(T[])) is the equivalent of $(SFINAE).
+It tries to build an array of $(D T),
+and if $(D T) is a function type, it is an array of functions. Since this is
+an invalid type, the $(D T[]) fails and $(D is(T[])) returns false.
 )
 
 $(P
@@ -562,7 +562,7 @@ void test()
 $(P
 Let's move on to things that are impractical with templates in C++.
 For example, this template returns the square root of
-real number $(TT x) using the Babylonian method:
+real number $(D x) using the Babylonian method:
 )
 
 ---
@@ -629,16 +629,16 @@ converts an integer to a string at compile time:
 template decimalDigit(int n)	// [3]
 {
   const string decimalDigit = "0123456789"[n..n+1];
-} 
+}
 
 template itoa(long n)
-{   
+{
   static if (n < 0)
-     const string itoa = "-" ~ itoa!(-n);  
+     const string itoa = "-" ~ itoa!(-n);
   else static if (n < 10)
-     const string itoa = decimalDigit!(n); 
+     const string itoa = decimalDigit!(n);
   else
-     const string itoa = itoa!(n/10L) ~ decimalDigit!(n%10L); 
+     const string itoa = itoa!(n/10L) ~ decimalDigit!(n%10L);
 }
 
 string foo()
@@ -864,7 +864,7 @@ template parseTextToken(string pattern)
     else
       const string parseTextToken =
            pattern[0..1] ~ parseTextToken!(pattern[1..$]);
-  }	
+  }
   else
     const string parseTextToken="";
 }
@@ -918,7 +918,7 @@ template parseUntil(string pattern,char terminator,bool fuzzy=false)
                terminator ~
                " to terminate group expression");
     static assert(false);
-  }			
+  }
 }
 
 /**
@@ -948,7 +948,7 @@ template regexCompileCharClass2(string pattern)
         {
           pragma(msg,
             "Error: expected char following '-' in char class");
-          static assert(false);	
+          static assert(false);
         }
       }
       else // not '-'
@@ -1011,7 +1011,7 @@ template regexCompileCharClassRecurse(alias termFn,string pattern)
  */
 
 template regexCompileCharClass(string pattern)
-{	
+{
   static if (pattern.length > 0)
   {
     static if (pattern[0] == ']')
@@ -1029,7 +1029,7 @@ template regexCompileCharClass(string pattern)
   else
   {
     pragma(msg,"Error: expected closing ']' for character class");
-    static assert(false);	
+    static assert(false);
   }
 }
 
@@ -1129,10 +1129,10 @@ template regexCompile(string pattern)
       const string next = pattern[token.length .. $];
       alias testText!(token) test;
     }
-    
+
     alias regexCompilePredicate!(test, next) term;
     const string remaining = next[term.consumed .. next.length];
-    
+
     alias regexCompileRecurse!(term,remaining).fn fn;
   }
   else
@@ -1175,9 +1175,9 @@ template isSpecial(string pattern)
 <h2>More Template Metaprogramming</h2>
 
     $(OL
-	$(LI Tomasz Stachowiak's compile time $(LINK2 http://www-users.mat.uni.torun.pl/~h3r3tic/ctrace/, raytracer).)
+	$(LI Tomasz Stachowiak's compile time $(LINK2 http://h3.gd/ctrace/, raytracer).)
 
-	$(LI Don Clugston's compile time $(LINK2 http://www.99-bottles-of-beer.net/language-d-1212.html?PHPSESSID=1c686874f412f908530c69924496192d, 99 Bottles of Beer).)
+	$(LI Don Clugston's compile time $(LINK2 http://www.99-bottles-of-beer.net/language-d-1212.html, 99 Bottles of Beer).)
     )
 
 <h2>References</h2>

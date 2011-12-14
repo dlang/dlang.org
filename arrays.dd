@@ -12,7 +12,7 @@ $(SPEC_S Arrays,
 
         $(TR $(TD $(I type)[])  $(TD $(LINK2 #dynamic-arrays, Dynamic arrays)))
 
-        $(TR $(TD $(I type)[$(I type)]) $(TD $(LINK2 $(WEB hash-map.html)$(EBOOK #Associative Arrays), Associative arrays)))
+        $(TR $(TD $(I type)[$(I type)]) $(TD $(DDLINK hash-map, Associative Arrays, Associative arrays)))
     )
 
 <h3>$(LNAME2 pointers, Pointers)</h3>
@@ -28,7 +28,7 @@ int* p;
         is no length associated with it, and so there is no way for the
         compiler or runtime to do bounds checking, etc., on it.
         Most conventional uses for pointers can be replaced with
-        dynamic arrays, $(TT out) and $(TT ref) parameters,
+        dynamic arrays, $(D out) and $(D ref) parameters,
         and reference types.
         )
 
@@ -542,7 +542,7 @@ $(V2    $(TD Returns an array literal with each element of the literal being the
         $(TR
         $(TD $(B .sizeof))
         $(TD Returns the size of the dynamic array reference,
-        which is 8 on 32 bit machines.
+        which is 8 in 32-bit builds and 16 on 64-bit builds.
         )
         )
 
@@ -593,16 +593,16 @@ $(V2    $(TD Returns an array literal with each element of the literal being the
 
         $(P For the $(B .sort) property to work on arrays of class
         objects, the class definition must define the function:
-        $(TT int opCmp(Object)). This is used to determine the
+        $(D int opCmp(Object)). This is used to determine the
         ordering of the class objects. Note that the parameter
-        is of type $(TT Object), not the type of the class.)
+        is of type $(D Object), not the type of the class.)
 
         $(P For the $(B .sort) property to work on arrays of
         structs or unions, the struct or union definition must
         define the function:
-        $(TT int opCmp(S)) or
-        $(TT int opCmp(S*)).
-        The type $(TT S) is the type of the struct or union.
+        $(D int opCmp(S)) or
+        $(D int opCmp(S*)).
+        The type $(D S) is the type of the struct or union.
         This function will determine the sort ordering.
         )
 
@@ -626,7 +626,7 @@ a.dup;    // creates an array of a.length elements, copies
 
 <h3>$(LNAME2 resize, Setting Dynamic Array Length)</h3>
 
-        $(P The $(B $(TT .length)) property of a dynamic array can be set
+        $(P The $(B $(D .length)) property of a dynamic array can be set
         as the lvalue of an = operator:
         )
 
@@ -714,7 +714,7 @@ a[15] = 'z';   // does not affect c, because either a or c has reallocated.
 
         $(P To guarantee copying behavior, use the .dup property to ensure
         a unique array that can be resized. $(V2 Also, one may use the phobos
-        $(TT .capacity) property to determine how many elements can be appended
+        $(D .capacity) property to determine how many elements can be appended
         to the array without reallocating.)
         )
 
@@ -733,7 +733,7 @@ while (1) {
   c = getinput();
   if (!c)
     break;
-  array.length = array.length + 1;
+  $(V2 ++array.length;)$(V1 array.length = array.length + 1;)
   array[array.length - 1] = c;
 }
 ---------
@@ -745,12 +745,12 @@ while (1) {
 ---------
 int[] array;
 array.length = 100;        // guess
-for (i = 0; 1; i++) {
+for (i = 0; ; i++) {
   c = getinput();
   if (!c)
     break;
   if (i == array.length)
-    array.length = array.length * 2;
+    $(V2 array.length *= 2;)$(V1 array.length = array.length * 2;)
   array[i] = c;
 }
 array.length = i;
@@ -762,7 +762,7 @@ array.length = i;
         input from the console - it's unlikely to be longer than 80.
         )
 
-        $(V2 $(P Also, you may wish to utilize the phobos $(TT reserve)
+        $(V2 $(P Also, you may wish to utilize the phobos $(D reserve)
         function to pre-allocate array data to use with the append operator.))
 
 <h3>$(LNAME2 func-as-property, Functions as Array Properties)</h3>
@@ -956,7 +956,7 @@ char* p = str;     // pointer to 1st element
 str ~= "\0";
 ---------
 
-        $(P or use the function $(TT std.string.toStringz).)
+        $(P or use the function $(D std.string.toStringz).)
 
         $(P The type of a string is determined by the semantic phase of
         compilation. The type is
@@ -1049,31 +1049,31 @@ writefln("the string is '%s'", str);
 
 <h3>$(LNAME2 implicit-conversions, Implicit Conversions)</h3>
 
-        $(P A pointer $(TT $(I T)*) can be implicitly converted to
+        $(P A pointer $(D $(I T)*) can be implicitly converted to
         one of the following:)
 
         $(UL
-        $(LI $(TT void*))
+        $(LI $(D void*))
         )
 
-        $(P A static array $(TT $(I T)[$(I dim)]) can be implicitly
+        $(P A static array $(D $(I T)[$(I dim)]) can be implicitly
         converted to
         one of the following:
         )
 
         $(UL
-        $(LI $(TT $(I T)[]))
-        $(LI $(TT $(I U)[]))
-        $(LI $(TT void[]))
+        $(LI $(D $(I T)[]))
+        $(LI $(D $(I U)[]))
+        $(LI $(D void[]))
         )
 
-        $(P A dynamic array $(TT $(I T)[]) can be implicitly converted to
+        $(P A dynamic array $(D $(I T)[]) can be implicitly converted to
         one of the following:
         )
 
         $(UL
-        $(LI $(TT $(I U)[]))
-        $(LI $(TT void[]))
+        $(LI $(D $(I U)[]))
+        $(LI $(D void[]))
         )
 
         $(P Where $(I U) is a base class of $(I T).)
@@ -1124,20 +1124,20 @@ if (p != $(B null))
 
         $(P Classes can be used as the $(I KeyType). For this to work,
         the class definition must override the following member functions
-        of class $(TT Object):)
+        of class $(D Object):)
 
         $(UL
-        $(LI $(TT hash_t toHash()))
-$(V1    $(LI $(TT int opEquals(Object))))
-$(V2    $(LI $(TT bool opEquals(Object))))
-        $(LI $(TT int opCmp(Object)))
+        $(LI $(D hash_t toHash()))
+$(V1    $(LI $(D int opEquals(Object))))
+$(V2    $(LI $(D bool opEquals(Object))))
+        $(LI $(D int opCmp(Object)))
         )
 
-        $(P $(TT hash_t) is an alias to an integral type.)
+        $(P $(D hash_t) is an alias to an integral type.)
 
-        $(P Note that the parameter to $(TT opCmp) and $(TT opEquals) is
+        $(P Note that the parameter to $(D opCmp) and $(D opEquals) is
         of type
-        $(TT Object), not the type of the class in which it is defined.)
+        $(D Object), not the type of the class in which it is defined.)
 
         $(P For example:)
 
@@ -1163,9 +1163,9 @@ $(V1   int $(B opEquals)(Object o))$(V2   bool $(B opEquals)(Object o)) {
 }
 ---
 
-        $(P The implementation may use either $(TT opEquals) or $(TT opCmp) or
+        $(P The implementation may use either $(D opEquals) or $(D opCmp) or
         both. Care should be taken so that the results of
-        $(TT opEquals) and $(TT opCmp) are consistent with each other when
+        $(D opEquals) and $(D opCmp) are consistent with each other when
         the class objects are the same or not.)
 
 <h3>$(LNAME2 structs-as-keys, Using Structs or Unions as the KeyType)</h3>
@@ -1235,9 +1235,9 @@ struct MyString {
 )
 
 
-        $(P The implementation may use either $(TT opEquals) or $(TT opCmp) or
+        $(P The implementation may use either $(D opEquals) or $(D opCmp) or
         both. Care should be taken so that the results of
-        $(TT opEquals) and $(TT opCmp) are consistent with each other when
+        $(D opEquals) and $(D opCmp) are consistent with each other when
         the struct/union objects are the same or not.)
 
 <h3>$(LNAME2 aa-properties, Properties)</h3>
@@ -1250,7 +1250,7 @@ Properties for associative arrays are:
         $(TR
         $(TD $(B .sizeof))
         $(TD Returns the size of the reference to the associative
-        array; it is typically 8.
+        array; it is 4 in 32-bit builds and 8 on 64-bit builds.
         )
         )
 
@@ -1316,75 +1316,116 @@ $(V2
 <hr>
 <h3>$(LNAME2 aa-example, Associative Array Example: word count)</h3>
 
+        $(P Let's consider the file is ASCII encoded with LF EOL.
+        In general case we should use $(I dchar c) for iteration
+        over code points and functions from $(STD_UNI).
+        )
+
 ---------
 import std.file;         // D file I/O
 import std.stdio;
+import std.$(V1 ctype)$(V2 ascii);
 
-int main (string[] args) {
-  int word_total;
-  int line_total;
-  int char_total;
-  int[string] dictionary;
+void main (string[] args) {
+  ulong totalWords, totalLines, totalChars;
+  ulong[string] dictionary;
 
   writefln("   lines   words   bytes file");
-  for (int i = 1; i < args.length; ++i)      // program arguments
+  foreach (arg; args[1 .. $]) // for each argument except the first one
   {
-    char[] input;            // input buffer
-    int w_cnt, l_cnt, c_cnt; // word, line, char counts
-    int inword;
-    int wstart;
+    ulong wordCount, lineCount, charCount;
 
-    // read file into input[]
-    input = cast(char[])std.file.read(args[i]);
+    $(V1 bool inWord;
+    size_t wordStart;
 
-    foreach (j, char c; input)
+    // read file into input buffer
+    auto input = cast(string)std.file.read(arg);
+
+    foreach (i, char c; input)
     {
-      if (c == '\n')
-              ++l_cnt;
-      if (c >= '0' && c <= '9')
-      {
+      if (std.ctype.isdigit(c))
+      { // c is a digit (0..9)
       }
-      else if (c >= 'a' && c <= 'z' ||
-               c >= 'A' && c <= 'Z')
-      {
-        if (!inword)
+      else if (std.ctype.isalpha(c))
+      { // c is an ASCII letter (A..Z, a..z)
+        if (!inWord)
         {
-          wstart = j;
-          inword = 1;
-          ++w_cnt;
+          wordStart = i;
+          inWord = true;
+          ++wordCount;
         }
       }
-      else if (inword)
+      else if (inWord)
       {
-        char[] word = input[wstart .. j];
-        dictionary[word]++;   // increment count for word
-        inword = 0;
+        auto word = input[wordStart .. i];
+        ++dictionary[word];   // increment count for word
+        inWord = false;
       }
-      ++c_cnt;
+      ++charCount;
+
+      // Let's consider the file has LF EOL.
+      if (c == '\n')
+        ++lineCount;
     }
-    if (inword)
+    if (inWord)
     {
-      char[] word = input[wstart .. input.length];
-      dictionary[word]++;
+      auto word = input[wordStart .. $];
+      ++dictionary[word];
     }
-    writefln("%8d%8d%8d %s", l_cnt, w_cnt, c_cnt, args[i]);
-    line_total += l_cnt;
-    word_total += w_cnt;
-    char_total += c_cnt;
+)$(V2 foreach(line; File(arg).byLine())
+    {
+      bool inWord;
+      size_t wordStart;
+
+      void tryFinishWord(size_t wordEnd)
+      {
+        if (inWord)
+        {
+          auto word = line[wordStart .. wordEnd];
+          ++dictionary[word.idup];   // increment count for word
+          inWord = false;
+        }
+      }
+
+      foreach (i, char c; line)
+      {
+        if (std.ascii.isDigit(c))
+        { // c is a digit (0..9)
+        }
+        else if (std.ascii.isAlpha(c))
+        { // c is an ASCII letter (A..Z, a..z)
+          if (!inWord)
+          {
+            wordStart = i;
+            inWord = true;
+            ++wordCount;
+          }
+        }
+        else
+          tryFinishWord(i);
+        ++charCount;
+      }
+      tryFinishWord(line.length);
+      ++lineCount;
+    }
+)
+    writefln("%8s%8s%8s %s", lineCount, wordCount, charCount, arg);
+    totalWords += wordCount;
+    totalLines += lineCount;
+    totalChars += charCount;
   }
 
   if (args.length > 2)
   {
-    writef("-------------------------------------\n%8d%8d%8d total",
-            line_total, word_total, char_total);
+    writefln("-------------------------------------\n%8s%8s%8s total",
+            totalLines, totalWords, totalChars);
   }
 
-  writefln("-------------------------------------");
+  write$(V1 f)ln("-------------------------------------");
   foreach (word; dictionary.keys.sort)
   {
-    writefln("%3d %s", dictionary[word], word);
+    writefln("%3s %s", dictionary[word], word);
   }
-  return 0;
 }
 ---------
 
@@ -1394,5 +1435,6 @@ Macros:
         TITLE=Arrays
         WIKI=Arrays
         CATEGORY_SPEC=$0
+        STD_UNI=<a href="phobos/std_uni.html">std.uni</a>
         FOO=
 

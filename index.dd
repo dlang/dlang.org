@@ -2,6 +2,297 @@ Ddoc
 
 $(D_S D Programming Language,
 
+$(SECTION3 The D programming language. Modern
+convenience. Modeling power. Native efficiency.,
+
+----
+#!/usr/bin/rdmd
+// Computes average line length for standard input.
+import std.stdio;
+
+void main() {
+    ulong lines = 0;
+    double sumLength = 0;
+    foreach (line; stdin.byLine()) {
+        ++lines;
+        sumLength += line.length;
+    }
+    writeln("Average line length: ",
+        lines ? sumLength / lines : 0);
+}
+----
+<div style="font-size:75%;text-align:right;position:relative;top:-3em;right:0.5em;bottom:0em;cursor:pointer;" onclick='alert("Got a brief example illustrating D? Submit your code to the digitalmars.D forum, specifying \"[your code here]\" in the title. Upon approval, it will be showcased on a random schedule on D&#145;s homepage.");'><a>[your code here]</a></div>
+
+D is a language with C-like syntax and static typing. It pragmatically combines
+efficiency, control, and modeling power, with safety and programmer productivity.
+
+$(SECTION3 Convenience,
+
+$(UL
+
+$(LI D allows writing large code fragments without redundantly specifying types,
+in the style of dynamic languages. Yet static inference deduces types and other
+code properties, giving the best of both the static and the
+dynamic worlds. $(EXAMPLE 1,
+----
+void main() {
+    // Define an array of numbers, double[]. Compiler recognizes the common
+    // type of all initializers.
+    auto arr = [ 1, 2, 3.14, 5.1, 6 ];
+    // Dictionary that maps string to int, type is spelled int[string]
+    auto dictionary = [ "one" : 1, "two" : 2, "three" : 3 ];
+    // Calls the min function defined below
+    auto x = min(arr[0], dictionary["two"]);
+}
+// Type deduction works for function results. This is important for generic
+// functions, such as min below, which works correctly for all comparable
+// types.
+auto min(T1, T2)(T1 lhs, T2 rhs) {
+    return rhs < lhs ? rhs : lhs;
+}
+----
+))
+
+$(LI Automatic memory management makes for safe, simple, and robust code.
+D also supports scoped resource management (aka the
+$(WEB en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization, RAII) idiom)
+and $(LINK2 statement.html#ScopeGuardStatement, $(D scope) statements) for
+deterministic transactional code that is easy to write and read. $(EXAMPLE 2,
+----
+import std.stdio;
+
+class Widget { ... }
+
+void main() {
+    // Automatically managed.
+    auto w = new Widget;
+    // Code is executed in any case upon scope exit.
+    scope(exit) { writeln("Exiting main."); }
+    // File is closed deterministically at scope's end.
+    foreach (line; File("text.txt").byLine()) {
+        writeln(line);
+    }
+}
+----
+)
+)
+
+$(LI Built-in linear and associative arrays, slices, and ranges make daily
+programming simple and pleasant for tasks small and large. $(EXAMPLE 3,
+----
+#!/usr/bin/rdmd
+import std.range, std.stdio;
+
+// Compute average line length for stdin
+void main() {
+    ulong lines = 0, sumLength = 0;
+    foreach (line; stdin.byLine()) {
+        ++lines;
+        sumLength += line.length;
+    }
+    writeln("Average line length: ",
+        lines ? cast(double) sumLength / lines : 0.0);
+}
+----
+))
+
+))
+
+$(SECTION3 Power,
+
+$(UL
+
+$(LI The best paradigm is to not impose one at the expense of others.
+D offers classic polymorphism, value semantics, functional
+style, generics, generative programming, contract programming,
+and more&mdash;all harmoniously integrated. $(EXAMPLE 4,
+----
+// Interfaces and classes
+interface Printable {
+   void print(uint level)
+   in { assert(level > 0); } // contract is part of the interface
+}
+
+// Interface implementation
+class Widget : Printable {
+   void print(uint level) { ... }
+}
+
+// Single inheritance of state
+class ExtendedWidget : Widget {
+   override void print(uint level)
+   in { /* weakening precondition is okay */  }
+   body {
+       ... level may be 0 here ...
+   }
+}
+
+// Immutable data shared across threads
+immutable string programName = "demo";
+// Mutable data is thread-local
+int perThread = 42;
+// Explicitly shared data
+shared int perApp = 5;
+
+// Structs have value semantics
+struct BigNum {
+    // intercept copying
+    this(this) { ... }
+    // intercept destructor
+    ~this() { ... }
+}
+----
+))
+
+$(LI D offers an innovative approach to concurrency featuring true
+immutable data, message passing, no sharing by default, and
+controlled mutable sharing across threads. $(WEBX
+informit.com/articles/article.aspx?p=1609144, Read more).)
+
+$(LI From simple scripts to large projects, D has the breadth
+to scale with any application's needs: unit testing,
+information hiding, refined modularity, fast compilation, precise
+interfaces. $(WEBX drdobbs.com/high-performance-computing/217801225,
+Read more).)
+
+))
+
+$(SECTION3 Efficiency,
+
+$(UL
+
+$(LI D compiles naturally to efficient native code.)
+
+$(LI D is designed such that most "obvious" code is fast $(I and)
+safe. On occasion a function might need to escape the confines of type
+safety for ultimate speed and control. For such rare cases D offers
+native pointers, type casts, access to any C function without any
+intervening translation, and even inline assembler. $(EXAMPLE 5,
+----
+void livingDangerously() {
+    // Access to C's malloc and free primitives
+    auto buf = malloc(1024 * 1024);
+    scope(exit) free(buf); // free automatically upon scope exit
+    // Interprets memory as an array of floats
+    auto floats = cast(float[]) buf[0 .. 1024 * 1024];
+    // Even stack allocation is possible
+    auto moreBuf = alloca(4096 * 100);
+    ...
+}
+
+// Using inline asm for extra speed on x86
+uint checked_multiply(uint x, uint y) {
+    uint result;
+    version (D_InlineAsm_X86) {
+        // Inline assembler "sees" D variables.
+        asm {
+            mov     EAX,x        ;
+            mul     EAX,y        ;
+            mov     result,EAX   ;
+            jc      Loverflow    ;
+        }
+        return result;
+    } else {
+        result = x * y;
+        if (!y || x <= uint.max / y)
+           return result;
+   }
+Loverflow:
+   throw new Exception("multiply overflow");
+}
+----
+))
+
+$(LI The $(D @safe), $(D @trusted), and $(D @system) modular
+attributes allow the programmer to best decide the safety/efficiency
+tradeoffs of a particular application, and have the compiler check for
+consistency. $(LINK2 safed.html, Read more.))
+
+)
+
+))
+
+$(XXXXSECTION2 Community,
+
+$(P D is the center of a growing, vibrant community. Get D-related
+news from the $(D digitalmars.D.announce) forum $(TAG2 span,
+style="font-size:80%", $(WEB
+digitalmars.com/pnews/indexing.php?server=news.digitalmars.com&group=digitalmars.D.announce,
+[browse]) $(LINK2 news://news.digitalmars.com/digitalmars.D.announce,
+[usenet]) $(WEB
+lists.puremagic.com/cgi-bin/mailman/listinfo/digitalmars-d-announce,
+[mailing list])). On Twitter, subscribe to D's official announcements
+channel, $(WEB twitter.com/#!/D_Programming,@D_Programming), and
+search for (and disseminate) news using tag $(WEB
+twitter.com/#!/search/%23d_lang, #d_lang).)
+
+$(P Learning D and have a question about the best way to do X? The $(D
+digitalmars.D.learn) forum $(TAG2 span, style="font-size:80%", $(WEB
+digitalmars.com/pnews/indexing.php?server=news.digitalmars.com&group=digitalmars.D.learn,
+[browse]) $(LINK2 news://news.digitalmars.com/digitalmars.D.learn,
+[usenet]) $(WEB
+lists.puremagic.com/cgi-bin/mailman/listinfo/digitalmars-d-learn,
+[mailing list])) is the hangout place where many D experts are ready
+to help fellow hackers.)
+
+$(P The $(D digitalmars.D) forum $(TAG2 span, style="font-size:80%",
+$(WEB
+digitalmars.com/pnews/indexing.php?server=news.digitalmars.com&group=digitalmars.D,
+[browse]) $(LINK2 news://news.digitalmars.com/digitalmars.D, [usenet])
+$(WEB lists.puremagic.com/cgi-bin/mailman/listinfo/digitalmars-d,
+[mailing list])) is the best place to discuss anything and everything
+related to D: language design ideas, suggestions, status and future,
+contributions to the language and its standard library. Reach and
+engage all major D contributors, including the very creator of D,
+$(WEB walterbright.com, Walter Bright). For real-time conversation, use #d IRC channel on freenode.)
+
+$(SECTION3 To contribute,
+
+$(P Many D enthusiasts are not only using, but also contributing to
+the language, its implementation, and its standard library. The main
+hub of D development is $(WEB github.com/D-Programming-Language,
+D-Programming-Language on github). The project has been awash in
+contributions ever since creating the github repository on January 23,
+2011, with an average of over 3 pull requests per day. (That doesn't
+mean there's not a lot more to do!) You are welcome to fork any
+subproject ($(WEB github.com/D-Programming-Language/dmd, compiler),
+$(WEB github.com/D-Programming-Language/druntime, runtime), $(WEB
+github.com/D-Programming-Language/phobos, standard library), $(WEB
+github.com/D-Programming-Language/d-programming-language.org,
+website), $(WEB github.com/D-Programming-Language/tools, tools), or
+$(WEB github.com/D-Programming-Language/installer, installer)), change
+it in useful ways, and propose your changes back to the community.
+
+$(P The reference compiler $(LINK2 download.html, dmd) has inspired
+work on alternate implementations that add value by using distinct
+back-ends:)
+
+$(UL
+
+$(LI GNU D compiler $(LINK2 http://bitbucket.org/goshawk/gdc/wiki/Home, gdc).)
+
+$(LI LLVM D Compiler $(WEB dsource.org/projects/ldc, ldc).)
+
+)
+
+$(P The gdc compiler is of particular interest because it taps into
+gcc's extremely portable back-end and large installation base. The D
+development team has signed the appropriate documents with FSF and is
+pursuing integration of gdc with gcc version 4.8 starting March 2012.
+$(WEB https://launchpad.net/~ibuclaw, Iain Buclaw) is leading that
+effort.)
+
+)
+
+)
+)
+)
+
+
+
+
+$(COMMENT
+
 $(COMMENT $(AMAZONLINK 0321635361, <img style="float:right;
 padding-left:1.5em; padding-bottom:1.5em; border-width: 0;"
 src="images/tdpl.jpg" alt="The D Programming Language book" />))
@@ -47,11 +338,10 @@ for new projects. )
 $(P There are currently three implementations:
 $(OL
     $(LI Digital Mars dmd for
-	$(LINK2 http://www.digitalmars.com/d/2.0/dmd-windows.html,
-    Windows),
-	 $(LINK2 http://www.digitalmars.com/d/2.0/dmd-linux.html, x86 Linux),
-	 $(LINK2 http://www.digitalmars.com/d/2.0/dmd-osx.html, Mac OS X), and
-	 $(LINK2 http://www.digitalmars.com/d/2.0/dmd-freebsd.html, x86 FreeBSD).
+	$(LINK2 dmd-windows.html, Windows),
+	$(LINK2 dmd-linux.html, x86 Linux),
+	$(LINK2 dmd-osx.html, Mac OS X), and
+	$(LINK2 dmd-freebsd.html, x86 FreeBSD).
     )
 
     $(LI LLVM D Compiler $(LINK2 http://www.dsource.org/projects/ldc, ldc).
@@ -204,6 +494,50 @@ someone posting a patch to the compiler, and then later claim compensation for t
 )
 
 Macros:
-	TITLE=Intro
+	TITLE=Home
 	WIKI=Intro
-
+    TAG=<$1>$+</$1>
+    TAG2=<$1 $2>$3</$1>
+    WEB=$(LINK2 http://$1,$2)
+    WEBX=$(LINK2 http://$1,$2)
+    D=<span class="d_inlinecode">$0</span>
+    EXAMPLE=$(TAG2 div, id="q$1" class="question" onclick="showHideAnswer(this);", <nobr>See example.</nobr>)$(TAG2 div, id="a$1" class="answer", $2)
+    LAYOUT=
+<div id="navigation">
+  $1
+  $(GOOGLE_TRANSLATE)
+</div>
+<div id="twitter">
+<script src="http://widgets.twimg.com/j/2/widget.js"></script>
+<script>
+new TWTR.Widget({
+  version : 2,
+  type : 'profile',
+  rpp : 8,
+  interval : 30000,
+  width : 'auto',
+  height : 600,
+  theme : {
+    shell : {
+      background : '#1f252b',
+      //color : '#000000'
+    },
+    tweets : {
+      //background : '',
+      //color : '',
+      //links : ''
+    }
+  },
+  features : {
+    scrollbar : true,
+    loop : false,
+    live : true,
+    behavior : 'all'
+  }
+}).render().setUser('D_programming').start();
+</script>
+</div>
+<div id="content" style="margin-right:18em;" class='hyphenate'>
+  $(PAGE_TOOLS)
+  $3
+</div>
