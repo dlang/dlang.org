@@ -217,8 +217,9 @@ void test()
 	When the count hits 0, the object can be deleted.
 	)
 
-	$(P D doesn't provide any automated support for reference counting,
-	it will have to be done explicitly.
+	$(P A reference counting type constructor can be found
+	<a href="/phobos/std_typecons.html#RefCounted">in the
+	standard library</a>.
 	)
 
 	$(P <a href="COM.html">Win32 COM programming</a>
@@ -340,22 +341,19 @@ class Foo
 ------
 import std.c.stdlib;
 import core.exception;
+import std.exception;
 import core.memory : GC;
+import std.conv : emplace;
 
 class Foo
 {
     static void[] buffer;
-    static int bufindex;
-    static const int bufsize = 100;
+    static size_t bufindex;
+    enum bufsize = 100;
 
     static this()
     {
-        void* p;
-        p = malloc(bufsize);
-
-        if (p is null)
-            throw new OutOfMemoryError;
-
+        void* p = enforce(malloc(bufsize), new OutOfMemoryError);
         GC.addRange(p, bufsize);
         buffer = p[0 .. bufsize];
     }
@@ -369,31 +367,27 @@ class Foo
             buffer = null;
         }
     }
-
-    new(size_t sz)
+    
+    static Foo create()
     {
-        void* p;
-
-        p = &buffer[bufindex];
-        bufindex += sz;
-
-        if (bufindex > buffer.length)
-            throw new OutOfMemoryError;
-
-        return p;
+        enum instanceSize = __traits(classInstanceSize, Foo);
+        auto nextIndex = bufindex + instanceSize;
+        
+        enforce(nextIndex <= buffer.length, new OutOfMemoryError); 
+        
+        void[] mem = buffer[bufindex .. nextIndex];
+        
+        bufindex = nextIndex;
+        
+        return emplace!Foo(mem);
     }
 
-    delete(void* p)
-    {
-        assert(0);
-    }
-
-    static int mark()
+    static size_t mark()
     {
         return bufindex;
     }
 
-    static void release(int i)
+    static void release(size_t i)
     {
         bufindex = i;
     }
@@ -401,17 +395,17 @@ class Foo
 
 void main()
 {
-    int m  = Foo.mark();
-    Foo f1 = new Foo;           // allocate
-    Foo f2 = new Foo;           // allocate
-
+    auto m = Foo.mark();
+    Foo f1 = Foo.create();      // allocate
+    Foo f2 = Foo.create();      // allocate
+    
     Foo.release(m);             // deallocate f1 and f2
 }
 ------
 
 	$(P The allocation of buffer[] itself is added as
 	a region to the GC, so there is no need for a separate
-	call inside Foo.new() to do it.)
+	call inside Foo.create() to do it.)
 
 <h2><a name="raii">RAII (Resource Acquisition Is Initialization)</a></h2>
 
@@ -424,26 +418,19 @@ void main()
 <h2>$(LNAME2 stackclass, Allocating Class Instances On The Stack)</h2>
 
 	$(P Class instances are normally allocated on the garbage
-	collected heap. However, if they:)
+	collected heap. However, they can be allocated on the stack
+	using the <a href="/phobos/std_typecons.html#scoped">scoped</a>
+	type constructor.)
 
-	$(UL
-	$(LI are allocated as local symbols in a function)
-	$(LI are allocated using $(B new))
-	$(LI use $(B new) with no arguments (constructor arguments are allowed))
-	$(LI have the $(B scope) storage class)
-	)
-
-	$(P then they are allocated on the stack. This is more efficient
-	than doing an allocate/free cycle on the instance. But be
-	careful that any reference to the object does not survive
-	the return of the function.)
+	$(P This is more efficient than doing an allocate/free cycle
+	on the instance. But be careful that any reference to the
+	object does not survive the return of the function.)
 
 ---
 class C { ... }
 
-scope c = new C();	// c is allocated on the stack
-scope c2 = new C(5);    // allocated on stack
-scope c3 = new(5) C();  // allocated by a custom allocator
+auto c = scoped!C();    // c is allocated on the stack
+auto c2 = scoped!C(5);  // allocated on stack
 ---
 
 	$(P If the class has a destructor, then that destructor is
