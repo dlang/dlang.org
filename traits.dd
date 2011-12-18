@@ -66,10 +66,10 @@ import std.stdio;
 
 void main() {
   int i;
-  writefln(__traits(isArithmetic, int));
-  writefln(__traits(isArithmetic, i, i+1, int));
-  writefln(__traits(isArithmetic));
-  writefln(__traits(isArithmetic, int*));
+  writeln(__traits(isArithmetic, int));
+  writeln(__traits(isArithmetic, i, i+1, int));
+  writeln(__traits(isArithmetic));
+  writeln(__traits(isArithmetic, int*));
 }
 ---
 
@@ -127,10 +127,10 @@ abstract class C { int foo(); }
 
 void main() {
   C c;
-  writefln(__traits(isAbstractClass, C));
-  writefln(__traits(isAbstractClass, c, C));
-  writefln(__traits(isAbstractClass));
-  writefln(__traits(isAbstractClass, int*));
+  writeln(__traits(isAbstractClass, C));
+  writeln(__traits(isAbstractClass, c, C));
+  writeln(__traits(isAbstractClass));
+  writeln(__traits(isAbstractClass, int*));
 }
 ---
 
@@ -166,8 +166,8 @@ class C {
 }
 
 void main() {
-  writefln(__traits(isVirtualFunction, C.bar));  // true
-  writefln(__traits(isVirtualFunction, S.bar));  // false
+  writeln(__traits(isVirtualFunction, C.bar));  // true
+  writeln(__traits(isVirtualFunction, S.bar));  // false
 }
 ---
 
@@ -193,9 +193,9 @@ class AC {
 }
 
 void main() {
-  writefln(__traits(isAbstractFunction, C.bar));   // false
-  writefln(__traits(isAbstractFunction, S.bar));   // false
-  writefln(__traits(isAbstractFunction, AC.foo));  // true
+  writeln(__traits(isAbstractFunction, C.bar));   // false
+  writeln(__traits(isAbstractFunction, S.bar));   // false
+  writeln(__traits(isAbstractFunction, AC.foo));  // true
 }
 ---
 
@@ -222,10 +222,10 @@ final class FC {
 }
 
 void main() {
-  writefln(__traits(isFinalFunction, C.bar));	  // false
-  writefln(__traits(isFinalFunction, S.bar));	  // false
-  writefln(__traits(isFinalFunction, C.foo));	  // true
-  writefln(__traits(isFinalFunction, FC.foo));  // true
+  writeln(__traits(isFinalFunction, C.bar));	  // false
+  writeln(__traits(isFinalFunction, S.bar));	  // false
+  writeln(__traits(isFinalFunction, C.foo));	  // true
+  writeln(__traits(isFinalFunction, FC.foo));  // true
 }
 ---
 
@@ -284,10 +284,10 @@ struct S {
 void main() {
   S s;
 
-  writefln(__traits(hasMember, S, "m")); // true
-  writefln(__traits(hasMember, s, "m")); // true
-  writefln(__traits(hasMember, S, "y")); // false
-  writefln(__traits(hasMember, int, "sizeof")); // true
+  writeln(__traits(hasMember, S, "m")); // true
+  writeln(__traits(hasMember, s, "m")); // true
+  writeln(__traits(hasMember, S, "y")); // false
+  writeln(__traits(hasMember, int, "sizeof")); // true
 }
 ---
 
@@ -319,7 +319,7 @@ void main() {
   S s;
 
   __traits(getMember, s, "mx") = 1;  // same as s.mx=1;
-  writefln(__traits(getMember, s, "m" ~ "x")); // 1
+  writeln(__traits(getMember, s, "m" ~ "x")); // 1
 
   __traits(getMember, S, "mx") = 1;  // error, no this for S.mx
   __traits(getMember, S, "my") = 2;  // ok
@@ -350,14 +350,14 @@ void main() {
   D d = new D();
 
   foreach (t; __traits(getOverloads, D, "foo"))
-    writefln(typeid(typeof(t)));
+    writeln(typeid(typeof(t)));
 
   alias typeof(__traits(getOverloads, D, "foo")) b;
   foreach (t; b)
-    writefln(typeid(t));
+    writeln(typeid(t));
 
   auto i = __traits(getOverloads, d, "foo")[1](1);
-  writefln(i);
+  writeln(i);
 }
 ---
 
@@ -395,14 +395,14 @@ void main() {
   D d = new D();
 
   foreach (t; __traits(getVirtualFunctions, D, "foo"))
-    writefln(typeid(typeof(t)));
+    writeln(typeid(typeof(t)));
 
   alias typeof(__traits(getVirtualFunctions, D, "foo")) b;
   foreach (t; b)
-    writefln(typeid(t));
+    writeln(typeid(t));
 
   auto i = __traits(getVirtualFunctions, d, "foo")[1](1);
-  writefln(i);
+  writeln(i);
 }
 ---
 
@@ -517,12 +517,12 @@ int foo();
 int bar();
 
 void main() {
-  writefln(__traits(isSame, foo, foo)); // true
-  writefln(__traits(isSame, foo, bar)); // false
-  writefln(__traits(isSame, foo, S));   // false
-  writefln(__traits(isSame, S, S));     // true
-  writefln(__traits(isSame, std, S));   // false
-  writefln(__traits(isSame, std, std)); // true
+  writeln(__traits(isSame, foo, foo)); // true
+  writeln(__traits(isSame, foo, bar)); // false
+  writeln(__traits(isSame, foo, S));   // false
+  writeln(__traits(isSame, S, S));     // true
+  writeln(__traits(isSame, std, S));   // false
+  writeln(__traits(isSame, std, std)); // true
 }
 ---
 
@@ -552,16 +552,16 @@ int foo();
 int bar();
 
 void main() {
-  writefln(__traits(compiles));                      // false
-  writefln(__traits(compiles, foo));                 // true
-  writefln(__traits(compiles, foo + 1));             // true
-  writefln(__traits(compiles, &foo + 1));            // false
-  writefln(__traits(compiles, typeof(1)));           // true
-  writefln(__traits(compiles, S.s1));                // true
-  writefln(__traits(compiles, S.s3));                // false
-  writefln(__traits(compiles, 1,2,3,int,long,std));  // true
-  writefln(__traits(compiles, 3[1]));                // false
-  writefln(__traits(compiles, 1,2,3,int,long,3[1])); // false
+  writeln(__traits(compiles));                      // false
+  writeln(__traits(compiles, foo));                 // true
+  writeln(__traits(compiles, foo + 1));             // true
+  writeln(__traits(compiles, &foo + 1));            // false
+  writeln(__traits(compiles, typeof(1)));           // true
+  writeln(__traits(compiles, S.s1));                // true
+  writeln(__traits(compiles, S.s3));                // false
+  writeln(__traits(compiles, 1,2,3,int,long,std));  // true
+  writeln(__traits(compiles, 3[1]));                // false
+  writeln(__traits(compiles, 1,2,3,int,long,3[1])); // false
 }
 ---
 
