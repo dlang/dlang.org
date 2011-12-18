@@ -795,16 +795,12 @@ $(GNAME AliasThis):
     $(B alias) $(I Identifier) $(B this;)
 )
 
-        $(P An $(I AliasThis) declaration names another class or struct member
-        to which any undefined lookups will be forwarded.
+        $(P An $(I AliasThis) declaration names a member to subtype.
         The $(I Identifier) names that member.
         )
 
         $(P A class or struct can be implicitly converted to the $(I AliasThis)
         member.
-        )
-
-        $(P There is only one $(I AliasThis) allowed per class or struct.
         )
 
 ---
@@ -825,6 +821,58 @@ void test() {
   i = foo(s);  // implicit conversion to int
 }
 ---
+
+        $(P If the member is a class or struct, undefined lookups will
+        be forwarded to the $(I AliasThis) member.
+        )
+
+---
+struct Foo
+{
+  int baz = 4;
+  int get() { return 7; }
+}
+
+class Bar
+{
+  Foo foo;
+  alias foo this;
+}
+
+void test() {
+  auto bar = new Bar;
+  int i = bar.baz; // i == 4
+  i = bar.get(); // i == 7
+}
+---
+
+        $(P If the $(I Identifier) refers to a property member
+        function with no parameters, conversions and undefined
+        lookups are forwarded to the return value of the function.
+        )
+
+---
+struct S
+{
+  int x;
+  @property int get() {
+    return x * 2;
+  }
+  alias get this;
+}
+
+void test() {
+  S s;
+  s.x = 2;
+  int i = s; // i == 4
+}
+---
+
+        $(P Multiple $(I AliasThis) are allowed. For implicit conversions
+        and forwarded lookups, all $(I AliasThis) declarations are attempted;
+        if more than one $(I AliasThis) is eligible, the ambiguity is
+        disallowed by raising an error.
+        )
 )
 
 <h3>$(LNAME2 auto, Scope Classes)</h3>
