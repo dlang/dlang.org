@@ -242,7 +242,7 @@ $(H2 $(GNAME isRef), $(GNAME isOut), $(GNAME isLazy))
 
 	$(P Takes one argument. If that argument is a declaration,
 	$(B true) is returned if it is $(D_KEYWORD ref), $(D_KEYWORD out),
-	$(D_KEYWORD lazy), otherwise $(B false).
+	or $(D_KEYWORD lazy), otherwise $(B false).
 	)
 
 ---
@@ -333,7 +333,7 @@ $(H2 $(GNAME getOverloads))
 	class type.
 	The second argument is a string that matches the name of
 	one of the functions of that class.
-	The result is an array of all the overloads of that function.
+	The result is a tuple of all the overloads of that function.
 	)
 
 ---
@@ -378,7 +378,7 @@ $(H2 $(GNAME getVirtualFunctions))
 	class type.
 	The second argument is a string that matches the name of
 	one of the functions of that class.
-	The result is an array of the virtual overloads of that function.
+	The result is a tuple of the virtual overloads of that function.
 	)
 
 ---
@@ -457,13 +457,12 @@ class D {
 }
 
 void main() {
-  auto a = __traits(allMembers, D);
+$(V1    auto a = __traits(allMembers, D);
   writefln(a);
-$(V2    // __ctor,__dtor,foo,print,toString,toHash,opCmp,opEquals
-
-  auto b = [ __traits(allMembers, D) ];
-  writefln(b);
-)  // [__ctor,__dtor,foo,print,toString,toHash,opCmp,opEquals]
+  // [__ctor,__dtor,foo,print,toString,toHash,opCmp,opEquals])
+$(V2    auto b = [ __traits(allMembers, D) ];
+  writeln(b);
+  // ["__ctor", "__dtor", "foo", "toString", "toHash", "opCmp", "opEquals", "Monitor", "factory"])
 }
 ---
 
@@ -494,9 +493,9 @@ class D {
 }
 
 void main() {
-  auto a = __traits(derivedMembers, D);
-$(V1    writefln(a);	// [__ctor,__dtor,foo])
-$(V2    writefln(a);	// __ctor,__dtor,foo)
+$(V1    auto a = __traits(derivedMembers, D);)
+$(V2    auto a = [__traits(derivedMembers, D)];)
+  writeln(a);    // ["__ctor", "__dtor", "foo"]
 }
 ---
 
