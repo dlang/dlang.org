@@ -46,6 +46,7 @@ $(D_S $(TITLE),
 
 	$(ITEMR casting_from_shared, What are the semantics of casting FROM shared TO unshared?)
 
+	$(ITEMR bss, Why does a large static array bloat my executable file size?)
 	)
 
 <h2>General D FAQ</h2>
@@ -131,6 +132,41 @@ $(ITEM casting_to_shared, What are the semantics of casting FROM unshared TO sha
 $(ITEM casting_from_shared, What are the semantics of casting FROM shared TO unshared?)
 
 	$(P Make sure there are no other shared references to that same data.
+	)
+
+$(ITEM bss, Why does a large static array bloat my executable file size?)
+
+	$(P Given the declaration:)
+---
+char[1024 * 1024] arr;
+---
+	$(P the executable size increases by a megabyte in size. In C, this would not
+	as $(CODE arr) would be stored in the BSS segment.
+	In D, $(CODE arr) is not stored in the BSS segment because:
+	)
+
+	$(UL
+	$(LI The $(CODE char) type is initialized to 0xFF, not 0. Non-zero data
+	cannot be placed in BSS.)
+	$(LI Statically allocated data is placed in thread local storage. The BSS
+	segment is not thread local, and there is no thread local equivalent of BSS.)
+	)
+
+	$(P The following will be placed in BSS:)
+
+---
+__gshared byte[1024 * 1024] arr;
+---
+
+	$(P as $(CODE byte)s are 0 initialized and $(CODE __gshared) puts it in the
+	global data.)
+
+	$(P There are similiar issues for $(CODE float), $(CODE double), and $(CODE real)
+	static arrays. They are initialized to NaN (Not A Number) values, not 0.
+	)
+
+	$(P The easiest way to deal with this issue is to allocate the array dynamically
+	at run time rather than statically allocate it.
 	)
 
 $(ITEM q1, Why the name D?)
