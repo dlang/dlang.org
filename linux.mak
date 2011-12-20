@@ -41,8 +41,7 @@ TARGETS=32-64-portability.html cpptod.html ctod.html download.html		\
 	variadic-function-templates.html howto-promote.html tuple.html		\
 	template-comparison.html template-mixin.html traits.html COM.html	\
 	cpp_interface.html hijack.html const3.html features2.html			\
-	safed.html const-faq.html dmd-windows.html dmd-linux.html			\
-	dmd-osx.html dmd-freebsd.html concepts.html memory-safe-d.html		\
+	safed.html const-faq.html concepts.html memory-safe-d.html			\
 	d-floating-point.html migrate-to-shared.html D1toD2.html			\
 	unittest.html hash-map.html pdf-intro-cover.html					\
 	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
@@ -103,7 +102,7 @@ $(DOC_OUTPUT_DIR)/% : %
 
 # Rulez
 
-all : html #phobos druntime phobos-last-release druntime-last-release
+all : html phobos druntime phobos-last-release druntime-last-release
 
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
 
