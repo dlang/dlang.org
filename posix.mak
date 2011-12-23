@@ -10,13 +10,12 @@ DOC_OUTPUT_DIR=../web
 
 DDOC=macros.ddoc windows.ddoc doc.ddoc
 
-IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico	\
-d3.gif d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif			\
-dmlogo-smaller.gif download.png fedora_logo.png freebsd_logo.png	\
-gradient-green.jpg gradient-red.jpg globe.gif linux_logo.png		\
-mac_osxlion_logo.png opensuse_logo.png pen.gif search-left.gif		\
-search-bg.gif search-button.gif Thumbs.db tdpl.jpg ubuntu_logo.png	\
-win32_logo.png)
+IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico		\
+d3.gif d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
+dmlogo-smaller.gif download.png fedora_logo.png freebsd_logo.png		\
+gradient-green.jpg gradient-red.jpg globe.gif linux_logo.png			\
+mac_logo.png opensuse_logo.png pen.gif search-left.gif search-bg.gif	\
+search-button.gif Thumbs.db tdpl.jpg ubuntu_logo.png win32_logo.png)
 
 STYLES=css/style.css css/print.css
 
@@ -154,7 +153,7 @@ phobos:
 		DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-last-release:
-	export TAG=$$(cd ${PHOBOS} && git tag | grep '^v' | sed 's/^v//' | sort -nr | head -n 1) && \
+	export TAG=$$(cd ${PHOBOS} && git tag | grep '^v[0-9]\.[0-9]*$$' | sed 's/^v//' | sort -nr | head -n 1) && \
 	  echo "Building Phobos version $$TAG in ${PHOBOS}-$$TAG" && \
 	  if [ ! -d ${PHOBOS}-$$TAG ]; then \
 	    mkdir ${PHOBOS}-$$TAG && \
