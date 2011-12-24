@@ -2,11 +2,11 @@
 #
 # To run:
 #
-# make -f linux.mak all
+# make -f posix.mak all
 #
 # To also upload to the website:
 #
-# make -f linux.mak rsync
+# make -f posix.mak rsync
 #
 
 # Externals
@@ -18,7 +18,8 @@ DOC_OUTPUT_DIR=../web
 GIT_HOME=git@github.com:D-Programming-Language
 
 # Latest released version
-LATEST:=$(shell cd ${PHOBOS_DIR} && git tag | grep '^v[0-9]\.[0-9]*$$' | sed 's/^v//' | sort -nr | head -n 1)
+LATEST:=$(shell cd ${DMD_DIR} && git fetch --tags && \
+git tag | grep '^v[0-9]\.[0-9]*$$' | sed 's/^v//' | sort -nr | head -n 1)
 $(info Current release: ${LATEST})
 
 # Documents
