@@ -1,14 +1,29 @@
-# makefile to build html files for DMD
+# Makefile to build the entire dlang.org website
+#
+# To run:
+#
+# make -f linux.mak all
+#
+# To also upload to the website:
+#
+# make -f linux.mak rsync
+#
 
 # Externals
 DMD=dmd
-PHOBOS=../phobos
-DRUNTIME=../druntime
+DMD_DIR=../dmd
+PHOBOS_DIR=../phobos
+DRUNTIME_DIR=../druntime
 DOC_OUTPUT_DIR=../web
+GIT_HOME=git@github.com:D-Programming-Language
+
+# Latest released version
+LATEST:=$(shell cd ${PHOBOS_DIR} && git tag | grep '^v[0-9]\.[0-9]*$$' | sed 's/^v//' | sort -nr | head -n 1)
+$(info Current release: ${LATEST})
 
 # Documents
 
-DDOC=macros.ddoc windows.ddoc doc.ddoc
+DDOC=macros.ddoc windows.ddoc doc.ddoc ${LATEST}.ddoc
 
 IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico		\
 d3.gif d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
@@ -99,9 +114,11 @@ $(DOC_OUTPUT_DIR)/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
+################################################################################
 # Rulez
+################################################################################
 
-all : html phobos druntime phobos-last-release druntime-last-release
+all : html phobos-prerelease druntime-prerelease druntime-release phobos-release
 
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
 
@@ -116,6 +133,9 @@ $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
 	$(DMD) -c -o- -Df$@ $(DDOC) sitemap.dd
 	rm -rf sitemap.dd
 
+${LATEST}.ddoc :
+	echo "LATEST=${LATEST}" >$@
+
 zip:
 	rm doc.zip
 	zip32 doc win32.mak style.css $(DDOC)
@@ -123,7 +143,11 @@ zip:
 	zip32 doc $(IMG)
 
 clean:
-	rm -rf $(DOC_OUTPUT_DIR)
+	rm -rf $(DOC_OUTPUT_DIR) ${DMD_DIR}.${LATEST} ${LATEST}.ddoc
+	rm -rf ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
+
+rsync : all
+	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
 
 pdf : $(PDFTARGETS)
 
@@ -148,40 +172,62 @@ d-tools.pdf:
 	  $(DOC_OUTPUT_DIR)/, $(PDFAPPENDICES))						\
 	  $(DOC_OUTPUT_DIR)/d-tools.pdf
 
-phobos:
-	cd ${PHOBOS} && make -f posix.mak \
-		DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
+################################################################################
+# dmd compiler, latest released build and current build
+################################################################################
 
-phobos-last-release:
-	export TAG=$$(cd ${PHOBOS} && git tag | grep '^v[0-9]\.[0-9]*$$' | sed 's/^v//' | sort -nr | head -n 1) && \
-	  echo "Building Phobos version $$TAG in ${PHOBOS}-$$TAG" && \
-	  if [ ! -d ${PHOBOS}-$$TAG ]; then \
-	    mkdir ${PHOBOS}-$$TAG && \
-	    cd ${PHOBOS}-$$TAG && \
-	    git clone git@github.com:D-Programming-Language/phobos . ; \
-	  else \
-	    cd ${PHOBOS}-$$TAG ; \
-	  fi && \
-	  git checkout v$$TAG && \
-	  make -f posix.mak \
-		DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos html -j 4
+${DMD_DIR}.${LATEST}/src/dmd :
+	[ -d ${DMD_DIR}.${LATEST} ] || \
+	  git clone ${GIT_HOME}/dmd ${DMD_DIR}.${LATEST}/
+	cd ${DMD_DIR}.${LATEST} && git checkout v${LATEST}
+	make --directory=${DMD_DIR}.${LATEST}/src -f posix.mak clean
+	make --directory=${DMD_DIR}.${LATEST}/src -f posix.mak -j 4
 
-druntime:
-	cd ${DRUNTIME} && make -f posix.mak \
+${DMD_DIR}/src/dmd :
+	[ -d ${DMD_DIR} ] || git clone ${GIT_HOME}/dmd ${DMD_DIR}/
+	make --directory=${DMD_DIR}/src -f posix.mak clean
+	make --directory=${DMD_DIR}/src -f posix.mak -j 4
+
+################################################################################
+# druntime, latest released build and current build
+################################################################################
+
+druntime-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
+${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd
+	make --directory=${DRUNTIME_DIR} -f posix.mak \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT=../d-programming-language.org/std.ddoc \
 		doc -j 4
 
-druntime-last-release:
-	cd ${DRUNTIME} && \
-	  TAG=$$(git tag | sed 's/druntime.*-//' | sort -nr | head -n 1) && \
-	  git checkout master && \
-	  (git branch -D last-release || true) && \
-	  git checkout -b last-release druntime-$$TAG && \
-	  make -f posix.mak \
-		DOCDIR=${DOC_OUTPUT_DIR}/phobos \
-	    DOCFMT=../d-programming-language.org/std.ddoc doc -j 4 && \
-	  git checkout master
+druntime-release : ${DOC_OUTPUT_DIR}/phobos/object.html
+${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
+	[ -d ${DRUNTIME_DIR}.${LATEST} ] || \
+	  git clone ${GIT_HOME}/druntime ${DRUNTIME_DIR}.${LATEST}/
+	cd ${DRUNTIME_DIR}.${LATEST} && git checkout v${LATEST}
+	make --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak clean
+	make --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak \
+	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
+	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
+	  DOCFMT=../d-programming-language.org/std.ddoc doc -j 4
 
-rsync : all
-	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
+################################################################################
+# phobos, latest released build and current build
+################################################################################
+
+phobos-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html
+${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : \
+	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
+	cd ${PHOBOS_DIR} && make -f posix.mak \
+	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
+
+phobos-release: ${DOC_OUTPUT_DIR}/phobos/index.html
+${DOC_OUTPUT_DIR}/phobos/index.html : \
+	    ${DOC_OUTPUT_DIR}/phobos/object.html
+	[ -d ${PHOBOS_DIR}.${LATEST} ] || \
+	  git clone ${GIT_HOME}/phobos ${PHOBOS_DIR}.${LATEST}/
+	cd ${PHOBOS_DIR}.${LATEST} && git checkout v${LATEST}
+	make --directory=${PHOBOS_DIR}.${LATEST} -f posix.mak -j 4 \
+	  release html \
+	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
+	  DDOC=${DMD_DIR}.${LATEST}/src/dmd \
+	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos
