@@ -87,6 +87,10 @@ PDFOPTIONS=--header-left [section] --header-right [page] --header-spacing 3 --he
 
 PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
+CHMTARGETS=d.hhp d.hhc d.hhk d.chm
+
+HHC=$(ProgramFiles)\HTML Help Workshop\hhc.exe
+
 target: $(TARGETS)
 
 .dd.html:
@@ -300,6 +304,19 @@ d-spec.pdf:
 d-tools.pdf:
 	wkhtmltopdf $(PDFOPTIONS) cover pdf-tools-cover.html toc $(PDFTOOLS) $(PDFHOWTOS) $(PDFARTICLES) $(PDFAPPENDICES) d-tools.pdf
 
+################# CHM #########################
+
+chm : d.chm
+
+chmgen.exe : chmgen.d
+	$(DMD) chmgen
+
+d.hhp d.hhc d.hhk : chmgen.exe $(TARGETS)
+	chmgen
+
+d.chm : d.hhp d.hhc d.hhk
+	cmd /C ""$(HHC)" d.hhp"
+
 ################# Other #########################
 
 zip:
@@ -312,5 +329,6 @@ zip:
 clean:
 	del $(TARGETS)
 	del $(PDFTARGETS)
+	del $(CHMTARGETS)
 
 
