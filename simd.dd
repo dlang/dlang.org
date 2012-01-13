@@ -1,0 +1,158 @@
+Ddoc
+
+$(SPEC_S Vector Extensions,
+
+	$(P Modern CPUs often support specialized vector types and vector
+	operations, sometimes called "media instructions".
+	Vector types are a fixed array of floating or integer types, and
+	vector operations operate simultaneously on them, thus achieving
+	great speedups.)
+
+	$(P When the compiler takes advantage of these instructions with standard D code
+	to speed up loops over arithmetic data, this is called auto-vectorization.
+	Auto-vectorization, however, has had only limited success and has not
+	been able to really take advantage of the richness (and often quirkiness)
+	of the native vector instructions.
+	)
+
+	$(P D has the array operation notation, such as:
+	)
+
+---
+int[] a,b;
+...
+a[] += b[];
+---
+
+	$(P which can be vectorized by the compiler, but again success is limited
+	for the same reason auto-vectorization is.
+	)
+
+	$(P The difficulties with trying to use vector instructions on regular arrays
+	are:)
+
+	$(OL
+	$(LI The vector types have stringent alignment requirements that are not
+	and cannot be met by conventional arrays.)
+	$(LI C ABI's often have vector extensions and have special name mangling
+	for them, call/return conventions, and symbolic debug support.)
+	$(LI The only way to get at the full vector instruction set would be to use
+	inline assembler - but the compiler cannot do register allocation across
+	inline assembler blocks (or other optimizations), leading to poor code
+	performance.)
+	$(LI Interleaving conventional array code with vector operations on the same
+	data can unwittingly lead to extremely poor runtime performance.)
+	)
+
+	$(P These issues are cleared up by using special vector types.
+	)
+
+<h2>$(D core.simd)</h2>
+
+	$(P Vector types and operations are introduced to D code by importing
+	$(CORE_SIMD):)
+
+---
+import core.simd;
+---
+
+	$(P These types and operations will be the ones defined for the architecture
+	the compiler is targetting. If a particular CPU family has varying
+	support for vector types, an additional runtime check may be necessary.
+	The compiler does not emit runtime checks; those must be done by the programmer.
+	)
+
+	$(P The types defined will all follow the naming convention:)
+
+$(GRAMMAR
+$(I typeNN)
+)
+	$(P where $(I type) is the vector element type and $(I NN) is the number
+	of those elements in the vector type.
+	The type names will not be keywords.
+	)
+
+	$(P Whether a type exists or not can be tested at compile time with
+	an $(LINK2 expression.html#IsExpression, $(I IsExpression)):
+	)
+
+---
+static if (is($(I typeNN)))
+    ... yes, it is supported ...
+else
+    ... nope, use workaround ...
+---
+
+	$(P Whether a particular operation on a type is supported can be tested
+	at compile time with:
+	)
+
+---
+float4 a,b;
+static if (__traits(compiles, a+b))
+    ... yes, it is supported ...
+else
+    ... nope, use workaround ...
+---
+
+	$(P For runtime testing to see if certain vector instructions are
+	available, see the functions in $(LINK2 phobos/core_cpuid.html, core.cpuid).
+	)
+
+	$(P The rest of this document describes the specific implementation of the
+	vector types for the X86 and X86_64 architectures.
+	)
+
+<h2>X86 And X86_64 Vector Extension Implementation</h2>
+
+	$(P The vector extensions are currently implemented for the OS X 32
+	bit target, and all 64 bit targets.)
+
+	$(P $(CORE_SIMD) defines the following types: )
+
+	$(TABLE2 Vector Types,
+	$(THEAD Type Name, Description, gcc Equivalent)
+	$(TROW void16, 16 bytes of untyped data, $(I no equivalent))
+	$(TROW byte16, 16 $(D byte)'s, $(D unsigned char __attribute((vector_size(16)))))
+	$(TROW ubyte16, 16 $(D ubyte)'s, $(D signed char __attribute((vector_size(16)))))
+	$(TROW short8, 8 $(D short)'s, $(D short __attribute((vector_size(16)))))
+	$(TROW ushort8, 8 $(D ushort)'s, $(D ushort __attribute((vector_size(16)))))
+	$(TROW int4, 4 $(D int)'s, $(D int __attribute((vector_size(16)))))
+	$(TROW uint4, 4 $(D uint)'s, $(D unsigned __attribute((vector_size(16)))))
+	$(TROW long2, 2 $(D long)'s, $(D long __attribute((vector_size(16)))))
+	$(TROW ulong2, 2 $(D ulong)'s, $(D unsigned long __attribute((vector_size(16)))))
+	$(TROW float4, 4 $(D float)'s, $(D float __attribute((vector_size(16)))))
+	$(TROW double2, 2 $(D double)'s, $(D double __attribute((vector_size(16)))))
+	)
+
+	$(P Note: for 32 bit gcc, it's $(D long long) instead of $(D long).)
+
+	$(TABLE2 Supported Vector Operators,
+	$(THEAD Operator,void16,byte16,ubyte16,short8,ushort8,int4,uint4,long2,ulong2,float4,double2)
+	$(TROW =,$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y))
+	$(TROW + +=,$(N),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y))
+	$(TROW - -=,$(N),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y))
+	$(TROW * *=,$(N),$(N),$(N),$(Y),$(Y),$(N),$(N),$(N),$(N),$(Y),$(Y))
+	$(TROW / /=,$(N),$(N),$(N),$(N),$(N),$(N),$(N),$(N),$(N),$(Y),$(Y))
+	$(TROW &amp; &amp;=,$(N),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(N),$(N))
+	$(TROW | |=,$(N),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(N),$(N))
+	$(TROW ^ ^=,$(N),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(N),$(N))
+	$(TROW $(I unary)~,$(N),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(N),$(N))
+	$(TROW $(I unary)+,$(N),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y))
+	$(TROW $(I unary)-,$(N),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y),$(Y))
+	)
+
+	$(P Operators not listed are not supported at all.)
+
+<h3>Vector Operation Intrinsics</h3>
+
+	$(P See $(CORE_SIMD) for the supported intrinsics.)
+)
+
+Macros:
+	TITLE=Vector Extensions
+	WIKI=Float
+	Y=&times;
+	N=&ndash;
+	CORE_SIMD=$(LINK2 phobos/core_simd.html, $(D core.simd))
+	CATEGORY_SPEC=$0
