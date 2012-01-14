@@ -72,6 +72,46 @@ $(I typeNN)
 	The type names will not be keywords.
 	)
 
+<h3>Properties</h3>
+
+	$(P Vector types have the property:)
+
+	$(TABLE2 Vector Type Properties,
+	$(THEAD Property, Description)
+	$(TROW .array, Returns static array representation)
+	)
+
+	$(P All the properties of the static array representation also work.)
+
+<h3>Conversions</h3>
+
+	$(P Vector types of the same size can be implicitly converted among
+	each other. Vector types can be cast to the static array representation.)
+
+	$(P Integers and floating point values can be implicitly converted
+	to their vector equivalents:)
+
+---
+int4 v = 7;
+v = 3 * v;   // multiply each element in v by 3
+---
+
+<h3>Accessing Individual Vector Elements</h3>
+
+	$(P They cannot be accessed directly, but can be when converted to
+	an array type:)
+
+----
+int4 v;
+(cast(int*)&v)[3] = 2;   // set 3rd element of the 4 int vector
+cast(int[4])v[3] = 2;    // set 3rd element of the 4 int vector
+v.array[3] = 2;          // set 3rd element of the 4 int vector
+v.ptr[3] = 2;            // set 3rd element of the 4 int vector
+----
+
+
+<h3>Conditional Compilation</h3>
+
 	$(P Whether a type exists or not can be tested at compile time with
 	an $(LINK2 expression.html#IsExpression, $(I IsExpression)):
 	)
@@ -99,11 +139,21 @@ else
 	available, see the functions in $(LINK2 phobos/core_cpuid.html, core.cpuid).
 	)
 
+	$(P A typical workaround would be to use array vector operations instead:)
+
+---
+float4 a,b;
+static if (__traits(compiles, a/b))
+    c = a / b;
+else
+    c[] = a[] / b[];
+---
+
+<h2>X86 And X86_64 Vector Extension Implementation</h2>
+
 	$(P The rest of this document describes the specific implementation of the
 	vector types for the X86 and X86_64 architectures.
 	)
-
-<h2>X86 And X86_64 Vector Extension Implementation</h2>
 
 	$(P The vector extensions are currently implemented for the OS X 32
 	bit target, and all 64 bit targets.)
