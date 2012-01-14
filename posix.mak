@@ -60,7 +60,7 @@ TARGETS=32-64-portability.html cpptod.html ctod.html download.html		\
 	d-floating-point.html migrate-to-shared.html D1toD2.html			\
 	unittest.html hash-map.html pdf-intro-cover.html					\
 	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
-	std_consolidated_header.html
+	std_consolidated_header.html simd.html
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html
@@ -77,7 +77,7 @@ PDFSPEC=spec.html intro.html lex.html module.html declaration.html		\
 	template-mixin.html dbc.html version.html traits.html errors.html	\
 	unittest.html garbage.html float.html iasm.html ddoc.html			\
 	interfaceToC.html cpp_interface.html portability.html entity.html	\
-	memory-safe-d.html abi.html
+	memory-safe-d.html abi.html simd.html
 
 PDFHOWTOS=windows.html dll.html COM.html htomodule.html
 
