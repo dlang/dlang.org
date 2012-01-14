@@ -345,6 +345,38 @@ $(V2
 
 <h2>$(LNAME2 gshared, __gshared Attribute)</h2>
 
+        $(P By default, non-immutable global declarations reside in thread local
+        storage. When a global variable is marked with the $(B __gshared)
+        attribute, its value is shared across all threads.)
+
+---
+int foo;            // Each thread has its own exclusive copy of foo.
+__gshared int bar;  // bar is shared by all threads.
+---
+
+        $(P $(B __gshared) may also be applied to member variables and local
+        variables. In these cases, $(B __gshared) is equivalent to $(B static),
+        except that the variable is shared by all threads rather than being
+        thread local.)
+
+---
+class Foo {
+  __gshared int bar;
+}
+
+int foo() {
+  __gshared int bar = 0;
+  return bar++; // Not thread safe.
+}
+---
+
+        $(P Unlike the $(B shared) attribute, $(B __gshared) provides no
+        safe-guards against data races or other multi-threaded synchronization
+        issues. It is the responsibility of the programmer to ensure that
+        access to variables marked $(B __gshared) is sychronized correctly.)
+
+        $(P $(B __gshared) is disallowed in safe mode.)
+
 <h2>$(LNAME2 shared, shared Attribute)</h2>
 
 <h2>$(LNAME2 inout, inout Attribute)</h2>
