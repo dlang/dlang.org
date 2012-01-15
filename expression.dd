@@ -1507,7 +1507,7 @@ $(GNAME ImportExpression):
 ---
 void foo() {
   // Prints contents of file foo.txt
-  writefln( import("foo.txt") );
+  write$(V1 f)ln( import("foo.txt") );
 }
 ---
 
@@ -1626,9 +1626,9 @@ alias int func(int);    // func is a alias to a function type
 void foo() {
   if ($(B is)(func[]) ) // not satisfied because arrays of
                         // functions are not allowed
-    writefln("satisfied");
+    write$(V1 f)ln("satisfied");
   else
-    writefln("not satisfied");
+    write$(V1 f)ln("not satisfied");
 
   if ($(B is)([][]))  // error, [][] is not a syntactically valid type
     ...
@@ -1647,9 +1647,9 @@ alias short bar;
 void foo(bar x) {
   if ( $(B is)(bar : int) )   // satisfied because short can be
                               // implicitly converted to int
-    writefln("satisfied");
+    write$(V1 f)ln("satisfied");
   else
-    writefln("not satisfied");
+    write$(V1 f)ln("not satisfied");
 }
 -------------
         )
@@ -1680,14 +1680,14 @@ $(V1 typedef char foo;)
 void test(bar x) {
   if ( $(B is)(bar == int) ) // not satisfied because short is not
                         // the same type as int
-    writefln("satisfied");
+    write$(V1 f)ln("satisfied");
   else
-    writefln("not satisfied");
+    write$(V1 f)ln("not satisfied");
 $(V1
   if ( $(B is)(foo == typedef) ) // satisfied because foo is a typedef
-    writefln("satisfied");
+    write$(V1 f)ln("satisfied");
   else
-    writefln("not satisfied");
+    write$(V1 f)ln("not satisfied");
 )}
 -------------
         )
@@ -1704,8 +1704,8 @@ void foo(bar x) {
     alias T S;
   else
     alias long S;
-  writefln(typeid(S));   // prints "short"
 
+  write$(V1 f)ln(typeid(S));  // prints "short"
   if ( $(B is)(bar T) )  // error, $(I Identifier) T form can
                       // only be in $(GLINK2 version, StaticIfCondition)s
     ...
@@ -1734,12 +1734,13 @@ void foo(bar x, abc a) {
   else
     alias long S;
 
-  writefln(typeid(S)); // prints "int"
+  write$(V1 f)ln(typeid(S));  // prints "int"
 
   static if ( $(B is)(abc U : U*) )
+  {
     U u;
-
-  writefln(typeid(typeof(u))); // prints "long"
+    write$(V1 f)ln(typeid(typeof(u)));  // prints "long"
+  }
 }
 -------------
 
@@ -1886,8 +1887,8 @@ void main() {
 
   static if (is(AA T : T[U], U : const char[]))
   {
-    writefln(typeid(T));        // long
-    writefln(typeid(U));        // const char[]
+    write$(V1 f)ln(typeid(T));  // long
+    write$(V1 f)ln(typeid(U));  // const char[]
   }
 
   static if (is(AA A : A[B], B : int))
@@ -1897,8 +1898,8 @@ void main() {
 
   static if (is(int[10] W : W[V], int V))
   {
-    writefln(typeid(W));        // int
-    writefln(V);                // 10
+    write$(V1 f)ln(typeid(W));  // int
+    write$(V1 f)ln(V);          // 10
   }
 
   static if (is(int[10] X : X[Y], int Y : 5))
