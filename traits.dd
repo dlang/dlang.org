@@ -28,17 +28,17 @@ $(GNAME TraitsKeyword):
     $(GBLINK isVirtualFunction)
     $(GBLINK isAbstractFunction)
     $(GBLINK isFinalFunction)
-$(V2      $(GBLINK isStaticFunction)
-)    $(GBLINK isRef)
+    $(GBLINK isStaticFunction)
+    $(GBLINK isRef)
     $(GBLINK isOut)
     $(GBLINK isLazy)
     $(GBLINK hasMember)
-$(V2      $(GBLINK identifier)
-)    $(GBLINK getMember)
-$(V2      $(GBLINK getOverloads)
-)    $(GBLINK getVirtualFunctions)
-$(V2      $(GBLINK parent)
-)    $(GBLINK classInstanceSize)
+    $(GBLINK identifier)
+    $(GBLINK getMember)
+    $(GBLINK getOverloads)
+    $(GBLINK getVirtualFunctions)
+    $(GBLINK parent)
+    $(GBLINK classInstanceSize)
     $(GBLINK allMembers)
     $(GBLINK derivedMembers)
     $(GBLINK isSame)
@@ -66,10 +66,10 @@ import std.stdio;
 
 void main() {
   int i;
-  writefln(__traits(isArithmetic, int));
-  writefln(__traits(isArithmetic, i, i+1, int));
-  writefln(__traits(isArithmetic));
-  writefln(__traits(isArithmetic, int*));
+  writeln(__traits(isArithmetic, int));
+  writeln(__traits(isArithmetic, i, i+1, int));
+  writeln(__traits(isArithmetic));
+  writeln(__traits(isArithmetic, int*));
 }
 ---
 
@@ -127,10 +127,10 @@ abstract class C { int foo(); }
 
 void main() {
   C c;
-  writefln(__traits(isAbstractClass, C));
-  writefln(__traits(isAbstractClass, c, C));
-  writefln(__traits(isAbstractClass));
-  writefln(__traits(isAbstractClass, int*));
+  writeln(__traits(isAbstractClass, C));
+  writeln(__traits(isAbstractClass, c, C));
+  writeln(__traits(isAbstractClass));
+  writeln(__traits(isAbstractClass, int*));
 }
 ---
 
@@ -166,8 +166,8 @@ class C {
 }
 
 void main() {
-  writefln(__traits(isVirtualFunction, C.bar));  // true
-  writefln(__traits(isVirtualFunction, S.bar));  // false
+  writeln(__traits(isVirtualFunction, C.bar));  // true
+  writeln(__traits(isVirtualFunction, S.bar));  // false
 }
 ---
 
@@ -193,9 +193,9 @@ class AC {
 }
 
 void main() {
-  writefln(__traits(isAbstractFunction, C.bar));   // false
-  writefln(__traits(isAbstractFunction, S.bar));   // false
-  writefln(__traits(isAbstractFunction, AC.foo));  // true
+  writeln(__traits(isAbstractFunction, C.bar));   // false
+  writeln(__traits(isAbstractFunction, S.bar));   // false
+  writeln(__traits(isAbstractFunction, AC.foo));  // true
 }
 ---
 
@@ -222,27 +222,26 @@ final class FC {
 }
 
 void main() {
-  writefln(__traits(isFinalFunction, C.bar));	  // false
-  writefln(__traits(isFinalFunction, S.bar));	  // false
-  writefln(__traits(isFinalFunction, C.foo));	  // true
-  writefln(__traits(isFinalFunction, FC.foo));  // true
+  writeln(__traits(isFinalFunction, C.bar));	  // false
+  writeln(__traits(isFinalFunction, S.bar));	  // false
+  writeln(__traits(isFinalFunction, C.foo));	  // true
+  writeln(__traits(isFinalFunction, FC.foo));  // true
 }
 ---
 
-$(V2
 $(H2 $(GNAME isStaticFunction))
 
 	$(P Takes one argument. If that argument is a static function,
 	meaning it has no context pointer,
 	$(B true) is returned, otherwise $(B false).
 	)
-)
+
 
 $(H2 $(GNAME isRef), $(GNAME isOut), $(GNAME isLazy))
 
 	$(P Takes one argument. If that argument is a declaration,
 	$(B true) is returned if it is $(D_KEYWORD ref), $(D_KEYWORD out),
-	$(D_KEYWORD lazy), otherwise $(B false).
+	or $(D_KEYWORD lazy), otherwise $(B false).
 	)
 
 ---
@@ -284,20 +283,19 @@ struct S {
 void main() {
   S s;
 
-  writefln(__traits(hasMember, S, "m")); // true
-  writefln(__traits(hasMember, s, "m")); // true
-  writefln(__traits(hasMember, S, "y")); // false
-  writefln(__traits(hasMember, int, "sizeof")); // true
+  writeln(__traits(hasMember, S, "m")); // true
+  writeln(__traits(hasMember, s, "m")); // true
+  writeln(__traits(hasMember, S, "y")); // false
+  writeln(__traits(hasMember, int, "sizeof")); // true
 }
 ---
 
-$(V2
 $(H2 $(GNAME identifier))
 
 	$(P Takes one argument, a symbol. Returns the identifier
 	for that symbol as a string literal.
 	)
-)
+
 
 $(H2 $(GNAME getMember))
 
@@ -319,21 +317,20 @@ void main() {
   S s;
 
   __traits(getMember, s, "mx") = 1;  // same as s.mx=1;
-  writefln(__traits(getMember, s, "m" ~ "x")); // 1
+  writeln(__traits(getMember, s, "m" ~ "x")); // 1
 
   __traits(getMember, S, "mx") = 1;  // error, no this for S.mx
   __traits(getMember, S, "my") = 2;  // ok
 }
 ---
 
-$(V2
 $(H2 $(GNAME getOverloads))
 
 	$(P The first argument is a class type or an expression of
 	class type.
 	The second argument is a string that matches the name of
 	one of the functions of that class.
-	The result is an array of all the overloads of that function.
+	The result is a tuple of all the overloads of that function.
 	)
 
 ---
@@ -350,14 +347,14 @@ void main() {
   D d = new D();
 
   foreach (t; __traits(getOverloads, D, "foo"))
-    writefln(typeid(typeof(t)));
+    writeln(typeid(typeof(t)));
 
   alias typeof(__traits(getOverloads, D, "foo")) b;
   foreach (t; b)
-    writefln(typeid(t));
+    writeln(typeid(t));
 
   auto i = __traits(getOverloads, d, "foo")[1](1);
-  writefln(i);
+  writeln(i);
 }
 ---
 
@@ -370,7 +367,6 @@ void()
 int()
 2
 )
-)
 
 $(H2 $(GNAME getVirtualFunctions))
 
@@ -378,7 +374,7 @@ $(H2 $(GNAME getVirtualFunctions))
 	class type.
 	The second argument is a string that matches the name of
 	one of the functions of that class.
-	The result is an array of the virtual overloads of that function.
+	The result is a tuple of the virtual overloads of that function.
 	)
 
 ---
@@ -395,14 +391,14 @@ void main() {
   D d = new D();
 
   foreach (t; __traits(getVirtualFunctions, D, "foo"))
-    writefln(typeid(typeof(t)));
+    writeln(typeid(typeof(t)));
 
   alias typeof(__traits(getVirtualFunctions, D, "foo")) b;
   foreach (t; b)
-    writefln(typeid(t));
+    writeln(typeid(t));
 
   auto i = __traits(getVirtualFunctions, d, "foo")[1](1);
-  writefln(i);
+  writeln(i);
 }
 ---
 
@@ -437,9 +433,7 @@ $(H2 $(GNAME allMembers))
 
 	$(P Takes a single argument, which must evaluate to either
 	a type or an expression of type.
-	$(V1 An array)
-	$(V2 A tuple)
-	of string literals is returned, each of which
+	A tuple of string literals is returned, each of which
 	is the name of a member of that type combined with all
 	of the members of the base classes (if the type is a class).
 	No name is repeated.
@@ -457,13 +451,9 @@ class D {
 }
 
 void main() {
-  auto a = __traits(allMembers, D);
-  writefln(a);
-$(V2    // _ctor,_dtor,foo,print,toString,toHash,opCmp,opEquals
-
   auto b = [ __traits(allMembers, D) ];
-  writefln(b);
-)  // [_ctor,_dtor,foo,print,toString,toHash,opCmp,opEquals]
+  writeln(b);
+  // ["__ctor", "__dtor", "foo", "toString", "toHash", "opCmp", "opEquals", "Monitor", "factory"]
 }
 ---
 
@@ -474,9 +464,7 @@ $(H2 $(GNAME derivedMembers))
 
 	$(P Takes a single argument, which must evaluate to either
 	a type or an expression of type.
-	$(V1 An array)
-	$(V2 A tuple)
-	of string literals is returned, each of which
+	A tuple of string literals is returned, each of which
 	is the name of a member of that type.
 	No name is repeated.
 	Base class member names are not included.
@@ -494,9 +482,8 @@ class D {
 }
 
 void main() {
-  auto a = __traits(derivedMembers, D);
-$(V1    writefln(a);	// [_ctor,_dtor,foo])
-$(V2    writefln(a);	// _ctor,_dtor,foo)
+  auto a = [__traits(derivedMembers, D)];
+  writeln(a);    // ["__ctor", "__dtor", "foo"]
 }
 ---
 
@@ -517,12 +504,12 @@ int foo();
 int bar();
 
 void main() {
-  writefln(__traits(isSame, foo, foo)); // true
-  writefln(__traits(isSame, foo, bar)); // false
-  writefln(__traits(isSame, foo, S));   // false
-  writefln(__traits(isSame, S, S));     // true
-  writefln(__traits(isSame, std, S));   // false
-  writefln(__traits(isSame, std, std)); // true
+  writeln(__traits(isSame, foo, foo)); // true
+  writeln(__traits(isSame, foo, bar)); // false
+  writeln(__traits(isSame, foo, S));   // false
+  writeln(__traits(isSame, S, S));     // true
+  writeln(__traits(isSame, std, S));   // false
+  writeln(__traits(isSame, std, std)); // true
 }
 ---
 
@@ -552,16 +539,16 @@ int foo();
 int bar();
 
 void main() {
-  writefln(__traits(compiles));                      // false
-  writefln(__traits(compiles, foo));                 // true
-  writefln(__traits(compiles, foo + 1));             // true
-  writefln(__traits(compiles, &foo + 1));            // false
-  writefln(__traits(compiles, typeof(1)));           // true
-  writefln(__traits(compiles, S.s1));                // true
-  writefln(__traits(compiles, S.s3));                // false
-  writefln(__traits(compiles, 1,2,3,int,long,std));  // true
-  writefln(__traits(compiles, 3[1]));                // false
-  writefln(__traits(compiles, 1,2,3,int,long,3[1])); // false
+  writeln(__traits(compiles));                      // false
+  writeln(__traits(compiles, foo));                 // true
+  writeln(__traits(compiles, foo + 1));             // true
+  writeln(__traits(compiles, &foo + 1));            // false
+  writeln(__traits(compiles, typeof(1)));           // true
+  writeln(__traits(compiles, S.s1));                // true
+  writeln(__traits(compiles, S.s3));                // false
+  writeln(__traits(compiles, 1,2,3,int,long,std));  // true
+  writeln(__traits(compiles, 3[1]));                // false
+  writeln(__traits(compiles, 1,2,3,int,long,3[1])); // false
 }
 ---
 
