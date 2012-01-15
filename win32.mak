@@ -52,7 +52,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
 	d-floating-point.html migrate-to-shared.html D1toD2.html			\
 	unittest.html hash-map.html pdf-intro-cover.html					\
 	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html \
-	simd.dd
+	simd.html
 
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
