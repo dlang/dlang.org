@@ -903,25 +903,25 @@ $(GNAME StatementNoCaseNoDefault):
     $(GLINK ScopeBlockStatement)
 )
 
-        $(P $(EXPRESSION) is evaluated. The result type T must be
-        of integral type or $(CODE char[]), $(CODE wchar[]) or $(CODE dchar[]).
-        The result is
-        compared against each of the case expressions. If there is
-        a match, the corresponding case statement is transferred to.
+        $(P $(EXPRESSION) is evaluated. The result type must be of integral,
+        enumerated, or string type. The result is compared against each of the
+        $(CODE case) expressions. If there is a match, execution is transferred
+        to the corresponding $(CODE case) statement.
         )
 
-        $(P The case expressions, $(GLINK2 expression, ArgumentList),
+        $(P The $(CODE case) expressions, $(GLINK2 expression, ArgumentList),
         are a comma separated list of expressions.
         )
 
 $(V2
         $(P A $(I CaseRangeStatement) is a shorthand for listing a series
-        of case statements from $(I FirstExp) to $(I LastExp).
+        of $(CODE case) statements from $(I FirstExp) to $(I LastExp).
         )
 )
 
-        $(P If none of the case expressions match, and there is a default
-        statement, the default statement is transferred to.
+        $(P If none of the $(CODE case) expressions match, and there is a
+        $(CODE default) statement, execution is transferred to the
+        $(CODE default) statement.
         )
 
 $(V1
@@ -937,41 +937,41 @@ $(V2
         )
 )
 $(V2
-        $(P A switch statement must have a default statement.)
+        $(P A $(CODE switch) statement must have a $(CODE default) statement.)
 )
 
         $(P
 $(V1
-        The case expressions must all evaluate to a constant value
+        The $(CODE case) expressions must all evaluate to a constant value
         or array.
 )
 $(V2
-        The case expressions must all evaluate to a constant value
-        or array, or a runtime initialized const or immutable variable of
-        integral type.
+        The $(CODE case) expressions may be variables, in which case they are
+        evaluated in lexical order until the first match.
 )
         They must be implicitly convertible to the type of the
-        switch $(EXPRESSION).
+        $(CODE switch) $(EXPRESSION).
         )
 
-        $(P Case expressions must all evaluate to distinct values.
-$(V2
-        Const or immutable variables must all have different names.
-        If they share a value, the first case statement with that value
-        gets control.
-        There must be exactly one default statement.
-)
+        $(P
 $(V1
-        There may not be two or more default statements.
+        $(CODE case) expressions must all evaluate to distinct values.
 )
+$(V2
+        Compile-time constant $(CODE case) expressions must all evaluate to
+        distinct values. $(CODE const) or $(CODE immutable) variables must all
+        have different names. If they share a value, the first $(CODE case)
+        statement with that value gets control.
+)
+        There may not be two or more $(CODE default) statements.
         )
 
         $(P The $(GLINK ScopeStatementList) introduces a new scope.
         )
 
-        $(P Case statements and default statements associated with the switch
-        can be nested within block statements; they do not have to be in
-        the outermost block. For example, this is allowed:
+        $(P $(CODE case) statements and $(CODE default) statements associated
+        with the $(CODE switch) can be nested within block statements; they do
+        not have to be in the outermost block. For example, this is allowed:
         )
 
 --------------
@@ -985,8 +985,9 @@ switch (i) {
 --------------
 
 $(V1
-        $(P Case statements 'fall through' to subsequent
-        case values. A break statement will exit the switch $(I BlockStatement).
+        $(P $(CODE case) statements 'fall through' to subsequent $(CODE case)
+        values. A $(CODE break) statement will exit the $(CODE switch)
+        $(I BlockStatement).
         For example:
         )
 
@@ -1049,7 +1050,8 @@ switch (number)
         $(P A break statement will exit the switch $(I BlockStatement).)
 )
 
-        $(P $(LNAME2 string-switch, Strings can be used in switch expressions).
+        $(P $(LNAME2 string-switch, Strings can be used in $(CODE switch)
+        expressions).
         For example:
         )
 
@@ -1065,11 +1067,12 @@ switch (name) {
 
         $(P For applications like command line switch processing, this
         can lead to much more straightforward code, being clearer and
-        less error prone. char, wchar and dchar strings are allowed.
+        less error prone. $(CODE char), $(CODE wchar) and $(CODE dchar) strings
+        are allowed.
         )
 
         $(P $(B Implementation Note:) The compiler's code generator may
-        assume that the case
+        assume that the $(CODE case)
         statements are sorted by frequency of use, with the most frequent
         appearing first and the least frequent last. Although this is
         irrelevant as far as program correctness is concerned, it is of
@@ -1084,15 +1087,15 @@ $(I FinalSwitchStatement):
     $(B final switch $(LPAREN)) $(EXPRESSION) $(B $(RPAREN)) $(PSSCOPE)
 )
 
-        $(P A final switch statement is just like a switch statement,
-        except that:)
+        $(P A $(CODE final switch) statement is just like a $(CODE switch)
+        statement, except that:)
 
         $(UL
         $(LI No $(GLINK DefaultStatement) is allowed.)
         $(LI No $(GLINK CaseRangeStatement)s are allowed.)
-        $(LI If the switch $(EXPRESSION) is of enum type, all
+        $(LI If the $(CODE switch) $(EXPRESSION) is of enum type, all
         the enum members must appear in the $(GLINK CaseStatement)s.)
-        $(LI The case expressions cannot evaluate to a run time
+        $(LI The $(CODE case) expressions cannot evaluate to a run time
         initialized value.)
         )
 
