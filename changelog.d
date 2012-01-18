@@ -6,16 +6,66 @@ $(UPCOMING
 	$(LI Shared libraries for Linux)
 )
 
-$(VERSION 071, Sep 10, 2011, =================================================,
+$(VERSION 073, Jan 18, 2012, =================================================,
 
     $(WHATSNEW
+	$(LI Convert to -shared dmd switch instead of -dylib)
+	$(LI Better use of XMM registers in OS X 32 bit target.)
     )
     $(BUGSFIXED
+314 - [module] Static, renamed, and selective imports are always public
+796 - Asserting a null object reference throws AssertError Failure internal\invariant.d(14) or Access Violation
+1313 - out/body disables escape analysis
+3092 - Indexing a tuple produces a tuple containing the indexed element
+3187 - Nested foreach over opApply doesn't work
+4135 - Regression(1.034): ICE(statement.c): mixin in bad foreach, D1 only
+4413 - typeof(this) doesn't work in method template signature
+4523 - [tdpl] .remove method for Associative Arrays returns void in all cases
+4647 - [tdpl] Cannot explicitly call final interface method, ambiguous calls allowed
+4711 - Incorrect handling of && operator with void operand
+6037 - [CTFE] recursive ref parameters evaluated incorrectly
+6701 - template specialization resolution failure
+6933 - Segfault(declaration.c) using struct with destructor in CTFE
+6934 - [CTFE] can't use $ in a slice of an array passed by ref
+6964 - Error message with __error: static assert(undefined+1)
+6984 - CTFE generates a torrent of spurious errors, if there was a previous error
+6985 - [CTFE] Non-constant case expressions can't be interpreted
+6995 - [CTFE] can't interpret static template method
+7011 - No line number error for vector power
+7043 - CTFE: ICE illegal reference value 0LU, only with -inline
+7073 - Parsing of class-returning varargs function inside module ctor fails
+7108 - ICE: TraitsExp::semantic(Scope*) 2.056 -> 2.057 regression - segfault
+7120 - Scope Delegates + Delegate Literals
+7123 - static assert(is(typeof(toDelegate(&main)))) is false
+7127 - Const-related infinite recursion in DWARF generation
+7143 - [CTFE] cannot compare class references with "is"
+7144 - [CTFE] base class does not call overridden members
+7154 - [CTFE] failing downcast causes error
+7158 - [CTFE] ICE(interpret.c) calling a class member using a dotvar expression
+7162 - [CTFE] "bool || void" expression crashes dmd
+7165 - [CTFE] ice converting null pointer to bool with constant member function
+7173 - dmd: glue.c:1065: virtual unsigned int Type::totym(): Assertion `0' failed.
+7185 - [CTFE] ICE on changing char array length
+7187 - Regression(head 12d62ca5): [CTFE] ICE on slicing
+7189 - inline failed
+7190 - Tuple length incorrect
+7194 - [CTFE] Incorrect behaviour with pointers as local struct variable
+7217 - [CTFE] ICE on accessing struct array field
+7218 - Nested function with contract is rejected
+7232 - Warning: statement is not reachable has no line number
+7239 - C style struct initialization doesn't work with aliases
+7245 - [CTFE] Address of ref foreach parameter changes to point after array
+7248 - [CTFE] Stack overflow on using struct filed pointer with address of array element
+7266 - [CTFE] Assign to ref param (that's taken from struct member) is noop
+7285 - Implicit fixed-size array cast
+7309 - [2.058] Regression caused by new inlining code
     )
 )
 
 <div id=version>
 $(UL 
+	$(NEW1 073)
+	$(NEW1 072)
 	$(NEW1 071)
 	$(NEW1 070)
 	$(NEW1 069)
@@ -101,6 +151,102 @@ $(COMMENT
 )
 )
 </div>
+
+$(VERSION 072, Dec 10, 2011, =================================================,
+
+    $(WHATSNEW
+	$(LI Better use of XMM registers in 64 bit targets.)
+	$(LI Add Mach-O 64 bit support for obj2asm and dumpobj)
+	$(LI Add OSX 64 bit target)
+	$(LI classes, interfaces, and exceptions are supported in CTFE)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 2532): '=' does not give a boolean result)
+	$(LI $(BUGZILLA 2856): static opIndex does not compile for a templated struct/class)
+	$(LI $(BUGZILLA 3990): Deferencing a dynamic array as pointer)
+	$(LI $(BUGZILLA 4047): [CTFE] class/struct heap allocation)
+	$(LI $(BUGZILLA 4511): Contravariance problem)
+	$(LI $(BUGZILLA 4583): PIC code not working: EBX register set incorrectly)
+	$(LI $(BUGZILLA 5311): Pure is broken when accessing globals / static data through instance reference)
+	$(LI $(BUGZILLA 5364): optimizer kills high dword of -1)
+	$(LI $(BUGZILLA 6077): CTFE: Cannot append null array to null array.)
+	$(LI $(BUGZILLA 6354): Optimizer bug on x86_64: Bitshift optimized out when foreach and scope(failure) are used)
+	$(LI $(BUGZILLA 6416): [CTFE] Declaration static struct is not yet implemented in CTFE)
+	$(LI $(BUGZILLA 6522): [CTFE] Problem with opAssign call in foreach(ref))
+	$(LI $(BUGZILLA 6603): [CTFE] Can't call through a manifest constant function pointer)
+	$(LI $(BUGZILLA 6792): [CTFE] ICE with pointer cast of indexed array)
+	$(LI $(BUGZILLA 6800): [CTFE] dangerous pointer casts should be rejected)
+	$(LI $(BUGZILLA 6816): [CTFE] nested function can't access this)
+	$(LI $(BUGZILLA 6817): [CTFE] Error on interpreting inlined IfStatement)
+	$(LI $(BUGZILLA 6851): [CTFE] Cannot deref pointer passed by argument)
+	$(LI $(BUGZILLA 6859): Segfault when abstract method uses with contract.)
+	$(LI $(BUGZILLA 6868): IsExp + incorrect static array type = error)
+	$(LI $(BUGZILLA 6877): [XMM] regression, clobbered float value)
+	$(LI $(BUGZILLA 6879): The difference of between template matching and IsExp)
+	$(LI $(BUGZILLA 6881): [XMM] ICE with painted float)
+	$(LI $(BUGZILLA 6885): [CTFE] wrong code with dynamically allocated 2D array)
+	$(LI $(BUGZILLA 6886): [CTFE] ICE(interpret.c) new array with initializer)
+	$(LI $(BUGZILLA 6901): wrong error "override cannot be applied to variable" in CTFE forward reference)
+	$(LI $(BUGZILLA 6910): __traits(hasMember, "<name>") does not work, if template has alias param)
+	$(LI $(BUGZILLA 6919): [CTFE] Cannot get effect to local variable through its pointer)
+	$(LI $(BUGZILLA 6972): [CTFE] ICE with ubyte/=uint)
+	$(LI $(BUGZILLA 6997): 64bit optimizer bug)
+	$(LI $(BUGZILLA 7004): Iterating tuple with index which explicitly typed as size_t causes an error)
+	$(LI $(BUGZILLA 7026): 64 bit optimizer bug)
+	$(LI $(BUGZILLA 7028): Fails to save FPU regs when executing finally block)
+    )
+)
+
+$(VERSION 071, Oct 26, 2011, =================================================,
+
+    $(WHATSNEW
+	$(LI add -gs compiler switch)
+	$(LI $(BUGZILLA 6752): Add separate option to control stack frame generation)
+    )
+    $(BUGSFIXED
+	$(LI $(BUGZILLA 546): Error message for accessing a deprecated variable is doubled)
+	$(LI $(BUGZILLA 1891): Array-concatenation of T* and T*[] produces corrupted result)
+	$(LI $(BUGZILLA 1993): Error calling vararg delegate with null)
+	$(LI $(BUGZILLA 2315): DMD Stack Overflow on unwanted ctfe recursion)
+	$(LI $(BUGZILLA 2553): Excess attribute propagation for interfaces)
+	$(LI $(BUGZILLA 2740): Template Mixins do not work as advertised)
+	$(LI $(BUGZILLA 2953): tuple.length rejected as a tuple parameter in a static foreach)
+	$(LI $(BUGZILLA 3069): Array literals do not implicitly cast to void[])
+	$(LI $(BUGZILLA 3133): Compiler does not check that static array casts are legal)
+	$(LI $(BUGZILLA 4022): [CTFE] AA get)
+	$(LI $(BUGZILLA 4197): ICE(glue.c): error in forward-referenced in/out contract)
+	$(LI $(BUGZILLA 4206): type accepted as enum initializer)
+	$(LI $(BUGZILLA 4237): Typedefs of the same name cause initializer conflict)
+	$(LI $(BUGZILLA 4269): Regression(2.031): invalid type accepted if evaluated while errors are gagged)
+	$(LI $(BUGZILLA 4284): empty string[] alias lacks .length in a template)
+	$(LI $(BUGZILLA 5453): ICE(statement.c): invalid switch statement forward referenced by CTFE)
+	$(LI $(BUGZILLA 5696): Templates typetuple iteration)
+	$(LI $(BUGZILLA 5932): Internal error: s2ir.c 339)
+	$(LI $(BUGZILLA 6073): Cannot pass __traits(parent, ...) as a template parameter if it is a module)
+	$(LI $(BUGZILLA 6084): Impossible to instantiate local template with TypeTuple-foreach iterator variable.)
+	$(LI $(BUGZILLA 6087): typeof(this) doesn't work outside member function)
+	$(LI $(BUGZILLA 6139): Duplicate error message on compile-time out of bounds array index)
+	$(LI $(BUGZILLA 6296): ICE(glue.c): invalid template instantiated in is(typeof()).)
+	$(LI $(BUGZILLA 6584): ICE on large version number/debug level)
+	$(LI $(BUGZILLA 6599): Segfault: invalid expression in initializer)
+	$(LI $(BUGZILLA 6661): Templates instantiated only through is(typeof()) shouldn't cause errors)
+	$(LI $(BUGZILLA 6665): Regression(2.055) ICE(cg87.c): static double inside closure)
+	$(LI $(BUGZILLA 6672): [CTFE] ICE on compile time std.algorithm.sort)
+	$(LI $(BUGZILLA 6693): [CTFE] Cannot set value to nested AA)
+	$(LI $(BUGZILLA 6695): typeof(this) does not take into account const/immutable attributes inside member functions)
+	$(LI $(BUGZILLA 6721): [CTFE] Cannot get pointer to start of char[])
+	$(LI $(BUGZILLA 6727): [CTFE] ICE(interpret.c): assignment from string literal.dup.ptr)
+	$(LI $(BUGZILLA 6733): Regression(2.054) ICE(cod2.c) pure nothrow func with side-effect parameters)
+	$(LI $(BUGZILLA 6739): [CTFE] Cannot set a value to an outer AA of a nested AA)
+	$(LI $(BUGZILLA 6749): [CTFE] problem with array of structs)
+	$(LI $(BUGZILLA 6751): [CTFE] ref argument of AA doesn't work)
+	$(LI $(BUGZILLA 6765): [CTFE]: AA.length doesn't compile when AA is null)
+	$(LI $(BUGZILLA 6769): [CTFE] AA.keys doesn't compile when -inline is used)
+	$(LI $(BUGZILLA 6775): Regression(2.054) ICE(glue.c) template parameter deduction with errors gagged)
+	$(LI $(BUGZILLA 6813): Yet another "cannot get frame pointer" error)
+	$(LI $(BUGZILLA 6825): Regression(2.055+): Address of templated method incorrectly taken)
+    )
+)
 
 $(VERSION 070, Sep 4, 2011, =================================================,
 
