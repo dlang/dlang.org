@@ -629,9 +629,17 @@ class Date {
         $(P The class invariant is a contract saying that the asserts must hold
         true.
         The invariant is checked when a class constructor completes,
-        at the start of the class destructor, before a public or exported
-        member is run, and after a public or exported function finishes.
+        at the start of the class destructor. For public or exported functions,
+	the order of execution is:
         )
+
+	$(OL
+	$(LI preconditions)
+	$(LI invariant)
+	$(LI body)
+	$(LI invariant)
+	$(LI postconditions)
+	)
 
         $(P The code in the invariant may not call any public non-static members
         of the
@@ -1143,7 +1151,7 @@ new ($(I ArgumentList)) $(I Identifier) ($(I ArgumentList));
         )
 
 $(V2
-$(SECTION3 <a name="ConstClass">Const, Immutable and Shared Classes</a>
+$(SECTION3 <a name="ConstClass">Const, Immutable and Shared Classes</a>,
         $(P If a $(I ClassDeclaration) has a $(CODE const), $(CODE immutable)
         or $(CODE shared) storage class, then it is as if each member of the class
         was declared with that storage class.
