@@ -67,45 +67,42 @@ export void func(int foo);
 --------------------
 import core.runtime;
 import std.c.windows.windows;
+import std.string;
 
 extern (Windows)
-int $(B WinMain)(HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPSTR lpCmdLine,
-	int nCmdShow)
+int WinMain(HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPSTR lpCmdLine,
+    int nCmdShow)
 {
-    int result;
+  int result;
 
-    void exceptionHandler(Exception e)
-    {
-	throw e;
-    }
+  void exceptionHandler(Throwable e) {
+    throw e;
+  }
 
-    try
-    {
-	Runtime.initialize(&exceptionHandler);
+  try {
+    Runtime.initialize(&exceptionHandler);
+    result = myWinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+    Runtime.terminate(&exceptionHandler);
+  }
 
-	result = $(B myWinMain)(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+  catch (Throwable e) { // catch any uncaught exceptions
+    MessageBoxA(null, e.toString().toStringz, "Error",
+        MB_OK | MB_ICONEXCLAMATION);
+    result = 0;             // failed
+  }
 
-	Runtime.terminate(&exceptionHandler);
-    }
-
-    catch (Object o)		// catch any uncaught exceptions
-    {
-	MessageBoxA(null, cast(char *)o.toString(), "Error",
-		    MB_OK | MB_ICONEXCLAMATION);
-	result = 0;		// failed
-    }
-
-    return result;
+  return result;
 }
 
-int $(B myWinMain)(HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPSTR lpCmdLine,
-	int nCmdShow)
+int myWinMain(HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPSTR lpCmdLine,
+    int nCmdShow)
 {
-    /* ... insert user code here ... */
+  // ... insert user code here ...
+  return 0;
 }
 --------------------
 
