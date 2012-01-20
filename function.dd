@@ -1107,7 +1107,7 @@ foo(1, 3+x, dg, cast(int delegate())null);
 foo( { return 1; }, { return 3+x; }, dg, null );
 ---
 
-<h2>Local Variables</h2>
+<h2>$(LNAME2 Local Variables, Local Variables)</h2>
 
         $(P It is an error to use a local variable without first assigning it a
         value. The implementation may not always be able to detect these
@@ -1149,6 +1149,42 @@ void func(int x) {
         $(P It is an error to have a local variable and a label with the same
         name.
         )
+
+<h2>$(LNAME2 Local Static Variables, Local Static Variables)</h2>
+
+	$(P Local variables in functions can be declared as static
+	$(V2 or __gshared) in which case they are statically allocated
+	rather than being allocated on the stack.
+	As such, their value persists beyond the exit of the function.
+	)
+
+---
+void foo() {
+  static int n;
+  if (++n == 100)
+    writeln("called 100 times");
+}
+---
+
+	$(P The initializer for a static variable must be evaluatable at
+	compile time, and they are initialized upon the start of the thread
+	$(V2 (or the start of the program for __gshared).
+	There are no static constructors or static destructors
+	for static local variables.)
+	)
+
+	$(P Although static variable name visibility follows the usual scoping
+	rules, the names of them must be unique within a particular function.
+	)
+
+---
+void main() {
+  { static int x; }
+  { static int x; } // error
+  { int i; }
+  { int i; } // ok
+}
+---
 
 <h2><a name="nested">Nested Functions</a></h2>
 
