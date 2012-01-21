@@ -24,7 +24,7 @@ $(info Current release: ${LATEST})
 
 # Documents
 
-DDOC=macros.ddoc windows.ddoc doc.ddoc ${LATEST}.ddoc
+DDOC=macros.ddoc doc.ddoc ${LATEST}.ddoc
 
 IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico		\
 d3.gif d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
@@ -60,7 +60,8 @@ TARGETS=32-64-portability.html cpptod.html ctod.html download.html		\
 	d-floating-point.html migrate-to-shared.html D1toD2.html			\
 	unittest.html hash-map.html pdf-intro-cover.html					\
 	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
-	std_consolidated_header.html simd.html
+	std_consolidated_header.html simd.html dmd-windows.html				\
+	dmd-linux.html dmd-freebsd.html dmd-osx.html
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html
@@ -115,6 +116,9 @@ $(DOC_OUTPUT_DIR)/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
+$(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC)
+	$(DMD) -c -o- -Df$@ $(DDOC) dcompiler.dd $<
+
 ################################################################################
 # Rulez
 ################################################################################
@@ -147,7 +151,7 @@ clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${DMD_DIR}.${LATEST} ${LATEST}.ddoc
 	rm -rf ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
 
-rsync : all
+rsync : #all
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
 
 pdf : $(PDFTARGETS)
