@@ -253,6 +253,24 @@ $(V2
 	$(P The built in properties $(CODE .sizeof), $(CODE .alignof), and $(CODE .mangleof)
 	may not be declared as fields or methods in structs, unions, classes or enums.
 	)
+
+	$(P If a .property is applied to a user-defined property, the .property is applied
+	to the result of the function call.
+	)
+
+$(V2
+---
+void main() {
+  @property int[] delegate() bar1 = { return [1, 2]; };
+  auto x1 = bar1.ptr; // points to array data
+
+  struct Foo { int* ptr; }
+  @property Foo delegate() bar2 = { return Foo(); };
+  auto x2 = bar2.ptr; // gets value of Foo.ptr
+} 
+---
+)
+
 )
 
 )
