@@ -980,8 +980,8 @@ cast(immutable(wchar) [])"abc" // this is an array of wchar characters
 ---------
 
         $(P String literals that do not have a postfix character and that
-        have not been cast can be implicitly converted between char[],
-        wchar[], and dchar[] as necessary.
+        have not been cast can be implicitly converted between
+	string, wstring, and dstring as necessary.
         )
 
 ---------
@@ -1021,22 +1021,22 @@ printf("the string is '%s'\n", std.string.toStringz(str));
         can be used directly:)
 
 -----------
-printf("the string is '%s'\n", cast(char*)"string literal");
+printf("the string is '%s'\n", cast(char)*"string literal");
 -----------
 
         $(P So, why does the first string literal to printf not need
-        the cast? The first parameter is prototyped as a char*, and
-        a string literal can be implicitly cast to a char*.
+        the cast? The first parameter is prototyped as a const(char)*, and
+        a string literal can be implicitly cast to a const(char)*.
         The rest of the arguments to printf, however, are variadic
         (specified by ...),
         and a string literal is passed as a (length,pointer) combination
         to variadic parameters.)
 
-        $(P The second way is to use the precision specifier. The way D arrays
-        are laid out, the length comes first, so the following works:)
+        $(P The second way is to use the precision specifier.
+        The length comes first, followed by the pointer:)
 
 ---------
-printf("the string is '%.*s'\n", str);
+printf("the string is '%.*s'\n", str.length, str.ptr);
 ---------
 
         $(P The best way is to use std.stdio.writefln, which can handle
