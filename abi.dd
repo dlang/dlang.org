@@ -613,9 +613,11 @@ $(I TypeTuple):
 
 $(SECTION3 Function Calling Conventions,
 
-	$(P The extern (C) calling convention matches the C calling convention
+	$(P The $(D extern (C)) and $(D extern (D)) calling convention matches the C
+	calling convention
 	used by the supported C compiler on the host system.
-	The extern (D) calling convention for x86 is described here.)
+	Except that the extern (D) calling convention for Windows x86 is described here.
+	)
 
 $(SECTION4 Register Conventions,
 
@@ -777,17 +779,6 @@ $(SECTION4 Parameters,
 	passed, it is computed by the callee.)
 )
 
-$(SECTION4 Function Attributes,
-	$(DL
-	$(DT $(B Na)
-	$(DD pure)
-	)
-	$(DT $(B Nb)
-	$(DD nothrow)
-	)
-	)
-)
-
 )
 
 $(SECTION3 Exception Handling,
@@ -799,57 +790,53 @@ $(SECTION3 Exception Handling,
 	)
     )
 
-    $(SECTION4 Linux and OSX,
+    $(SECTION4 Linux, FreeBSD and OS X,
 
 	$(P Uses static address range/handler tables.
-	It is not compatible with the ELF exception handling tables.
-	The stack is walked assuming it uses the EBP stack frame
-	convention. The EBP convention must be used for every
-	function that has an associated EH table.
+	It is not compatible with the ELF/Mach-O exception handling tables.
+	The stack is walked assuming it uses the EBP/RBP stack frame
+	convention. The EBP/RBP convention must be used for every
+	function that has an associated EH (Exception Handler) table.
 	)
 
 	$(P For each function that has exception handlers,
 	an EH table entry is generated.
 	)
 
-	$(TABLE1
-	<caption>EH Table Entry</caption>
+	$(TABLE2 EH Table Entry,
 	$(TR $(TH field) $(TH description))
 	$(TR $(TD void*) $(TD pointer to start of function))
 	$(TR $(TD DHandlerTable*) $(TD pointer to corresponding EH data))
 	$(TR $(TD uint) $(TD size in bytes of the function))
 	)
-	$(BR)
 
 	$(P The EH table entries are placed into the following special
 	segments, which are concatenated by the linker.
 	)
 
-	$(TABLE1
-	<caption>EH Table Segment</caption>
+	$(TABLE2 EH Table Segment,
 	$(TR $(TH Operating System) $(TH Segment Name))
 	$(TR $(TD Windows) $(TD FI))
 	$(TR $(TD Linux) $(TD .deh_eh))
-	$(TR $(TD OSX) $(TD __deh_eh, __DATA))
+	$(TROW FreeBSD, .deh_eh)
+	$(TR $(TD OS X) $(TD __deh_eh, __DATA))
 	)
 	$(BR)
 
 	$(P The rest of the EH data can be placed anywhere,
 	it is immutable.)
 
-	$(TABLE1
-	<caption>DHandlerTable</caption>
+	$(TABLE2 DHandlerTable,
 	$(TR $(TH field) $(TH description))
 	$(TR $(TD void*) $(TD pointer to start of function))
-	$(TR $(TD uint) $(TD offset of ESP from EBP))
+	$(TR $(TD uint) $(TD offset of ESP/RSP from EBP/RBP))
 	$(TR $(TD uint) $(TD offset from start of function to return code))
 	$(TR $(TD uint) $(TD number of entries in DHandlerInfo[]))
 	$(TR $(TD DHandlerInfo[]) $(TD array of handler information))
 	)
 	$(BR)
 
-	$(TABLE1
-	<caption>DHandlerInfo</caption>
+	$(TABLE2 DHandlerInfo,
 	$(TR $(TH field) $(TH description))
 	$(TR $(TD uint) $(TD offset from function address to start of guarded section))
 	$(TR $(TD uint) $(TD offset of end of guarded section))
@@ -859,19 +846,17 @@ $(SECTION3 Exception Handling,
 	)
 	$(BR)
 
-	$(TABLE1
-	<caption>DCatchInfo</caption>
+	$(TABLE2 DCatchInfo,
 	$(TR $(TH field) $(TH description))
 	$(TR $(TD uint) $(TD number of entries in DCatchBlock[]))
 	$(TR $(TD DCatchBlock[]) $(TD array of catch information))
 	)
 	$(BR)
 
-	$(TABLE1
-	<caption>DCatchBlock</caption>
+	$(TABLE2 DCatchBlock,
 	$(TR $(TH field) $(TH description))
 	$(TR $(TD ClassInfo) $(TD catch type))
-	$(TR $(TD uint) $(TD offset from EBP to catch variable))
+	$(TR $(TD uint) $(TD offset from EBP/RBP to catch variable))
 	$(TR $(TD void*) $(TD catch handler code))
 	)
     )
@@ -1007,7 +992,7 @@ $(SECTION3 <a name="codeview">Codeview Debugger Extensions</a>,
 	)
 	)
 
-	$(BR) $(BR)
+	$(P Where:)
 
 	$(TABLE
 	$(TR
@@ -1044,7 +1029,7 @@ $(SECTION3 <a name="codeview">Codeview Debugger Extensions</a>,
 	)
 )
 
-$(SECTION3 <a name="dwarf">Dwarf Debugger Extensions</a>,
+$(SECTION3 $(LNAME2 dwarf, Dwarf Debugger Extensions),
 	$(P The following leaf types are added:)
 
 	$(TABLE2 Dwarf Extensions for D,
@@ -1079,6 +1064,10 @@ $(SECTION3 <a name="dwarf">Dwarf Debugger Extensions</a>,
 
 	$(P The $(LINK2 http://www.zerobugs.org/, ZeroBUGS)
 	debugger supports them.)
+	)
+
+	$(P Note that these Dwarf extensions have been removed as they conflict with
+	recent gcc additions.
 	)
 )
 
