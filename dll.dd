@@ -16,7 +16,7 @@ $(D_S Writing Win32 DLLs in D,
 
 	$(P This guide will show how to create DLLs of various types with D.)
 
-	$(UL
+	$(UL 
 	$(LI <a href="#Cinterface">DLLs with a C interface</a>)
 	$(LI <a href="#com">DLLs that are COM servers</a>)
 	$(LI <a href="#Dcode">D code calling D code in DLLs</a>)
@@ -29,7 +29,7 @@ $(D_S Writing Win32 DLLs in D,
 	)
 
 	$(P DLLs can be created in D in roughly the same way as in C.
-	A $(D DllMain())
+	A $(TT DllMain())
 	is required, looking like:
 	)
 
@@ -67,7 +67,7 @@ BOOL DllMain(HINSTANCE hInstance, ULONG ulReason, LPVOID pvReserved)
 -------------------------------
 
 	$(P Notes:)
-	$(UL
+	$(UL 
 	$(LI DllMain simply forwards to the appropriate helper functions. These setup
 	     the runtime, create thread objects for interaction with the garbage collector
 	     and initialize thread local storage data.)
@@ -76,10 +76,10 @@ BOOL DllMain(HINSTANCE hInstance, ULONG ulReason, LPVOID pvReserved)
 	     should be controlled by the garbage collector. You might need more control over
 	     this behaviour if there are threads in the process that must not be suspended.
 	     In this case pass false to disable the automatic handling of all threads.)
-	$(LI The presence of $(D DllMain()) is recognized by the compiler
+	$(LI The presence of $(TT DllMain()) is recognized by the compiler
 		causing it to emit a reference to
 		$(LINK2 http://www.digitalmars.com/ctg/acrtused.html, __acrtused_dll)
-		and the $(D phobos.lib) runtime library.)
+		and the $(TT phobos.lib) runtime library.)
 	)
 
 	Link with a .def
@@ -132,7 +132,7 @@ DATA WRITE
 )
 
 	$(P Put the code above that contains $(CODE DllMain()) into a file
-	$(D dll.d).
+	$(TT dll.d).
 	Compile and link the dll with the following command:
 	)
 
@@ -192,7 +192,7 @@ C:>
 
 	$(P There are many approaches to solving this problem:)
 
-	$(UL
+	$(UL 
 
 	$(LI Do not return pointers to D gc allocated memory to the caller of
 	the DLL. Instead, have the caller allocate a buffer, and have the DLL
@@ -375,7 +375,7 @@ export MyClass $(B getMyClass)()
 	<dt>$(B DllMain)
 	<dd>This is the main entry point for any D DLL. It gets called
 	by the C startup code
-	(for DMC++, the source is $(D \dm\src\win32\dllstart.c)).
+	(for DMC++, the source is $(TT \dm\src\win32\dllstart.c)).
 	The $(B printf)'s are placed there so one can trace how it gets
 	called.
 	Notice that the initialization and termination code seen in
@@ -434,17 +434,17 @@ export MyClass $(B getMyClass)()
 
 	</dl>
 
-	To build the $(D mydll.dll) DLL:
+	To build the $(TT mydll.dll) DLL:
 
-	$(OL
-	$(LI$(B $(D dmd -c mydll -g))
-	<br>Compiles $(D mydll.d) into $(D mydll.obj).
+	$(OL 
+	$(LI$(B $(TT dmd -c mydll -g))
+	<br>Compiles $(TT mydll.d) into $(TT mydll.obj).
 	$(B -g) turns on debug info generation.
 	)
 
-	$(LI $(B $(D dmd mydll.obj mydll.def -g -L/map))
-	<br>Links $(D mydll.obj) into a DLL named $(D mydll.dll).
-	$(D mydll.def) is the
+	$(LI $(B $(TT dmd mydll.obj mydll.def -g -L/map))
+	<br>Links $(TT mydll.obj) into a DLL named $(TT mydll.dll).
+	$(TT mydll.def) is the
 	<a href="http://www.digitalmars.com/ctg/ctgDefFiles.html">Module Definition File</a>,
 	and has the contents:
 
@@ -453,24 +453,24 @@ LIBRARY         MYDLL
 DESCRIPTION     'MyDll demonstration DLL'
 EXETYPE		NT
 CODE            PRELOAD DISCARDABLE
-DATA            PRELOAD SINGLE
+DATA            PRELOAD MULTIPLE
 )
 	$(B -g) turns on debug info generation, and
-	$(B -L/map) generates a map file $(D mydll.map).
+	$(B -L/map) generates a map file $(TT mydll.map).
 	)
 
-	$(LI $(B $(D implib /noi /system mydll.lib mydll.dll))
+	$(LI $(B $(TT implib /noi /system mydll.lib mydll.dll))
 	<br>Creates an
 	<a href="http://www.digitalmars.com/ctg/implib.html">import library</a>
-	$(D mydll.lib) suitable
+	$(TT mydll.lib) suitable
 	for linking in with an application that will be statically
-	loading $(D mydll.dll).
+	loading $(TT mydll.dll).
 	)
 
 	)
 
-	$(P Here's $(D test.d), a sample application that makes use of
-	$(D mydll.dll). There are two versions, one statically binds to
+	$(P Here's $(TT test.d), a sample application that makes use of
+	$(TT mydll.dll). There are two versions, one statically binds to
 	the DLL, and the other dynamically loads it.
 	)
 
@@ -561,14 +561,14 @@ $(CONSOLE
 C:>dmd test mydll.lib -g
 )
 
-	$(P Note how it is linked with $(D mydll.lib), the import library
-	for $(D mydll.dll).
-	The code is straightforward, it initializes $(D mydll.lib) with
+	$(P Note how it is linked with $(TT mydll.lib), the import library
+	for $(TT mydll.dll).
+	The code is straightforward, it initializes $(TT mydll.lib) with
 	a call to $(B MyDLL_Initialize)(), passing the handle
-	to $(D test.exe)'s gc.
+	to $(TT test.exe)'s gc.
 	Then, we can use the DLL and call its functions just as if
-	it were part of $(D test.exe). In $(B foo)(), gc memory
-	is allocated and freed both by $(D test.exe) and $(D mydll.dll).
+	it were part of $(TT test.exe). In $(B foo)(), gc memory
+	is allocated and freed both by $(TT test.exe) and $(TT mydll.dll).
 	When we're done using the DLL, it is terminated with
 	$(B MyDLL_Terminate)().
 	)
@@ -595,17 +595,17 @@ C:>
 $(CONSOLE
 C:>dmd test -version=DYNAMIC_LOAD -g
 )
-	$(P The import library $(D mydll.lib) is not needed.
+	$(P The import library $(TT mydll.lib) is not needed.
 	The DLL is loaded with a call to
 	$(B Runtime.loadLibrary)(),
 	and each exported function has to be retrieved via
 	a call to
 	$(B GetProcAddress)().
 	An easy way to get the decorated name to pass to $(B GetProcAddress)()
-	is to copy and paste it from the generated $(D mydll.map) file
+	is to copy and paste it from the generated $(TT mydll.map) file
 	under the $(B Export) heading.
 	Once this is done, we can use the member functions of the
-	DLL classes as if they were part of $(D test.exe).
+	DLL classes as if they were part of $(TT test.exe).
 	When done, release the DLL with
 	$(B Runtime.unloadLibrary)().
 	)
