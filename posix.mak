@@ -36,7 +36,7 @@ search-button.gif Thumbs.db tdpl.jpg ubuntu_logo.png win32_logo.png)
 STYLES=css/style.css css/print.css
 
 PREMADE=dcompiler.html language-reference.html appendices.html	\
-howtos.html articles.html
+howtos.html articles.html fetch-issue-cnt.php
 
 TARGETS=32-64-portability.html cpptod.html ctod.html download.html		\
 	pretod.html gsoc2011.html index.html overview.html spec.html		\
@@ -61,7 +61,7 @@ TARGETS=32-64-portability.html cpptod.html ctod.html download.html		\
 	unittest.html hash-map.html pdf-intro-cover.html					\
 	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
 	std_consolidated_header.html simd.html dmd-windows.html				\
-	dmd-linux.html dmd-freebsd.html dmd-osx.html
+	dmd-linux.html dmd-freebsd.html dmd-osx.html bugstats.php
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html
@@ -112,6 +112,9 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC)
 	$(DMD) -c -o- -Df$@ $(DDOC) $<
 
+$(DOC_OUTPUT_DIR)/%.php : %.php.dd $(DDOC)
+	$(DMD) -c -o- -Df$@ $(DDOC) $<
+
 $(DOC_OUTPUT_DIR)/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
@@ -151,7 +154,7 @@ clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${DMD_DIR}.${LATEST} ${LATEST}.ddoc
 	rm -rf ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
 
-rsync : #all
+rsync : all
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
 
 pdf : $(PDFTARGETS)
