@@ -14,7 +14,7 @@ DMD=dmd
 DMD_DIR=../dmd
 PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
-DOC_OUTPUT_DIR=../web
+DOC_OUTPUT_DIR=./web
 GIT_HOME=git@github.com:D-Programming-Language
 
 # Latest released version
@@ -151,8 +151,8 @@ zip:
 	zip32 doc $(IMG)
 
 clean:
-	rm -rf $(DOC_OUTPUT_DIR) ${DMD_DIR}.${LATEST} ${LATEST}.ddoc
-	rm -rf ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
+	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
+	@echo You should issue manually: rm -rf ${DMD_DIR}.${LATEST} ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
 
 rsync : all
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
@@ -238,4 +238,5 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : \
 	  release html \
 	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
 	  DDOC=${DMD_DIR}.${LATEST}/src/dmd \
+	  DRUNTIME_PATH=${DRUNTIME_DIR}.${LATEST} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos
