@@ -367,13 +367,15 @@ $(GNAME TokenString):
 	or a hex string.
 	)
 
+	$(P In all string literal forms, an $(GLINK EndOfLine) is regarded as a single
+	\n character.)
+
 <h4>Wysiwyg Strings</h4>
 
 	$(P
 	Wysiwyg quoted strings are enclosed by r" and ".
 	All characters between
-	the r" and " are part of the string except for $(GLINK EndOfLine) which is
-	regarded as a single \n character.
+	the r" and " are part of the string.
 	There are no escape sequences inside r" ":
 	)
 
@@ -403,7 +405,6 @@ r"ab\n" // string is 4 characters,
 
 	Double quoted strings are enclosed by "". Escape sequences can be
 	embedded into them with the typical \ notation.
-	$(GLINK EndOfLine) is regarded as a single \n character.
 
 ---------------
 "hello"
@@ -422,17 +423,17 @@ $(V1
 	Adjacent escape strings are concatenated:
 	)
 
-<pre>
-\n			the linefeed character
-\t			the tab character
-\"			the double quote character
-\012			octal
-\x1A			hex
-\u1234			wchar character
-\U00101234		dchar character
-\&amp;reg;			&reg; dchar character
-\r\n			carriage return, line feed
-</pre>
+$(TABLE1
+$(TROW \n,			the linefeed character)
+$(TROW \t,			the tab character)
+$(TROW \",			the double quote character)
+$(TROW \012,			octal)
+$(TROW \x1A,			hex)
+$(TROW \u1234,			wchar character)
+$(TROW \U00101234,		dchar character)
+$(TROW \&amp;reg;,		&reg; dchar character)
+$(TROW \r\n,			carriage return, line feed)
+)
 
 	$(P Undefined escape sequences are errors.
 	Although string literals are defined to be composed of
@@ -464,7 +465,7 @@ x"00 FBCD 32FD 0A" // same as
 	juxtaposition:
 
 --------------
-"hello " ~ "world" ~ \n // forms the string
+"hello " ~ "world" ~ $(V1 \n)$(V2 "\n") // forms the string
        // 'h','e','l','l','o',' ',
        // 'w','o','r','l','d',linefeed
 --------------
@@ -476,7 +477,7 @@ x"00 FBCD 32FD 0A" // same as
 r"ab" r"c"
 r"a" "bc"
 "a" ~ "b" ~ "c"
-\x61"bc"
+$(V1 \x61"bc")
 -----------------
 
 	The optional $(I StringPostfix) character gives a specific type
