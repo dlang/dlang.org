@@ -26,6 +26,7 @@ $(GNAME TraitsKeyword):
     $(GBLINK isStaticArray)
     $(GBLINK isUnsigned)
     $(GBLINK isVirtualFunction)
+    $(GBLINK isVirtualMethod)
     $(GBLINK isAbstractFunction)
     $(GBLINK isFinalFunction)
     $(GBLINK isStaticFunction)
@@ -37,6 +38,7 @@ $(GNAME TraitsKeyword):
     $(GBLINK getMember)
     $(GBLINK getOverloads)
     $(GBLINK getVirtualFunctions)
+    $(GBLINK getVirtualMethods)
     $(GBLINK parent)
     $(GBLINK classInstanceSize)
     $(GBLINK allMembers)
@@ -150,9 +152,15 @@ $(H2 $(GNAME isFinalClass))
 
 $(H2 $(GNAME isVirtualFunction))
 
+	$(P The same as $(GLINK isVirtualMethod), except
+	that final functions that don't override anything return true.
+	)
+
+$(H2 $(GNAME isVirtualMethod))
+
 	$(P Takes one argument. If that argument is a virtual function,
 	$(B true) is returned, otherwise $(B false).
-	Note that final functions are virtual.
+	Final functions that don't override anything return false.
 	)
 
 ---
@@ -167,8 +175,8 @@ class C {
 }
 
 void main() {
-  writeln(__traits(isVirtualFunction, C.bar));  // true
-  writeln(__traits(isVirtualFunction, S.bar));  // false
+  writeln(__traits(isVirtualMethod, C.bar));  // true
+  writeln(__traits(isVirtualMethod, S.bar));  // false
 }
 ---
 
@@ -371,12 +379,18 @@ int()
 
 $(H2 $(GNAME getVirtualFunctions))
 
+	$(P The same as $(GLINK getVirtualMethods), except that
+	final functions that do not override anything are included.
+	)
+
+$(H2 $(GNAME getVirtualMethods))
+
 	$(P The first argument is a class type or an expression of
 	class type.
 	The second argument is a string that matches the name of
 	one of the functions of that class.
 	The result is a tuple of the virtual overloads of that function.
-	Note that final functions are virtual.
+	It does not include final functions that do not override anything.
 	)
 
 ---
@@ -392,14 +406,14 @@ class D {
 void main() {
   D d = new D();
 
-  foreach (t; __traits(getVirtualFunctions, D, "foo"))
+  foreach (t; __traits(getVirtualMethods, D, "foo"))
     writeln(typeid(typeof(t)));
 
-  alias typeof(__traits(getVirtualFunctions, D, "foo")) b;
+  alias typeof(__traits(getVirtualMethods, D, "foo")) b;
   foreach (t; b)
     writeln(typeid(t));
 
-  auto i = __traits(getVirtualFunctions, d, "foo")[1](1);
+  auto i = __traits(getVirtualMethods, d, "foo")[1](1);
   writeln(i);
 }
 ---
