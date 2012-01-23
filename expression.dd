@@ -901,6 +901,45 @@ else
 	$(P Casting a pointer type to and from a class type is done as a type paint
 	(i.e. a reinterpret cast).)
 
+	$(P Casting a dynamic array to another dynamic array is done only if the
+	array lengths multiplied by the element sizes match. The cast is done
+	as a type paint, with the array length adjusted to match any change in
+	element size. If there's not a match, a runtime error is generated.)
+
+$(V1
+---
+import std.stdio;
+
+int main() {
+  byte[] a = [1,2,3];
+  auto b = cast(int[])a; // runtime array cast misalignment
+
+  int[] c = [1, 2, 3];
+  auto d = cast(byte[])c; // ok
+  // prints:
+  // [1,0,0,0,2,0,0,0,3,0,0,0]
+  writefln(d);
+  return 0;
+} 
+---
+)
+$(V2
+---
+import std.stdio;
+
+int main() {
+  byte[] a = [1,2,3];
+  auto b = cast(int[])a; // runtime array cast misalignment
+
+  int[] c = [1, 2, 3];
+  auto d = cast(byte[])c; // ok
+  // prints:
+  // [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]
+  writeln(d);
+  return 0;
+} 
+---
+)
         $(P Casting a floating point literal from one type to another
         changes its type, but internally it is retained at full
         precision for the purposes of constant folding.
