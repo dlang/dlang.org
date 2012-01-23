@@ -307,14 +307,9 @@ class C {
 	form:)
 ---
 struct S {
-  bool opEquals(ref const S s) { ... }
+  int opEquals(ref const S s) { ... }
 }
 ---
-
-   $(P For $(D struct)s, signatures such as $(D int opEquals(S s)) and
-   others are also accepted. This is because the operation is
-   essentially a syntactic rewrite$(MDASH)the only
-   requirement is that $(D a.opEquals(b)) compiles.)
 
 <h2><a name="compare">Overloading &lt; &lt;=, &gt; and &gt;=</a></h2>
 
@@ -348,7 +343,7 @@ class C {
 	form:)
 ---
 struct S {
-  int opCmp(ref const S s) { ... }
+  int opCmp(ref const S s) const { ... }
 }
 ---
 
@@ -697,7 +692,7 @@ a.$(I opfunc)()
 
 <h3>Examples</h3>
 
-	$(OL
+	$(OL 
 	$(LI
 -------
 class A { int $(B opNeg)(); }
@@ -832,7 +827,7 @@ a $(I op) b
 	the following sequence of rules is applied, in order, to determine
 	which form is used:
 
-	$(OL
+	$(OL 
 	$(LI The expression is rewritten as both:
 ---
 a.$(I opfunc)(b)
@@ -859,7 +854,7 @@ b.$(I opfunc)(a)
 
 <h4>Examples</h4>
 
-	$(OL
+	$(OL 
 	$(LI
 
 -------
@@ -990,6 +985,7 @@ int $(B opCmp)(Object o);
 	$(P $(CODE $(B opCmp)) for structs works analogously to
 	$(CODE $(B opEquals)) for structs:
 	)
+$(V1
 -------
 struct Pair {
   int a, b;
@@ -1000,7 +996,19 @@ struct Pair {
   }
 }
 -------
-
+)
+$(V2
+-------
+struct Pair {
+  int a, b;
+  int $(B opCmp)(ref const Pair *rhs) const {
+    if (a!=rhs.a)
+      return a-rhs.a;
+    return b-rhs.b;
+  }
+}
+-------
+)
 	$(P If a struct has no $(CODE $(B opCmp)()) function declared for it,
 	attempting
 	to compare two structs is an error.
