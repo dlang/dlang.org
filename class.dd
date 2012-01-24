@@ -489,19 +489,25 @@ $(GNAME StaticConstructor):
     $(B static this ( )) $(GLINK2 function, FunctionBody)
 )
 
-        A static constructor is defined as a function that performs
-        initializations before the
-        $(D main()) function gets control. Static constructors are used to
-        initialize
+	$(P
+        $(V1 A static constructor is a function that performs
+        initializations before the $(D main()) function gets control.)
+
+        $(V2 A static constructor is a function that performs
+        initializations of thread local data before the $(D main()) function gets control for
+	the main thread, and upon thread startup.)
+
+	Static constructors are used to initialize
         static class members
         with values that cannot be computed at compile time.
-        <p>
+        )
 
-        Static constructors in other languages are built implicitly by using
+        $(P Static constructors in other languages are built implicitly by using
         member
         initializers that can't be computed at compile time. The trouble with
         this stems from not
         having good control over exactly when the code is executed, for example:
+	)
 
 ------
 class Foo {
@@ -542,23 +548,34 @@ class Foo {
 }
 ------
 
-        $(D static this()) is called by the startup code before
-        $(D main()) is called. If it returns normally
+	$(P
+	$(V1
+	If $(D main()) returns normally
         (does not throw an exception), the static destructor is added
         to the list of functions to be
         called on program termination.
+	)
+	$(V2
+	If $(D main()) or the thread returns normally,
+        (does not throw an exception), the static destructor is added
+        to the list of functions to be
+        called on thread termination.
+	)
         Static constructors have empty parameter lists.
-        <p>
+        )
 
+	$(P
         Static constructors within a module are executed in the lexical
         order in which they appear.
         All the static constructors for modules that are directly or
         indirectly imported
         are executed before the static constructors for the importer.
-        <p>
+        )
 
+	$(P
         The $(B static) in the static constructor declaration is not
         an attribute, it must appear immediately before the $(B this):
+	)
 
 ------
 class Foo {
@@ -590,16 +607,19 @@ class Foo {
 }
 ------
 
-        A static destructor gets called on program termination, but only if
-        the static constructor
+	$(P
+        A static destructor gets called on $(V1 program)$(V2 thread) termination,
+	but only if the static constructor
         completed successfully.
         Static destructors have empty parameter lists.
         Static destructors get called in the reverse order that the static
         constructors were called in.
-        <p>
+        )
 
+	$(P
         The $(B static) in the static destructor declaration is not
         an attribute, it must appear immediately before the $(B ~this):
+	)
 
 ------
 class Foo {
