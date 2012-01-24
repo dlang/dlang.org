@@ -265,6 +265,26 @@ b.opBinaryRight!("$(I op)")(a)
 	It is an error for both to equally match.
 	)
 
+	$(P Operator overloading for a number of operators can be done at the same time.
+	For example, if only the + or - operators are supported:)
+
+---
+T opBinary(string op)(T rhs) {
+   static if (op == "+") return data + rhs.data;
+   else static if (op == "-") return data - rhs.data;
+   else static assert(0, "Operator "~op~" not implemented");
+}
+---
+
+	$(P To do them all en masse:)
+
+---
+T opBinary(string op)(T rhs) {
+     return mixin("data "~op~" rhs.data");
+}
+---
+
+
 <h2><a name="equals">Overloading == and !=</a></h2>
 
 	$(P Expressions of the form $(CODE a != b) are rewritten as $(CODE !(a == b)).)
