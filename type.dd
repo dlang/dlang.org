@@ -367,7 +367,9 @@ $(SECTION2 <a name="delegates">Delegates</a>,
     $(P There are no pointers-to-members in D, but a more useful
     concept called $(I delegates) are supported.
     Delegates are an aggregate of two pieces of data: an
-    object reference and a function pointer. The object reference
+    object reference and a pointer to a non-static member function,
+    or a pointer to a closure and a pointer to a nested function.
+    The object reference
     forms the $(I this) pointer when the function is called.
     )
 
@@ -416,6 +418,21 @@ dg = &o.member; // dg is a delegate to object $(I o) and
 fp(3);   // call func(3)
 dg(3);   // call o.member(3)
 -------------------
+
+    $(P The equivalent of member function pointers can be constructed
+    using anonymous lambda functions:)
+
+---
+class C {
+  int a;
+  int foo(int i) { return i + a; }
+}
+
+// mfp is the member function pointer
+auto mfp = function(C self, int i) { return self.foo(i); };
+auto c = new C();  // create an instance of C
+mfp(c, 1);  // and call c.foo(1)
+---
 )
 
 $(SECTION2 $(D size_t) And $(D ptrdiff_t),
