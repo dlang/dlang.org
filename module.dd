@@ -24,8 +24,7 @@ $(GNAME DeclDef):
 	$(GLINK2 unittest, UnitTest)
 	$(GLINK2 class, StaticConstructor)
 	$(GLINK2 class, StaticDestructor)
-$(V2
-	$(GLINK2 class, SharedStaticConstructor)
+$(V2  	$(GLINK2 class, SharedStaticConstructor)
 	$(GLINK2 class, SharedStaticDestructor)
 )	$(GLINK2 version, ConditionalDeclaration)
 	$(GLINK2 version, DebugSpecification)
@@ -364,7 +363,7 @@ void main()
                             // foo is not a member of io
 --------------
 
-<h3>Import Scoping</h3>
+<h3>Scoped Imports</h3>
 
     $(P Import declarations may be used at any scope. For example:)
 
@@ -375,16 +374,25 @@ void main() {
 }
 --------------
 
-    $(P The scope of imported symbols is the same as the scope of the import
-    declaration. Imported symbols may hide symbols from outer scopes.
-    For example:)
+    $(P The imports are looked up to satisfy any unresolved symbols at that scope.
+    Imported symbols may hide symbols from outer scopes.)
+
+
+	$(P In function scopes, imported symbols only become visible after the
+	import declaration
+	lexically appears in the function body. In other words, imported symbols
+	at function scope cannot be forward referenced.
+	)
 
 --------------
 void main() {
   void writeln(string) {}
   void foo() {
+    writeln("bar"); // calls main.writeln
     import std.stdio;
     writeln("bar"); // calls std.stdio.writeln
+    void writeln(string) {}
+    writeln("bar"); // calls main.foo.writeln
   }
   writeln("bar"); // calls main.writeln
   std.stdio.writeln("bar");  // error, std is undefined
