@@ -63,9 +63,9 @@ $(D_S $(TITLE),
 	$(ITEMR backend, How do I write my own D compiler for CPU X?)
 	$(ITEMR gui, Where can I get a GUI library for D?)
 	$(ITEMR ide, Where can I get an IDE for D?)
-	$(ITEMR q3, Why emphasize implementation ease?)
 	$(ITEMR q4, Why is [expletive deleted] printf left in?)
-	$(ITEMR q5, Will D be open source?)
+	$(ITEMR q5, Is D open source?)
+	$(ITEMR q5_2, Why does the standard library use the boost license? Why not public domain?)
 	$(ITEMR q6, Why $(I no) fall through on switch statements?)
 	$(ITEMR q7, Why should I use D instead of Java?)
 	$(ITEMR q7_2, Doesn't C++ support strings, etc. with STL?)
@@ -209,32 +209,6 @@ $(ITEM ide, Where can I get an IDE for D?)
     $(LINK2 http://prowiki.org/wiki4d/wiki.cgi?EditorSupport, the D wiki).
 	)
 
-$(ITEM q3, Why emphasize implementation ease?)
-
-	$(P Isn't ease of use for the user of the language more important? Yes,
-	it is.
-	But a vaporware language is useless to everyone. The easier a language
-	is to implement, the more robust implementations there will be. In C's
-	heyday, there were 30 different commercial C compilers for the IBM PC.
-	Not many made the transition to C++. In looking at
-	the C++ compilers on the market today, how many years of development
-	went into each? At least 10 years? Programmers waited years
-	for the various pieces of C++ to get implemented after they were
-	specified.
-	If C++ was not so enormously popular, it's doubtful that very complex
-	features
-	like multiple inheritance, templates, etc., would ever have been
-	implemented.
-	)
-
-	$(P I suggest that if a language is easier to implement, then it is
-	likely also easier to understand. Isn't it better to spend time learning
-	to write better programs than language arcana? If a language can capture
-	90% of the power of
-	C++ with 10% of its complexity, I argue that is a worthwhile tradeoff.
-	)
-
-
 $(ITEM q4, Why is printf in D?)
 
 	$(P $(LINK2 http://www.digitalmars.com/rtl/stdio.html#printf, printf)
@@ -247,17 +221,32 @@ $(ITEM q4, Why is printf in D?)
 	)
 
 
-$(ITEM q5, Will D be open source?)
+$(ITEM q5, Is D open source?)
 
-	$(P The front end for the $(B dmd) D compiler is open source, and the complete
-	source comes with the
-	$(LINK2 http://www.digitalmars.com/d/download.html, compiler),
-	and is available on $(LINK2 https://github.com/D-Programming-Language/dmd, github).
-	The back end for dmd is licensed from Symantec.
+    $(P The front end for the $(B dmd) D compiler is open source.
+    The back end for dmd is licensed from Symantec,
+    and is not compatible with open-source licenses such as the GPL.
+    Nonetheless, the complete source comes with the
+    $(LINK2 http://www.digitalmars.com/d/download.html, compiler),
+    and all development takes place publically on
+    $(LINK2 https://github.com/D-Programming-Language/dmd, github).
+    Compilers using the DMD front end and the GCC and LLVM open source
+    backends are also available.
+
 	The runtime library is completely open source using the
 	$(LINK2 http://boost.org/LICENSE_1_0.txt, Boost License 1.0).
 	The $(B gdc) and $(B ldc) D compilers are completely open sourced.
 	)
+
+$(ITEM q5_2, Why does the standard library use the boost license? Why not public domain?)
+
+    $(P Although most jurisdictions use the concept of Public Domain, some
+    (eg, Japan) do not.
+    The $(LINK2 http://boost.org/LICENSE_1_0.txt, Boost License)
+    avoids this problem. It was chosen because, unlike almost all other open
+    source licenses, it does not demand that the license text be included on
+    distributions in binary form.
+    )
 
 $(ITEM q6, Why $(I no) fall through on switch statements?)
 
@@ -693,7 +682,7 @@ $(V2
 
 	$(LI C++ code, despite decades of attempts to replace macro features
 	with inbuilt ones, relies more heavily than ever on layer after layer of
-	arbitrary macros. There is no D analog for token pasting or
+	arbitrary macros. D does not always have an analog for token pasting and
 	stringizing.)
 
 	$(LI Macro names have global scope across #include files, but are local
@@ -826,10 +815,9 @@ $(ITEM gc_1, Isn't garbage collection slow and non-deterministic?)
 
 $(ITEM pure, Can't a sufficiently smart compiler figure out that a function is pure automatically?)
 
-	$(P The problems with the
-	$(LINK2 http://c2.com/cgi/wiki?SufficientlySmartCompiler, sufficently smart compiler)
-	argument are:
-	)
+    $(P The compiler infers purity (and safety, and nothrow) for delegate and function
+    literals. It doesn't do this for normal functions for several reasons:
+    )
 
 	$(OL
 	$(LI most functions call other functions, which call other functions,
