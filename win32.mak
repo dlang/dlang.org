@@ -13,7 +13,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
 	template-comparison.dd COM.dd hijack.dd features2.dd safed.dd		\
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd pdf-intro-cover.dd pdf-spec-cover.dd pdf-tools-cover.dd	\
-	intro-to-datetime.dd simd.dd
+	intro-to-datetime.dd simd.dd deprecate.dd
 
 SPECSRC=spec.dd lex.dd module.dd declaration.dd type.dd property.dd		\
 	attribute.dd pragma.dd expression.dd statement.dd arrays.dd			\
@@ -52,7 +52,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
 	d-floating-point.html migrate-to-shared.html D1toD2.html			\
 	unittest.html hash-map.html pdf-intro-cover.html					\
 	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html \
-	simd.html
+	simd.html deprecate.html
 
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
@@ -158,6 +158,8 @@ dbc.html : $(DDOC) dbc.dd
 ddoc.html : $(DDOC) ddoc.dd
 
 declaration.html : $(DDOC) declaration.dd
+
+deprecate.html : $(DDOC) deprecate.dd
 
 dll.html : $(DDOC) dll.dd
 
