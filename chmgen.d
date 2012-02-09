@@ -352,7 +352,7 @@ void main()
 				if (!foundNav)
 					writeln("Warning: Page not found in navigation");
 
-				src = join(newlines, newline[]);
+				src = join(newlines, std.ascii.newline[]);
 				std.file.write(newFileName, src);
 			}
 			else
@@ -368,7 +368,7 @@ void main()
 					if (!line.test(re_css_margin))
 						newlines ~= line;
 				}
-				src = join(newlines, newline[]);
+				src = join(newlines, std.ascii.newline[]);
 				std.file.write(newFileName, src);
 			}
 			else
