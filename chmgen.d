@@ -13,6 +13,8 @@ import std.string;
 import std.regex;
 import std.path;
 
+alias std.ascii.newline newline;
+
 enum ROOT = `.`;
 
 // ********************************************************************
@@ -52,7 +54,7 @@ string absoluteUrl(string base, string url)
 	base = base.backSlash();
 	url  = url.backSlash();
 	enforce(url.length, "Empty URL");
-	
+
 	if (url[0]=='#')
 		return base ~ url;
 
@@ -74,6 +76,14 @@ string movePath(string s)
 	if (s == `chm\phobos\phobos.html`)
 		s = `chm\phobos\index.html`;
 	return s;
+}
+
+bool ignoreNav(string href)
+{
+	return
+		href=="bugstats.php" ||
+		href=="sitemap.html" ||
+		href.contains("://");
 }
 
 // ********************************************************************
@@ -159,6 +169,8 @@ void main()
 	if (exists("chm"))
 		rmdirRecurse("chm");
 	mkdir("chm");
+
+	enforce(exists(ROOT ~ `\phobos\phobos.html`), "Phobos documentation not present. Please place Phobos documentation HTML files into the \"phobos\" subdirectory.");
 
 	string[] files;
 	foreach (de; dirEntries(ROOT ~ `\`, "*.{html,css,gif,jpg,png,ico}", SpanMode.breadth))
@@ -271,6 +283,8 @@ void main()
 
 						void doLink(string title, string url)
 						{
+							if (ignoreNav(url))
+								return;
 							if (url)
 							{
 								url = absoluteUrl(fileName, url);
@@ -461,7 +475,7 @@ main="D Programming Language","d.hhc","d.hhk","chm\index.html","chm\index.html",
 
 	void dumpNav(Nav nav, int level=0)
 	{
-		if (nav.title)
+		if (nav.title && (nav.url || nav.children.length))
 		{
 			auto t = "\t".replicate(level);
 			f.writeln(t,
