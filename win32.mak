@@ -3,7 +3,7 @@
 DMD=dmd
 
 SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
-	overview.dd mixin.dd memory.dd interface.dd windows.dd		\
+	overview.dd mixin.dd memory.dd interface.dd windows.dd				\
 	dll.dd htomodule.dd faq.dd dstyle.dd wc.dd changelog.dd				\
 	glossary.dd acknowledgements.dd dcompiler.dd builtin.dd				\
 	comparison.dd rationale.dd code_coverage.dd exception-safe.dd		\
@@ -13,7 +13,8 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
 	template-comparison.dd COM.dd hijack.dd features2.dd safed.dd		\
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd pdf-intro-cover.dd pdf-spec-cover.dd pdf-tools-cover.dd	\
-	intro-to-datetime.dd simd.dd deprecate.dd
+	intro-to-datetime.dd simd.dd deprecate.dd download.dd				\
+	32-64-portability.dd 
 
 SPECSRC=spec.dd lex.dd module.dd declaration.dd type.dd property.dd		\
 	attribute.dd pragma.dd expression.dd statement.dd arrays.dd			\
@@ -28,10 +29,10 @@ DDOC=macros.ddoc windows.ddoc doc.ddoc
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 
-PREMADE=download.html dcompiler.html language-reference.html appendices.html howtos.html articles.html
+PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
 TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
-	overview.html lex.html module.html declaration.html		\
+	overview.html lex.html module.html declaration.html					\
 	type.html property.html attribute.html pragma.html					\
 	expression.html statement.html arrays.html struct.html class.html	\
 	enum.html function.html operatoroverloading.html template.html		\
@@ -51,8 +52,8 @@ TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
 	dmd-osx.html dmd-freebsd.html concepts.html memory-safe-d.html		\
 	d-floating-point.html migrate-to-shared.html D1toD2.html			\
 	unittest.html hash-map.html pdf-intro-cover.html					\
-	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html \
-	simd.html deprecate.html
+	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
+	simd.html deprecate.html download.html 32-64-portability.html 
 
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
@@ -113,6 +114,8 @@ dmd-osx.html : $(DDOC) osx.ddoc dcompiler.dd
 dmd-windows.html : $(DDOC) windows.ddoc dcompiler.dd
 	$(DMD) -o- -c -D $(DDOC) windows.ddoc dcompiler.dd -Dfdmd-windows.html
 
+32-64-portability.html : $(DDOC) 32-64-portability.dd
+
 abi.html : $(DDOC) abi.dd
 
 acknowledgements.html : $(DDOC) acknowledgements.dd
@@ -162,6 +165,8 @@ declaration.html : $(DDOC) declaration.dd
 deprecate.html : $(DDOC) deprecate.dd
 
 dll.html : $(DDOC) dll.dd
+
+download.html : $(DDOC) download.dd
 
 dstyle.html : $(DDOC) dstyle.dd
 
@@ -336,5 +341,5 @@ clean:
 	del $(TARGETS)
 	del $(PDFTARGETS)
 	del $(CHMTARGETS)
-
+	if exist chm rmdir /S /Q chm
 
