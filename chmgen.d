@@ -162,6 +162,8 @@ void main()
 		rmdirRecurse("chm");
 	mkdir("chm");
 
+	enforce(exists(ROOT ~ `\phobos\phobos.html`), "Phobos documentation not present. Please place Phobos documentation HTML files into the \"phobos\" subdirectory.");
+
 	string[] files;
 	foreach (de; dirEntries(ROOT ~ `\`, "*.{html,css,gif,jpg,png,ico}", SpanMode.breadth))
 		if (!de.name.baseName.startsWith("pdf-")
