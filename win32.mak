@@ -13,7 +13,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
 	template-comparison.dd COM.dd hijack.dd features2.dd safed.dd		\
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd pdf-intro-cover.dd pdf-spec-cover.dd pdf-tools-cover.dd	\
-	intro-to-datetime.dd simd.dd deprecate.dd
+	intro-to-datetime.dd simd.dd deprecate.dd download.dd
 
 SPECSRC=spec.dd lex.dd module.dd declaration.dd type.dd property.dd		\
 	attribute.dd pragma.dd expression.dd statement.dd arrays.dd			\
@@ -28,7 +28,7 @@ DDOC=macros.ddoc windows.ddoc doc.ddoc
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 
-PREMADE=download.html dcompiler.html language-reference.html appendices.html howtos.html articles.html
+PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
 TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
 	overview.html lex.html module.html declaration.html		\
@@ -52,7 +52,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
 	d-floating-point.html migrate-to-shared.html D1toD2.html			\
 	unittest.html hash-map.html pdf-intro-cover.html					\
 	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html \
-	simd.html deprecate.html
+	simd.html deprecate.html download.html
 
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
@@ -162,6 +162,8 @@ declaration.html : $(DDOC) declaration.dd
 deprecate.html : $(DDOC) deprecate.dd
 
 dll.html : $(DDOC) dll.dd
+
+download.html : $(DDOC) download.dd
 
 dstyle.html : $(DDOC) dstyle.dd
 
