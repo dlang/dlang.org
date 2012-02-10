@@ -13,6 +13,8 @@ import std.string;
 import std.regex;
 import std.path;
 
+alias std.ascii.newline newline;
+
 enum ROOT = `.`;
 
 // ********************************************************************
