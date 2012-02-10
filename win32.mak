@@ -341,5 +341,5 @@ clean:
 	del $(TARGETS)
 	del $(PDFTARGETS)
 	del $(CHMTARGETS)
-
+	if exist chm rmdir /S /Q chm
 
