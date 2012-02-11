@@ -36,7 +36,7 @@ search-button.gif Thumbs.db tdpl.jpg ubuntu_logo.png win32_logo.png)
 STYLES=css/style.css css/print.css
 
 PREMADE=dcompiler.html language-reference.html appendices.html	\
-howtos.html articles.html fetch-issue-cnt.php
+howtos.html articles.html fetch-issue-cnt.php robots.txt
 
 TARGETS=32-64-portability.html cpptod.html ctod.html download.html		\
 	pretod.html gsoc2011.html index.html overview.html spec.html		\
