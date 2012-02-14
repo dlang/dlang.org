@@ -88,6 +88,7 @@ $(D_S $(TITLE),
 	$(ITEMR reference-counting, Why doesn't D use reference counting for garbage collection?)
 	$(ITEMR gc_1, Isn't garbage collection slow and non-deterministic?)
 	$(ITEMR pure, Can't a sufficiently smart compiler figure out that a function is pure automatically?)
+	$(ITEMR minimum precision, Why allow $(D cast(float)) if it isn't supposed to work?)
 	)
 
 $(ITEM case_range, Why doesn't the case range statement
@@ -841,6 +842,33 @@ $(ITEM pure, Can't a sufficiently smart compiler figure out that a function is p
 	)
 
 	)
+
+$(ITEM minimum precision, Why allow $(D cast(float)) if it isn't supposed to work?)
+
+	$(P The floating point rules are such that transforming $(D cast(real)cast(float)) to
+	$(D cast(real)) is a valid transformation.
+	This is because the floating point rules are written with the following principle in
+	mind:
+	)
+
+	$(BLOCKQUOTE An algorithm is invalid if it breaks if the floating point precision is
+	increased. Floating point precision is always a minimum, not a maximum.)
+
+	$(P Programs that legitimately depended on maximum precision are:)
+
+	$(OL
+	$(LI compiler/library validation test suites)
+	$(LI ones trying to programmatically test the precision)
+	)
+
+	$(P (1) is not of value to user programming, and there are alternate ways to test
+	the precision.)
+
+	$(P (2) D has .properties that take care of that.)
+
+	$(P Programs that rely on a maximum accuracy need to be rethought and reengineered.)
+
+
 
 $(COMMENT
 	> Single inheritance may be easier to implement, but you are losing
