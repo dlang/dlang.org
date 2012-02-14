@@ -341,5 +341,6 @@ clean:
 	del $(TARGETS)
 	del $(PDFTARGETS)
 	del $(CHMTARGETS)
+	del chmgen.obj chmgen.exe
 	if exist chm rmdir /S /Q chm
 
