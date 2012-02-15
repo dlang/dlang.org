@@ -6,59 +6,141 @@ $(UPCOMING
 	$(LI Shared libraries for Linux)
 )
 
-$(VERSION 073, Jan 18, 2012, =================================================,
+$(VERSION 073, Feb 8, 2012, =================================================,
 
     $(WHATSNEW
 	$(LI Convert to -shared dmd switch instead of -dylib)
 	$(LI Better use of XMM registers in OS X 32 bit target.)
+	$(LI Add inline assembler support for AVX instructions (64 bit targets only).)
     )
     $(BUGSFIXED
-314 - [module] Static, renamed, and selective imports are always public
-796 - Asserting a null object reference throws AssertError Failure internal\invariant.d(14) or Access Violation
-1313 - out/body disables escape analysis
-3092 - Indexing a tuple produces a tuple containing the indexed element
-3187 - Nested foreach over opApply doesn't work
-4135 - Regression(1.034): ICE(statement.c): mixin in bad foreach, D1 only
-4413 - typeof(this) doesn't work in method template signature
-4523 - [tdpl] .remove method for Associative Arrays returns void in all cases
-4647 - [tdpl] Cannot explicitly call final interface method, ambiguous calls allowed
-4711 - Incorrect handling of && operator with void operand
-6037 - [CTFE] recursive ref parameters evaluated incorrectly
-6701 - template specialization resolution failure
-6933 - Segfault(declaration.c) using struct with destructor in CTFE
-6934 - [CTFE] can't use $ in a slice of an array passed by ref
-6964 - Error message with __error: static assert(undefined+1)
-6984 - CTFE generates a torrent of spurious errors, if there was a previous error
-6985 - [CTFE] Non-constant case expressions can't be interpreted
-6995 - [CTFE] can't interpret static template method
-7011 - No line number error for vector power
-7043 - CTFE: ICE illegal reference value 0LU, only with -inline
-7073 - Parsing of class-returning varargs function inside module ctor fails
-7108 - ICE: TraitsExp::semantic(Scope*) 2.056 -> 2.057 regression - segfault
-7120 - Scope Delegates + Delegate Literals
-7123 - static assert(is(typeof(toDelegate(&main)))) is false
-7127 - Const-related infinite recursion in DWARF generation
-7143 - [CTFE] cannot compare class references with "is"
-7144 - [CTFE] base class does not call overridden members
-7154 - [CTFE] failing downcast causes error
-7158 - [CTFE] ICE(interpret.c) calling a class member using a dotvar expression
-7162 - [CTFE] "bool || void" expression crashes dmd
-7165 - [CTFE] ice converting null pointer to bool with constant member function
-7173 - dmd: glue.c:1065: virtual unsigned int Type::totym(): Assertion `0' failed.
-7185 - [CTFE] ICE on changing char array length
-7187 - Regression(head 12d62ca5): [CTFE] ICE on slicing
-7189 - inline failed
-7190 - Tuple length incorrect
-7194 - [CTFE] Incorrect behaviour with pointers as local struct variable
-7217 - [CTFE] ICE on accessing struct array field
-7218 - Nested function with contract is rejected
-7232 - Warning: statement is not reachable has no line number
-7239 - C style struct initialization doesn't work with aliases
-7245 - [CTFE] Address of ref foreach parameter changes to point after array
-7248 - [CTFE] Stack overflow on using struct filed pointer with address of array element
-7266 - [CTFE] Assign to ref param (that's taken from struct member) is noop
-7285 - Implicit fixed-size array cast
-7309 - [2.058] Regression caused by new inlining code
+	$(LI $(BUGZILLA 516): Mutually calling constructors allowed)
+	$(LI $(BUGZILLA 664): is(func T == function) ignores variadic arguments)
+	$(LI $(BUGZILLA 678): Compiler accepts, for a function T[] t(), t().ptr but not t.ptr)
+	$(LI $(BUGZILLA 796): Asserting a null object reference throws AssertError Failure internal\invariant.d(14) or Access Violation)
+	$(LI $(BUGZILLA 949): Wrong spec/compiler behaviour for Strings, Integers and Floats)
+	$(LI $(BUGZILLA 955): Passing arguments into functions - in, out, inout, const, and contracts)
+	$(LI $(BUGZILLA 1313): out/body disables escape analysis)
+	$(LI $(BUGZILLA 1521): Ambiguous documentation)
+	$(LI $(BUGZILLA 1563): dynamic cast is not always performed)
+	$(LI $(BUGZILLA 1570): Wrong return for address operator)
+	$(LI $(BUGZILLA 1918): __traits(getVirtualFunctions) returns final functions)
+	$(LI $(BUGZILLA 1920): Class documentation incomplete)
+	$(LI $(BUGZILLA 1943): Templates can't take function pointer parameters)
+	$(LI $(BUGZILLA 2106): export class doesn't affect, what is exported)
+	$(LI $(BUGZILLA 2351): enum with no members allowed)
+	$(LI $(BUGZILLA 2382): spec is not clear on what is allowed as global/static initializers)
+	$(LI $(BUGZILLA 2387): Static array terminology)
+	$(LI $(BUGZILLA 2417): [module] protected base member is not available via base handle in a derived class if it is defined in a separate module)
+	$(LI $(BUGZILLA 2483): DMD allows assignment to a scope variable)
+	$(LI $(BUGZILLA 2494): describe explicit casting of arrays)
+	$(LI $(BUGZILLA 2495): const syntax for member functions needs better description)
+	$(LI $(BUGZILLA 2497): delete and null relationship needs more details)
+	$(LI $(BUGZILLA 2639): Hex and octal string values not completely specified)
+	$(LI $(BUGZILLA 2819): array.sort segfaults if array length >=0x8F_FFFF)
+	$(LI $(BUGZILLA 2894): abstract classes sometimes allow non-abstract bodyless functions)
+	$(LI $(BUGZILLA 3084): Formatting of lazy in parameters section)
+	$(LI $(BUGZILLA 3092): Indexing a tuple produces a tuple containing the indexed element)
+	$(LI $(BUGZILLA 3111): 'mangleof' can't be member of a struct not documented)
+	$(LI $(BUGZILLA 3187): Nested foreach over opApply doesn't work)
+	$(LI $(BUGZILLA 3204): Document global properties)
+	$(LI $(BUGZILLA 3265): .classinfo for Interface-typed reference does not return instance's ClassInfo)
+	$(LI $(BUGZILLA 3492): Can't overload nested functions)
+	$(LI $(BUGZILLA 3578): Impossible to run a struct invariant using assert(s))
+	$(LI $(BUGZILLA 3735): op=)
+	$(LI $(BUGZILLA 3757): Overloading const function with overridden non-const function results in seg fault.)
+	$(LI $(BUGZILLA 3777): size_t is undefined)
+	$(LI $(BUGZILLA 3783): Text inconsistent with EscapeSequence rules)
+	$(LI $(BUGZILLA 3787): clarification: assigment to 'this')
+	$(LI $(BUGZILLA 3791): Reference anonymous nested classes when describing new expressions)
+	$(LI $(BUGZILLA 3838): PrimaryExpression rule doesn't permit module scope template instances)
+	$(LI $(BUGZILLA 3886): Bad example of definition file for DLLs)
+	$(LI $(BUGZILLA 3906): Undefined struct and union declarations are not documented)
+	$(LI $(BUGZILLA 3954): DeclDef rule is missing TemplateMixinDeclaration)
+	$(LI $(BUGZILLA 3988): Provide canonical example for operator overloading)
+	$(LI $(BUGZILLA 4135): Regression(1.034): ICE(statement.c): mixin in bad foreach, D1 only)
+	$(LI $(BUGZILLA 4180): D DWARF extensions conflict with DWARF-4)
+	$(LI $(BUGZILLA 4235): !in not working (D1))
+	$(LI $(BUGZILLA 4371): segfault(template.c) template tuple in is() expression)
+	$(LI $(BUGZILLA 4413): typeof(this) doesn't work in method template signature)
+	$(LI $(BUGZILLA 4523): [tdpl] .remove method for Associative Arrays returns void in all cases)
+	$(LI $(BUGZILLA 4545): Alias to members possible without "this" instance)
+	$(LI $(BUGZILLA 4647): [tdpl] Cannot explicitly call final interface method, ambiguous calls allowed)
+	$(LI $(BUGZILLA 4711): Incorrect handling of && operator with void operand)
+	$(LI $(BUGZILLA 4887): Right-shifting by 32 is allowed and broken)
+	$(LI $(BUGZILLA 4956): remove direct references to gcc from linux.mak)
+	$(LI $(BUGZILLA 5023): Docs about order of execution of invariant and pre/post conditions)
+	$(LI $(BUGZILLA 5111): Static function-level variables are not in the language spec.)
+	$(LI $(BUGZILLA 5114): Too many error messages)
+	$(LI $(BUGZILLA 5132): ~ unary operator silently different from C)
+	$(LI $(BUGZILLA 5138): Special token sequence)
+	$(LI $(BUGZILLA 5337): Documentation regarding interfacing with C does not account for TLS differences)
+	$(LI $(BUGZILLA 5476): spec: attributes have an optional else clause)
+	$(LI $(BUGZILLA 5527): Bug in http://www.digitalmars.com/d/2.0/ctod.html#closures)
+	$(LI $(BUGZILLA 5648): dmd command line option list inconsistencies)
+	$(LI $(BUGZILLA 5715): Contradiction in spec: meaning of variable.init)
+	$(LI $(BUGZILLA 5796): ICE with pragma(msg, ...) after missing ';' in a template)
+	$(LI $(BUGZILLA 5820): Documentation states string literals can implicitly convert to char*)
+	$(LI $(BUGZILLA 5841): alias grammar is incorrect)
+	$(LI $(BUGZILLA 6013): private ignored for aliases)
+	$(LI $(BUGZILLA 6037): [CTFE] recursive ref parameters evaluated incorrectly)
+	$(LI $(BUGZILLA 6451): [64bit] ICE(expression.c:4434): SymbolExp::SymbolExp(Loc, TOK, int, Declaration*, int): Assertion 'var' failed)
+	$(LI $(BUGZILLA 6504): Regression(2.041): "str" ~ [arr] allows string literal to be modified)
+	$(LI $(BUGZILLA 6701): template specialization resolution failure)
+	$(LI $(BUGZILLA 6933): Segfault(declaration.c) using struct with destructor in CTFE)
+	$(LI $(BUGZILLA 6934): [CTFE] can't use $ in a slice of an array passed by ref)
+	$(LI $(BUGZILLA 6964): Error message with __error: static assert(undefined+1))
+	$(LI $(BUGZILLA 6968): Segmantation fault, if exclamation mark absent)
+	$(LI $(BUGZILLA 6971): [lex.dd] Type of string literals are outdated)
+	$(LI $(BUGZILLA 6984): CTFE generates a torrent of spurious errors, if there was a previous error)
+	$(LI $(BUGZILLA 6985): [CTFE] Non-constant case expressions can't be interpreted)
+	$(LI $(BUGZILLA 6995): [CTFE] can't interpret static template method)
+	$(LI $(BUGZILLA 7011): No line number error for vector power)
+	$(LI $(BUGZILLA 7043): CTFE: ICE illegal reference value 0LU, only with -inline)
+	$(LI $(BUGZILLA 7073): Parsing of class-returning varargs function inside module ctor fails)
+	$(LI $(BUGZILLA 7108): ICE: TraitsExp::semantic(Scope*) 2.056 -> 2.057 regression - segfault)
+	$(LI $(BUGZILLA 7120): Scope Delegates + Delegate Literals)
+	$(LI $(BUGZILLA 7123): static assert(is(typeof(toDelegate(&main)))) is false)
+	$(LI $(BUGZILLA 7127): Const-related infinite recursion in DWARF generation)
+	$(LI $(BUGZILLA 7143): [CTFE] cannot compare class references with "is")
+	$(LI $(BUGZILLA 7144): [CTFE] base class does not call overridden members)
+	$(LI $(BUGZILLA 7154): [CTFE] failing downcast causes error)
+	$(LI $(BUGZILLA 7158): [CTFE] ICE(interpret.c) calling a class member using a dotvar expression)
+	$(LI $(BUGZILLA 7162): [CTFE] "bool || void" expression crashes dmd)
+	$(LI $(BUGZILLA 7165): [CTFE] ice converting null pointer to bool with constant member function)
+	$(LI $(BUGZILLA 7166): Internal error: ../ztc/cgxmm.c 60)
+	$(LI $(BUGZILLA 7173): dmd: glue.c:1065: virtual unsigned int Type::totym(): Assertion `0' failed.)
+	$(LI $(BUGZILLA 7178): Segfault with import of invalid template)
+	$(LI $(BUGZILLA 7185): [CTFE] ICE on changing char array length)
+	$(LI $(BUGZILLA 7187): Regression(head 12d62ca5): [CTFE] ICE on slicing)
+	$(LI $(BUGZILLA 7188): "import phobos;" crashes DMD)
+	$(LI $(BUGZILLA 7189): inline failed)
+	$(LI $(BUGZILLA 7190): Tuple length incorrect)
+	$(LI $(BUGZILLA 7194): [CTFE] Incorrect behaviour with pointers as local struct variable)
+	$(LI $(BUGZILLA 7197): enum string doesn't work with CTFE)
+	$(LI $(BUGZILLA 7216): [CTFE] Can't call struct member function using pointer field)
+	$(LI $(BUGZILLA 7217): [CTFE] ICE on accessing struct array field)
+	$(LI $(BUGZILLA 7218): Nested function with contract is rejected)
+	$(LI $(BUGZILLA 7228): MOVDQ2Q instruction is emitted with swapped register indices)
+	$(LI $(BUGZILLA 7231): Segfault using opDispatch with property notation)
+	$(LI $(BUGZILLA 7232): Warning: statement is not reachable has no line number)
+	$(LI $(BUGZILLA 7239): C style struct initialization doesn't work with aliases)
+	$(LI $(BUGZILLA 7245): [CTFE] Address of ref foreach parameter changes to point after array)
+	$(LI $(BUGZILLA 7248): [CTFE] Stack overflow on using struct filed pointer with address of array element)
+	$(LI $(BUGZILLA 7266): [CTFE] Assign to ref param (that's taken from struct member) is noop)
+	$(LI $(BUGZILLA 7277): [CTFE ICE] Assertion failure: 'thisval' on line 1690 in file 'interpret.c')
+	$(LI $(BUGZILLA 7285): Implicit fixed-size array cast)
+	$(LI $(BUGZILLA 7309): [2.058] Regression caused by new inlining code)
+	$(LI $(BUGZILLA 7335): sometimes the OUT - block have undefined class members-acces)
+	$(LI $(BUGZILLA 7351): Possible asm bug: bad type/size of operands 'xadd')
+	$(LI $(BUGZILLA 7359): Template function with typesafe variadic rejects more than one string arguments)
+	$(LI $(BUGZILLA 7367): wrong char comparison result)
+	$(LI $(BUGZILLA 7373): (Regression git) Renamed imports conflict with other implicitly imported symbols)
+	$(LI $(BUGZILLA 7375): Regression(2.057): Invalid downcast permitted with derived/aliased template classes)
+	$(LI $(BUGZILLA 7377): Compiler segfault in: TemplateMixin::hasPointers())
+	$(LI $(BUGZILLA 7383): Blank lines in code sections cause premature section termination)
+	$(LI $(BUGZILLA 7419): [2.058/CTFE] Constructor of struct is overwritten inside a unittest with -inline)
+	$(LI $(BUGZILLA 7435): Regression(master):dmd crashes when 'scope(failure) debug ...' without -debug option.)
     )
 )
 
