@@ -31,7 +31,7 @@ d3.gif d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
 dmlogo-smaller.gif download.png fedora_logo.png freebsd_logo.png		\
 gradient-green.jpg gradient-red.jpg globe.gif linux_logo.png			\
 mac_logo.png opensuse_logo.png pen.gif search-left.gif search-bg.gif	\
-search-button.gif Thumbs.db tdpl.jpg ubuntu_logo.png win32_logo.png)
+search-button.gif tdpl.jpg ubuntu_logo.png win32_logo.png)
 
 STYLES=css/style.css css/print.css
 
