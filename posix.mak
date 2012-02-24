@@ -190,13 +190,13 @@ ${DMD_DIR}.${LATEST}/src/dmd :
 	[ -d ${DMD_DIR}.${LATEST} ] || \
 	  git clone ${GIT_HOME}/dmd ${DMD_DIR}.${LATEST}/
 	cd ${DMD_DIR}.${LATEST} && git checkout v${LATEST}
-	make --directory=${DMD_DIR}.${LATEST}/src -f posix.mak clean
-	make --directory=${DMD_DIR}.${LATEST}/src -f posix.mak -j 4
+	${MAKE} --directory=${DMD_DIR}.${LATEST}/src -f posix.mak clean
+	${MAKE} --directory=${DMD_DIR}.${LATEST}/src -f posix.mak -j 4
 
 ${DMD_DIR}/src/dmd :
 	[ -d ${DMD_DIR} ] || git clone ${GIT_HOME}/dmd ${DMD_DIR}/
-	make --directory=${DMD_DIR}/src -f posix.mak clean
-	make --directory=${DMD_DIR}/src -f posix.mak -j 4
+	${MAKE} --directory=${DMD_DIR}/src -f posix.mak clean
+	${MAKE} --directory=${DMD_DIR}/src -f posix.mak -j 4
 
 ################################################################################
 # druntime, latest released build and current build
@@ -204,7 +204,7 @@ ${DMD_DIR}/src/dmd :
 
 druntime-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
 ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd
-	make --directory=${DRUNTIME_DIR} -f posix.mak \
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT=../d-programming-language.org/std.ddoc \
 		doc -j 4
@@ -214,8 +214,8 @@ ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
 	[ -d ${DRUNTIME_DIR}.${LATEST} ] || \
 	  git clone ${GIT_HOME}/druntime ${DRUNTIME_DIR}.${LATEST}/
 	cd ${DRUNTIME_DIR}.${LATEST} && git checkout v${LATEST}
-	make --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak clean
-	make --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak \
+	${MAKE} --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak clean
+	${MAKE} --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak \
 	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
 	  DOCFMT=../d-programming-language.org/std.ddoc doc -j 4
@@ -227,7 +227,7 @@ ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
 phobos-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
-	cd ${PHOBOS_DIR} && make -f posix.mak \
+	cd ${PHOBOS_DIR} && ${MAKE} -f posix.mak \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-release: ${DOC_OUTPUT_DIR}/phobos/index.html
@@ -236,7 +236,7 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : \
 	[ -d ${PHOBOS_DIR}.${LATEST} ] || \
 	  git clone ${GIT_HOME}/phobos ${PHOBOS_DIR}.${LATEST}/
 	cd ${PHOBOS_DIR}.${LATEST} && git checkout v${LATEST}
-	make --directory=${PHOBOS_DIR}.${LATEST} -f posix.mak -j 4 \
+	${MAKE} --directory=${PHOBOS_DIR}.${LATEST} -f posix.mak -j 4 \
 	  release html \
 	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
 	  DDOC=${DMD_DIR}.${LATEST}/src/dmd \
