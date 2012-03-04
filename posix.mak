@@ -148,7 +148,7 @@ zip:
 	rm doc.zip
 	zip32 doc win32.mak style.css $(DDOC)
 	zip32 doc $(SRC) download.html
-	zip32 doc $(IMG)
+	zip32 doc $(IMAGES) $(STYLES)
 
 clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
