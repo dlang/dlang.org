@@ -251,6 +251,31 @@ $(GNAME ProtectionAttribute):
         is analogous to exporting definitions from a DLL.
         )
 
+        $(P Protection does not participate in name lookup.
+        In particular, if two symbols with the same name are in scope,
+        and that name is used unqualified then the lookup will be ambiguous,
+        even if one of the symbols is inaccessible due to protection.
+        For example:
+        )
+
+---------------
+module A;
+private class Foo {}
+---------------
+
+---------------
+module B;
+public class Foo {}
+---------------
+
+---------------
+import A;
+import B;
+
+Foo f1; // error, could be either A.Foo or B.Foo
+B.Foo f2; // ok
+---------------
+
 <h2>$(LNAME2 const, Const Attribute)</h2>
 
         $(P The $(B const) attribute declares constants that can be
