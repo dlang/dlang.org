@@ -4,7 +4,7 @@ $(SPEC_S Interfacing to C++,
 
 	$(P
 	While D is fully capable of
-	$(LINK2 interfaceToC.html, interfacing to C),
+	$(DDLINK interfaceToC, Interfacing to C, interfacing to C),
 	its ability to interface to C++ is much more limited.
 	There are three ways to do it:
 	)
@@ -13,13 +13,13 @@ $(SPEC_S Interfacing to C++,
 
 	$(LI Use C++'s ability to create a C interface, and then
 	use D's ability to
-	$(LINK2 interfaceToC.html, interface with C)
+	$(DDLINK interfaceToC, Interfacing to C, interface with C)
 	to access that interface.
 	)
 
 	$(LI Use C++'s ability to create a COM interface, and then
 	use D's ability to
-	$(LINK2 COM.html, interface with COM)
+	$(DPLLINK COM.html, interface with COM)
 	to access that interface.
 	)
 
@@ -70,13 +70,12 @@ $(CPPCODE
 
 using namespace std;
 
-int foo(int i, int j, int k)
-{
-    cout &lt;&lt; "i = " &lt;&lt; i &lt;&lt; endl;
-    cout &lt;&lt; "j = " &lt;&lt; j &lt;&lt; endl;
-    cout &lt;&lt; "k = " &lt;&lt; k &lt;&lt; endl;
+int foo(int i, int j, int k) {
+  cout &lt;&lt; "i = " &lt;&lt; i &lt;&lt; endl;
+  cout &lt;&lt; "j = " &lt;&lt; j &lt;&lt; endl;
+  cout &lt;&lt; "k = " &lt;&lt; k &lt;&lt; endl;
 
-    return 7;
+  return 7;
 }
 )
 
@@ -93,9 +92,8 @@ extern (C++) int foo(int i, int j, int k);
 ------
 extern (C++) int foo(int i, int j, int k);
 
-void main()
-{
-    foo(1,2,3);
+void main() {
+  foo(1,2,3);
 }
 ------
 
@@ -142,19 +140,17 @@ k = 3
 ---
 import std.stdio;
 
-extern (C++) int foo(int i, int j, int k)
-{
-    writefln("i = %s", i);
-    writefln("j = %s", j);
-    writefln("k = %s", k);
-    return 1;
+extern (C++) int foo(int i, int j, int k) {
+  writefln("i = %s", i);
+  writefln("j = %s", j);
+  writefln("k = %s", k);
+  return 1;
 }
 
 extern (C++) void bar();
 
-void main()
-{
-    bar();
+void main() {
+  bar();
 }
 ---
 
@@ -163,9 +159,8 @@ void main()
 $(CPPCODE
 int foo(int i, int j, int k);
 
-void bar()
-{
-    foo(6, 7, 8);
+void bar() {
+  foo(6, 7, 8);
 }
 )
 
@@ -202,42 +197,37 @@ $(CPPCODE
 
 using namespace std;
 
-class D
-{
-  public:
-    virtual int bar(int i, int j, int k)
-    {
-	cout &lt;&lt; "i = " &lt;&lt; i &lt;&lt; endl;
-	cout &lt;&lt; "j = " &lt;&lt; j &lt;&lt; endl;
-	cout &lt;&lt; "k = " &lt;&lt; k &lt;&lt; endl;
-	return 8;
-    }
+class D {
+ public:
+  virtual int bar(int i, int j, int k)
+  {
+    cout &lt;&lt; "i = " &lt;&lt; i &lt;&lt; endl;
+    cout &lt;&lt; "j = " &lt;&lt; j &lt;&lt; endl;
+    cout &lt;&lt; "k = " &lt;&lt; k &lt;&lt; endl;
+    return 8;
+  }
 };
 
-D *getD()
-{
-    D *d = new D();
-    return d;
+D *getD() {
+  D *d = new D();
+  return d;
 }
 )
 
 	$(P We can get at it from D code like:)
 
 ---
-extern (C++)
-{
-  interface D
-  {
+extern (C++) {
+  interface D {
     int bar(int i, int j, int k);
   }
 
   D getD();
 }
 
-void main()
-{
-    D d = getD();
-    d.bar(9,10,11);
+void main() {
+  D d = getD();
+  d.bar(9,10,11);
 }
 ---
 
@@ -248,42 +238,37 @@ void main()
 ---
 extern (C++) int callE(E);
 
-extern (C++) interface E
-{
-    int bar(int i, int j, int k);
+extern (C++) interface E {
+  int bar(int i, int j, int k);
 }
 
-class F : E
-{
-    extern (C++) int bar(int i, int j, int k)
-    {
-	writefln("i = ", i);
-	writefln("j = ", j);
-	writefln("k = ", k);
-	return 8;
-    }
+class F : E {
+  extern (C++) int bar(int i, int j, int k)
+  {
+    writefln("i = ", i);
+    writefln("j = ", j);
+    writefln("k = ", k);
+    return 8;
+  }
 }
 
-void main()
-{
-    F f = new F();
-    callE(f);
+void main() {
+  F f = new F();
+  callE(f);
 }
 ---
 
 	$(P The C++ code to access it looks like:)
 
 $(CPPCODE
-class E
-{
-  public:
-    virtual int bar(int i, int j, int k);
+class E {
+ public:
+  virtual int bar(int i, int j, int k);
 };
 
 
-int callE(E *e)
-{
-    return e->bar(11,12,13);
+int callE(E *e) {
+  return e->bar(11,12,13);
 }
 )
 
@@ -358,8 +343,7 @@ int callE(E *e)
 
 <h2>Data Type Compatibility</h2>
 
-	$(TABLE1
-	<caption>D And C Type Equivalence</caption>
+	$(TABLE2 D And C Type Equivalence,
 
 	$(TR
 	$(TH D type)
@@ -552,7 +536,7 @@ int callE(E *e)
 
 	$(P D does not support bit fields. If needed, they can be emulated
 	with shift and mask operations.
-	$(LINK2 htod.html, htod) will convert bit fields to inline functions that
+	$(DPLLINK htod.html, htod) will convert bit fields to inline functions that
 	do the right shift and masks.
 	)
 

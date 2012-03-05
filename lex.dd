@@ -2,84 +2,26 @@ Ddoc
 
 $(SPEC_S Lexical,
 
-	In D, the lexical analysis is independent of the syntax parsing and the
+	The lexical analysis is independent of the syntax parsing and the
 	semantic analysis. The lexical analyzer splits the source text up into
-	tokens. The lexical grammar describes what those tokens are. The D
-	lexical grammar is designed to be suitable for high speed scanning, it
+	tokens. The lexical grammar describes what those tokens are. The
+	grammar is designed to be suitable for high speed scanning, it
 	has a minimum of special case rules, there is only one phase of
 	translation, and to make it easy to write a correct scanner
 	for. The tokens are readily recognizable by those familiar with C and
 	C++.
 
-<h3>Phases of Compilation</h3>
-
-	The process of compiling is divided into multiple phases. Each phase
-	has no dependence on subsequent phases. For example, the scanner is
-	not perturbed by the semantic analyzer. This separation of the passes
-	makes language tools like syntax
-	directed editors relatively easy to produce.
-	It also is possible to compress D source by storing it in
-	$(SINGLEQUOTE tokenized) form.
-
-$(OL
-	$(LI $(B source character set)$(BR)
-
-	The source file is checked to see what character set it is,
-	and the appropriate scanner is loaded. ASCII and UTF
-	formats are accepted.
-	)
-
-	$(LI $(B script line) $(BR)
-
-	If the first line starts with $(GREEN #!) then the first line
-	is ignored.
-	)
-
-	$(LI $(B lexical analysis)$(BR)
-
-	The source file is divided up into a sequence of tokens.
-	$(LINK2 #specialtokens, Special tokens) are replaced with other tokens.
-	$(LINK2 #specialtokenseq, Special token sequences)
-	are processed and removed.
-	)
-
-	$(LI $(B syntax analysis)$(BR)
-
-	The sequence of tokens is parsed to form syntax trees.
-	)
-
-	$(LI $(B semantic analysis)$(BR)
-
-	The syntax trees are traversed to declare variables, load symbol tables, assign
-	types, and in general determine the meaning of the program.
-	)
-
-	$(LI $(B optimization)$(BR)
-
-	Optimization is an optional pass that tries to rewrite the program
-	in a semantically equivalent, but faster executing, version.
-	)
-
-	$(LI $(B code generation)$(BR)
-
-	Instructions are selected from the target architecture to implement
-	the semantics of the program. The typical result will be
-	an object file, suitable for input to a linker.
-	)
-)
-
-
 <h3>Source Text</h3>
 
 	D source text can be in one of the following formats:
 
-	$(UL
-	$(LI ASCII)
-	$(LI UTF-8)
-	$(LI UTF-16BE)
-	$(LI UTF-16LE)
-	$(LI UTF-32BE)
-	$(LI UTF-32LE)
+	$(LIST
+	ASCII,
+	UTF-8,
+	UTF-16BE,
+	UTF-16LE,
+	UTF-32BE,
+	UTF-32LE
 	)
 
 	UTF-8 is a superset of traditional 7-bit ASCII.
@@ -89,34 +31,13 @@ $(OL
 	<p>
 
 	$(TABLE2 UTF Byte Order Marks,
-	$(TR
-	$(TH Format)
-	$(TH BOM)
-	)
-	$(TR
-	$(TD UTF-8)
-	$(TD EF BB BF)
-	)
-	$(TR
-	$(TD UTF-16BE)
-	$(TD FE FF)
-	)
-	$(TR
-	$(TD UTF-16LE)
-	$(TD FF FE)
-	)
-	$(TR
-	$(TD UTF-32BE)
-	$(TD 00 00 FE FF)
-	)
-	$(TR
-	$(TD UTF-32LE)
-	$(TD FF FE 00 00)
-	)
-	$(TR
-	$(TD ASCII)
-	$(TD no BOM)
-	)
+	$(THEAD Format, BOM)
+	$(TROW UTF-8, EF BB BF)
+	$(TROW UTF-16BE, FE FF)
+	$(TROW UTF-16LE, FF FE)
+	$(TROW UTF-32BE, 00 00 FE FF)
+	$(TROW UTF-32LE, FF FE 00 00)
+	$(TROW ASCII, no BOM)
 	)
 
 	$(P If the source file does not start with a BOM, then the first
@@ -125,15 +46,15 @@ $(OL
 	$(P There are no digraphs or trigraphs in D.)
 
 	$(P The source text is decoded from its source representation
-	into Unicode $(I Character)s.
-	The $(I Character)s are further divided into:
+	into Unicode $(GLINK Character)s.
+	The $(GLINK Character)s are further divided into:
 
-	$(LINK2 #whitespace, white space),
-	$(LINK2 #endofline, end of lines),
-	$(LINK2 #comment, comments),
-	$(LINK2 #specialtokens, special token sequences),
-	$(LINK2 #tokens, tokens),
-	all followed by $(LINK2 #eof, end of file).
+	$(GLINK WhiteSpace),
+	$(GLINK EndOfLine),
+	$(GLINK Comment)s,
+	$(GLINK SpecialTokenSequence)s,
+	$(GLINK Token)s,
+	all followed by $(GLINK EndOfFile).
 	)
 
 	$(P The source text is split into tokens using the maximal munch
@@ -146,74 +67,88 @@ $(OL
 	first integer.
 	)
 
-<h3>$(LNAME2 eof, End of File)</h3>
+<h3>Character Set</h3>
 
 $(GRAMMAR
-$(I EndOfFile):
-	$(I physical end of the file)
-	\u0000
-	\u001A
+$(GNAME Character)
+    $(I any Unicode character)
+)
+
+<h3>End of File</h3>
+
+$(GRAMMAR
+$(GNAME EndOfFile):
+    $(I physical end of the file)
+    \u0000
+    \u001A
 )
 
 	The source text is terminated by whichever comes first.
 
-<h3>$(LNAME2 endofline, End of Line)</h3>
+<h3>End of Line</h3>
 
 $(GRAMMAR
-$(I EndOfLine):
-	\u000D
-	\u000A
-	\u000D \u000A
-	$(I EndOfFile)
+$(GNAME EndOfLine):
+    \u000D
+    \u000A
+    \u000D \u000A
+    $(GLINK EndOfFile)
 )
 
 	There is no backslash line splicing, nor are there any limits
 	on the length of a line.
 
-<h3>$(LNAME2 whitespace, White Space)</h3>
+<h3>White Space</h3>
 
 $(GRAMMAR
-$(I WhiteSpace):
-	$(I Space)
-	$(I Space) $(I WhiteSpace)
+$(GNAME WhiteSpace):
+    $(GLINK Space)
+    $(GLINK Space) $(I WhiteSpace)
 
-$(I Space):
-	\u0020
-	\u0009
-	\u000B
-	\u000C
+$(GNAME Space):
+    \u0020
+    \u0009
+    \u000B
+    \u000C
 )
 
 
 <h3>$(LNAME2 comment, Comments)</h3>
 
 $(GRAMMAR
-$(I Comment):
-	$(B /*) $(I Characters) $(B */)
-	$(B //) $(I Characters) $(I EndOfLine)
-	$(I NestingBlockComment)
+$(GNAME Comment):
+    $(GLINK BlockComment)
+    $(GLINK LineComment)
+    $(GLINK NestingBlockComment)
 
-$(I Characters):
-	$(I Character)
-	$(I Character) $(I Characters)
+$(GNAME BlockComment)
+    $(B /*) $(GLINK Characters) $(B */)
 
-$(I NestingBlockComment):
-	$(B /+) $(I NestingBlockCommentCharacters) $(B +/)
+$(GNAME LineComment)
+    $(B //) $(GLINK Characters) $(GLINK EndOfLine)
 
-$(I NestingBlockCommentCharacters):
-	$(I NestingBlockCommentCharacter)
-	$(I NestingBlockCommentCharacter) $(I NestingBlockCommentCharacters)
+$(GNAME NestingBlockComment):
+    $(B /+) $(GLINK NestingBlockCommentCharacters) $(B +/)
 
-$(I NestingBlockCommentCharacter):
-	$(I Character)
-	$(I NestingBlockComment)
+$(GNAME NestingBlockCommentCharacters):
+    $(GLINK NestingBlockCommentCharacter)
+    $(GLINK NestingBlockCommentCharacter) $(I NestingBlockCommentCharacters)
+
+$(GNAME NestingBlockCommentCharacter):
+    $(GLINK Character)
+    $(GLINK NestingBlockComment)
+
+$(GNAME Characters):
+    $(GLINK Character)
+    $(GLINK Character) $(I Characters)
 )
 
-	D has three kinds of comments:
+	$(P D has three kinds of comments:)
+
 	$(OL
 	$(LI Block comments can span multiple lines, but do not nest.)
 	$(LI Line comments terminate at the end of the line.)
-	$(LI Nesting comments can span multiple lines and can nest.)
+	$(LI Nesting block comments can span multiple lines and can nest.)
 	)
 
 	$(P
@@ -226,106 +161,108 @@ $(I NestingBlockCommentCharacter):
 	)
 
 -------------
-a = /+ // +/ 1;		// parses as if 'a = 1;'
-a = /+ "+/" +/ 1";	// parses as if 'a = " +/ 1";'
-a = /+ /* +/ */ 3;	// parses as if 'a = */ 3;'
+a = /+ // +/ 1;    // parses as if 'a = 1;'
+a = /+ "+/" +/ 1"; // parses as if 'a = " +/ 1";'
+a = /+ /* +/ */ 3; // parses as if 'a = */ 3;'
 -------------
 
 	Comments cannot be used as token concatenators, for example,
-	<code>abc/**/def</code> is two tokens, $(TT abc) and $(TT def),
-	not one $(TT abcdef) token.
+	<code>abc/**/def</code> is two tokens, $(D abc) and $(D def),
+	not one $(D abcdef) token.
 
-<h3>$(LNAME2 tokens, Tokens)</h3>
+<h3>Tokens</h3>
 
 $(GRAMMAR
-$(I Token):
-	$(LINK2 #identifier, $(I Identifier))
-	$(LINK2 #StringLiteral, $(I StringLiteral))
-	$(LINK2 #characterliteral, $(I CharacterLiteral))
-	$(LINK2 #integerliteral, $(I IntegerLiteral))
-	$(LINK2 #floatliteral, $(I FloatLiteral))
-	$(LINK2 #keyword, $(I Keyword))
-	$(B /)
-	$(B /=)
-	$(B .)
-	$(B ..)
-	$(B ...)
-	$(B &)
-	$(B &=)
-	$(B &&)
-	$(B |)
-	$(B |=)
-	$(B ||)
-	$(B -)
-	$(B -=)
-	$(B --)
-	$(B +)
-	$(B +=)
-	$(B ++)
-	$(B &lt;)
-	$(B &lt;=)
-	$(B &lt;&lt;)
-	$(B &lt;&lt;=)
-	$(B &lt;&gt;)
-	$(B &lt;&gt=)
-	$(B &gt;)
-	$(B &gt;=)
-	$(B &gt;&gt;=)
-	$(B &gt;&gt;&gt;=)
-	$(B &gt;&gt;)
-	$(B &gt;&gt;&gt;)
-	$(B !)
-	$(B !=)
-	$(B !&lt;&gt;)
-	$(B !&lt;&gt;=)
-	$(B !&lt;)
-	$(B !&lt;=)
-	$(B !&gt;)
-	$(B !&gt;=)
-	$(B $(LPAREN))
-	$(B $(RPAREN))
-	$(B [)
-	$(B ])
-	$(B {)
-	$(B })
-	$(B ?)
-	$(B ,)
-	$(B ;)
-	$(B :)
-	$(B $)
-	$(B =)
-	$(B ==)
-	$(B *)
-	$(B *=)
-	$(B %)
-	$(B %=)
-	$(B ^)
-	$(B ^=)
-	$(B ~)
-	$(B ~=)
-	$(V2 $(B @))
+$(GNAME Token):
+    $(GLINK Identifier)
+    $(GLINK StringLiteral)
+    $(GLINK CharacterLiteral)
+    $(GLINK IntegerLiteral)
+    $(GLINK FloatLiteral)
+    $(GLINK Keyword)
+    $(B /)
+    $(B /=)
+    $(B .)
+    $(B ..)
+    $(B ...)
+    $(B &)
+    $(B &=)
+    $(B &&)
+    $(B |)
+    $(B |=)
+    $(B ||)
+    $(B -)
+    $(B -=)
+    $(B --)
+    $(B +)
+    $(B +=)
+    $(B ++)
+    $(B &lt;)
+    $(B &lt;=)
+    $(B &lt;&lt;)
+    $(B &lt;&lt;=)
+    $(B &lt;&gt;)
+    $(B &lt;&gt=)
+    $(B &gt;)
+    $(B &gt;=)
+    $(B &gt;&gt;=)
+    $(B &gt;&gt;&gt;=)
+    $(B &gt;&gt;)
+    $(B &gt;&gt;&gt;)
+    $(B !)
+    $(B !=)
+    $(B !&lt;&gt;)
+    $(B !&lt;&gt;=)
+    $(B !&lt;)
+    $(B !&lt;=)
+    $(B !&gt;)
+    $(B !&gt;=)
+    $(B $(LPAREN))
+    $(B $(RPAREN))
+    $(B [)
+    $(B ])
+    $(B {)
+    $(B })
+    $(B ?)
+    $(B ,)
+    $(B ;)
+    $(B :)
+    $(B $)
+    $(B =)
+    $(B ==)
+    $(B *)
+    $(B *=)
+    $(B %)
+    $(B %=)
+    $(B ^)
+    $(B ^=)
+    $(B ~)
+    $(B ~=)
+    $(V2 $(B @))
+    $(V2 $(B =>))
+    $(V2 $(B #))
 )
 
-<h3>$(LNAME2 identifier, Identifiers)</h3>
+<h3>Identifiers</h3>
 
 $(GRAMMAR
-$(I Identifier):
-	$(I IdentiferStart)
-	$(I IdentiferStart) $(I IdentifierChars)
+$(GNAME Identifier):
+    $(GLINK IdentifierStart)
+    $(GLINK IdentifierStart) $(GLINK IdentifierChars)
 
-$(I IdentifierChars):
-	$(I IdentiferChar)
-	$(I IdentiferChar) $(I IdentifierChars)
+$(GNAME IdentifierChars):
+    $(GLINK IdentifierChar)
+    $(GLINK IdentifierChar) $(I IdentifierChars)
 
-$(I IdentifierStart):
-	$(B _)
-	$(I Letter)
-	$(I UniversalAlpha)
+$(GNAME IdentifierStart):
+    $(B _)
+    $(I Letter)
+    $(I UniversalAlpha)
 
-$(I IdentifierChar):
-	$(I IdentiferStart)
-	$(B 0)
-	$(I NonZeroDigit)
+$(GNAME IdentifierChar):
+    $(GLINK IdentifierStart)
+    $(B 0)
+    $(GLINK NonZeroDigit)
 )
 
 
@@ -337,90 +274,90 @@ $(I IdentifierChar):
 	Identifiers can be arbitrarily long, and are case sensitive.
 	Identifiers starting with $(B __) (two underscores) are reserved.
 
-<h3>$(LNAME2 StringLiteral, String Literals)</h3>
+<h3>String Literals</h3>
 
 $(GRAMMAR
-$(I StringLiteral):
-	$(I WysiwygString)
-	$(I AlternateWysiwygString)
-	$(I DoubleQuotedString)
+$(GNAME StringLiteral):
+    $(GLINK WysiwygString)
+    $(GLINK AlternateWysiwygString)
+    $(GLINK DoubleQuotedString)
 $(V1
-	$(I EscapeSequence))
-	$(I HexString)
+    $(GLINK EscapeSequence))
+    $(GLINK HexString)
 $(V2
-	$(I DelimitedString)
-	$(I TokenString))
+    $(GLINK DelimitedString)
+    $(GLINK TokenString))
 
-$(I WysiwygString):
-	$(B r") $(I WysiwygCharacters) $(B ") $(I Postfix<sub>opt</sub>)
+$(GNAME WysiwygString):
+    $(B r") $(GLINK WysiwygCharacters) $(B ") $(GLINK StringPostfix)<sub>opt</sub>
 
-$(I AlternateWysiwygString):
-	$(B `) $(I WysiwygCharacters) $(B `) $(I Postfix<sub>opt</sub>)
+$(GNAME AlternateWysiwygString):
+    $(B `) $(GLINK WysiwygCharacters) $(B `) $(GLINK StringPostfix)<sub>opt</sub>
 
-$(I WysiwygCharacters):
-	$(I WysiwygCharacter)
-	$(I WysiwygCharacter) $(I WysiwygCharacters)
+$(GNAME WysiwygCharacters):
+    $(GLINK WysiwygCharacter)
+    $(GLINK WysiwygCharacter) $(I WysiwygCharacters)
 
-$(I WysiwygCharacter):
-	$(I Character)
-	$(I EndOfLine)
+$(GNAME WysiwygCharacter):
+    $(GLINK Character)
+    $(GLINK EndOfLine)
 
-$(I DoubleQuotedString):
-	$(B ") $(I DoubleQuotedCharacters) $(B ") $(I Postfix<sub>opt</sub>)
+$(GNAME DoubleQuotedString):
+    $(B ") $(GLINK DoubleQuotedCharacters) $(B ") $(GLINK StringPostfix)<sub>opt</sub>
 
-$(I DoubleQuotedCharacters):
-	$(I DoubleQuotedCharacter)
-	$(I DoubleQuotedCharacter) $(I DoubleQuotedCharacters)
+$(GNAME DoubleQuotedCharacters):
+    $(GLINK DoubleQuotedCharacter)
+    $(GLINK DoubleQuotedCharacter) $(I DoubleQuotedCharacters)
 
-$(I DoubleQuotedCharacter):
-	$(I Character)
-	$(I EscapeSequence)
-	$(I EndOfLine)
+$(GNAME DoubleQuotedCharacter):
+    $(GLINK Character)
+    $(GLINK EscapeSequence)
+    $(GLINK EndOfLine)
 
-$(LNAME2 EscapeSequence, $(I EscapeSequence)):
-	$(B \')
-	$(B \")
-	$(B \?)
-	$(B \\)
-	$(B \a)
-	$(B \b)
-	$(B \f)
-	$(B \n)
-	$(B \r)
-	$(B \t)
-	$(B \v)
-	$(B \) $(I EndOfFile)
-	$(B \x) $(I HexDigit) $(I HexDigit)
-	$(B \) $(I OctalDigit)
-	$(B \) $(I OctalDigit) $(I OctalDigit)
-	$(B \) $(I OctalDigit) $(I OctalDigit) $(I OctalDigit)
-	$(B \u) $(I HexDigit) $(I HexDigit) $(I HexDigit) $(I HexDigit)
-	$(B \U) $(I HexDigit) $(I HexDigit) $(I HexDigit) $(I HexDigit) $(I HexDigit) $(I HexDigit) $(I HexDigit) $(I HexDigit)
-	$(B \&amp;) $(LINK2 entity.html, $(I NamedCharacterEntity)) $(B ;)
+$(GNAME EscapeSequence):
+    $(B \')
+    $(B \")
+    $(B \?)
+    $(B \\)
+    $(B \a)
+    $(B \b)
+    $(B \f)
+    $(B \n)
+    $(B \r)
+    $(B \t)
+    $(B \v)
+    $(B \) $(GLINK EndOfFile)
+    $(B \x) $(GLINK HexDigit) $(GLINK HexDigit)
+    $(B \) $(GLINK OctalDigit)
+    $(B \) $(GLINK OctalDigit) $(GLINK OctalDigit)
+    $(B \) $(GLINK OctalDigit) $(GLINK OctalDigit) $(GLINK OctalDigit)
+    $(B \u) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit)
+    $(B \U) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit) $(GLINK HexDigit)
+    $(GLINK2 entity, NamedCharacterEntity)
 
-$(I HexString):
-	$(B x") $(I HexStringChars) $(B ") $(I Postfix<sub>opt</sub>)
+$(GNAME HexString):
+    $(B x") $(GLINK HexStringChars) $(B ") $(GLINK StringPostfix)<sub>opt</sub>
 
-$(I HexStringChars):
-	$(I HexStringChar)
-	$(I HexStringChar) $(I HexStringChars)
+$(GNAME HexStringChars):
+    $(GLINK HexStringChar)
+    $(GLINK HexStringChar) $(I HexStringChars)
 
-$(I HexStringChar):
-	$(I HexDigit)
-	$(I WhiteSpace)
-	$(I EndOfLine)
+$(GNAME HexStringChar):
+    $(GLINK HexDigit)
+    $(GLINK WhiteSpace)
+    $(GLINK EndOfLine)
 
-$(I Postfix):
-	$(B c)
-	$(B w)
-	$(B d)
+$(GNAME StringPostfix):
+    $(B c)
+    $(B w)
+    $(B d)
 
 $(V2
-$(I DelimitedString):
-	$(B q") $(I Delimiter) $(I WysiwygCharacters) $(I MatchingDelimiter) $(B ")
+$(GNAME DelimitedString):
+    $(B q") $(I Delimiter) $(GLINK WysiwygCharacters) $(I MatchingDelimiter) $(B ")
 
-$(I TokenString):
-	$(B q{) $(I Tokens) $(B })
+$(GNAME TokenString):
+    $(B q{) $(GLINK Token)s $(B })
 )
 )
 
@@ -431,20 +368,23 @@ $(I TokenString):
 	or a hex string.
 	)
 
+	$(P In all string literal forms, an $(GLINK EndOfLine) is regarded as a single
+	\n character.)
+
 <h4>Wysiwyg Strings</h4>
 
 	$(P
 	Wysiwyg quoted strings are enclosed by r" and ".
 	All characters between
-	the r" and " are part of the string except for $(I EndOfLine) which is
-	regarded as a single \n character.
+	the r" and " are part of the string.
 	There are no escape sequences inside r" ":
 	)
 
 ---------------
 r"hello"
 r"c:\root\foo.exe"
-r"ab\n"			// string is 4 characters, 'a', 'b', '\', 'n'
+r"ab\n" // string is 4 characters,
+        // 'a', 'b', '\', 'n'
 ---------------
 
 	$(P
@@ -458,21 +398,23 @@ r"ab\n"			// string is 4 characters, 'a', 'b', '\', 'n'
 ---------------
 `hello`
 `c:\root\foo.exe`
-`ab\n`			// string is 4 characters, 'a', 'b', '\', 'n'
+`ab\n`  // string is 4 characters,
+        // 'a', 'b', '\', 'n'
 ---------------
 
 <h4>Double Quoted Strings</h4>
 
 	Double quoted strings are enclosed by "". Escape sequences can be
 	embedded into them with the typical \ notation.
-	$(I EndOfLine) is regarded as a single \n character.
 
 ---------------
 "hello"
 "c:\\root\\foo.exe"
-"ab\n"			// string is 3 characters, 'a', 'b', and a linefeed
+"ab\n"   // string is 3 characters,
+         // 'a', 'b', and a linefeed
 "ab
-"			// string is 3 characters, 'a', 'b', and a linefeed
+"        // string is 3 characters,
+         // 'a', 'b', and a linefeed
 ---------------
 
 $(V1
@@ -482,17 +424,17 @@ $(V1
 	Adjacent escape strings are concatenated:
 	)
 
-<pre>
-\n			the linefeed character
-\t			the tab character
-\"			the double quote character
-\012			octal
-\x1A			hex
-\u1234			wchar character
-\U00101234		dchar character
-\&amp;reg;			&reg; dchar character
-\r\n			carriage return, line feed
-</pre>
+$(TABLE1
+$(TROW \n,			the linefeed character)
+$(TROW \t,			the tab character)
+$(TROW \",			the double quote character)
+$(TROW \012,			octal)
+$(TROW \x1A,			hex)
+$(TROW \u1234,			wchar character)
+$(TROW \U00101234,		dchar character)
+$(TROW \&amp;reg;,		&reg; dchar character)
+$(TROW \r\n,			carriage return, line feed)
+)
 
 	$(P Undefined escape sequences are errors.
 	Although string literals are defined to be composed of
@@ -510,8 +452,9 @@ $(V1
 	)
 
 --------------
-x"0A"			// same as "\x0A"
-x"00 FBCD 32FD 0A"	// same as "\x00\xFB\xCD\x32\xFD\x0A"
+x"0A"              // same as "\x0A"
+x"00 FBCD 32FD 0A" // same as
+               // "\x00\xFB\xCD\x32\xFD\x0A"
 --------------
 
 	Whitespace and newlines are ignored, so the hex data can be
@@ -523,8 +466,9 @@ x"00 FBCD 32FD 0A"	// same as "\x00\xFB\xCD\x32\xFD\x0A"
 	juxtaposition:
 
 --------------
-"hello " ~ "world" ~ \n	// forms the string 'h','e','l','l','o',' ',
-			// 'w','o','r','l','d',linefeed
+"hello " ~ "world" ~ $(V1 \n)$(V2 "\n") // forms the string
+       // 'h','e','l','l','o',' ',
+       // 'w','o','r','l','d',linefeed
 --------------
 
 	The following are all equivalent:
@@ -534,40 +478,41 @@ x"00 FBCD 32FD 0A"	// same as "\x00\xFB\xCD\x32\xFD\x0A"
 r"ab" r"c"
 r"a" "bc"
 "a" ~ "b" ~ "c"
-\x61"bc"
+$(V1 \x61"bc")
 -----------------
 
-	The optional $(I Postfix) character gives a specific type
+	$(P The optional $(I StringPostfix) character gives a specific type
 	to the string, rather than it being inferred from the context.
 	This is useful when the type cannot be unambiguously inferred,
 	such as when overloading based on string type. The types corresponding
 	to the postfix characters are:
-	<p>
+	)
 
+$(V1
 	$(TABLE2 String Literal Postfix Characters,
-	$(TR
-	$(TH Postfix)
-	$(TH Type)
+	$(THEAD Postfix, Type, Aka)
+	$(TROW $(B c), $(D char[]), $(D string))
+	$(TROW $(B w), $(D wchar[]), $(D wstring))
+	$(TROW $(B d), $(D dchar[]), $(D dstring))
 	)
-	$(TR
-	$(TD $(B c))
-	$(TD char[ ])
+)
+$(V2
+	$(TABLE2 String Literal Postfix Characters,
+	$(THEAD Postfix, Type, Aka)
+	$(TROW $(B c), $(D immutable(char)[]), $(D string))
+	$(TROW $(B w), $(D immutable(wchar)[]), $(D wstring))
+	$(TROW $(B d), $(D immutable(dchar)[]), $(D dstring))
 	)
-	$(TR
-	$(TD $(B w))
-	$(TD wchar[ ])
-	)
-	$(TR
-	$(TD $(B d))
-	$(TD dchar[ ])
-	)
-	)
+)
+---
+"hello"c  // string
+"hello"w  // wstring
+"hello"d  // dstring
+---
 
----
-"hello"c          // char[]
-"hello"w          // wchar[]
-"hello"d          // dchar[]
----
+	$(P The string literals are assembled as UTF-8 char arrays,
+	and the postfix is applied
+	to convert to wchar or dchar as necessary as a final step.)
 
 	$(P String literals are read only. Writes to string literals
 	cannot always be detected, but cause undefined behavior.)
@@ -585,26 +530,11 @@ $(V2
 	)
 
 	$(TABLE2 Nesting Delimiters,
-	$(TR
-	$(TH Delimiter)
-	$(TH Matching Delimiter)
-	)
-	$(TR
-	$(TD [)
-	$(TD ])
-	)
-	$(TR
-	$(TD $(LPAREN))
-	$(TD $(RPAREN))
-	)
-	$(TR
-	$(TD &lt;)
-	$(TD &gt;)
-	)
-	$(TR
-	$(TD {)
-	$(TD })
-	)
+	$(THEAD Delimiter, Matching Delimiter)
+	$(TROW [, ])
+	$(TROW $(LPAREN), $(RPAREN))
+	$(TROW &lt;, &gt;)
+	$(TROW {, })
 	)
 
 ---
@@ -627,7 +557,8 @@ EOS"
 ---
 	$(P The newline following the opening identifier is not part
 	of the string, but the last newline before the closing
-	identifier is part of the string.
+	identifier is part of the string. The closing identifier
+    must be placed on its own line at the leftmost column.
 	)
 
 	$(P Otherwise, the matching delimiter is the same as
@@ -648,12 +579,11 @@ q"/abc/def/"    // error
 	)
 
 ---
-q{foo}               // "foo"
-q{/*}*/ }            // "/*}*/ "
-q{ foo(q{hello}); }  // " foo(q{hello}); "
-q{ @ }               // error, @ is not a valid D token
-q{ __TIME__ }        // " __TIME__ ", i.e. it is not replaced with the time
-q{ __EOF__ }         // error, as __EOF__ is not a token, it's end of file
+q{foo}              // "foo"
+q{/*}*/ }           // "/*}*/ "
+q{ foo(q{hello}); } // " foo(q{hello}); "
+q{ __TIME__ }       // " __TIME__ ", i.e. it is not replaced with the time
+q{ __EOF__ }        // error, as __EOF__ is not a token, it's end of file
 ---
 
 )
@@ -661,12 +591,12 @@ q{ __EOF__ }         // error, as __EOF__ is not a token, it's end of file
 <h3>$(LNAME2 characterliteral, Character Literals)</h3>
 
 $(GRAMMAR
-$(I CharacterLiteral):
-	$(B ') $(I SingleQuotedCharacter) $(B ')
+$(GNAME CharacterLiteral):
+    $(B ') $(GLINK SingleQuotedCharacter) $(B ')
 
-$(I SingleQuotedCharacter):
-	$(I Character)
-	$(I EscapeSequence)
+$(GNAME SingleQuotedCharacter):
+    $(GLINK Character)
+    $(GLINK EscapeSequence)
 )
 
 	Character literals are a single character or escape sequence
@@ -676,226 +606,208 @@ $(I SingleQuotedCharacter):
 
 $(GRAMMAR
 $(GNAME IntegerLiteral):
-	$(I Integer)
-	$(I Integer) $(I IntegerSuffix)
+    $(GLINK Integer)
+    $(GLINK Integer) $(I IntegerSuffix)
 
-$(I Integer):
-	$(I Decimal)
-	$(I Binary)
-	$(I Octal)
-	$(I Hexadecimal)
+$(GNAME Integer):
+    $(GLINK DecimalInteger)
+    $(GLINK BinaryInteger)
+$(V1    $(GLINK OctalInteger)
+)    $(GLINK HexadecimalInteger)
 
-$(I IntegerSuffix):
-	$(B L)
-	$(B u)
-	$(B U)
-	$(B Lu)
-	$(B LU)
-	$(B uL)
-	$(B UL)
+$(GNAME IntegerSuffix):
+    $(B L)
+    $(B u)
+    $(B U)
+    $(B Lu)
+    $(B LU)
+    $(B uL)
+    $(B UL)
 
-$(GNAME Decimal):
-	$(B 0)
-	$(I NonZeroDigit)
-	$(I NonZeroDigit) $(I DecimalDigits)
+$(GNAME DecimalInteger):
+    $(B 0)
+    $(GLINK NonZeroDigit)
+    $(GLINK NonZeroDigit) $(I DecimalDigitsUS)
 
-$(I Binary):
-	$(B 0b) $(I BinaryDigits)
-	$(B 0B) $(I BinaryDigits)
+$(GNAME BinaryInteger):
+    $(GLINK BinPrefix) $(GLINK BinaryDigits)
 
-$(I Octal):
-	$(B 0) $(I OctalDigits)
+$(GNAME BinPrefix):
+    $(B 0b)
+    $(B 0B)
 
-$(I Hexadecimal):
-	$(B 0x) $(I HexDigits)
-	$(B 0X) $(I HexDigits)
+$(V1 $(GNAME OctalInteger):
+    $(B 0) $(GLINK OctalDigitsUS)
 
-$(I NonZeroDigit):
-	$(B 1)
-	$(B 2)
-	$(B 3)
-	$(B 4)
-	$(B 5)
-	$(B 6)
-	$(B 7)
-	$(B 8)
-	$(B 9)
+)$(GNAME HexadecimalInteger):
+    $(GLINK HexPrefix) $(GLINK HexDigitsNoSingleUS)
+
+$(GNAME NonZeroDigit):
+    $(B 1)
+    $(B 2)
+    $(B 3)
+    $(B 4)
+    $(B 5)
+    $(B 6)
+    $(B 7)
+    $(B 8)
+    $(B 9)
 
 $(GNAME DecimalDigits):
-	$(I DecimalDigit)
-	$(I DecimalDigit) $(I DecimalDigits)
+    $(GLINK DecimalDigit)
+    $(GLINK DecimalDigit) $(I DecimalDigits)
+
+$(GNAME DecimalDigitsUS):
+    $(GLINK DecimalDigitUS)
+    $(GLINK DecimalDigitUS) $(I DecimalDigitsUS)
+
+$(GNAME DecimalDigitsNoSingleUS):
+    $(GLINK DecimalDigit)
+    $(GLINK DecimalDigit) $(GLINK DecimalDigitsUS)
+    $(GLINK DecimalDigitsUS) $(GLINK DecimalDigit)
+
+$(GNAME DecimalDigitsNoStartingUS):
+    $(GLINK DecimalDigit)
+    $(GLINK DecimalDigit) $(GLINK DecimalDigitsUS)
 
 $(GNAME DecimalDigit):
-	$(B 0)
-	$(I NonZeroDigit)
-	$(B _)
+    $(B 0)
+    $(GLINK NonZeroDigit)
 
-$(I BinaryDigits):
-	$(I BinaryDigit)
-	$(I BinaryDigit) $(I BinaryDigits)
+$(GNAME DecimalDigitUS):
+    $(GLINK DecimalDigit)
+    $(B _)
 
-$(I BinaryDigit):
-	$(B 0)
-	$(B 1)
-	$(B _)
+$(GNAME BinaryDigitsUS):
+    $(GLINK BinaryDigitUS)
+    $(GLINK BinaryDigitUS) $(I BinaryDigitsUS)
 
-$(I OctalDigits):
-	$(I OctalDigit)
-	$(I OctalDigit) $(I OctalDigits)
+$(GNAME BinaryDigit):
+    $(B 0)
+    $(B 1)
 
-$(I OctalDigit):
-	$(B 0)
-	$(B 1)
-	$(B 2)
-	$(B 3)
-	$(B 4)
-	$(B 5)
-	$(B 6)
-	$(B 7)
-	$(B _)
+$(GNAME BinaryDigitUS):
+    $(GLINK BinaryDigit)
+    $(B _)
 
-$(I HexDigits):
-	$(I HexDigit)
-	$(I HexDigit) $(I HexDigits)
+$(GNAME OctalDigits):
+    $(GLINK OctalDigit)
+    $(GLINK OctalDigit) $(I OctalDigits)
 
-$(I HexDigit):
-	$(I DecimalDigit)
-	$(B a)
-	$(B b)
-	$(B c)
-	$(B d)
-	$(B e)
-	$(B f)
-	$(B A)
-	$(B B)
-	$(B C)
-	$(B D)
-	$(B E)
-	$(B F)
-	$(B _)
+$(GNAME OctalDigitsUS):
+    $(GLINK OctalDigitUS)
+    $(GLINK OctalDigitUS) $(I OctalDigitsUS)
+
+$(GNAME OctalDigit):
+    $(B 0)
+    $(B 1)
+    $(B 2)
+    $(B 3)
+    $(B 4)
+    $(B 5)
+    $(B 6)
+    $(B 7)
+
+$(GNAME OctalDigitUS):
+    $(GLINK OctalDigit)
+    $(B _)
+
+$(GNAME HexDigits):
+    $(GLINK HexDigit)
+    $(GLINK HexDigit) $(I HexDigits)
+
+$(GNAME HexDigitsUS):
+    $(GLINK HexDigitUS)
+    $(GLINK HexDigitUS) $(I HexDigitsUS)
+
+$(GNAME HexDigitsNoSingleUS):
+    $(GLINK HexDigit)
+    $(GLINK HexDigit) $(GLINK HexDigitsUS)
+    $(GLINK HexDigitsUS) $(GLINK HexDigit)
+
+$(GNAME HexDigit):
+    $(GLINK DecimalDigit)
+    $(GLINK HexLetter)
+
+$(GNAME HexLetter):
+    $(B a)
+    $(B b)
+    $(B c)
+    $(B d)
+    $(B e)
+    $(B f)
+    $(B A)
+    $(B B)
+    $(B C)
+    $(B D)
+    $(B E)
+    $(B F)
+    $(B _)
 )
 
-	Integers can be specified in decimal, binary, octal, or hexadecimal.
-<p>
-	Decimal integers are a sequence of decimal digits.
-<p>
-	$(LNAME2 binary-literals, Binary integers) are a sequence of binary digits preceded
+	$(P Integers can be specified in decimal, binary, octal, or hexadecimal.)
+
+	$(P Decimal integers are a sequence of decimal digits.)
+
+	$(P $(LNAME2 binary-literals, Binary integers) are a sequence of binary digits preceded
 	by a $(SINGLEQUOTE 0b).
-<p>
-	Octal integers are a sequence of octal digits preceded by a $(SINGLEQUOTE 0).
-<p>
-	Hexadecimal integers are a sequence of hexadecimal digits preceded
+	)
+
+	$(V1 $(P Octal integers are a sequence of octal digits preceded by a $(SINGLEQUOTE 0).))
+
+	$(P Hexadecimal integers are a sequence of hexadecimal digits preceded
 	by a $(SINGLEQUOTE 0x).
-<p>
-	Integers can have embedded $(SINGLEQUOTE _) characters, which are ignored.
+	)
+
+	$(P Integers can have embedded $(SINGLEQUOTE _) characters, which are ignored.
 	The embedded $(SINGLEQUOTE _) are useful for formatting long literals, such
 	as using them as a thousands separator:
+	)
 
 -------------
-123_456		// 123456
-1_2_3_4_5_6_	// 123456
+123_456       // 123456
+1_2_3_4_5_6_  // 123456
 -------------
 
-	Integers can be immediately followed by one $(SINGLEQUOTE L) or one
-	$(SINGLEQUOTE u) or both.
-<p>
-	The type of the integer is resolved as follows:
-	<p>
+	$(P Integers can be immediately followed by one $(SINGLEQUOTE L) or one of
+	$(SINGLEQUOTE u) or $(SINGLEQUOTE U) or both.
+	Note that there is no $(SINGLEQUOTE l) suffix.
+	)
+
+	$(P The type of the integer is resolved as follows:)
 
 	$(TABLE2 Decimal Literal Types,
-	$(TR
-	$(TH Decimal Literal)
-	$(TH Type)
-	)
-	$(TR
-	$(TD 0 .. 2_147_483_647)
-	$(TD int)
-	)
-	$(TR
-	$(TD 2_147_483_648 .. 9_223_372_036_854_775_807L)
-	$(TD long)
-	)
-	$(TR
-	$(TH Decimal Literal, L Suffix)
-	$(TH Type)
-	)
-	$(TR
-	$(TD 0L .. 9_223_372_036_854_775_807L)
-	$(TD long)
-	)
-	$(TR
-	$(TH Decimal Literal, U Suffix)
-	$(TH Type)
-	)
-	$(TR
-	$(TD 0U .. 4_294_967_296U)
-	$(TD uint)
-	)
-	$(TR
-	$(TD 4_294_967_296U .. 18_446_744_073_709_551_615UL)
-	$(TD ulong)
-	)
-	$(TR
-	$(TH Decimal Literal, UL Suffix)
-	$(TH Type)
-	)
-	$(TR
-	$(TD 0UL .. 18_446_744_073_709_551_615UL)
-	$(TD ulong)
-	)
 
-	$(TR
-	$(TH Non-Decimal Literal)
-	$(TH Type)
-	)
-	$(TR
-	$(TD 0x0 .. 0x7FFF_FFFF)
-	$(TD int)
-	)
-	$(TR
-	$(TD 0x8000_0000 .. 0xFFFF_FFFF)
-	$(TD uint)
-	)
-	$(TR
-	$(TD 0x1_0000_0000 .. 0x7FFF_FFFF_FFFF_FFFF)
-	$(TD long)
-	)
-	$(TR
-	$(TD 0x8000_0000_0000_0000 .. 0xFFFF_FFFF_FFFF_FFFF)
-	$(TD ulong)
-	)
-	$(TR
-	$(TH Non-Decimal Literal, L Suffix)
-	$(TH Type)
-	)
-	$(TR
-	$(TD 0x0L .. 0x7FFF_FFFF_FFFF_FFFFL)
-	$(TD long)
-	)
-	$(TR
-	$(TD 0x8000_0000_0000_0000L .. 0xFFFF_FFFF_FFFF_FFFFL)
-	$(TD ulong)
-	)
-	$(TR
-	$(TH Non-Decimal Literal, U Suffix)
-	$(TH Type)
-	)
-	$(TR
-	$(TD 0x0U .. 0xFFFF_FFFFU)
-	$(TD uint)
-	)
-	$(TR
-	$(TD 0x1_0000_0000UL .. 0xFFFF_FFFF_FFFF_FFFFUL)
-	$(TD ulong)
-	)
-	$(TR
-	$(TH Non-Decimal Literal, UL Suffix)
-	$(TH Type)
-	)
-	$(TR
-	$(TD 0x0UL .. 0xFFFF_FFFF_FFFF_FFFFUL)
-	$(TD ulong)
-	)
+	$(THEAD Decimal Literal, Type)
+	$(TROW 0 .. 2_147_483_647, int)
+	$(TROW 2_147_483_648 .. 9_223_372_036_854_775_807L, long)
+
+	$(THEAD $(ARGS Decimal Literal, L Suffix), Type)
+	$(TROW 0L .. 9_223_372_036_854_775_807L, long)
+
+	$(THEAD $(ARGS Decimal Literal, U Suffix), Type)
+	$(TROW 0U .. 4_294_967_296U, uint)
+	$(TROW 4_294_967_296U .. 18_446_744_073_709_551_615UL, ulong)
+
+	$(THEAD $(ARGS Decimal Literal, UL Suffix), Type)
+	$(TROW 0UL .. 18_446_744_073_709_551_615UL, ulong)
+
+	$(THEAD Non-Decimal Literal, Type)
+	$(TROW 0x0 .. 0x7FFF_FFFF, int)
+	$(TROW 0x8000_0000 .. 0xFFFF_FFFF, uint)
+	$(TROW 0x1_0000_0000 .. 0x7FFF_FFFF_FFFF_FFFF, long)
+	$(TROW 0x8000_0000_0000_0000 .. 0xFFFF_FFFF_FFFF_FFFF, ulong)
+
+	$(THEAD $(ARGS Non-Decimal Literal, L Suffix), Type)
+	$(TROW 0x0L .. 0x7FFF_FFFF_FFFF_FFFFL, long)
+	$(TROW 0x8000_0000_0000_0000L .. 0xFFFF_FFFF_FFFF_FFFFL, ulong)
+
+	$(THEAD $(ARGS Non-Decimal Literal, U Suffix), Type)
+	$(TROW 0x0U .. 0xFFFF_FFFFU, uint)
+	$(TROW 0x1_0000_0000UL .. 0xFFFF_FFFF_FFFF_FFFFUL, ulong)
+
+	$(THEAD $(ARGS Non-Decimal Literal, UL Suffix), Type)
+	$(TROW 0x0UL .. 0xFFFF_FFFF_FFFF_FFFFUL, ulong)
 
 	)
 
@@ -904,262 +816,269 @@ $(I HexDigit):
 
 $(GRAMMAR
 $(GNAME FloatLiteral):
-	$(I Float)
-	$(I Float) $(I Suffix)
-	$(I Integer) $(I ImaginarySuffix)
-	$(I Integer) $(I FloatSuffix) $(I ImaginarySuffix)
-	$(I Integer) $(I RealSuffix) $(I ImaginarySuffix)
+    $(GLINK Float)
+    $(GLINK Float) $(GLINK Suffix)
+    $(GLINK Integer) $(GLINK ImaginarySuffix)
+    $(GLINK Integer) $(GLINK FloatSuffix) $(GLINK ImaginarySuffix)
+    $(GLINK Integer) $(GLINK RealSuffix) $(GLINK ImaginarySuffix)
 
-$(I Float):
-	$(I DecimalFloat)
-	$(I HexFloat)
+$(GNAME Float):
+    $(GLINK DecimalFloat)
+    $(GLINK HexFloat)
 
-$(I DecimalFloat):
-	$(GLINK LeadingDecimal) $(B .)
-	$(GLINK LeadingDecimal) $(B .) $(I DecimalDigits)
-	$(I DecimalDigits) $(B .) $(I DecimalDigits) $(I DecimalExponent)
-	$(B .) $(I Decimal)
-	$(B .) $(I Decimal) $(I DecimalExponent)
-	$(GLINK LeadingDecimal) $(I DecimalExponent)
+$(GNAME DecimalFloat):
+    $(GLINK LeadingDecimal) $(B .)
+    $(GLINK LeadingDecimal) $(B .) $(GLINK DecimalDigits)
+    $(GLINK DecimalDigits) $(B .) $(GLINK DecimalDigitsNoSingleUS) $(GLINK DecimalExponent)
+    $(B .) $(GLINK DecimalInteger)
+    $(B .) $(GLINK DecimalInteger) $(GLINK DecimalExponent)
+    $(GLINK LeadingDecimal) $(GLINK DecimalExponent)
 
-$(I DecimalExponent)
-	$(B e) $(I DecimalDigits)
-	$(B E) $(I DecimalDigits)
-	$(B e+) $(I DecimalDigits)
-	$(B E+) $(I DecimalDigits)
-	$(B e-) $(I DecimalDigits)
-	$(B E-) $(I DecimalDigits)
+$(GNAME DecimalExponent)
+    $(GLINK DecimalExponentStart) $(GLINK DecimalDigitsNoSingleUS)
 
-$(I HexFloat):
-	$(I HexPrefix) $(I HexDigits) $(B .) $(I HexDigits) $(I HexExponent)
-	$(I HexPrefix) $(B .) $(I HexDigits) $(I HexExponent)
-	$(I HexPrefix) $(I HexDigits) $(I HexExponent)
+$(GNAME DecimalExponentStart)
+    $(B e)
+    $(B E)
+    $(B e+)
+    $(B E+)
+    $(B e-)
+    $(B E-)
 
-$(I HexPrefix):
-	$(B 0x)
-	$(B 0X)
+$(GNAME HexFloat):
+    $(GLINK HexPrefix) $(GLINK HexDigitsNoSingleUS) $(B .) $(GLINK HexDigitsNoSingleUS) $(GLINK HexExponent)
+    $(GLINK HexPrefix) $(B .) $(GLINK HexDigitsNoSingleUS) $(GLINK HexExponent)
+    $(GLINK HexPrefix) $(GLINK HexDigitsNoSingleUS) $(GLINK HexExponent)
 
-$(I HexExponent):
-	$(B p) $(I DecimalDigits)
-	$(B P) $(I DecimalDigits)
-	$(B p+) $(I DecimalDigits)
-	$(B P+) $(I DecimalDigits)
-	$(B p-) $(I DecimalDigits)
-	$(B P-) $(I DecimalDigits)
+$(GNAME HexPrefix):
+    $(B 0x)
+    $(B 0X)
 
-$(I Suffix):
-	$(I FloatSuffix)
-	$(I RealSuffix)
-	$(I ImaginarySuffix)
-	$(I FloatSuffix) $(I ImaginarySuffix)
-	$(I RealSuffix) $(I ImaginarySuffix)
+$(GNAME HexExponent):
+    $(GLINK HexExponentStart) $(GLINK DecimalDigitsNoSingleUS)
 
-$(I FloatSuffix):
-	$(B f)
-	$(B F)
+$(GNAME HexExponentStart):
+    $(B p)
+    $(B P)
+    $(B p+)
+    $(B P+)
+    $(B p-)
+    $(B P-)
 
-$(I RealSuffix):
-	$(B L)
 
-$(I ImaginarySuffix):
-	$(B i)
+$(GNAME Suffix):
+    $(GLINK FloatSuffix)
+    $(GLINK RealSuffix)
+    $(GLINK ImaginarySuffix)
+    $(GLINK FloatSuffix) $(GLINK ImaginarySuffix)
+    $(GLINK RealSuffix) $(GLINK ImaginarySuffix)
+
+$(GNAME FloatSuffix):
+    $(B f)
+    $(B F)
+
+$(GNAME RealSuffix):
+    $(B L)
+
+$(GNAME ImaginarySuffix):
+    $(B i)
 
 $(GNAME LeadingDecimal):
-	$(GLINK Decimal)
-	$(B 0) $(GLINK DecimalDigits)
+    $(GLINK DecimalInteger)
+    $(B 0) $(GLINK DecimalDigitsNoSingleUS)
 )
 
-	Floats can be in decimal or hexadecimal format,
-	as in standard C.
-	<p>
+	$(P Floats can be in decimal or hexadecimal format.)
 
-	Hexadecimal floats are preceded with a $(B 0x) and the
+	$(P Hexadecimal floats are preceded with a $(B 0x) and the
 	exponent is a $(B p)
 	or $(B P) followed by a decimal number serving as the exponent
 	of 2.
-	<p>
+	)
 
-	Floating literals can have embedded $(SINGLEQUOTE _) characters, which are ignored.
+	$(P Floating literals can have embedded $(SINGLEQUOTE _) characters, which are ignored.
 	The embedded $(SINGLEQUOTE _) are useful for formatting long literals to
 	make them more readable, such
 	as using them as a thousands separator:
+	)
 
 ---------
-123_456.567_8		// 123456.5678
-1_2_3_4_5_6_._5_6_7_8	// 123456.5678
-1_2_3_4_5_6_._5e-6_	// 123456.5e-6
+123_456.567_8         // 123456.5678
+1_2_3_4_5_6_._5_6_7_8 // 123456.5678
+1_2_3_4_5_6_._5e-6_   // 123456.5e-6
 ---------
 
-	Floating literals with no suffix are of type double.
+	$(P Floating literals with no suffix are of type double.
 	Floats can be followed by one $(B f), $(B F),
 	or $(B L) suffix.
 	The $(B f) or $(B F) suffix means it is a
 	float, and $(B L) means it is a real.
-	<p>
+	)
 
-	If a floating literal is followed by $(B i), then it is an
+	$(P If a floating literal is followed by $(B i), then it is an
 	$(I ireal) (imaginary) type.
-	<p>
+	)
 
-	Examples:
+	$(P Examples:)
 
 ---------
-0x1.FFFFFFFFFFFFFp1023		// double.max
-0x1p-52				// double.epsilon
-1.175494351e-38F		// float.min
-6.3i				// idouble 6.3
-6.3fi				// ifloat 6.3
-6.3Li				// ireal 6.3
+0x1.FFFFFFFFFFFFFp1023 // double.max
+0x1p-52                // double.epsilon
+1.175494351e-38F       // float.min
+6.3i                   // idouble 6.3
+6.3fi                  // ifloat 6.3
+6.3Li                  // ireal 6.3
 ---------
 
-	It is an error if the literal exceeds the range of the type.
+	$(P It is an error if the literal exceeds the range of the type.
 	It is not an error if the literal is rounded to fit into
 	the significant digits of the type.
-	<p>
+	)
 
-	Complex literals are not tokens, but are assembled from
-	real and imaginary expressions in the semantic analysis:
+	$(P Complex literals are not tokens, but are assembled from
+	real and imaginary expressions during semantic analysis:
+	)
 
 ---------
-4.5 + 6.2i		// complex number
+4.5 + 6.2i  // complex number (phased out)
 ---------
 
-<h3>$(LNAME2 keyword, Keywords)</h3>
+<h3>Keywords</h3>
 
 	Keywords are reserved identifiers.
 
 $(GRAMMAR
-$(I Keyword):
-	$(B abstract)
-	$(B alias)
-	$(B align)
-	$(B asm)
-	$(B assert)
-	$(B auto)
+$(GNAME Keyword):
+    $(B abstract)
+    $(B alias)
+    $(B align)
+    $(B asm)
+    $(B assert)
+    $(B auto)
 
-	$(B body)
-	$(B bool)
-	$(B break)
-	$(B byte)
+    $(B body)
+    $(B bool)
+    $(B break)
+    $(B byte)
 
-	$(B case)
-	$(B cast)
-	$(B catch)
-	$(B cdouble)
-	$(B cent)
-	$(B cfloat)
-	$(B char)
-	$(B class)
-	$(B const)
-	$(B continue)
-	$(B creal)
+    $(B case)
+    $(B cast)
+    $(B catch)
+    $(B cdouble)
+    $(B cent)
+    $(B cfloat)
+    $(B char)
+    $(B class)
+    $(B const)
+    $(B continue)
+    $(B creal)
 
-	$(B dchar)
-	$(B debug)
-	$(B default)
-	$(B delegate)
-	$(B delete)
-	$(B deprecated)
-	$(B do)
-	$(B double)
+    $(B dchar)
+    $(B debug)
+    $(B default)
+    $(B delegate)
+    $(B delete)
+    $(B deprecated)
+    $(B do)
+    $(B double)
 
-	$(B else)
-	$(B enum)
-	$(B export)
-	$(B extern)
+    $(B else)
+    $(B enum)
+    $(B export)
+    $(B extern)
 
-	$(B false)
-	$(B final)
-	$(B finally)
-	$(B float)
-	$(B for)
-	$(B foreach)
-	$(B foreach_reverse)
-	$(B function)
+    $(B false)
+    $(B final)
+    $(B finally)
+    $(B float)
+    $(B for)
+    $(B foreach)
+    $(B foreach_reverse)
+    $(B function)
 
-	$(B goto)
+    $(B goto)
 
-	$(B idouble)
-	$(B if)
-	$(B ifloat)
+    $(B idouble)
+    $(B if)
+    $(B ifloat)
 $(V2
-	$(B immutable)
-)	$(B import)
-	$(B in)
-	$(B inout)
-	$(B int)
-	$(B interface)
-	$(B invariant)
-	$(B ireal)
-	$(B is)
+    $(B immutable)
+)    $(B import)
+    $(B in)
+    $(B inout)
+    $(B int)
+    $(B interface)
+    $(B invariant)
+    $(B ireal)
+    $(B is)
 
-	$(B lazy)
-	$(B long)
+    $(B lazy)
+    $(B long)
 
-	$(B macro)
-	$(B mixin)
-	$(B module)
+    $(B macro)
+    $(B mixin)
+    $(B module)
 
-	$(B new)
+    $(B new)
 $(V2
-	$(B nothrow)
-)	$(B null)
+    $(B nothrow)
+)    $(B null)
 
-	$(B out)
-	$(B override)
+    $(B out)
+    $(B override)
 
-	$(B package)
-	$(B pragma)
-	$(B private)
-	$(B protected)
-	$(B public)
+    $(B package)
+    $(B pragma)
+    $(B private)
+    $(B protected)
+    $(B public)
 $(V2
-	$(B pure)
+    $(B pure)
 )
-	$(B real)
-	$(B ref)
-	$(B return)
+    $(B real)
+    $(B ref)
+    $(B return)
 
-	$(B scope)
+    $(B scope)
 $(V2
-	$(B shared)
-)	$(B short)
-	$(B static)
-	$(B struct)
-	$(B super)
-	$(B switch)
-	$(B synchronized)
+    $(B shared)
+)    $(B short)
+    $(B static)
+    $(B struct)
+    $(B super)
+    $(B switch)
+    $(B synchronized)
 
-	$(B template)
-	$(B this)
-	$(B throw)
-	$(B true)
-	$(B try)
-	$(B typedef)
-	$(B typeid)
-	$(B typeof)
+    $(B template)
+    $(B this)
+    $(B throw)
+    $(B true)
+    $(B try)
+    $(B typedef)
+    $(B typeid)
+    $(B typeof)
 
-	$(B ubyte)
-	$(B ucent)
-	$(B uint)
-	$(B ulong)
-	$(B union)
-	$(B unittest)
-	$(B ushort)
+    $(B ubyte)
+    $(B ucent)
+    $(B uint)
+    $(B ulong)
+    $(B union)
+    $(B unittest)
+    $(B ushort)
 
-	$(B version)
-	$(B void)
-	$(B volatile)
+    $(B version)
+    $(B void)
+    $(B volatile)
 
-	$(B wchar)
-	$(B while)
-	$(B with)
+    $(B wchar)
+    $(B while)
+    $(B with)
 $(V2
-	$(B __FILE__)
-	$(B __LINE__)
-	$(B __gshared)
-	$(B __thread)
-	$(B __traits))
+    $(B __FILE__)
+    $(B __LINE__)
+    $(B __gshared)
+    $(B __thread)
+    $(B __traits))
 )
 
 <h3>$(LNAME2 specialtokens, Special Tokens)</h3>
@@ -1170,87 +1089,63 @@ $(V2
 	)
 
 	$(TABLE2 Special Tokens,
-	$(TR
-	$(TH Special Token)
-	$(TH Replaced with...)
-	)
+	$(THEAD Special Token, Replaced with...)
 $(V1
-	$(TR
-	$(TD $(B __FILE__))
-	$(TD string literal containing source file name)
-	)
-	$(TR
-	$(TD $(B __LINE__))
-	$(TD integer literal of the current source line number)
-	)
+	$(TROW $(CODE __FILE__), string literal containing source file name)
+	$(TROW $(CODE __LINE__), integer literal of the current source line number)
 )
-	$(TR
-	$(TD $(B __DATE__))
-	$(TD string literal of the date of compilation "$(I mmm dd yyyy)")
-	)
+	$(TROW $(CODE __DATE__), string literal of the date of compilation "$(I mmm dd yyyy)")
 $(V2
-	$(TR
-	$(TD $(B __EOF__))
-	$(TD sets the scanner to the end of the file)
-	)
+	$(TROW $(CODE __EOF__), sets the scanner to the end of the file)
 )
-	$(TR
-	$(TD $(B __TIME__))
-	$(TD string literal of the time of compilation "$(I hh:mm:ss)")
-	)
-	$(TR
-	$(TD $(B __TIMESTAMP__))
-	$(TD string literal of the date and time of compilation "$(I www mmm dd hh:mm:ss yyyy)")
-	)
-	$(TR
-	$(TD $(B __VENDOR__))
-	$(TD Compiler vendor string, such as "Digital Mars D")
-	)
-	$(TR
-	$(TD $(B __VERSION__))
-	$(TD Compiler version as an integer, such as 2001)
-	)
+	$(TROW $(CODE __TIME__), string literal of the time of compilation "$(I hh:mm:ss)")
+	$(TROW $(CODE __TIMESTAMP__), string literal of the date and time of compilation "$(I www mmm dd hh:mm:ss yyyy)")
+	$(TROW $(CODE __VENDOR__), $(ARGS Compiler vendor string, such as "Digital Mars D"))
+	$(TROW $(CODE __VERSION__), $(ARGS Compiler version as an integer, such as 2001))
 	)
 
-<h3>$(LNAME2 specialtokenseq, Special Token Sequences)</h3>
-
-	Special token sequences are processed by the lexical analyzer, may
-	appear between any other tokens, and do not affect the syntax
-	parsing.
-	<p>
-
-	There is currently only one special token sequence, $(TT #line).
+<h3>$(LNAME2 Special Token Sequence, Special Token Sequences)</h3>
 
 $(GRAMMAR
-$(I SpecialTokenSequence):
-	$(B # line) $(I Integer) $(I EndOfLine)
-	$(B # line) $(I Integer) $(I Filespec) $(I EndOfLine)
+$(GNAME SpecialTokenSequence):
+    $(B # line) $(GLINK IntegerLiteral) $(GLINK EndOfLine)
+    $(B # line) $(GLINK IntegerLiteral) $(GLINK Filespec) $(GLINK EndOfLine)
 
-$(I Filespec):
-	$(B ") $(I Characters) $(B ")
+$(GNAME Filespec):
+    $(B ") $(GLINK Characters) $(B ")
 )
 
-	This sets the source line number to $(I Integer),
-	and optionally the source file 	name to $(I Filespec),
+	$(P Special token sequences are processed by the lexical analyzer, may
+	appear between any other tokens, and do not affect the syntax
+	parsing.
+	)
+
+	$(P There is currently only one special token sequence, $(D #line).
+	)
+
+	$(P This sets the source line number to $(GLINK IntegerLiteral),
+	and optionally the source file 	name to $(GLINK Filespec),
 	beginning with the next line of source text.
 	The source file and line number is used for printing error messages
 	and for mapping generated code back to the source for the symbolic
 	debugging output.
-	<p>
+	)
 
-	For example:
+	$(P For example:
+	)
 
 -----------------
 int #line 6 "foo\bar"
-x;			// this is now line 6 of file foo\bar
+x;  // this is now line 6 of file foo\bar
 -----------------
 
-	Note that the backslash character is not treated specially inside
-	$(I Filespec) strings.
-
+	$(P Note that the backslash character is not treated specially inside
+	$(GLINK Filespec) strings.
+	)
 )
 
 Macros:
 	TITLE=Lexical
 	WIKI=Lex
-	CATEGORY_SPEC=$0
+        CATEGORY_SPEC=$0
+

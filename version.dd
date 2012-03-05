@@ -10,22 +10,22 @@ $(SPEC_S Conditional Compilation,
 
 $(GRAMMAR
 $(GNAME ConditionalDeclaration):
-    $(GLINK Condition) $(I CCDeclarationBlock)
-    $(GLINK Condition) $(I CCDeclarationBlock) $(B else) $(I CCDeclarationBlock)
-    $(GLINK Condition) $(B :) $(I Declarations)
+    $(GLINK Condition) $(GLINK CCDeclarationBlock)
+    $(GLINK Condition) $(GLINK CCDeclarationBlock) $(B else) $(GLINK CCDeclarationBlock)
+    $(GLINK Condition) $(B :) $(GLINK Declarations)
 
 $(GNAME CCDeclarationBlock):
-    $(LINK2 declaration.html#Declaration, $(I Declaration))
-    $(B {) $(I Declarations) $(B })
+    $(GLINK2 declaration, Declaration)
+    $(B {) $(GLINK Declarations) $(B })
     $(B { })
 
 $(GNAME Declarations):
-    $(LINK2 declaration.html#Declaration, $(I Declaration))
-    $(LINK2 declaration.html#Declaration, $(I Declaration)) $(I Declarations)
+    $(GLINK2 declaration, Declaration)
+    $(GLINK2 declaration, Declaration) $(I Declarations)
 
 $(GNAME ConditionalStatement):
-    $(GLINK Condition) $(LINK2 statement.html#NoScopeNonEmptyStatement, $(I NoScopeNonEmptyStatement))
-    $(GLINK Condition) $(LINK2 statement.html#NoScopeNonEmptyStatement, $(I NoScopeNonEmptyStatement)) $(B else) $(LINK2 statement.html#NoScopeNonEmptyStatement, $(I NoScopeNonEmptyStatement))
+    $(GLINK Condition) $(GLINK2 statement, NoScopeNonEmptyStatement)
+    $(GLINK Condition) $(GLINK2 statement, NoScopeNonEmptyStatement) $(B else) $(GLINK2 statement, NoScopeNonEmptyStatement)
 )
 
 	$(P If the $(GLINK Condition) is satisfied, then the following
@@ -47,7 +47,7 @@ $(GNAME ConditionalStatement):
 	can be nested.
 	)
 
-	$(P The $(LINK2 #StaticAssert, $(I StaticAssert)) can be used
+	$(P The $(GLINK StaticAssert) can be used
 	to issue errors at compilation time for branches of the conditional
 	compilation that are errors.
 	)
@@ -57,24 +57,24 @@ $(GNAME ConditionalStatement):
 
 $(GRAMMAR
 $(GNAME Condition):
-    $(LINK2 #version, $(I VersionCondition))
-    $(LINK2 #debug, $(I DebugCondition))
-    $(LINK2 #staticif, $(I StaticIfCondition))
+    $(GLINK VersionCondition)
+    $(GLINK DebugCondition)
+    $(GLINK StaticIfCondition)
 )
 
 <h2>$(LNAME2 version, Version Condition)</h2>
 
+$(GRAMMAR
+$(GNAME VersionCondition):
+    $(B version $(LPAREN)) $(GLINK2 lex, IntegerLiteral) $(B $(RPAREN))
+    $(B version $(LPAREN)) $(I Identifier) $(B $(RPAREN))
+$(V2
+    $(B version $(LPAREN)) $(B unittest) $(B $(RPAREN)))
+)
+
 	$(P Versions enable multiple versions of a module to be implemented
 	with a single source file.
 	)
-
-$(GRAMMAR
-$(GNAME VersionCondition):
-	$(B version $(LPAREN)) $(LINK2 lex.html#IntegerLiteral, $(I IntegerLiteral)) $(B $(RPAREN))
-	$(B version $(LPAREN)) $(I Identifier) $(B $(RPAREN))
-$(V2
-	$(B version $(LPAREN)) $(B unittest) $(B $(RPAREN)))
-)
 
 	$(P The $(I VersionCondition) is satisfied if the $(I IntegerLiteral)
 	is greater than or equal to the current $(I version level),
@@ -95,28 +95,28 @@ $(V2
 
 ------
 int k;
-version (Demo)	// compile in this code block for the demo version
-{   int i;
-    int k;	// error, k already defined
+version (Demo) // compile in this code block for the demo version
+{ int i;
+  int k;    // error, k already defined
 
-    i = 3;
+  i = 3;
 }
-x = i;		// uses the i declared above
+x = i;      // uses the i declared above
 ------
 
 ------
 version (X86)
 {
-    ... // implement custom inline assembler version
+  ... // implement custom inline assembler version
 }
 else
 {
-    ... // use default, but slow, version
+  ... // use default, but slow, version
 }
 ------
 
 $(V2	$(P The $(B version(unittest)) is satisfied if and only if the code is
-	compiled with unit tests enabled (the $(TT -unittest) option on $(B dmd)).
+	compiled with unit tests enabled (the $(D -unittest) option on $(B dmd)).
 	)
 )
 
@@ -125,7 +125,7 @@ $(V2	$(P The $(B version(unittest)) is satisfied if and only if the code is
 $(GRAMMAR
 $(GNAME VersionSpecification):
     $(B version =) $(I Identifier) $(B ;)
-    $(B version =) $(LINK2 lex.html#IntegerLiteral, $(I IntegerLiteral)) $(B ;)
+    $(B version =) $(GLINK2 lex, IntegerLiteral) $(B ;)
 )
 
 	$(P The version specification makes it straightforward to group
@@ -135,18 +135,18 @@ $(GNAME VersionSpecification):
 ------
 version (ProfessionalEdition)
 {
-    version = FeatureA;
-    version = FeatureB;
-    version = FeatureC;
+  version = FeatureA;
+  version = FeatureB;
+  version = FeatureC;
 }
 version (HomeEdition)
 {
-    version = FeatureA;
+  version = FeatureA;
 }
 ...
 version (FeatureB)
 {
-    ... implement Feature B ...
+  ... implement Feature B ...
 }
 ------
 
@@ -156,7 +156,7 @@ version (FeatureB)
 ------
 version (Foo)
 {
-    int x;
+  int x;
 }
 version = Foo;	// error, Foo already used
 ------
@@ -174,25 +174,24 @@ version = Foo;	// error, Foo already used
 	a $(I demo) version:)
 
 ------
-class Foo
-{
-    int a, b;
+class Foo {
+  int a, b;
 
-    version(full)
+  version(full)
+  {
+    int extrafunctionality()
     {
-	int extrafunctionality()
-	{
-	    ...
-	    return 1;		// extra functionality is supported
-	}
+      ...
+      return 1;  // extra functionality is supported
     }
-    else // demo
+  }
+  else // demo
+  {
+    int extrafunctionality()
     {
-	int extrafunctionality()
-	{
-	    return 0;		// extra functionality is not supported
-	}
+      return 0;  // extra functionality is not supported
     }
+  }
 }
 ------
 
@@ -213,7 +212,7 @@ version($(I identifier)) // add in version code if version
 ------
 
 	$(P These are presumably set by the command line as
-	$(TT -version=$(I n)) and $(TT -version=$(I identifier)).
+	$(D -version=$(I n)) and $(D -version=$(I identifier)).
 	)
 
 
@@ -229,32 +228,67 @@ version($(I identifier)) // add in version code if version
 
 	$(TABLE2 Predefined Version Identifiers,
 	$(TR $(TH Version Identifier) $(TH Description))
-	$(TR $(TD $(B DigitalMars)) $(TD Digital Mars is the compiler vendor))
-	$(TR $(TD $(B X86)) $(TD Intel and AMD 32 bit processors))
-	$(TR $(TD $(B X86_64)) $(TD AMD and Intel 64 bit processors))
+	$(TR $(TD $(B DigitalMars)) $(TD DMD (Digital Mars D) is the compiler))
+	$(TR $(TD $(B GNU)) $(TD GDC (GNU D Compiler) is the compiler))
+	$(TR $(TD $(B LDC)) $(TD LDC (LLVM D Compiler) is the compiler))
+	$(TR $(TD $(B SDC)) $(TD SDC (Stupid D Compiler) is the compiler))
+	$(TR $(TD $(B D_NET)) $(TD D.NET is the compiler))
 	$(TR $(TD $(B Windows)) $(TD Microsoft Windows systems))
-	$(TR $(TD $(B Win32)) $(TD Microsoft 32 bit Windows systems))
-	$(TR $(TD $(B Win64)) $(TD Microsoft 64 bit Windows systems))
-	$(TR $(TD $(B linux)) $(TD All linux systems))
-	$(TR $(TD $(B D_NET)) $(TD .NET))
+	$(TR $(TD $(B Win32)) $(TD Microsoft 32-bit Windows systems))
+	$(TR $(TD $(B Win64)) $(TD Microsoft 64-bit Windows systems))
+	$(TR $(TD $(B linux)) $(TD All Linux systems))
 	$(TR $(TD $(B OSX)) $(TD Mac OS X))
 	$(TR $(TD $(B FreeBSD)) $(TD FreeBSD))
+	$(TR $(TD $(B OpenBSD)) $(TD OpenBSD))
+	$(TR $(TD $(B BSD)) $(TD All other BSDs))
 	$(TR $(TD $(B Solaris)) $(TD Solaris))
-$(V2
-	$(TR $(TD $(B Posix)) $(TD All posix systems (includes Linux, FreeBSD, OS X, Solaris, etc.)))
-)
+	$(TR $(TD $(B Posix)) $(TD All POSIX systems (includes Linux, FreeBSD, OS X, Solaris, etc.)))
+	$(TR $(TD $(B AIX)) $(TD IBM Advanced Interactive eXecutive OS))
+	$(TR $(TD $(B SkyOS)) $(TD The SkyOS operating system))
+	$(TR $(TD $(B SysV3)) $(TD System V Release 3))
+	$(TR $(TD $(B SysV4)) $(TD System V Release 4))
+	$(TR $(TD $(B Hurd)) $(TD GNU Hurd))
+	$(TR $(TD $(B Android)) $(TD The Android platform))
+	$(TR $(TD $(B Cygwin)) $(TD The Cygwin environment))
+	$(TR $(TD $(B MinGW)) $(TD The MinGW environment))
+	$(TR $(TD $(B X86)) $(TD Intel and AMD 32-bit processors))
+	$(TR $(TD $(B X86_64)) $(TD AMD and Intel 64-bit processors))
+	$(TR $(TD $(B ARM)) $(TD The Advanced RISC Machine architecture (32-bit)))
+	$(TR $(TD $(B PPC)) $(TD The PowerPC architecture, 32-bit))
+	$(TR $(TD $(B PPC64)) $(TD The PowerPC architecture, 64-bit))
+	$(TR $(TD $(B IA64)) $(TD The Itanium architecture (64-bit)))
+	$(TR $(TD $(B MIPS)) $(TD The MIPS architecture, 32-bit))
+	$(TR $(TD $(B MIPS64)) $(TD The MIPS architecture, 64-bit))
+	$(TR $(TD $(B SPARC)) $(TD The SPARC architecture, 32-bit))
+	$(TR $(TD $(B SPARC64)) $(TD The SPARC architecture, 64-bit))
+	$(TR $(TD $(B S390)) $(TD The System/390 architecture, 32-bit))
+	$(TR $(TD $(B S390X)) $(TD The System/390X architecture, 64-bit))
+	$(TR $(TD $(B HPPA)) $(TD The HP PA-RISC architecture, 32-bit))
+	$(TR $(TD $(B HPPA64)) $(TD The HP PA-RISC architecture, 64-bit))
+	$(TR $(TD $(B SH)) $(TD The SuperH architecture, 32-bit))
+	$(TR $(TD $(B SH64)) $(TD The SuperH architecture, 64-bit))
+	$(TR $(TD $(B Alpha)) $(TD The Alpha architecture))
 	$(TR $(TD $(B LittleEndian)) $(TD Byte order, least significant first))
 	$(TR $(TD $(B BigEndian)) $(TD Byte order, most significant first))
-	$(TR $(TD $(B D_Coverage)) $(TD $(LINK2 code_coverage.html, Code coverage analysis) instrumentation (command line $(LINK2 dmd-windows.html#switches, switch) $(B -cov)) is being generated))
-	$(TR $(TD $(B D_Ddoc)) $(TD $(LINK2 ddoc.html, Ddoc) documentation (command line $(LINK2 dmd-windows.html#switches, switch) $(B -D)) is being generated))
-	$(TR $(TD $(B D_InlineAsm_X86)) $(TD $(LINK2 iasm.html, Inline assembler) for X86 is implemented))
-	$(TR $(TD $(B D_InlineAsm_X86_64)) $(TD $(LINK2 iasm.html, Inline assembler) for X86-64 is implemented))
-	$(TR $(TD $(B D_LP64)) $(TD Pointers are 64 bits (command line $(LINK2 dmd-windows.html#switches, switch) $(B -m64))))
-	$(TR $(TD $(B D_PIC)) $(TD Position Independent Code (command line $(LINK2 dmd-windows.html#switches, switch) $(B -fPIC)) is being generated))
-	$(V2 $(TR $(TD $(B unittest)) $(TD $(LINK2 unittest.html, Unit tests) are enabled (command line $(LINK2 dmd-windows.html#switches, switch) $(B -unittest)))))
+	$(TR $(TD $(B D_Coverage)) $(TD $(DPLLINK code_coverage.html, Code coverage analysis) instrumentation (command line $(DPLLINK dmd-windows.html#switches, switch) $(B -cov)) is being generated))
+	$(TR $(TD $(B D_Ddoc)) $(TD $(DDLINK ddoc, Embedded Documentation, Ddoc) documentation (command line $(DPLLINK dmd-windows.html#switches, switch) $(B -D)) is being generated))
+	$(TR $(TD $(B D_InlineAsm_X86)) $(TD $(DDLINK iasm, Inline Assembler, Inline assembler) for X86 is implemented))
+	$(TR $(TD $(B D_InlineAsm_X86_64)) $(TD $(DDLINK iasm, Inline Assembler, Inline assembler) for X86-64 is implemented))
+	$(TR $(TD $(B D_LP64)) $(TD Pointers are 64 bits (command line $(DPLLINK dmd-windows.html#switches, switch) $(B -m64))))
+	$(TR $(TD $(B D_PIC)) $(TD Position Independent Code (command line $(DPLLINK dmd-windows.html#switches, switch) $(B -fPIC)) is being generated))
+	$(V2 $(TR $(TD $(B D_SIMD)) $(TD $(DDLINK simd, simd, Vector extensions) (__vector and __simd) are supported)))
 	$(V2 $(TR $(TD $(B D_Version2)) $(TD This is a D version 2 compiler)))
+	$(V2 $(TR $(TD $(B unittest)) $(TD $(DDLINK unittest, Unit Tests, Unit tests) are enabled (command line $(DPLLINK dmd-windows.html#switches, switch) $(B -unittest)))))
 	$(TR $(TD $(B none)) $(TD Never defined; used to just disable a section of code))
 	$(TR $(TD $(B all)) $(TD Always defined; used as the opposite of $(B none)))
+	)
+
+	$(P The following identifiers are defined, but are deprecated:
+	)
+
+	$(TABLE2 Predefined Version Identifiers,
+	$(TR $(TH Version Identifier) $(TH Description))
+	$(TR $(TD $(B darwin)) $(TD The Darwin operating system; use $(B OSX) instead))
 	)
 
 	$(P Others will be added as they make sense and new implementations appear.
@@ -293,6 +327,13 @@ version(DigitalMars_funky_extension)
 
 <h2>$(LNAME2 debug, Debug Condition)</h2>
 
+$(GRAMMAR
+$(GNAME DebugCondition):
+    $(B debug)
+    $(B debug $(LPAREN)) $(GLINK2 lex, IntegerLiteral) $(B $(RPAREN))
+    $(B debug $(LPAREN)) $(I Identifier) $(B $(RPAREN))
+)
+
 	$(P Two versions of programs are commonly built,
 	a release build and a debug build.
 	The debug build includes extra error checking code,
@@ -302,13 +343,6 @@ version(DigitalMars_funky_extension)
 	It is D's way of what in C is done
 	with $(CODE #ifdef DEBUG) / $(CODE #endif) pairs.
 	)
-
-$(GRAMMAR
-$(GNAME DebugCondition):
-    $(B debug)
-    $(B debug $(LPAREN)) $(LINK2 lex.html#IntegerLiteral, $(I IntegerLiteral)) $(B $(RPAREN))
-    $(B debug $(LPAREN)) $(I Identifier) $(B $(RPAREN))
-)
 
 	$(P The $(B debug) condition is satisfied when the $(B -debug) switch is
 	thrown on the compiler.
@@ -324,11 +358,10 @@ $(GNAME DebugCondition):
 	)
 
 ------
-class Foo
-{
-	int a, b;
-    debug:
-	int flag;
+class Foo {
+  int a, b;
+ debug:
+  int flag;
 }
 ------
 
@@ -338,7 +371,7 @@ class Foo
 $(GRAMMAR
 $(GNAME DebugSpecification):
     $(B debug =) $(I Identifier) $(B ;)
-    $(B debug =) $(LINK2 lex.html#IntegerLiteral, $(I IntegerLiteral)) $(B ;)
+    $(B debug =) $(GLINK2 lex, IntegerLiteral) $(B ;)
 )
 
 	$(P Debug identifiers and levels are set either by the command line switch
@@ -366,12 +399,12 @@ debug = foo;	// error, foo used before set
 	)
 
 ------
-debug($(LINK2 lex.html#IntegerLiteral, $(I IntegerLiteral))) { }    // add in debug code if debug level is &gt;= $(LINK2 lex.html#IntegerLiteral, $(I IntegerLiteral))
+debug($(GLINK2 lex, IntegerLiteral)) { }    // add in debug code if debug level is &gt;= $(GLINK2 lex, IntegerLiteral)
 debug($(I identifier)) { } // add in debug code if debug keyword is $(I identifier)
 ------
 
 	$(P These are presumably set by the command line as
-	$(TT -debug=$(I n)) and $(TT -debug=$(I identifier)).
+	$(D -debug=$(I n)) and $(D -debug=$(I identifier)).
 	)
 
 <h2>$(LNAME2 staticif, Static If Condition)</h2>
@@ -405,41 +438,40 @@ int j = 4;
 $(B static if) (i == 3)	// ok, at module scope
     int x;
 
-class C
-{   const int k = 5;
+class C {
+  const int k = 5;
 
-    $(B static if) (i == 3)	// ok
-	int x;
-    $(B else)
-	long x;
+  $(B static if) (i == 3) // ok
+    int x;
+  $(B else)
+    long x;
 
-    $(B static if) (j == 3)	// error, j is not a constant
-	int y;
+  $(B static if) (j == 3) // error, j is not a constant
+    int y;
 
-    $(B static if) (k == 5)	// ok, k is in current scope
-	int z;
+  $(B static if) (k == 5) // ok, k is in current scope
+    int z;
 }
 
-template INT(int i)
-{
-    $(B static if) (i == 32)
-	alias int INT;
-    $(B else static if) (i == 16)
-	alias short INT;
-    $(B else)
-	static assert(0);	// not supported
+template INT(int i) {
+  $(B static if) (i == 32)
+    alias int INT;
+  $(B else static if) (i == 16)
+    alias short INT;
+  $(B else)
+    static assert(0); // not supported
 }
 
-INT!(32) a;	// a is an int
-INT!(16) b;	// b is a short
-INT!(17) c;	// error, static assert trips
+INT!(32) a;  // a is an int
+INT!(16) b;  // b is a short
+INT!(17) c;  // error, static assert trips
 ------
 
 	$(P A $(I StaticIfConditional) condition differs from an
 	$(I IfStatement) in the following ways:
 	)
 
-	$(OL 
+	$(OL
 	$(LI It can be used to conditionally compile declarations,
 	not just statements.
 	)
@@ -469,26 +501,25 @@ $(GNAME StaticAssert):
 	and the compile fails.
 	)
 
-	$(P Unlike $(I AssertExpression)s, $(I StaticAssert)s are always
+	$(P Unlike $(GLINK2 expression, AssertExpression)s, $(I StaticAssert)s are always
 	checked and evaluted by the compiler unless they appear in an
 	unsatisfied conditional.
 	)
 
 ------
-void foo()
-{
-    if (0)
-    {
-	assert(0);	  // never trips
-	static assert(0); // always trips
-    }
-    version (BAR)
-    {
-    }
-    else
-    {
-	static assert(0); // trips when version BAR is not defined
-    }
+void foo() {
+  if (0)
+  {
+    assert(0);  // never trips
+    static assert(0); // always trips
+  }
+  version (BAR)
+  {
+  }
+  else
+  {
+    static assert(0); // trips when version BAR is not defined
+  }
 }
 ------
 

@@ -14,10 +14,16 @@ $(CCODE
 )
 	$(P of C, in D there is:)
 
+$(V1
 --------------------
 import std.c.windows.windows;
 --------------------
-
+)
+$(V2
+--------------------
+import core.sys.windows.windows;
+--------------------
+)
 
 <h2>Calling Conventions</h2>
 
@@ -52,65 +58,101 @@ export void func(int foo);
 <h2>Windows Executables</h2>
 
 	$(P Windows GUI applications can be written with D.
-	A sample such can be found in $(TT $(DMDDIR)\samples\d\winsamp.d)
+	A sample such can be found in $(D $(DMDDIR)\samples\d\winsamp.d)
 	)
 
 	$(P These are required:)
 
-	$(OL 
+	$(OL
 
 	$(LI Instead of a $(CODE main) function serving as the entry point,
 	a $(CODE WinMain) function is needed.
 	)
 
 	$(LI $(CODE WinMain) must follow this form:
+$(V1
 --------------------
 import core.runtime;
 import std.c.windows.windows;
+import std.string;
 
 extern (Windows)
-int $(B WinMain)(HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPSTR lpCmdLine,
-	int nCmdShow)
+int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+            LPSTR lpCmdLine, int nCmdShow)
 {
     int result;
 
-    void exceptionHandler(Exception e)
-    {
-	throw e;
+    void exceptionHandler(Throwable e) {
+        throw e;
     }
 
     try
-    {	
-	Runtime.initialize(&exceptionHandler);
-
-	result = $(B myWinMain)(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
-
-	Runtime.terminate(&exceptionHandler);
-    }
-
-    catch (Object o)		// catch any uncaught exceptions
     {
-	MessageBoxA(null, cast(char *)o.toString(), "Error",
-		    MB_OK | MB_ICONEXCLAMATION);
-	result = 0;		// failed
+        Runtime.initialize(&exceptionHandler);
+        result = myWinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+        Runtime.terminate(&exceptionHandler);
+    }
+    catch (Throwable e) // catch any uncaught exceptions
+    {
+        MessageBoxA(null, e.toString().toStringz, "Error",
+                    MB_OK | MB_ICONEXCLAMATION);
+        result = 0;     // failed
     }
 
-    return result;
+  return result;
 }
 
-int $(B myWinMain)(HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPSTR lpCmdLine,
-	int nCmdShow)
+int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+              LPSTR lpCmdLine, int nCmdShow)
 {
-    /* ... insert user code here ... */
+    // ... insert user code here ...
+    return 0;
 }
 --------------------
+)
+$(V2
+--------------------
+import core.runtime;
+import core.sys.windows.windows;
+import std.string;
 
-	The $(TT myWinMain()) function is where the user code goes, the
-	rest of $(TT WinMain) is boilerplate to initialize and shut down
+extern (Windows)
+int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+            LPSTR lpCmdLine, int nCmdShow)
+{
+    int result;
+
+    void exceptionHandler(Throwable e) {
+        throw e;
+    }
+
+    try
+    {
+        Runtime.initialize(&exceptionHandler);
+        result = myWinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+        Runtime.terminate(&exceptionHandler);
+    }
+    catch (Throwable e) // catch any uncaught exceptions
+    {
+        MessageBoxA(null, e.toString().toStringz(), "Error",
+                    MB_OK | MB_ICONEXCLAMATION);
+        result = 0;     // failed
+    }
+
+  return result;
+}
+
+int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+              LPSTR lpCmdLine, int nCmdShow)
+{
+    // ... insert user code here ...
+    return 0;
+}
+--------------------
+)
+
+	The $(D myWinMain()) function is where the user code goes, the
+	rest of $(D WinMain) is boilerplate to initialize and shut down
 	the D runtime system.
 	)
 
@@ -128,14 +170,22 @@ SUBSYSTEM WINDOWS
 	the application is run.
 	)
 
-	$(LI The presence of $(TT WinMain()) is recognized by the compiler
+	$(LI The presence of $(D WinMain()) is recognized by the compiler
 		causing it to emit a reference to
 		$(LINK2 http://www.digitalmars.com/ctg/acrtused.html, __acrtused_dll)
 		and the phobos.lib runtime library.
 	)
 
 	)
+
+<h2>Windows Programming Examples</h2>
+
+A collection of over 140 Windows D programming code examples is available at
+$(LINK2 https://github.com/AndrejMitrovic/DWindowsProgramming, this Github repository.)
+
 )
+
+
 
 Macros:
 	TITLE=Windows

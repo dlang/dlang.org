@@ -15,7 +15,7 @@ $(D_S $(TITLE),
 
 	$(LI Where is my simple language?)
 
-	$(LI $(LINK2 cpp0x.html, What's D 2.0's answer to C++0x's proposed new features?))
+	$(REDO $(LI $(LINK2 cpp0x.html, What's D 2.0's answer to C++0x's proposed new features?)))
 
 	$(LI What other cool features are in the plans for D 2.0?)
 
@@ -34,7 +34,7 @@ $(D_S $(TITLE),
 	$(LI I want to contribute to D 2.0. How can I effect that?)
 
 	$(ITEMR case_range, Why doesn't the case range statement
-	 use the $(TT case X..Y:) syntax?)
+	 use the $(D case X..Y:) syntax?)
 
 	$(ITEMR shared_guarantees, What guarantees is shared supposed to provide?)
 
@@ -46,13 +46,14 @@ $(D_S $(TITLE),
 
 	$(ITEMR casting_from_shared, What are the semantics of casting FROM shared TO unshared?)
 
+	$(ITEMR bss, Why does a large static array bloat my executable file size?)
 	)
 
 <h2>General D FAQ</h2>
 
 	$(UL
 
-	$(LI $(LINK2 http://www.wikiservice.at/wiki4d/wiki.cgi?FaqRoadmap, The D wiki FAQ page)
+	$(LI $(LINK2 http://www.prowiki.org/wiki4d/wiki.cgi?FaqRoadmap, The D wiki FAQ page)
 	with many more questions answered)
 	$(LI $(LINK2 comparison.html, What does D have that C++ doesn't?))
 	$(ITEMR q1, Why the name D?)
@@ -62,11 +63,10 @@ $(D_S $(TITLE),
 	$(ITEMR backend, How do I write my own D compiler for CPU X?)
 	$(ITEMR gui, Where can I get a GUI library for D?)
 	$(ITEMR ide, Where can I get an IDE for D?)
-	$(ITEMR q2, What about templates?)
-	$(ITEMR q3, Why emphasize implementation ease?)
 	$(ITEMR q4, Why is [expletive deleted] printf left in?)
-	$(ITEMR q5, Will D be open source?)
-	$(ITEMR q6, Why fall through on switch statements?)
+	$(ITEMR q5, Is D open source?)
+	$(ITEMR q5_2, Why does the standard library use the boost license? Why not public domain?)
+	$(ITEMR q6, Why $(I no) fall through on switch statements?)
 	$(ITEMR q7, Why should I use D instead of Java?)
 	$(ITEMR q7_2, Doesn't C++ support strings, etc. with STL?)
 	$(ITEMR q7_3, Can't garbage collection be done in C++ with an add-on library?)
@@ -88,22 +88,23 @@ $(D_S $(TITLE),
 	$(ITEMR reference-counting, Why doesn't D use reference counting for garbage collection?)
 	$(ITEMR gc_1, Isn't garbage collection slow and non-deterministic?)
 	$(ITEMR pure, Can't a sufficiently smart compiler figure out that a function is pure automatically?)
+	$(ITEMR minimum precision, Why allow $(D cast(float)) if it isn't supposed to work?)
 	)
 
 $(ITEM case_range, Why doesn't the case range statement
-	 use the $(TT case X..Y:) syntax?)
+	 use the $(D case X..Y:) syntax?)
 
 	$(P See the $(LINK2 statement.html#CaseRangeStatement, case range statement).)
 
 	$(P The usages of .. would then be:
 	$(OL
-	$(LI $(TT case X..Y:))
-	$(LI $(TT foreach(e; X..Y)))
-	$(LI $(TT array[X..Y]))
+	$(LI $(D case X..Y:))
+	$(LI $(D foreach(e; X..Y)))
+	$(LI $(D array[X..Y]))
 	)
 	Case (1) has a VERY DIFFERENT meaning from (2) and (3).
 	(1) is inclusive of Y, and (2) and (3) are exclusive of Y.
-	Having a very different meaning means it should have a distinctly different syntax. 
+	Having a very different meaning means it should have a distinctly different syntax.
 	)
 
 $(ITEM shared_guarantees, What guarantees is shared supposed to provide?)
@@ -134,13 +135,48 @@ $(ITEM casting_from_shared, What are the semantics of casting FROM shared TO uns
 	$(P Make sure there are no other shared references to that same data.
 	)
 
+$(ITEM bss, Why does a large static array bloat my executable file size?)
+
+	$(P Given the declaration:)
+---
+char[1024 * 1024] arr;
+---
+	$(P the executable size increases by a megabyte in size. In C, this would not
+	as $(CODE arr) would be stored in the BSS segment.
+	In D, $(CODE arr) is not stored in the BSS segment because:
+	)
+
+	$(UL
+	$(LI The $(CODE char) type is initialized to 0xFF, not 0. Non-zero data
+	cannot be placed in BSS.)
+	$(LI Statically allocated data is placed in thread local storage. The BSS
+	segment is not thread local, and there is no thread local equivalent of BSS.)
+	)
+
+	$(P The following will be placed in BSS:)
+
+---
+__gshared byte[1024 * 1024] arr;
+---
+
+	$(P as $(CODE byte)s are 0 initialized and $(CODE __gshared) puts it in the
+	global data.)
+
+	$(P There are similiar issues for $(CODE float), $(CODE double), and $(CODE real)
+	static arrays. They are initialized to NaN (Not A Number) values, not 0.
+	)
+
+	$(P The easiest way to deal with this issue is to allocate the array dynamically
+	at run time rather than statically allocate it.
+	)
+
 $(ITEM q1, Why the name D?)
 
 	$(P The original name was the Mars Programming Language. But my friends
 	kept calling it D, and I found myself starting to call it D.
 	The idea of D being a successor to C goes back at least as far as 1988,
 	as in this
-	$(LINK2 http://groups.google.com/groups?q=%22d+programming+language&amp;hl=en&amp;lr=&amp;ie=UTF8&amp;oe=UTF8&amp;selm=12055%40brl-adm.ARPA&amp;rnum=1, thread).
+	$(LINK2 http://groups.google.com/group/comp.lang.c/browse_thread/thread/cb4b868fab477b61/d4b5407644d16806, thread).
 	)
 
 $(ITEM q1_2, Is there a linux port of D?)
@@ -163,77 +199,71 @@ $(ITEM backend, How do I write my own D compiler for CPU X?)
 
 $(ITEM gui, Where can I get a GUI library for D?)
 
-	$(P Since D can call C functions, any GUI library with a C interface is 
-	accessible from D. Various D GUI libraries and ports can be found at 
-	<a href="http://www.prowiki.org/wiki4d/wiki.cgi?AvailableGuiLibraries">AvailableGuiLibraries</a>.
+	$(P Since D can call C functions, any GUI library with a C interface is
+	accessible from D. Various D GUI libraries and ports can be found at
+	$(LINK2 http://www.prowiki.org/wiki4d/wiki.cgi?GuiLibraries, the D wiki).
 	)
 
 $(ITEM ide, Where can I get an IDE for D?)
 
-	$(P Try
-	$(LINK2 http://www.dsource.org/projects/elephant/, Elephant),
-	$(LINK2 http://www.dsource.org/projects/poseidon/, Poseidon),
-	or $(LINK2 http://www.dsource.org/projects/leds/, LEDS).
+	$(P A list of IDEs and editors that support D can be found on
+    $(LINK2 http://prowiki.org/wiki4d/wiki.cgi?EditorSupport, the D wiki).
 	)
-
-$(ITEM q2, What about templates?)
-
-	$(P D now supports advanced templates.
-	)
-
-$(ITEM q3, Why emphasize implementation ease?)
-
-	$(P Isn't ease of use for the user of the language more important? Yes,
-	it is.
-	But a vaporware language is useless to everyone. The easier a language
-	is to implement, the more robust implementations there will be. In C's
-	heyday, there were 30 different commercial C compilers for the IBM PC.
-	Not many made the transition to C++. In looking at
-	the C++ compilers on the market today, how many years of development
-	went into each? At least 10 years? Programmers waited years
-	for the various pieces of C++ to get implemented after they were
-	specified.
-	If C++ was not so enormously popular, it's doubtful that very complex
-	features
-	like multiple inheritance, templates, etc., would ever have been
-	implemented.
-	)
-
-	$(P I suggest that if a language is easier to implement, then it is
-	likely also easier to understand. Isn't it better to spend time learning
-	to write better programs than language arcana? If a language can capture
-	90% of the power of
-	C++ with 10% of its complexity, I argue that is a worthwhile tradeoff.
-	)
-
 
 $(ITEM q4, Why is printf in D?)
 
-	$(P $(B printf) is not part of D, it is part of C's standard
+	$(P $(LINK2 http://www.digitalmars.com/rtl/stdio.html#printf, printf)
+	is not part of D, it is part of C's standard
 	runtime library which is accessible from D.
-	D's standard runtime library has $(B std.stdio.writefln),
-	which is as powerful as $(B printf) but much easier to use.
+	D's standard runtime library has
+	$(LINK2 http://dlang.org/phobos/std_stdio.html#writefln, std.stdio.writefln),
+	which is as powerful as $(LINK2 http://www.digitalmars.com/rtl/stdio.html#printf, printf)
+	but is much easier to use.
 	)
 
 
-$(ITEM q5, Will D be open source?)
+$(ITEM q5, Is D open source?)
 
-	$(P The front end for D is open source, and the source comes with the
-	$(LINK2 http://www.digitalmars.com/d/download.html, compiler).
-	The runtime library is completely open source.
-	David Friedman has integrated the
-	$(LINK2 http://home.earthlink.net/~dvdfrdmn/d, D frontend with GCC)
-	to create $(B gdc), a completely open source implementation of D.
+    $(P The front end for the $(B dmd) D compiler is open source.
+    The back end for dmd is licensed from Symantec,
+    and is not compatible with open-source licenses such as the GPL.
+    Nonetheless, the complete source comes with the
+    $(LINK2 http://www.digitalmars.com/d/download.html, compiler),
+    and all development takes place publically on
+    $(LINK2 https://github.com/D-Programming-Language/dmd, github).
+    Compilers using the DMD front end and the GCC and LLVM open source
+    backends are also available.
+
+	The runtime library is completely open source using the
+	$(LINK2 http://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+	The $(B gdc) and $(B ldc) D compilers are completely open sourced.
 	)
 
-$(ITEM q6, Why fall through on switch statements?)
+$(ITEM q5_2, Why does the standard library use the boost license? Why not public domain?)
+
+    $(P Although most jurisdictions use the concept of Public Domain, some
+    (eg, Japan) do not.
+    The $(LINK2 http://boost.org/LICENSE_1_0.txt, Boost License)
+    avoids this problem. It was chosen because, unlike almost all other open
+    source licenses, it does not demand that the license text be included on
+    distributions in binary form.
+    )
+
+$(ITEM q6, Why $(I no) fall through on switch statements?)
 
 	$(P Many people have asked for a requirement that there be a break between
 	cases in a switch statement, that C's behavior of silently falling through
 	is the cause of many bugs.
 	)
 
-	$(P The reason D doesn't change this is for the same reason that integral
+    $(P In D2, implicit fall through is disallowed. You have to add a
+    $(LINK2 statement.html#GotoStatement, goto case;) statement to explicitly
+    state the intention of falling through.
+    )
+
+	$(P There was further request that the $(B break) statement be made
+    implicit.
+    The reason D doesn't change this is for the same reason that integral
 	promotion rules and operator precedence rules were kept the same - to
 	make code that looks the same as in C operate the same. If it had subtly
 	different semantics, it will cause frustratingly subtle bugs.
@@ -242,25 +272,26 @@ $(ITEM q6, Why fall through on switch statements?)
 
 $(ITEM q7, Why should I use D instead of Java?)
 
-	D is distinct from Java in purpose, philosophy and reality.
-	See this <a href="comparison.html">comparison</a>.
-	<p>
+	$(P D is distinct from Java in purpose, philosophy and reality.
+	See this $(LINK2 comparison.html, comparison).
+	)
 
-	Java is designed to be write once, run everywhere. D is designed for writing
+	$(P Java is designed to be write once, run everywhere. D is designed for writing
 	efficient native system apps. Although D and Java share the notion that
-	garbage collection is good and multiple inheritance is bad &lt;g&gt;, their
+	garbage collection is good and multiple inheritance is bad, their
 	different design goals mean the languages have very different feels.
+	)
 
 $(ITEM q7_2, Doesn't C++ support strings, etc. with STL?)
 
 	$(P In the C++ standard library are mechanisms for doing strings,
-	dynamic arrays, associative arrays, bounds checked
-	arrays, and complex numbers.
+	dynamic arrays, associative arrays, and bounds-checked
+	arrays.
 	)
 
 	$(P Sure, all this stuff can be done with libraries,
-	following certain coding disciplines, etc. But you can also do
-	object oriented programming in C (I've seen it done).
+	following certain coding disciplines, etc. But
+	object oriented programming can also be done in C (it's been done).
 	Isn't it incongruous that something like strings,
 	supported by the simplest BASIC interpreter, requires a very
 	large and complicated infrastructure to support?
@@ -449,7 +480,7 @@ $(ITEM keys, The $(SINGLEQUOTE ~) is not on my keyboard?)
 $(ITEM omf, Can I link in C object files created with another compiler?)
 
 
-	DMD produces OMF (Microsoft Object Module Format) object 
+	DMD produces OMF (Microsoft Object Module Format) object
 	files while other compilers such as VC++ produce COFF object
 	files.
 	DMD's output is designed to work with DMC, the Digital Mars C
@@ -493,14 +524,14 @@ $(ITEM omf, Can I link in C object files created with another compiler?)
 	tool.
 
 $(ITEM regexp_literals, Why not support regular expression literals
-	with the $(TT /foo/g) syntax?)
+	with the $(D /foo/g) syntax?)
 
 	$(P There are two reasons:
 	)
 
 	$(OL
 
-	$(LI The $(TT /foo/g) syntax would make it impossible to separate
+	$(LI The $(D /foo/g) syntax would make it impossible to separate
 	the lexer from the parser, as / is the divide token.)
 
 	$(LI There are already 3 string types; adding the regex literals
@@ -512,7 +543,7 @@ $(ITEM regexp_literals, Why not support regular expression literals
 $(ITEM dogfood, Why is the D front end written in C++ rather than D?)
 
 	$(P The front end is in C++ in order to interface to the existing gcc
-	and dmd back ends. 
+	and dmd back ends.
 	It's also meant to be easily interfaced to other existing back ends,
 	which are likely written in C++.
 	The D implementation of
@@ -619,10 +650,10 @@ $(V2
 	) Here are some reasons why it isn't a full interface:
 )
 
-	$(P Attempting to have D interface with C++ is 
-	nearly as complicated as writing a C++ compiler, which would destroy the 
+	$(P Attempting to have D interface with C++ is
+	nearly as complicated as writing a C++ compiler, which would destroy the
 	goal of having D be a reasonably easy language to implement.
-	For people with an existing C++ code base that they must work with, they are 
+	For people with an existing C++ code base that they must work with, they are
 	stuck with C++ (they can't move it to any other language, either).)
 
 	$(P There are many issues that would have to be resolved in order for D
@@ -652,7 +683,7 @@ $(V2
 
 	$(LI C++ code, despite decades of attempts to replace macro features
 	with inbuilt ones, relies more heavily than ever on layer after layer of
-	arbitrary macros. There is no D analog for token pasting or
+	arbitrary macros. D does not always have an analog for token pasting and
 	stringizing.)
 
 	$(LI Macro names have global scope across #include files, but are local
@@ -712,7 +743,7 @@ $(V2
 	$(P The bottom line is the language features affect the design of the code. C++
 	designs just don't fit with D. Even if you could find a way to automatically
 	adapt between the two, the result will be about as enticing as the left side of
-	a honda welded to the right side of a camaro. 
+	a honda welded to the right side of a camaro.
 	)
 
 $(ITEM reference-counting, Why doesn't D use reference counting for garbage collection?)
@@ -764,7 +795,10 @@ $(ITEM reference-counting, Why doesn't D use reference counting for garbage coll
 
 	$(P That said, D may in the future optionally support some form of ref
 	counting, as rc is better for managing scarce resources like file
-	handles. 
+	handles.
+    Furthermore, if ref counting is a must, Phobos has the
+    $(LINK2 phobos/std_typecons.html#RefCounted, std.typecons.RefCounted) type
+    which implements it as a library, similar to C++'s shared_ptr&lt;&gt;.
 	)
 
 $(ITEM gc_1, Isn't garbage collection slow and non-deterministic?)
@@ -782,10 +816,9 @@ $(ITEM gc_1, Isn't garbage collection slow and non-deterministic?)
 
 $(ITEM pure, Can't a sufficiently smart compiler figure out that a function is pure automatically?)
 
-	$(P The problems with the
-	$(LINK2 http://c2.com/cgi/wiki?SufficientlySmartCompiler, sufficently smart compiler)
-	argument are:
-	)
+    $(P The compiler infers purity (and safety, and nothrow) for delegate and function
+    literals. It doesn't do this for normal functions for several reasons:
+    )
 
 	$(OL
 	$(LI most functions call other functions, which call other functions,
@@ -810,13 +843,40 @@ $(ITEM pure, Can't a sufficiently smart compiler figure out that a function is p
 
 	)
 
+$(ITEM minimum precision, Why allow $(D cast(float)) if it isn't supposed to work?)
+
+	$(P The floating point rules are such that transforming $(D cast(real)cast(float)) to
+	$(D cast(real)) is a valid transformation.
+	This is because the floating point rules are written with the following principle in
+	mind:
+	)
+
+	$(BLOCKQUOTE_PLAIN An algorithm is invalid if it breaks if the floating point precision is
+	increased. Floating point precision is always a minimum, not a maximum.)
+
+	$(P Programs that legitimately depended on maximum precision are:)
+
+	$(OL
+	$(LI compiler/library validation test suites)
+	$(LI ones trying to programmatically test the precision)
+	)
+
+	$(P (1) is not of value to user programming, and there are alternate ways to test
+	the precision.)
+
+	$(P (2) D has .properties that take care of that.)
+
+	$(P Programs that rely on a maximum accuracy need to be rethought and reengineered.)
+
+
+
 $(COMMENT
 	> Single inheritance may be easier to implement, but you are losing
 	>something.  It's a little concerning how often folks here take the
 	>opinion that "Feature X has problems and I never use it anyway, so no
 	>body else 'really' needs it."  I'm not specificly blaming you, but i've
 	>lost track of how many time if seen that reasoning tonight.  I'm afraid
-	>I'll see it a lot in the 275 I still have to read.  
+	>I'll see it a lot in the 275 I still have to read.
 
 
 	Your reasoning has merit. The counterargument (and I've discussed
@@ -840,7 +900,7 @@ $(COMMENT
 
 	I intend to further help this along by writing a D style guide,
 	"The D Way". There's a start on it all ready with the document
-	on how to do error handling: 
+	on how to do error handling:
 
 	    www.digitalmars.com/d/errors.html
 

@@ -14,7 +14,7 @@ $(COMMUNITY D's Contract Programming vs C++'s,
 	<p>
 
 	Digital Mars C++ adds
-	<a href="../ctg/contract.html">extensions to C++</a>
+	<a href="http://digitalmars.com/ctg/contract.html">extensions to C++</a>
 	to support DbC, but they are not covered here because they are not
 	part of standard C++ and are not supported by any other C++ compiler.
 
@@ -24,7 +24,7 @@ $(COMMUNITY D's Contract Programming vs C++'s,
 	<a href="dbc.html">Contract Programming</a> document.
 	To sum up, DbC in D has the following characteristics:
 
-	$(OL 
+	$(OL
 
 	$(LI The $(I assert) is the basic contract.
 	)
@@ -68,20 +68,20 @@ $(COMMUNITY D's Contract Programming vs C++'s,
 
 <h2>Contract Programming in C++</h2>
 
-<h3>The $(TT assert) Macro</h3>
+<h3>The $(D assert) Macro</h3>
 
-	C++ does have the basic $(TT assert) macro, which tests its argument
-	and if it fails, aborts the program. $(TT assert) can be turned
-	on and off with the $(TT NDEBUG) macro.
+	C++ does have the basic $(D assert) macro, which tests its argument
+	and if it fails, aborts the program. $(D assert) can be turned
+	on and off with the $(D NDEBUG) macro.
 	<p>
 
-	$(TT assert) does not know anything about class invariants,
+	$(D assert) does not know anything about class invariants,
 	and does not throw an exception when it fails. It just aborts
-	the program after writing a message. $(TT assert) relies on
+	the program after writing a message. $(D assert) relies on
 	a macro text preprocessor to work.
 	<p>
 
-	$(TT assert) is where explicit support for DbC in Standard C++
+	$(D assert) is where explicit support for DbC in Standard C++
 	begins and ends.
 
 <h3>Class Invariants</h3>
@@ -162,8 +162,8 @@ void B::barG()
 }
 )
 
-	There's an additional complication with $(TT A::foo()). Upon every
-	normal exit from the function, the $(TT invariant()) should be
+	There's an additional complication with $(D A::foo()). Upon every
+	normal exit from the function, the $(D invariant()) should be
 	called.
 	This means that code that looks like:
 
@@ -247,14 +247,14 @@ void foo()
 )
 
 	If the preconditions and postconditions consist of nothing
-	more than $(TT assert) macros, the whole doesn't need to
-	be wrapped in a $(TT #ifdef) pair, since a good C++ compiler will
-	optimize the whole thing away if the $(TT assert)s are turned off.
+	more than $(D assert) macros, the whole doesn't need to
+	be wrapped in a $(D #ifdef) pair, since a good C++ compiler will
+	optimize the whole thing away if the $(D assert)s are turned off.
 	<p>
 
-	But suppose $(TT foo()) sorts an array, and the postcondition needs
+	But suppose $(D foo()) sorts an array, and the postcondition needs
 	to walk the array and verify that it really is sorted. Now
-	the shebang needs to be wrapped in $(TT #ifdef):
+	the shebang needs to be wrapped in $(D #ifdef):
 
 $(CCODE
 void foo()
@@ -270,12 +270,12 @@ void foo()
 )
 
 	(One can make use of the C++ rule that templates are only
-	instantiated when used can be used to avoid the $(TT #ifdef), by
+	instantiated when used can be used to avoid the $(D #ifdef), by
 	putting the conditions into a template function referenced
-	by the $(TT assert).)
+	by the $(D assert).)
 	<p>
 
-	Let's add a return value to $(TT foo()) that needs to be checked in
+	Let's add a return value to $(D foo()) that needs to be checked in
 	the postconditions. In D:
 
 ----------
@@ -318,7 +318,7 @@ int foo()
 }
 )
 
-	Now add a couple parameters to $(TT foo()). In D:
+	Now add a couple parameters to $(D foo()). In D:
 
 ----------
 int foo(int a, int b)
@@ -394,9 +394,9 @@ class B : A
 }
 ----------
 
-	The semantics for a call to $(TT B.foo()) are:
+	The semantics for a call to $(D B.foo()) are:
 
-	$(UL 
+	$(UL
 	$(LI Either Apreconditions or Bpreconditions must be satisfied.)
 	$(LI Both Apostconditions and Bpostconditions must be satisfied.)
 	)
@@ -457,16 +457,16 @@ public:
 )
 
 	Something interesting has happened here. The preconditions can
-	no longer be done using $(TT assert), since the results need
+	no longer be done using $(D assert), since the results need
 	to be OR'd together. I'll leave as a reader exercise adding
-	in a class invariant, function return values for $(TT foo()),
+	in a class invariant, function return values for $(D foo()),
 	and parameters
-	for $(TT foo()).
+	for $(D foo()).
 
 <h2>Conclusion</h2>
 
 	These C++ techniques can work up to a point. But, aside from
-	$(TT assert), they are not standardized and so will vary from
+	$(D assert), they are not standardized and so will vary from
 	project to project. Furthermore, they require much tedious
 	adhesion to a particular convention, and add significant clutter
 	to the code. Perhaps that's why it's rarely seen in practice.

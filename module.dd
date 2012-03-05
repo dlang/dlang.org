@@ -12,25 +12,27 @@ $(GNAME DeclDefs):
 	$(GLINK DeclDef) $(I DeclDefs)
 
 $(GNAME DeclDef):
-	$(LINK2 attribute.html#AttributeSpecifier, $(I AttributeSpecifier))
+	$(GLINK2 attribute, AttributeSpecifier)
 	$(GLINK ImportDeclaration)
-	$(LINK2 enum.html#EnumDeclaration, $(I EnumDeclaration))
-	$(LINK2 class.html#ClassDeclaration, $(I ClassDeclaration))
-	$(LINK2 interface.html#InterfaceDeclaration, $(I InterfaceDeclaration))
-	$(LINK2 struct.html#AggregateDeclaration, $(I AggregateDeclaration))
-	$(LINK2 declaration.html#Declaration, $(I Declaration))
-	$(LINK2 class.html#Constructor, $(I Constructor))
-	$(LINK2 class.html#Destructor, $(I Destructor))
-	$(LINK2 unittest.html#UnitTest, $(I UnitTest))
-	$(LINK2 class.html#StaticConstructor, $(I StaticConstructor))
-	$(LINK2 class.html#StaticDestructor, $(I StaticDestructor))
-$(V2
-	$(LINK2 class.html#SharedStaticConstructor, $(I SharedStaticConstructor))
-	$(LINK2 class.html#SharedStaticDestructor, $(I SharedStaticDestructor))
-)	$(LINK2 version.html#ConditionalDeclaration, $(I ConditionalDeclaration))
-	$(LINK2 version.html#StaticAssert, $(I StaticAssert))
-	$(LINK2 template.html#TemplateDeclaration, $(I TemplateDeclaration))
-	$(LINK2 template-mixin.html#TemplateMixin, $(I TemplateMixin))
+	$(GLINK2 enum, EnumDeclaration)
+	$(GLINK2 class, ClassDeclaration)
+	$(GLINK2 interface, InterfaceDeclaration)
+	$(GLINK2 struct, AggregateDeclaration)
+	$(GLINK2 declaration, Declaration)
+	$(GLINK2 class, Constructor)
+	$(GLINK2 class, Destructor)
+	$(GLINK2 unittest, UnitTest)
+	$(GLINK2 class, StaticConstructor)
+	$(GLINK2 class, StaticDestructor)
+$(V2  	$(GLINK2 class, SharedStaticConstructor)
+	$(GLINK2 class, SharedStaticDestructor)
+)	$(GLINK2 version, ConditionalDeclaration)
+	$(GLINK2 version, DebugSpecification)
+	$(GLINK2 version, VersionSpecification)
+	$(GLINK2 version, StaticAssert)
+	$(GLINK2 template, TemplateDeclaration)
+	$(GLINK2 template-mixin, TemplateMixinDeclaration)
+	$(GLINK2 template-mixin, TemplateMixin)
 	$(GLINK MixinDeclaration)
 	$(B ;)
 )
@@ -168,7 +170,7 @@ $(GNAME ModuleAliasIdentifier):
 	$(P There are several forms of the $(I ImportDeclaration),
 	from generalized to fine-grained importing.)
 
-	$(P The order in which $(I ImportDeclarations) occur has no
+	$(P The order in which $(I ImportDeclaration)s occur has no
 	significance.)
 
 	$(P $(I ModuleFullyQualifiedName)s in the $(I ImportDeclaration) must be
@@ -182,8 +184,8 @@ $(GNAME ModuleAliasIdentifier):
 	modules being imported:)
 
 ---------
-import std.stdio;  // import module $(B stdio) from the $(B std) package
-import foo, bar;   // import modules $(B foo) and $(B bar)
+import std.stdio; // import module $(B stdio) from the $(B std) package
+import foo, bar;  // import modules $(B foo) and $(B bar)
 
 void main()
 {
@@ -295,8 +297,8 @@ static import std.stdio;
 
 void main()
 {
-    writefln("hello!");            // error, writefln is undefined
-    std.stdio.writefln("hello!");  // ok, writefln is fully qualified
+ writefln("hello!");           // error, writefln is undefined
+ std.stdio.writefln("hello!"); // ok, writefln is fully qualified
 }
 ---
 
@@ -312,9 +314,9 @@ import io = std.stdio;
 
 void main()
 {
-    io.writefln("hello!");         // ok, calls std.stdio.writefln
-    std.stdio.writefln("hello!");  // error, std is undefined
-    writefln("hello!");            // error, writefln is undefined
+ io.writefln("hello!");        // ok, calls std.stdio.writefln
+ std.stdio.writefln("hello!"); // error, std is undefined
+ writefln("hello!");           // error, writefln is undefined
 }
 ---
 
@@ -331,11 +333,11 @@ import std.stdio : writefln, foo = writef;
 
 void main()
 {
-    std.stdio.writefln("hello!");  // error, std is undefined
-    writefln("hello!");            // ok, writefln bound into current namespace
-    writef("world");               // error, writef is undefined
-    foo("world");                  // ok, calls std.stdio.writef()
-    fwritefln(stdout, "abc");      // error, fwritefln undefined
+ std.stdio.writefln("hello!"); // error, std is undefined
+ writefln("hello!");           // ok, writefln bound into current namespace
+ writef("world");              // error, writef is undefined
+ foo("world");                 // ok, calls std.stdio.writef()
+ fwritefln(stdout, "abc");     // error, fwritefln undefined
 }
 ---
 
@@ -350,15 +352,51 @@ import io = std.stdio : foo = writefln;
 
 void main()
 {
-    writefln("bar");           // error, writefln is undefined
-    std.stdio.foo("bar");      // error, foo is bound into current namespace
-    std.stdio.writefln("bar"); // error, std is undefined
-    foo("bar");                // ok, foo is bound into current namespace,
-                               // FQN not required
-    io.writefln("bar");        // ok, io=std.stdio bound the name io in
-                               // the current namespace to refer to the entire module
-    io.foo("bar");             // error, foo is bound into current namespace,
-                               // foo is not a member of io
+ writefln("bar");           // error, writefln is undefined
+ std.stdio.foo("bar");      // error, foo is bound into current namespace
+ std.stdio.writefln("bar"); // error, std is undefined
+ foo("bar");                // ok, foo is bound into current namespace,
+                            // FQN not required
+ io.writefln("bar");        // ok, io=std.stdio bound the name io in
+                            // the current namespace to refer to the entire module
+ io.foo("bar");             // error, foo is bound into current namespace,
+                            // foo is not a member of io
+--------------
+
+<h3>Scoped Imports</h3>
+
+    $(P Import declarations may be used at any scope. For example:)
+
+--------------
+void main() {
+  import std.stdio;
+  writeln("bar");
+}
+--------------
+
+    $(P The imports are looked up to satisfy any unresolved symbols at that scope.
+    Imported symbols may hide symbols from outer scopes.)
+
+
+	$(P In function scopes, imported symbols only become visible after the
+	import declaration
+	lexically appears in the function body. In other words, imported symbols
+	at function scope cannot be forward referenced.
+	)
+
+--------------
+void main() {
+  void writeln(string) {}
+  void foo() {
+    writeln("bar"); // calls main.writeln
+    import std.stdio;
+    writeln("bar"); // calls std.stdio.writeln
+    void writeln(string) {}
+    writeln("bar"); // calls main.foo.writeln
+  }
+  writeln("bar"); // calls main.writeln
+  std.stdio.writeln("bar");  // error, std is undefined
+}
 --------------
 
 <h3>Module Scope Operator</h3>
@@ -372,10 +410,10 @@ int x;
 
 int foo(int x)
 {
-    if (y)
-	return x;		// returns foo.x, not global x
-    else
-	return .x;		// returns global x
+ if (y)
+   return x;  // returns foo.x, not global x
+ else
+   return .x; // returns global x
 }
 ---------
 
@@ -468,7 +506,5 @@ Macros:
 	TITLE=Modules
 	WIKI=Module
 	CATEGORY_SPEC=$0
-	GLINK=$(LINK2 #$0, $(I $0))
-	GNAME=$(LNAME2 $0, $0)
 	FOO=
 

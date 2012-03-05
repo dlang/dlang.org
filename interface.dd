@@ -4,23 +4,14 @@ $(SPEC_S Interfaces,
 
 $(GRAMMAR
 $(GNAME InterfaceDeclaration):
-	$(B interface) $(I Identifier) $(GLINK BaseInterfaceList) $(GLINK InterfaceBody)
-	$(LINK2 template.html#InterfaceTemplateDeclaration, $(I InterfaceTemplateDeclaration))
+	$(B interface) $(I Identifier) $(GLINK BaseInterfaceList)$(OPT) $(GLINK InterfaceBody)
+	$(GLINK2 template, InterfaceTemplateDeclaration)
 
 $(GNAME BaseInterfaceList):
-	$(I Empty)
-	$(B :) $(LINK2 class.html#InterfaceClasses, $(I InterfaceClasses))
+	$(B :) $(GLINK2 class, InterfaceClasses)
 
 $(GNAME InterfaceBody):
-	$(B { })
-	$(B {) $(GLINK InterfaceBodyDeclarations) $(B })
-
-$(GNAME InterfaceBodyDeclarations):
-	$(GLINK InterfaceBodyDeclaration)
-	$(GLINK InterfaceBodyDeclaration) $(I InterfaceBodyDeclarations)
-
-$(GNAME InterfaceBodyDeclaration):
-	$(B {) $(LINK2 module.html#DeclDef, $(I DeclDef)) $(B })
+	$(B {) $(GLINK2 module, DeclDefs)$(OPT) $(B })
 )
 
 	$(P Interfaces describe a list of functions that a class that inherits
@@ -243,21 +234,21 @@ $(SECTION2 $(LNAME2 COM-Interfaces, COM Interfaces),
 	)
 
 	$(P A COM interface is defined as one that derives from the interface
-	$(TT std.c.windows.com.IUnknown). A COM interface differs from
+	$(D std.c.windows.com.IUnknown). A COM interface differs from
 	a regular D interface in that:
 	)
 
 	$(UL
-	$(LI It derives from the interface $(TT std.c.windows.com.IUnknown).)
+	$(LI It derives from the interface $(D std.c.windows.com.IUnknown).)
 	$(LI It cannot be the argument of a $(I DeleteExpression).)
 	$(LI References cannot be upcast to the enclosing class object, nor
 	can they be downcast to a derived interface. To accomplish this,
-	an appropriate $(TT QueryInterface()) would have to be implemented
+	an appropriate $(D QueryInterface()) would have to be implemented
 	for that interface in standard COM fashion.)
 	$(LI Classes derived from COM interfaces are COM classes.)
 	$(LI The default linkage for member functions of COM classes
-	is $(TT extern(System)).)
-	$(LI The first member of the $(TT vtbl[]) is not the pointer
+	is $(D extern(System)).)
+	$(LI The first member of the $(D vtbl[]) is not the pointer
 	to the InterfaceInfo, but the first virtual function pointer.)
 	)
 )
@@ -297,8 +288,12 @@ class Ifoo
 	can they be downcast to a derived interface.)
 	$(LI The C++ calling convention is the default convention
 	for its member functions, rather than the D calling convention.)
-	$(LI The first member of the $(TT vtbl[]) is not the pointer
-	to the $(TT Interface), but the first virtual function pointer.)
+	$(LI The first member of the $(D vtbl[]) is not the pointer
+	to the $(D Interface), but the first virtual function pointer.)
+	)
+
+	$(P For more information, see
+	$(LINK2 http://lunesu.com/uploads/ModernCOMProgramminginD.pdf, Modern COM Programming in D)
 	)
 )
 )

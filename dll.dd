@@ -29,13 +29,13 @@ $(D_S Writing Win32 DLLs in D,
 	)
 
 	$(P DLLs can be created in D in roughly the same way as in C.
-	A $(TT DllMain())
+	A $(D DllMain())
 	is required, looking like:
 	)
 
 --------------------------------
 import std.c.windows.windows;
-import core.dll_helper;
+import core.sys.windows.dll;
 
 __gshared HINSTANCE g_hInst;
 
@@ -76,14 +76,14 @@ BOOL DllMain(HINSTANCE hInstance, ULONG ulReason, LPVOID pvReserved)
 	     should be controlled by the garbage collector. You might need more control over
 	     this behaviour if there are threads in the process that must not be suspended.
 	     In this case pass false to disable the automatic handling of all threads.)
-	$(LI The presence of $(TT DllMain()) is recognized by the compiler
+	$(LI The presence of $(D DllMain()) is recognized by the compiler
 		causing it to emit a reference to
 		$(LINK2 http://www.digitalmars.com/ctg/acrtused.html, __acrtused_dll)
 		and the $(TT phobos.lib) runtime library.)
 	)
 
 	Link with a .def
-	(<a href="http://www.digitalmars.com/ctg/ctgDefFiles.html">Module Definition File</a>)
+	($(LINK2 http://www.digitalmars.com/ctg/ctgDefFiles.html, Module Definition File))
 	along the lines of:
 
 $(MODDEFFILE
@@ -223,8 +223,7 @@ C:>
 	<p>
 
 	For understanding COM, Kraig Brockshmidt's
-	<a href="http://www.amazon.com/exec/obidos/ASIN/1556158432/classicempire">
-	Inside OLE</a>
+	$(LINK2 http://www.amazon.com/exec/obidos/ASIN/1556158432/classicempire, Inside OLE)
 	is an indispensible resource.
 	<p>
 
@@ -438,14 +437,14 @@ export MyClass $(B getMyClass)()
 
 	$(OL 
 	$(LI$(B $(TT dmd -c mydll -g))
-	<br>Compiles $(TT mydll.d) into $(TT mydll.obj).
+	<br>Compiles $(D mydll.d) into $(TT mydll.obj).
 	$(B -g) turns on debug info generation.
 	)
 
 	$(LI $(B $(TT dmd mydll.obj mydll.def -g -L/map))
 	<br>Links $(TT mydll.obj) into a DLL named $(TT mydll.dll).
 	$(TT mydll.def) is the
-	<a href="http://www.digitalmars.com/ctg/ctgDefFiles.html">Module Definition File</a>,
+	$(LINK2 http://www.digitalmars.com/ctg/ctgDefFiles.html, Module Definition File),
 	and has the contents:
 
 $(MODDEFFILE
@@ -453,7 +452,7 @@ LIBRARY         MYDLL
 DESCRIPTION     'MyDll demonstration DLL'
 EXETYPE		NT
 CODE            PRELOAD DISCARDABLE
-DATA            PRELOAD SINGLE
+DATA            PRELOAD MULTIPLE
 )
 	$(B -g) turns on debug info generation, and
 	$(B -L/map) generates a map file $(TT mydll.map).
@@ -461,7 +460,7 @@ DATA            PRELOAD SINGLE
 
 	$(LI $(B $(TT implib /noi /system mydll.lib mydll.dll))
 	<br>Creates an
-	<a href="http://www.digitalmars.com/ctg/implib.html">import library</a>
+	$(LINK2 http://www.digitalmars.com/ctg/implib.html, import library)
 	$(TT mydll.lib) suitable
 	for linking in with an application that will be statically
 	loading $(TT mydll.dll).

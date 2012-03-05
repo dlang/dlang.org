@@ -40,7 +40,7 @@ $(D_S Memory Management,
 
 	$(P Consider the case of passing an array to a function, possibly
 	modifying the contents of the array, and returning the modified
-	array. Since arrays are passed by reference, not by value,
+	array. As the contents of an array are accessed through a reference,
 	a crucial issue is who owns the contents of the array?
 	For example, a function to convert an array of characters to
 	upper case:
@@ -53,9 +53,9 @@ char[] toupper(char[] s)
 
     for (i = 0; i < s.length; i++)
     {
-	char c = s[i];
-	if ('a' <= c && c <= 'z')
-	    s[i] = c - (cast(char)'a' - 'A');
+        char c = s[i];
+        if ('a' <= c && c <= 'z')
+            s[i] = cast(char)(c - ('a' - 'A'));
     }
     return s;
 }
@@ -89,20 +89,22 @@ char[] toupper(char[] s)
     changed = 0;
     for (i = 0; i < s.length; i++)
     {
-	char c = s[i];
-	if ('a' <= c && c <= 'z')
-	{
-	    if (!changed)
-	    {   char[] r = new char[s.length];
-		r[] = s;
-		s = r;
-		changed = 1;
-	    }
-	    s[i] = c - (cast(char)'a' - 'A');
-	}
+        char c = s[i];
+        if ('a' <= c && c <= 'z')
+        {
+            if (!changed)
+            {
+                char[] r = new char[s.length];
+                r[] = s;
+                s = r;
+                changed = 1;
+            }
+            s[i] = cast(char)(c - ('a' - 'A'));
+        }
     }
     return s;
 }
+
 ------
 
 	$(P Copy-on-write is the protocol implemented by array processing
@@ -193,7 +195,7 @@ void test()
 
 	Such free list approaches can be very high performance.
 
-	$(UL 
+	$(UL
 	$(LI If used by multiple threads, the allocate() and
 	deallocate() functions need to be synchronized.)
 
@@ -219,7 +221,7 @@ void test()
 	it will have to be done explicitly.
 	)
 
-	$(P <a href="windows.html#com">Win32 COM programming</a>
+	$(P <a href="COM.html">Win32 COM programming</a>
 	uses the members AddRef() and Release()
 	to maintain the reference counts.
 	)
@@ -237,35 +239,38 @@ void test()
 
 ------
 import std.c.stdlib;
-import std.outofmemory;
-import std.gc;
+import core.exception;
+import core.memory : GC;
 
 class Foo
 {
     new(size_t sz)
     {
-	void* p;
+        void* p;
 
-	p = std.c.stdlib.malloc(sz);
-	if (!p)
-	    throw new OutOfMemoryException();
-	std.gc.addRange(p, p + sz);
-	return p;
+        p = std.c.stdlib.malloc(sz);
+
+        if (!p)
+            throw new OutOfMemoryError();
+
+        GC.addRange(p, sz);
+        return p;
     }
 
     delete(void* p)
     {
-	if (p)
-	{   std.gc.removeRange(p);
-	    std.c.stdlib.free(p);
-	}
+        if (p)
+        {
+            GC.removeRange(p);
+            std.c.stdlib.free(p);
+        }
     }
 }
 ------
 
 	$(P The critical features of new() are:)
 
-	$(UL 
+	$(UL
 	$(LI new() does not have a return type specified,
 	but it is defined to be void*. new() must return
 	a void*.)
@@ -301,7 +306,7 @@ class Foo
 
 	The critical features of delete() are:
 
-	$(UL 
+	$(UL
 	$(LI The destructor (if any) has already been called on the
 	argument p, so the data it points to should be assumed to
 	be garbage.)
@@ -334,7 +339,8 @@ class Foo
 
 ------
 import std.c.stdlib;
-import std.outofmemory;
+import core.exception;
+import core.memory : GC;
 
 class Foo
 {
@@ -343,58 +349,63 @@ class Foo
     static const int bufsize = 100;
 
     static this()
-    {   void *p;
+    {
+        void* p;
+        p = malloc(bufsize);
 
-	p = malloc(bufsize);
-	if (!p)
-	    throw new OutOfMemoryException;
-	std.gc.addRange(p, p + bufsize);
-	buffer = p[0 .. bufsize];
+        if (p is null)
+            throw new OutOfMemoryError;
+
+        GC.addRange(p, bufsize);
+        buffer = p[0 .. bufsize];
     }
 
     static ~this()
     {
-	if (buffer.length)
-	{
-	    std.gc.removeRange(buffer);
-	    free(buffer);
-	    buffer = null;
-	}
+        if (buffer.length)
+        {
+            GC.removeRange(buffer.ptr);
+            free(buffer.ptr);
+            buffer = null;
+        }
     }
 
     new(size_t sz)
-    {   void *p;
+    {
+        void* p;
 
-	p = &buffer[bufindex];
-	bufindex += sz;
-	if (bufindex > buffer.length)
-	    throw new OutOfMemory;
-	return p;
+        p = &buffer[bufindex];
+        bufindex += sz;
+
+        if (bufindex > buffer.length)
+            throw new OutOfMemoryError;
+
+        return p;
     }
 
     delete(void* p)
     {
-	assert(0);
+        assert(0);
     }
 
     static int mark()
     {
-	return bufindex;
+        return bufindex;
     }
 
     static void release(int i)
     {
-	bufindex = i;
+        bufindex = i;
     }
 }
 
-void test()
+void main()
 {
-    int m = Foo.mark();
-    Foo f1 = new Foo;		// allocate
-    Foo f2 = new Foo;		// allocate
-    ...
-    Foo.release(m);		// deallocate f1 and f2
+    int m  = Foo.mark();
+    Foo f1 = new Foo;           // allocate
+    Foo f2 = new Foo;           // allocate
+
+    Foo.release(m);             // deallocate f1 and f2
 }
 ------
 
@@ -416,9 +427,9 @@ void test()
 	collected heap. However, if they:)
 
 	$(UL
-	$(LI are allocated as local symbols in a function)
-	$(LI are allocated using $(B new))
-	$(LI use $(B new) with no arguments (constructor arguments are allowed))
+	$(LI are allocated as local symbols in a function and)
+	$(LI are allocated using $(B new) and)
+	$(LI use $(B new) with no arguments (constructor arguments are allowed) and)
 	$(LI have the $(B scope) storage class)
 	)
 
@@ -472,7 +483,7 @@ void foo()
 	to be carefully evaluated before using:
 	)
 
-	$(UL 
+	$(UL
 
 	$(LI The uninitialized data that is on the stack will get scanned by the
 	garbage collector looking for any references to allocated memory. Since
@@ -508,7 +519,7 @@ void foo()
 	)
 
 	$(P Therefore, the ISR thread should not be paused.
-	Threads created with the $(LINK2 phobos/std_thread.html, std.thread)
+	Threads created with the $(LINK2 phobos/core_thread.html, core.thread)
 	functions will be paused. But threads created with C's
 	$(TT _beginthread()) or equivalent won't be, the GC
 	won't know they exist.

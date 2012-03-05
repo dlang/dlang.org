@@ -12,7 +12,7 @@ $(SPEC_S Contract Programming,
 
 	Building contract support into the language makes for:
 
-	$(OL 
+	$(OL
 	$(LI a consistent look and feel for the contracts)
 	$(LI tool support)
 	$(LI it's possible the compiler can generate better code using information gathered
@@ -21,20 +21,20 @@ $(SPEC_S Contract Programming,
 	$(LI handling of contract inheritance)
 	)
 
-<img src="images/d4.gif" alt="Contracts make D bug resistant" border=0>
+$(COMMENT <img src="images/d4.gif" alt="Contracts make D bug resistant" border=0>)
 
-	The idea of a contract is simple - it's just an expression that must evaluate to true.
+	$(P The idea of a contract is simple - it's just an expression that must evaluate to true.
 	If it does not, the contract is broken, and by definition, the program has a bug in it.
 	Contracts form part of the specification for a program, moving it from the documentation
 	to the code itself. And as every programmer knows, documentation tends to be incomplete,
 	out of date, wrong, or non-existent. Moving the contracts into the code makes them
-	verifiable against the program.
+	verifiable against the program.)
 
 <h2>Assert Contract</h2>
 
 	The most basic contract is the
-	<a href="expression.html#AssertExpression">assert</a>.
-	An assert inserts a checkable expression into
+	$(GLINK2 expression, AssertExpression).
+	An $(B assert) inserts a checkable expression into
 	the code, and that expression must evaluate to true:
 ------
 assert(expression);
@@ -57,15 +57,15 @@ assert(expression);
 ------
 in
 {
-    ...contract preconditions...
+  ...contract preconditions...
 }
 out (result)
 {
-    ...contract postconditions...
+  ...contract postconditions...
 }
 body
 {
-    ...code...
+  ...code...
 }
 ------
 	By definition, if a pre contract fails, then the body received bad
@@ -80,18 +80,18 @@ body
 	For example, let's implement a square root function:
 ------
 long square_root(long x)
-    in
-    {
-	assert(x >= 0);
-    }
-    out (result)
-    {
-	assert((result * result) <= x && (result+1) * (result+1) >= x);
-    }
-    body
-    {
-	return cast(long)std.math.sqrt(cast(real)x);
-    }
+  in
+  {
+    assert(x >= 0);
+  }
+  out (result)
+  {
+    assert((result * result) <= x && (result+1) * (result+1) >= x);
+  }
+  body
+  {
+    return cast(long)std.math.sqrt(cast(real)x);
+  }
 ------
 	The assert's in the in and out bodies are called <dfn>contracts</dfn>.
 	Any other D
@@ -107,14 +107,14 @@ long square_root(long x)
 	In that case, use:
 ------
 void func()
-   out
-   {
-	...contracts...
-   }
-   body
-   {
-	...
-   }
+  out
+  {
+    ...contracts...
+  }
+  body
+  {
+    ...
+  }
 ------
 	In an out statement, $(I result) is initialized and set to the
 	return value of the function.
@@ -123,23 +123,23 @@ void func()
 
 	$(P If a function in a derived class overrides a function in its
 	super class, then only one of
-	the $(TT in) contracts of the function and its base functions
+	the $(D in) contracts of the function and its base functions
 	must be satisfied.
 	Overriding
-	functions then becomes a process of $(I loosening) the $(TT in)
+	functions then becomes a process of $(I loosening) the $(D in)
 	contracts.
 	)
 
-	$(P A function without an $(TT in) contract means that any values
+	$(P A function without an $(D in) contract means that any values
 	of the function parameters are allowed. This implies that if any
-	function in an inheritance hierarchy has no $(TT in) contract,
-	then $(TT in) contracts on functions overriding it have no useful
+	function in an inheritance hierarchy has no $(D in) contract,
+	then $(D in) contracts on functions overriding it have no useful
 	effect.
 	)
 
-	$(P Conversely, all of the $(TT out) contracts needs to be satisfied,
+	$(P Conversely, all of the $(D out) contracts needs to be satisfied,
 	so overriding functions becomes a processes of $(I tightening) the
-	$(TT out)
+	$(D out)
 	contracts.
 	)
 
@@ -148,13 +148,15 @@ void func()
 	$(P Class invariants are used to specify characteristics of a class that
 	always
 	must be true (except while executing a member function).
-	They are described in $(LINK2 class.html, Classes).
+	They are described in $(DDLINK class, Classes, Classes).
 	)
 
 <h2>References</h2>
 
-$(LINK2 http://people.cs.uchicago.edu/~robby/contract-reading-list/, Contracts Reading List)<br>
-$(LINK2 http://pandonia.canberra.edu.au/java/contracts/paper-long.html, Adding Contracts to Java)<br>
+	$(LIST
+	$(LINK2 http://people.cs.uchicago.edu/~robby/contract-reading-list/, Contracts Reading List),
+	$(LINK2 http://jan.newmarch.name/java/contracts/paper-long.html, Adding Contracts to Java)
+	)
 
 )
 

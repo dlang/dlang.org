@@ -16,12 +16,12 @@ $(SPEC_S Garbage Collection,
 	collection shows that:
 	)
 
-	$(UL 
+	$(UL
 
 	$(LI Garbage collected programs are faster. This is counterintuitive,
 	but the reasons are:
 
-	$(UL 
+	$(UL
 	    $(LI Reference counting is a common solution to solve explicit
 	    memory allocation problems. The code to implement the increment and
 	    decrement operations whenever assignments are made is one source
@@ -97,7 +97,7 @@ $(SPEC_S Garbage Collection,
 	$(P Garbage collection is not a panacea. There are some downsides:
 	)
 
-	$(UL 
+	$(UL
 
 	$(LI It is not predictable when a collection gets run, so the program
 	can arbitrarily pause.
@@ -129,7 +129,7 @@ $(SPEC_S Garbage Collection,
 	)
 
 	$(P These constraints are addressed by techniques outlined
-	in <a href="memory.html">Memory Management</a>.
+	in $(DPLLINK memory.html, Memory Management).
 	)
 
 <h2>How Garbage Collection Works</h2>
@@ -234,7 +234,7 @@ p = cast(void*)12345678;   // error: undefined behavior
 	A copying garbage collector may change this value.
 	)
 
-	$(LI Do not store magic values into pointers, other than $(TT null).
+	$(LI Do not store magic values into pointers, other than $(D null).
 	)
 
 	$(LI Do not write pointer values out to disk and read them back in
@@ -250,8 +250,8 @@ p = cast(void*)12345678;   // error: undefined behavior
 	$(LI Do not depend on the ordering of pointers:
 
 ------
-if (p1 < p2)		// error: undefined behavior
-    ...
+if (p1 < p2)  // error: undefined behavior
+  ...
 ------
 	since, again, the garbage collector can move objects around in
 	memory.
@@ -263,9 +263,9 @@ if (p1 < p2)		// error: undefined behavior
 
 ------
 char* p = new char[10];
-char* q = p + 6;	// ok
-q = p + 11;		// error: undefined behavior
-q = p - 1;		// error: undefined behavior
+char* q = p + 6; // ok
+q = p + 11;      // error: undefined behavior
+q = p - 1;       // error: undefined behavior
 ------
 	)
 
@@ -273,9 +273,9 @@ q = p - 1;		// error: undefined behavior
 	point into the gc heap, such as:
 
 ------
-align (1) struct Foo
-{   byte b;
-    char* p;	// misaligned pointer
+align (1) struct Foo {
+  byte b;
+  char* p;  // misaligned pointer
 }
 ------
 
@@ -288,11 +288,11 @@ align (1) struct Foo
 	This may result in intermediate conditions where there is
 	not a valid pointer, and if the gc pauses the thread in such a
 	condition, it can corrupt memory.
-	Most implementations of $(TT memcpy()) will work since the
+	Most implementations of $(D memcpy()) will work since the
 	internal implementation of it does the copy in aligned chunks
 	greater than or equal to a pointer size, but since this kind of
 	implementation is not guaranteed by the C standard, use
-	$(TT memcpy()) only with extreme caution.
+	$(D memcpy()) only with extreme caution.
 	)
 
 	$(LI Do not have pointers in a struct instance that point back
@@ -388,8 +388,7 @@ char[] q = p[3..6];
 	$(LI $(LINK2 http://en.wikipedia.org/wiki/Garbage_collection_%28computer_science%29, Wikipedia))
 	$(LI $(LINK2 http://www.iecc.com/gclist/GC-faq.html, GC FAQ))
 	$(LI $(LINK2 ftp://ftp.cs.utexas.edu/pub/garbage/gcsurvey.ps, Uniprocessor Garbage Collector Techniques))
-	$(LI $(LINK2 http://www.amazon.com/exec/obidos/ASIN/0471941484/classicempire,
-	Garbage Collection : Algorithms for Automatic Dynamic Memory Management))
+	$(LI $(AMAZONLINK 0471941484, Garbage Collection : Algorithms for Automatic Dynamic Memory Management))
 	)
 
 )
