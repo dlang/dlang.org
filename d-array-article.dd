@@ -1,0 +1,254 @@
+Ddoc
+
+$(D_S $(TITLE),
+
+$(P $(I by Steven Schveighoffer))
+
+$(P One of the most pleasant features of the D language is its implementation of slices.  Every time I use a programming language that isn't D, I find myself lamenting for D's slice syntax.  Not only is it concise and efficient, but things "just work" when you are dealing with slices.
+)
+
+$(P I'll go over some of the background and internals of D slices and arrays, and hopefully after reading this, you will have a clearer understanding of the proper ways to use D slices, as well as an idea of how fundamentally different they are than normal arrays!
+)
+
+$(H2 An Overflowing Problem)
+
+$(P In most languages, an array is a built-in type which manages its own data, and is passed around by reference.  One refers to the entire thing as an "Array", and associates all the operations for the array (such as setting values, appending data for dynamic arrays, obtaining the length) to that type.
+)
+
+$(P However, D takes its lineage from C, where an array is simply a chunk of contiguous data.  In C, a reference to an array or array segment is as simple as a pointer (an explicit reference).  C's arrays are distinctly unmanaged by the type that refers to them -- the pointer.  The only operations supported are to retrieve and set data using an offset from the pointer.
+)
+
+$(P For those of you unfamiliar with C, here are some examples of array usage in C (these also work in D):
+)
+
+------
+arr[0] = 4; /* sets the first element of the array 'arr' to 4 */
+x = arr[1]; /* retrieves the second element of the array 'arr' into x */
+------
+
+$(P Everything else (length, appending, allocation, destruction) is left up to library functions and assumption/documentation.  So what is so wrong with this concept?  One of the largest problems with C arrays is the ability to access any data via the pointer, even data that doesn't belong to the array.  You can even use negative indexes!  Not to mention that the array uses the exact same type as a pointer to a single item.  When you get a pointer as a parameter to a function, that could be an array, or it could be just a pointer to a single item.  Cue buffer overflow attacks.  You can read more about this in Walter Bright's article, $(LINK2 http://drdobbs.com/blogs/cpp/228701625, "C's biggest mistake")
+)
+
+$(H2 Introducing Slices)
+
+$(P So how does D improve things?  In many ways, D's arrays are similar to C's arrays.  In fact, D supports C's array syntax using pointers.  However, D provides a new type that builds on C array syntax called a slice.  A slice is a segment of an array (dynamic or otherwise) that tracks both the pointer $(I and) the length of the segment.  With the combined protection of having the length of the data, and the garbage collector to manage the memory backing the data, slices are an extremely powerful, dynamic concept that is safe from most memory corruption issues.  In addition, D slices support extending with simple functions which take a slice as the first parameter.  This allows one to add any functionality you want to a built-in type via properties or methods. With D slices, one can write high-performance code with elegant and concise syntax that is awkward or inefficient in almost any other language.
+)
+
+$(P Let's see some D slices in action:)
+
+------
+import std.stdio;
+
+void main()
+{
+    int[] a;             // a is a slice
+
+    a = new int[5];      // allocate a dynamic array of integers that has at least 5
+                         // elements, and give me a slice to the first 5.  Note
+                         // that all data in D is default assigned, int's are
+                         // defaulted to 0, so this array contains five 0's
+
+    int[] b = a[0..2];   // This is a 'slicing' operation.  b now refers to the
+                         // first two elements of a.  Note that D uses open interval
+                         // for the upper limit, so a[2] is not included in b.
+
+    int[] c = a[$-2..$]; // c refers to the last two elements of a
+                         // ($ stands for length inside a slice or index operation).
+
+    c[0] = 4;            // this also assigns a[3]
+    c[1] = 5;            // this also assigns a[4]
+
+    b[] = c[];           // assign the first two elements of a[] to the value from
+                         // the last two elements (4, 5).
+
+    writeln(a);          // prints "[4, 5, 0, 4, 5]"
+
+    int[5] d;            // d is a fixed sized array, allocated on the stack
+    b = d[0..2];         // slices can point at fixed sized arrays too!
+}
+------
+
+$(P You may notice something puzzling about the description of the allocation of the array: "allocate a dynamic array of integers that has at least 5 elements, and give me a slice to the first 5."  Why isn't it just "allocate a dynamic array of 5 elements"?  Even experienced D coders have trouble with D's array concepts sometimes, and for quite good reason.  D's slices are $(I not) proper dynamic array types (at least not under the hood) even though they appear to be.  What they do is provide a safe and easy $(I interface) to arrays of any type (dynamic or otherwise).  So let's discuss probably the most common misconception of D slices.
+)
+
+$(H2 Who's Responsible?)
+
+$(P A slice in D seems like a dynamic array in almost all aspects of the concept -- when passed without adornments, the data referred to is passed by reference, and it supports all the properties and functions one would expect a dynamic array type to support.  But there is one very important difference.  A slice does not $(I own) the array, it $(I references) the array.  That is, the slice is not responsible for allocation or deallocation of its data.  The responsible party for managing a dynamic array's memory is the D runtime.
+)
+
+$(P So where is the true dynamic array type in D?  It's hidden by the runtime, and in fact, has no formal type.  Slices are good enough, and as it turns out, the runtime is smart enough about what you want to do with the data, that you almost never notice dynamic arrays are missing as a full-fledged type.  In fact, most D coders consider the D slice to $(I be) the dynamic array type -- it's even listed as a dynamic array type in the spec!  The lack of ownership is very subtle and easy to miss.
+)
+
+$(P Another consequence of this is that the length is not an array property, it's a slice property.  This means the length field is not necessarily the length of the array, it's the length of the slice.  This can be confusing to newcomers to the language.  For instance, this code has a large flaw in it:
+)
+
+------
+import std.stdio;
+
+void shrinkTo2(int[] arr)
+{
+    if(arr.length > 2)
+        arr.length = 2;
+}
+
+void main()
+{
+   int[] arr = new int[5];
+   arr.shrinkTo2();     // note the ability to call shrinkTo2 as a method
+   writeln(arr.length); // outputs 5
+}
+------
+
+$(P This might look like you changed the passed $(D arr)'s length to 2, but it actually did not affect anything (as is proven by the output from $(D writeln)).  This is because even though the data is passed by reference, the actual pointer and length are passed by value.  Many languages have an array type whose properties are all passed by reference.  Notably, C# and Java arrays are actually fully referenced Objects.  C++'s vector either passes both its data and properties by reference or by value.)
+
+$(P To fix this problem, you can do one of two things.  Either you explicitly pass the slice by reference via the $(D ref) keyword, or you return the resulting slice to be reassigned.  For example, here is how the signature would look if the slice is passed by reference:)
+
+------
+void shrinkTo2(ref int[] arr)
+------
+
+$(P Let's say you make this change, what happens to the data beyond the second element?  In D, since slices don't own the data, it's still there, managed by the nebulous dynamic array type.  The reason is fundamental: some other slice may still be referencing that data!  The fact that no $(I single) slice is the true owner of the data means no single slice can make any assumptions about what else references the array data.)
+
+$(P What happens when no slices reference that data?  Enter D's garbage collector.  The garbage collector is responsible for cleaning up dynamic arrays that no longer are referenced by any slices.  In fact, it is the garbage collector that makes much of D's slice usage possible.  You can slice and serve up segments of dynamic arrays, and never have to worry that you are leaking memory, clobbering other slices, or worry about managing the lifetime of the array.)
+
+$(H2 A Slice You Can Append On)
+
+$(P D's slices support appending more data to the end of the slice, much like a true dynamic array type.  The language has a specific operator used for concatenation and appending, the tilde ($(D ~)).  Here are some operations that append and concatenate arrays:)
+
+------
+int[] a;     // an empty slice references no data, but still can be appended to
+a ~= 1;      // append some integers, this automatically allocates a new
+a ~= 2;      // array to hold the elements.
+
+a ~= [3, 4]; // append another array (this time, an array literal)
+a = a ~ a;   // concatenate a with itself, a is now [1, 2, 3, 4, 1, 2, 3, 4]
+
+int[5] b;    // a fixed-size array on the stack
+a = b[1..$]; // a is a slice of b
+a ~= 5;      // since a was pointing to stack data, appending always reallocates,
+             // but works!
+------
+
+$(P Anyone who cares about performance will wonder what happens when you append the four elements.  The slice does not own its data, so how does one avoid reallocating a new array on each append operation?  One of the main requirements of D slices are that they are efficient.  Otherwise, coders would not use them.  D has solved this problem in a way that is virtually transparent to the programmer, and this is one of the reasons slices seem more like true dynamic arrays.)
+
+$(H2 How it Works)
+
+$(P Remember before when we allocated a new array, I said $(I allocate a dynamic array of $(B at least) n elements and give me a slice)?  Here is where the runtime earns its keep.  The allocator only allocates blocks in powers of 2 up to a page of data (in 32-bit x86, a page of data is 4096 bytes), or in multiples of pages.  So when you allocate an array, you can easily get a block that's larger than requested. For instance, allocating a block of five 32 bit integers (which consumes 20 bytes) provides you a block of 32 bytes.  This leaves space for 3 more integers.)
+
+$(P It's clearly possible to append more integers into the array without reallocating, but the trick is to prevent "stomping" on data that is valid and in use.  Remember, the slice doesn't know what other slices refer to that data, or really where it is in the array (it could be a segment at the beginning or the middle).  To make the whole thing work, the runtime stores the number of $(I used) bytes inside the block itself (a minor drawback is that the usable space in the block is not as big as it could be.  In our example, for instance, we can truly only store 7 integers before needing to reallocate into another block).
+)
+
+$(P When we request the runtime to append to a slice, it first checks to see that both the block is appendable (which means the $(I used) field is valid), and the slice $(I ends) at the same point valid data ends (it is not important where the slice begins).  The runtime then checks to see if the new data will fit into the unused block space.  If all of these checks pass, the data is written into the array block, and the stored $(I used) field is updated to include the new data.  If any of these checks fail, a new array block is allocated that will hold the existing and new data, which is then populated with all the data.  What happens to the old block?  If there were other slices referencing it, it stays in place without being changed.  If nothing else is referencing it, it becomes garbage and is reclaimed on the next collection cycle.  This allows you to safely reallocate one slice without invalidating any others.  This is a huge departure from C/C++, where reallocating an array, or appending to a vector can invalidate other references to that data (pointers or iterators).)
+
+$(P The result is an append operation which is not only efficient, but universally handy.  Whenever you want to append a slice, you can, without worry about performance or corruption issues.  You don't even have to worry about whether a slice's data is heap allocated, stack allocated, in ROM, or even if it's null.  The append operation always succeeds (given you have enough memory), and the runtime takes care of all the dirty work in the background.)
+
+$(H2 Determinism)
+
+$(P There is one caveat with slice appending that can bite inexperienced, and even experienced D coders: the apparent non-deterministic behavior of appending.)
+
+$(P Let's say we have a function which is passed a buffer, and writes some number of A's to the buffer (appending if necessary), returning the filled buffer:)
+
+------
+import std.stdio;
+
+char[] fillAs(char[] buf, size_t num)
+{
+   if(buf.length < num)
+      buf.length = num; // increase buffer length to be able to hold the A's
+   buf[0..num] = 'A';   // assign A to all the elements
+   return buf[0..num];  // return the result
+}
+------
+
+$(P What's wrong with the $(D fillAs) function?  Nothing really, but what happens if increasing the length forces the buffer to be reallocated?  In that case, the buffer passed in is $(I not) overwritten with A's, only the reallocated buffer is.  This can be surprising if you were expecting to continue to use the same buffer in further operations, or if you expected the original buffer to be filled with A's.  The end result, depending on whether the block referenced by $(D buf[]) can be appended in place, is the caller's slice might be overwritten with A's, or it might not be.)
+
+------
+// continued example...
+void main()
+{
+   char[] str = new char[10];  // Note, the block capacity allocated for this is
+                               // 15 elements
+   str[] = 'B';
+   fillAs(str, 20);            // buffer must be reallocated (20 > 15)
+   writeln(str);               // "BBBBBBBBBB"
+   fillAs(str, 12);            // buffer can be extended in place (12 <= 15)!
+   writeln(str);               // "AAAAAAAAAA";
+}
+------
+
+
+$(P If you give this some thought, you should come to the conclusion that such a situation is unavoidable without costly copy-on-append semantics -- the system cannot keep track of every slice that references the data, and you have to put the new data somewhere.  However, there are a couple options we have to mitigate the problem:)
+
+$(OL
+$(LI Re-assign the slice to the return value of the function.  Note that the most important result of this function is the return value, not whether the buffer was used or not.)
+$(LI Don't use the passed in buffer again.  If you don't use the source slice again, then you can't experience any issues with it.)
+)
+
+$(P As the function author, there are some things we can do to avoid causing these problems.  It's important to note that the only time this situation can occur is when the function appends to, or increases the length of, a passed in slice $(B and then) writes data to the original portion of the slice.  Avoiding this specific situation where possible can reduce the perception of non-determinism.  Later we will discuss some properties you can use to predict how the runtime will affect your slice.  It is a good idea to note in the documentation how the passed in slice might or might not be overwritten.)
+
+$(P A final option is to use $(D ref) to make sure the source slice is updated.  This is sometimes not an option as a slice can easily be an rvalue (input only).  However, this does not fix the problem for any aliases to the same data elsewhere.)
+
+$(H2 Caching)
+
+$(P One of the issues with appending to a slice is that the operation is quick, but not quick enough.  Every time we append, we need to fetch the metadata for the block (its starting address, size, and $(I used) data).  Doing this means an O(lg(n)) lookup in the GC's memory pool for every append (not to mention acquiring the global GC lock).  However, what we want is amortized constant appending.  To achieve this lofty goal, we employ a caching technique that is, as far as I know, unique to D.)
+
+$(P Since D has the concept of default thread local storage, the type system can tell us whether heap data is local to the thread (and most data is), or shared amongst all threads.  Using this knowledge, we can achieve lock-free caching of this metadata for thread-local appends, with one cache per thread.  The cache stores the most recent $(D N) lookups of metadata, giving us quick access to whether a slice can be appended.)
+
+$(H2 Slice Members and the Appender)
+
+$(P With D slices having such interesting behavior, there is a need sometimes to be able to predict the behavior of slices and appending.  To that end, several properties and methods have been added to the slice.)
+
+$(P $(OBJREF reserve, size_t reserve(size_t n)): Reserves n elements for appending to a slice.  If a slice can already be appended in place, and there is already space in the array for at least n elements (n represents both existing slice elements and appendable space), nothing is modified.  It returns the resulting capacity.)
+
+------
+int[] slice;
+slice.reserve(50);
+foreach(int i; 0..50)
+   slice ~= i;        // does not reallocate
+------
+
+$(P $(OBJREF capacity, size_t capacity): A property which gives you the number of elements the slice can hold via appending.  If the slice cannot be appended in place, this returns 0.  Note that capacity (if non-zero) includes the current slice elements.)
+
+------
+int[] slice = new int[5];
+assert(slice.capacity == 7);  // includes the 5 pre-allocated elements
+int[] slice2 = slice;
+slice.length = 6;
+assert(slice.capacity == 7);  // appending in place doesn't change the capacity.
+assert(slice2.capacity == 0); // cannot append slice2 because it would stomp on
+                              // slice's 6th element
+------
+
+$(P $(OBJREF assumeSafeAppend, assumeSafeAppend()): This method forces the runtime to assume it is safe to append a slice.  Essentially this adjusts the $(I used) field of the array to end at the same spot the slice ends.)
+
+------
+int[] slice = new int[5];
+slice = slice[0..2];
+assert(slice.capacity == 0); // not safe to append, there is other valid data in the block.
+slice.assumeSafeAppend();
+assert(slice.capacity == 7); // force the used data to 2 elements
+------
+
+$(P If D slices' append performance just isn't up to snuff for your performance requirements, there is another alternative.  The $(FULL_STDREF array, Appender) type will append data to an array as fast as possible, without any need to look up metadata from the runtime.  $(STDREF array, Appender) also supports the output range idiom via an append operation (normal slices only support the output range by overwriting their own data).)
+
+$(H2 Conclusion)
+
+$(P Whether you are a seasoned programmer or a novice, the array and slice concepts in D provide an extremely rich feature set that allows for almost anything you would want to do with an array type.  With a large focus on performance and usability, the D slice type is one of those things that you don't notice how great it is until you work with another language that doesn't have it.)
+
+$(P $(I Thanks to David Gileadi, Andrej Mitrovic, Jesse Phillips, Alex Dovhal, Johann !MacDonagh, and Jonathan Davis for their reviews and suggestions for this article))
+
+&copy; 2011-2012 by Steven Schveighoffer <br/>
+<a rel="license" href="http://creativecommons.org/licenses/by-nd/3.0/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nd/3.0/88x31.png" /></a><br />This <span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Text" rel="dct:type">work</span> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nd/3.0/">Creative Commons Attribution-NoDerivs 3.0 Unported License</a>.
+
+)
+
+Macros:
+      D = <font face=Courier><b>$0</b></font>
+      D = <span class="d_inlinecode">$0</span>
+	H2=<h2>$0</h2>
+	H3=<h3>$0</h3>
+	TITLE=D Slices
+	CATEGORY_ARTICLES=$0
+    FULL_STDREF = <a href="phobos/std_$1.html#$2">$(D std.$1.$2)</a>
+    STDREF = <a href="phobos/std_$1.html#$2">$(D $2)</a>
+    OBJREF = <a href="phobos/object.html#$1">$(D $2)</a>
