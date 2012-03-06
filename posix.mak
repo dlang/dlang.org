@@ -41,29 +41,30 @@ PREMADE=dcompiler.html language-reference.html appendices.html	\
 howtos.html articles.html fetch-issue-cnt.php robots.txt
 
 TARGETS=32-64-portability.html cpptod.html ctod.html download.html		\
-	pretod.html gsoc2011.html index.html overview.html spec.html		\
-	intro.html lex.html module.html declaration.html type.html			\
-	property.html attribute.html pragma.html expression.html			\
-	statement.html arrays.html struct.html class.html enum.html			\
-	function.html operatoroverloading.html template.html mixin.html		\
-	dbc.html version.html errors.html garbage.html memory.html			\
-	float.html iasm.html interface.html portability.html entity.html	\
-	abi.html windows.html dll.html htomodule.html faq.html				\
-	dstyle.html wc.html changelog.html glossary.html					\
-	acknowledgements.html builtin.html interfaceToC.html				\
-	comparison.html rationale.html ddoc.html code_coverage.html			\
-	exception-safe.html rdmd.html templates-revisited.html				\
-	warnings.html ascii-table.html windbg.html htod.html				\
-	regular-expression.html lazy-evaluation.html						\
-	variadic-function-templates.html howto-promote.html tuple.html		\
-	template-comparison.html template-mixin.html traits.html COM.html	\
-	cpp_interface.html hijack.html const3.html features2.html			\
-	safed.html const-faq.html concepts.html memory-safe-d.html			\
-	d-floating-point.html migrate-to-shared.html D1toD2.html			\
-	unittest.html hash-map.html pdf-intro-cover.html					\
-	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
-	std_consolidated_header.html simd.html dmd-windows.html				\
-	dmd-linux.html dmd-freebsd.html dmd-osx.html bugstats.php
+	pretod.html gsoc2011.html gsoc2012.html gsoc2012-template.html		\
+	index.html overview.html spec.html intro.html lex.html				\
+	module.html declaration.html type.html property.html				\
+	attribute.html pragma.html expression.html statement.html			\
+	arrays.html struct.html class.html enum.html function.html			\
+	operatoroverloading.html template.html mixin.html dbc.html			\
+	version.html errors.html garbage.html memory.html float.html		\
+	iasm.html interface.html portability.html entity.html abi.html		\
+	windows.html dll.html htomodule.html faq.html dstyle.html wc.html	\
+	changelog.html glossary.html acknowledgements.html builtin.html		\
+	interfaceToC.html comparison.html rationale.html ddoc.html			\
+	code_coverage.html exception-safe.html rdmd.html					\
+	templates-revisited.html warnings.html ascii-table.html				\
+	windbg.html htod.html regular-expression.html						\
+	lazy-evaluation.html variadic-function-templates.html				\
+	howto-promote.html tuple.html template-comparison.html				\
+	template-mixin.html traits.html COM.html cpp_interface.html			\
+	hijack.html const3.html features2.html safed.html const-faq.html	\
+	concepts.html memory-safe-d.html d-floating-point.html				\
+	migrate-to-shared.html D1toD2.html unittest.html hash-map.html		\
+	pdf-intro-cover.html pdf-spec-cover.html pdf-tools-cover.html		\
+	intro-to-datetime.html std_consolidated_header.html simd.html		\
+	dmd-windows.html dmd-linux.html dmd-freebsd.html dmd-osx.html		\
+	bugstats.php
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html
