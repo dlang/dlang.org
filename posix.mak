@@ -37,8 +37,8 @@ win32_logo.png)
 
 STYLES=css/style.css css/print.css
 
-PREMADE=dcompiler.html language-reference.html appendices.html	\
-howtos.html articles.html fetch-issue-cnt.php robots.txt
+PREMADE=appendices.html articles.html fetch-issue-cnt.php	\
+howtos.htmllanguage-reference.html robots.txt
 
 TARGETS=32-64-portability.html abi.html acknowledgements.html			\
 	arrays.html ascii-table.html attribute.html bugstats.php			\
