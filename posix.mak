@@ -40,31 +40,31 @@ STYLES=css/style.css css/print.css
 PREMADE=dcompiler.html language-reference.html appendices.html	\
 howtos.html articles.html fetch-issue-cnt.php robots.txt
 
-TARGETS=32-64-portability.html cpptod.html ctod.html download.html		\
-	pretod.html gsoc2011.html gsoc2012.html gsoc2012-template.html		\
-	index.html overview.html spec.html intro.html lex.html				\
-	module.html declaration.html type.html property.html				\
-	attribute.html pragma.html expression.html statement.html			\
-	arrays.html struct.html class.html enum.html function.html			\
-	operatoroverloading.html template.html mixin.html dbc.html			\
-	version.html errors.html garbage.html memory.html float.html		\
-	iasm.html interface.html portability.html entity.html abi.html		\
-	windows.html dll.html htomodule.html faq.html dstyle.html wc.html	\
-	changelog.html glossary.html acknowledgements.html builtin.html		\
-	interfaceToC.html comparison.html rationale.html ddoc.html			\
-	code_coverage.html exception-safe.html rdmd.html					\
-	templates-revisited.html warnings.html ascii-table.html				\
-	windbg.html htod.html regular-expression.html						\
-	lazy-evaluation.html variadic-function-templates.html				\
-	howto-promote.html tuple.html template-comparison.html				\
-	template-mixin.html traits.html COM.html cpp_interface.html			\
-	hijack.html const3.html features2.html safed.html const-faq.html	\
-	concepts.html memory-safe-d.html d-floating-point.html				\
-	migrate-to-shared.html D1toD2.html unittest.html hash-map.html		\
-	pdf-intro-cover.html pdf-spec-cover.html pdf-tools-cover.html		\
-	intro-to-datetime.html std_consolidated_header.html simd.html		\
-	dmd-windows.html dmd-linux.html dmd-freebsd.html dmd-osx.html		\
-	bugstats.php
+TARGETS=32-64-portability.html abi.html acknowledgements.html			\
+	arrays.html ascii-table.html attribute.html bugstats.php			\
+	builtin.html changelog.html class.html code_coverage.html			\
+	concepts.html const3.html const-faq.html COM.html comparison.html	\
+	cpp_interface.html cpptod.html ctod.html D1toD2.html				\
+	d-array-article.html d-floating-point.html dbc.html ddoc.html		\
+	declaration.html dll.html dmd-freebsd.html dmd-linux.html			\
+	dmd-osx.html dmd-windows.html download.html dstyle.html				\
+	errors.html entity.html enum.html exception-safe.html				\
+	expression.html faq.html features2.html function.html float.html	\
+	garbage.html glossary.html gsoc2011.html gsoc2012.html				\
+	gsoc2012-template.html hash-map.html hijack.html					\
+	howto-promote.html htod.html htomodule.html iasm.html index.html	\
+	interface.html interfaceToC.html intro.html							\
+	intro-to-datetime.html lazy-evaluation.html lex.html memory.html	\
+	memory-safe-d.html migrate-to-shared.html mixin.html module.html	\
+	operatoroverloading.html overview.html pdf-intro-cover.html			\
+	pdf-spec-cover.html pdf-tools-cover.html portability.html			\
+	pragma.html pretod.html property.html rationale.html rdmd.html		\
+	regular-expression.html safed.html simd.html spec.html				\
+	statement.html std_consolidated_header.html struct.html				\
+	template.html template-comparison.html template-mixin.html			\
+	templates-revisited.html traits.html tuple.html type.html			\
+	unittest.html variadic-function-templates.html version.html			\
+	warnings.html wc.html windbg.html windows.html
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html
@@ -89,7 +89,7 @@ PDFARTICLES=d-floating-point.html migrate-to-shared.html hijack.html	\
 	const3.html memory.html exception-safe.html							\
 	templates-revisited.html regular-expression.html					\
 	lazy-evaluation.html variadic-function-templates.html tuple.html	\
-	mixin.html safed.html intro-to-datetime.html
+	mixin.html safed.html intro-to-datetime.html d-array-article.html
 
 PDFTOOLS=dmd-linux.html dmd-freebsd.html dmd-osx.html dmd-windows.html	\
 	http://digitalmars.com/ctg/optlink.html								\
@@ -151,7 +151,7 @@ zip:
 	rm doc.zip
 	zip32 doc win32.mak style.css $(DDOC)
 	zip32 doc $(SRC) download.html
-	zip32 doc $(IMG)
+	zip32 doc $(IMAGES) $(STYLES)
 
 clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc

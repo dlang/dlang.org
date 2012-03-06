@@ -53,7 +53,8 @@ TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
 	d-floating-point.html migrate-to-shared.html D1toD2.html			\
 	unittest.html hash-map.html pdf-intro-cover.html					\
 	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
-	simd.html deprecate.html download.html 32-64-portability.html 
+	simd.html deprecate.html download.html 32-64-portability.html \
+        d-array-article.html
 
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
@@ -78,7 +79,7 @@ PDFHOWTOS=windows.html dll.html COM.html htomodule.html
 PDFARTICLES=d-floating-point.html migrate-to-shared.html hijack.html const3.html \
 	memory.html exception-safe.html templates-revisited.html regular-expression.html \
 	lazy-evaluation.html variadic-function-templates.html tuple.html mixin.html \
-	safed.html intro-to-datetime.html
+	safed.html intro-to-datetime.html d-array-article.html
 
 PDFTOOLS=dmd-linux.html dmd-freebsd.html dmd-osx.html dmd-windows.html \
 	http://www.digitalmars.com/ctg/optlink.html http://www.digitalmars.com/ctg/trace.html \
