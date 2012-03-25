@@ -301,7 +301,7 @@ dlangspec.zip : dlangspec.html ebook.css win32.mak
 
 dlangspec.mobi : dlangspec.opf dlangspec.html dlangspec.png dlangspec.ncx ebook.css win32.mak
 	del dlangspec.mobi
-	\kindlegen\kindlegen dlangspec.opf
+	kindlegen dlangspec.opf
 
 ################# Pdf #########################
 
