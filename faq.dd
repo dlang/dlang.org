@@ -90,6 +90,7 @@ $(D_S $(TITLE),
 	$(ITEMR gc_1, Isn't garbage collection slow and non-deterministic?)
 	$(ITEMR pure, Can't a sufficiently smart compiler figure out that a function is pure automatically?)
 	$(ITEMR minimum precision, Why allow $(D cast(float)) if it isn't supposed to work?)
+    $(ITEMR nested_forward_references, Why can't nested functions be forward referenced?)
 	)
 
 $(ITEM case_range, Why doesn't the case range statement
@@ -881,6 +882,26 @@ $(ITEM minimum precision, Why allow $(D cast(float)) if it isn't supposed to wor
 
 	$(P Programs that rely on a maximum accuracy need to be rethought and reengineered.)
 
+
+$(ITEM nested_forward_references, Why can't nested functions be forward referenced?)
+
+	$(P Declarations within a function are different from declarations at module scope.
+    Within a function, initializers for variable declarations are guaranteed to run in
+    sequential order. Allowing arbitrary forward references to nested functions would
+    break this, because nested functions can reference any variables declared above them.
+    )
+----
+    int first() {  return second();    }
+    int x = first();   // x depends on y, which hasn't been declared yet.
+    int y = x + 1;
+    int second() {  return y;    }
+----
+
+    $(P But, forward references of nested functions are sometimes required (eg, for
+    mutually recursive nested functions). The most general solution is to declare a local,
+    nested struct. Any member functions (and variables!) of that struct have
+    non-sequential semantics, so they can forward reference each other.
+    )
 
 
 $(COMMENT
