@@ -748,7 +748,7 @@ assert(mydate);         // check that class Date invariant holds
         runs at maximum speed.
 
 <h3>$(LNAME2 allocators, Class Allocators)</h3>
-
+$(B Note): Class allocators are deprecated in D2.
 $(GRAMMAR
 $(GNAME ClassAllocator):
     $(B new) $(GLINK2 declaration, Parameters) $(GLINK2 function, FunctionBody)
@@ -812,7 +812,18 @@ new(1,2) Foo(a);        // calls new(Foo.sizeof,1,2)
         )
 
 <h3>$(LNAME2 deallocators, Class Deallocators)</h3>
-
+$(B Note): Class deallocators and the delete operator are deprecated in D2. 
+Use the $(B clear) function to finalize an object by calling its destructor. 
+The memory of the object is $(B not) immediately deallocated, instead the GC 
+will collect the memory of the object at an undetermined point after finalization:
+    
+------
+class Foo { int x; this() { x = 1; } }
+Foo foo = new Foo;
+clear(foo);
+assert(foo.x == int.init);  // object is still accessible
+------
+    
 $(GRAMMAR
 $(GNAME ClassDeallocator):
     $(B delete) $(GLINK2 declaration, Parameters) $(GLINK2 function, FunctionBody)
