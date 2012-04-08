@@ -160,6 +160,9 @@ clean:
 rsync : all
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
 
+rsync-only :
+	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
+
 pdf : $(PDFTARGETS)
 
 d-intro.pdf:
