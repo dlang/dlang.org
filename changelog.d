@@ -6,7 +6,7 @@ $(UPCOMING
 	$(LI Shared libraries for Linux)
 )
 
-$(VERSION 074, Apr 1, 2012, =================================================,
+$(VERSION 074, Apr 12, 2012, =================================================,
 
     $(WHATSNEW
 	$(LI Add predefined Ddoc macro SRCFILENAME)
@@ -41,6 +41,7 @@ $(VERSION 074, Apr 1, 2012, =================================================,
 	$(LI $(BUGZILLA 7462): Error message with _error_ in overridden function)
 	$(LI $(BUGZILLA 7463): Duplicated error message with bad template value parameter)
 	$(LI $(BUGZILLA 7473): [CTFE] Non-ref argument behaves as if it's a ref argument)
+	$(LI $(BUGZILLA 7493): Initialization of void[][N])
 	$(LI $(BUGZILLA 7527): [CTFE] Segfault when slicing a pointer at compile time)
 	$(LI $(BUGZILLA 7536): ctfeAdrOnStack triggered)
 	$(LI $(BUGZILLA 7544): ICE(interpret.c) Catching an exception with a null catch block)
@@ -65,8 +66,12 @@ $(VERSION 074, Apr 1, 2012, =================================================,
 	$(LI $(BUGZILLA 7781): [CTFE] Segmentation fault on 'mixin({return;}());)
 	$(LI $(BUGZILLA 7782): [ICE] With wrong import syntax)
 	$(LI $(BUGZILLA 7785): [CTFE] ICE when slicing pointer to variable)
+	$(LI $(BUGZILLA 7786): dmd crashes with invalid module name)
 	$(LI $(BUGZILLA 7789):  [CTFE] null pointer exception on setting array length)
 	$(LI $(BUGZILLA 7794): Sea of errors when calling regex() after compile error)
+	$(LI $(BUGZILLA 7812): Segfault on invalid code during template match deduction with errors gagged)
+	$(LI $(BUGZILLA 7814): Regression(2.059head) ICE(tocsym.c) using scope(failure) within foreach-range)
+	$(LI $(BUGZILLA 7817): opAssign to in declaration broken in dmd 1.074 beta1)
     )
 )
 
