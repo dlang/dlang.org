@@ -46,9 +46,9 @@ TARGETS=32-64-portability.html abi.html acknowledgements.html			\
 	concepts.html const3.html const-faq.html COM.html comparison.html	\
 	cpp_interface.html cpptod.html ctod.html D1toD2.html				\
 	d-array-article.html d-floating-point.html dbc.html ddoc.html		\
-	declaration.html dll.html dmd-freebsd.html dmd-linux.html			\
-	dmd-osx.html dmd-windows.html download.html dstyle.html				\
-	errors.html entity.html enum.html exception-safe.html				\
+	declaration.html deprecate.html dll.html dmd-freebsd.html			\
+	dmd-linux.html dmd-osx.html dmd-windows.html download.html			\
+	dstyle.html errors.html entity.html enum.html exception-safe.html	\
 	expression.html faq.html features2.html function.html float.html	\
 	garbage.html glossary.html gsoc2011.html gsoc2012.html				\
 	gsoc2012-template.html hash-map.html hijack.html					\
