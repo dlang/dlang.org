@@ -816,33 +816,38 @@ foo(2);         // error, y is a required argument
 extern (C) int def(...); // error, must have at least one parameter
 ------
 
+        $(P
         C-style variadic functions match the C calling convention for
         variadic functions, and is most useful for calling C library
         functions like $(D printf).
-        The implementiations of these variadic functions have a special
-        local variable declared for them,
-        $(B _argptr), which is a $(D void*) pointer to the first of the
-        variadic
-        arguments. To access the arguments, $(B _argptr) must be cast
-        to a pointer to the expected argument type:
+	)
+
+	$(P Access to variadic arguments is done using the standard library
+	module $(V1 $(B std.c.stdarg))$(V2 $(B core.stdc.stdarg)).
+	)
 
 ------
-foo(3, 4, 5);   // first variadic argument is 5
+import $(V1 std.c.stdarg)$(V2 core.stdc.stdarg);
+
+void test() {
+  foo(3, 4, 5);   // first variadic argument is 5
+}
 
 int foo(int x, int y, ...) {
-  int z;
 
-  z = *cast(int*)$(B _argptr); // z is set to 5
+  va_list ap;
+  version (X86_64)
+    va_start(ap, __va_argsave);
+  else version (X86)
+    va_start(ap, y);  // y is the last named parameter
+
+  int z;
+  va_arg(ap, z);  // z is set to 5 
+
+  va_end(ap);
 }
 ------
 
-        To protect against the vagaries of stack layouts on different
-        CPU architectures, use $(B core.vararg) to access the variadic
-        arguments:
-
-------
-import $(B core.vararg);
-------
 
 <h3>D-style Variadic Functions</h3>
 
@@ -856,20 +861,31 @@ int abc(char c, ...);   // one required parameter: c
 int def(...);           // ok
 ------
 
-        These variadic functions have a special local variable declared for
-        them,
-        $(B _argptr), which is a $(D void*) pointer to the first of the
-        variadic
-        arguments. To access the arguments, $(B _argptr) must be cast
-        to a pointer to the expected argument type:
+	To access them, the following import is required:
 
 ------
-foo(3, 4, 5);   // first variadic argument is 5
+import $(V1 std.stdarg)$(V2 core.vararg);
+------
+
+        These variadic functions have a special local variable declared for
+        them,
+        $(B _argptr), which is a $(V1 $(D std.stdarg.va_list))$(V2 $(D core.vararg))
+	reference to the first of the variadic
+        arguments. To access the arguments, $(B _argptr) must be used
+	in conjuction with $(D va_arg):
+
+------
+import $(V1 std.stdarg)$(V2 core.vararg);
+
+void test() {
+  foo(3, 4, 5);   // first variadic argument is 5
+}
 
 int foo(int x, int y, ...) {
+
   int z;
 
-  z = *cast(int*)$(B _argptr); // z is set to 5
+  z = va_arg!int(_argptr); // z is set to 5
 }
 ------
 
@@ -881,6 +897,7 @@ int foo(int x, int y, ...) {
 
 ------
 import std.stdio;
+import $(V1 std.stdarg)$(V2 core.vararg);
 
 class Foo { int x = 3; }
 class Bar { long y = 4; }
@@ -889,37 +906,32 @@ void printargs(int x, ...) {
   writefln("%d arguments", $(B _arguments).length);
   for (int i = 0; i < $(B _arguments).length; i++)
   {
-    $(B _arguments)[i].print();
+    $(V1 $(B _arguments)[i].print();)$(V2 writeln($(B _arguments)[i]);)
 
     if ($(B _arguments)[i] == typeid(int))
     {
-      int j = *cast(int *)_argptr;
-      _argptr += int.sizeof;
+      int j = va_arg!(int)(_argptr);
       writefln("\t%d", j);
     }
     else if ($(B _arguments)[i] == typeid(long))
     {
-      long j = *cast(long *)_argptr;
-      _argptr += long.sizeof;
+      long j = va_arg!(long)(_argptr);
       writefln("\t%d", j);
     }
     else if ($(B _arguments)[i] == typeid(double))
     {
-      double d = *cast(double *)_argptr;
-      _argptr += double.sizeof;
+      double d = va_arg!(double)(_argptr);
       writefln("\t%g", d);
     }
     else if ($(B _arguments)[i] == typeid(Foo))
     {
-      Foo f = *cast(Foo*)_argptr;
-      _argptr += Foo.sizeof;
-      writefln("\t%X", f);
+      Foo f = va_arg!(Foo)(_argptr);
+      writefln("\t%s", f);
     }
     else if ($(B _arguments)[i] == typeid(Bar))
     {
-      Bar b = *cast(Bar*)_argptr;
-      _argptr += Bar.sizeof;
-      writefln("\t%X", b);
+      Bar b = va_arg!(Bar)(_argptr);
+      writefln("\t%s", b);
     }
     else
       assert(0);
@@ -930,7 +942,7 @@ void main() {
   Foo f = new Foo();
   Bar b = new Bar();
 
-  writefln("%X", f);
+  writefln("%s", f);
   printargs(1, 2, 3L, 4.5, f, b);
 }
 ------
@@ -952,45 +964,6 @@ Bar
         00870FD0
 ------
 
-        To protect against the vagaries of stack layouts on different
-        CPU architectures, use $(B core.vararg) to access the variadic
-        arguments:
-
-------
-import std.stdio;
-import $(B core.vararg);
-
-void foo(int x, ...) {
-  writefln("%d arguments", _arguments.length);
-  for (int i = 0; i < _arguments.length; i++)
-  {
-    _arguments[i].print();
-
-    if (_arguments[i] == typeid(int))
-    {
-      int j = $(B va_arg)!(int)(_argptr);
-      writefln("\t%d", j);
-    }
-    else if (_arguments[i] == typeid(long))
-    {
-      long j = $(B va_arg)!(long)(_argptr);
-      writefln("\t%d", j);
-    }
-    else if (_arguments[i] == typeid(double))
-    {
-      double d = $(B va_arg)!(double)(_argptr);
-      writefln("\t%g", d);
-    }
-    else if (_arguments[i] == typeid(FOO))
-    {
-      FOO f = $(B va_arg)!(FOO)(_argptr);
-      writefln("\t%X", f);
-    }
-    else
-      assert(0);
-  }
-}
-------
 
 <h3>Typesafe Variadic Functions</h3>
 
