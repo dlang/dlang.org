@@ -1527,30 +1527,58 @@ int main(string[] args) { ... }
 
     $(LI non-portable casts (eg, from $(I int[]) to $(I float[])), including
         casts which depend on endianness, are not permitted.
-        Casts between signed and unsigned types are permitted.
+        Casts between signed and unsigned types are permitted)
+    )
+
+    $(P Pointers are permitted in CTFE, provided they are used safely:)
+
+    $(UL
+        $(LI
+        C-style semantics on pointer arithmetic are strictly enforced.
+        Pointer arithmetic is permitted only on pointers which point to static
+        or dynamic array elements. Such pointers must point to an element of
+        the array, or to the first element past the array.
+        Pointer arithmetic is completely forbidden on pointers which are null,
+        or which point to a non-array.
+        )
+
+        $(LI
+        The memory location of different memory blocks is not defined.
+        Ordered comparison (<, <=, >, >=) between two pointers is permitted
+        when both pointers point to the same array, or when at least one
+        pointer is null.
+        )
+
+        $(LI
+        Pointer comparisons between independent memory blocks will generate
+        a compile-time error, unless two such comparisons are combined
+        using $(I &&) or $(I ||) to yield a result which is independent of the
+        ordering of memory blocks. Each comparison must consist of two pointer
+        expressions compared with <, <=, >, or >=, and may optionally be
+        negated with $(I ! ).
+
+        $(P
+        For example, the expression $(I (p1 > q1 && p2 <= q2) )
+        is permitted when $(I p1), $(I p2) are expressions yielding pointers
+        to memory block $(I P), and $(I q1), $(I q2) are expressions yielding
+        pointers to memory block $(I Q), even when $(I P) and $(I Q) are
+        unrelated memory blocks.
+        It returns true if [p1..p2] lies inside [q1..q2], and false otherwise.
+        Similarly, the expression $(I (p1 < q1 || p2 > q2) ) is true if
+        [p1..p2] lies outside [q1..q2], and false otherwise.
+        )
+        )
+
+        $(LI
+        Equality comparisons (==, !=, $(D_KEYWORD is), $(D_KEYWORD !is)) are
+        permitted between all pointers, without restriction.
+        )
+
+        $(LI
         Any pointer may be cast to $(I void *) and from $(I void *) back to
         its original type. Casting between pointer and non-pointer types is
         prohibited.
         )
-
-    $(LI C-style semantics on pointer arithmetic are strictly enforced.
-        $(P
-        Pointer arithmetic is permitted only on pointers which point to static
-        or dynamic array elements. Such pointers must point to an element of
-        the array, or to the first element past the array.
-        Ordered comparison (<, <=, >, >=) between pointers is permitted only
-        between pointers which point to the same array.
-        Pointer arithmetic is completely forbidden on pointers which are null,
-        or which point to a non-array.
-        )
-        $(P
-        Equality comparisons (==, !=, $(D_KEYWORD is), $(D_KEYWORD !is)) are
-        permitted between all pointers, without restriction.
-        )
-    )
-    $(LI Non-recoverable errors (such as $(D_KEYWORD assert) failures) do not
-        throw exceptions; instead, they end interpretation immediately.
-    )
     )
 
     $(P Note that the above restrictions apply only to expressions which are
@@ -1607,6 +1635,10 @@ void foo() {
     longer than executing it at run time.
     If the function goes into an infinite loop, it will hang at
     compile time (rather than hanging at run time).
+    )
+
+    $(P Non-recoverable errors (such as $(D_KEYWORD assert) failures) do not
+    throw exceptions; instead, they end interpretation immediately.
     )
 
     $(P Functions executed at compile time can give different results
