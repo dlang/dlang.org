@@ -124,41 +124,80 @@ $(GNAME AlignAttribute):
     $(B align) $(B $(LPAREN)) $(GLINK2 lex, IntegerLiteral) $(B $(RPAREN))
 )
 
-        $(P Specifies the alignment of struct members. $(B align) by itself
+        $(P Specifies the alignment of:)
+
+	$(OL
+	$(LI variables)
+	$(LI struct fields)
+	$(LI union fields)
+	$(LI class fields)
+	$(LI struct, union, and class types)
+	)
+
+	$(P $(B align) by itself
         sets it to the default, which matches the default member alignment
-        of the companion C compiler. $(I Integer) specifies the alignment
-        which matches the behavior of the companion C compiler when non-default
-        alignments are used.
-        )
+        of the companion C compiler.)
 
-        $(P Matching the behavior of the companion C compiler can have some
-        surprising results, such as the following for Digital Mars C++:
-        )
-
----------------
+--------
 struct S {
-  align(4) byte a; // placed at offset 0
-  align(4) byte b; // placed at offset 1
+  align:
+     byte a;   // placed at offset 0
+     int b;    // placed at offset 4
+     long c;   // placed at offset 8
 }
----------------
 
-        $(P $(I AlignAttribute) is meant for C ABI compatiblity, which is not
-        the same thing as binary compatibility across diverse platforms.
-        For that, use packed structs:
+auto sz = S.sizeof;  // 16
+--------
+
+	$(P $(I IntegerLiteral) specifies the alignment
+        which matches the behavior of the companion C compiler when non-default
+        alignments are used. It must be a positive power of 2.
         )
-
----------------
-align (1) struct S {
-  byte a;     // placed at offset 0
-  byte[3] filler1;
-  byte b;     // placed at offset 4
-  byte[3] filler2;
-}
----------------
 
         $(P A value of 1 means that no alignment is done;
-        members are packed together.
+        fields are packed together.
         )
+
+--------
+struct S {
+  align (1):
+     byte a;   // placed at offset 0
+     int b;    // placed at offset 1
+     long c;   // placed at offset 5
+}
+
+auto sz = S.sizeof;  // 16
+--------
+
+	$(P The alignment for the fields of an aggregate does not affect the alignment
+	of the aggregate itself - that is affected by the alignment setting outside
+	of the aggregate.)
+
+--------
+align (2) struct S {
+  align (1):
+     byte a;   // placed at offset 0
+     int b;    // placed at offset 1
+     long c;   // placed at offset 5
+}
+
+auto sz = S.sizeof;  // 14
+--------
+
+	$(P Setting the alignment of a field aligns it to that power of 2, regardless
+	of the size of the field.)
+
+--------
+struct S {
+  align (4):
+     byte a;   // placed at offset 0
+     byte b;   // placed at offset 4
+     short c;  // placed at offset 8
+}
+
+auto sz = S.sizeof;  // 12
+--------
+
 
         $(P Do not align references or pointers that were allocated
         using $(I NewExpression) on boundaries that are not
@@ -168,13 +207,8 @@ align (1) struct S {
         result.
         )
 
-        $(P $(I AlignAttribute) is ignored when applied to declarations
-        that are not struct members.
-        Whether it applies to class members or not is implementation defined.
-        )
-
         $(P The $(I AlignAttribute) is reset to the default when
-        entering a struct, union, class, or function scope, and restored
+        entering a function scope or a non-anonymous struct, union, class, and restored
         when exiting that scope.
         It is not inherited from a base class.
         )
