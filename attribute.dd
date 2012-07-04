@@ -124,6 +124,63 @@ $(GNAME AlignAttribute):
     $(B align) $(B $(LPAREN)) $(GLINK2 lex, IntegerLiteral) $(B $(RPAREN))
 )
 
+$(V1
+        $(P Specifies the alignment of struct members. $(B align) by itself
+        sets it to the default, which matches the default member alignment
+        of the companion C compiler. $(I Integer) specifies the alignment
+        which matches the behavior of the companion C compiler when non-default
+        alignments are used.
+        )
+
+        $(P Matching the behavior of the companion C compiler can have some
+        surprising results, such as the following for Digital Mars C++:
+        )
+
+---------------
+struct S {
+  align(4) byte a; // placed at offset 0
+  align(4) byte b; // placed at offset 1
+}
+---------------
+
+        $(P $(I AlignAttribute) is meant for C ABI compatiblity, which is not
+        the same thing as binary compatibility across diverse platforms.
+        For that, use packed structs:
+        )
+
+---------------
+align (1) struct S {
+  byte a;     // placed at offset 0
+  byte[3] filler1;
+  byte b;     // placed at offset 4
+  byte[3] filler2;
+}
+---------------
+
+        $(P A value of 1 means that no alignment is done;
+        members are packed together.
+        )
+
+        $(P Do not align references or pointers that were allocated
+        using $(I NewExpression) on boundaries that are not
+        a multiple of $(D size_t). The garbage collector assumes that pointers
+        and references to gc allocated objects will be on $(D size_t)
+        byte boundaries. If they are not, undefined behavior will
+        result.
+        )
+
+        $(P $(I AlignAttribute) is ignored when applied to declarations
+        that are not struct members.
+        Whether it applies to class members or not is implementation defined.
+        )
+
+        $(P The $(I AlignAttribute) is reset to the default when
+        entering a struct, union, class, or function scope, and restored
+        when exiting that scope.
+        It is not inherited from a base class.
+        )
+)
+$(V2
         $(P Specifies the alignment of:)
 
 	$(OL
@@ -212,6 +269,8 @@ auto sz = S.sizeof;  // 12
         when exiting that scope.
         It is not inherited from a base class.
         )
+)
+
 
 <h2>$(LNAME2 deprecated, Deprecated Attribute)</h2>
 
