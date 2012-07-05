@@ -1,22 +1,22 @@
 <?php
-if (!isset($_POST["code"]))
+if (!isset($HTTP_POST_VARS["code"]))
     return;
 
 $url = 'http://dpaste.dzfl.pl/request';
 $fields = array(
             'compiler'=>"dmd2",
             'ptr'=>"64",
-            'code'=>$_POST['code'],
-            'stdin' => $_POST['stdin'],
-            'args'=>$_POST['args'],
+            'code'=>$HTTP_POST_VARS['code'],
+            'stdin' => $HTTP_POST_VARS['stdin'],
+            'args'=>$HTTP_POST_VARS['args'],
         );
 $ch = curl_init();
 
 curl_setopt($ch,CURLOPT_URL,$url);
 curl_setopt($ch,CURLOPT_POST,count($fields));
-$code = ($_POST['code']);
-$stdin = $_POST['stdin'];
-$args = $_POST['args'];
+$code = ($HTTP_POST_VARS['code']);
+$stdin = $HTTP_POST_VARS['stdin'];
+$args = $HTTP_POST_VARS['args'];
 
 curl_setopt($ch,CURLOPT_POSTFIELDS,"compiler=dmd&ptr=64&code={$code}&stdin=$stdin&args=$args");
 
