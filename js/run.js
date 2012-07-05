@@ -26,11 +26,11 @@ function parseOutput(data)
     var json = jQuery.parseJSON(data);
     if (json == null)
     {
-        output = "<h5>Temporarly unavaible</h5>";
+        output = "<h5>Temporarily unavaible</h5>";
         return output;
     }
 
-    /* 
+    /*
     * Escape html/script/etc
     */
     var cout = $('<div/>').text(json["compilation"]["stdout"]).html();
@@ -48,10 +48,10 @@ function parseOutput(data)
             output = '<b>Compilation output: </b><br />'
                 + '<div class="outputWindow">' + cout + "</div><br />";
         }
-        output += "<b>Output: </b><br />" + (stdout == "" && stderr == "" ? 
+        output += "<b>Output: </b><br />" + (stdout == "" && stderr == "" ?
             '<div class="outputWindow">-- No output --</div>' : '<div class="outputWindow">'+stdout);
 
-        if (stderr != "") 
+        if (stderr != "")
         {
             output += stderr;
         }
@@ -62,7 +62,7 @@ function parseOutput(data)
     return output.nl2br();
 }
 
-$(document).ready(function() 
+$(document).ready(function()
 {
     $('textarea[class=d_code]').each(function(index) {
         var thisObj = $(this);
@@ -110,16 +110,16 @@ $(document).ready(function()
                 type: 'POST',
                 url: "/process.php",
                 data: {'code' : encodeURIComponent(code), 'stdin' : encodeURIComponent(stdin), 'args': encodeURIComponent(args)},
-                success: function(data) 
+                success: function(data)
                 {
                     outputWindow.html(parseOutput(data));
 
                     runBtn.attr("disabled", false);
                     runBtn.val("Run");
                 },
-                error: function() 
+                error: function()
                 {
-                    outputWindow.html("<h5>Temporarly unavaible</h5>");
+                    outputWindow.html("<h5>Temporarily unavaible</h5>");
 
                     runBtn.attr("disabled", false);
                     runBtn.val("Run");
