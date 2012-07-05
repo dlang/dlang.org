@@ -30,7 +30,7 @@ function parseOutput(data)
         return output;
     }
 
-    /*
+    /* 
     * Escape html/script/etc
     */
     var cout = $('<div/>').text(json["compilation"]["stdout"]).html();
@@ -48,10 +48,10 @@ function parseOutput(data)
             output = '<b>Compilation output: </b><br />'
                 + '<div class="outputWindow">' + cout + "</div><br />";
         }
-        output += "<b>Output: </b><br />" + (stdout == "" && stderr == "" ?
+        output += (stdout == "" && stderr == "" ? 
             '<div class="outputWindow">-- No output --</div>' : '<div class="outputWindow">'+stdout);
 
-        if (stderr != "")
+        if (stderr != "") 
         {
             output += stderr;
         }
@@ -62,19 +62,16 @@ function parseOutput(data)
     return output.nl2br();
 }
 
-$(document).ready(function()
+$(document).ready(function() 
 {
     $('textarea[class=d_code]').each(function(index) {
         var thisObj = $(this);
 
         var p = thisObj.parent();
+        var codeStr = thisObj.val();
         p.css("display", "block");
         var originalSource = thisObj.val();
-        var runBtn = p.children("input.runButton");
-        var resetBtn = p.children("input.resetButton");
-        var stdin = p.children("input.d_code_stdin").val();
-        var args = p.children("input.d_code_args").val();
-        var code = thisObj.val();
+        
 
         var editor = CodeMirror.fromTextArea(thisObj[0], {
                 lineNumbers: false,
@@ -83,54 +80,86 @@ $(document).ready(function()
                 indentWithTabs: true,
                 mode: "text/x-csharp",
                 lineWrapping: true,
-               //onGutterClick: foldFunc,
                 theme: "eclipse",
                 readOnly: false,
                 onChange: function (editor, event) {
-                   code = editor.getValue();
+                   codeStr = editor.getValue();
                 },
+        });
+
+        var runBtn = p.children("input.runButton");
+        var editBtn = p.children("input.editButton");
+        var inputBtn = p.children("input.inputButton");
+        var resetBtn = p.children("input.resetButton");
+        var argsBtn = p.children("input.argsButton");
+        var stdinDiv = p.children("div.d_code_stdin");
+        var argsDiv = p.children("div.d_code_args");
+        var outputDiv = p.children("div.d_code_output_div");
+
+        var code = $(editor.getWrapperElement());
+        var output = outputDiv.children("div.d_code_output");
+        var stdin = stdinDiv.children("textarea.d_code_stdin");
+        var args = argsDiv.children("textarea.d_code_args");
+
+        var hideAllWindows = function()
+        {
+            stdinDiv.css('display', 'none');
+            argsDiv.css('display', 'none');
+            outputDiv.css('display', 'none');
+            code.css('display', 'none');
+
+            inputBtn.removeClass('test');
+            argsBtn.removeClass('test');
+            runBtn.removeClass('test');
+            editBtn.removeClass('test');
+        };
+
+        var originalStdin = stdin.val();
+        var originalArgs = args.val();
+
+        argsBtn.click(function(){
+            hideAllWindows();
+            argsDiv.css('display', 'block');
+            $(this).addClass('test');
+        });
+
+        inputBtn.click(function(){
+            hideAllWindows();
+            stdinDiv.css('display', 'block');
+            $(this).addClass('test');
+        });
+        editBtn.click(function(){
+            hideAllWindows();
+            code.css('display', 'block');
+            $(this).addClass('test');
         });
 
         runBtn.click(function(){
             $(this).attr("disabled", true);
-            $(this).val("Running...");
-
-            if (p.children("p.outputWindow")[0] != null) {
-                var outputWindow = p.children("p.outputWindow");
-            }
-            else {
-                var outputWindow = $('<p class="outputWindow"/>');
-                p.append(outputWindow);
-            }
-            outputWindow.html("");
-
-            var output = "";
+            hideAllWindows();
+            outputDiv.css('display', 'block');
+            output.html("Running...");
 
             $.ajax({
                 type: 'POST',
                 url: "/process.php",
-                data: {'code' : encodeURIComponent(code), 'stdin' : encodeURIComponent(stdin), 'args': encodeURIComponent(args)},
-                success: function(data)
+                data: 
                 {
-                    outputWindow.html(parseOutput(data));
-
-                    runBtn.attr("disabled", false);
-                    runBtn.val("Run");
+                    'code' : encodeURIComponent(editor.getValue()), 
+                    'stdin' : encodeURIComponent(stdin.val()), 
+                    'args': encodeURIComponent(args.val())
                 },
-                error: function()
+                success: function(data) 
                 {
-                    outputWindow.html("<h5>Temporarily unavaible</h5>");
-
+                    output.html(parseOutput(data));
                     runBtn.attr("disabled", false);
-                    runBtn.val("Run");
+                },
+                error: function() 
+                {
+                    output.html("<h5>Temporarily unavaible</h5>");
+                    runBtn.attr("disabled", false);
                 }
             });
-        });
-
-        resetBtn.click(function(){
-            editor.setValue(originalSource);
-            var outputWindow = p.children("p.outputWindow");
-            outputWindow.remove();
         });
     });
 
