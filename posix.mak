@@ -35,6 +35,9 @@ linux_logo.png mac_logo.png opensuse_logo.png pen.gif search-left.gif	\
 search-bg.gif search-button.gif tdpl.jpg ubuntu_logo.png				\
 win32_logo.png)
 
+JAVASCRIPT=$(addprefix js/, codemirror.js d.js hyphenate.js	\
+hyphenate_selectively.js run.js)
+
 STYLES=css/style.css css/print.css css/codemirror.css
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php	\
@@ -106,7 +109,7 @@ PDFOPTIONS=--header-left [section] --header-right [page]			\
 PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
-$(PREMADE) $(STYLES) $(IMAGES))
+$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
@@ -134,6 +137,7 @@ all : html phobos-prerelease druntime-prerelease druntime-release phobos-release
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
 
 html : $(ALL_FILES)
+	@echo $(ALL_FILES)
 
 $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
 	cp -f sitemap-template.dd sitemap.dd
@@ -151,7 +155,7 @@ zip:
 	rm doc.zip
 	zip32 doc win32.mak style.css $(DDOC)
 	zip32 doc $(SRC) download.html
-	zip32 doc $(IMAGES) $(STYLES)
+	zip32 doc $(IMAGES) $(JAVASCRIPT) $(STYLES)
 
 clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
