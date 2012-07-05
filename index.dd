@@ -21,6 +21,8 @@ function showHideYourCodeHere()
 }
 </script>
 
+$(D_RUN_CODE
+$(ARGS
 ----
 #!/usr/bin/rdmd
 // Computes average line length for standard input.
@@ -37,7 +39,26 @@ void main() {
         lines ? sumLength / lines : 0);
 }
 ----
-<div style="font-size:75%;text-align:right;position:relative;top:-3em;right:0.5em;bottom:0em;cursor:pointer;" onclick='showHideYourCodeHere();'><a id="your-code-link">[your code here]</a></div>
+),
+$(ARGS
+#!/usr/bin/rdmd
+// Computes average line length for standard input.
+import std.stdio;
+
+void main() {
+    ulong lines = 0;
+    double sumLength = 0;
+    foreach (line; stdin.byLine()) {
+        ++lines;
+        sumLength += line.length;
+    }
+    writeln("Average line length: ",
+        lines ? sumLength / lines : 0);
+}),
+$(ARGS Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris tristique rutrum sem, nec convallis enim bibendum ut. Donec ac dolor tortor, sit amet consequat turpis. In hac habitasse platea dictumst. Fusce lacus dolor, sodales ac consequat eu, ultricies et leo. In commodo scelerisque urna non posuere. Sed justo ipsum, consectetur nec sodales in, faucibus ut nunc. Phasellus nunc metus, mollis eu malesuada at, scelerisque eget nulla. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus ac velit vel massa faucibus sagittis ut quis lectus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam convallis dolor quis nunc viverra suscipit. Nam egestas pretium enim, sit amet tincidunt orci condimentum sit amet. Duis accumsan elit vehicula nisl tincidunt hendrerit. Nunc nec augue velit, ac lacinia nunc.),
+$(ARGS))
+
+<div style="font-size:75%;text-align:right;position:relative;top:-3em;right:0.5em;bottom:0em;" onclick='showHideYourCodeHere();'><a id="your-code-link" style="cursor:pointer;">[your code here]</a></div>
 
 $(TAG2 div, id="your-code-info" style="display:block; position:relative; width: 50%; margin-left:auto; top:-2.5em; bottom:0em; background:white; border:1px solid #ccc; font-size:80%; padding:0px 5px 0px 5px; line-height:1.4em;",
 Got a brief example illustrating D? Submit your code to the
@@ -58,6 +79,8 @@ $(LI D allows writing large code fragments without redundantly specifying types,
 like dynamic languages do. On the other hand, static inference deduces types and other
 code properties, giving the best of both the static and the
 dynamic worlds. $(EXAMPLE 1,
+$(D_RUN_CODE 
+$(ARGS
 ----
 void main() {
     // Define an array of numbers, double[]. Compiler recognizes the common
@@ -75,6 +98,25 @@ auto min(T1, T2)(T1 lhs, T2 rhs) {
     return rhs < lhs ? rhs : lhs;
 }
 ----
+),
+$(ARGS 
+void main() {
+    // Define an array of numbers, double[]. Compiler recognizes the common
+    // type of all initializers.
+    auto arr = [ 1, 2, 3.14, 5.1, 6 ];
+    // Dictionary that maps string to int, type is spelled int[string]
+    auto dictionary = [ "one" : 1, "two" : 2, "three" : 3 ];
+    // Calls the min function defined below
+    auto x = min(arr[0], dictionary["two"]);
+}
+// Type deduction works for function results. This is important for generic
+// functions, such as min below, which works correctly for all comparable
+// types.
+auto min(T1, T2)(T1 lhs, T2 rhs) {
+    return rhs < lhs ? rhs : lhs;
+}),
+$(ARGS), $(ARGS))
+
 ))
 
 $(LI Automatic memory management makes for safe, simple, and robust code.
@@ -82,10 +124,12 @@ D also supports scoped resource management (aka the
 $(WEB en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization, RAII) idiom)
 and $(LINK2 statement.html#ScopeGuardStatement, $(D scope) statements) for
 deterministic transactional code that is easy to write and read. $(EXAMPLE 2,
+$(D_RUN_CODE 
+$(ARGS
 ----
 import std.stdio;
 
-class Widget { ... }
+class Widget { }
 
 void main() {
     // Automatically managed.
@@ -96,13 +140,34 @@ void main() {
     foreach (line; File("text.txt").byLine()) {
         writeln(line);
     }
+    writeln();
 }
 ----
+),
+$(ARGS
+import std.stdio;
+
+class Widget { }
+
+void main() {
+    // Automatically managed.
+    auto w = new Widget;
+    // Code is executed in any case upon scope exit.
+    scope(exit) { writeln("Exiting main."); }
+    // File is closed deterministically at scope's end.
+    foreach (line; File("text.txt").byLine()) {
+        writeln(line);
+    }
+    writeln();
+}),
+$(ARGS), $(ARGS))
 )
 )
 
 $(LI Built-in linear and associative arrays, slices, and ranges make daily
 programming simple and pleasant for tasks, both small and large. $(EXAMPLE 3,
+$(D_RUN_CODE 
+$(ARGS
 ----
 #!/usr/bin/rdmd
 import std.range, std.stdio;
@@ -118,6 +183,23 @@ void main() {
         lines ? cast(double) sumLength / lines : 0.0);
 }
 ----
+),
+$(ARGS
+#!/usr/bin/rdmd
+import std.range, std.stdio;
+
+// Compute average line length for stdin
+void main() {
+    ulong lines = 0, sumLength = 0;
+    foreach (line; stdin.byLine()) {
+        ++lines;
+        sumLength += line.length;
+    }
+    writeln("Average line length: ",
+        lines ? cast(double) sumLength / lines : 0.0);
+}),
+$(ARGS Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris tristique rutrum sem, nec convallis enim bibendum ut. Donec ac dolor tortor, sit amet consequat turpis. In hac habitasse platea dictumst. Fusce lacus dolor, sodales ac consequat eu, ultricies et leo. In commodo scelerisque urna non posuere. Sed justo ipsum, consectetur nec sodales in, faucibus ut nunc. Phasellus nunc metus, mollis eu malesuada at, scelerisque eget nulla. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus ac velit vel massa faucibus sagittis ut quis lectus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam convallis dolor quis nunc viverra suscipit. Nam egestas pretium enim, sit amet tincidunt orci condimentum sit amet. Duis accumsan elit vehicula nisl tincidunt hendrerit. Nunc nec augue velit, ac lacinia nunc.),
+$(ARGS))
 ))
 
 ))
@@ -130,6 +212,8 @@ $(LI The best paradigm is to not impose something at the expense of others.
 D offers classic polymorphism, value semantics, functional
 style, generics, generative programming, contract programming,
 and more&mdash;all harmoniously integrated. $(EXAMPLE 4,
+$(D_RUN_CODE 
+$(ARGS
 ----
 // Interfaces and classes
 interface Printable {
@@ -139,7 +223,9 @@ interface Printable {
 
 // Interface implementation
 class Widget : Printable {
-   void print(uint level) { ... }
+   void print(uint level) 
+   in{ }
+   body{ }
 }
 
 // Single inheritance of state
@@ -147,7 +233,7 @@ class ExtendedWidget : Widget {
    override void print(uint level)
    in { /* weakening precondition is okay */  }
    body {
-       ... level may be 0 here ...
+       //... level may be 0 here ...
    }
 }
 
@@ -161,11 +247,60 @@ shared int perApp = 5;
 // Structs have value semantics
 struct BigNum {
     // intercept copying
-    this(this) { ... }
+    this(this) { }
     // intercept destructor
-    ~this() { ... }
+    ~this() { }
+}
+
+void main()
+{
+    // ...
 }
 ----
+),
+$(ARGS
+// Interfaces and classes
+interface Printable {
+   void print(uint level)
+   in { assert(level > 0); } // contract is part of the interface
+}
+
+// Interface implementation
+class Widget : Printable {
+   void print(uint level)    
+   in{ }
+   body{ }
+}
+
+// Single inheritance of state
+class ExtendedWidget : Widget {
+   override void print(uint level)
+   in { /* weakening precondition is okay */  }
+   body {
+       //... level may be 0 here ...
+   }
+}
+
+// Immutable data shared across threads
+immutable string programName = "demo";
+// Mutable data is thread-local
+int perThread = 42;
+// Explicitly shared data
+shared int perApp = 5;
+
+// Structs have value semantics
+struct BigNum {
+    // intercept copying
+    this(this) { }
+    // intercept destructor
+    ~this() { }
+}
+
+void main()
+{
+    // ...
+}),
+$(ARGS), $(ARGS))
 ))
 
 $(LI D offers an innovative approach to concurrency, featuring true
@@ -192,7 +327,11 @@ safe. On occasion a function might need to escape the confines of type
 safety for ultimate speed and control. For such rare cases D offers
 native pointers, type casts, access to any C function without any
 intervening translation, and even inline assembly code. $(EXAMPLE 5,
+$(D_RUN_CODE 
+$(ARGS
 ----
+import core.stdc.stdlib;
+
 void livingDangerously() {
     // Access to C's malloc and free primitives
     auto buf = malloc(1024 * 1024);
@@ -201,7 +340,7 @@ void livingDangerously() {
     auto floats = cast(float[]) buf[0 .. 1024 * 1024];
     // Even stack allocation is possible
     auto moreBuf = alloca(4096 * 100);
-    ...
+    //...
 }
 
 // Using inline asm for extra speed on x86
@@ -224,7 +363,54 @@ uint checked_multiply(uint x, uint y) {
 Loverflow:
    throw new Exception("multiply overflow");
 }
+
+void main()
+{
+    // ...
+}
 ----
+),
+$(ARGS
+import core.stdc.stdlib;
+
+void livingDangerously() {
+    // Access to C's malloc and free primitives
+    auto buf = malloc(1024 * 1024);
+    scope(exit) free(buf); // free automatically upon scope exit
+    // Interprets memory as an array of floats
+    auto floats = cast(float[]) buf[0 .. 1024 * 1024];
+    // Even stack allocation is possible
+    auto moreBuf = alloca(4096 * 100);
+    //...
+}
+
+// Using inline asm for extra speed on x86
+uint checked_multiply(uint x, uint y) {
+    uint result;
+    version (D_InlineAsm_X86) {
+        // Inline assembler "sees" D variables.
+        asm {
+            mov     EAX,x        ;
+            mul     EAX,y        ;
+            mov     result,EAX   ;
+            jc      Loverflow    ;
+        }
+        return result;
+    } else {
+        result = x * y;
+        if (!y || x <= uint.max / y)
+           return result;
+   }
+Loverflow:
+   throw new Exception("multiply overflow");
+}
+
+void main()
+{
+    // ...
+}),
+$(ARGS), $(ARGS))
+
 ))
 
 $(LI The $(D @safe), $(D @trusted), and $(D @system) modular
@@ -531,9 +717,6 @@ Macros:
 </script>
 <noscript><span class="nobr">See example.</span></noscript>
 $(TAG2 div, id="a$1" class="answer-nojs", $2)
-<script>
-  document.getElementById("a$1").style.display='none';
-</script>
     LAYOUT=
 <div id="navigation">
   $1
