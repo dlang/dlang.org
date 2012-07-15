@@ -19,13 +19,13 @@ $code = $_POST['code'];
 $stdin = $_POST['stdin'];
 $args = $_POST['args'];
 
-$str = "compiler=dmd2&code=$code&stdin=$stdin&args=$args";
+$str = "compiler=dmd2&code=$code&stdin=$stdin&args=$args&unittest=1";
 
 $result = "";
 $fp = fsockopen("dpaste.dzfl.pl", 80, $errno,$errstr, 15); 
 if ($fp)
 { 
-    fputs($fp, "POST /request/?xml HTTP/1.1\r\n"); 
+    fputs($fp, "POST /request/ HTTP/1.1\r\n"); 
     fputs($fp, "Host: dpaste.dzfl.pl\r\n"); 
     fputs($fp, "Content-type: application/x-www-form-urlencoded\r\n"); 
     fputs($fp, "Content-length: ".strlen($str)."\r\n"); 
