@@ -3,163 +3,105 @@ Ddoc
 $(D_S The D Style,
 
 $(P
-	$(I The D Style) is a set of style conventions for writing
-	D programs. The D Style is not enforced by the compiler, it is
-	purely cosmetic and a matter of choice. Adhering to the D Style,
-	however, will make it easier for others to work with your
-	code and easier for you to work with others' code.
-	The D Style can form the starting point for a project
-	style guide customized for your project team.
+    $(I The D Style) is a set of style conventions for writing
+    D programs. The D Style is not enforced by the compiler. It is
+    purely cosmetic and a matter of choice. Adhering to the D Style,
+    however, will make it easier for others to work with your
+    code and easier for you to work with others' code.
+    The D Style can form the starting point for a project
+    style guide customized for your project team.
 )
 
 $(P
-	Submissions to Phobos and other official D source code will
-	follow these guidelines.
+    Submissions to Phobos and other official D source code will
+    follow these guidelines.
 )
 
-<h3>White Space</h3>
+<h3>Whitespace</h3>
 
 $(UL
-	$(LI One statement per line.)
+    $(LI One statement per line.)
 
-	$(LI Use spaces instead of hardware tabs.)
+    $(LI Use spaces instead of hardware tabs.)
 
-	$(LI Each indentation level will be four columns.)
-
-	$(LI Operators are separated by single spaces from their operands.)
-
-	$(LI Two blank lines separating function bodies.)
-
-	$(LI One blank line separating variable declarations from statements
-	in function bodies.)
-)
-
-<h3>Comments</h3>
-
-$(UL
-	$(LI Use // comments to document a single line:
--------------------------------
-statement;	// comment
-statement;	// comment
--------------------------------
-	)
-
-	$(LI Use block comments to document a multiple line block of
-	statements:
--------------------------------
-/* comment
- * comment
- */
- statement;
- statement;
--------------------------------
-	)
-
-	$(LI Use $(CODE version (none)) to $(SINGLEQUOTE comment out) a piece of trial code
-	that is syntactically valid:
--------------------------------
-  version (none)
-  {
-    /* comment
-     * comment
-     */
-     statement;
-     statement;
-  }
--------------------------------
-
-	It can be turned on with $(CODE version(all)):
-
--------------------------------
-  version (all)
-  {
-    /* comment
-     * comment
-     */
-     statement;
-     statement;
-  }
--------------------------------
-
-	)
-
-	$(LI Use nesting comments to $(SINGLEQUOTE comment out) a piece of syntactically invalid code:
--------------------------------
-/+++++
-    /* comment
-     * comment
-     */
-     { statement;
-       statement;
- +++++/
--------------------------------
-	)
+    $(LI Each indentation level will be four columns.)
 )
 
 <h3>Naming Conventions</h3>
 
 $(DL
     $(DT General)
-	<dd>Names formed by joining multiple words should have each word
-	other than the first capitalized.
-	Names shall not begin with an underscore $(SINGLEQUOTE _) unless they are private member variables.
+    <dd>Names should be camel-cased. So, names formed by joining multiple words
+    have each word other than the first word capitalized. Also, names do not
+    begin with an underscore $(SINGLEQUOTE _) unless they are private member
+    variables.
 
 -------------------------------
 int myFunc();
 -------------------------------
 
-    $(DT Module)
-	$(DD Module and package names are all lower case, and only contain
-	the characters [a..z][0..9][_]. This avoids problems dealing
-	with case insensitive file systems.)
-
-    $(DT C Modules)
-	$(DD Modules that are interfaces to C functions go into the "c"
-	package, for example:
+    $(DT Modules)
+    $(DD Module and package names should be all lowercase, and only contain
+    the characters [a..z][0..9][_]. This avoids problems when dealing with case
+    insensitive file systems.
 -------------------------------
-import std.c.stdio;
+import std.algorithm;
 -------------------------------
-	Module names should be all lower case.
-	)
+    )
 
-    $(DT Class, Struct, Union, Enum, Template names)
-	$(DD are capitalized.
+    $(DT Classes, Structs, Unions, Enums, Templates)
+    $(DD The names of user-defined types should be pascal-cased, which is the
+    same as camel-cased except that the first letter is uppercase.
 
 -------------------------------
 class Foo;
-class FooAndBar;
+struct FooAndBar;
 -------------------------------
-	)
-    $(DD An exception is that eponymous templates that return a value instead of a type should not be  
-    capitalized, as they are conceptually more similar to functions.  
+    )
+    $(DD An exception is that eponymous templates that return a value instead of
+    a type should not be capitalized, as they are conceptually more similar to
+    functions.
 
--------------------------  
-template GetSomeType(T) {}  
-template isSomeType(T) {}  
--------------------------  
-    )  
+-------------------------
+template GetSomeType(T) {}
+template isSomeType(T) {}
+-------------------------
+    )
 
-    $(DT Function names)
-	$(DD Function names are not capitalized.
+    $(DT Functions)
+    $(DD Function names should be camel-cased, so their first letter is lowercase.)
 
 -------------------------------
 int done();
 int doneProcessing();
 -------------------------------
-	)
+    )
 
-$(V1
-    $(DT Const names)
-	$(DD Are in all caps.)
-)
-    $(DT Enum member names)
-	$(DD Are in lowerCamelCase.)
+    $(DT Constants)
+    $(DD The names of constants should generally be camel-cased just like normal
+    variables, though shorter constants (e.g. PI) can be all uppercase. In
+    general however, constants should $(I not) be in all uppercase. They aren't
+    C macros and don't need to worry about the C pre-processor.
 
-)
+-------------------------------
+enum secondsPerMinute = 60;
+immutable hexDigits = "0123456789ABCDEF";
+-------------------------------
+    )
+
+    $(DT Enum members)
+    $(DD The members of enums should be camel-cased, so their first letter is
+    lowercase.
+
+-------------------------------
+Enum Direction { bwd, fwd, both }
+Enum OpenRight { no, yes }
+-------------------------------
+    )
 
 <h3>Meaningless Type Aliases</h3>
 
-	$(P Things like:)
+    $(P Things like:)
 
 -------------------------------
 alias void VOID;
@@ -167,65 +109,118 @@ alias int INT;
 alias int* pint;
 -------------------------------
 
-	$(P should be avoided.)
+    $(P should be avoided.)
 
 <h3>Declaration Style</h3>
 
-	$(P Since the declarations are left-associative, left justify them:)
+    $(P Since the declarations are left-associative, left justify them:)
 
 -------------------------------
-int[] x, y;	// makes it clear that x and y are the same type
-int** p, q;	// makes it clear that p and q are the same type
+int[] x, y; // makes it clear that x and y are the same type
+int** p, q; // makes it clear that p and q are the same type
 -------------------------------
 
-	$(P to emphasize their relationship. Do not use the C style:)
+    $(P to emphasize their relationship. Do not use the C style:)
 
 -------------------------------
-int []x, y;	// confusing since y is also an int[]
-int **p, q;	// confusing since q is also an int**
+int []x, y; // confusing since y is also an int[]
+int **p, q; // confusing since q is also an int**
 -------------------------------
 
 <h3>Operator Overloading</h3>
 
-	$(P Operator overloading is a powerful tool to extend the basic
-	types supported by the language. But being powerful, it has
-	great potential for creating obfuscated code. In particular,
-	the existing D operators have conventional meanings, such
-	as $(SINGLEQUOTE +) means $(SINGLEQUOTE add) and $(SINGLEQUOTE &lt;&lt;)
-	means $(SINGLEQUOTE shift left).
-	Overloading operator $(SINGLEQUOTE +) with a meaning different from $(SINGLEQUOTE add)
-	is arbitrarily confusing and should be avoided. 
-	)
+    $(P Operator overloading is a powerful tool to extend the basic
+    types supported by the language. But being powerful, it has
+    great potential for creating obfuscated code. In particular,
+    the existing D operators have conventional meanings, such
+    as $(SINGLEQUOTE +) means $(SINGLEQUOTE add) and $(SINGLEQUOTE &lt;&lt;)
+    means $(SINGLEQUOTE shift left).
+    Overloading operator $(SINGLEQUOTE +) with a meaning different from $(SINGLEQUOTE add)
+    is arbitrarily confusing and should be avoided.
+    )
 
 <h3>Hungarian Notation</h3>
 
-	$(P Using hungarian notation to denote the type of a variable
-	is a bad idea.
-	However, using notation to denote the purpose of a variable
-	(that cannot be expressed by its type) is often a good
-	practice.)
+    $(P Using hungarian notation to denote the type of a variable
+    is a bad idea.
+    However, using notation to denote the purpose of a variable
+    (that cannot be expressed by its type) is often a good
+    practice.)
+
+<h3>Properties</h3>
+
+    $(P Functions should be property functions whenever appropriate. In
+    particular, getters and setters should generally be avoided in favor of
+    property functions. And in general, whereas functions should be verbs,
+    properties should be nouns, just like if they were member variables.)
 
 <h3>Documentation</h3>
 
 $(P
-	All public declarations will be documented in
-	$(LINK2 ddoc.html, Ddoc) format.
+    All public declarations will be documented in $(LINK2 ddoc.html, Ddoc)
+    format. In addition, in Phobos and other official D source, when a version
+    block specifically for Ddoc is needed, use version(StdDdoc) instead
+    of version(D_Ddoc). This is so that users can generate documentation with
+    their normal builds if they want to rather than having to have a separate
+    build for their documentation.
+
 )
 
 <h3>Unit Tests</h3>
 
 $(P
-	As much as practical, all functions will be exercised
-	by unit tests using unittest blocks immediately following
-	the function to be tested.
-	Every path of code should be executed at least once,
-	verified by the $(LINK2 code_coverage.html, code coverage analyzer).
+    As much as practical, all functions will be exercised
+    by unit tests using unittest blocks immediately following
+    the function to be tested.
+    Every path of code should be executed at least once,
+    verified by the $(LINK2 code_coverage.html, code coverage analyzer).
 )
 
+<h2>Additional Requirements for Phobos</h2>
+
+$(P
+    In general, this guide does not try to recommend or require that code
+    conform to any particular formatting guidelines. The small section on
+    whitespace at the top contains its only formatting guidelines. However, for
+    Phobos and other official D source code, there are two additional
+    requirements:
+ )
+
+$(UL
+    $(LI Braces should be on their own line. There are a few exceptions to this
+    (such as when declaring lambda functions), but with any normal function
+    block or type definition, the braces should be on their own line.)
+
+-------------------------------
+void func(int param)
+{
+    if(param < 0)
+    {
+        ...
+    }
+    else
+    {
+        ...
+    }
+}
+-------------------------------
+
+    $(LI Lines have a soft limit of 80 characters and a hard limit of 120
+    characters. This means that most lines of code should be no longer than 80
+    characters long, but they can exceed 80 characters when appropriate.
+    However, they can never exceed 120 characters.)
+ )
+
+$(P
+    We are not necessarily recommending that all code follow these two rules.
+    They're both likely to be controversial in any discussion on coding
+    standards. However, they are required in submissions to Phobos and other
+    official D source code.
+ )
 )
 
 Macros:
-	TITLE=The D Style
-	WIKI=DStyle
-	CATEGORY_APPENDICES=$0
+    TITLE=The D Style
+    WIKI=DStyle
+    CATEGORY_APPENDICES=$0
 
