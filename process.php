@@ -2,7 +2,7 @@
 /**
 Runnable examples functionality
 
-Copyright: Damian Ziemba 2012
+Copyright: 2012 by Digital Mars
 
 License:   http://boost.org/LICENSE_1_0.txt, Boost License 1.0
 
