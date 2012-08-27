@@ -93,19 +93,28 @@ statement;  // comment
 
 $(DL
     $(DT General)
-    <dd>Names formed by joining multiple words should have each word
-    other than the first capitalized.
-    Names shall not begin with an underscore $(SINGLEQUOTE _) unless they are private member variables.
+    $(DD Unless listed otherwise below, names should be camelCased (this
+         includes $(I all) variables). So, names formed by joining multiple
+         words have each word other than the first word capitalized. Also, names
+         do not begin with an underscore $(SINGLEQUOTE _) unless they are
+         private.
 
 -------------------------------
 int myFunc();
+string myLocalVar;
 -------------------------------
+    )
 
-    $(DT Module)
-    $(DD Module and package names are all lower case, and only contain
-    the characters [a..z][0..9][_]. This avoids problems dealing
-    with case insensitive file systems.)
+    $(DT Modules)
+    $(DD Module and package names should be all lowercase, and only contain
+         the characters [a..z][0..9][_]. This avoids problems when dealing with
+         case insensitive file systems.
+-------------------------------
+import std.algorithm;
+-------------------------------
+    )
 
+$(V1
     $(DT C Modules)
     $(DD Modules that are interfaces to C functions go into the "c"
     package, for example:
@@ -114,26 +123,31 @@ import std.c.stdio;
 -------------------------------
     Module names should be all lower case.
     )
+)
 
-    $(DT Class, Struct, Union, Enum, Template names)
-    $(DD are capitalized.
+    $(DT Classes, Structs, Unions, Enums, Templates)
+    $(DD The names of user-defined types should be PascalCased, which is the
+         same as camelCased except that the first letter is uppercase.
 
 -------------------------------
 class Foo;
-class FooAndBar;
+struct FooAndBar;
 -------------------------------
     )
-    $(DD An exception is that eponymous templates that return a value instead of a type should not be
-    capitalized, as they are conceptually more similar to functions.
+
+    $(DD An exception is that eponymous templates that return a value instead of
+         a type should not be capitalized, as they are conceptually more similar
+         to functions.
 
 -------------------------
-template GetSomeType(T) {}
-template isSomeType(T) {}
+template GetSomeType(T) { alias T GetSomeType; }
+template isSomeType(T) { enum isSomeType = is(T == SomeType); }
 -------------------------
-    )
+     )
 
-    $(DT Function names)
-    $(DD Function names are not capitalized.
+    $(DT Functions)
+    $(DD Function names should be camelCased, so their first letter is lowercase.
+         This includes properties and member functions.
 
 -------------------------------
 int done();
@@ -141,13 +155,30 @@ int doneProcessing();
 -------------------------------
     )
 
+    $(DT Constants)
+    $(DD The names of constants should generally be camelCased just like normal
+         variables.
+
+-------------------------------
+enum secondsPerMinute = 60;
+immutable hexDigits = "0123456789ABCDEF";
+-------------------------------
+    )
+
+    $(DT Enum members)
+    $(DD The members of enums should be camelCased, so their first letter is
+         lowercase.
+
+-------------------------------
+Enum Direction { bwd, fwd, both }
+Enum OpenRight { no, yes }
+-------------------------------
+    )
+
 $(V1
     $(DT Const names)
     $(DD Are in all caps.)
 )
-    $(DT Enum member names)
-    $(DD Are in lowerCamelCase.)
-
 )
 
 <h3>Meaningless Type Aliases</h3>
