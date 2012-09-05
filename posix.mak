@@ -53,12 +53,12 @@ TARGETS=32-64-portability.html abi.html acknowledgements.html			\
 	dmd-linux.html dmd-osx.html dmd-windows.html download.html			\
 	dstyle.html errors.html entity.html enum.html exception-safe.html	\
 	expression.html faq.html features2.html function.html float.html	\
-	garbage.html glossary.html gsoc2011.html gsoc2012.html				\
-	gsoc2012-template.html hash-map.html hijack.html					\
-	howto-promote.html htod.html htomodule.html iasm.html index.html	\
-	interface.html interfaceToC.html intro.html							\
-	intro-to-datetime.html lazy-evaluation.html lex.html memory.html	\
-	memory-safe-d.html migrate-to-shared.html mixin.html module.html	\
+	glossary.html gsoc2011.html gsoc2012.html gsoc2012-template.html	\
+	hash-map.html hijack.html howto-promote.html htod.html				\
+	htomodule.html iasm.html index.html interface.html					\
+	interfaceToC.html intro.html intro-to-datetime.html					\
+	lazy-evaluation.html lex.html memory.html memory-safe-d.html		\
+	migrate-to-shared.html mixin.html module.html						\
 	operatoroverloading.html overview.html pdf-intro-cover.html			\
 	pdf-spec-cover.html pdf-tools-cover.html portability.html			\
 	pragma.html pretod.html property.html rationale.html rdmd.html		\
@@ -82,8 +82,8 @@ PDFSPEC=spec.html intro.html lex.html module.html declaration.html		\
 	struct.html class.html interface.html enum.html const3.html			\
 	function.html operatoroverloading.html template.html				\
 	template-mixin.html dbc.html version.html traits.html errors.html	\
-	unittest.html garbage.html float.html iasm.html ddoc.html			\
-	interfaceToC.html cpp_interface.html portability.html entity.html	\
+	unittest.html float.html iasm.html ddoc.html interfaceToC.html		\
+	cpp_interface.html portability.html entity.html						\
 	memory-safe-d.html abi.html simd.html
 
 PDFHOWTOS=windows.html dll.html COM.html htomodule.html
