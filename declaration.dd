@@ -52,11 +52,10 @@ $(GNAME BasicType):
     $(GLINK IdentifierList)
     $(GLINK Typeof)
     $(GLINK Typeof) $(B .) $(GLINK IdentifierList)
-$(V2          $(B const$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-        $(B immutable$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-        $(B shared$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-        $(B inout$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-)
+$(V2      $(B const$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
+    $(B immutable$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
+    $(B shared$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
+    $(B inout$(LPAREN)) $(GLINK Type) $(B $(RPAREN)))
 
 $(GNAME BasicTypeX):
     $(B bool)
@@ -118,15 +117,13 @@ $(GNAME StorageClasses):
 $(GNAME StorageClass):
     $(B abstract)
     $(B auto)
-    $(B const)
-    $(B deprecated)
+$(V1      $(B const)
+)$(V2      $(GLINK TypeCtor)
+)    $(B deprecated)
 $(V2      $(B enum)
 )    $(B extern)
     $(B final)
-$(V2      $(B immutable)
-    $(B inout)
-    $(B shared)
-    $(B nothrow)
+$(V2      $(B nothrow)
     $(B override)
     $(B pure)
     $(B __gshared)
@@ -135,8 +132,7 @@ $(V2      $(B immutable)
     $(B static)
     $(B synchronized)
 
-$(V2
-$(GNAME Property):
+$(V2 $(GNAME Property):
     $(B @) $(GLINK PropertyIdentifier)
 
 $(GNAME PropertyIdentifier):
@@ -145,11 +141,20 @@ $(GNAME PropertyIdentifier):
     $(B trusted)
     $(B system)
     $(B disable)
-)
 
+$(GNAME TypeCtors):
+    $(GLINK TypeCtor)
+    $(GLINK TypeCtor) $(I TypeCtors)
+
+$(GNAME TypeCtor):
+    $(B const)
+    $(B immutable)
+    $(B inout)
+    $(B shared)
+)
 $(GNAME Type):
-    $(GLINK BasicType)
-    $(GLINK BasicType) $(GLINK Declarator2)
+    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType)
+    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType) $(GLINK Declarator2)
 
 $(GNAME Declarator2):
     $(GLINK BasicType2)$(OPT) $(GLINK DeclaratorSuffixes)$(OPT)
@@ -177,21 +182,17 @@ $(GNAME InOut):
 
 $(GNAME InOutX):
     $(B auto)
-    $(B const)
-    $(B final)
-$(V2      $(B immutable)
-)    $(B in)
-    $(B inout)
-    $(B lazy)
+$(V1      $(B const)
+)$(V2      $(GLINK TypeCtor)
+)    $(B final)
+    $(B in)
+$(V1          $(B inout)
+)    $(B lazy)
     $(B out)
     $(B ref)
     $(B scope)
-$(V2
-    $(B shared)
-)
 
-$(V2
-$(GNAME FunctionAttributes):
+$(V2 $(GNAME FunctionAttributes):
     $(GLINK FunctionAttribute)
     $(GLINK FunctionAttribute) $(I FunctionAttributes)
 
@@ -211,7 +212,6 @@ $(GNAME MemberFunctionAttribute):
     $(B shared)
     $(GLINK FunctionAttribute)
 )
-
 $(GNAME DefaultInitializerExpression):
     $(ASSIGNEXPRESSION)
 $(V2      $(B __FILE__)
