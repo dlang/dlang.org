@@ -143,13 +143,93 @@ void func()
 	contracts.
 	)
 
-<h2>Class Invariants</h2>
+<h2>Invariants</h2>
 
-	$(P Class invariants are used to specify characteristics of a class that
-	always
-	must be true (except while executing a member function).
-	They are described in $(DDLINK class, Classes, Classes).
+	$(P Invariants are used to specify characteristics of a class or struct that
+	always must be true (except while executing a member function).
+	For example, a class representing a date might have an invariant that the
+	day must be 1..31 and the hour must be 0..23:
 	)
+
+------
+class Date
+{
+  int day;
+  int hour;
+
+  $(B invariant()) {
+    assert(1 <= day && day <= 31);
+    assert(0 <= hour && hour < 24);
+  }
+}
+------
+
+	$(P The invariant is a contract saying that the asserts must hold true.
+	The invariant is checked when a class or struct constructor completes,
+	at the start of the class or struct destructor. For public or exported
+	functions, the order of execution is:
+	)
+
+	$(OL
+	$(LI preconditions)
+	$(LI invariant)
+	$(LI body)
+	$(LI invariant)
+	$(LI postconditions)
+	)
+
+	$(P The code in the invariant may not call any public non-static members
+	of the class or struct, either directly or indirectly.
+	Doing so will result in a stack overflow, as the invariant will wind
+	up being called in an infinitely recursive manner.
+	)
+
+	$(V2 $(P Invariants are implicitly const.))
+
+	$(P Since the invariant is called at the start of public or
+	exported members, such members should not be called from
+	constructors.
+	)
+
+------
+class Foo {
+  public void f() { }
+  private void g() { }
+
+  $(B invariant()) {
+    f();  // error, cannot call public member function from invariant
+    g();  // ok, g() is not public
+  }
+}
+------
+
+	The invariant can be checked with an <code>assert()</code> expression:
+
+	$(OL
+	$(LI classes need to pass a class object)
+	$(LI structs need to pass the address of an instance)
+	)
+
+------
+auto mydate = new Date(); //class
+auto s = S();             //struct
+...
+assert(mydate);           // check that class Date invariant holds
+assert(&s);               // check that struct S invariant holds
+------
+
+	Invariants contain assert expressions, and so when they fail,
+	they throw a $(D AssertError)s.
+	Class invariants are inherited, that is,
+	any class invariant is implicitly anded with the invariants of its base
+	classes.
+	<p>
+
+	There can be only one $(I Invariant) per class or struct.
+	<p>
+
+	When compiling for release, the invariant code is not generated, and the compiled program
+	runs at maximum speed.
 
 <h2>References</h2>
 
