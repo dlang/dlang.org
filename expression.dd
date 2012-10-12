@@ -58,13 +58,27 @@ $(V1
 -------------
 i = i++;
 c = a + (a = b);
-func(++i, ++i);
 -------------
         $(P If the compiler can determine that the result of an expression
         is illegally dependent on the order of evaluation, it can issue
         an error (but is not required to). The ability to detect these kinds
         of errors is a quality of implementation issue.
         )
+
+	$(P The evaluation order of function arguments is defined to be left to
+	right. This is similar to Java but different to C/C++ where the evaluation
+	order is unspecified. Thus, the following code is valid and well defined.
+	)
+-------------
+import std.conv;
+int i = 0;
+assert(text(++i, ++i) == "12"); // left to right evaluation of arguments
+-------------
+
+	$(P But even though the order of evaluation is well defined writing code that
+	depends on it is rarely recommended.
+	$(B Note that dmd currently does not comply with left to right evaluation of
+	function arguments.))
 
 <h2><a name="Expression">Expressions</a></h2>
 
