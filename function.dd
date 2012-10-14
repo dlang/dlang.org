@@ -347,6 +347,36 @@ class Bar : Foo {
         the function is called.
         )
 
+        $(P To avoid dynamic binding on member function call, insert
+        base class name before the member function name. For example:
+        )
+
+------
+class B {
+  int foo() { return 1; }
+}
+class C : B {
+  override int foo() { return 2; }
+
+  void test() {
+    assert(B.foo() == 1);  // translated to this.A.foo(), and
+                           // calls B.foo statically.
+    assert(C.foo() == 2);  // calls C.foo statically, even if
+                           // the actual instance of 'this' is D.
+  }
+}
+class D : C {
+  override int foo() { return 3; }
+}
+void main() {
+  auto d = new D();
+  assert(d.foo() == 3);    // calls D.foo
+  assert(d.B.foo() == 1);  // calls B.foo
+  assert(d.C.foo() == 2);  // calls C.foo
+  d.test();
+}
+------
+
 <h3>$(LNAME2 function-inheritance, Function Inheritance and Overriding)</h3>
 
         A functions in a derived class with the same name and parameter
