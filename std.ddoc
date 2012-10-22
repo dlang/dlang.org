@@ -71,6 +71,8 @@ function listanchors()
     {
         var a = document.anchors[i];
         var text = a.name;
+        // ignore anchors from DDOC_PSYMBOL
+        if (text[0] != '.') continue;
         if (hash[text] > 0) continue;
         hash[text] = 1;
         values[n++] = a.name
@@ -81,7 +83,7 @@ function listanchors()
     for(var i = 0; i < values.length; i++) {
         var a = values[i];
         newText += ' \x3Ca href="\x23' + a +
-            '"\x3E\x3Cspan class="d_psymbol"\x3E' + a + '\x3C/span\x3E\x3C/a\x3E';
+            '"\x3E\x3Cspan class="d_psymbol"\x3E' + a.slice(1) + '\x3C/span\x3E\x3C/a\x3E';
     }
     if (newText != "") newText = "\x3Cp\x3E\x3Cb\x3EJump to:\x3C/b\x3E" + newText + "\x3C/p\x3E";
     var a = document.getElementById("quickindex");
@@ -336,6 +338,7 @@ BIGOH = <b><i>&Omicron;</i>(</b>$(D $0)<b><i>)</i></b>
 GLOSSARY = $(LINK2 ../glossary.html#$0, $0)
 
 DDOC_PSYMBOL = <a name="$0"></a><span class="ddoc_psymbol">$0</span>
+DDOC_ANCHOR = <a name=".$1"></a>
 DDOC_DECL  = <dt class="d_decl">$0</dt>
 XREF = <a href="std_$1.html#$2">$(D std.$1.$2)</a>
 CXREF = <a href="core_$1.html#$2">$(D core.$1.$2)</a>
