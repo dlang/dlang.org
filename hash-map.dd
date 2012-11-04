@@ -167,6 +167,39 @@ struct MyString {
         $(D opEquals) and $(D opCmp) are consistent with each other when
         the struct/union objects are the same or not.)
 
+$(V2
+<h3>Runtime Initialization of Immutable AAs</h3>
+
+    $(P Immutable associative arrays are often desirable, but sometimes
+        initialization must be done at runtime. This can be achieved with
+        a constructor (static constructor depending on scope), 
+        a buffer associative array and $(D assumeUnique):)
+---------
+immutable long[string] aa;
+
+static this()
+{
+    import std.exception : assumeUnique;
+    import std.conv : to;
+
+    long[string] temp; // mutable buffer
+    foreach(i; 0 .. 10)
+    {
+        temp[to!string(i)] = i;
+    }
+
+    aa = assumeUnique(temp);
+}
+
+unittest
+{
+    assert(aa["1"] == 1);
+    assert(aa["5"] == 5);
+    assert(aa["9"] == 9);
+}
+---------
+)
+
 <h3>Properties</h3>
 
 Properties for associative arrays are:
@@ -364,4 +397,4 @@ Macros:
         DOLLAR=$
         STD_UNI=<a href="phobos/std_uni.html">std.uni</a>
         FOO=
-	CATEGORY_SPEC=$0
+        CATEGORY_SPEC=$0
