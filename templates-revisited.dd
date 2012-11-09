@@ -275,8 +275,9 @@ class Foo(
   S:T*,         // S must be pointer to T
   C:B,          // C must be of class B or derived
                 // from B
-  U:I,          // U must be a class that
-                // implements interface I
+  U:I,          // U must be interface I, or any interface
+                // or class which has interface I in its
+                // inheritance tree
   string str = "hello",
                 // string literal,
                 // default is "hello"
@@ -308,7 +309,7 @@ template Foo(T, U:int) ...
 Foo!(long)       // picks Foo(T)
 Foo!(long[])     // picks Foo(T), T is long[]
 Foo!(int*)       // picks Foo(T*), T is int
-Foo!(long,long)  // picks Foo(T, T)
+Foo!(long,long)  // picks Foo(T, U:T)
 Foo!(long,short) // picks Foo(T, U)
 Foo!(long,int)   // picks Foo(T, U:int)
 Foo!(int,int)    // ambiguous - Foo(T, U:T)
@@ -330,7 +331,7 @@ int g(double d) { return 1; }
 
 typedef double A;
 
-template&lt;class T&gt; B
+template&lt;class T&gt; struct B
 {
   typedef int A;
 };
@@ -355,11 +356,11 @@ Scoped lookup rules in D match the rules for the rest of the language:
 ---
 int g(double d) { return 1; }
 
-typedef double A;
+$(V1 typedef double A; )$(V2 alias double A; )
 
 class B(T)
 {
-  typedef int A;
+    $(V1 typedef int A; )$(V2 alias int A; )
 }
 
 class X(T) : B!(T)
@@ -368,7 +369,7 @@ class X(T) : B!(T)
   int T;           // ok, T redeclared as int
   int foo()
   {   char T;      // ok, T redeclared as char
-     return g(1);  // always returns 2
+      return g(1);  // always returns 2
   }
 };
 
@@ -544,7 +545,7 @@ an invalid type, the $(D T[]) fails and $(D is(T[])) returns false.
 )
 
 $(P
-Although $(SFINAE) can be used, the is expressions can test a type directly,
+Although $(SFINAE) can be used, the $(LINK2 expression.html#IsExpression, is expressions) can test a type directly,
 so it isn't even necessary to use a template to ask questions about a type:
 )
 
