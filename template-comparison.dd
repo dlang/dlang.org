@@ -25,7 +25,7 @@ are subject to change.)
 
 	$(TR
 	$(TD Argument list delineation)
-	$(TD Uses !( ), as in Foo!(int))
+	$(TD Uses !( ), as in Foo!(int). $(BR)Can omit parens when the argument is a single lexical token: Foo!int)
 	$(TD Uses &lt; &gt; as in Foo&lt;int&gt;)
 	$(TD No change)
 	)
@@ -178,7 +178,7 @@ template&lt;int n&gt; class factorial
     {
       result =
          n * factorial&lt;n-1&gt;::result
-    }; 
+    };
 };
 template&lt;&gt; class factorial&lt;1&gt;
 {
@@ -218,7 +218,7 @@ template&lt;int n&gt; class factorial
       result =
          n * factorial&lt;n-1&gt;::result
 #endif
-    }; 
+    };
 };
 )
 )
@@ -632,6 +632,29 @@ void foo(int t) { }
 	)
 
 	$(TR
+	$(TD Can extract arguments of
+	template instance)
+	$(TD Yes:
+---
+class Foo(T)
+{
+  static if (is(T x : T!A, A...))
+  {
+    pragma(msg, A);  // (int, float)
+  }
+}
+
+struct Bar(T1, T2) { }
+alias Bar!(int, float) BarInst;
+Foo!(BarInst) f;
+---
+    See $(LINK2 expression.html#IsExpression, is expressions).
+    )
+	$(TD No)
+	$(TD No change)
+	)
+
+	$(TR
 	$(TH Parsing Idiosyncracies)
 	$(TH D)
 	$(TH C++98)
@@ -644,7 +667,7 @@ void foo(int t) { }
 	$(TD Context-Free Grammar)
 	$(TD Yes:
 ---
-class Foo!(int i)
+class Foo(int i)
 {
    ...
 }
@@ -668,11 +691,11 @@ Foo&lt;3 $(B &gt;) 4&gt; f; // $(ERROR)
 	$(TD Distinguish template arguments from other operators)
 	$(TD Yes:
 ---
-class Foo!(T)
+class Foo(T)
 {
    ...
 }
-class Bar!(int i)
+class Bar(int i)
 {
    ...
 }
