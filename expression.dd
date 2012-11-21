@@ -1590,6 +1590,8 @@ $(GNAME IsExpression):
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D $(RPAREN))
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D :) $(GLINK TypeSpecialization) $(D $(RPAREN))
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D ==) $(GLINK TypeSpecialization) $(D $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D :) $(GLINK TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D ==) $(GLINK TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D $(RPAREN))
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D :) $(GLINK TypeSpecialization) $(D $(RPAREN))
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D ==) $(GLINK TypeSpecialization) $(D $(RPAREN))
@@ -1835,8 +1837,10 @@ void foo(bar x) {
 
         )
 
-        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D :) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))$(BR)
-        $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D ==) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
+        $(LI $(D is $(LPAREN)) $(I Type) $(D :) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))$(BR)
+             $(D is $(LPAREN)) $(I Type) $(D ==) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))$(BR)
+             $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D :) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))$(BR)
+             $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D ==) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
 
         $(P More complex types can be pattern matched; the
         $(GLINK2 template, TemplateParameterList) declares symbols based on the
@@ -1845,10 +1849,18 @@ void foo(bar x) {
         )
 
 ---
-import std.stdio;
+import std.stdio, std.typecons;
 
 void main() {
+  alias Tuple!(int, string) Tup;
   alias long[char[]] AA;
+
+  static if (is(Tup : TX!TL, alias TX, TL...))
+  {
+    writeln(is(TX!(int, long) == Tuple!(int, long)));  // true
+    writeln(typeid(TL[0]));  // int
+    writeln(typeid(TL[1]));  // immutable(char)[]
+  }
 
   static if (is(AA T : T[U], U : const char[]))
   {
