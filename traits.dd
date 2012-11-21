@@ -33,6 +33,11 @@ $(GNAME TraitsKeyword):
     $(GBLINK isRef)
     $(GBLINK isOut)
     $(GBLINK isLazy)
+    $(GBLINK isPublic)
+    $(GBLINK isPrivate)
+    $(GBLINK isProtected)
+    $(GBLINK isPackage)
+    $(GBLINK isExport)
     $(GBLINK hasMember)
     $(GBLINK identifier)
     $(GBLINK getMember)
@@ -271,6 +276,56 @@ void foolazy(lazy int x) {
   static assert(!__traits(isRef, x));
   static assert(!__traits(isOut, x));
   static assert(__traits(isLazy, x));
+}
+---
+
+$(H2 $(GNAME isPublic), $(GNAME isPrivate), $(GNAME isProtected), $(GNAME isPackage), $(GNAME isExport))
+
+	$(P Takes one argument. $(B true) is returned if that argument has
+	the corresponding access modifier, otherwise $(B false).
+	)
+
+---
+import std.stdio;
+
+struct Foo {
+  public int a;
+  private int b;
+  protected int c;
+  package int d;
+  export int e;
+}
+
+void main() {
+   writeln(__traits(isPublic, Foo.a)); //true
+   writeln(__traits(isPrivate, Foo.a)); //false
+   writeln(__traits(isProtected, Foo.a)); //false
+   writeln(__traits(isPackage, Foo.a)); //false
+   writeln(__traits(isExport, Foo.a)); //false
+
+   writeln(__traits(isPublic, Foo.b)); //false
+   writeln(__traits(isPrivate, Foo.b)); //true
+   writeln(__traits(isProtected, Foo.b)); //false
+   writeln(__traits(isPackage, Foo.b)); //false
+   writeln(__traits(isExport, Foo.b)); //false
+
+   writeln(__traits(isPublic, Foo.c)); //false
+   writeln(__traits(isPrivate, Foo.c)); //false
+   writeln(__traits(isProtected, Foo.c)); //true
+   writeln(__traits(isPackage, Foo.c)); //false
+   writeln(__traits(isExport, Foo.c)); //false
+
+   writeln(__traits(isPublic, Foo.d)); //false
+   writeln(__traits(isPrivate, Foo.d)); //false
+   writeln(__traits(isProtected, Foo.d)); //false
+   writeln(__traits(isPackage, Foo.d)); //true
+   writeln(__traits(isExport, Foo.d)); //false
+
+   writeln(__traits(isPublic, Foo.e)); //false
+   writeln(__traits(isPrivate, Foo.e)); //false
+   writeln(__traits(isProtected, Foo.e)); //false
+   writeln(__traits(isPackage, Foo.e)); //false
+   writeln(__traits(isExport, Foo.e)); //true
 }
 ---
 
