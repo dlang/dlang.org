@@ -96,6 +96,47 @@ struct Foo {
 Foo.init.a  // is 0
 Foo.init.b  // is 7
 ----------------
+
+	$(P $(B Note:) $(B .init) produces a default initialized object, not
+	default constructed. That means using $(B .init) is sometimes incorrect.)
+
+    $(OL
+	$(LI If $(B T) is a nested struct, the frame pointer in $(B T.init)
+	is $(B null).)
+
+----------------
+void main() {
+  int a;
+  struct S {
+    void foo() { a = 1; }  // access a variable in enclosing scope
+  }
+  S s1;           // OK. S() correctly initialize its frame pointer.
+  S s2 = S();     // OK. same as s1
+  S s3 = S.init;  // Bad. the frame pointer in s3 is null
+  s3.foo();       // Access violation
+}
+----------------
+
+	$(LI If $(B T) is a struct which has $(CODE @disable this();), $(B T.init)
+	might return logically incorrect object.)
+
+----------------
+struct S {
+  int a;
+  @disable this();
+  this(int n) { a = n; }
+  invariant() { assert(a > 0); }
+  void check() {}
+}
+void main() {
+//S s1;           // Error: variable s1 initializer required for type S
+//S s2 = S();     // Error: constructor S.this is not callable
+                  // because it is annotated with @disable
+  S s3 = S.init;  // Bad. s3.a == 0, and it violates the invariant of S.
+  s3.check();     // Assertion failure.
+}
+----------------
+    )
 )
 
 $(SECTION2 $(LNAME2 stringof, .stringof) Property,
