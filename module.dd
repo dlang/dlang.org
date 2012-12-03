@@ -129,14 +129,14 @@ module c.stdio;    // this is module $(B stdio) in the $(B c) package
 	system's directory and file names, and many file systems
 	are not case sensitive. All lower case package and module names will
 	minimize problems moving projects between dissimilar file systems.)
-    
+
     $(P If the file name of a module is an invalid module name (e.g. $(B foo-bar.d)),
     you may use a module declaration to set a valid module name:
-    
+
 ---------
 module foo_bar;
 ---------
-    
+
 	)
 
 <h2><a name="ImportDeclaration">Import Declaration</a></h2>
@@ -260,8 +260,12 @@ void test()
 	C, then C's names are not searched for. An import can
 	be specifically declared $(I public), when it will be
 	treated as if any imports of the module with the $(I ImportDeclaration)
-	also import the public imported modules.
-	)
+	also import the public imported modules.)
+
+    $(P All symbols from a publicly imported module are also aliased in the
+    importing module. This means that if module D imports module C, and
+    module C $(I publicly) imports module B which has the symbol $(I bar),
+    in module D you can access the symbol via $(B bar), $(B B.bar), and $(B C.bar).)
 
 ---
 module A;
@@ -286,8 +290,10 @@ bar();	// calls B.bar()
 module D;
 import C;
 ...
-foo();	// error, foo() is undefined
-bar();	// ok, calls B.bar()
+foo();	 // error, foo() is undefined
+bar();	 // ok, calls B.bar()
+B.bar(); // ditto
+C.bar(); // ok, calls C.bar() which is an alias to B.bar()
 ---
 
 <h3>Static Imports</h3>
