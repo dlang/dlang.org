@@ -450,6 +450,54 @@ union Info  // D code
 }
 ---
 
+<h2>Callbacks</h2>
+
+    $(P D can easily call C callbacks (function pointers), and C can call
+    callbacks provided by D code if the callback is an $(D extern(C)) function,
+    or some other linkage that both sides have agreed to (e.g. $(D extern(Windows))).)
+
+    $(P Here's an example of C code providing a callback to D code:)
+
+$(CCODE
+void someFunc(void *arg) { printf("Called someFunc!\n"); }  // C code
+typedef void (*Callback)(void *);
+extern "C" Callback getCallback(void)
+{
+    return someFunc;
+}
+)
+
+---
+alias extern(C) int function(int, int) Callback;  // D code
+extern(C) Callback getCallback();
+void main()
+{
+    Callback cb = getallback();
+    cb();  // invokes the callback
+}
+---
+
+    $(P And an example of D code providing a callback to C code:)
+
+$(CCODE
+extern "C" void printer(int (*callback)(int, int))  // C code
+{
+    printf("calling callback with 2 and 4 returns: %d\n", callback(2, 4));
+}
+)
+
+---
+alias extern(C) int function(int, int) Callback;  // D code
+extern(C) void printer(Callback callback);
+extern(C) int sum(int x, int y) { return x + y; }
+void main()
+{
+    printer(&sum);
+}
+---
+
+    $(P For more info about callbacks read the $(LINK2 function.html#closures, closures) section.)
+
 <h2>$(LNAME2 Using C Libraries, Using Existing C Libraries)</h2>
 
 	$(P Since D can call C code directly, it can also call any C library
