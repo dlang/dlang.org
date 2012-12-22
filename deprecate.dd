@@ -40,6 +40,7 @@ $(SPEC_S Deprecated Features,
     $(TROW $(DEPLINK .sort and .reverse properties for arrays),               future, &nbsp;, &nbsp;, &nbsp;, &nbsp;)
     $(TROW $(DEPLINK delete),                                                 future, &nbsp;, &nbsp;, &nbsp;, &nbsp;)
     $(TROW $(DEPLINK overriding without override),                            future, &nbsp;, &nbsp;, &nbsp;, &nbsp;)
+    $(TROW $(DEPLINK scope for allocating classes on the stack),              future, &nbsp;, &nbsp;, &nbsp;, &nbsp;)
 	)
 
 	$(DL
@@ -620,6 +621,52 @@ class B : A
 	)
 <h4>Rationale</h4>
 	$(P Making the 'override' attribute mandatory makes it explicit, and can catch errors when a base class function is accidentally overridden.
+    )
+
+<h3>$(DEPNAME scope for allocating classes on the stack)</h3>
+	The $(D scope) keyword can be used to allocate class objects on the stack:
+---
+class A
+{
+    int x;
+    this(int x) { this.x = x; }
+}
+
+void main()
+{
+    A obj;
+    {
+        scope A a = new A(1);
+        obj = a;
+    }
+    assert(obj.x == 1);  // fails, 'a' has been destroyed
+}
+---
+<h4>Corrective Action</h4>
+	$(P Use $(B scoped) from std.typecons
+---
+class A
+{
+    this(int x) { }
+}
+void main()
+{
+    A a = scoped!A(1);
+}
+---
+	)
+<h4>Rationale</h4>
+	$(P $(D scope) was an unsafe feature. A reference to a scoped class could easily
+        be returned from a function without errors, which would make using such
+        an object undefined behavior due to the object being destroyed after
+        exiting the scope of the function it was allocated in. To discourage it
+        from general-use but still allow usage when needed a library solution was
+        implemented.
+    )
+        
+    $(P 
+        Note that $(D scope) for other usages (e.g. scoped variables) is unrelated
+        to this feature and will not be deprecated.
     )
 
 
