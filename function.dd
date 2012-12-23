@@ -264,29 +264,25 @@ void foo() {
 
 <h3>$(LNAME2 virtual-functions, Virtual Functions)</h3>
 
-        $(P Virtual functions are functions that are called indirectly
-        through a function
-        pointer table, called a vtbl[], rather than directly.
-        All non-static non-private non-template member functions are virtual.
-        This may sound
-        inefficient, but since the D compiler knows all of the class
-        hierarchy when generating code, all
-        functions that are not overridden can be optimized to be non-virtual.
-        In fact, since
-        C++ programmers tend to "when in doubt, make it virtual", the D way of
-        "make it
-        virtual unless we can prove it can be made non-virtual" results, on
-        average, in many
-        more direct function calls. It also results in fewer bugs caused by
-        not declaring
-        a function virtual that gets overridden.
+        $(P Virtual functions are functions that are called indirectly through a
+        function pointer table, called a vtbl[], rather than directly. All
+        $(D public) and $(D protected) member functions which are non-static and
+        aren't templatized are virtual unless the compiler can determine that
+        they will never be overridden (e.g. they're marked with $(D final) and
+        don't override any functions in a base class), in which case, it will
+        make them non-virtual. This results in fewer bugs caused by not
+        declaring a function virtual and then overriding it anyway.
         )
 
-        $(P Functions with non-D linkage cannot be virtual, and hence cannot be
+        $(P Member functions which are $(D private) or $(D package) are never
+        virtual, and hence cannot be overridden.
+        )
+
+        $(P Functions with non-D linkage cannot be virtual and hence cannot be
         overridden.
         )
 
-        $(P Member template functions cannot be virtual, and hence cannot be
+        $(P Member template functions cannot be virtual and hence cannot be
         overridden.
         )
 
