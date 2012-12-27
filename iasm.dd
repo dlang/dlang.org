@@ -332,8 +332,9 @@ add  int ptr [EAX],7  ;
 
 <h3>Struct/Union/Class Member Offsets</h3>
 
-	$(P To access members of an aggregate, given a pointer to the aggregate
-	is in a register, use the qualified name of the member:
+    $(P To access members of an aggregate, given a pointer to the aggregate
+    is in a register, use the $(B .offsetof) property of the qualified name
+    of the member:
 	)
 
 --------------
@@ -341,8 +342,12 @@ struct Foo { int a,b,c; }
 int bar(Foo *f) {
   asm {
     mov EBX,f          ;
-    mov EAX,Foo.b[EBX] ;
+    mov EAX,Foo.b.offsetof[EBX] ;
   }
+}
+void main() {
+    Foo f = Foo(0, 2, 0);
+    assert(bar(&f) == 2);
 }
 --------------
 
