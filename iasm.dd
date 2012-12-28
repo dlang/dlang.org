@@ -341,13 +341,31 @@ add  int ptr [EAX],7  ;
 struct Foo { int a,b,c; }
 int bar(Foo *f) {
   asm {
-    mov EBX,f          ;
+    mov EBX,f                   ;
     mov EAX,Foo.b.offsetof[EBX] ;
   }
 }
 void main() {
     Foo f = Foo(0, 2, 0);
     assert(bar(&f) == 2);
+}
+--------------
+
+    $(P Alternatively, inside the scope of an aggregate, only the member name is needed:)
+
+--------------
+struct Foo { // or class
+  int a,b,c;
+  int bar() {
+    asm {
+      mov EBX, this   ;
+      mov EAX, b[EBX] ;
+    }
+  }
+}
+void main() {
+    Foo f = Foo(0, 2, 0);
+    assert(f.bar() == 2);
 }
 --------------
 
