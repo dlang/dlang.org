@@ -1,9 +1,9 @@
 Ddoc
 
-$(SPEC_S Inline Assembler,
+$(SPEC_S D x86 Inline Assembler,
 
 	<a href="http://www.digitalmars.com/gift/index.html" title="Gift Shop" target="_top">
-	<img src="d5.gif" border=0 align=right alt="Some Assembly Required" width=284 height=186>
+	<img src="images/d5.gif" border=0 align=right alt="Some Assembly Required" width=284 height=186>
 	</a>
 
 	$(P D, being a systems programming language, provides an inline
@@ -19,8 +19,10 @@ $(SPEC_S Inline Assembler,
 	argument passing conventions, etc.
 	)
 
-	$(P This document describes the x86 implementation of the inline
-	assembler.
+	$(P This document describes the $(B x86) and $(B x86_64) implementations of
+	the inline assembler. The inline assembler platform support that a compiler
+	provides is indicated by the $(B D_InlineAsm_X86) and
+	$(B D_InlineAsm_X86_64) version identifiers, respectively.
 	)
 
 $(GRAMMAR
@@ -150,8 +152,30 @@ $(GNAME Register):
     $(B TR3) $(B TR4) $(B TR5) $(B TR6) $(B TR7)
     $(B ST)
     $(B ST(0)) $(B ST(1)) $(B ST(2)) $(B ST(3)) $(B ST(4)) $(B ST(5)) $(B ST(6)) $(B ST(7))
-    $(B MM0) $(B MM1) $(B MM2) $(B MM3) $(B MM4) $(B MM5) $(B MM6) $(B MM7)
+    $(B MM0)  $(B MM1)  $(B MM2)  $(B MM3)  $(B MM4)  $(B MM5)  $(B MM6)  $(B MM7)
     $(B XMM0) $(B XMM1) $(B XMM2) $(B XMM3) $(B XMM4) $(B XMM5) $(B XMM6) $(B XMM7)
+)
+
+    $(P x86_64 adds these additional registers.)
+
+$(GRAMMAR
+$(GNAME Register64):
+    $(B RAX)  $(B RBX)  $(B RCX)  $(B RDX)
+    $(B BPL)  $(B RBP)
+    $(B SPL)  $(B RSP)
+    $(B DIL)  $(B RDI)
+    $(B SIL)  $(B RSI)
+    $(B R8B)  $(B R8W)  $(B R8D)  $(B R8)
+    $(B R9B)  $(B R9W)  $(B R9D)  $(B R9)
+    $(B R10B) $(B R10W) $(B R10D) $(B R10)
+    $(B R11B) $(B R11W) $(B R11D) $(B R11)
+    $(B R12B) $(B R12W) $(B R12D) $(B R12)
+    $(B R13B) $(B R13W) $(B R13D) $(B R13)
+    $(B R14B) $(B R14W) $(B R14D) $(B R14)
+    $(B R15B) $(B R15W) $(B R15D) $(B R15)
+    $(B XMM8) $(B XMM9) $(B XMM10) $(B XMM11) $(B XMM12) $(B XMM13) $(B XMM14) $(B XMM15)
+    $(B YMM0) $(B YMM1) $(B YMM2)  $(B YMM3)  $(B YMM4)  $(B YMM5)  $(B YMM6)  $(B YMM7)
+    $(B YMM8) $(B YMM9) $(B YMM10) $(B YMM11) $(B YMM12) $(B YMM13) $(B YMM14) $(B YMM15)
 )
 
 <h3>Special Cases</h3>
@@ -276,6 +300,7 @@ $(GNAME AsmPrimaryExp):
     $(B __LOCAL_SIZE)
     $(B $)
     $(GLINK Register)
+    $(GLINK Register64)
     $(I DotIdentifier)
 
 $(GNAME DotIdentifier):
@@ -1126,6 +1151,15 @@ jmp  $  ;
 	<td>pswapd</td>
 	</tr>
 	)
+
+<h3>SIMD</h3>
+
+    $(P SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2 and AVX are supported.)
+
+$(COMMENT
+<h3>Other</h3>
+    $(P AES, CMUL, FSGSBASE, RDRAND, FP16C and FMA are supported.)
+)
 
 $(COMMENT
 SSE4.1
