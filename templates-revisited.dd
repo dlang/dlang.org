@@ -8,11 +8,12 @@ $(I by Walter Bright, $(LINK http://www.digitalmars.com/d))
 <br>
 <br>
 
-$(BLOCKQUOTE Richard Deeman,
-What I am going to tell you about is what we teach our programming students in
+$(BLOCKQUOTE
+"What I am going to tell you about is what we teach our programming students in
 the third or fourth year of graduate school... It is my task to convince you not
 to turn away because you don't understand it. You see my programming students
-don't understand it... That is because I don't understand it. Nobody does.
+don't understand it... That is because I don't understand it. Nobody does."<br>
+-- Richard Deeman
 )
 </center>
 
@@ -68,8 +69,8 @@ a&lt;b&lt;c&gt;&gt;d;
 
 $(P
 are syntactically ambiguous, both to the compiler and the programmer.
-If you run across $(D a&lt;b,c&gt;d;) in unfamiliar code, you've got to slog through
-an arbitrarily large amount of declarations and $(D .h) files to figure out
+If you run across $(TT a&lt;b,c&gt;d;) in unfamiliar code, you've got to slog through
+an arbitrarily large amount of declarations and $(TT .h) files to figure out
 if it is a template or not.
 How much effort has been expended by programmers, compiler writers, and
 language standard writers to deal with this?
@@ -95,7 +96,7 @@ a!(b,c)
 $(P
 is syntactically unambiguous. This makes it easy to parse, easy to generate
 reasonable error messages for, and makes it easy for someone inspecting the
-code to determine that yes, $(D a) must be a template.
+code to determine that yes, $(TT a) must be a template.
 )
 
 
@@ -132,12 +133,12 @@ template Foo(T, U)
 
   T abc;
 
-  typedef T* Footype;	// any declarations can be templated
+  typedef T* Footype;   // any declarations can be templated
 }
 ----
 
 $(P
-The $(D Foo) forms a name space for the templates, which are accessed by,
+The $(TT Foo) forms a name space for the templates, which are accessed by,
 for example:
 )
 
@@ -193,7 +194,7 @@ definition, and an exported template.
 Because D has a true module system, rather than textual #include files,
 there are only template definitions in D. The need for template declarations
 and export is irrelevant. For example, given a template definition in
-module $(D A):
+module $(TT A):
 )
 
 ---
@@ -206,7 +207,7 @@ template Foo(T)
 ---
 
 $(P
-it can be accessed from module $(D B) like:
+it can be accessed from module $(TT B) like:
 )
 
 ---
@@ -275,10 +276,9 @@ class Foo(
   S:T*,         // S must be pointer to T
   C:B,          // C must be of class B or derived
                 // from B
-  U:I,          // U must be interface I, or any interface
-                // or class which has interface I in its
-                // inheritance tree
-  string str = "hello",
+  U:I,          // U must be a class that
+                // implements interface I
+  char[] string = "hello",
                 // string literal,
                 // default is "hello"
   alias A = B   // A is any symbol
@@ -294,7 +294,7 @@ class Foo(
 
 $(P
 Partial and explicit specialization work as they do in C++, except that
-there is no notion of a $(SINGLEQUOTE primary) template. All the templates with the
+there is no notion of a 'primary' template. All the templates with the
 same name are examined upon template instantiation, and the one with the
 best fit of arguments to parameters is instantiated.
 )
@@ -309,7 +309,7 @@ template Foo(T, U:int) ...
 Foo!(long)       // picks Foo(T)
 Foo!(long[])     // picks Foo(T), T is long[]
 Foo!(int*)       // picks Foo(T*), T is int
-Foo!(long,long)  // picks Foo(T, U:T)
+Foo!(long,long)  // picks Foo(T, T)
 Foo!(long,short) // picks Foo(T, U)
 Foo!(long,int)   // picks Foo(T, U:int)
 Foo!(int,int)    // ambiguous - Foo(T, U:T)
@@ -331,7 +331,7 @@ int g(double d) { return 1; }
 
 typedef double A;
 
-template&lt;class T&gt; struct B
+template&lt;class T&gt; B
 {
   typedef int A;
 };
@@ -346,7 +346,7 @@ template&lt;class T&gt; struct X : B&lt;T&gt;
   }
 };
 
-int g(int i) { return 2; }	// this definition not seen by X
+int g(int i) { return 2; }      // this definition not seen by X
 )
 
 $(P
@@ -356,11 +356,11 @@ Scoped lookup rules in D match the rules for the rest of the language:
 ---
 int g(double d) { return 1; }
 
-$(V1 typedef double A; )$(V2 alias double A; )
+typedef double A;
 
 class B(T)
 {
-    $(V1 typedef int A; )$(V2 alias int A; )
+  typedef int A;
 }
 
 class X(T) : B!(T)
@@ -369,11 +369,11 @@ class X(T) : B!(T)
   int T;           // ok, T redeclared as int
   int foo()
   {   char T;      // ok, T redeclared as char
-      return g(1);  // always returns 2
+     return g(1);  // always returns 2
   }
 };
 
-int g(int i) { return 2; }	// functions can be forward referenced
+int g(int i) { return 2; }      // functions can be forward referenced
 ---
 
 
@@ -449,11 +449,11 @@ template factorial(int n)
 
 $(P
 reducing 13 lines of code to an arguably much cleaner 7 lines.
-$(D static if)'s are the equivalent of C++'s $(D #if).
-But $(D #if) cannot access template
+$(TT static if)'s are the equivalent of C++'s $(TT #if).
+But $(TT #if) cannot access template
 arguments, so all template conditional compilation must be handled with
 partial and explicitly specialized templates.
-$(D static if) dramatically simplifies
+$(TT static if) dramatically simplifies
 such constructions.
 )
 
@@ -504,14 +504,14 @@ void test()
 )
 
 $(P
-Template $(D IsFunctionT) relies on two side effects to achieve its result.
+Template $(TT IsFunctionT) relies on two side effects to achieve its result.
 First, it relies on arrays of functions being an invalid C++ type.
-Thus, if $(D U) is a function type, the second $(D test) will not be selected
+Thus, if $(TT U) is a function type, the second $(TT test) will not be selected
 since to do so would cause an error ($(SFINAE)).
-The first $(D test) will be selected.
-If $(D U) is not a function type, the second $(D test) is a better fit than ... .
-Next, it is determined which $(D test) was selected by examining the size
-of the return value, i.e. $(D sizeof(One)) or $(D sizeof(Two)).
+The first $(TT test) will be selected.
+If $(TT U) is not a function type, the second $(TT test) is a better fit than ... .
+Next, it is determined which $(TT test) was selected by examining the size
+of the return value, i.e. $(TT sizeof(One)) or $(TT sizeof(Two)).
 Unfortunately, template metaprogramming in C++ often seems to be relying
 on side effects rather than being able to expressly code what is desired.
 )
@@ -538,14 +538,14 @@ void test()
 ---
 
 $(P
-The $(D is(T[])) is the equivalent of $(SFINAE).
-It tries to build an array of $(D T),
-and if $(D T) is a function type, it is an array of functions. Since this is
-an invalid type, the $(D T[]) fails and $(D is(T[])) returns false.
+The $(TT is(T[])) is the equivalent of $(SFINAE).
+It tries to build an array of $(TT T),
+and if $(TT T) is a function type, it is an array of functions. Since this is
+an invalid type, the $(TT T[]) fails and $(TT is(T[])) returns false.
 )
 
 $(P
-Although $(SFINAE) can be used, the $(LINK2 expression.html#IsExpression, is expressions) can test a type directly,
+Although $(SFINAE) can be used, the is expressions can test a type directly,
 so it isn't even necessary to use a template to ask questions about a type:
 )
 
@@ -563,7 +563,7 @@ void test()
 $(P
 Let's move on to things that are impractical with templates in C++.
 For example, this template returns the square root of
-real number $(D x) using the Babylonian method:
+real number $(TT x) using the Babylonian method:
 )
 
 ---
@@ -610,9 +610,9 @@ real sqrt(real x)
     real root = x / 2;
     for (int ntries = 0; ntries < 5; ntries++)
     {
-	if (root * root - x == 0)
-	    break;
-	root = (root + x / root) / 2;
+        if (root * root - x == 0)
+            break;
+        root = (root + x / root) / 2;
     }
     return root;
 }
@@ -627,22 +627,22 @@ converts an integer to a string at compile time:
 )
 
 ---
-template decimalDigit(int n)	// [3]
+template decimalDigit(int n)    // [3]
 {
-  const string decimalDigit = "0123456789"[n..n+1];
+  const char[] decimalDigit = "0123456789"[n..n+1];
 }
 
 template itoa(long n)
 {
   static if (n < 0)
-     const string itoa = "-" ~ itoa!(-n);
+     const char[] itoa = "-" ~ itoa!(-n);
   else static if (n < 10)
-     const string itoa = decimalDigit!(n);
+     const char[] itoa = decimalDigit!(n);
   else
-     const string itoa = itoa!(n/10L) ~ decimalDigit!(n%10L);
+     const char[] itoa = itoa!(n/10L) ~ decimalDigit!(n%10L);
 }
 
-string foo()
+char[] foo()
 {
   return itoa!(264);   // returns "264"
 }
@@ -727,11 +727,11 @@ const int testFail = -1;
  * regular expression to it, returning an array of matches.
  */
 
-template regexMatch(string pattern)
+template regexMatch(char[] pattern)
 {
-  string[] regexMatch(string str)
+  char[][] regexMatch(char[] str)
   {
-    string[] results;
+    char[][] results;
     int n = regexCompile!(pattern).fn(str);
     if (n != testFail && n > 0)
       results ~= str[0..n];
@@ -744,23 +744,23 @@ template regexMatch(string pattern)
  * to match each predicate of the regular expression.
  *
  * Params:
- *	string str	the input string to match against
+ *      char[] str      the input string to match against
  *
  * Returns:
- *	testFail	failed to have a match
- *	n >= 0		matched n characters
+ *      testFail        failed to have a match
+ *      n >= 0          matched n characters
  */
 
 /// Always match
 template testEmpty()
 {
-  int testEmpty(string str) { return 0; }
+  int testEmpty(char[] str) { return 0; }
 }
 
 /// Match if testFirst(str) and testSecond(str) match
 template testUnion(alias testFirst, alias testSecond)
 {
-  int testUnion(string str)
+  int testUnion(char[] str)
   {
     int n1 = testFirst(str);
     if (n1 != testFail)
@@ -774,9 +774,9 @@ template testUnion(alias testFirst, alias testSecond)
 }
 
 /// Match if first part of str[] matches text[]
-template testText(string text)
+template testText(char[] text)
 {
-  int testText(string str)
+  int testText(char[] str)
   {
     if (str.length &&
         text.length <= str.length &&
@@ -790,7 +790,7 @@ template testText(string text)
 /// Match if testPredicate(str) matches 0 or more times
 template testZeroOrMore(alias testPredicate)
 {
-  int testZeroOrMore(string str)
+  int testZeroOrMore(char[] str)
   {
     if (str.length == 0)
       return 0;
@@ -807,9 +807,9 @@ template testZeroOrMore(alias testPredicate)
 }
 
 /// Match if term1[0] <= str[0] <= term2[0]
-template testRange(string term1, string term2)
+template testRange(char[] term1, char[] term2)
 {
-  int testRange(string str)
+  int testRange(char[] str)
   {
     if (str.length && str[0] >= term1[0]
                    && str[0] <= term2[0])
@@ -819,9 +819,9 @@ template testRange(string term1, string term2)
 }
 
 /// Match if ch[0]==str[0]
-template testChar(string ch)
+template testChar(char[] ch)
 {
-  int testChar(string str)
+  int testChar(char[] str)
   {
     if (str.length && str[0] == ch[0])
       return 1;
@@ -832,7 +832,7 @@ template testChar(string ch)
 /// Match if str[0] is a word character
 template testWordChar()
 {
-  int testWordChar(string str)
+  int testWordChar(char[] str)
   {
     if (str.length &&
         (
@@ -856,27 +856,27 @@ template testWordChar()
  * the end or a special character.
  */
 
-template parseTextToken(string pattern)
+template parseTextToken(char[] pattern)
 {
   static if (pattern.length > 0)
   {
     static if (isSpecial!(pattern))
-      const string parseTextToken = "";
+      const char[] parseTextToken = "";
     else
-      const string parseTextToken =
+      const char[] parseTextToken =
            pattern[0..1] ~ parseTextToken!(pattern[1..$]);
   }
   else
-    const string parseTextToken="";
+    const char[] parseTextToken="";
 }
 
 /**
  * Parses pattern[] up to and including terminator.
  * Returns:
- *	token[]	 	everything up to terminator.
- *	consumed	number of characters in pattern[] parsed
+ *      token[]         everything up to terminator.
+ *      consumed        number of characters in pattern[] parsed
  */
-template parseUntil(string pattern,char terminator,bool fuzzy=false)
+template parseUntil(char[] pattern,char terminator,bool fuzzy=false)
 {
   static if (pattern.length > 0)
   {
@@ -884,9 +884,9 @@ template parseUntil(string pattern,char terminator,bool fuzzy=false)
     {
       static if (pattern.length > 1)
       {
-        const string nextSlice = pattern[2 .. $];
+        const char[] nextSlice = pattern[2 .. $];
         alias parseUntil!(nextSlice,terminator,fuzzy) next;
-        const string token = pattern[0 .. 2] ~ next.token;
+        const char[] token = pattern[0 .. 2] ~ next.token;
         const uint consumed = next.consumed+2;
       }
       else
@@ -897,20 +897,20 @@ template parseUntil(string pattern,char terminator,bool fuzzy=false)
     }
     else static if (pattern[0] == terminator)
     {
-      const string token="";
+      const char[] token="";
       const uint consumed = 1;
     }
     else
     {
-      const string nextSlice = pattern[1 .. $];
+      const char[] nextSlice = pattern[1 .. $];
       alias parseUntil!(nextSlice,terminator,fuzzy) next;
-      const string token = pattern[0..1] ~ next.token;
+      const char[] token = pattern[0..1] ~ next.token;
       const uint consumed = next.consumed+1;
     }
   }
   else static if (fuzzy)
   {
-    const string token = "";
+    const char[] token = "";
     const uint consumed = 0;
   }
   else
@@ -931,7 +931,7 @@ template parseUntil(string pattern,char terminator,bool fuzzy=false)
  *   consumed = number of characters in pattern[] parsed
  */
 
-template regexCompileCharClass2(string pattern)
+template regexCompileCharClass2(char[] pattern)
 {
   static if (pattern.length > 0)
   {
@@ -943,7 +943,7 @@ template regexCompileCharClass2(string pattern)
         {
           alias testRange!(pattern[0..1], pattern[2..3]) termFn;
           const uint thisConsumed = 3;
-          const string remaining = pattern[3 .. $];
+          const char[] remaining = pattern[3 .. $];
         }
         else // length is 2
         {
@@ -956,14 +956,14 @@ template regexCompileCharClass2(string pattern)
       {
         alias testChar!(pattern[0..1]) termFn;
         const uint thisConsumed = 1;
-        const string remaining = pattern[1 .. $];
+        const char[] remaining = pattern[1 .. $];
       }
     }
     else
     {
       alias testChar!(pattern[0..1]) termFn;
       const uint thisConsumed = 1;
-      const string remaining = pattern[1 .. $];
+      const char[] remaining = pattern[1 .. $];
     }
     alias regexCompileCharClassRecurse!(termFn,remaining) recurse;
     alias recurse.fn fn;
@@ -987,7 +987,7 @@ template regexCompileCharClass2(string pattern)
  *  consumed = number of characters in pattern[] parsed
  */
 
-template regexCompileCharClassRecurse(alias termFn,string pattern)
+template regexCompileCharClassRecurse(alias termFn,char[] pattern)
 {
   static if (pattern.length > 0 && pattern[0] != ']')
   {
@@ -1011,7 +1011,7 @@ template regexCompileCharClassRecurse(alias termFn,string pattern)
  *  consumed = number of characters in pattern[] parsed
  */
 
-template regexCompileCharClass(string pattern)
+template regexCompileCharClass(char[] pattern)
 {
   static if (pattern.length > 0)
   {
@@ -1044,7 +1044,7 @@ template regexCompileCharClass(string pattern)
  *  consumed = number of characters in pattern[] parsed
  */
 
-template regexCompilePredicate(alias test, string pattern)
+template regexCompilePredicate(alias test, char[] pattern)
 {
   static if (pattern.length > 0 && pattern[0] == '*')
   {
@@ -1067,7 +1067,7 @@ template regexCompilePredicate(alias test, string pattern)
  *  consumed = number of characters in pattern[] parsed
  */
 
-template regexCompileEscape(string pattern)
+template regexCompileEscape(char[] pattern)
 {
   static if (pattern.length > 0)
   {
@@ -1102,37 +1102,37 @@ template regexCompileEscape(string pattern)
  *  fn = generated function
  */
 
-template regexCompile(string pattern)
+template regexCompile(char[] pattern)
 {
   static if (pattern.length > 0)
   {
     static if (pattern[0] == '[')
     {
-      const string charClassToken =
+      const char[] charClassToken =
           parseUntil!(pattern[1 .. $],']').token;
       alias regexCompileCharClass!(charClassToken) charClass;
-      const string token = pattern[0 .. charClass.consumed+2];
-      const string next = pattern[charClass.consumed+2 .. $];
+      const char[] token = pattern[0 .. charClass.consumed+2];
+      const char[] next = pattern[charClass.consumed+2 .. $];
       alias charClass.fn test;
     }
     else static if (pattern[0] == '\\')
     {
       alias regexCompileEscape!(pattern[1..pattern.length]) escapeSequence;
-      const string token = pattern[0 .. escapeSequence.consumed+1];
-      const string next =
+      const char[] token = pattern[0 .. escapeSequence.consumed+1];
+      const char[] next =
           pattern[escapeSequence.consumed+1 .. $];
       alias escapeSequence.fn test;
     }
     else
     {
-      const string token = parseTextToken!(pattern);
+      const char[] token = parseTextToken!(pattern);
       static assert(token.length > 0);
-      const string next = pattern[token.length .. $];
+      const char[] next = pattern[token.length .. $];
       alias testText!(token) test;
     }
 
     alias regexCompilePredicate!(test, next) term;
-    const string remaining = next[term.consumed .. next.length];
+    const char[] remaining = next[term.consumed .. next.length];
 
     alias regexCompileRecurse!(term,remaining).fn fn;
   }
@@ -1140,7 +1140,7 @@ template regexCompile(string pattern)
     alias testEmpty!() fn;
 }
 
-template regexCompileRecurse(alias term,string pattern)
+template regexCompileRecurse(alias term,char[] pattern)
 {
   static if (pattern.length > 0)
   {
@@ -1152,7 +1152,7 @@ template regexCompileRecurse(alias term,string pattern)
 }
 
 /// Utility function for parsing
-template isSpecial(string pattern)
+template isSpecial(char[] pattern)
 {
   static if (
     pattern[0] == '*' ||
@@ -1176,32 +1176,32 @@ template isSpecial(string pattern)
 <h2>More Template Metaprogramming</h2>
 
     $(OL
-	$(LI Tomasz Stachowiak's compile time $(LINK2 http://h3.gd/ctrace/, raytracer).)
+        $(LI Tomasz Stachowiak's compile time $(LINK2 http://www-users.mat.uni.torun.pl/~h3r3tic/ctrace/, raytracer).)
 
-	$(LI Don Clugston's compile time $(LINK2 http://www.99-bottles-of-beer.net/language-d-1212.html, 99 Bottles of Beer).)
+        $(LI Don Clugston's compile time $(LINK2 http://www.99-bottles-of-beer.net/language-d-1212.html?PHPSESSID=1c686874f412f908530c69924496192d, 99 Bottles of Beer).)
     )
 
 <h2>References</h2>
 
-	$(P [1] D programming language,
-	see $(LINK http://www.digitalmars.com/d/)
-	)
+        $(P [1] D programming language,
+        see $(LINK http://www.digitalmars.com/d/)
+        )
 
-	$(P [2] Don Clugston's &pi; calculator, see
-	$(LINK http://trac.dsource.org/projects/ddl/browser/trunk/meta/demo/calcpi.d)
-	)
+        $(P [2] Don Clugston's &pi; calculator, see
+        $(LINK http://trac.dsource.org/projects/ddl/browser/trunk/meta/demo/calcpi.d)
+        )
 
-	$(P [3] Don Clugston's decimaldigit and itoa,
-	see $(LINK http://trac.dsource.org/projects/ddl/browser/trunk/meta/conv.d)
-	)
+        $(P [3] Don Clugston's decimaldigit and itoa,
+        see $(LINK http://trac.dsource.org/projects/ddl/browser/trunk/meta/conv.d)
+        )
 
-	$(P [4] Eric Niebler's Boost.Xpressive regular expression template
-	library is at $(LINK http://boost-sandbox.sourceforge.net/libs/xpressive/doc/html/index.html)
-	)
+        $(P [4] Eric Niebler's Boost.Xpressive regular expression template
+        library is at $(LINK http://boost-sandbox.sourceforge.net/libs/xpressive/doc/html/index.html)
+        )
 
-	$(P [5] Eric Anderton's Regular Expression template library
-	for D is at $(LINK http://trac.dsource.org/projects/ddl/browser/trunk/meta/regex.d)
-	)
+        $(P [5] Eric Anderton's Regular Expression template library
+        for D is at $(LINK http://trac.dsource.org/projects/ddl/browser/trunk/meta/regex.d)
+        )
 
 <h2>Acknowledgements</h2>
 
@@ -1213,8 +1213,7 @@ of Don Clugston, Eric Anderton and Matthew Wilson.
 )
 
 Macros:
-	TITLE=Templates Revisited
-	WIKI=TemplatesRevisited
-	CATEGORY_ARTICLES=$0
+        TITLE=Templates Revisited
+        WIKI=TemplatesRevisited
 
 

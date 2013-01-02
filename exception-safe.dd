@@ -20,9 +20,9 @@ for a few statements, then released:
 void abc()
 {
     Mutex m = new Mutex;
-    lock(m);	// lock the mutex
-    foo();	// do processing
-    unlock(m);	// unlock the mutex
+    lock(m);    // lock the mutex
+    foo();      // do processing
+    unlock(m);  // unlock the mutex
 }
 ---
 
@@ -47,13 +47,13 @@ class Lock
 
     this(Mutex m)
     {
-	this.m = m;
-	lock(m);
+        this.m = m;
+        lock(m);
     }
 
     ~this()
     {
-	unlock(m);
+        unlock(m);
     }
 }
 
@@ -61,7 +61,7 @@ void abc()
 {
     Mutex m = new Mutex;
     scope L = new Lock(m);
-    foo();	// do processing
+    foo();      // do processing
 }
 ---
 
@@ -73,14 +73,14 @@ The try-finally solution to the same problem looks like:
 void abc()
 {
     Mutex m = new Mutex;
-    lock(m);	// lock the mutex
+    lock(m);    // lock the mutex
     try
     {
-	foo();	// do processing
+        foo();  // do processing
     }
     finally
     {
-	unlock(m);	// unlock the mutex
+        unlock(m);      // unlock the mutex
     }
 }
 ---
@@ -106,10 +106,10 @@ void abc()
 {
     Mutex m = new Mutex;
 
-    lock(m);	// lock the mutex
-    scope(exit) unlock(m);	// unlock on leaving the scope
+    lock(m);    // lock the mutex
+    scope(exit) unlock(m);      // unlock on leaving the scope
 
-    foo();	// do processing
+    foo();      // do processing
 }
 ---
 
@@ -157,13 +157,13 @@ class FooX
 
     this()
     {
-	f = dofoo();
+        f = dofoo();
     }
 
     ~this()
     {
-	if (!commit)
-	    dofoo_undo(f);
+        if (!commit)
+            dofoo_undo(f);
     }
 }
 
@@ -187,13 +187,13 @@ Transaction abc()
     f = dofoo();
     try
     {
-	b = dobar();
-	return Transaction(f, b);
+        b = dobar();
+        return Transaction(f, b);
     }
     catch (Object o)
     {
-	dofoo_undo(f);
-	throw o;
+        dofoo_undo(f);
+        throw o;
     }
 }
 ---
@@ -251,47 +251,47 @@ Transaction abc()
 <h3>Example</h3>
 
 The next example involves temporarily changing the state of some object.
-Suppose there's a class data member $(D verbose), which controls the
+Suppose there's a class data member $(TT verbose), which controls the
 emission of messages logging the activity of the class.
-Inside one of the methods, $(D verbose) needs to be turned off because
+Inside one of the methods, $(TT verbose) needs to be turned off because
 there's a loop that would otherwise cause a blizzard of messages to be output:
 
 ---
 class Foo
 {
-    bool verbose;	// true means print messages, false means silence
+    bool verbose;       // true means print messages, false means silence
     ...
     bar()
     {
-	auto verbose_save = verbose;
-	verbose = false;
-	... lots of code ...
-	verbose = verbose_save;
+        auto verbose_save = verbose;
+        verbose = false;
+        ... lots of code ...
+        verbose = verbose_save;
     }
 }
 ---
 
-There's a problem if $(D Foo.bar()) exits via an exception - the verbose
+There's a problem if $(TT Foo.bar()) exits via an exception - the verbose
 flag state is not restored.
 That's easily fixed with $(D_KEYWORD scope)(exit):
 
 ---
 class Foo
 {
-    bool verbose;	// true means print messages, false means silence
+    bool verbose;       // true means print messages, false means silence
     ...
     bar()
     {
-	auto verbose_save = verbose;
-	verbose = false;
-	scope(exit) verbose = verbose_save;
+        auto verbose_save = verbose;
+        verbose = false;
+        scope(exit) verbose = verbose_save;
 
-	...lots of code...
+        ...lots of code...
     }
 }
 ---
 
-$(P It also neatly solves the problem if $(D ...lots of code...) goes on at
+$(P It also neatly solves the problem if $(TT ...lots of code...) goes on at
 some length, and in the future a maintenance programmer inserts a
 return statement in it, not realizing that verbose must be reset upon
 exit. The reset code is where it belongs conceptually, rather than where
@@ -316,12 +316,12 @@ Sending an email consists of two operations:
 
 $(OL
 $(LI Perform the SMTP send operation.)
-$(LI Copy the email to the $(DOUBLEQUOTE Sent) folder, which in POP is on the local
+$(LI Copy the email to the "Sent" folder, which in POP is on the local
 disk, and in IMAP is also remote.)
 )
 
-$(P Messages should not appear in $(DOUBLEQUOTE Sent) that haven't been actually sent,
-and sent messages must actually appear in $(DOUBLEQUOTE Sent).
+$(P Messages should not appear in "Sent" that haven't been actually sent,
+and sent messages must actually appear in "Sent".
 )
 
 $(P Operation (1) is not undoable because it's a well-known distributed
@@ -330,16 +330,16 @@ reliability. So we break the job down into three steps:
 )
 
 $(OL
-$(LI Copy the message to $(DOUBLEQUOTE Sent) with a changed title $(DOUBLEQUOTE [Sending]
-&lt;Subject&gt;). This operation ensures there's space in the client's IMAP
+$(LI Copy the message to "Sent" with a changed title "[Sending]
+&lt;Subject&gt;". This operation ensures there's space in the client's IMAP
 account (or on the local disk), the rights are proper, the connection
 exists and works, etc.)
 
 $(LI Send the message via SMTP.)
 
-$(LI If sending fails, delete the message from $(DOUBLEQUOTE Sent). If the message
+$(LI If sending fails, delete the message from "Sent". If the message
 succeeds,
-change its title from $(DOUBLEQUOTE [Sending] &lt;Subject&gt;) to $(DOUBLEQUOTE &lt;Subject&gt;).
+change its title from "[Sending] &lt;Subject&gt;" to "&lt;Subject&gt;".
 Both of these operation have a high probability to succeed. If the
 folder is local, the probability of success is very high. If the folder
 is remote, probability is still vastly higher than that of step (1)
@@ -352,15 +352,15 @@ class Mailer
 {
     void Send(Message msg)
     {
-	{
-	    char[] origTitle = msg.Title();
-	    scope(exit) msg.SetTitle(origTitle);
-	    msg.SetTitle("[Sending] " ~ origTitle);
-	    Copy(msg, "Sent");
-	}
-	scope(success) SetTitle(msg.ID(), "Sent", msg.Title);
-	scope(failure) Remove(msg.ID(), "Sent");
-	SmtpSend(msg);	// do the least reliable part last
+        {
+            char[] origTitle = msg.Title();
+            scope(exit) msg.SetTitle(origTitle);
+            msg.SetTitle("[Sending] " ~ origTitle);
+            Copy(msg, "Sent");
+        }
+        scope(success) SetTitle(msg.ID(), "Sent", msg.Title);
+        scope(failure) Remove(msg.ID(), "Sent");
+        SmtpSend(msg);  // do the least reliable part last
     }
 }
 ---
@@ -433,7 +433,7 @@ me about exception safe programming.
 
 $(OL
 
-$(LI $(LINK2 http://drdobbs.com/184403758,
+$(LI $(LINK2 http://www.cuj.com/documents/s=8000/cujcexp1812alexandr/alexandr.htm,
 Generic&lt;Programming&gt;: Change the Way You Write Exception-Safe Code Forever)
 by Andrei Alexandrescu and Petru Marginean
 
@@ -450,7 +450,6 @@ $(LINK2 http://www.amazon.com/exec/obidos/ASIN/0321334876/classicempire,
 )
 
 Macros:
-	TITLE=Exception Safety
-	WIKI=ExceptionSafe
-	CATEGORY_ARTICLES=$0
+        TITLE=Exception Safety
+        WIKI=ExceptionSafe
 

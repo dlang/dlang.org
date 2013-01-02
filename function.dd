@@ -31,32 +31,28 @@ $(GNAME BodyStatement):
 
 <h3>Functions Without Bodies</h3>
 
-	$(P Functions without bodies:)
+        $(P Functions without bodies:)
 
 ---
 int foo();
 ---
 
-	$(P that are not declared as $(D abstract) are expected to have their implementations
-	elsewhere, and that implementation will be provided at the link step.
-	This enables an implementation of a function to be completely hidden from the user
-	of it, and the implementation may be in another language such as C, assembler, etc.
-	)
+        $(P that are not declared as $(D abstract) are expected to have their implementations
+        elsewhere, and that implementation will be provided at the link step.
+        This enables an implementation of a function to be completely hidden from the user
+        of it, and the implementation may be in another language such as C, assembler, etc.
+        )
 
 $(V2
 <h3>$(LNAME2 pure-functions, Pure Functions)</h3>
 
-        $(P Pure functions are functions which cannot access global or static, mutable
-        state save through their arguments. This can enable optimizations based on the fact
-        that a pure function is guaranteed to mutate nothing which isn't passed to it,
-        and in cases where the compiler can guarantee that a pure function cannot
-        alter its arguments, it can enable full, functional purity (i.e. the guarantee
-        that the function will always return the same result for the same arguments).
+        $(P Pure functions are functions that produce the same
+        result for the same arguments.
         To that end, a pure function:
         )
 
         $(UL
-        $(LI does not read or write any global or static mutable state)
+        $(LI does not read or write any global mutable state)
         $(LI cannot call functions that are not pure)
         $(LI can override an impure function, but an impure function
         cannot override a pure one)
@@ -264,25 +260,29 @@ void foo() {
 
 <h3>$(LNAME2 virtual-functions, Virtual Functions)</h3>
 
-        $(P Virtual functions are functions that are called indirectly through a
-        function pointer table, called a vtbl[], rather than directly. All
-        $(D public) and $(D protected) member functions which are non-static and
-        aren't templatized are virtual unless the compiler can determine that
-        they will never be overridden (e.g. they're marked with $(D final) and
-        don't override any functions in a base class), in which case, it will
-        make them non-virtual. This results in fewer bugs caused by not
-        declaring a function virtual and then overriding it anyway.
+        $(P Virtual functions are functions that are called indirectly
+        through a function
+        pointer table, called a vtbl[], rather than directly.
+        All non-static non-private non-template member functions are virtual.
+        This may sound
+        inefficient, but since the D compiler knows all of the class
+        hierarchy when generating code, all
+        functions that are not overridden can be optimized to be non-virtual.
+        In fact, since
+        C++ programmers tend to "when in doubt, make it virtual", the D way of
+        "make it
+        virtual unless we can prove it can be made non-virtual" results, on
+        average, in many
+        more direct function calls. It also results in fewer bugs caused by
+        not declaring
+        a function virtual that gets overridden.
         )
 
-        $(P Member functions which are $(D private) or $(D package) are never
-        virtual, and hence cannot be overridden.
-        )
-
-        $(P Functions with non-D linkage cannot be virtual and hence cannot be
+        $(P Functions with non-D linkage cannot be virtual, and hence cannot be
         overridden.
         )
 
-        $(P Member template functions cannot be virtual and hence cannot be
+        $(P Member template functions cannot be virtual, and hence cannot be
         overridden.
         )
 
@@ -342,36 +342,6 @@ class Bar : Foo {
         $(I this) reference, which refers to the class object for which
         the function is called.
         )
-
-        $(P To avoid dynamic binding on member function call, insert
-        base class name before the member function name. For example:
-        )
-
-------
-class B {
-  int foo() { return 1; }
-}
-class C : B {
-  override int foo() { return 2; }
-
-  void test() {
-    assert(B.foo() == 1);  // translated to this.B.foo(), and
-                           // calls B.foo statically.
-    assert(C.foo() == 2);  // calls C.foo statically, even if
-                           // the actual instance of 'this' is D.
-  }
-}
-class D : C {
-  override int foo() { return 3; }
-}
-void main() {
-  auto d = new D();
-  assert(d.foo() == 3);    // calls D.foo
-  assert(d.B.foo() == 1);  // calls B.foo
-  assert(d.C.foo() == 2);  // calls C.foo
-  d.test();
-}
-------
 
 <h3>$(LNAME2 function-inheritance, Function Inheritance and Overriding)</h3>
 
@@ -680,7 +650,7 @@ $(V1
         $(P Parameters are $(B in), $(B out), $(B inout) or $(B lazy).
         $(B in) is the default; the others work like
         storage classes. For example:
-	)
+        )
 
 ------
 int foo(in int x, out int y, inout int z, int q);
@@ -692,10 +662,10 @@ int foo(in int x, out int y, inout int z, int q);
 $(V2
         $(P Parameter storage classes are $(B in), $(B out),
         $(B ref), $(B lazy), $(B const), $(B immutable), $(B shared),
-	$(B inout) or
+        $(B inout) or
         $(B scope).
         For example:
-	)
+        )
 ------
 int foo(in int x, out int y, ref int z, int q);
 ------
@@ -713,25 +683,25 @@ int foo(in int x, out int y, ref int z, int q);
         possibly better code generation.)
         )
 
-	$(TABLE2 Parameter Storage Classes,
-	$(THEAD Storage Class, Description)
-	$(TROW $(I none), parameter becomes a mutable copy of its argument)
-	$(V1 $(TROW $(D in), equivalent to $(I none)))
-	$(V2 $(TROW $(D in), equivalent to $(D const scope)))
-	$(TROW $(D out), parameter is initialized upon function entry with the default value
-	for its type)
-	$(V1 $(TROW $(D inout), parameter is passed by reference))
-	$(V2 $(TROW $(D ref),   parameter is passed by reference))
-	$(V2 $(TROW $(D scope), references in the parameter
-	cannot be escaped (e.g. assigned to a global variable)))
-	$(TROW $(D lazy), argument is evaluated by the called function and not by the caller)
-	$(V2
-	$(TROW $(D const), argument is implicitly converted to a const type)
-	$(TROW $(D immutable), argument is implicitly converted to an immutable type)
-	$(TROW $(D shared), argument is implicitly converted to a shared type)
-	$(TROW $(D inout), argument is implicitly converted to an inout type)
-	)
-	)
+        $(TABLE2 Parameter Storage Classes,
+        $(THEAD Storage Class, Description)
+        $(TROW $(I none), parameter becomes a mutable copy of its argument)
+        $(V1 $(TROW $(D in), equivalent to $(I none)))
+        $(V2 $(TROW $(D in), equivalent to $(D const scope)))
+        $(TROW $(D out), parameter is initialized upon function entry with the default value
+        for its type)
+        $(V1 $(TROW $(D inout), parameter is passed by reference))
+        $(V2 $(TROW $(D ref),   parameter is passed by reference))
+        $(V2 $(TROW $(D scope), references in the parameter
+        cannot be escaped (e.g. assigned to a global variable)))
+        $(TROW $(D lazy), argument is evaluated by the called function and not by the caller)
+        $(V2
+        $(TROW $(D const), argument is implicitly converted to a const type)
+        $(TROW $(D immutable), argument is implicitly converted to an immutable type)
+        $(TROW $(D shared), argument is implicitly converted to a shared type)
+        $(TROW $(D inout), argument is implicitly converted to an inout type)
+        )
+        )
 
 ------
 void foo(out int x) {
@@ -850,11 +820,11 @@ extern (C) int def(...); // error, must have at least one parameter
         C-style variadic functions match the C calling convention for
         variadic functions, and is most useful for calling C library
         functions like $(D printf).
-	)
+        )
 
-	$(P Access to variadic arguments is done using the standard library
-	module $(V1 $(B std.c.stdarg))$(V2 $(B core.stdc.stdarg)).
-	)
+        $(P Access to variadic arguments is done using the standard library
+        module $(V1 $(B std.c.stdarg))$(V2 $(B core.stdc.stdarg)).
+        )
 
 ------
 import $(V1 std.c.stdarg)$(V2 core.stdc.stdarg);
@@ -891,7 +861,7 @@ int abc(char c, ...);   // one required parameter: c
 int def(...);           // ok
 ------
 
-	To access them, the following import is required:
+        To access them, the following import is required:
 
 ------
 import $(V1 std.stdarg)$(V2 core.vararg);
@@ -900,9 +870,9 @@ import $(V1 std.stdarg)$(V2 core.vararg);
         These variadic functions have a special local variable declared for
         them,
         $(B _argptr), which is a $(V1 $(D std.stdarg.va_list))$(V2 $(D core.vararg))
-	reference to the first of the variadic
+        reference to the first of the variadic
         arguments. To access the arguments, $(B _argptr) must be used
-	in conjuction with $(D va_arg):
+        in conjuction with $(D va_arg):
 
 ------
 import $(V1 std.stdarg)$(V2 core.vararg);
@@ -980,7 +950,7 @@ void main() {
         which prints:
 
 ------
-0x00870FE0
+00870FE0
 5 arguments
 int
         2
@@ -989,9 +959,9 @@ long
 double
         4.5
 Foo
-        0x00870FE0
+        00870FE0
 Bar
-        0x00870FD0
+        00870FD0
 ------
 
 
@@ -1168,11 +1138,11 @@ void func(int x) {
 
 <h2>$(LNAME2 Local Static Variables, Local Static Variables)</h2>
 
-	$(P Local variables in functions can be declared as static
-	$(V2 or __gshared) in which case they are statically allocated
-	rather than being allocated on the stack.
-	As such, their value persists beyond the exit of the function.
-	)
+        $(P Local variables in functions can be declared as static
+        $(V2 or __gshared) in which case they are statically allocated
+        rather than being allocated on the stack.
+        As such, their value persists beyond the exit of the function.
+        )
 
 ---
 void foo() {
@@ -1182,16 +1152,16 @@ void foo() {
 }
 ---
 
-	$(P The initializer for a static variable must be evaluatable at
-	compile time, and they are initialized upon the start of the thread
-	$(V2 (or the start of the program for __gshared).
-	There are no static constructors or static destructors
-	for static local variables.)
-	)
+        $(P The initializer for a static variable must be evaluatable at
+        compile time, and they are initialized upon the start of the thread
+        $(V2 (or the start of the program for __gshared).
+        There are no static constructors or static destructors
+        for static local variables.)
+        )
 
-	$(P Although static variable name visibility follows the usual scoping
-	rules, the names of them must be unique within a particular function.
-	)
+        $(P Although static variable name visibility follows the usual scoping
+        rules, the names of them must be unique within a particular function.
+        )
 
 ---
 void main() {
@@ -1400,7 +1370,7 @@ void test() {
 }
 ------
 
-	$(P Nested functions cannot be overloaded.)
+        $(P Nested functions cannot be overloaded.)
 
 <h3><a name="closures">Delegates, Function Pointers, and $(V1 Dynamic) Closures</a></h3>
 
@@ -1546,69 +1516,41 @@ int main(string[] args) { ... }
     )
 
     $(OL
-    $(LI The function source code must be available to the compiler. Functions
+    $(LI the function source code must be available to the compiler. Functions
         which exist in the source code only as $(D_KEYWORD extern) declarations
-        cannot be executed at compile time.)
+        cannot be executed at compile time)
 
-    $(LI Executed expressions may not reference any global or local
-        static variables.)
+    $(LI executed expressions may not reference any global or local
+        static variables)
 
     $(LI $(D_KEYWORD asm) statements are not permitted)
 
-    $(LI Non-portable casts (eg, from $(D int[]) to $(D float[])), including
+    $(LI non-portable casts (eg, from $(I int[]) to $(I float[])), including
         casts which depend on endianness, are not permitted.
-        Casts between signed and unsigned types are permitted)
-    )
-
-    $(P Pointers are permitted in CTFE, provided they are used safely:)
-
-    $(UL
-        $(LI
-        C-style semantics on pointer arithmetic are strictly enforced.
-        Pointer arithmetic is permitted only on pointers which point to static
-        or dynamic array elements. Such pointers must point to an element of
-        the array, or to the first element past the array.
-        Pointer arithmetic is completely forbidden on pointers which are null,
-        or which point to a non-array.
-        )
-
-        $(LI
-        The memory location of different memory blocks is not defined.
-        Ordered comparison (<, <=, >, >=) between two pointers is permitted
-        when both pointers point to the same array, or when at least one
-        pointer is $(D null).
-        )
-
-        $(LI
-        Pointer comparisons between independent memory blocks will generate
-        a compile-time error, unless two such comparisons are combined
-        using $(D &&) or $(D ||) to yield a result which is independent of the
-        ordering of memory blocks. Each comparison must consist of two pointer
-        expressions compared with <, <=, >, or >=, and may optionally be
-        negated with $(D ! ).
-
-        $(P
-        For example, the expression $(D (p1 > q1 && p2 <= q2) )
-        is permitted when $(D p1), $(D p2) are expressions yielding pointers
-        to memory block $(I P), and $(D q1), $(D q2) are expressions yielding
-        pointers to memory block $(I Q), even when $(I P) and $(I Q) are
-        unrelated memory blocks.
-        It returns true if $(D [p1..p2]) lies inside $(D [q1..q2]), and false otherwise.
-        Similarly, the expression $(D (p1 < q1 || p2 > q2) ) is true if
-        $(D [p1..p2]) lies outside $(D [q1..q2]), and false otherwise.
-        )
-        )
-
-        $(LI
-        Equality comparisons (==, !=, $(D_KEYWORD is), $(D_KEYWORD !is)) are
-        permitted between all pointers, without restriction.
-        )
-
-        $(LI
-        Any pointer may be cast to $(D void *) and from $(D void *) back to
+        Casts between signed and unsigned types are permitted.
+        Any pointer may be cast to $(I void *) and from $(I void *) back to
         its original type. Casting between pointer and non-pointer types is
         prohibited.
         )
+
+    $(LI C-style semantics on pointer arithmetic are strictly enforced.
+        $(P
+        Pointer arithmetic is permitted only on pointers which point to static
+        or dynamic array elements. Such pointers must point to an element of
+        the array, or to the first element past the array.
+        Ordered comparison (<, <=, >, >=) between pointers is permitted only
+        between pointers which point to the same array.
+        Pointer arithmetic is completely forbidden on pointers which are null,
+        or which point to a non-array.
+        )
+        $(P
+        Equality comparisons (==, !=, $(D_KEYWORD is), $(D_KEYWORD !is)) are
+        permitted between all pointers, without restriction.
+        )
+    )
+    $(LI Non-recoverable errors (such as $(D_KEYWORD assert) failures) do not
+        throw exceptions; instead, they end interpretation immediately.
+    )
     )
 
     $(P Note that the above restrictions apply only to expressions which are
@@ -1630,21 +1572,19 @@ $(V2
     $(P The $(D_KEYWORD __ctfe) boolean pseudo-variable, which evaluates to $(D_KEYWORD true)
         at compile time, but $(D_KEYWORD false) at run time, can be used to provide
         an alternative execution path to avoid operations which are forbidden
-        at compile time. Every usage of $(D_KEYWORD __ctfe) is evaluated before
-        code generation and therefore has no run-time cost, even if no optimizer
-        is used.
+        at compile time.
     )
 )
 
-	$(P In order to be executed at compile time, the function
-	must appear in a context where it must be so executed, for
-	example:)
+        $(P In order to be executed at compile time, the function
+        must appear in a context where it must be so executed, for
+        example:)
 
-	$(UL
-	$(LI initialization of a static variable)
-	$(LI dimension of a static array)
-	$(LI argument for a template value parameter)
-	)
+        $(UL
+        $(LI initialization of a static variable)
+        $(LI dimension of a static array)
+        $(LI argument for a template value parameter)
+        )
 
 ---
 template eval( A... ) {
@@ -1667,10 +1607,6 @@ void foo() {
     longer than executing it at run time.
     If the function goes into an infinite loop, it will hang at
     compile time (rather than hanging at run time).
-    )
-
-    $(P Non-recoverable errors (such as $(D_KEYWORD assert) failures) do not
-    throw exceptions; instead, they end interpretation immediately.
     )
 
     $(P Functions executed at compile time can give different results

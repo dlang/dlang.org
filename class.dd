@@ -112,18 +112,18 @@ Foo var;
 
 <h3>Access Control</h3>
 
-	$(P Access to class members is controlled using $(GLINK2 attribute, ProtectionAttribute)s.
-	The default protection attribute is $(D public).
-	Access control does not affect visibility.
-	) 
+        $(P Access to class members is controlled using $(GLINK2 attribute, ProtectionAttribute)s.
+        The default protection attribute is $(D public).
+        Access control does not affect visibility.
+        )
 
 <h3>Fields</h3>
 
         $(P Class members are always accessed with the . operator.
         )
 
-	$(P Members of a base class can be accessed by prepending the name of
-	the base class followed by a dot:)
+        $(P Members of a base class can be accessed by prepending the name of
+        the base class followed by a dot:)
 
 ---
 class A { int a; }
@@ -207,11 +207,11 @@ void test(Foo foo) {
         )
 
 $(V2
-	$(P Non-static member functions can have, in addition to the usual
-	$(GLINK2 declaration, FunctionAttribute)s, the attributes
-	$(D const), $(D immutable), $(D shared), or $(D inout).
-	These attributes apply to the hidden $(I this) parameter.
-	)
+        $(P Non-static member functions can have, in addition to the usual
+        $(GLINK2 declaration, FunctionAttribute)s, the attributes
+        $(D const), $(D immutable), $(D shared), or $(D inout).
+        These attributes apply to the hidden $(I this) parameter.
+        )
 ---
 class C {
   int a;
@@ -352,8 +352,8 @@ this() { }
 
         $(OL
         $(LI It is illegal for constructors to mutually call each other,
-	although the compiler is not required to detect it. It will result
-	in undefined behavior.
+        although the compiler is not required to detect it. It will result
+        in undefined behavior.
 
 ------
 this() { this(1); }
@@ -489,15 +489,15 @@ $(GNAME StaticConstructor):
     $(B static this ( )) $(GLINK2 function, FunctionBody)
 )
 
-	$(P
+        $(P
         $(V1 A static constructor is a function that performs
         initializations before the $(D main()) function gets control.)
 
         $(V2 A static constructor is a function that performs
         initializations of thread local data before the $(D main()) function gets control for
-	the main thread, and upon thread startup.)
+        the main thread, and upon thread startup.)
 
-	Static constructors are used to initialize
+        Static constructors are used to initialize
         static class members
         with values that cannot be computed at compile time.
         )
@@ -507,7 +507,7 @@ $(GNAME StaticConstructor):
         initializers that can't be computed at compile time. The trouble with
         this stems from not
         having good control over exactly when the code is executed, for example:
-	)
+        )
 
 ------
 class Foo {
@@ -548,23 +548,23 @@ class Foo {
 }
 ------
 
-	$(P
-	$(V1
-	If $(D main()) returns normally
+        $(P
+        $(V1
+        If $(D main()) returns normally
         (does not throw an exception), the static destructor is added
         to the list of functions to be
         called on program termination.
-	)
-	$(V2
-	If $(D main()) or the thread returns normally,
+        )
+        $(V2
+        If $(D main()) or the thread returns normally,
         (does not throw an exception), the static destructor is added
         to the list of functions to be
         called on thread termination.
-	)
+        )
         Static constructors have empty parameter lists.
         )
 
-	$(P
+        $(P
         Static constructors within a module are executed in the lexical
         order in which they appear.
         All the static constructors for modules that are directly or
@@ -572,10 +572,10 @@ class Foo {
         are executed before the static constructors for the importer.
         )
 
-	$(P
+        $(P
         The $(B static) in the static constructor declaration is not
         an attribute, it must appear immediately before the $(B this):
-	)
+        )
 
 ------
 class Foo {
@@ -607,19 +607,19 @@ class Foo {
 }
 ------
 
-	$(P
+        $(P
         A static destructor gets called on $(V1 program)$(V2 thread) termination,
-	but only if the static constructor
+        but only if the static constructor
         completed successfully.
         Static destructors have empty parameter lists.
         Static destructors get called in the reverse order that the static
         constructors were called in.
         )
 
-	$(P
+        $(P
         The $(B static) in the static destructor declaration is not
         an attribute, it must appear immediately before the $(B ~this):
-	)
+        )
 
 ------
 class Foo {
@@ -667,11 +667,88 @@ $(GNAME Invariant):
 )
 
     Class invariants are used to specify characteristics of a class that always
-    must be true (except while executing a member function).
-    They are described in $(GLINK2 dbc, Invariants).
+    must be true (except while executing a member function). For example, a
+    class representing a date might have an invariant that the day must be 1..31
+    and the hour must be 0..23:
+
+------
+class Date {
+  int day;
+  int hour;
+
+  $(B invariant()) {
+    assert(1 <= day && day <= 31);
+    assert(0 <= hour && hour < 24);
+  }
+}
+------
+
+        $(P The class invariant is a contract saying that the asserts must hold
+        true.
+        The invariant is checked when a class constructor completes,
+        at the start of the class destructor. For public or exported functions,
+        the order of execution is:
+        )
+
+        $(OL
+        $(LI preconditions)
+        $(LI invariant)
+        $(LI body)
+        $(LI invariant)
+        $(LI postconditions)
+        )
+
+        $(P The code in the invariant may not call any public non-static members
+        of the
+        class, either directly or indirectly.
+        Doing so will result in a stack overflow, as the invariant will wind
+        up being called in an infinitely recursive manner.
+        )
+
+        $(V2 $(P Invariants are implicitly const.))
+
+        $(P Since the invariant is called at the start of public or
+        exported members, such members should not be called from
+        constructors.
+        )
+
+------
+class Foo {
+  public void f() { }
+  private void g() { }
+
+  $(B invariant()) {
+    f();  // error, cannot call public member function from invariant
+    g();  // ok, g() is not public
+  }
+}
+------
+
+        The invariant
+        can be checked when a class object is the argument to an
+        <code>assert()</code> expression, as:
+
+------
+Date mydate;
+...
+assert(mydate);         // check that class Date invariant holds
+------
+
+        Invariants contain assert expressions, and so when they fail,
+        they throw a $(D AssertError)s.
+        Class invariants are inherited, that is,
+        any class invariant is implicitly anded with the invariants of its base
+        classes.
+        <p>
+
+        There can be only one $(I Invariant) per class.
+        <p>
+
+        When compiling for release, the invariant code is not generated, and the compiled program
+        runs at maximum speed.
 
 <h3>$(LNAME2 allocators, Class Allocators)</h3>
-$(B Note): Class allocators are deprecated in D2.
+
 $(GRAMMAR
 $(GNAME ClassAllocator):
     $(B new) $(GLINK2 declaration, Parameters) $(GLINK2 function, FunctionBody)
@@ -735,18 +812,7 @@ new(1,2) Foo(a);        // calls new(Foo.sizeof,1,2)
         )
 
 <h3>$(LNAME2 deallocators, Class Deallocators)</h3>
-$(B Note): Class deallocators and the delete operator are deprecated in D2. 
-Use the $(B destroy) function to finalize an object by calling its destructor. 
-The memory of the object is $(B not) immediately deallocated, instead the GC 
-will collect the memory of the object at an undetermined point after finalization:
-    
-------
-class Foo { int x; this() { x = 1; } }
-Foo foo = new Foo;
-destroy(foo);
-assert(foo.x == int.init);  // object is still accessible
-------
-    
+
 $(GRAMMAR
 $(GNAME ClassDeallocator):
     $(B delete) $(GLINK2 declaration, Parameters) $(GLINK2 function, FunctionBody)
@@ -873,7 +939,6 @@ void test() {
         and forwarded lookups, all $(I AliasThis) declarations are attempted;
         if more than one $(I AliasThis) is eligible, the ambiguity is
         disallowed by raising an error.
-        Note: Multiple $(I AliasThis) is currently unimplemented.
         )
 )
 
@@ -1129,7 +1194,7 @@ $(GNAME NewAnonClassExpression):
     $(B new) $(GLINK2 expression, AllocatorArguments)$(OPT) $(B class) $(I ClassArguments)$(OPT) $(GLINK SuperClass)$(OPT) $(GLINK Interfaces)$(OPT) $(GLINK ClassBody)
 
 $(GNAME ClassArguments):
-	$(B $(LPAREN)) $(GLINK2 expression, ArgumentList)$(OPT) $(B $(RPAREN))
+        $(B $(LPAREN)) $(GLINK2 expression, ArgumentList)$(OPT) $(B $(RPAREN))
 )
 
         $(P which is equivalent to:
@@ -1147,13 +1212,14 @@ new ($(I ArgumentList)) $(I Identifier) ($(I ArgumentList));
         )
 
 $(V2
-$(SECTION3 $(LNAME2 ConstClass, Const, Immutable and Shared Classes))
+$(SECTION3 <a name="ConstClass">Const Immutable and Shared Classes</a>,
         $(P If a $(I ClassDeclaration) has a $(CODE const), $(CODE immutable)
         or $(CODE shared) storage class, then it is as if each member of the class
         was declared with that storage class.
         If a base class is const, immutable or shared, then all classes derived
         from it are also const, immutable or shared.
         )
+)
 )
 
 )

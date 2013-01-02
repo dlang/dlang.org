@@ -7,7 +7,7 @@ is creating a test suite for it. Without some sort of test suite,
 it is impossible to know if the software works at all.
 The D language has
 many features to aid in the creation of test suites, such as
-$(LINK2 unittest.html, unit tests) and
+$(LINK2 class.html#unittest, unit tests) and
 $(LINK2 dbc.html, contract programming).
 But there's the issue of how thoroughly the test suite tests
 the code.
@@ -67,7 +67,7 @@ Therefore, it is always in perfect synchronization with the language
 implementation. It's implemented by establishing a counter for each
 line in each module compiled with the $(B -cov) switch. Code is inserted
 at the beginning of each statement to increment the corresponding counter.
-When the program finishes, the runtime collects all
+When the program finishes, a static destructor for std.cover collects all
 the counters, merges it with the source files, and writes the reports out
 to listing (.lst) files.)
 
@@ -84,20 +84,20 @@ int main()
 
     writefln("10 iterations");
     for (iter = 1; iter <= 10; iter++)
-    {	count = 0;
-	flags[] = true;
-	for (i = 0; i < flags.length; i++)
-	{   if (flags[i])
-	    {	prime = i + i + 3;
-		k = i + prime;
-		while (k < flags.length)
-		{
-		    flags[k] = false;
-		    k += prime;
-		}
-		count += 1;
-	    }
-	}
+    {   count = 0;
+        flags[] = true;
+        for (i = 0; i < flags.length; i++)
+        {   if (flags[i])
+            {   prime = i + i + 3;
+                k = i + prime;
+                while (k < flags.length)
+                {
+                    flags[k] = false;
+                    k += prime;
+                }
+                count += 1;
+            }
+        }
     }
     writefln("%d primes", count);
     return 0;
@@ -111,7 +111,7 @@ dmd sieve -cov
 sieve
 )
 
-$(P The output file will be created called $(D sieve.lst), the contents of
+$(P The output file will be created called $(TT sieve.lst), the contents of
 which are:)
 
 $(CONSOLE
@@ -155,11 +155,11 @@ At the end of the .lst file, the percent coverage is given.
 )
 
 $(P There are 3 lines with an exection count
-of 1, these were each executed once. The declaration line for $(D i, prime),
+of 1, these were each executed once. The declaration line for $(TT i, prime),
 etc., has 5 because there are 5 declarations, and the initialization of
 each declaration counts as one statement.)
 
-$(P The first $(D for) loop shows 22. This is the sum of the 3 parts
+$(P The first $(TT for) loop shows 22. This is the sum of the 3 parts
 of the for header. If the for header is broken up into 3 lines, the
 data is similarly divided:)
 
@@ -171,8 +171,8 @@ $(CONSOLE
 
 $(P which adds up to 22.)
 
-$(P $(D e1&amp;&amp;e2) and $(D e1||e2) expressions conditionally
-execute the rvalue $(D e2).
+$(P $(TT e1&amp;&amp;e2) and $(TT e1||e2) expressions conditionally
+execute the rvalue $(TT e2).
 Therefore, the rvalue is treated as a separate statement with its own
 counter:)
 
@@ -181,7 +181,7 @@ $(CONSOLE
         |{
        5|   bar(a);
        8|   if (a && b)
-       1|	bar(b);
+       1|       bar(b);
         |}
 )
 
@@ -192,18 +192,18 @@ $(CONSOLE
         |{
        5|   bar(a);
        5|   if (a &&
-       3|	b)
-       1|	bar(b);
+       3|       b)
+       1|       bar(b);
         |}
 )
 
-$(P Similarly, for the $(D e?e1:e2) expressions, $(D e1) and
-$(D e2) are treated as separate statements.)
+$(P Similarly, for the $(TT e?e1:e2) expressions, $(TT e1) and
+$(TT e2) are treated as separate statements.)
 
 <h3>Controlling the Coverage Analyser</h3>
 
-$(COMMENT The behavior of the coverage analyser can be controlled through
-the $(DRUNTIMESRC rt/cover.d) module.)
+$(P The behavior of the coverage analyser can be controlled through
+the $(LINK2 phobos/std_cover.html, std.cover) module.)
 
 $(P When the $(B -cov) switch is thrown, the version identifier
 $(B D_Coverage) is defined.)
@@ -215,8 +215,7 @@ $(LINK2 http://en.wikipedia.org/wiki/Code_coverage, Wikipedia)
 )
 
 Macros:
-	TITLE=Code Coverage Analysis
-	WIKI=Dcover
-	CATEGORY_DOWNLOAD=$0
-	RPAREN=)
+        TITLE=Code Coverage Analysis
+        WIKI=Dcover
+        RPAREN=)
 

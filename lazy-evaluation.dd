@@ -17,14 +17,14 @@ do lazy evaluation:
 void test(int* p)
 {
     if (p && p[0])
-	...
+        ...
 }
 ---
 
-$(P The second expression $(D p[0]) is not evaluated unless $(D p)
+$(P The second expression $(TT p[0]) is not evaluated unless $(TT p)
 is not $(B null).
 If the second expression was not lazily evaluated, it would
-generate a runtime fault if $(D p) was $(B null).
+generate a runtime fault if $(TT p) was $(B null).
 )
 
 $(P While invaluable, the lazy evaluation operators have significant
@@ -37,7 +37,7 @@ value:
 void log(char[] message)
 {
     if (logging)
-	fwritefln(logfile, message);
+        fwritefln(logfile, message);
 }
 ---
 
@@ -80,7 +80,7 @@ $(P but that just papers over the problem. Preprocessor macros have
 well known shortcomings:)
 
 $(UL
-$(LI The $(D logging) variable is exposed in the user's namespace.)
+$(LI The $(TT logging) variable is exposed in the user's namespace.)
 $(LI Macros are invisible to symbolic debuggers.)
 $(LI Macros are global only, and cannot be scoped.)
 $(LI Macros cannot be class members.)
@@ -97,7 +97,7 @@ is possible in the D programming language using a delegate parameter:
 void log(char[] delegate() dg)
 {
     if (logging)
-	fwritefln(logfile, dg());
+        fwritefln(logfile, dg());
 }
 
 void foo(int i)
@@ -108,15 +108,15 @@ void foo(int i)
 
 $(P Now, the string building expression only gets evaluated if logging
 is true, and encapsulation is maintained. The only trouble is that
-few are going to want to wrap expressions with $(D { return $(I exp); }).
+few are going to want to wrap expressions with $(TT { return $(I exp); }).
 )
 
 $(P So D takes it one small, but crucial, step further
 (suggested by Andrei Alexandrescu).
 Any expression
-can be implicitly converted to a delegate that returns either $(D void) or
+can be implicitly converted to a delegate that returns either $(TT void) or
 the type of the expression.
-The delegate declaration is replaced by the $(D lazy) storage class
+The delegate declaration is replaced by the $(TT lazy) storage class
 (suggested by Tomasz Stachowiak).
 The functions then become:
 )
@@ -125,7 +125,7 @@ The functions then become:
 void log(lazy char[] dg)
 {
     if (logging)
-	fwritefln(logfile, dg());
+        fwritefln(logfile, dg());
 }
 
 void foo(int i)
@@ -192,7 +192,7 @@ Here's a method to create a switch like structure:
 bool scase(bool b, lazy void dg)
 {
     if (b)
-	dg();
+        dg();
     return b;
 }
 
@@ -202,8 +202,8 @@ bool scase(bool b, lazy void dg)
 void cond(bool delegate()[] cases ...)
 {
     foreach (c; cases)
-    {	if (c())
-	    break;
+    {   if (c())
+            break;
     }
 }
 ---
@@ -217,10 +217,10 @@ void foo()
     int v = 2;
     cond
     (
-	scase(v == 1, writefln("it is 1")),
-	scase(v == 2, writefln("it is 2")),
-	scase(v == 3, writefln("it is 3")),
-	scase(true,   writefln("it is the default"))
+        scase(v == 1, writefln("it is 1")),
+        scase(v == 2, writefln("it is 2")),
+        scase(v == 3, writefln("it is 3")),
+        scase(true,   writefln("it is the default"))
     );
 }
 ---
@@ -244,7 +244,7 @@ Abc p;
 p = foo();
 if (!p)
     throw new Exception("foo() failed");
-p.bar();	// now use p
+p.bar();        // now use p
 ---
 
 $(P Because throw is a statement, not an expression, expressions that
@@ -261,7 +261,7 @@ function:
 Abc Enforce(Abc p, lazy char[] msg)
 {
     if (!p)
-	throw new Exception(msg());
+        throw new Exception(msg());
     return p;
 }
 ---
@@ -281,7 +281,7 @@ template function:
 T Enforce(T)(T p,  lazy char[] msg)
 {
     if (!p)
-	throw new Exception(msg());
+        throw new Exception(msg());
     return p;
 }
 ---
@@ -296,19 +296,18 @@ impractical to do.
 
 <h2>Acknowledgements</h2>
 
-	$(P I gratefully acknowledge the inspiration and assistance
-	of Andrei Alexandrescu, Bartosz Milewski, and David Held.
-	The D community helped a lot with much constructive
-	criticism, such as the thread starting with
-	Tomasz Stachowiak in $(NG_digitalmars_D 41633).
-	)
+        $(P I gratefully acknowledge the inspiration and assistance
+        of Andrei Alexandrescu, Bartosz Milewski, and David Held.
+        The D community helped a lot with much constructive
+        criticism, such as the thread starting with
+        Tomasz Stachowiak in $(NG_digitalmars_D 41633).
+        )
 
 )
 
 Macros:
-	TITLE=LazyEvaluationOfFunctionArguments
-	WIKI=LazyEvaluation
-	CATEGORY_ARTICLES=$0
+        TITLE=LazyEvaluationOfFunctionArguments
+        WIKI=LazyEvaluation
 
-	NG_digitalmars_D = <a href="http://www.digitalmars.com/pnews/read.php?server=news.digitalmars.com&group=digitalmars.D&artnum=$0">D/$0</a>
+        NG_digitalmars_D = <a href="http://www.digitalmars.com/pnews/read.php?server=news.digitalmars.com&group=digitalmars.D&artnum=$0">D/$0</a>
 

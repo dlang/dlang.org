@@ -4,35 +4,35 @@ $(SPEC_S Interfaces,
 
 $(GRAMMAR
 $(GNAME InterfaceDeclaration):
-	$(B interface) $(I Identifier) $(GLINK BaseInterfaceList)$(OPT) $(GLINK InterfaceBody)
-	$(GLINK2 template, InterfaceTemplateDeclaration)
+        $(B interface) $(I Identifier) $(GLINK BaseInterfaceList)$(OPT) $(GLINK InterfaceBody)
+        $(GLINK2 template, InterfaceTemplateDeclaration)
 
 $(GNAME BaseInterfaceList):
-	$(B :) $(GLINK2 class, InterfaceClasses)
+        $(B :) $(GLINK2 class, InterfaceClasses)
 
 $(GNAME InterfaceBody):
-	$(B {) $(GLINK2 module, DeclDefs)$(OPT) $(B })
+        $(B {) $(GLINK2 module, DeclDefs)$(OPT) $(B })
 )
 
-	$(P Interfaces describe a list of functions that a class that inherits
-	from the interface must implement.
-	A class that implements an interface can be converted to a reference
-	to that interface.)
+        $(P Interfaces describe a list of functions that a class that inherits
+        from the interface must implement.
+        A class that implements an interface can be converted to a reference
+        to that interface.)
 
-	$(P Some operating system objects, like COM/OLE/ActiveX for Win32,
-	have specialized interfaces. D interfaces that are compatible with
-	COM/OLE/ActiveX are called $(LINK2 #COM-Interfaces, $(I COM Interfaces)).
-	)
+        $(P Some operating system objects, like COM/OLE/ActiveX for Win32,
+        have specialized interfaces. D interfaces that are compatible with
+        COM/OLE/ActiveX are called $(LINK2 #COM-Interfaces, $(I COM Interfaces)).
+        )
 
 $(V2
-	$(P $(LINK2 #CPP-Interfaces, $(I C++ Interfaces)) are another
-	form of interfaces, meant to be binary compatible with C++.
-	)
+        $(P $(LINK2 #CPP-Interfaces, $(I C++ Interfaces)) are another
+        form of interfaces, meant to be binary compatible with C++.
+        )
 )
 
-	$(P Interfaces cannot derive from classes; only from other interfaces.
-	Classes cannot derive from an interface multiple times.
-	)
+        $(P Interfaces cannot derive from classes; only from other interfaces.
+        Classes cannot derive from an interface multiple times.
+        )
 
 ------
 interface D
@@ -40,12 +40,12 @@ interface D
     void foo();
 }
 
-class A : D, D	// error, duplicate interface
+class A : D, D  // error, duplicate interface
 {
 }
 ------
 
-	An instance of an interface cannot be created.
+        An instance of an interface cannot be created.
 
 
 ------
@@ -56,35 +56,35 @@ interface D
 
 ...
 
-D d = new D();		// error, cannot create instance of interface
+D d = new D();          // error, cannot create instance of interface
 ------
 
 $(V1
-	$(P Interface member functions do not have implementations.)
+        $(P Interface member functions do not have implementations.)
 
 ------
 interface D
 {
-    void bar() { }	// error, implementation not allowed
+    void bar() { }      // error, implementation not allowed
 }
 ------
 )
 $(V2
-	$(P Virtual interface member functions do not have implementations.
-	Interfaces are expected to implement static or final functions.
-	)
+        $(P Virtual interface member functions do not have implementations.
+        Interfaces are expected to implement static or final functions.
+        )
 
 ------
 interface D
 {
-    void bar() { }	// error, implementation not allowed
+    void bar() { }      // error, implementation not allowed
     static void foo() { } // ok
     final void abc() { } // ok
 }
 ------
 
-	$(P Classes that inherit from an interface may not override final or
-	static interface member functions.)
+        $(P Classes that inherit from an interface may not override final or
+        static interface member functions.)
 
 ------
 interface D {
@@ -101,9 +101,9 @@ class C : D {
 ------
 
 )
-	$(P All interface functions must be defined in a class that inherits
-	from that interface:
-	)
+        $(P All interface functions must be defined in a class that inherits
+        from that interface:
+        )
 ------
 interface D
 {
@@ -112,16 +112,16 @@ interface D
 
 class A : D
 {
-    void foo() { }	// ok, provides implementation
+    void foo() { }      // ok, provides implementation
 }
 
 class B : D
 {
-    int foo() { }	// error, no void foo() implementation
+    int foo() { }       // error, no void foo() implementation
 }
 ------
 
-	Interfaces can be inherited and functions overridden:
+        Interfaces can be inherited and functions overridden:
 
 ------
 interface D
@@ -142,12 +142,12 @@ class B : A
 ...
 
 B b = new B();
-b.foo();		// returns 2
-D d = cast(D) b;	// ok since B inherits A's D implementation
-d.foo();		// returns 2;
+b.foo();                // returns 2
+D d = cast(D) b;        // ok since B inherits A's D implementation
+d.foo();                // returns 2;
 ------
 
-	$(P Interfaces can be reimplemented in derived classes:)
+        $(P Interfaces can be reimplemented in derived classes:)
 
 ------
 interface D
@@ -168,17 +168,17 @@ class B : A, D
 ...
 
 B b = new B();
-b.foo();		// returns 2
+b.foo();                // returns 2
 D d = cast(D) b;
-d.foo();		// returns 2
+d.foo();                // returns 2
 A a = cast(A) b;
 D d2 = cast(D) a;
-d2.foo();		// returns 2, even though it is A's D, not B's D
+d2.foo();               // returns 2, even though it is A's D, not B's D
 ------
 
-	$(P A reimplemented interface must implement all the interface
-	functions, it does not inherit them from a super class:
-	)
+        $(P A reimplemented interface must implement all the interface
+        functions, it does not inherit them from a super class:
+        )
 
 ------
 interface D
@@ -193,16 +193,16 @@ class A : D
 
 class B : A, D
 {
-}		// error, no foo() for interface D
+}               // error, no foo() for interface D
 ------
 
 $(V2
 $(SECTION2 $(LNAME2 InterfaceContracts, Interfaces with Contracts),
 
-	$(P Interface member functions can have contracts even though there
-	is no body for the function. The contracts are inherited by any
-	class member function that implements that interface member function.
-	)
+        $(P Interface member functions can have contracts even though there
+        is no body for the function. The contracts are inherited by any
+        class member function that implements that interface member function.
+        )
 
 ---
 interface I
@@ -217,53 +217,47 @@ interface I
 )
 
 $(SECTION2 $(LNAME2 ConstInterface, Const and Immutable Interfaces),
-	$(P If an interface has $(CODE const) or $(CODE immutable) storage
-	class, then all members of the interface are
-	$(CODE const) or $(CODE immutable).
-	This storage class is not inherited.
-	)
+        $(P If an interface has $(CODE const) or $(CODE immutable) storage
+        class, then all members of the interface are
+        $(CODE const) or $(CODE immutable).
+        This storage class is not inherited.
+        )
 )
 )
 
 $(SECTION2 $(LNAME2 COM-Interfaces, COM Interfaces),
 
-	$(P A variant on interfaces is the COM interface. A COM interface is
-	designed to map directly onto a Windows COM object. Any COM object
-	can be represented by a COM interface, and any D object with
-	a COM interface can be used by external COM clients.
-	)
+        $(P A variant on interfaces is the COM interface. A COM interface is
+        designed to map directly onto a Windows COM object. Any COM object
+        can be represented by a COM interface, and any D object with
+        a COM interface can be used by external COM clients.
+        )
 
-	$(P A COM interface is defined as one that derives from the interface
-	$(D std.c.windows.com.IUnknown). A COM interface differs from
-	a regular D interface in that:
-	)
+        $(P A COM interface is defined as one that derives from the interface
+        $(D std.c.windows.com.IUnknown). A COM interface differs from
+        a regular D interface in that:
+        )
 
-	$(UL
-	$(LI It derives from the interface $(D std.c.windows.com.IUnknown).)
-	$(LI It cannot be the argument of a $(I DeleteExpression).)
-	$(LI References cannot be upcast to the enclosing class object, nor
-	can they be downcast to a derived interface. To accomplish this,
-	an appropriate $(D QueryInterface()) would have to be implemented
-	for that interface in standard COM fashion.)
-	$(LI Classes derived from COM interfaces are COM classes.)
-	$(LI The default linkage for member functions of COM classes
-	is $(D extern(System)).)
-	$(LI The first member of the $(D vtbl[]) is not the pointer
-	to the InterfaceInfo, but the first virtual function pointer.)
-	)
-
-$(V2
-	$(P For more information, see
-	$(LINK2 http://lunesu.com/uploads/ModernCOMProgramminginD.pdf, Modern COM Programming in D)
-	)
-)
+        $(UL
+        $(LI It derives from the interface $(D std.c.windows.com.IUnknown).)
+        $(LI It cannot be the argument of a $(I DeleteExpression).)
+        $(LI References cannot be upcast to the enclosing class object, nor
+        can they be downcast to a derived interface. To accomplish this,
+        an appropriate $(D QueryInterface()) would have to be implemented
+        for that interface in standard COM fashion.)
+        $(LI Classes derived from COM interfaces are COM classes.)
+        $(LI The default linkage for member functions of COM classes
+        is $(D extern(System)).)
+        $(LI The first member of the $(D vtbl[]) is not the pointer
+        to the InterfaceInfo, but the first virtual function pointer.)
+        )
 )
 
 $(V2
 $(SECTION2 $(LNAME2 CPP-Interfaces, C++ Interfaces),
 
-	$(P C++ interfaces are interfaces declared with C++ linkage:
-	)
+        $(P C++ interfaces are interfaces declared with C++ linkage:
+        )
 
 ---
 extern (C++) interface Ifoo
@@ -273,7 +267,7 @@ extern (C++) interface Ifoo
 }
 ---
 
-	$(P which is meant to correspond with the following C++ declaration:)
+        $(P which is meant to correspond with the following C++ declaration:)
 
 $(CPPCODE
 class Ifoo
@@ -283,27 +277,31 @@ class Ifoo
 };
 )
 
-	$(P Any interface that derives from a C++ interface is also
-	a C++ interface.
-	A C++ interface differs from a D interface in that:
-	)
+        $(P Any interface that derives from a C++ interface is also
+        a C++ interface.
+        A C++ interface differs from a D interface in that:
+        )
 
-	$(UL
-	$(LI It cannot be the argument of a $(I DeleteExpression).)
-	$(LI References cannot be upcast to the enclosing class object, nor
-	can they be downcast to a derived interface.)
-	$(LI The C++ calling convention is the default convention
-	for its member functions, rather than the D calling convention.)
-	$(LI The first member of the $(D vtbl[]) is not the pointer
-	to the $(D Interface), but the first virtual function pointer.)
-	)
+        $(UL
+        $(LI It cannot be the argument of a $(I DeleteExpression).)
+        $(LI References cannot be upcast to the enclosing class object, nor
+        can they be downcast to a derived interface.)
+        $(LI The C++ calling convention is the default convention
+        for its member functions, rather than the D calling convention.)
+        $(LI The first member of the $(D vtbl[]) is not the pointer
+        to the $(D Interface), but the first virtual function pointer.)
+        )
+
+        $(P For more information, see
+        $(LINK2 http://lunesu.com/uploads/ModernCOMProgramminginD.pdf, Modern COM Programming in D)
+        )
 )
 )
 
 )
 
 Macros:
-	TITLE=Interfaces
-	WIKI=Interface
-	CATEGORY_SPEC=$0
+        TITLE=Interfaces
+        WIKI=Interface
+        CATEGORY_SPEC=$0
 

@@ -1,351 +1,39 @@
 Ddoc
 
-$(D_S D Programming Language,
+$(D_S D Programming Language $(VER),
 
-$(SECTION3 The D programming language. Modern
-convenience. Modeling power. Native efficiency.,
-
-$(P $(RED $(B DConf 2013 is scheduled for May 1-3 in Menlo Park, California.) Visit the $(LINK2 http://dconf.org/, conference website) for more details including how to propose a session.))
-
-<div style="text-align: right; font-size: 11px; margin-bottom: -35px; margin-right: 5px; position: relative; z-index: 10000">
-<a href="http://forum.dlang.org/group/digitalmars.D" target="_blank" class="tip button">
-    [your code here]
-    <span>
-        Got a brief example illustrating D? Submit your code to the digitalmars.D forum specifying "[your code here]" in the title. Upon approval it will be showcased on a random schedule on D's homepage.
-    </span>
-</a>
-</div>
-----
-#!/usr/bin/env rdmd
-// Computes average line length for standard input.
-import std.stdio;
-
-void main() {
-    ulong lines = 0;
-    double sumLength = 0;
-    foreach (line; stdin.byLine()) {
-        ++lines;
-        sumLength += line.length;
-    }
-    writeln("Average line length: ",
-        lines ? sumLength / lines : 0);
-}
-----
-
-D is a language with C-like syntax and static typing. It pragmatically combines
-efficiency, control, and modeling power, with safety and programmer productivity.
-
-$(SECTION3 Convenience,
-
-$(UL
-
-$(LI D allows writing large code fragments without redundantly specifying types,
-like dynamic languages do. On the other hand, static inference deduces types and other
-code properties, giving the best of both the static and the
-dynamic worlds. $(EXAMPLE 1,
-----
-void main() {
-    // Define an array of numbers, double[]. Compiler recognizes the common
-    // type of all initializers.
-    auto arr = [ 1, 2, 3.14, 5.1, 6 ];
-    // Dictionary that maps string to int, type is spelled int[string]
-    auto dictionary = [ "one" : 1, "two" : 2, "three" : 3 ];
-    // Calls the min function defined below
-    auto x = min(arr[0], dictionary["two"]);
-}
-// Type deduction works for function results. This is important for generic
-// functions, such as min below, which works correctly for all comparable
-// types.
-auto min(T1, T2)(T1 lhs, T2 rhs) {
-    return rhs < lhs ? rhs : lhs;
-}
-----
-
-))
-
-$(LI Automatic memory management makes for safe, simple, and robust code.
-D also supports scoped resource management (aka the
-$(HTTP en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization, RAII) idiom)
-and $(LINK2 statement.html#ScopeGuardStatement, $(D scope) statements) for
-deterministic transactional code that is easy to write and read. $(EXAMPLE 2,
-
-----
-import std.stdio;
-
-class Widget { }
-
-void main() {
-    // Automatically managed.
-    auto w = new Widget;
-    // Code is executed in any case upon scope exit.
-    scope(exit) { writeln("Exiting main."); }
-    // File is closed deterministically at scope's end.
-    foreach (line; File("text.txt").byLine()) {
-        writeln(line);
-    }
-    writeln();
-}
-----
-)
+$(BLOCKQUOTE
+        $(DOUBLEQUOTE It seems to me that most of the $(SINGLEQUOTE new) programming languages
+        fall into one of two categories: Those from academia with radical
+        new paradigms and those from large corporations with a focus on RAD
+        and the web. Maybe it&rsquo;s time for a new language born out of
+        practical experience implementing compilers.) -- Michael
 )
 
-$(LI Built-in linear and associative arrays, slices, and ranges make daily
-programming simple and pleasant for tasks, both small and large. $(EXAMPLE 3,
-----
-#!/usr/bin/env rdmd
-import std.range, std.stdio;
-
-// Compute average line length for stdin
-void main() {
-    ulong lines = 0, sumLength = 0;
-    foreach (line; stdin.byLine()) {
-        ++lines;
-        sumLength += line.length;
-    }
-    writeln("Average line length: ",
-        lines ? cast(double) sumLength / lines : 0.0);
-}
-----
-))
-
-))
-
-$(SECTION3 Power,
-
-$(UL
-
-$(LI The best paradigm is to not impose something at the expense of others.
-D offers classic polymorphism, value semantics, functional
-style, generics, generative programming, contract programming,
-and more&mdash;all harmoniously integrated. $(EXAMPLE 4,
-----
-// Interfaces and classes
-interface Printable {
-   void print(uint level)
-   in { assert(level > 0); } // contract is part of the interface
-}
-
-// Interface implementation
-class Widget : Printable {
-   void print(uint level)
-   in{ }
-   body{ }
-}
-
-// Single inheritance of state
-class ExtendedWidget : Widget {
-   override void print(uint level)
-   in { /* weakening precondition is okay */  }
-   body {
-       //... level may be 0 here ...
-   }
-}
-
-// Immutable data shared across threads
-immutable string programName = "demo";
-// Mutable data is thread-local
-int perThread = 42;
-// Explicitly shared data
-shared int perApp = 5;
-
-// Structs have value semantics
-struct BigNum {
-    // intercept copying
-    this(this) { }
-    // intercept destructor
-    ~this() { }
-}
-
-void main()
-{
-    // ...
-}
-----
-))
-
-$(LI D offers an innovative approach to concurrency, featuring true
-immutable data, message passing, no sharing by default, and
-controlled mutable sharing across threads. $(HTTP
-informit.com/articles/article.aspx?p=1609144, Read more).)
-
-$(LI From simple scripts to large projects, D has the breadth
-to scale with any application's needs: unit testing,
-information hiding, refined modularity, fast compilation, precise
-interfaces. $(HTTP drdobbs.com/high-performance-computing/217801225,
-Read more).)
-
-))
-
-$(SECTION3 Efficiency,
-
-$(UL
-
-$(LI D compiles naturally to efficient native code.)
-
-$(LI D is designed such that most "obvious" code is fast $(I and)
-safe. On occasion a function might need to escape the confines of type
-safety for ultimate speed and control. For such rare cases D offers
-native pointers, type casts, access to any C function without any
-intervening translation, and even inline assembly code. $(EXAMPLE 5,
-----
-import core.stdc.stdlib;
-
-void livingDangerously() {
-    // Access to C's malloc and free primitives
-    auto buf = malloc(1024 * 1024);
-    scope(exit) free(buf); // free automatically upon scope exit
-    // Interprets memory as an array of floats
-    auto floats = cast(float[]) buf[0 .. 1024 * 1024];
-    // Even stack allocation is possible
-    auto moreBuf = alloca(4096 * 100);
-    //...
-}
-
-// Using inline asm for extra speed on x86
-uint checked_multiply(uint x, uint y) {
-    uint result;
-    version (D_InlineAsm_X86) {
-        // Inline assembler "sees" D variables.
-        asm {
-            mov     EAX,x        ;
-            mul     EAX,y        ;
-            mov     result,EAX   ;
-            jc      Loverflow    ;
-        }
-        return result;
-    } else {
-        result = x * y;
-        if (!y || x <= uint.max / y)
-           return result;
-   }
-Loverflow:
-   throw new Exception("multiply overflow");
-}
-
-void main()
-{
-    // ...
-}
-----
-))
-
-$(LI The $(D @safe), $(D @trusted), and $(D @system) modular
-attributes allow the programmer to best decide the safety-efficiency
-tradeoffs of an application, and have the compiler check for
-consistency. $(LINK2 safed.html, Read more.))
-
+$(BLOCKQUOTE
+$(DOUBLEQUOTE Great, just what I need.. another D in programming.) -- Segfault
 )
-
-))
-
-$(XXXXSECTION2 Community,
-
-$(P D is the center of a growing, vibrant community. Get D-related
-news from the $(D digitalmars.D.announce) forum $(TAG2 span,
-style="font-size:80%", $(HTTP
-digitalmars.com/pnews/indexing.php?server=news.digitalmars.com&group=digitalmars.D.announce,
-[browse]) $(LINK2 news://news.digitalmars.com/digitalmars.D.announce,
-[usenet]) $(HTTP
-lists.puremagic.com/cgi-bin/mailman/listinfo/digitalmars-d-announce,
-[mailing list])). On Twitter, subscribe to D's official announcements
-channel, $(HTTP twitter.com/#!/D_Programming,@D_Programming), and
-search for (and disseminate) news using tag $(HTTP
-twitter.com/#!/search/%23d_lang, #d_lang).)
-
-$(P Learning D and have a question about the best way to do X? The $(D
-digitalmars.D.learn) forum $(TAG2 span, style="font-size:80%", $(HTTP
-digitalmars.com/pnews/indexing.php?server=news.digitalmars.com&group=digitalmars.D.learn,
-[browse]) $(LINK2 news://news.digitalmars.com/digitalmars.D.learn,
-[usenet]) $(HTTP
-lists.puremagic.com/cgi-bin/mailman/listinfo/digitalmars-d-learn,
-[mailing list])) is the hangout place where many D experts are ready
-to help fellow hackers.)
-
-$(P The $(D digitalmars.D) forum $(TAG2 span, style="font-size:80%",
-$(HTTP
-digitalmars.com/pnews/indexing.php?server=news.digitalmars.com&group=digitalmars.D,
-[browse]) $(LINK2 news://news.digitalmars.com/digitalmars.D, [usenet])
-$(HTTP lists.puremagic.com/cgi-bin/mailman/listinfo/digitalmars-d,
-[mailing list])) is the best place to discuss anything and everything
-related to D: language design ideas, suggestions, status and future,
-contributions to the language and its standard library. Reach and
-engage all major D contributors, including the very creator of D,
-$(HTTP walterbright.com, Walter Bright). For real-time conversation, use #d IRC channel on freenode.)
-
-$(SECTION3 To contribute,
-
-$(P Many D enthusiasts are not only using, but also contributing to
-the language, its implementation, and its standard library. The main
-hub of D development is $(HTTP github.com/D-Programming-Language,
-D-Programming-Language on github). The project has been awash in
-contributions ever since creating the github repository on January 23,
-2011, with an average of over 3 pull requests per day. (That doesn't
-mean there's not a lot more to do!) You are welcome to fork any
-subproject ($(HTTP github.com/D-Programming-Language/dmd, compiler),
-$(HTTP github.com/D-Programming-Language/druntime, runtime), $(HTTP
-github.com/D-Programming-Language/phobos, standard library), $(HTTP
-github.com/D-Programming-Language/d-programming-language.org,
-website), $(HTTP github.com/D-Programming-Language/tools, tools), or
-$(HTTP github.com/D-Programming-Language/installer, installer)), change
-it in useful ways, and propose your changes back to the community.
-
-$(P The reference compiler $(LINK2 download.html, dmd) has inspired
-work on alternate implementations that add value by using distinct
-back-ends:)
-
-$(UL
-
-$(LI GNU D compiler $(LINK2 http://bitbucket.org/goshawk/gdc/wiki/Home, gdc).)
-
-$(LI LLVM D Compiler $(HTTP dsource.org/projects/ldc, ldc).)
-
-)
-
-$(P The gdc compiler is of particular interest because it taps into
-gcc's extremely portable back-end and large installation base. The D
-development team has signed the appropriate documents with FSF and is
-pursuing integration of gdc with gcc version 4.8 starting March 2012.
-$(HTTPS launchpad.net/~ibuclaw, Iain Buclaw) is leading that
-effort.)
-
-)
-
-)
-)
-)
-
-
-
 
 $(COMMENT
+The second
+$(LINK2 http://d.puremagic.com/conference2008/, D Programming Language Conference)
+will take place in Seattle at Amazon, Aug 4..6, 2008.
 
-$(COMMENT $(AMAZONLINK 0321635361, <img style="float:right;
-padding-left:1.5em; padding-bottom:1.5em; border-width: 0;"
-src="images/tdpl.jpg" alt="The D Programming Language book" />))
+$(P The first
+$(LINK2 http://d.puremagic.com/conference2007/, D Programming Language Conference)
+took place in Seattle at Amazon, Aug 23..24, 2007.)
+)
 
-$(P The K&amp;R of D  is here! Get $(AMAZONLINK 0321635361, The D
-Programming  Language) by Andrei  Alexandrescu&mdash;the authoritative
-source on everything D. From the book's introduction:
-
-$(BLOCKQUOTE $(AMAZONLINK 0321635361, The D Programming Language) by
-Andrei Alexandrescu, D is a language that attempts to consistently do
-the right thing within the constraints it chose: system-level access
-to computing resources, high performance, and syntactic similarity
-with C-derived languages.  In trying to do the right thing, D
-sometimes stays with tradition and does what other languages do, and
-other times it breaks tradition with a fresh, innovative solution.  On
-occasion that meant revisiting the very constraints that D ostensibly
-embraced.  For example, large program fragments or indeed entire
-programs can be written in a well-defined memory-safe subset of D,
-which entails giving away a small amount of system-level access for a
-large gain in program debuggability.))
-
-$(P  D  is  a  multi-paradigm  programming language  that  combines  a
-principled approach  with a  focus on practicality.   In D you  get to
-harness  the power  and high  performance of  C and  C++ and  also the
-safety and  programmer productivity of  modern languages such  as Ruby
-and  Python.  Special  attention  is  given to  the  needs of  quality
-assurance, documentation, portability, and reliability.)
+<table>
+$(TR
+$(TD
+$(P
+D is a systems programming language.
+Its focus is on combining the power and high performance of C and C++ with
+the programmer productivity of modern languages like Ruby and Python.
+Special attention is given to the needs of quality assurance, documentation,
+management, portability and reliability.
+)
 
 $(P The D language is statically typed and compiles directly to machine code.
 It&rsquo;s multiparadigm, supporting many programming styles:
@@ -354,38 +42,58 @@ syntax family, and its appearance is very similar to that of C++.
 Here&rsquo;s a quick list of $(LINK2 comparison.html, features).
 )
 
-$(P This site does not refer to the first edition of the language,
-known as "D version 1" or "D1". Currently, D1 is in maintenance mode
-and has documentation available $(LINK2
-http://www.digitalmars.com/d/1.0/index.html,here). We recommend the
-current edition of the D programming language (formerly known as "D2")
-for new projects. )
+$(P It is not governed by a corporate agenda or any overarching theory of
+programming. The needs and contributions of the
+$(LINK2 ../NewsGroup.html, D programming community) form the direction it
+goes.
+)
+)
+$(TD
+$(V1 $(AMAZON 1590599608))
+$(V2 $(AMAZON 0321635361))
+)
+)
+</table>
 
-$(P There are currently three implementations:
+$(P There are two versions of the language:
+$(OL
+    $(LI $(LINK2 http://www.digitalmars.com/d/2.0/index.html, D version 2)
+        which is recommended for new projects.)
+    $(LI $(LINK2 http://www.digitalmars.com/d/1.0/index.html, D version 1)
+        which is in maintenance mode.)
+)
+)
+
+$(P There are currently four implementations:
 $(OL
     $(LI Digital Mars dmd for
-    $(LINK2 dmd-windows.html, Windows),
-    $(LINK2 dmd-linux.html, x86 Linux),
-    $(LINK2 dmd-osx.html, Mac OS X), and
-    $(LINK2 dmd-freebsd.html, x86 FreeBSD).
+        Windows $(LINK2 http://www.digitalmars.com/d/1.0/dmd-windows.html, 1.0)
+                $(LINK2 http://www.digitalmars.com/d/2.0/dmd-windows.html, 2.0),
+        x86 Linux $(LINK2 http://www.digitalmars.com/d/1.0/dmd-linux.html, 1.0)
+                $(LINK2 http://www.digitalmars.com/d/2.0/dmd-linux.html, 2.0),
+        Mac OS X $(LINK2 http://www.digitalmars.com/d/1.0/dmd-osx.html, 1.0)
+                $(LINK2 http://www.digitalmars.com/d/2.0/dmd-osx.html, 2.0), and
+        x86 FreeBSD $(LINK2 http://www.digitalmars.com/d/1.0/dmd-freebsd.html, 1.0),
+                $(LINK2 http://www.digitalmars.com/d/2.0/dmd-osx.html, 2.0).
     )
 
-    $(LI LLVM D Compiler $(LINK2 http://www.dsource.org/projects/ldc, ldc).
+    $(LI LLVM D Compiler $(LINK2 http://www.dsource.org/projects/ldc, ldc)
+        for D version 1.
     )
 
 $(COMMENT
     $(LI Gnu D compiler $(LINK2 http://dgcc.sourceforge.net/, gdc)
-    for several platforms, including
-    $(LINK2 http://gdcwin.sourceforge.net/, Windows) and
-    $(LINK2 http://gdcmac.sourceforge.net/, Mac OS X)
-    for D versions 1.030 and 2.014.
+        for several platforms, including
+        $(LINK2 http://gdcwin.sourceforge.net/, Windows) and
+        $(LINK2 http://gdcmac.sourceforge.net/, Mac OS X)
+        for D versions 1.030 and 2.014.
     )
 )
     $(LI Gnu D compiler $(LINK2 http://bitbucket.org/goshawk/gdc/wiki/Home, gdc).
     )
 
-    $(COMMENT $(LINK2 http://dnet.codeplex.com/, D.NET compiler)
-    alpha for .NET for D version 2.)
+    $(LI $(LINK2 http://dnet.codeplex.com/, D.NET compiler)
+        alpha for .NET for D version 2.)
 )
 )
 
@@ -395,7 +103,7 @@ More links to innumerable D wikis, libraries, tools, media articles,
 etc. are at $(LINK2 http://www.digitalmars.com/d/dlinks.html, dlinks).
 )
 
-$(COMMENT $(P
+$(P
 This document is available as a
 $(LINK2 http://www.prowiki.org/wiki4d/wiki.cgi?LanguageSpecification/PDFArchive, pdf),
 as well as in
@@ -410,18 +118,18 @@ a Japanese book
 $(LINK2 http://www.gihyo.co.jp/books/syoseki-contents.php/4-7741-2208-4, D Language Perfect Guide),
 and a Turkish book
 $(LINK2 http://ddili.org/ders/d/, D Programlama Dili Dersleri).
-))
+)
 
 $(COMMENT: Japanese by Kazuhiro Inaba, Portugese by Christian Hartung)
 
 $(P This is an example D program illustrating some of the capabilities:)
 ----
-#!/usr/bin/env rdmd
-/* shebang is supported */
+#!/usr/bin/dmd -run
+/* sh style script syntax is supported */
 
 /* Hello World in D
    To compile:
-     dmd hello.d (or on Unix just make hello.d executable and run it)
+     dmd hello.d
    or to optimize:
      dmd -O -inline -release hello.d
 */
@@ -430,7 +138,7 @@ import std.stdio;
 
 void main(string[] args)
 {
-$(V1      writefln("Hello World, Reloaded");)$(V2      writeln("Hello World, Reloaded");)
+    writeln("Hello World, Reloaded");
 
     // auto type inference and built-in foreach
     foreach (argc, argv; args)
@@ -456,7 +164,7 @@ $(V1      writefln("Hello World, Reloaded");)$(V2      writeln("Hello World, Rel
     {
         specs* s = new specs;
         // no need for '->'
-        s.count = args.length;         // get length of array with .length
+        s.count = args.length;             // get length of array with .length
         s.allocated = typeof(args).sizeof; // built-in native type properties
         foreach (argv; args)
             s.allocated += argv.length * typeof(argv[0]).sizeof;
@@ -465,7 +173,7 @@ $(V1      writefln("Hello World, Reloaded");)$(V2      writeln("Hello World, Rel
 
     // built-in string and common string operations
     writefln("argc = %d, " ~ "allocated = %d",
-    argspecs().count, argspecs().allocated);
+        argspecs().count, argspecs().allocated);
 }
 
 class CmdLin
@@ -505,7 +213,7 @@ public:
             suffix = "rd";
             break;
           default:
-        break;
+            break;
         }
         return suffix;
     }
@@ -520,53 +228,6 @@ someone posting a patch to the compiler, and then later claim compensation for t
 )
 
 Macros:
-    TITLE=Home
-    WIKI=Intro
-    TAG=<$1>$+</$1>
-    TAG2=<$1 $2>$3</$1>
-    D=<span class="d_inlinecode">$0</span>
-    EXAMPLE=
-<script>
-  document.write('$(TAG2 div, id="q$1" class="question" onclick="showHideAnswer(this);", <span class="nobr">See example.</span>)');
-</script>
-<noscript><span class="nobr">See example.</span></noscript>
-$(TAG2 div, id="a$1" class="answer-nojs", $2)
-    LAYOUT=
-<div id="navigation">
-  $1
-  $(GOOGLE_TRANSLATE)
-</div>
-<div id="twitter">
-<script src="http://widgets.twimg.com/j/2/widget.js"></script>
-<script>
-new TWTR.Widget({
-  version : 2,
-  type : 'profile',
-  rpp : 8,
-  interval : 30000,
-  width : 'auto',
-  height : 600,
-  theme : {
-    shell : {
-      background : '#1f252b',
-      //color : '#000000'
-    },
-    tweets : {
-      //background : '',
-      //color : '',
-      //links : ''
-    }
-  },
-  features : {
-    scrollbar : true,
-    loop : false,
-    live : true,
-    behavior : 'all'
-  }
-}).render().setUser('D_programming').start();
-</script>
-</div>
-<div id="content" style="margin-right:18em;" class='hyphenate'>
-  $(PAGE_TOOLS)
-  $3
-</div>
+        TITLE=Intro
+        WIKI=Intro
+

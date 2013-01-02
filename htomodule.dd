@@ -1,40 +1,40 @@
 Ddoc
 
-$(D_S Converting C $(D .h) Files to D Modules,
+$(D_S Converting C $(TT .h) Files to D Modules,
 
-	While D cannot directly compile C source code, it can easily
-	interface to C code, be linked with C object files, and call
-	C functions in DLLs.
-	The interface to C code is normally found in C $(D .h) files.
-	So, the trick to connecting with C code is in converting C
-	$(D .h) files to D modules.
-	This turns out to be difficult to do mechanically since
-	inevitably some human judgement must be applied.
-	This is a guide to doing such conversions.
+        While D cannot directly compile C source code, it can easily
+        interface to C code, be linked with C object files, and call
+        C functions in DLLs.
+        The interface to C code is normally found in C $(TT .h) files.
+        So, the trick to connecting with C code is in converting C
+        $(TT .h) files to D modules.
+        This turns out to be difficult to do mechanically since
+        inevitably some human judgement must be applied.
+        This is a guide to doing such conversions.
 
 <h4>Preprocessor</h4>
 
-	$(D .h) files can sometimes be a bewildering morass of layers of
-	macros, $(D #include) files, $(D #ifdef)'s, etc. D doesn't
-	include a text preprocessor like the C preprocessor,
-	so the first step is to remove the need for
-	it by taking the preprocessed output. For DMC (the Digital
-	Mars C/C++ compiler), the command:
+        $(TT .h) files can sometimes be a bewildering morass of layers of
+        macros, $(TT #include) files, $(TT #ifdef)'s, etc. D doesn't
+        include a text preprocessor like the C preprocessor,
+        so the first step is to remove the need for
+        it by taking the preprocessed output. For DMC (the Digital
+        Mars C/C++ compiler), the command:
 
 $(CONSOLE
 <a href="http://www.digitalmars.com/ctg/sc.html">dmc</a> <a href="http://www.digitalmars.com/ctg/sc.html#dashc">-c</a> program.h <a href="http://www.digitalmars.com/ctg/sc.html#dashe">-e</a> <a href="http://www.digitalmars.com/ctg/sc.html#dashl">-l</a>
 )
 
-	will create a file $(D program.lst) which is the source file after
-	all text preprocessing.
-	<p>
+        will create a file $(TT program.lst) which is the source file after
+        all text preprocessing.
+        <p>
 
-	Remove all the $(D #if), $(D #ifdef), $(D #include),
-	etc. statements.
+        Remove all the $(TT #if), $(TT #ifdef), $(TT #include),
+        etc. statements.
 
 <h4>Linkage</h4>
 
-	Generally, surround the entire module with:
+        Generally, surround the entire module with:
 
 ---------------------------
 extern (C)
@@ -43,103 +43,103 @@ extern (C)
 }
 ---------------------------
 
-	to give it C linkage.
+        to give it C linkage.
 
 <h4>Types</h4>
 
-	A little global search and replace will take care of renaming
-	the C types to D types. The following table shows a typical mapping
-	for 32 bit C code:
-	<p>
+        A little global search and replace will take care of renaming
+        the C types to D types. The following table shows a typical mapping
+        for 32 bit C code:
+        <p>
 
-	$(TABLE1
-	<caption>Mapping C type to D type</caption>
-	<tr>
-	<th>C type
-	<th>D type
-	<tr>
-	<td>long double
-	<td>real
-	<tr>
-	<td>unsigned long long
-	<td>ulong
-	<tr>
-	<td>long long
-	<td>long
-	<tr>
-	<td>unsigned long
-	<td>uint
-	<tr>
-	<td>long
-	<td>int
-	<tr>
-	<td>unsigned
-	<td>uint
-	<tr>
-	<td>unsigned short
-	<td>ushort
-	<tr>
-	<td>signed char
-	<td>byte
-	<tr>
-	<td>unsigned char
-	<td>ubyte
-	<tr>
-	<td>wchar_t
-	<td>wchar or dchar
-	<tr>
-	<td>bool
-	<td>bool, byte, int
-	<tr>
-	<td>size_t
-	<td>size_t
-	<tr>
-	<td>ptrdiff_t
-	<td>ptrdiff_t
-	)
+        $(TABLE1
+        <caption>Mapping C type to D type</caption>
+        <tr>
+        <th>C type
+        <th>D type
+        <tr>
+        <td>long double
+        <td>real
+        <tr>
+        <td>unsigned long long
+        <td>ulong
+        <tr>
+        <td>long long
+        <td>long
+        <tr>
+        <td>unsigned long
+        <td>uint
+        <tr>
+        <td>long
+        <td>int
+        <tr>
+        <td>unsigned
+        <td>uint
+        <tr>
+        <td>unsigned short
+        <td>ushort
+        <tr>
+        <td>signed char
+        <td>byte
+        <tr>
+        <td>unsigned char
+        <td>ubyte
+        <tr>
+        <td>wchar_t
+        <td>wchar or dchar
+        <tr>
+        <td>bool
+        <td>bool, byte, int
+        <tr>
+        <td>size_t
+        <td>size_t
+        <tr>
+        <td>ptrdiff_t
+        <td>ptrdiff_t
+        )
 
 <h4>NULL</h4>
 
-	$(D NULL) and $(D ((void*)0)) should be replaced
-	with $(D null).
+        $(TT NULL) and $(TT ((void*)0)) should be replaced
+        with $(TT null).
 
 <h4>Numeric Literals</h4>
 
-	Any $(SINGLEQUOTE L) or $(SINGLEQUOTE l) numeric literal suffixes should be removed,
-	as a C $(D long) is (usually) the same size as a D $(D int).
-	Similarly, $(SINGLEQUOTE LL) suffixes should be replaced with a
-	single $(SINGLEQUOTE L).
-	Any $(SINGLEQUOTE u) suffix will work the same in D.
+        Any $(SINGLEQUOTE L) or $(SINGLEQUOTE l) numeric literal suffixes should be removed,
+        as a C $(TT long) is (usually) the same size as a D $(TT int).
+        Similarly, $(SINGLEQUOTE LL) suffixes should be replaced with a
+        single $(SINGLEQUOTE L).
+        Any $(SINGLEQUOTE u) suffix will work the same in D.
 
 <h4>String Literals</h4>
 
-	In most cases, any $(SINGLEQUOTE L) prefix to a string can just be dropped,
-	as D will implicitly convert strings to wide characters if
-	necessary. However, one can also replace:
+        In most cases, any $(SINGLEQUOTE L) prefix to a string can just be dropped,
+        as D will implicitly convert strings to wide characters if
+        necessary. However, one can also replace:
 
 $(CCODE
 L"string"
 )
 
-	with:
+        with:
 
 ---------------------------
-"string"w	// for 16 bit wide characters
-"string"d	// for 32 bit wide characters
+"string"w       // for 16 bit wide characters
+"string"d       // for 32 bit wide characters
 ---------------------------
 
 <h4>Macros</h4>
 
-	Lists of macros like:
+        Lists of macros like:
 
 $(CCODE
-#define FOO	1
-#define BAR	2
-#define ABC	3
-#define DEF	40
+#define FOO     1
+#define BAR     2
+#define ABC     3
+#define DEF     40
 )
 
-	can be replaced with:
+        can be replaced with:
 
 ---------------------------
 enum
@@ -150,7 +150,7 @@ enum
 }
 ---------------------------
 
-	or with:
+        or with:
 
 ---------------------------
 const int FOO = 1;
@@ -159,23 +159,23 @@ const int ABC = 3;
 const int DEF = 40;
 ---------------------------
 
-	Function style macros, such as:
+        Function style macros, such as:
 
 $(CCODE
 #define MAX(a,b) ((a) < (b) ? (b) : (a))
 )
 
-	can be replaced with functions:
+        can be replaced with functions:
 
 ---------------------------
 int MAX(int a, int b) { return (a < b) ? b : a; }
 ---------------------------
 
-	<!-- Thanks to Jarrett Billingsley for the following tip -->
+        <!-- Thanks to Jarrett Billingsley for the following tip -->
 
-	The functions, however, won't work if they appear inside static
-	initializers that must be evaluated at compile time rather than
-	runtime. To do it at compile time, a template can be used:
+        The functions, however, won't work if they appear inside static
+        initializers that must be evaluated at compile time rather than
+        runtime. To do it at compile time, a template can be used:
 
 $(CCODE
 #define GT_DEPTH_SHIFT  (0)
@@ -186,13 +186,13 @@ $(CCODE
 
 /* Macro that constructs a graphtype */
 #define GT_CONSTRUCT(depth,scheme,size) \
-	((depth) | (scheme) | ((size) << GT_SIZE_SHIFT))
+        ((depth) | (scheme) | ((size) << GT_SIZE_SHIFT))
 
 /* Common graphtypes */
 #define GT_TEXT16  GT_CONSTRUCT(4, GT_TEXT, 16)
 )
 
-	The corresponding D version would be:
+        The corresponding D version would be:
 
 ---------------------------
 const uint GT_DEPTH_SHIFT  = 0;
@@ -215,14 +215,14 @@ const uint GT_TEXT16 = GT_CONSTRUCT!(4, GT_TEXT, 16);
 
 <h4>Declaration Lists</h4>
 
-	D doesn't allow declaration lists to change the type.
-	Hence:
+        D doesn't allow declaration lists to change the type.
+        Hence:
 
 $(CCODE
 int *p, q, t[3], *s;
 )
 
-	should be written as:
+        should be written as:
 
 ---------------------------
 int* p, s;
@@ -232,50 +232,67 @@ int[3] t;
 
 <h4>Void Parameter Lists</h4>
 
-	Functions that take no parameters:
+        Functions that take no parameters:
 
 $(CCODE
 int foo(void);
 )
 
-	are in D:
+        are in D:
 
 ---------------------------
 int foo();
 ---------------------------
 
-$(V1
-
 <h4>Const Type Modifiers</h4>
 
-	D has $(D const) as a storage class, not a type modifier. Hence, just
-	drop any $(D const) used as a type modifier:
+$(V1
+        D has $(TT const) as a storage class, not a type modifier. Hence, just
+        drop any $(TT const) used as a type modifier:
 
 $(CCODE
 void foo(const int *p, char *const q);
 )
 
-	becomes:
+        becomes:
 
 ---------------------------
 void foo(int* p, char* q);
 ---------------------------
 )
+$(V2
+        D has const as a type modifier.
+
+$(CCODE
+void foo(const int *p, char *const q);
+)
+
+        becomes:
+
+---------------------------
+void foo(const int* p, const char* q);
+---------------------------
+
+        $(P But D's const is transitive - there are no const pointers to mutable
+        types in D. When encountering such in C code, simply drop the const.
+        )
+)
+
 <h4>Extern Global C Variables</h4>
 
-	Whenever a global variable is declared in D, it is also defined.
-	But if it's also defined by the C object file being linked in,
-	there will be a multiple definition error. To fix this problem,
-	use the extern storage class.
-	For example, given a C header file named
-	$(D foo.h):
+        Whenever a global variable is declared in D, it is also defined.
+        But if it's also defined by the C object file being linked in,
+        there will be a multiple definition error. To fix this problem,
+        use the extern storage class.
+        For example, given a C header file named
+        $(TT foo.h):
 
 $(CCODE
 struct Foo { };
 struct Foo bar;
 )
 
-	It can be replaced with the D modules, $(D foo.d):
+        It can be replaced with the D modules, $(TT foo.d):
 
 ---------------------------
 struct Foo { }
@@ -288,13 +305,13 @@ extern (C)
 
 <h4>Typedef</h4>
 
-	$(D alias) is the D equivalent to the C $(D typedef):
+        $(TT alias) is the D equivalent to the C $(TT typedef):
 
 $(CCODE
 typedef int foo;
 )
 
-	becomes:
+        becomes:
 
 ---------------------------
 alias int foo;
@@ -302,7 +319,7 @@ alias int foo;
 
 <h4>Structs</h4>
 
-	Replace declarations like:
+        Replace declarations like:
 
 $(CCODE
 typedef struct Foo
@@ -311,7 +328,7 @@ typedef struct Foo
 } Foo, *pFoo, *lpFoo;
 )
 
-	with:
+        with:
 
 ---------------------------
 struct Foo
@@ -323,10 +340,10 @@ alias Foo* pFoo, lpFoo;
 
 <h4>Struct Member Alignment</h4>
 
-	A good D implementation by default will align struct members the
-	same way as the C compiler it was designed to work with. But
-	if the $(D .h) file has some $(D #pragma)'s to control alignment, they
-	can be duplicated with the D $(D align) attribute:
+        A good D implementation by default will align struct members the
+        same way as the C compiler it was designed to work with. But
+        if the $(TT .h) file has some $(TT #pragma)'s to control alignment, they
+        can be duplicated with the D $(TT align) attribute:
 
 $(CCODE
 #pragma pack(1)
@@ -338,7 +355,7 @@ struct Foo
 #pragma pack()
 )
 
-	becomes:
+        becomes:
 
 ---------------------------
 struct Foo
@@ -357,7 +374,7 @@ struct Foo
     int a;
     struct Bar
     {
-	int c;
+        int c;
     } bar;
 };
 
@@ -366,12 +383,12 @@ struct Abc
     int a;
     struct
     {
-	int c;
+        int c;
     } bar;
 };
 )
 
-	becomes:
+        becomes:
 
 ---------------------------
 struct Foo
@@ -379,7 +396,7 @@ struct Foo
     int a;
     struct Bar
     {
-	int c;
+        int c;
     }
     Bar bar;
 }
@@ -389,12 +406,12 @@ struct Abc
     int a;
     struct
     {
-	int c;
+        int c;
     }
 }
 ---------------------------
 
-<h4>$(D __cdecl), $(D __pascal), $(D __stdcall)</h4>
+<h4>$(TT __cdecl), $(TT __pascal), $(TT __stdcall)</h4>
 
 $(CCODE
 int __cdecl x;
@@ -403,7 +420,7 @@ int __pascal bar(int b);
 int __stdcall abc(int c);
 )
 
-	becomes:
+        becomes:
 
 ---------------------------
 extern (C) int x;
@@ -412,22 +429,22 @@ extern (Pascal) int bar(int b);
 extern (Windows) int abc(int c);
 ---------------------------
 
-<h4>$(D __declspec(dllimport))</h4>
+<h4>$(TT __declspec(dllimport))</h4>
 
 $(CCODE
 __declspec(dllimport) int __stdcall foo(int a);
 )
 
-	becomes:
+        becomes:
 
 ---------------------------
 export extern (Windows) int foo(int a);
 ---------------------------
 
-<h4>$(D __fastcall)</h4>
+<h4>$(TT __fastcall)</h4>
 
-	Unfortunately, D doesn't support the $(D __fastcall) convention.
-	Therefore, a shim will be needed, either written in C:
+        Unfortunately, D doesn't support the $(TT __fastcall) convention.
+        Therefore, a shim will be needed, either written in C:
 
 $(CCODE
 int __fastcall foo(int a);
@@ -438,15 +455,14 @@ int myfoo(int a)
 }
 )
 
-	and compiled with a C compiler that supports $(D __fastcall) and
-	linked in, or compile the above, disassemble it with
-	<a href="http://www.digitalmars.com/ctg/obj2asm.html">obj2asm</a>
-	and insert it in a D $(D myfoo) shim with
-	<a href="iasm.html">inline assembler</a>.
+        and compiled with a C compiler that supports $(TT __fastcall) and
+        linked in, or compile the above, disassemble it with
+        <a href="http://www.digitalmars.com/ctg/obj2asm.html">obj2asm</a>
+        and insert it in a D $(TT myfoo) shim with
+        <a href="iasm.html">inline assembler</a>.
 
 )
 
 Macros:
-	TITLE=Converting C .h Files to D Modules
-	WIKI=HToModule
-	CATEGORY_HOWTOS=$0
+        TITLE=Converting C .h Files to D Modules
+        WIKI=HToModule

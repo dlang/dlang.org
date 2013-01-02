@@ -20,18 +20,9 @@ $(GNAME AliasDeclaration):
 
 $(GNAME AliasDeclaration):
     $(B alias) $(GLINK BasicType) $(GLINK Declarator)
-    $(B alias) $(GLINK AliasInitializerList)
-
-$(GNAME AliasInitializerList):
-    $(GLINK AliasInitializer)
-    $(GLINK AliasInitializer) $(B ,) $(I AliasInitializerList)
-
-$(GNAME AliasInitializer):
-    $(I Identifier) $(B =) $(GLINK Type)
 
 $(GNAME AliasThisDeclaration):
     $(B alias) $(I Identifier) $(B this)
-    $(B alias) $(B this) $(B =) $(I Identifier)
 )
 $(GNAME Decl):
     $(GLINK StorageClasses) $(I Decl)
@@ -61,10 +52,11 @@ $(GNAME BasicType):
     $(GLINK IdentifierList)
     $(GLINK Typeof)
     $(GLINK Typeof) $(B .) $(GLINK IdentifierList)
-$(V2      $(B const$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-    $(B immutable$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-    $(B shared$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-    $(B inout$(LPAREN)) $(GLINK Type) $(B $(RPAREN)))
+$(V2          $(B const$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
+        $(B immutable$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
+        $(B shared$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
+        $(B inout$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
+)
 
 $(GNAME BasicTypeX):
     $(B bool)
@@ -96,7 +88,7 @@ $(GNAME BasicType2):
     $(B [) $(VEXPRESSION) $(B ])
     $(B [) $(VEXPRESSION) .. $(VEXPRESSION) $(B ])
     $(B [) $(GLINK Type) $(B ])
-    $(B delegate) $(GLINK Parameters) $(V2 $(GLINK MemberFunctionAttributes)$(OPT))
+    $(B delegate) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
     $(B function) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
 
 $(GNAME Declarator):
@@ -126,13 +118,15 @@ $(GNAME StorageClasses):
 $(GNAME StorageClass):
     $(B abstract)
     $(B auto)
-$(V1      $(B const)
-)$(V2      $(GLINK TypeCtor)
-)    $(B deprecated)
+    $(B const)
+    $(B deprecated)
 $(V2      $(B enum)
 )    $(B extern)
     $(B final)
-$(V2      $(B nothrow)
+$(V2      $(B immutable)
+    $(B inout)
+    $(B shared)
+    $(B nothrow)
     $(B override)
     $(B pure)
     $(B __gshared)
@@ -141,7 +135,7 @@ $(V2      $(B nothrow)
     $(B static)
     $(B synchronized)
 
-$(V2 $(GNAME Property):
+$(GNAME Property):
     $(B @) $(GLINK PropertyIdentifier)
 
 $(GNAME PropertyIdentifier):
@@ -151,19 +145,9 @@ $(GNAME PropertyIdentifier):
     $(B system)
     $(B disable)
 
-$(GNAME TypeCtors):
-    $(GLINK TypeCtor)
-    $(GLINK TypeCtor) $(I TypeCtors)
-
-$(GNAME TypeCtor):
-    $(B const)
-    $(B immutable)
-    $(B inout)
-    $(B shared)
-)
 $(GNAME Type):
-    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType)
-    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType) $(GLINK Declarator2)
+    $(GLINK BasicType)
+    $(GLINK BasicType) $(GLINK Declarator2)
 
 $(GNAME Declarator2):
     $(GLINK BasicType2)$(OPT) $(GLINK DeclaratorSuffixes)$(OPT)
@@ -191,17 +175,19 @@ $(GNAME InOut):
 
 $(GNAME InOutX):
     $(B auto)
-$(V1      $(B const)
-)$(V2      $(GLINK TypeCtor)
-)    $(B final)
-    $(B in)
-$(V1          $(B inout)
-)    $(B lazy)
+    $(B const)
+    $(B final)
+$(V2      $(B immutable)
+)    $(B in)
+    $(B inout)
+    $(B lazy)
     $(B out)
     $(B ref)
     $(B scope)
+    $(B shared)
 
-$(V2 $(GNAME FunctionAttributes):
+$(V2
+$(GNAME FunctionAttributes):
     $(GLINK FunctionAttribute)
     $(GLINK FunctionAttribute) $(I FunctionAttributes)
 
@@ -209,7 +195,7 @@ $(GNAME FunctionAttribute):
     $(B nothrow)
     $(B pure)
     $(GLINK Property)
-
+)
 $(GNAME MemberFunctionAttributes):
     $(GLINK MemberFunctionAttribute)
     $(GLINK MemberFunctionAttribute) $(I MemberFunctionAttributes)
@@ -220,7 +206,7 @@ $(GNAME MemberFunctionAttribute):
     $(B inout)
     $(B shared)
     $(GLINK FunctionAttribute)
-)
+
 $(GNAME DefaultInitializerExpression):
     $(ASSIGNEXPRESSION)
 $(V2      $(B __FILE__)
@@ -399,8 +385,8 @@ myint m;        // initialized to 7
 <h3><a name="alias">Type Aliasing</a></h3>
 
         $(P
-	$(GLINK AliasDeclaration)s create a symbol that is an alias for another type,
-	and can be used anywhere that other type may appear.
+        $(GLINK AliasDeclaration)s create a symbol that is an alias for another type,
+        and can be used anywhere that other type may appear.
         )
 
 --------------------
@@ -555,9 +541,7 @@ b = 4;       // sets S.i to 4
 $(GRAMMAR
 $(GNAME Typeof):
     $(B typeof $(LPAREN)) $(EXPRESSION) $(B $(RPAREN))
-$(V2
     $(B typeof $(LPAREN)) $(B return) $(B $(RPAREN))
-)
 )
 
         $(P
@@ -590,7 +574,8 @@ void func() {
 }
 --------------------
 
-        $(P There are $(V1 two) $(V2 three) special cases: )
+        $(P
+        There are $(V1 two) $(V2 three) special cases:
         $(OL
         $(LI $(B typeof(this)) will generate the type of what $(B this)
         would be in a non-static member function, even if not in a member
@@ -605,7 +590,7 @@ $(V2
         )
 )
         )
-        
+        )
 
 --------------------
 class A { }
@@ -616,9 +601,8 @@ class B : A {
 }
 
 struct C {
- $(V2 $(B static typeof(this)) z;  // z is declared to be a C)
- $(V1 $(B typeof(this)) z;  // z is declared to be a C*)
-$(B typeof(super)) q; // error, no super struct for C
+ $(B typeof(this)) z;  // z is declared to be a C*
+ $(B typeof(super)) q; // error, no super struct for C
 }
 
 $(B typeof(this)) r;   // error, no enclosing struct or class
@@ -641,7 +625,7 @@ $(GNAME VoidInitializer):
         type of the variable. If the $(I Initializer) is $(B void),
         however, the variable is not initialized. If its value is
         used before it is set, undefined program behavior will result.
-	)
+        )
 
 -------------------------
 void foo() {
@@ -652,16 +636,16 @@ void foo() {
 
         $(P Therefore, one should only use $(B void) initializers as a
         last resort when optimizing critical code.
-	)
+        )
 
 <h3>Global and Static Initializers</h3>
 
-	$(P The $(GLINK Initializer) for a global or static variable must be
-	evaluatable at compile time.
-	Whether some pointers can be initialized with the addresses of other
-	functions or data is implementation defined.
-	Runtime initialization can be done with static constructors.
-	)
+        $(P The $(GLINK Initializer) for a global or static variable must be
+        evaluatable at compile time.
+        Whether some pointers can be initialized with the addresses of other
+        functions or data is implementation defined.
+        Runtime initialization can be done with static constructors.
+        )
 
 )
 
