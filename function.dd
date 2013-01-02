@@ -210,10 +210,6 @@ inout(int)[] foo(inout(int)[] a, int x, int y) { return a[x .. y]; }
         Casting to or from inout is not allowed in @safe functions.
         )
 
-        $(P If an inout appears in a function parameter list, it must also appear
-        in the return type.
-        )
-
         $(P A set of arguments to a function with inout parameters is considered
         a match if any inout argument types match exactly, or:)
 
@@ -516,6 +512,24 @@ void test() {
 
   C c = new C();
   c.foo();       // error, need an argument for C.foo
+}
+------
+
+        $(P If a derived class overrides a base class member function with diferrent
+        $(GLINK2 declaration, FunctionAttributes), the missing attributes will be
+        automatically compensated by the compiler.)
+
+------
+class B {
+  void foo() pure nothrow @safe {}
+}
+class D : B {
+  override void foo() {}
+}
+void main() {
+  auto d = new D();
+  pragma(msg, typeof(&d.foo));
+  // prints "void delegate() pure nothrow @safe" in compile time
 }
 ------
 
