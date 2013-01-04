@@ -43,31 +43,32 @@ STYLES=css/style.css css/print.css css/codemirror.css
 PREMADE=appendices.html articles.html fetch-issue-cnt.php	\
 howtos.html language-reference.html robots.txt process.php
 
-TARGETS=32-64-portability.html abi.html acknowledgements.html			\
-	arrays.html ascii-table.html attribute.html bugstats.php			\
-	builtin.html changelog.html class.html code_coverage.html			\
-	concepts.html const3.html const-faq.html COM.html comparison.html	\
-	cpp_interface.html cpptod.html ctod.html D1toD2.html				\
-	d-array-article.html d-floating-point.html dbc.html ddoc.html		\
-	declaration.html deprecate.html dll.html dmd-freebsd.html			\
-	dmd-linux.html dmd-osx.html dmd-windows.html download.html			\
-	dstyle.html errors.html entity.html enum.html exception-safe.html	\
-	expression.html faq.html features2.html function.html float.html	\
-	garbage.html glossary.html gsoc2011.html gsoc2012.html				\
-	gsoc2012-template.html hash-map.html hijack.html					\
-	howto-promote.html htod.html htomodule.html iasm.html index.html	\
-	interface.html interfaceToC.html intro.html							\
-	intro-to-datetime.html lazy-evaluation.html lex.html memory.html	\
-	memory-safe-d.html migrate-to-shared.html mixin.html module.html	\
-	operatoroverloading.html overview.html pdf-intro-cover.html			\
-	pdf-spec-cover.html pdf-tools-cover.html portability.html			\
-	pragma.html pretod.html property.html rationale.html rdmd.html		\
-	regular-expression.html safed.html simd.html spec.html				\
-	statement.html std_consolidated_header.html struct.html				\
-	template.html template-comparison.html template-mixin.html			\
-	templates-revisited.html traits.html tuple.html type.html			\
-	unittest.html variadic-function-templates.html version.html			\
-	warnings.html wc.html windbg.html windows.html
+# Language spec root filenames. They have extension .dd in the source
+# and .html in the generated HTML. These are also used for the mobi
+# book generation, for which reason the list is sorted by chapter.
+SPEC_ROOT=spec lex module declaration type property attribute pragma	\
+	expression statement arrays hash-map struct class interface enum	\
+	const3 function operatoroverloading template template-mixin dbc		\
+	version traits errors unittest garbage float iasm ddoc				\
+	interfaceToC cpp_interface portability entity memory-safe-d abi		\
+	simd
+
+# Website root filenames. They have extension .dd in the source
+# and .html in the generated HTML. Save for the expansion of
+# $(SPEC_ROOT), the list is sorted alphabetically.
+PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements				\
+	ascii-table bugstats.php builtin changelog code_coverage concepts	\
+	const-faq COM comparison cpptod ctod D1toD2 d-array-article			\
+	d-floating-point deprecate dll dmd-freebsd dmd-linux dmd-osx		\
+	dmd-windows download dstyle exception-safe faq features2 glossary	\
+	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod		\
+	htomodule index intro intro-to-datetime lazy-evaluation memory		\
+	migrate-to-shared mixin overview pdf-intro-cover pdf-spec-cover		\
+	pdf-tools-cover pretod rationale rdmd regular-expression safed		\
+	std_consolidated_header template-comparison templates-revisited		\
+	tuple variadic-function-templates warnings wc windbg windows
+
+TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html
@@ -132,12 +133,12 @@ $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC)
 # Rulez
 ################################################################################
 
-all : html phobos-prerelease druntime-prerelease druntime-release phobos-release
+all : phobos-prerelease druntime-prerelease druntime-release phobos-release \
+	html ${DOC_OUTPUT_DIR}/dlangspec.mobi
 
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
 
 html : $(ALL_FILES)
-	@echo $(ALL_FILES)
 
 $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
 	cp -f sitemap-template.dd sitemap.dd
@@ -150,12 +151,6 @@ $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
 
 ${LATEST}.ddoc :
 	echo "LATEST=${LATEST}" >$@
-
-zip:
-	rm doc.zip
-	zip32 doc win32.mak style.css $(DDOC)
-	zip32 doc $(SRC) download.html
-	zip32 doc $(IMAGES) $(JAVASCRIPT) $(STYLES)
 
 clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
@@ -191,6 +186,27 @@ d-tools.pdf:
 	  $(DOC_OUTPUT_DIR)/d-tools.pdf
 
 ################################################################################
+# Ebook
+################################################################################
+
+dlangspec.d : $(addsuffix .dd,$(SPEC_ROOT))
+	cat $^ >$@
+
+dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d
+	$(DMD) $(DDOC) ebook.ddoc dlangspec.d
+
+dlangspec.zip : dlangspec.html ebook.css
+	rm -f $@
+	zip $@ dlangspec.html ebook.css
+
+$(DOC_OUTPUT_DIR)/dlangspec.mobi : \
+		dlangspec.opf dlangspec.html dlangspec.png dlangspec.ncx ebook.css
+	rm -f $@ dlangspec.mobi
+# kindlegen has warnings, ignore them for now
+	-kindlegen dlangspec.opf
+	mv dlangspec.mobi $@
+
+################################################################################
 # dmd compiler, latest released build and current build
 ################################################################################
 
@@ -212,12 +228,14 @@ ${DMD_DIR}/src/dmd :
 
 druntime-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
 ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd
+	rm -f $@
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT=../d-programming-language.org/std.ddoc
 
 druntime-release : ${DOC_OUTPUT_DIR}/phobos/object.html
 ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
+	rm -f $@
 	[ -d ${DRUNTIME_DIR}.${LATEST} ] || \
 	  git clone ${GIT_HOME}/druntime ${DRUNTIME_DIR}.${LATEST}/
 	cd ${DRUNTIME_DIR}.${LATEST} && git checkout v${LATEST}
@@ -234,7 +252,7 @@ ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
 phobos-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
-	cd ${PHOBOS_DIR} && ${MAKE} -f posix.mak \
+	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-release: ${DOC_OUTPUT_DIR}/phobos/index.html
