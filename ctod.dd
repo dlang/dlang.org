@@ -79,7 +79,7 @@ sizeof(struct Foo)
 
 <h4>The D Way</h4>
 
-<P>Use the size property:</P>
+$(P Use the size property:)
 
 ----------------------------
 int.sizeof
@@ -137,12 +137,12 @@ long double        =&gt;        real
 _Imaginary long double =&gt;    ireal
 _Complex long double   =&gt;    creal
 )
-<p>
+$(P
        Although char is an unsigned 8 bit type, and
        wchar is an unsigned 16 bit type, they have their own separate types
        in order to aid overloading and type safety.
-<p>
-       Ints and unsigneds in C are of varying size; not so in D.
+)
+$(P        Ints and unsigneds in C are of varying size; not so in D.)
 
 <hr><!-- ============================================ -->
 <h3><a name="floating">Special Floating Point Values</a></h3>
@@ -234,10 +234,9 @@ result = (x < y);        // false if x or y is nan
 <h3><a name="assert">Asserts are a necessary part of any good defensive coding strategy</a></h3>
 
 <h4>The C Way</h4>
-<p>
-C doesn't directly support assert, but does support __FILE__
+$(P C doesn't directly support assert, but does support __FILE__
 and __LINE__ from which an assert macro can be built. In fact,
-there appears to be practically no other use for __FILE__ and __LINE__.
+there appears to be practically no other use for __FILE__ and __LINE__.)
 
 $(CCODE
 #include &lt;assert.h&gt;
@@ -276,9 +275,9 @@ array[] = value;
 <h3><a name="arrayloop">Looping through an array</a></h3>
 
 <h4>The C Way</h4>
-<p>
+$(P
        The array length is defined separately, or a clumsy
-       sizeof() expression is used to get the length.
+       sizeof() expression is used to get the length.)
 
 $(CCODE
 #define ARRAY_LENGTH        17
@@ -924,7 +923,7 @@ Consider the escape sequence to match a quoted string:
 $(CCODE
 /"[^\\]*(\\.[^\\]*)*"/
 )
-<P>In C, this horror is expressed as:
+$(P In C, this horror is expressed as:)
 $(CCODE
 char quoteString[] = "\"[^\\\\]*(\\\\.[^\\\\]*)*\"";
 )
@@ -946,7 +945,7 @@ char[] hello = "hello world\n";
 <hr><!-- ============================================ -->
 <h3><a name="ascii">Ascii vs Wide Characters</a></h3>
 
-<P>Modern programming requires that wchar strings be supported in an easy way, for internationalization of the programs.
+$(P Modern programming requires that wchar strings be supported in an easy way, for internationalization of the programs.)
 
 <h4>The C Way</h4>
 
@@ -1112,15 +1111,14 @@ if (memcmp(&x, &y, sizeof(struct A)) == 0)
     ...
 )
 
-	Note the obtuseness of this, coupled with the lack of any kind
-	of help from the language with type checking.
-	<p>
+	$(P Note the obtuseness of this, coupled with the lack of any kind
+	of help from the language with type checking.)
 
-	There's a nasty bug lurking in the memcmp().
+	$(P There's a nasty bug lurking in the memcmp().
 	The layout of a struct, due to alignment, can have 'holes' in it.
 	C does not guarantee those holes are assigned any values, and so
 	two different struct instances can have the same value for each member,
-	but compare different because the holes contain different garbage.
+	but compare different because the holes contain different garbage.)
 
 <h4>The D Way</h4>
 
@@ -1161,13 +1159,12 @@ if (string == "betty")
     ...
 -----------------------------
 
-	D strings have the length stored separately from the string.
+	$(P D strings have the length stored separately from the string.
 	Thus, the implementation of string compares can be much faster
 	than in C (the difference being equivalent to the difference
-	in speed between the C memcmp() and strcmp()).
-	<p>
+	in speed between the C memcmp() and strcmp()).)
 
-	D supports comparison operators on strings, too:
+	$(P D supports comparison operators on strings, too:)
 
 -----------------------------
 char[] string = "hello";
@@ -1273,19 +1270,18 @@ lines
 
 <h4>The C Way</h4>
 
-    Consider a function to traverse a recursive data structure.
+    $(P Consider a function to traverse a recursive data structure.
     In this example, there's a simple symbol table of strings.
     The data structure is an array of binary trees.
     The code needs to do an exhaustive search of it to find
     a particular string in it, and determine if it is a unique
-    instance.
-    <p>
+    instance.)
 
-    To make this work, a helper function $(D membersearchx)
+    $(P To make this work, a helper function $(D membersearchx)
     is needed to recursively
     walk the trees. The helper function needs to read and write
     some context outside of the trees, so a custom $(D struct Paramblock)
-    is created and a pointer to it is used to maximize efficiency.
+    is created and a pointer to it is used to maximize efficiency.)
 
 $(CCODE
 struct Symbol
@@ -1335,15 +1331,14 @@ struct Symbol *symbol_membersearch(Symbol *table[], int tablemax, char *id)
 
 <h4>The D Way</h4>
 
-    This is the same algorithm in D, and it shrinks dramatically.
+    $(P This is the same algorithm in D, and it shrinks dramatically.
     Since nested functions have access to the lexically enclosing
     function's variables, there's no need for a Paramblock or
     to deal with its bookkeeping details. The nested helper function
     is contained wholly within the function that needs it,
-    improving locality and maintainability.
-    <p>
+    improving locality and maintainability.)
 
-    The performance of the two versions is indistinguishable.
+    $(P The performance of the two versions is indistinguishable.)
 
 -----------------------------
 class Symbol
@@ -1433,17 +1428,16 @@ j = i >>> 3;
 
 <h4>The C Way</h4>
 
-	Consider a reusable container type. In order to be reusable,
+	$(P Consider a reusable container type. In order to be reusable,
 	it must support a way to apply arbitrary code to each element
 	of the container. This is done by creating an $(I apply) function
 	that accepts a function pointer to which is passed each
-	element of the container contents.
-	<p>
+	element of the container contents.)
 
-	A generic context pointer is also needed, represented here by
+	$(P A generic context pointer is also needed, represented here by
 	$(D void *p). The example here is of a trivial container
 	class that holds an array of ints, and a user of that container
-	that computes the maximum of those ints.
+	that computes the maximum of those ints.)
 
 $(CCODE
 void apply(void *p, int *array, int dim, void (*fp)(void *, int))

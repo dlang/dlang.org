@@ -4,12 +4,11 @@ $(COMMUNITY Programming in D for C++ Programmers,
 
 <!--img src="images/cpp1.gif" border=0 align=right alt="C++"-->
 
-Every experienced C++ programmer accumulates a series of idioms and techniques
+$(P Every experienced C++ programmer accumulates a series of idioms and techniques
 which become second nature. Sometimes, when learning a new language, those
 idioms can be so comfortable it's hard to see how to do the equivalent in the
 new language. So here's a collection of common C++ techniques, and how to do the
-corresponding task in D.
-<p>
+corresponding task in D.)
 
 See also: <a href="ctod.html">Programming in D for C Programmers</a>
 
@@ -152,28 +151,25 @@ if (x == y)
     ...
 )
 
-	Note that the operator overload must be done for every struct
+	$(P Note that the operator overload must be done for every struct
 	needing to be compared, and the implementation of that overloaded
 	operator is free of any language help with type checking.
 	The C++ way has an additional problem in that just inspecting the
 	(x == y) does not give a clue what is actually happening, you have
 	to go and find the particular overloaded operator==() that applies
-	to verify what it really does.
-	<p>
+	to verify what it really does.)
 
-	There's a nasty bug lurking in the memcmp() implementation of operator==().
+	$(P There's a nasty bug lurking in the memcmp() implementation of operator==().
 	The layout of a struct, due to alignment, can have $(SINGLEQUOTE holes) in it.
 	C++ does not guarantee those holes are assigned any values, and so
 	two different struct instances can have the same value for each member,
-	but compare different because the holes contain different garbage.
-	<p>
+	but compare different because the holes contain different garbage.)
 
-	To address this, the operator==() can be implemented to do a memberwise
+	$(P To address this, the operator==() can be implemented to do a memberwise
 	compare. Unfortunately, this is unreliable because (1) if a member is added
 	to the struct definition one may forget to add it to operator==(), and
 	(2) floating point nan values compare unequal even if their bit patterns
-	match.
-	<p>
+	match.)
 
 	There just is no robust solution in C++.
 
@@ -360,17 +356,16 @@ struct A
 }
 ------
 
-	The compiler automatically interprets all the
+	$(P The compiler automatically interprets all the
 	&lt;, &lt;=, &gt; and &gt;=
 	operators in terms of the $(D cmp) function, as well
 	as handling the cases where the left operand is not an
-	object reference.
-	<p>
+	object reference.)
 
-	Similar sensible rules hold for other operator overloads,
+	$(P Similar sensible rules hold for other operator overloads,
 	making using operator overloading in D much less tedious and less
 	error prone. Far less code needs to be written to accomplish
-	the same effect.
+	the same effect.)
 
 <hr><!-- -------------------------------------------- -->
 <h3><a name="usingdeclaration">Namespace using declarations</a></h3>
@@ -430,15 +425,14 @@ class File
 
 <h4>The D Way</h4>
 
-	The bulk of resource release problems are simply keeping track
+	$(P The bulk of resource release problems are simply keeping track
 	of and freeing memory. This is handled automatically in D by
 	the garbage collector. The second common resources used are semaphores
 	and locks, handled automatically with D's $(D synchronized)
-	declarations and statements.
-	<p>
+	declarations and statements.)
 
-	The few RAII issues left are handled by $(I scope) classes.
-	Scope classes get their destructors run when they go out of scope.
+	$(P The few RAII issues left are handled by $(I scope) classes.
+	Scope classes get their destructors run when they go out of scope.)
 
 ------
 scope class File
@@ -587,13 +581,12 @@ void test()
 
 <h4>The C++ Way</h4>
 
-	This example is simplified and adapted from one written by
+	$(P This example is simplified and adapted from one written by
 	Dr. Carlo Pescio in
 	<a href="http://www.eptacom.net/pubblicazioni/pub_eng/paramint.html">
-	Template Metaprogramming: Make parameterized integers portable with this novel technique</a>.
-	<p>
+	Template Metaprogramming: Make parameterized integers portable with this novel technique</a>.)
 
-	There is no way in C++ to do conditional compilation based
+	$(P There is no way in C++ to do conditional compilation based
 	on the result of an expression based on template parameters, so
 	all control flow follows from pattern matching of the template
 	argument against various explicit template specializations.
@@ -604,8 +597,7 @@ void test()
 	a specialization matches.
 	If there is no match, the result is an unhelpful recursive compiler
 	stack overflow or internal error, or at best a strange syntax
-	error.
-	<p>
+	error.)
 
 	A preprocessor macro is also needed to make up for the lack
 	of template typedefs.

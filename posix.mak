@@ -153,7 +153,7 @@ ${LATEST}.ddoc :
 	echo "LATEST=${LATEST}" >$@
 
 clean:
-	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
+	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc dlangspec.d dlangspec.html
 	@echo You should issue manually: rm -rf ${DMD_DIR}.${LATEST} ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
 
 rsync : all
@@ -190,7 +190,7 @@ d-tools.pdf:
 ################################################################################
 
 dlangspec.d : $(addsuffix .dd,$(SPEC_ROOT))
-	cat $^ >$@
+	rdmd ../tools/catdoc.d -o=$@ $^
 
 dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d
 	$(DMD) $(DDOC) ebook.ddoc dlangspec.d
