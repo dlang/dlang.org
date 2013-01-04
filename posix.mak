@@ -212,10 +212,9 @@ ${DMD_DIR}/src/dmd :
 
 druntime-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
 ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak \
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
-		DOCFMT=../d-programming-language.org/std.ddoc \
-		doc -j 4
+		DOCFMT=../d-programming-language.org/std.ddoc
 
 druntime-release : ${DOC_OUTPUT_DIR}/phobos/object.html
 ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
@@ -226,7 +225,7 @@ ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
 	${MAKE} --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak \
 	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
-	  DOCFMT=../d-programming-language.org/std.ddoc doc -j 4
+	  DOCFMT=../d-programming-language.org/std.ddoc -j 4
 
 ################################################################################
 # phobos, latest released build and current build
