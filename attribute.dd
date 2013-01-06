@@ -632,6 +632,117 @@ $(P
         they can still provide $(SINGLEQUOTE base class functionality.)
 )
 
+$(SECTION2 $(LNAME2 uda, User Defined Attributes),
+
+        $(P
+            User Defined Attributes (UDA) are compile time expressions that can be attached
+            to a declaration. These attributes can then be queried, extracted, and manipulated
+            at compile time. There is no runtime component to them.
+        )
+
+        $(P
+            Grammatically, a UDA is a StorageClass:
+        )
+
+$(GRAMMAR
+$(GNAME StorageClass):
+    $(GLINK UserDefinedAttribute)
+
+$(GNAME UserDefinedAttribute):
+    @(ArgumentList)
+    @CallExpression
+)
+        $(P
+            And looks like:
+        )
+
+---
+@(3) int a;
+@("string", 7) int b;
+
+enum Foo;
+@Foo int c;
+
+struct Bar
+{
+    int x;
+}
+
+@Bar(3) int d;
+---
+
+        $(P
+            If there are multiple UDAs in scope for a declaration, they are concatenated:
+        )
+
+---
+@(1) {
+    @(2) int a;         // has UDA's (1, 2)
+    @("string") int b;  // has UDA's (1, "string")
+}
+---
+
+        $(P
+            UDA's can be extracted into an expression tuple using __traits:
+        )
+
+---
+@('c') string s;
+pragma(msg, __traits(getAttributes, s)); // prints tuple('c')
+---
+)
+
+        $(P
+            If there are no user defined attributes for the symbol, an empty tuple is returned.
+            The expression tuple can be turned into a manipulatable tuple:
+        )
+
+---
+template Tuple (T...)
+{
+    alias T Tuple;
+}
+
+enum EEE = 7;
+@("hello") struct SSS { }
+@(3) { @(4) @EEE @SSS int foo; }
+
+alias Tuple!(__traits(getAttributes, foo)) TP;
+
+pragma(msg, TP); // prints tuple(3, 4, 7, (SSS))
+pragma(msg, TP[2]); // prints 7
+---
+
+        $(P
+            Of course the tuple types can be used to declare things:
+        )
+
+---
+TP[3] a; // a is declared as an SSS
+---
+
+        $(P
+            The attribute of the type name is not the same as the attribute of the variable:
+        )
+
+---
+pragma(msg, __traits(getAttributes, typeof(a))); // prints tuple("hello")
+---
+
+        $(P
+            Of course, the real value of UDA's is to be able to create user defined types with
+            specific values. Having attribute values of basic types does not scale.
+            The attribute tuples can be manipulated like any other tuple, and can be passed as
+            the argument list to a template.
+        )
+
+        $(P
+            Whether the attributes are values or types is up to the user, and whether later
+            attributes accumulate or override earlier ones is also up to how the user
+            interprets them.
+        )
+)
+
 )
 
 Macros:
