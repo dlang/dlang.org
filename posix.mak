@@ -18,8 +18,14 @@ DOC_OUTPUT_DIR=$(ROOT_DIR)/web
 GIT_HOME=git@github.com:D-Programming-Language
 
 # Latest released version
-LATEST:=$(shell cd ${DMD_DIR} && git fetch --tags git@github.com:D-Programming-Language/dmd && \
-git tag | grep '^v[0-9]\.[0-9]*$$' | sed 's/^v//' | sort -nr | head -n 1)
+ifeq (,${LATEST})
+LATEST:=$(shell cd ${DMD_DIR} && \
+  git fetch --tags git@github.com:D-Programming-Language/dmd && \
+  git tag | grep '^v[0-9]\.[0-9]*$$' | sed 's/^v//' | sort -nr | head -n 1)
+endif
+ifeq (,${LATEST})
+  $(error Could not fetch latest version)
+endif
 $(info Current release: ${LATEST})
 ROOT_DIR=$(shell pwd)
 
@@ -153,7 +159,8 @@ ${LATEST}.ddoc :
 	echo "LATEST=${LATEST}" >$@
 
 clean:
-	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc dlangspec.d dlangspec.html
+	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
+	rm -rf auto dlangspec-tex.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex)
 	@echo You should issue manually: rm -rf ${DMD_DIR}.${LATEST} ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
 
 rsync : all
@@ -205,6 +212,25 @@ $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
 # kindlegen has warnings, ignore them for now
 	-kindlegen dlangspec.opf
 	mv dlangspec.mobi $@
+
+################################################################################
+# LaTeX
+################################################################################
+
+# This should be:
+#dlangspec-tex.d : $(addsuffix .dd,$(SPEC_ROOT))
+# However, for now we only produce a subset of files.
+dlangspec-tex.d : $(addsuffix .dd,spec lex)
+	rdmd ../tools/catdoc.d -o=$@ $^
+
+dlangspec.tex : $(DDOC) latex.ddoc dlangspec-tex.d
+	$(DMD) -Df$@ $^
+
+dlangspec.dvi : dlangspec.tex
+	latex $^
+
+dlangspec.pdf : dlangspec.dvi
+	dvipdf $^ $@
 
 ################################################################################
 # dmd compiler, latest released build and current build
