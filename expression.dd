@@ -1381,13 +1381,13 @@ $(GNAME Lambda):
         The first form is equivalent to:
         )
 ---
-delegate ( $(IDENTIFIER) ) { return $(I AssignExpression); }
+( $(IDENTIFIER) ) { return $(I AssignExpression); }
 ---
 
         $(P And the second:)
 
 ---
-delegate $(I ParameterAttributes) { return $(I AssignExpression); }
+$(I ParameterAttributes) { return $(I AssignExpression); }
 ---
 
 Example usage:
@@ -1431,7 +1431,8 @@ $(V2      $(GLINK2 declaration, Parameters) $(GLINK2 declaration, FunctionAttrib
         The type of a function literal is pointer to function or
         pointer to delegate.
         If the keywords $(B function) or $(B delegate) are omitted,
-        it defaults to being a delegate.)
+        it is inferred from whether $(I FunctionBody) is actually
+        accessing to the outer context.)
 
         $(P For example:)
 
@@ -1480,16 +1481,36 @@ void test() {
 }
 -------------
 
-        $(P and the following where the return type $(B int) is
-        inferred:)
+        $(P and the following where the return type $(B int) and
+        $(B function)/$(B delegate) are inferred:)
 
 -------------
 int abc(int delegate(long i));
+int def(int function(long s));
 
 void test() {
   int b = 3;
 
-  abc( $(B (long c) { return 6 + b; }) );
+  abc( $(B (long c) { return 6 + b; }) );  // inferred to $(B delegate)
+  def( $(B (long c) { return c * 2; }) );  // inferred to $(B function)
+//def( $(B (long c) { return c * b; }) );  // error!
+  // Because the FunctionBody accesses b, then the function literal type
+  // is inferred to delegate. But def cannot receive delegate.
+}
+-------------
+
+        If the type of a function literal can be uniquely determined from its context,
+        the parameter type inference is possible.
+
+-------------
+void foo(int function(int) fp);
+
+void test() {
+  int function(int) fp = (n) { return n * 2; };
+  // The type of parameter n is inferred to $(B int).
+
+  foo((n) { return n * 2; });
+  // The type of parameter n is inferred to $(B int).
 }
 -------------
 
