@@ -220,7 +220,7 @@ $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
 # This should be:
 #dlangspec-tex.d : $(addsuffix .dd,$(SPEC_ROOT))
 # However, for now we only produce a subset of files.
-dlangspec-tex.d : $(addsuffix .dd,spec lex module declaration)
+dlangspec-tex.d : $(addsuffix .dd,spec lex module declaration type)
 	rdmd ../tools/catdoc.d -o=$@ $^
 
 dlangspec.tex : $(DDOC) latex.ddoc dlangspec-tex.d
