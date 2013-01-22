@@ -34,7 +34,7 @@ $(V2  	$(GLINK2 class, SharedStaticConstructor)
 	$(GLINK2 template-mixin, TemplateMixinDeclaration)
 	$(GLINK2 template-mixin, TemplateMixin)
 	$(GLINK MixinDeclaration)
-	$(B ;)
+	$(D ;)
 )
 
 
@@ -81,7 +81,7 @@ $(V2  	$(GLINK2 class, SharedStaticConstructor)
 
 	)
 
-<h3>Module Declaration</h3>
+$(H3 Module Declaration)
 
 	$(P The $(I ModuleDeclaration) sets the name of the module and what
 	package it belongs to. If absent, the module name is taken to be the
@@ -90,18 +90,18 @@ $(V2  	$(GLINK2 class, SharedStaticConstructor)
 
 $(GRAMMAR
 $(GNAME ModuleDeclaration):
-	$(B module) $(I ModuleFullyQualifiedName) $(B ;)
+	$(D module) $(I ModuleFullyQualifiedName) $(D ;)
 
 $(GNAME ModuleFullyQualifiedName):
 	$(I ModuleName)
-	$(I Packages) $(B .) $(I ModuleName)
+	$(I Packages) $(D .) $(I ModuleName)
 
 $(GNAME ModuleName):
 	$(I Identifier)
 
 $(GNAME Packages):
 	$(I PackageName)
-	$(I Packages) $(B .) $(I PackageName)
+	$(I Packages) $(D .) $(I PackageName)
 
 $(GNAME PackageName):
 	$(I Identifier)
@@ -121,7 +121,7 @@ $(GNAME PackageName):
 	$(P Example:)
 
 ---------
-module c.stdio;    // this is module $(B stdio) in the $(B c) package
+module c.stdio; // module stdio in the c package
 ---------
 
 	$(P By convention, package and module names are all lower case. This is
@@ -130,14 +130,14 @@ module c.stdio;    // this is module $(B stdio) in the $(B c) package
 	are not case sensitive. All lower case package and module names will
 	minimize problems moving projects between dissimilar file systems.)
 
-    $(P If the file name of a module is an invalid module name (e.g. $(B foo-bar.d)),
+    $(P If the file name of a module is an invalid module name (e.g. $(D foo-bar.d)),
     you may use a module declaration to set a valid module name:)
 
 ---------
 module foo_bar;
 ---------
 
-<h2><a name="ImportDeclaration">Import Declaration</a></h2>
+$(H3 $(LNAME2 ImportDeclaration, Import Declaration))
 
 	$(P
 	Symbols from one module are made available in another module
@@ -146,24 +146,24 @@ module foo_bar;
 
 $(GRAMMAR
 $(GNAME ImportDeclaration):
-	$(B import) $(I ImportList) $(B ;)
-	$(B static import) $(I ImportList) $(B ;)
+	$(D import) $(I ImportList) $(D ;)
+	$(D static import) $(I ImportList) $(D ;)
 
 $(GNAME ImportList):
 	$(I Import)
 	$(I ImportBindings)
-	$(I Import) $(B ,) $(I ImportList)
+	$(I Import) $(D ,) $(I ImportList)
 
 $(GNAME Import):
 	$(I ModuleFullyQualifiedName)
-	$(I ModuleAliasIdentifier) $(B =) $(I ModuleFullyQualifiedName)
+	$(I ModuleAliasIdentifier) $(D =) $(I ModuleFullyQualifiedName)
 
 $(GNAME ImportBindings):
-	$(I Import) $(B :) $(I ImportBindList)
+	$(I Import) $(D :) $(I ImportBindList)
 
 $(GNAME ImportBindList):
 	$(I ImportBind)
-	$(I ImportBind) $(B ,) $(I ImportBindList)
+	$(I ImportBind) $(D ,) $(I ImportBindList)
 
 $(GNAME ImportBind):
 	$(I Identifier)
@@ -184,14 +184,14 @@ $(GNAME ModuleAliasIdentifier):
 	with whatever packages they are in. They are not considered to
 	be relative to the module that imports them.)
 
-<h3>Basic Imports</h3>
+$(H3 Basic Imports)
 
 	$(P The simplest form of importing is to just list the
 	modules being imported:)
 
 ---------
-import std.stdio; // import module $(B stdio) from the $(B std) package
-import foo, bar;  // import modules $(B foo) and $(B bar)
+import std.stdio; // import module stdio from package std
+import foo, bar;  // import modules foo and bar
 
 void main()
 {
@@ -223,7 +223,8 @@ module C;
 import A;
 void foo();
 void test()
-{ foo(); // C.foo() is called, it is found before imports are searched
+{
+  foo(); // C.foo() is called, it is found before imports are searched
   bar(); // A.bar() is called, since imports are searched
 }
 ---
@@ -233,7 +234,8 @@ module D;
 import A;
 import B;
 void test()
-{ foo();   // error, A.foo() or B.foo() ?
+{
+  foo();   // error, A.foo() or B.foo() ?
   A.foo(); // ok, call A.foo()
   B.foo(); // ok, call B.foo()
 }
@@ -245,13 +247,14 @@ import A;
 import B;
 alias B.foo foo;
 void test()
-{ foo();   // call B.foo()
+{
+  foo();   // call B.foo()
   A.foo(); // call A.foo()
   B.foo(); // call B.foo()
 }
 ---
 
-<h3>Public Imports</h3>
+$(H3 Public Imports)
 
 	$(P By default, imports are $(I private). This means that
 	if module A imports module B, and module B imports module
@@ -263,7 +266,7 @@ void test()
     $(P All symbols from a publicly imported module are also aliased in the
     importing module. This means that if module D imports module C, and
     module C $(I publicly) imports module B which has the symbol $(I bar),
-    in module D you can access the symbol via $(B bar), $(B B.bar), and $(B C.bar).)
+    in module D you can access the symbol via $(D bar), $(D B.bar), and $(D C.bar).)
 
 ---
 module A;
@@ -294,7 +297,7 @@ B.bar(); // ditto
 C.bar(); // ok, calls C.bar() which is an alias to B.bar()
 ---
 
-<h3>Static Imports</h3>
+$(H3 Static Imports)
 
 	$(P Basic imports work well for programs with relatively few modules
 	and imports. If there are a lot of imports, name collisions
@@ -315,7 +318,7 @@ void main()
 ---
 
 
-<h3>Renamed Imports</h3>
+$(H3 Renamed Imports)
 
 	$(P A local name for an import can be given, through which
 	all references to the module's symbols must be qualified
@@ -335,7 +338,7 @@ void main()
 	$(P Renamed imports are handy when dealing with
 	very long import names.)
 
-<h3>Selective Imports</h3>
+$(H3 Selective Imports)
 
 	$(P Specific symbols can be exclusively imported from
 	a module and bound into the current namespace:)
@@ -353,9 +356,9 @@ void main()
 }
 ---
 
-	$(P $(B static) cannot be used with selective imports.)
+	$(P $(D static) cannot be used with selective imports.)
 
-<h3>Renamed and Selective Imports</h3>
+$(H3 Renamed and Selective Imports)
 
 	$(P When renaming and selective importing are combined:)
 
@@ -375,7 +378,7 @@ void main()
                             // foo is not a member of io
 --------------
 
-<h3>Scoped Imports</h3>
+$(H3 Scoped Imports)
 
     $(P Import declarations may be used at any scope. For example:)
 
@@ -411,7 +414,7 @@ void main() {
 }
 --------------
 
-<h3>Module Scope Operator</h3>
+$(H3 Module Scope Operator)
 
 	Sometimes, it's necessary to override the usual lexical scoping rules
 	to access a name hidden by a local name. This is done with the
@@ -431,7 +434,7 @@ int foo(int x)
 
 	The leading $(SINGLEQUOTE .) means look up the name at the module scope level.
 
-<a name="staticorder"><h2>Static Construction and Destruction</h2></a>
+$(H3 $(LNAME2 staticorder, Static Construction and Destruction))
 
 	$(P Static constructors are code that gets executed to initialize
 	a module or a class before the main() function gets called.
@@ -453,7 +456,7 @@ $(V2
 	)
 )
 
-<h3>Order of Static Construction</h3>
+$(H3 Order of Static Construction)
 
 $(V2
 	$(P Shared static constructors on all modules are run before any static
@@ -475,12 +478,12 @@ $(V2
 	in a runtime exception.
 	)
 
-<h3>Order of Static Construction within a Module</h3>
+$(H3 Order of Static Construction within a Module)
 
 	Within a module, the static construction occurs in the lexical
 	order in which they appear.
 
-<h3>Order of Static Destruction</h3>
+$(H3 Order of Static Destruction)
 
 	$(P It is defined to be exactly the reverse order that static
 	construction was performed in. Static destructors for individual
@@ -493,16 +496,16 @@ $(V2
 )
 
 
-<h3>Order of Unit tests</h3>
+$(H3 Order of Unit tests)
 
 	Unit tests are run in the lexical order in which they appear
 	within a module.
 
-<h2>$(LNAME2 MixinDeclaration, Mixin Declaration)</h2>
+$(H3 $(LNAME2 MixinDeclaration, Mixin Declaration))
 
 $(GRAMMAR
 $(GNAME MixinDeclaration):
-    $(B mixin) $(B $(LPAREN)) $(ASSIGNEXPRESSION) $(B $(RPAREN)) $(B ;)
+    $(D mixin) $(D $(LPAREN)) $(ASSIGNEXPRESSION) $(D $(RPAREN)) $(D ;)
 )
 
 	$(P The $(ASSIGNEXPRESSION)
