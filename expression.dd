@@ -11,7 +11,7 @@ $(SPEC_S Expressions,
         tested, or ignored. Expressions can also have side effects.
         )
 
-<h2><a name="order-of-evaluation">Order Of Evaluation</a></h2>
+$(H3 $(LNAME2 order-of-evaluation, Order Of Evaluation))
 
         $(P The following binary expressions are evaluated in strictly
         left-to-right order:)
@@ -46,9 +46,8 @@ $(V1
         $(GLINK ShiftExpression),
         $(GLINK AddExpression),
         $(GLINK CatExpression),
-        $(GLINK MulExpression),
-)
-        function parameters
+        $(GLINK MulExpression),)
+        function arguments
         )
 
         $(P It is an error
@@ -80,7 +79,7 @@ assert(text(++i, ++i) == "12"); // left to right evaluation of arguments
         $(B Note that dmd currently does not comply with left to right evaluation of
         function arguments.))
 
-<h2><a name="Expression">Expressions</a></h2>
+$(H3 $(LNAME2 Expression, Expressions))
 
 $(GRAMMAR
 $(GNAME Expression):
@@ -88,34 +87,34 @@ $(GNAME Expression):
 
 $(GNAME CommaExpression):
     $(GLINK AssignExpression)
-    $(GLINK AssignExpression) $(B ,) $(I CommaExpression)
+    $(GLINK AssignExpression) $(D ,) $(I CommaExpression)
 )
 
-        The left operand of the $(B ,) is evaluated, then the right operand
+        The left operand of the $(D ,) is evaluated, then the right operand
         is evaluated. The type of the expression is the type of the right
         operand, and the result is the result of the right operand.
 
 
-<h2>Assign Expressions</h2>
+$(H3 Assign Expressions)
 
 $(GRAMMAR
 $(GNAME AssignExpression):
     $(GLINK ConditionalExpression)
-    $(GLINK ConditionalExpression) $(B =) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B +=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B -=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B *=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B /=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B %=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B &=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B |=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B ^=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B ~=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B &lt;&lt;=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B &gt;&gt;=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(B &gt;&gt;&gt;=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D =) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D +=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D -=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D *=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D /=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D %=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D &=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D |=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D ^=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D ~=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D $(LT)$(LT)=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D $(GT)$(GT)=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D $(GT)$(GT)$(GT)=) $(I AssignExpression)
 $(V2
-    $(GLINK ConditionalExpression) $(B ^^=) $(I AssignExpression))
+    $(GLINK ConditionalExpression) $(D ^^=) $(I AssignExpression))
 )
 
         $(P The right operand is implicitly converted to the type of the
@@ -125,18 +124,18 @@ $(V2
 
         The left operand must be an lvalue.
 
-<h3>Assignment Operator Expressions</h3>
+$(H4 Assignment Operator Expressions)
 
         Assignment operator expressions, such as:
 
 --------------
-a $(I op)= b
+a op= b
 --------------
 
         are semantically equivalent to:
 
 --------------
-a = cast(typeof(a))(a $(I op) b)
+a = cast(typeof(a))(a op b)
 --------------
 
         $(P except that:)
@@ -144,15 +143,15 @@ a = cast(typeof(a))(a $(I op) b)
         $(UL
         $(LI operand $(D a) is only evaluated once)
         $(LI overloading $(I op) uses a different function than overloading $(I op)= does)
-        $(LI the left operand of $(D >>>=) does not undergo integral promotions before shifting)
+        $(LI the left operand of $(D $(GT)$(GT)$(GT)=) does not undergo integral promotions before shifting)
         )
 
-<h2>Conditional Expressions</h2>
+$(H3 Conditional Expressions)
 
 $(GRAMMAR
 $(GNAME ConditionalExpression):
     $(GLINK OrOrExpression)
-    $(GLINK OrOrExpression) $(B ?) $(GLINK Expression) $(B :) $(I ConditionalExpression)
+    $(GLINK OrOrExpression) $(D ?) $(GLINK Expression) $(D :) $(I ConditionalExpression)
 )
 
         The first expression is converted to bool, and is evaluated.
@@ -165,12 +164,12 @@ $(GNAME ConditionalExpression):
         expressions are implicitly converted to a common type which becomes
         the result type of the conditional expression.
 
-<h2>OrOr Expressions</h2>
+$(H3 OrOr Expressions)
 
 $(GRAMMAR
 $(GNAME OrOrExpression):
     $(GLINK AndAndExpression)
-    $(I OrOrExpression) $(B ||) $(GLINK AndAndExpression)
+    $(I OrOrExpression) $(D ||) $(GLINK AndAndExpression)
 )
 
         $(P The result type of an $(I OrOrExpression) is bool,
@@ -190,22 +189,22 @@ $(GNAME OrOrExpression):
         the $(I OrOrExpression) is bool then the result of the
         expression is the right operand converted to type bool.)
 
-<h2>AndAnd Expressions</h2>
+$(H3 AndAnd Expressions)
 
 $(V1
 $(GRAMMAR
 $(GNAME AndAndExpression):
     $(GLINK OrExpression)
-    $(I AndAndExpression) $(B &&) $(GLINK OrExpression)
+    $(I AndAndExpression) $(CODE_ET)$(CODE_ET) $(GLINK OrExpression)
 )
 )
 $(V2
 $(GRAMMAR
 $(GNAME AndAndExpression):
     $(GLINK OrExpression)
-    $(I AndAndExpression) $(B &&) $(GLINK OrExpression)
+    $(I AndAndExpression) $(CODE_ET)$(CODE_ET) $(GLINK OrExpression)
     $(GLINK CmpExpression)
-    $(I AndAndExpression) $(B &&) $(GLINK CmpExpression)
+    $(I AndAndExpression) $(CODE_ET)$(CODE_ET) $(GLINK CmpExpression)
 )
 )
 
@@ -230,53 +229,53 @@ $(GNAME AndAndExpression):
         )
 
 
-<h2>Bitwise Expressions</h2>
+$(H3 Bitwise Expressions)
 
         Bit wise expressions perform a bitwise operation on their operands.
         Their operands must be integral types.
         First, the default integral promotions are done. Then, the bitwise
         operation is done.
 
-<h3>Or Expressions</h3>
+$(H4 Or Expressions)
 
 $(GRAMMAR
 $(GNAME OrExpression):
     $(GLINK XorExpression)
-    $(I OrExpression) $(B |) $(GLINK XorExpression)
+    $(I OrExpression) $(D |) $(GLINK XorExpression)
 )
 
         The operands are OR'd together.
 
-<h3>Xor Expressions</h3>
+$(H4 Xor Expressions)
 
 $(GRAMMAR
 $(GNAME XorExpression):
     $(GLINK AndExpression)
-    $(I XorExpression) $(B ^) $(GLINK AndExpression)
+    $(I XorExpression) $(D ^) $(GLINK AndExpression)
 )
 
         The operands are XOR'd together.
 
-<h3>And Expressions</h3>
+$(H4 And Expressions)
 
 $(V1
 $(GRAMMAR
 $(GNAME AndExpression):
     $(GLINK CmpExpression)
-    $(I AndExpression) $(B &) $(GLINK CmpExpression)
+    $(I AndExpression) $(D &) $(GLINK CmpExpression)
 )
 )
 $(V2
 $(GRAMMAR
 $(GNAME AndExpression):
     $(GLINK ShiftExpression)
-    $(I AndExpression) $(B &) $(GLINK ShiftExpression)
+    $(I AndExpression) $(D &) $(GLINK ShiftExpression)
 )
 )
         The operands are AND'd together.
 
 
-<h2>Compare Expressions</h2>
+$(H3 Compare Expressions)
 
 $(GRAMMAR
 $(GNAME CmpExpression):
@@ -287,16 +286,16 @@ $(GNAME CmpExpression):
     $(GLINK InExpression)
 )
 
-<h2>Equality Expressions</h2>
+$(H3 Equality Expressions)
 
 $(GRAMMAR
 $(GNAME EqualExpression):
-    $(GLINK ShiftExpression) $(B ==) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B !=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D ==) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !=) $(GLINK ShiftExpression)
 )
 
-        $(P Equality expressions compare the two operands for equality ($(B ==))
-        or inequality ($(B !=)).
+        $(P Equality expressions compare the two operands for equality ($(D ==))
+        or inequality ($(D !=)).
         The type of the result is bool. The operands
         go through the usual conversions to bring them to a common type before
         comparison.)
@@ -351,16 +350,16 @@ if (c is null)  // ok
         matching, and all the elements are equal.
         )
 
-<h3>Identity Expressions</h3>
+$(H4 Identity Expressions)
 
 $(GRAMMAR
 $(GNAME IdentityExpression):
-    $(GLINK ShiftExpression) $(B is) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B !is) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D is) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !is) $(GLINK ShiftExpression)
 )
 
-        $(P The $(B is) compares for identity.
-        To compare for not identity, use $(D $(I e1) $(B !is) $(I e2)).
+        $(P The $(D is) compares for identity.
+        To compare for not identity, use $(D e1 !is e2).
         The type of the result is bool. The operands
         go through the usual conversions to bring them to a common type before
         comparison.
@@ -368,7 +367,7 @@ $(GNAME IdentityExpression):
 
         $(P For class objects, identity is defined as the object references
         are for the same object. Null class objects can be compared with
-        $(B is).
+        $(D is).
         )
 
         $(P For struct objects, identity is defined as the bits in the
@@ -383,25 +382,25 @@ $(GNAME IdentityExpression):
         as equality.
         )
 
-        $(P The identity operator $(B is) cannot be overloaded.
+        $(P The identity operator $(D is) cannot be overloaded.
         )
 
-<h2>Relational Expressions</h2>
+$(H3 Relational Expressions)
 
 $(GRAMMAR
 $(GNAME RelExpression):
-    $(GLINK ShiftExpression) $(B &lt;) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B &lt;=) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B &gt;) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B &gt;=) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B !&lt;&gt;=) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B !&lt;&gt;) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B &lt;&gt;) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B &lt;&gt;=) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B !&gt;) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B !&gt;=) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B !&lt;) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(B !&lt;=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D $(LT)) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D $(LT)=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D $(GT)) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D $(GT)=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !$(LT)$(GT)=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !$(LT)$(GT)) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D $(LT)$(GT)) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D $(LT)$(GT)=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !$(GT)) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !$(GT)=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !$(LT)) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !$(LT)=) $(GLINK ShiftExpression)
 )
 
         $(P First, the integral promotions are done on the operands.
@@ -415,7 +414,7 @@ $(GNAME RelExpression):
 (o1.opCmp(o2) op 0)
 ---
 
-        $(P It is an error to compare objects if one is $(B null).)
+        $(P It is an error to compare objects if one is $(D null).)
 
         $(P For static and dynamic arrays, the result of the relational
         op is the result of the operator applied to the first non-equal
@@ -423,36 +422,28 @@ $(GNAME RelExpression):
         different lengths, the shorter array compares as "less" than the
         longer array.)
 
-<h3>Integer comparisons</h3>
+$(H4 Integer comparisons)
 
         $(P Integer comparisons happen when both operands are integral
         types.
         )
 
         $(TABLE2 Integer comparison operators,
-        $(TR
-        $(TH Operator)$(TH Relation)
-        )$(TR
-        $(TD &lt;)              $(TD less)
-        )$(TR
-        $(TD &gt;)              $(TD greater)
-        )$(TR
-        $(TD &lt;=)             $(TD less or equal)
-        )$(TR
-        $(TD &gt;=)             $(TD greater or equal)
-        )$(TR
-        $(TD ==)                $(TD equal)
-        )$(TR
-        $(TD !=)                $(TD not equal)
-        )
+        $(THEAD Operator, Relation)
+        $(TROW $(D $(LT)), less)
+        $(TROW $(D $(GT)), greater)
+        $(TROW $(D $(LT)=), less or equal)
+        $(TROW $(D $(GT)=), greater or equal)
+        $(TROW $(D ==), equal)
+        $(TROW $(D !=), not equal)
         )
 
         $(P It is an error to have one operand be signed and the other
-        unsigned for a &lt;, &lt;=, &gt; or &gt;= expression.
+        unsigned for a $(D $(LT)), $(D $(LT)=), $(D $(GT)) or $(D $(GT)=) expression.
         Use casts to make both operands signed or both operands unsigned.
         )
 
-<h3><a name="floating_point_comparisons">Floating point comparisons</a></h3>
+$(H4 $(LNAME2 floating_point_comparisons, Floating point comparisons))
 
         $(P If one or both operands are floating point, then a floating
         point comparison is performed.)
@@ -466,65 +457,29 @@ $(GNAME RelExpression):
         conditions to test for:)
 
         $(TABLE2 Floating point comparison operators,
-        $(TR
-        $(TH Operator)
-        $(TH Greater Than)
-        $(TH Less Than)
-        $(TH Equal)
-        $(TH Unordered)
-        $(TH Exception)
-        $(TH Relation)
-        )
-        $(TR
-        $(TD ==)        $(TD F)$(TD F)$(TD T)$(TD F)$(TD no)    $(TD equal)
-        )
-        $(TR
-        $(TD !=)        $(TD T)$(TD T)$(TD F)$(TD T)$(TD no)    $(TD unordered, less, or greater)
-        )
-        $(TR
-        $(TD &gt;)      $(TD T)$(TD F)$(TD F)$(TD F)$(TD yes)   $(TD greater)
-        )
-        $(TR
-        $(TD &gt;=)     $(TD T)$(TD F)$(TD T)$(TD F)$(TD yes)   $(TD greater or equal)
-        )
-        $(TR
-        $(TD &lt;)      $(TD F)$(TD T)$(TD F)$(TD F)$(TD yes)   $(TD less)
-        )
-        $(TR
-        $(TD &lt;=)     $(TD F)$(TD T)$(TD T)$(TD F)$(TD yes)   $(TD less or equal)
-        )
-        $(TR
-        $(TD !&lt;&gt;=) $(TD F)$(TD F)$(TD F)$(TD T)$(TD no)   $(TD unordered)
-        )
-        $(TR
-        $(TD &lt;&gt;)  $(TD T)$(TD T)$(TD F)$(TD F)$(TD yes)   $(TD less or greater)
-        )
-        $(TR
-        $(TD &lt;&gt;=) $(TD T)$(TD T)$(TD T)$(TD F)$(TD yes)   $(TD less, equal, or greater)
-        )
-        $(TR
-        $(TD !&lt;=)    $(TD T)$(TD F)$(TD F)$(TD T)$(TD no)    $(TD unordered or greater)
-        )
-        $(TR
-        $(TD !&lt;)     $(TD T)$(TD F)$(TD T)$(TD T)$(TD no)    $(TD unordered, greater, or equal)
-        )
-        $(TR
-        $(TD !&gt;=)    $(TD F)$(TD T)$(TD F)$(TD T)$(TD no)    $(TD unordered or less)
-        )
-        $(TR
-        $(TD !&gt;)     $(TD F)$(TD T)$(TD T)$(TD T)$(TD no)    $(TD unordered, less, or equal)
-        )
-        $(TR
-        $(TD !&lt;&gt;) $(TD F)$(TD F)$(TD T)$(TD T)$(TD no)    $(TD unordered or equal)
-        )
+        $(THEAD Operator, Greater, Less, Equal, Unordered, Exception, Relation)
+        $(TROW $(D ==),$(D F),$(D F),$(D T),$(D F),$(D no),equal)
+        $(TROW $(D !=),$(D T),$(D T),$(D F),$(D T),$(D no),$(ARGS unordered, less, or greater))
+        $(TROW $(D $(GT)),$(D T),$(D F),$(D F),$(D F),$(D yes),$(ARGS greater))
+        $(TROW $(D $(GT)=),$(D T),$(D F),$(D T),$(D F),$(D yes),$(ARGS greater or equal))
+        $(TROW $(D $(LT)),$(D F),$(D T),$(D F),$(D F),$(D yes),$(ARGS less))
+        $(TROW $(D $(LT)=),$(D F),$(D T),$(D T),$(D F),$(D yes),$(ARGS less or equal))
+        $(TROW $(D !$(LT)$(GT)=),$(D F),$(D F),$(D F),$(D T),$(D no),$(ARGS unordered))
+        $(TROW $(D $(LT)$(GT)),$(D T),$(D T),$(D F),$(D F),$(D yes),$(ARGS less or greater))
+        $(TROW $(D $(LT)$(GT)=),$(D T),$(D T),$(D T),$(D F),$(D yes),$(ARGS less, equal, or greater))
+        $(TROW $(D !$(LT)=),$(D T),$(D F),$(D F),$(D T),$(D no),$(ARGS unordered or greater))
+        $(TROW $(D !$(LT)),$(D T),$(D F),$(D T),$(D T),$(D no),$(ARGS unordered, greater, or equal))
+        $(TROW $(D !$(GT)=),$(D F),$(D T),$(D F),$(D T),$(D no),$(ARGS unordered or less))
+        $(TROW $(D !$(GT)),$(D F),$(D T),$(D T),$(D T),$(D no),$(ARGS unordered, less, or equal))
+        $(TROW $(D !$(LT)$(GT)),$(D F),$(D F),$(D T),$(D T),$(D no),$(ARGS unordered or equal))
         )
 
-        <h4>Notes:</h4>
+        $(H5 Notes:)
 
         $(OL
         $(LI For floating point comparison operators,
-         $(CODE ($(I a) !$(I op) $(I b)))
-         is not the same as $(CODE !($(I a op b))).)
+         $(CODE (a !op b))
+         is not the same as $(CODE !(a op b)).)
         $(LI "Unordered" means one or both of the operands is a NAN.)
         $(LI "Exception" means the $(I Invalid Exception) is raised if one
                 of the operands is a NAN. It does not mean an exception
@@ -533,7 +488,7 @@ $(GNAME RelExpression):
         )
         )
 
-<h3><a name="class_comparisons">Class comparisons</a></h3>
+$(H4 $(LNAME2 class_comparisons, Class comparisons))
 
         $(P For class objects, the relational
         operators compare the
@@ -548,12 +503,12 @@ if (c < null)  // error
   ...
 ---
 
-<h2>In Expressions</h2>
+$(H3 In Expressions)
 
 $(GRAMMAR
 $(GNAME InExpression):
-    $(GLINK ShiftExpression) $(B in) $(GLINK ShiftExpression)
-$(V2    $(GLINK ShiftExpression) $(B !in) $(GLINK ShiftExpression))
+    $(GLINK ShiftExpression) $(D in) $(GLINK ShiftExpression)
+$(V2    $(GLINK ShiftExpression) $(D !in) $(GLINK ShiftExpression))
 )
 
         $(P An associative array can be tested to see if an element is in the array:
@@ -566,26 +521,26 @@ if ("hello" in foo)
     ...
 -------------
 
-        $(P The $(B in) expression has the same precedence as the
-        relational expressions $(B &lt;), $(B &lt;=),
+        $(P The $(D in) expression has the same precedence as the
+        relational expressions $(D $(LT)), $(D $(LT)=),
         etc.
-        The return value of the $(I InExpression) is $(B null)
+        The return value of the $(I InExpression) is $(D null)
         if the element is not in the array;
         if it is in the array it is a pointer to the element.
         )
 
-        $(V2 $(P The $(B !in) expression is the logical negation of the $(B in)
+        $(V2 $(P The $(D !in) expression is the logical negation of the $(D in)
         operation.
         ))
 
-<h2>Shift Expressions</h2>
+$(H3 Shift Expressions)
 
 $(GRAMMAR
 $(GNAME ShiftExpression):
     $(GLINK AddExpression)
-    $(I ShiftExpression) $(B &lt;&lt;) $(GLINK AddExpression)
-    $(I ShiftExpression) $(B &gt;&gt;) $(GLINK AddExpression)
-    $(I ShiftExpression) $(B &gt;&gt;&gt;) $(GLINK AddExpression)
+    $(I ShiftExpression) $(D $(LT)$(LT)) $(GLINK AddExpression)
+    $(I ShiftExpression) $(D $(GT)$(GT)) $(GLINK AddExpression)
+    $(I ShiftExpression) $(D $(GT)$(GT)$(GT)) $(GLINK AddExpression)
 )
 
         $(P The operands must be integral types, and undergo the usual integral
@@ -594,9 +549,9 @@ $(GNAME ShiftExpression):
         by the right operand's value.
         )
 
-        $(P $(B &lt;&lt;) is a left shift.
-        $(B &gt;&gt;) is a signed right shift.
-        $(B &gt;&gt;&gt;) is an unsigned right shift.
+        $(P $(D $(LT)$(LT)) is a left shift.
+        $(D $(GT)$(GT)) is a signed right shift.
+        $(D $(GT)$(GT)$(GT)) is an unsigned right shift.
         )
 
         $(P It's illegal to shift by the same or more bits than the size of the
@@ -608,13 +563,13 @@ int c;
 c << 33;        // error
 -------------
 
-<h2>Add Expressions</h2>
+$(H3 Add Expressions)
 
 $(GRAMMAR
 $(GNAME AddExpression):
     $(GLINK MulExpression)
-    $(I AddExpression) $(B +) $(GLINK MulExpression)
-    $(I AddExpression) $(B -) $(GLINK MulExpression)
+    $(I AddExpression) $(D +) $(GLINK MulExpression)
+    $(I AddExpression) $(D -) $(GLINK MulExpression)
     $(GLINK CatExpression)
 )
 
@@ -628,7 +583,7 @@ $(GNAME AddExpression):
         via the usual arithmetic conversions.
         )
 
-        $(P If the operator is $(B +) or $(B -), and
+        $(P If the operator is $(D +) or $(D -), and
         the first operand is a pointer, and the second is an integral type,
         the resulting type is the type of the first operand, and the resulting
         value is the pointer plus (or minus) the second operand multiplied by
@@ -636,13 +591,13 @@ $(GNAME AddExpression):
         )
 
         $(P If the second operand is a pointer, and the first is an integral type,
-        and the operator is $(B +),
+        and the operator is $(D +),
         the operands are reversed and the pointer arithmetic just described
         is applied.
         )
 
-        $(P If both operands are pointers, and the operator is $(B +),
-        then it is illegal. For $(B -), the pointers are subtracted and the
+        $(P If both operands are pointers, and the operator is $(D +),
+        then it is illegal. For $(D -), the pointers are subtracted and the
         result is divided by the size of the type pointed to by the
         operands. It is an error if the pointers point to different types.
         )
@@ -655,11 +610,11 @@ $(GNAME AddExpression):
         $(P Add expressions for floating point operands are not associative.
         )
 
-<h2>Cat Expressions</h2>
+$(H3 Cat Expressions)
 
 $(GRAMMAR
 $(GNAME CatExpression):
-    $(I AddExpression) $(B ~) $(GLINK MulExpression)
+    $(I AddExpression) $(D ~) $(GLINK MulExpression)
 )
 
         $(P A $(I CatExpression) concatenates arrays, producing
@@ -670,14 +625,14 @@ $(GNAME CatExpression):
         and then the concatenation is performed.
         )
 
-<h2>Mul Expressions</h2>
+$(H3 Mul Expressions)
 
 $(GRAMMAR
 $(GNAME MulExpression):
     $(GLINK UnaryExpression)
-    $(I MulExpression) $(B *) $(GLINK UnaryExpression)
-    $(I MulExpression) $(B /) $(GLINK UnaryExpression)
-    $(I MulExpression) $(B %) $(GLINK UnaryExpression)
+    $(I MulExpression) $(D *) $(GLINK UnaryExpression)
+    $(I MulExpression) $(D /) $(GLINK UnaryExpression)
+    $(I MulExpression) $(D %) $(GLINK UnaryExpression)
 )
 
         $(P The operands must be arithmetic types. They undergo integral
@@ -685,13 +640,13 @@ $(GNAME MulExpression):
         usual arithmetic conversions.
         )
 
-        $(P For integral operands, the $(B *), $(B /), and $(B %)
+        $(P For integral operands, the $(D *), $(D /), and $(D %)
         correspond to multiply, divide, and modulus operations.
         For multiply, overflows are ignored and simply chopped to fit
         into the integral type.
         )
 
-        $(P For integral operands of the $(B /) and $(B %) operators,
+        $(P For integral operands of the $(D /) and $(D %) operators,
         the quotient rounds towards zero and the remainder has the
         same sign as the dividend.
         If the divisor is zero, an Exception is thrown.
@@ -706,30 +661,30 @@ $(GNAME MulExpression):
         $(P Mul expressions for floating point operands are not associative.
         )
 
-<h2><a name="UnaryExpression">Unary Expressions</a></h2>
+$(H3 $(LNAME2 UnaryExpression, Unary Expressions))
 
 $(GRAMMAR
 $(GNAME UnaryExpression):
-    $(B &amp;) $(I UnaryExpression)
-    $(B ++) $(I UnaryExpression)
-    $(B --) $(I UnaryExpression)
-    $(B *) $(I UnaryExpression)
-    $(B -) $(I UnaryExpression)
-    $(B +) $(I UnaryExpression)
-    $(B !) $(I UnaryExpression)
+    $(D &amp;) $(I UnaryExpression)
+    $(D ++) $(I UnaryExpression)
+    $(D --) $(I UnaryExpression)
+    $(D *) $(I UnaryExpression)
+    $(D -) $(I UnaryExpression)
+    $(D +) $(I UnaryExpression)
+    $(D !) $(I UnaryExpression)
     $(GLINK ComplementExpression)
-    $(B $(LPAREN)) $(GLINK2 declaration, Type) $(B $(RPAREN) .) $(IDENTIFIER)
+    $(D $(LPAREN)) $(GLINK2 declaration, Type) $(D $(RPAREN) .) $(IDENTIFIER)
     $(GLINK NewExpression)
     $(GLINK DeleteExpression)
     $(GLINK CastExpression)
     $(V1 $(GLINK PostfixExpression))$(V2 $(GLINK PowExpression))
 )
 
-<h3>Complement Expressions</h3>
+$(H4 Complement Expressions)
 
 $(GRAMMAR
 $(GNAME ComplementExpression):
-    $(B ~) $(I UnaryExpression)
+    $(D ~) $(I UnaryExpression)
 )
 
         $(P $(I ComplementExpression)s work on integral types (except bool).
@@ -739,22 +694,22 @@ $(GNAME ComplementExpression):
         prior to the complement operation.
         )
 
-<h3>New Expressions</h3>
+$(H4 New Expressions)
 
 $(GRAMMAR
 $(GNAME NewExpression):
-    $(B new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(B [) $(GLINK AssignExpression) $(B ])
-    $(B new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(B $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
-    $(B new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type)
+    $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(D [) $(GLINK AssignExpression) $(D ])
+    $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
+    $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type)
     $(GLINK2 class, NewAnonClassExpression)
 
 $(GNAME AllocatorArguments):
-    $(B $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(B $(RPAREN))
+    $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
 
 $(GNAME ArgumentList):
     $(GLINK AssignExpression)
-$(V2      $(GLINK AssignExpression) $(B ,)
-)    $(GLINK AssignExpression) $(B ,) $(I ArgumentList)
+$(V2      $(GLINK AssignExpression) $(D ,)
+)    $(GLINK AssignExpression) $(D ,) $(I ArgumentList)
 )
 
         $(P $(I NewExpression)s are used to allocate memory on the garbage
@@ -799,24 +754,24 @@ foreach (ref a; bar)
 }
 -----------
 
-        $(P If there is a $(B new $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN)),
+        $(P If there is a $(D new $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN)),
         then
         those arguments are passed to the class or struct specific
         $(LINK2 class.html#allocators, allocator function) after the size argument.
         )
 
         $(P If a $(I NewExpression) is used as an initializer for
-        a function local variable with $(B scope) storage class,
-        and the $(GLINK ArgumentList) to $(B new) is empty, then
+        a function local variable with $(D scope) storage class,
+        and the $(GLINK ArgumentList) to $(D new) is empty, then
         the instance is allocated on the stack rather than the heap
         or using the class specific allocator.
         )
 
-<h3>Delete Expressions</h3>
+$(H4 Delete Expressions)
 
 $(GRAMMAR
 $(GNAME DeleteExpression):
-    $(B delete) $(GLINK UnaryExpression)
+    $(D delete) $(GLINK UnaryExpression)
 )
         $(P If the $(I UnaryExpression) is a class object reference, and
         there is a destructor for that class, the destructor
@@ -842,7 +797,7 @@ $(GNAME DeleteExpression):
         the instance, undefined behavior will result.
         )
 
-        $(P The pointer, dynamic array, or reference is set to $(B null)
+        $(P The pointer, dynamic array, or reference is set to $(D null)
         after the delete is performed.
         Any attempt to reference the data after the deletion via another
         reference to it will result in undefined behavior.
@@ -854,23 +809,23 @@ $(GNAME DeleteExpression):
         is called.
         )
 
-<h3>Cast Expressions</h3>
+$(H4 Cast Expressions)
 
 $(GRAMMAR
 $(GNAME CastExpression):
-    $(B cast $(LPAREN)) $(GLINK2 declaration, Type) $(B $(RPAREN)) $(GLINK UnaryExpression)
-    $(B cast $(LPAREN)) $(I CastQual) $(B $(RPAREN)) $(GLINK UnaryExpression)
-    $(B cast $(LPAREN)) $(B $(RPAREN)) $(GLINK UnaryExpression)
+    $(D cast $(LPAREN)) $(GLINK2 declaration, Type) $(D $(RPAREN)) $(GLINK UnaryExpression)
+    $(D cast $(LPAREN)) $(I CastQual) $(D $(RPAREN)) $(GLINK UnaryExpression)
+    $(D cast $(LPAREN)) $(D $(RPAREN)) $(GLINK UnaryExpression)
 
 $(GNAME CastQual):
-    $(B const)
-    $(B const shared)
-    $(B shared const)
-    $(B inout)
-    $(B inout shared)
-    $(B shared inout)
-    $(B immutable)
-    $(B shared)
+    $(D const)
+    $(D const shared)
+    $(D shared const)
+    $(D inout)
+    $(D inout shared)
+    $(D shared inout)
+    $(D immutable)
+    $(D shared)
 )
 
         $(P A $(I CastExpression) converts the $(I UnaryExpression)
@@ -878,15 +833,15 @@ $(GNAME CastQual):
         )
 
 -------------
-$(B cast)(foo) -p; // cast (-p) to type foo
+cast(foo) -p; // cast (-p) to type foo
 (foo) - p;      // subtract p from foo
 -------------
 
         $(P Any casting of a class reference to a
         derived class reference is done with a runtime check to make sure it
-        really is a downcast. $(B null) is the result if it isn't.
-        $(B Note:) This is equivalent to the behavior of the
-        dynamic_cast operator in C++.
+        really is a downcast. $(D null) is the result if it isn't.
+        $(D Note:) This is equivalent to the behavior of the
+        $(D dynamic_cast) operator in C++.
         )
 
 -------------
@@ -906,7 +861,7 @@ void test(A a, B b) {
         )
 
 -------------
-if ($(B cast)(B) o)
+if (cast(B) o)
 {
   // o is an instance of B
 }
@@ -996,7 +951,7 @@ assert(is(typeof(cast(const)x) == const int));
 ---
 
         $(P Casting with no $(GLINK Type) or $(GLINK CastQual) removes
-        any top level $(B const), $(B immutable), $(B shared) or $(B inout)
+        any top level $(D const), $(D immutable), $(D shared) or $(D inout)
         type modifiers from the type
         of the $(GLINK UnaryExpression).)
 
@@ -1006,7 +961,7 @@ assert(is(typeof(cast()x) == int));
 ---
 
 $(V2
-<h2>Pow Expressions</h2>
+$(H3 Pow Expressions)
 
 $(GRAMMAR
 $(GNAME PowExpression):
@@ -1020,29 +975,29 @@ $(GNAME PowExpression):
 )
 
 
-<h2>Postfix Expressions</h2>
+$(H3 Postfix Expressions)
 
 $(GRAMMAR
 $(GNAME PostfixExpression):
     $(GLINK PrimaryExpression)
-    $(I PostfixExpression) $(B .) $(IDENTIFIER)
-    $(I PostfixExpression) $(B .) $(GLINK2 template, TemplateInstance)
-    $(I PostfixExpression) $(B .) $(GLINK NewExpression)
-    $(I PostfixExpression) $(B ++)
-    $(I PostfixExpression) $(B --)
-    $(I PostfixExpression) $(B ( ))
-    $(I PostfixExpression) $(B $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
-$(V2      $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(B ( ))
-    $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(B $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
+    $(I PostfixExpression) $(D .) $(IDENTIFIER)
+    $(I PostfixExpression) $(D .) $(GLINK2 template, TemplateInstance)
+    $(I PostfixExpression) $(D .) $(GLINK NewExpression)
+    $(I PostfixExpression) $(D ++)
+    $(I PostfixExpression) $(D --)
+    $(I PostfixExpression) $(D ( ))
+    $(I PostfixExpression) $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
+$(V2      $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(D ( ))
+    $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
 )    $(GLINK IndexExpression)
     $(GLINK SliceExpression)
 )
 
-<h2>Index Expressions</h2>
+$(H3 Index Expressions)
 
 $(GRAMMAR
 $(GNAME IndexExpression):
-    $(GLINK PostfixExpression) $(B [) $(GLINK ArgumentList) $(B ])
+    $(GLINK PostfixExpression) $(D [) $(GLINK ArgumentList) $(D ])
 )
 
         $(P $(I PostfixExpression) is evaluated.
@@ -1068,22 +1023,22 @@ $(GNAME IndexExpression):
         It is an error if $(I n) is out of bounds of the $(I ExpressionTuple).
         )
 
-<h2>Slice Expressions</h2>
+$(H3 Slice Expressions)
 
 $(GRAMMAR
 $(GNAME SliceExpression):
-    $(GLINK PostfixExpression) $(B [ ])
-    $(GLINK PostfixExpression) $(B [) $(GLINK AssignExpression) $(B ..) $(GLINK AssignExpression) $(B ])
+    $(GLINK PostfixExpression) $(D [ ])
+    $(GLINK PostfixExpression) $(D [) $(GLINK AssignExpression) $(D ..) $(GLINK AssignExpression) $(D ])
 )
 
         $(P $(I PostfixExpression) is evaluated.
         if $(I PostfixExpression) is an expression of type
-        static array or dynamic array, the variable $(B length)
+        static array or dynamic array, the variable $(D length)
         (and the special variable $(DOLLAR))
         is declared and set to be the length of the array.
         A new declaration scope is created for the evaluation of the
         $(GLINK AssignExpression)..$(GLINK AssignExpression)
-        and $(B length) (and $(DOLLAR)) appears in that scope only.
+        and $(D length) (and $(DOLLAR)) appears in that scope only.
         )
 
         $(P The first $(I AssignExpression) is taken to be the inclusive
@@ -1094,7 +1049,7 @@ $(GNAME SliceExpression):
         array.
         )
 
-        $(P If the $(B [ ]) form is used, the slice is of the entire
+        $(P If the $(D [ ]) form is used, the slice is of the entire
         array.
         )
 
@@ -1112,22 +1067,22 @@ $(GNAME SliceExpression):
         bounds are out of range.
         )
 
-<h2>Primary Expressions</h2>
+$(H3 Primary Expressions)
 
 $(GRAMMAR
 $(GNAME PrimaryExpression):
     $(IDENTIFIER)
-    $(B .)$(IDENTIFIER)
+    $(D .)$(IDENTIFIER)
     $(GLINK2 template, TemplateInstance)
-    $(B .)$(GLINK2 template, TemplateInstance)
-    $(LINK2 #this, $(B this))
-    $(LINK2 #super, $(B super))
-    $(LINK2 #null, $(B null))
-    $(B true)
-    $(B false)
-    $(B $)
-$(V2      $(B __FILE__)
-    $(B __LINE__))
+    $(D .)$(GLINK2 template, TemplateInstance)
+    $(LINK2 #this, $(D this))
+    $(LINK2 #super, $(D super))
+    $(LINK2 #null, $(D null))
+    $(D true)
+    $(D false)
+    $(D $)
+$(V2      $(D __FILE__)
+    $(D __LINE__))
     $(GLINK2 lex, IntegerLiteral)
     $(GLINK2 lex, FloatLiteral)
     $(GLINK CharacterLiteral)
@@ -1139,35 +1094,35 @@ $(V2      $(B __FILE__)
     $(GLINK AssertExpression)
     $(GLINK MixinExpression)
     $(GLINK ImportExpression)
-    $(DDSUBLINK declaration, BasicTypeX, $(I BasicType)) $(B .) $(IDENTIFIER)
+    $(DDSUBLINK declaration, BasicTypeX, $(I BasicType)) $(D .) $(IDENTIFIER)
     $(GLINK2 declaration, Typeof)
     $(GLINK TypeidExpression)
     $(GLINK IsExpression)
-    $(B $(LPAREN)) $(I Expression) $(B $(RPAREN))
+    $(D $(LPAREN)) $(I Expression) $(D $(RPAREN))
 $(V2      $(GLINK2 traits, TraitsExpression))
 )
 
-<h3>.Identifier</h3>
+$(H4 .Identifier)
 
         $(IDENTIFIER) is looked up at module scope, rather than the current
         lexically nested scope.
 
-<h3>$(LNAME2 this, this)</h3>
+$(H4 $(LNAME2 this, this))
 
-        $(P Within a non-static member function, $(B this) resolves to
+        $(P Within a non-static member function, $(D this) resolves to
         a reference to the object for which the function was called.
-        If the object is an instance of a struct, $(B this) will
+        If the object is an instance of a struct, $(D this) will
         be a pointer to that instance.
         If a member function is called with an explicit reference
-        to $(B typeof(this)), a non-virtual call is made:
+        to $(D typeof(this)), a non-virtual call is made:
         )
 
 -------------
 class A {
   char get() { return 'A'; }
 
-  char foo() { return $(B typeof(this)).get(); }
-  char bar() { return $(B this).get(); }
+  char foo() { return typeof(this).get(); }
+  char bar() { return this.get(); }
 }
 
 class B : A {
@@ -1182,24 +1137,24 @@ void main() {
 }
 -------------
 
-        $(P Assignment to $(B this) is not allowed.)
+        $(P Assignment to $(D this) is not allowed.)
 
-<h3>$(LNAME2 super, super)</h3>
+$(H4 $(LNAME2 super, super))
 
-        $(P $(B super) is identical to $(B this), except that it is
-        cast to $(B this)'s base class.
+        $(P $(D super) is identical to $(D this), except that it is
+        cast to $(D this)'s base class.
         It is an error if there is no base class.
-        It is an error to use $(B super) within a struct member function.
+        It is an error to use $(D super) within a struct member function.
         (Only class $(D Object) has no base class.)
         If a member function is called with an explicit reference
-        to $(B super), a non-virtual call is made.
+        to $(D super), a non-virtual call is made.
         )
 
-        $(P Assignment to $(B super) is not allowed.)
+        $(P Assignment to $(D super) is not allowed.)
 
-<h3>$(LNAME2 null, null)</h3>
+$(H4 $(LNAME2 null, null))
 
-        $(P $(B null) represents the null value for
+        $(P $(D null) represents the null value for
         pointers, pointers to functions, delegates,
         dynamic arrays, associative arrays,
         and class objects.
@@ -1211,22 +1166,22 @@ void main() {
         but no longer exact.
         )
 
-<h3>true, false</h3>
+$(H4 true, false)
 
-        These are of type $(B bool) and when cast to another integral
+        These are of type $(D bool) and when cast to another integral
         type become the values 1 and 0,
         respectively.
 
-<h3><a name="CharacterLiteral">Character Literals</a></h3>
+$(H4 $(LNAME2 CharacterLiteral, Character Literals))
 
         Character literals are single characters and resolve to one
-        of type $(B char), $(B wchar), or $(B dchar).
-        If the literal is a \u escape sequence, it resolves to type $(B wchar).
-        If the literal is a \U escape sequence, it resolves to type $(B dchar).
+        of type $(D char), $(D wchar), or $(D dchar).
+        If the literal is a $(D \u) escape sequence, it resolves to type $(D wchar).
+        If the literal is a $(D \U) escape sequence, it resolves to type $(D dchar).
         Otherwise, it resolves to the type with the smallest size it
         will fit into.
 
-<h3>String Literals</h3>
+$(H4 String Literals)
 
 $(GRAMMAR
 $(GNAME StringLiterals):
@@ -1265,11 +1220,11 @@ $(V2
         string literal.
         )
 
-<h3>Array Literals</h3>
+$(H4 Array Literals)
 
 $(GRAMMAR
 $(GNAME ArrayLiteral):
-    $(B [) $(GLINK ArgumentList) $(B ])
+    $(D [) $(GLINK ArgumentList) $(D ])
 )
 
         $(P Array literals are a comma-separated list of $(GLINK AssignExpression)s
@@ -1323,18 +1278,18 @@ void main() {
 ---
 
 
-<h3>Associative Array Literals</h3>
+$(H4 Associative Array Literals)
 
 $(GRAMMAR
 $(GNAME AssocArrayLiteral):
-    $(B [) $(GLINK KeyValuePairs) $(B ])
+    $(D [) $(GLINK KeyValuePairs) $(D ])
 
 $(GNAME KeyValuePairs):
     $(GLINK KeyValuePair)
-    $(GLINK KeyValuePair) $(B ,) $(I KeyValuePairs)
+    $(GLINK KeyValuePair) $(D ,) $(I KeyValuePairs)
 
 $(GNAME KeyValuePair):
-    $(GLINK KeyExpression) $(B :) $(GLINK ValueExpression)
+    $(GLINK KeyExpression) $(D :) $(GLINK ValueExpression)
 
 $(GNAME KeyExpression):
     $(GLINK AssignExpression)
@@ -1369,26 +1324,24 @@ $(GNAME ValueExpression):
         )
 
 $(V2
-<h3>Lambdas</h3>
+$(H4 Lambdas)
 
 $(GRAMMAR
 $(GNAME Lambda):
-        $(IDENTIFIER) $(B =&gt;) $(GLINK AssignExpression)
-        $(GLINK ParameterAttributes) $(B =&gt;) $(GLINK AssignExpression)
+        $(IDENTIFIER) $(D =$(GT)) $(GLINK AssignExpression)
+        $(GLINK ParameterAttributes) $(D =$(GT)) $(GLINK AssignExpression)
 )
 
         $(P $(I Lambda)s are a shorthand syntax for $(GLINK FunctionLiteral)s.
         The first form is equivalent to:
         )
----
-( $(IDENTIFIER) ) { return $(I AssignExpression); }
----
+
+$(P $(D $(LPAREN)) $(IDENTIFIER) $(D $(RPAREN)) $(D { return) $(I
+AssignExpression) $(D ; }))
 
         $(P And the second:)
 
----
-$(I ParameterAttributes) { return $(I AssignExpression); }
----
+$(P $(I ParameterAttributes) $(D { return) $(I AssignExpression) $(D ; }))
 
 Example usage:
 ---
@@ -1406,12 +1359,12 @@ void main() {
 
 )
 
-<h3>Function Literals</h3>
+$(H4 Function Literals)
 
 $(GRAMMAR
 $(GNAME FunctionLiteral):
-        $(B function) $(GLINK2 declaration, Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK2 function, FunctionBody)
-        $(B delegate) $(GLINK2 declaration, Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK2 function, FunctionBody)
+        $(D function) $(GLINK2 declaration, Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK2 function, FunctionBody)
+        $(D delegate) $(GLINK2 declaration, Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK2 function, FunctionBody)
         $(GLINK ParameterAttributes) $(GLINK2 function, FunctionBody)
         $(GLINK2 function, FunctionBody)
 
@@ -1425,12 +1378,12 @@ $(V2      $(GLINK2 declaration, Parameters) $(GLINK2 declaration, FunctionAttrib
         $(I Type) is the return type of the function or delegate,
         if omitted it is inferred from any $(I ReturnStatement)s
         in the $(I FunctionBody).
-        $(B $(LPAREN)) $(GLINK ArgumentList) $(B $(RPAREN))
+        $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
         forms the arguments to the function.
-        If omitted it defaults to the empty argument list $(B ( )).
+        If omitted it defaults to the empty argument list $(D ( )).
         The type of a function literal is pointer to function or
         pointer to delegate.
-        If the keywords $(B function) or $(B delegate) are omitted,
+        If the keywords $(D function) or $(D delegate) are omitted,
         it is inferred from whether $(I FunctionBody) is actually
         accessing to the outer context.)
 
@@ -1452,7 +1405,7 @@ void test() {
 int function(char c) fp;
 
 void test() {
-  fp = $(B function int(char c) { return 6;}) ;
+  fp = function int(char c) { return 6;} ;
 }
 -------------
 
@@ -1477,12 +1430,12 @@ int abc(int delegate(long i));
 void test() {
   int b = 3;
 
-  abc( $(B delegate int(long c) { return 6 + b; }) );
+  abc( delegate int(long c) { return 6 + b; } );
 }
 -------------
 
-        $(P and the following where the return type $(B int) and
-        $(B function)/$(B delegate) are inferred:)
+        $(P and the following where the return type $(D int) and
+        $(D function)/$(D delegate) are inferred:)
 
 -------------
 int abc(int delegate(long i));
@@ -1491,9 +1444,9 @@ int def(int function(long s));
 void test() {
   int b = 3;
 
-  abc( $(B (long c) { return 6 + b; }) );  // inferred to $(B delegate)
-  def( $(B (long c) { return c * 2; }) );  // inferred to $(B function)
-//def( $(B (long c) { return c * b; }) );  // error!
+  abc( (long c) { return 6 + b; } );  // inferred to delegate
+  def( (long c) { return c * 2; } );  // inferred to function
+//def( (long c) { return c * b; } );  // error!
   // Because the FunctionBody accesses b, then the function literal type
   // is inferred to delegate. But def cannot receive delegate.
 }
@@ -1507,10 +1460,10 @@ void foo(int function(int) fp);
 
 void test() {
   int function(int) fp = (n) { return n * 2; };
-  // The type of parameter n is inferred to $(B int).
+  // The type of parameter n is inferred to int.
 
   foo((n) { return n * 2; });
-  // The type of parameter n is inferred to $(B int).
+  // The type of parameter n is inferred to int.
 }
 -------------
 
@@ -1528,34 +1481,34 @@ double test() {
     }
   }
 
-  loop(5, 100, $(B { d += 1; }) );
-  loop(3, 10,  $(B { f += 3; }) );
+  loop(5, 100, { d += 1; } );
+  loop(3, 10,  { f += 3; } );
 
   return d + f;
 }
 -------------
 
         When comparing with $(DDSUBLINK function, nested, nested functions),
-        the $(B function) form is analogous to static
-        or non-nested functions, and the $(B delegate) form is
+        the $(D function) form is analogous to static
+        or non-nested functions, and the $(D delegate) form is
         analogous to non-static nested functions. In other words,
         a delegate literal can access stack variables in its enclosing
         function, a function literal cannot.
 
 
-<h3>Assert Expressions</h3>
+$(H4 Assert Expressions)
 
 $(GRAMMAR
 $(GNAME AssertExpression):
-    $(B assert $(LPAREN)) $(GLINK AssignExpression) $(B $(RPAREN))
-    $(B assert $(LPAREN)) $(GLINK AssignExpression) $(B ,) $(GLINK AssignExpression) $(B $(RPAREN))
+    $(D assert $(LPAREN)) $(GLINK AssignExpression) $(D $(RPAREN))
+    $(D assert $(LPAREN)) $(GLINK AssignExpression) $(D ,) $(GLINK AssignExpression) $(D $(RPAREN))
 )
 
         $(P Asserts evaluate the $(I AssignExpression).
         If it evaluates to a non-null class reference, the class invariant is run.
         Otherwise, if it evaluates to a non-null pointer to a struct, the struct invariant is run.
         Otherwise, if the result is false,
-        an $(B AssertError) is thrown. If the result is true, then no
+        an $(D AssertError) is thrown. If the result is true, then no
         exception is thrown.
         It is an error if the $(I expression) contains any side effects
         that the program depends on. The compiler may optionally not
@@ -1568,9 +1521,9 @@ $(GNAME AssertExpression):
 
         $(P The expression $(D assert(0)) is a special case; it
         signifies that it is unreachable code.
-        Either $(B AssertError) is thrown at runtime if it is reachable,
+        Either $(D AssertError) is thrown at runtime if it is reachable,
         or the execution is halted
-        (on the x86 processor, a $(B HLT) instruction can be used to halt
+        (on the x86 processor, a $(D HLT) instruction can be used to halt
         execution).
         The optimization and code generation phases of compilation may
         assume that it is unreachable code.
@@ -1580,7 +1533,7 @@ $(GNAME AssertExpression):
         convertible to type $(V1 $(D char[]))$(V2 $(D const(char)[])).
         It is evaluated if the
         result is false, and the string result is appended to the
-        $(B AssertError)'s message.
+        $(D AssertError)'s message.
         )
 
 ----
@@ -1596,11 +1549,11 @@ Error: AssertError Failure test.d(3) an error message
 )
 
 
-<h3>Mixin Expressions</h3>
+$(H4 Mixin Expressions)
 
 $(GRAMMAR
 $(GNAME MixinExpression):
-    $(B mixin $(LPAREN)) $(GLINK AssignExpression) $(B $(RPAREN))
+    $(D mixin $(LPAREN)) $(GLINK AssignExpression) $(D $(RPAREN))
 )
 
         $(P The $(I AssignExpression) must evaluate at compile time
@@ -1615,11 +1568,11 @@ int foo(int x) {
 }
 ---
 
-<h3>Import Expressions</h3>
+$(H4 Import Expressions)
 
 $(GRAMMAR
 $(GNAME ImportExpression):
-    $(B import $(LPAREN)) $(GLINK AssignExpression) $(B $(RPAREN))
+    $(D import $(LPAREN)) $(GLINK AssignExpression) $(D $(RPAREN))
 )
 
         $(P The $(I AssignExpression) must evaluate at compile time
@@ -1642,33 +1595,33 @@ void foo() {
 }
 ---
 
-<h3>Typeid Expressions</h3>
+$(H4 Typeid Expressions)
 
 $(GRAMMAR
 $(GNAME TypeidExpression):
-    $(B typeid $(LPAREN)) $(GLINK2 declaration, Type) $(B $(RPAREN))
-$(V2      $(B typeid $(LPAREN)) $(GLINK Expression) $(B $(RPAREN)))
+    $(D typeid $(LPAREN)) $(GLINK2 declaration, Type) $(D $(RPAREN))
+$(V2      $(D typeid $(LPAREN)) $(GLINK Expression) $(D $(RPAREN)))
 )
 
 $(V1
         $(P Returns an instance of class
-        $(DPLLINK phobos/object.html, $(B TypeInfo))
+        $(DPLLINK phobos/object.html, $(D TypeInfo))
         corresponding
         to $(I Type).
         )
 )
 $(V2
         $(P If $(I Type), returns an instance of class
-        $(DPLLINK phobos/object.html, $(B TypeInfo))
+        $(DPLLINK phobos/object.html, $(D TypeInfo))
         corresponding
         to $(I Type).
         )
 
         $(P If $(I Expression), returns an instance of class
-        $(DPLLINK phobos/object.html, $(B TypeInfo))
+        $(DPLLINK phobos/object.html, $(D TypeInfo))
         corresponding
         to the type of the $(I Expression).
-        If the type is a class, it returns the $(B TypeInfo)
+        If the type is a class, it returns the $(D TypeInfo)
         of the dynamic type (i.e. the most derived type).
         The $(I Expression) is always executed.
         )
@@ -1689,37 +1642,37 @@ void main() {
 ---
 )
 
-<h3>IsExpression</h3>
+$(H4 IsExpression)
 
 $(GRAMMAR
 $(GNAME IsExpression):
-    $(B is $(LPAREN)) $(GLINK2 declaration, Type) $(B $(RPAREN))
-    $(B is $(LPAREN)) $(GLINK2 declaration, Type) $(B :) $(GLINK TypeSpecialization) $(B $(RPAREN))
-    $(B is $(LPAREN)) $(GLINK2 declaration, Type) $(B ==) $(GLINK TypeSpecialization) $(B $(RPAREN))
-    $(B is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(B $(RPAREN))
-    $(B is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(B :) $(GLINK TypeSpecialization) $(B $(RPAREN))
-    $(B is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(B ==) $(GLINK TypeSpecialization) $(B $(RPAREN))
-    $(V2 $(B is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(B :) $(GLINK TypeSpecialization) $(B ,) $(GLINK2 template, TemplateParameterList) $(B $(RPAREN))
-    $(B is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(B ==) $(GLINK TypeSpecialization) $(B ,) $(GLINK2 template, TemplateParameterList) $(B $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D :) $(GLINK TypeSpecialization) $(D $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D ==) $(GLINK TypeSpecialization) $(D $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D :) $(GLINK TypeSpecialization) $(D $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D ==) $(GLINK TypeSpecialization) $(D $(RPAREN))
+    $(V2 $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D :) $(GLINK TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D ==) $(GLINK TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
 )
 
 $(GNAME TypeSpecialization):
     $(GLINK2 declaration, Type)
-$(V1    $(B typedef)
-)    $(B struct)
-    $(B union)
-    $(B class)
-    $(B interface)
-    $(B enum)
-    $(B function)
-    $(B delegate)
-    $(B super)
-$(V2      $(B const)
-    $(B immutable)
-    $(B inout)
-    $(B shared)
-    $(B return)
-    $(B __parameters)
+$(V1    $(D typedef)
+)    $(D struct)
+    $(D union)
+    $(D class)
+    $(D interface)
+    $(D enum)
+    $(D function)
+    $(D delegate)
+    $(D super)
+$(V2      $(D const)
+    $(D immutable)
+    $(D inout)
+    $(D shared)
+    $(D return)
+    $(D __parameters)
 ))
 
         $(P $(I IsExpression)s are evaluated at compile time and are
@@ -1745,26 +1698,26 @@ $(V2      $(B const)
 
         $(OL
 
-        $(LI $(B is $(LPAREN)) $(I Type) $(B $(RPAREN))$(BR)
-        The condition is satisfied if $(I Type) is semantically
+        $(LI $(D is $(LPAREN)) $(I Type) $(D $(RPAREN))$(BR)
+        The condition is satisfied if $(D Type) is semantically
         correct (it must be syntactically correct regardless).
 
 -------------
 alias int func(int);    // func is a alias to a function type
 void foo() {
-  if ($(B is)(func[]) ) // not satisfied because arrays of
+  if (is(func[]) ) // not satisfied because arrays of
                         // functions are not allowed
     write$(V1 f)ln("satisfied");
   else
     write$(V1 f)ln("not satisfied");
 
-  if ($(B is)([][]))  // error, [][] is not a syntactically valid type
+  if (is([][]))  // error, [][] is not a syntactically valid type
     ...
 }
 -------------
         )
 
-        $(LI $(B is $(LPAREN)) $(I Type) $(B :) $(I TypeSpecialization) $(B $(RPAREN))<br>
+        $(LI $(D is $(LPAREN)) $(I Type) $(D :) $(I TypeSpecialization) $(D $(RPAREN))<br>
         The condition is satisfied if $(I Type) is semantically
         correct and it is the same as
         or can be implicitly converted to $(I TypeSpecialization).
@@ -1773,7 +1726,7 @@ void foo() {
 -------------
 alias short bar;
 void foo(bar x) {
-  if ( $(B is)(bar : int) )   // satisfied because short can be
+  if ( is(bar : int) )   // satisfied because short can be
                               // implicitly converted to int
     write$(V1 f)ln("satisfied");
   else
@@ -1782,36 +1735,35 @@ void foo(bar x) {
 -------------
         )
 
-        $(LI $(B is $(LPAREN)) $(I Type) $(B ==) $(I TypeSpecialization) $(B $(RPAREN))<br>
+        $(LI $(D is $(LPAREN)) $(I Type) $(D ==) $(I TypeSpecialization) $(D $(RPAREN))$(BR)
         $(P The condition is satisfied if $(I Type) is semantically
         correct and is the same type as $(I TypeSpecialization).)
 
         If $(I TypeSpecialization) is one of
-$(V1            $(B typedef)
-)               $(B struct)
-                $(B union)
-                $(B class)
-                $(B interface)
-                $(B enum)
-                $(B function)
-                $(B delegate)
-$(V2            $(B const)
-                $(B immutable)
-                $(B shared)
-)
-        then the condition is satisifed if $(I Type) is one of those.
+$(V1            $(D typedef))
+                $(D struct)
+                $(D union)
+                $(D class)
+                $(D interface)
+                $(D enum)
+                $(D function)
+                $(D delegate)
+$(V2            $(D const)
+                $(D immutable)
+                $(D shared))
+        then the condition is satisfied if $(I Type) is one of those.
 
 -------------
 alias short bar;
 $(V1 typedef char foo;)
 void test(bar x) {
-  if ( $(B is)(bar == int) ) // not satisfied because short is not
+  if ( is(bar == int) ) // not satisfied because short is not
                         // the same type as int
     write$(V1 f)ln("satisfied");
   else
     write$(V1 f)ln("not satisfied");
 $(V1
-  if ( $(B is)(foo == typedef) ) // satisfied because foo is a typedef
+  if ( is(foo == typedef) ) // satisfied because foo is a typedef
     write$(V1 f)ln("satisfied");
   else
     write$(V1 f)ln("not satisfied");
@@ -1819,7 +1771,7 @@ $(V1
 -------------
         )
 
-        $(LI $(B is $(LPAREN)) $(I Type) $(I Identifier) $(B $(RPAREN))<br>
+        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D $(RPAREN))<br>
         The condition is satisfied if $(I Type) is semantically
         correct. If so, $(I Identifier)
         is declared to be an alias of $(I Type).
@@ -1827,20 +1779,20 @@ $(V1
 -------------
 alias short bar;
 void foo(bar x) {
-  static if ( $(B is)(bar T) )
+  static if ( is(bar T) )
     alias T S;
   else
     alias long S;
 
   write$(V1 f)ln(typeid(S));  // prints "short"
-  if ( $(B is)(bar T) )  // error, $(I Identifier) T form can
-                      // only be in $(GLINK2 version, StaticIfCondition)s
+  if ( is(bar T) )  // error, Identifier T form can
+                      // only be in StaticIfConditions
     ...
 }
 -------------
         )
 
-        $(LI $(B is $(LPAREN)) $(I Type) $(I Identifier) $(B :) $(I TypeSpecialization) $(B $(RPAREN))<br>
+        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D :) $(I TypeSpecialization) $(D $(RPAREN))<br>
 
         $(P
         The condition is satisfied if $(I Type) is the same as
@@ -1856,14 +1808,14 @@ void foo(bar x) {
 alias int bar;
 alias long* abc;
 void foo(bar x, abc a) {
-  static if ( $(B is)(bar T : int) )
+  static if ( is(bar T : int) )
     alias T S;
   else
     alias long S;
 
   write$(V1 f)ln(typeid(S));  // prints "int"
 
-  static if ( $(B is)(abc U : U*) )
+  static if ( is(abc U : U*) )
   {
     U u;
     write$(V1 f)ln(typeid(typeof(u)));  // prints "long"
@@ -1877,7 +1829,7 @@ void foo(bar x, abc a) {
         )
         )
 
-        $(LI $(B is $(LPAREN)) $(I Type) $(I Identifier) $(B ==) $(I TypeSpecialization) $(B $(RPAREN))<br>
+        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D ==) $(I TypeSpecialization) $(D $(RPAREN))<br>
 
 
         $(P The condition is satisfied if $(I Type) is semantically
@@ -1888,88 +1840,52 @@ void foo(bar x, abc a) {
         )
 
         $(P If $(I TypeSpecialization) is one of
-$(V1            $(B typedef)
-)               $(B struct)
-                $(B union)
-                $(B class)
-                $(B interface)
-                $(B enum)
-                $(B function)
-                $(B delegate)
-$(V2            $(B const)
-                $(B immutable)
-                $(B shared)
+$(V1            $(D typedef)
+)               $(D struct)
+                $(D union)
+                $(D class)
+                $(D interface)
+                $(D enum)
+                $(D function)
+                $(D delegate)
+$(V2            $(D const)
+                $(D immutable)
+                $(D shared)
 )
-        then the condition is satisifed if $(I Type) is one of those.
+        then the condition is satisfied if $(I Type) is one of those.
         Furthermore, $(I Identifier) is set to be an alias of the type:
         )
 
-        $(TABLE1
-        $(TR
-        $(TH keyword)
-        $(TH alias type for $(I Identifier))
-        )
-$(V1    $(TR
-        $(TD $(CODE typedef))
-        $(TD the type that $(I Type) is a typedef of)
+        $(TABLE_2COLS ,
+        $(THEAD keyword, alias type for $(I Identifier))
+$(V1    $(TROW
+        $(D $(CODE typedef)),
+        $(D the type that $(I Type) is a typedef of)
         )
 )
-        $(TR
-        $(TD $(CODE struct))
-        $(TD $(I Type))
-        )
-        $(TR
-        $(TD $(CODE union))
-        $(TD $(I Type))
-        )
-        $(TR
-        $(TD $(CODE class))
-        $(TD $(I Type))
-        )
-        $(TR
-        $(TD $(CODE interface))
-        $(TD $(I Type))
-        )
-        $(TR
-        $(TD $(CODE super))
-        $(TD $(I TypeTuple) of base classes and interfaces)
-        )
-        $(TR
-        $(TD $(CODE enum))
-        $(TD the base type of the enum)
-        )
-        $(TR
-        $(TD $(CODE function))
-        $(TD $(I TypeTuple) of the function parameter types.
+        $(TROW $(CODE struct), $(I Type))
+        $(TROW $(D union), $(I Type))
+        $(TROW $(D class), $(I Type))
+        $(TROW $(D interface), $(I Type))
+        $(TROW $(D super), $(I TypeTuple) of base classes and interfaces)
+        $(TROW $(D enum), the base type of the enum)
+        $(TROW $(D function), $(ARGS $(I TypeTuple) of the function parameter types.
              For C- and D-style variadic functions,
              only the non-variadic parameters are included.
-             For typesafe variadic functions, the ... is ignored.)
-        )
-        $(TR
-        $(TD $(CODE delegate))
-        $(TD the function type of the delegate)
-        )
-        $(TR
-        $(TD $(CODE return))
-        $(TD the return type of the function, delegate, or function pointer)
-        )
+             For typesafe variadic functions, the $(D ...) is ignored.))
+        $(TROW $(CODE delegate), the function type of the delegate)
+        $(TROW $(CODE return), $(ARGS the return type of the function, delegate, or function pointer))
 $(V2
-        $(TR
-        $(TD $(CODE __parameters))
-        $(TD the parameter tuple of a function, delegate, or function pointer.
-         This includes the parameter types, names, and default values.)
+        $(TROW $(CODE __parameters), $(ARGS the parameter tuple of a function, delegate, or function pointer.
+         This includes the parameter types, names, and default values.))
+        $(TROW $(D const), $(I Type))
+        $(TROW
+        $(D immutable),
+        $(I Type)
         )
-        $(TR
-        $(TD $(CODE const))
-        $(TD $(I Type))
-        )
-        $(TR
-        $(TD $(CODE immutable))
-        $(TD $(I Type))
-        )
-        $(TR
-        $(TD $(CODE shared))
-        $(TD $(I Type))
+        $(TROW
+        $(CODE shared),
+        $(I Type)
         )
 )
         )
@@ -1978,11 +1894,11 @@ $(V2
 alias short bar;
 enum E : byte { Emember }
 void foo(bar x) {
-  static if ( $(B is)(bar T == int) ) // not satisfied, short is not int
+  static if ( is(bar T == int) ) // not satisfied, short is not int
     alias T S;
   alias T U;       // error, T is not defined
 
-  static if ( $(B is)(E V == enum) )  // satisified, E is an enum
+  static if ( is(E V == enum) )  // satisified, E is an enum
     V v;           // v is declared to be a byte
 }
 -------------
@@ -2005,8 +1921,8 @@ else {
         )
 
 $(V2
-        $(LI $(B is $(LPAREN)) $(I Type) $(I Identifier) $(B :) $(I TypeSpecialization) $(B ,) $(GLINK2 template, TemplateParameterList) $(B $(RPAREN))$(BR)
-        $(B is $(LPAREN)) $(I Type) $(I Identifier) $(B ==) $(I TypeSpecialization) $(B ,) $(GLINK2 template, TemplateParameterList) $(B $(RPAREN))
+        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D :) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))$(BR)
+        $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D ==) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
 
         $(P More complex types can be pattern matched; the
         $(GLINK2 template, TemplateParameterList) declares symbols based on the
@@ -2049,7 +1965,7 @@ void main() {
         )
 
 
-<h2><a name="associativity">Associativity and Commutativity</a></h2>
+$(H3 $(LNAME2 associativity, Associativity and Commutativity))
 
         $(P An implementation may rearrange the evaluation of expressions
         according to arithmetic associativity and commutativity rules

@@ -13,10 +13,10 @@ CODE_LCURL=\verb|{|
 CODE_RCURL=\verb|}|
 PERCENT=PERCENT
 CODE_PERCENT=\verb|%|
-FULL_XREF = <a href="phobos/std_$1.html#$2">$(D std.$1.$2)</a>
 FULL_XREF=\href{phobos/std_$1.html#$2}{$(D std.$1.$2)}
 DDOC_COMMENT=% $0
 H4=\subsubsection{$0}
+H5=\paragraph{$0}
 SINGLEQUOTE=`$0'
 UNDERSCORE=\_
 U=\underline{$0}
@@ -27,7 +27,20 @@ SECTION1=$(H1 $1) $+
 SECTION2=$(H2 $1) $+
 SECTION3=$(H3 $1) $+
 SECTION4=$(H4 $1) $+
+SECTION5=$(H5 $1) $+
 FOOTNOTE=\footnote{$0}
+SUP=\textsuperscript{$0}
+SUB=\textsubscript{$0}
+DOLLAR=$(D $)
+NBSP=~
+HTMLTAG3=
+HASH=\#
+MULTICOL_HEADER=\multicolumn{$1}{l}{$+}
+MULTIROW_HEADER=\multirow{$1}{*}{$+}
+MULTICOL_CELL=\multicolumn{$1}{l}{$+}
+ELABORATE_HEADER=\toprule\multirow{2}{*}{D}&\multicolumn{2}{l}{C}\\ & 32 bit & 64 bit\\\midrule
+TIMES=$\times$
+NDASH=--
 
 DDOC=% Copyright (c) 1999-$(YEAR) by Digital Mars
 % All Rights Reserved Written by Walter Bright
@@ -41,6 +54,7 @@ DDOC=% Copyright (c) 1999-$(YEAR) by Digital Mars
 \usepackage{booktabs}
 \usepackage{alltt}
 \usepackage{tabularx}
+\usepackage{multirow}
 
 \def\commentstyle{%
   \color{OliveGreen}%
@@ -87,21 +101,27 @@ LAYOUT=
 \section{$2}
   $3
 
-CODE=\lstinline{$0}
+CODE=$(D $0)
 ASMCODE=\lstinline{$0}
-CCODE=\lstinline{$0}
-CPPCODE=\lstinline{$0}
+CCODE=$(D_CODE $0)
+CPPCODE=\lstset{language=C++}\lstinline|$0|\lstset{language=C++}
+CPPLISTING=\lstset{language=C++}
+\begin{lstlisting}
+$0
+\end{lstlisting}
+\lstset{language=C++}
 GRAMMAR=\begin{alltt}
 $0
 \end{alltt}
 GNAME={\fontshape{sl}\selectfont $0}
-DDOCCODE=\lstinline{$0}
+DDOCCODE=$(D_CODE $0)
 SCINI=\lstinline{$0}
-CONSOLE=\lstinline{$0}
+CONSOLE=\texttt{$0}
 MODDEFFILE=\lstinline{$0}
 
 GLINK2=$(GLINK $2)
 DDLINK=$(LINK2 #$2, $3)
+DDLINK=$(LINK2 $1.html, $3)
 DDSUBLINK=$(LINK2 #$2, $3)
 DPLLINK=$(LINK2 http://dlang.org/$1, $2)
 NOT_EBOOK=
@@ -116,28 +136,40 @@ $0
 \end{description}
 DT=\item[$0]
 DD=$0
-TABLE=\begin{tabular}[2]{lllllllllll}
+TABLE=\begin{tabular}[2]{llllllllllll}
 $0
 \end{tabular}
 TABLE_2COLS=\begin{center}
+$(B $1)\\*
 \begin{tabularx}{\textwidth}[2]{lXl}
 $+
 \bottomrule
 \end{tabularx}
 \end{center}
 TABLE_3COLS=\begin{center}
+$(B $1)\\
 \begin{tabularx}{\textwidth}[2]{lXXl}
 $+
 \bottomrule
 \end{tabularx}
 \end{center}
+TABLE1=\begin{center}
+\begin{tabular}[10]{llllllllllll}
+\toprule
+$0
+\bottomrule
+\end{tabular}
+\end{center}
 TABLE2=\begin{center}
-\begin{tabular}[10]{lllllllllll}
+$(B $1)\\
+\begin{tabular}[10]{llllllllllll}
 $+
 \bottomrule
 \end{tabular}
 \end{center}
 TR=$0 \\
+TR2=$1 & $2 \\
+TR3=$1 & $2 & $3 \\
 TH=$0 &
 TD=$0
 OL=\begin{enumerate}
@@ -149,7 +181,7 @@ $0
 LI=\item $0
 BIG=\large{$0}
 SMALL=\small{$0}
-BR=\newline
+BR=\hspace*{\fill}
 LINK=\url{$0}
 LINK2=\href{$1}{$+}
 RED={\color{red}$0}

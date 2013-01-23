@@ -126,9 +126,9 @@ $(SECTION2 Const Storage Class,
 $(COMMENT
 $(TABLE1
 
-$(TR $(TH &nbsp;) $(TH AddrOf) $(TH CTFEInit) $(TH Static) $(TH Field) $(TH Stack) $(TH Ctor))
+$(TR $(TH $(NBSP)) $(TH AddrOf) $(TH CTFEInit) $(TH Static) $(TH Field) $(TH Stack) $(TH Ctor))
 
-$(TR $(TD &nbsp;)
+$(TR $(TD $(NBSP))
  $(TD Can the address be taken?)
  $(TD Is compile time function evaluation done on the initializer?)
  $(TD allocated as static data?)
@@ -177,7 +177,7 @@ constant folding.)
 
 $(TABLE1
 <caption>Template Argument Deduced Type</caption>
-$(TR $(TH &nbsp;)               $(TH mutable $(CODE T)) $(TH1 const(T)) $(TH1 immutable(T)))
+$(TR $(TH $(NBSP))               $(TH mutable $(CODE T)) $(TH1 const(T)) $(TH1 immutable(T)))
 $(TR $(TD1 foo(U))              $(TDE T) $(TDE T) $(TDE T))
 $(TR $(TD1 foo(U:U))            $(TDE T) $(TDE const(T)) $(TDE immutable(T)))
 $(TR $(TD1 foo(U:const(U)))     $(TDI T) $(TDE T) $(TDI T))
@@ -387,122 +387,89 @@ $(SECTION2 Implicit Conversions,
 
 $(SECTION2 Comparing D Immutable and Const with C++ Const,
 
-	<table border=2 cellpadding=4 cellspacing=0 class="comp">
-	<caption>Const, Immutable Comparison</caption>
-
-	<thead>
-	$(TR
-	$(TH Feature)
-	$(TH D)
-	$(TH C++98)
-	)
-	</thead>
-
-	<tbody>
-
-	$(TR
-	$(TD const keyword)
-	$(TD Yes)
-	$(TD Yes)
-	)
-
-	$(TR
-	$(TD immutable keyword)
-	$(TD Yes)
-	$(TD No)
-	)
-
-	$(TR
-	$(TD const notation)
-	$(TD Functional:
+$(TABLE2 $(ARGS Const, Immutable Comparison),
+	$(THEAD Feature, D, C++98)
+	$(TROW const keyword, Yes, Yes)
+	$(TROW immutable keyword, Yes, No)
+	$(TROW const notation,
+	Functional:
 ---
 //ptr to const ptr to const int
 const(int*)* p;
 ---
-	)
-	$(TD Postfix:
-$(CPPCODE
+,
+	Postfix:
+$(CPPLISTING
 //ptr to const ptr to const int
 const int *const *p;
 )
 	)
-	)
 
-	$(TR
-	$(TD transitive const)
-	$(TD Yes:
+	$(TROW transitive const, Yes:
 ---
 //const ptr to const ptr to const int
 const int** p;
 **p = 3; // error
 ---
-	 )
-	$(TD No:
-$(CPPCODE
+,
+	No:
+$(CPPLISTING
 // const ptr to ptr to int
 int** const p;
 **p = 3;    // ok
 )
-	 )
 	)
 
-	$(TR
-	$(TD cast away const)
-	$(TD Yes:
+	$(TROW cast away const,
+	Yes:
 ---
 // ptr to const int
 const(int)* p;
 int* q = cast(int*)p; // ok
 ---
-	)
-	$(TD Yes:
-$(CPPCODE
+,
+	Yes:
+$(CPPLISTING
 // ptr to const int
 const int* p;
-int* q = const_cast&lt;int*&gt;p; //ok
+int* q = const_cast$(LT)int*$(GT)p; //ok
 )
 	)
-	)
 
-	$(TR
-	$(TD modification after casting away const)
-	$(TD No:
+	$(TROW modification after casting away const,
+	No:
 ---
 // ptr to const int
 const(int)* p;
 int* q = cast(int*)p;
 *q = 3;   // undefined behavior
 ---
-	)
-	$(TD Yes:
-$(CPPCODE
+,
+	Yes:
+$(CPPLISTING
 // ptr to const int
 const int* p;
-int* q = const_cast&lt;int*&gt;p;
+int* q = const_cast$(LT)int*$(GT)p;
 *q = 3;   // ok
 )
 	)
-	)
 
-	$(TR
-	$(TD overloading of top level const)
-	$(TD Yes:
+	$(TROW overloading of top level const,
+	Yes:
 ---
 void foo(int x);
 void foo(const int x);  //ok
 ---
-	)
-	$(TD No:
-$(CPPCODE
+,
+	No:
+$(CPPLISTING
 void foo(int x);
 void foo(const int x);  //error
 )
 	)
-	)
 
-	$(TR
-	$(TD aliasing of const with mutable)
-	$(TD Yes:
+	$(TROW aliasing of const with mutable,
+	Yes:
 ---
 void foo(const int* x, int* y)
 {
@@ -514,9 +481,9 @@ void foo(const int* x, int* y)
 int i = 3;
 foo(&i, &i);
 ---
-	)
-	$(TD Yes:
-$(CPPCODE
+,
+	Yes:
+$(CPPLISTING
 void foo(const int* x, int* y)
 {
    bar(*x); // bar(3)
@@ -528,11 +495,9 @@ int i = 3;
 foo(&amp;i, &amp;i);
 )
 	)
-	)
 
-	$(TR
-	$(TD aliasing of immutable with mutable)
-	$(TD No:
+	$(TROW aliasing of immutable with mutable,
+	No:
 ---
 void foo(immutable int* x, int* y) {
  bar(*x); // bar(3)
@@ -543,28 +508,22 @@ void foo(immutable int* x, int* y) {
 int i = 3;
 foo(cast(immutable)&i, &i);
 ---
-	)
-	$(TD No immutables)
-	)
-
-	$(TR
-	$(TD type of string literal)
-	$(TD immutable(char)[])
-	$(TD const char*)
+,
+	No immutables
 	)
 
-
-	$(TR
-	$(TD implicit conversion of string literal to non-const)
-	$(TD not allowed)
-	$(TD allowed, but deprecated)
+	$(TROW type of string literal,
+	immutable(char)[],
+	const char*
 	)
 
-	</tbody>
-	</table>
+
+	$(TROW implicit conversion of string literal to non-const,
+	not allowed,
+	$(ARGS allowed, but deprecated)
+	)
 )
-
-
+)
 )
 
 Macros:
@@ -582,7 +541,6 @@ Macros:
 	NO1=<td class="compNo"><a href="$1">No</a></td>
 	YES=<td class="compYes">Yes</td>
 	YES1=<td class="compYes"><a href="$1">Yes</a></td>
-	CPPCODE2 = <pre class="cppcode2">$0</pre>
 	ERROR = $(RED $(B error))
 	COMMA=,
 META_KEYWORDS=D Programming Language, const, immutable

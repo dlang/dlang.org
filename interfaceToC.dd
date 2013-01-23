@@ -46,8 +46,10 @@ int myDfunction(char[] s) {
 	$(LI C functions cannot be overloaded with another C function
 	with the same name.)
 
-	$(LI There are no __cdecl, __far, __stdcall,
-	$(LINK2 http://www.digitalmars.com/ctg/ctgLanguageImplementation.html#declspec, __declspec),
+	$(LI There are no $(D __cdecl), $(D __far), $(D __stdcall),
+	$(LINK2
+	http://www.digitalmars.com/ctg/ctgLanguageImplementation.html#declspec,
+	$(D __declspec)),
 	or other such C
 	$(LINK2 http://www.digitalmars.com/ctg/ctgLanguageImplementation.html#extended, extended type modifiers)
 	in D. These are handled by
@@ -131,209 +133,55 @@ extern (C) {
 <h2>Data Type Compatibility</h2>
 
 	$(TABLE2 D And C Type Equivalence,
-
-	$(TR <th rowspan=2>D</th><th colspan=2>C</th>)
-	$(TR $(TH 32 bit) $(TH 64 bit))
-
-	$(TR
-	$(TD $(B void))
-	$(TD2 $(B void))
-	)
-
-	$(TR
-	$(TD $(B byte))
-	$(TD2 $(B signed char))
-	)
-
-	$(TR
-	$(TD $(B ubyte))
-	$(TD2 $(B unsigned char))
-	)
-
-	$(TR
-	$(TD $(B char))
-	$(TD2 $(B char) (chars are unsigned in D))
-	)
-
-	$(TR
-	$(TD $(B wchar))
-	$(TD2 $(B wchar_t) (when sizeof(wchar_t) is 2))
-	)
-
-	$(TR
-	$(TD $(B dchar))
-	$(TD2 $(B wchar_t) (when sizeof(wchar_t) is 4))
-	)
-
-	$(TR
-	$(TD $(B short))
-	$(TD2 $(B short))
-	)
-
-	$(TR
-	$(TD $(B ushort))
-	$(TD2 $(B unsigned short))
-	)
-
-	$(TR
-	$(TD $(B int))
-	$(TD2 $(B int))
-	)
-
-	$(TR
-	$(TD $(B uint))
-	$(TD2 $(B unsigned))
-	)
-
+    $(ELABORATE_HEADER)
+	$(TROW2 void, void)
+	$(TROW2 byte, signed char)
+	$(TROW2 ubyte, unsigned char)
+	$(TROW2 char, char, (chars are unsigned in D))
+	$(TROW2 wchar, wchar_t, (when $(D sizeof(wchar_t)) is 2))
+	$(TROW2 dchar, wchar_t, (when $(D sizeof(wchar_t)) is 4))
+	$(TROW2 short, short)
+	$(TROW2 ushort, unsigned short)
+	$(TROW2 int, int)
+	$(TROW2 uint, unsigned)
 $(V1
-	$(TR
-	$(TD $(B long))
-	$(TD $(B long long))
-	$(TD $(B long))
-	)
-
-	$(TR
-	$(TD $(B ulong))
-	$(TD $(B unsigned long long))
-	$(TD $(B unsigned long))
-	)
+	$(TROW3 long, long long, long)
 )
-
+	$(TROW3 ulong, unsigned long long, unsigned long)
 $(V2
-	$(TR
-	$(TD $(B c_long (in core.stdc.config)))
-	$(TD $(B long))
-	$(TD $(B long))
-	)
-
-	$(TR
-	$(TD $(B c_ulong (in core.stdc.config)))
-	$(TD $(B unsigned long))
-	$(TD $(B unsigned long))
-	)
-
-	$(TR
-	$(TD $(B long))
-	$(TD $(B long long))
-	$(TD $(B long (or long long)))
-	)
-
-	$(TR
-	$(TD $(B ulong))
-	$(TD $(B unsigned long long))
-	$(TD $(B unsigned long (or unsigned long long)))
-	)
+	$(TROW3 core.stdc.config.c_long, long, long)
 )
-	$(TR
-	$(TD $(B float))
-	$(TD2 $(B float))
-	)
 
-	$(TR
-	$(TD $(B double))
-	$(TD2 $(B double))
-	)
+	$(TROW3 core.stdc.config.c_ulong, unsigned long, unsigned long)
+	$(TROW3PLUS long, long long, long, (or $(D long long)))
+	$(TROW3PLUS ulong, unsigned long long, unsigned long, (or $(D unsigned long long)))
 
-	$(TR
-	$(TD $(B real))
-	$(TD2 $(B long double))
-	)
+	$(TROW2 float, float)
+	$(TROW2 double, double)
+	$(TROW2 real, long double)
+
 $(V1
-	$(TR
-	$(TD $(B ifloat))
-	$(TD2 $(B float _Imaginary))
-	)
-
-	$(TR
-	$(TD $(B idouble))
-	$(TD2 $(B double _Imaginary))
-	)
-
-	$(TR
-	$(TD $(B ireal))
-	$(TD2 $(B long double _Imaginary))
-	)
-
-	$(TR
-	$(TD $(B cfloat))
-	$(TD2 $(B float _Complex))
-	)
-
-	$(TR
-	$(TD $(B cdouble))
-	$(TD2 $(B double _Complex))
-	)
-
-	$(TR
-	$(TD $(B creal))
-	$(TD2 $(B long double _Complex))
-	)
+	$(TROW2 ifloat, float _Imaginary)
+	$(TROW2 idouble, double _Imaginary)
+	$(TROW2 ireal, long double _Imaginary)
+	$(TROW2 cfloat, float _Complex)
 )
-	$(TR
-	$(TD $(B struct))
-	$(TD2 $(B struct))
-	)
 
-	$(TR
-	$(TD $(B union))
-	$(TD2 $(B union))
-	)
-
-	$(TR
-	$(TD $(B enum))
-	$(TD2 $(B enum))
-	)
-
-	$(TR
-	$(TD $(B class))
-	$(TD2 no equivalent)
-	)
-
-	$(TR
-	$(TD $(I type)$(B *))
-	$(TD2 $(I type) $(B *))
-	)
-
-	$(TR
-	$(TD $(I type)$(B [)$(I dim)$(B ]))
-	$(TD2 $(I type)$(B [)$(I dim)$(B ]))
-	)
-
-	$(TR
-	$(TD $(I type)$(B [)$(I dim)$(B ]*))
-	$(TD2 $(I type)$(B (*)[)$(I dim)$(B ]))
-	)
-
-	$(TR
-	$(TD $(I type)$(B []))
-	$(TD2 no equivalent)
-	)
-
-	$(TR
-	$(TD $(I type)$(B [)$(I type)$(B ]))
-	$(TD2 no equivalent)
-	)
-
-	$(TR
-	$(TD $(I type) $(B function)$(B $(LPAREN))$(I parameters)$(B $(RPAREN)))
-	$(TD2 $(I type)$(B (*))$(B $(LPAREN))$(I parameters)$(B $(RPAREN)))
-	)
-
-	$(TR
-	$(TD $(I type) $(B delegate)$(B $(LPAREN))$(I parameters)$(B $(RPAREN)))
-	$(TD2 no equivalent)
-	)
-
-	$(TR
-	$(TD $(B size_t))
-	$(TD2 $(B size_t))
-	)
-
-	$(TR
-	$(TD $(B ptrdiff_t))
-	$(TD2 $(B ptrdiff_t))
-	)
-
+	$(TROW2 cdouble, double _Complex)
+	$(TROW2 creal, long double _Complex)
+	$(TROW2 struct, struct)
+	$(TROW2 union, union)
+	$(TROW2 enum, enum)
+	$(TROW2 class, ,no equivalent)
+	$(TROW2 type *, type *)
+	$(TROW2 type[dim], type[dim])
+	$(TROW2 type[dim]*, type(*)[dim])
+	$(TROW2 type[], ,no equivalent)
+	$(TROW2 type1[type2], , no equivalent)
+	$(TROW2 type function(params), type(*)(params))
+	$(TROW2 type delegate(params), , no equivalent)
+	$(TROW2 size_t, size_t)
+	$(TROW2 ptrdiff_t, ptrdiff_t)
 	)
 
 	$(P These equivalents hold for most C compilers. The C standard
@@ -369,9 +217,7 @@ $(V2
 
 	$(P For example:)
 
-$(CCODE
-void foo(int a[3]) { ... } // C code
-)
+$(CCODE void foo(int a[3]) { ... } // C code)
 ---
 extern (C)
 {
@@ -415,7 +261,7 @@ void foo(char[] string) {
 
 	$(P C code often adjusts the alignment and packing of struct members
 	with a command line switch or with various implementation specific
-	#pragma's. D supports explicit alignment attributes that correspond
+	$(HASH)pragma's. D supports explicit alignment attributes that correspond
 	to the C compiler's rules. Check what alignment the C code is using,
 	and explicitly set it for the D struct declaration.
 	)
@@ -544,8 +390,10 @@ $(V1
 )
 
 Macros:
-	TD2=<td colspan=2>$0</td>
+    TROW2=$(TR2 $(TD $(D $1)), $(TD2 $(D $2) $(TAIL $+)))
+    TROW3=$(TR3 $(TD $(D $1)), $(TD $(D $2)), $(TD $(D $3)))
+    TROW3PLUS=$(TR3 $(TD $(D $1)), $(TD $(D $2)), $(TD $(D $3) $4))
+	TD2=$(MULTICOL_CELL 2, $0)
 	TITLE=Interfacing to C
 	WIKI=InterfaceToC
-
 	CATEGORY_SPEC=$0
