@@ -60,7 +60,7 @@ string absoluteUrl(string base, string url)
 
 	auto baseParts = base.split(`\`);
 	baseParts = baseParts[0..$-1];
-	
+
 	while (url.startsWith(`..\`))
 	{
 		url = url[3..$];
@@ -173,9 +173,9 @@ void main()
 	enforce(exists(ROOT ~ `\phobos\phobos.html`), "Phobos documentation not present. Please place Phobos documentation HTML files into the \"phobos\" subdirectory.");
 
 	string[] files;
-	foreach (de; dirEntries(ROOT ~ `\`, "*.{html,css,gif,jpg,png,ico}", SpanMode.breadth))
-		if (!de.name.baseName.startsWith("pdf-")
-		 && !de.name.baseName.startsWith("std_consolidated_"))
+	foreach (de; dirEntries(ROOT ~ `\`, "*.{html,css,gif,jpg,png,ico,js}", SpanMode.breadth))
+		if (!de.name.baseName().startsWith("pdf-")
+		 && !de.name.baseName().startsWith("std_consolidated_"))
 			files ~= de.name;
 
 	auto re_title        = regex(`<title>(.*) - (The )?D Programming Language( [0-9]\.[0-9])? - Digital Mars</title>`);
@@ -200,7 +200,7 @@ void main()
 		{
 			scope(failure) writeln("Error while processing file: ", fileName);
 
-			string destdir = fileName.getDirName().movePath();
+			string destdir = fileName.dirName().movePath();
 			if (!exists(destdir))
 				mkdirRecurse(destdir);
 
@@ -235,7 +235,7 @@ void main()
 
 					if (line.test(re_link_pl))
 						continue; // don't process link as well
-					
+
 					if (line.test(re_title))
 					{
 						title = strip(/*re_title*/match.captures[1]);
@@ -249,7 +249,7 @@ void main()
 					if (line.test(re_title3))
 						if (title=="")
 							title = strip(/*re_title2*/match.captures[1]);
-					
+
 					if (line.test(re_anchor_1h))
 					{
 						auto anchor = '#' ~ /*re_anchor*/match.captures[1];
@@ -338,7 +338,10 @@ void main()
 					if (line.test(re_link))
 						if (!/*re_link*/match.captures[1].startsWith("http://"))
 							addKeyword(/*re_link*/match.captures[3], absoluteUrl(fileName, /*re_link*/match.captures[1]));
-					
+
+					if (line.contains(`<script src="/js`))
+						line = line.replace(`<script src="/`, `<script src="` ~ "../".replicate(fileName[ROOT.length+1..$].split(dirSeparator).length-1));
+
 					// skip Google ads
 					if (line.startsWith(`<!-- Google ad -->`))
 						skip = nextSkip = true;
@@ -361,6 +364,10 @@ void main()
 					if (!skip)
 						newlines ~= line;
 					skip = nextSkip;
+
+					// Work around JS bug in run.js
+					if (line.contains(`<head`))
+						newlines ~= `<script>mainPage = [];</script>`;
 				}
 
 				if (!foundNav)
@@ -390,7 +397,7 @@ void main()
 				writeln("Copying "~fileName);
 				copy(fileName, newFileName);
 			}
-		} 
+		}
 
 	// ************************************************************
 
@@ -417,7 +424,7 @@ void main()
 			string file = removeAnchor(url);
 			string anchor = getAnchor(url);
 			backSlash(url);
-			
+
 			if (file in pages)
 			{
 				if (!(anchor in pages[file].anchors))
@@ -495,7 +502,7 @@ main="D Programming Language","d.hhc","d.hhk","chm\index.html","chm\index.html",
 		foreach (child; nav.children)
 			dumpNav(child, level);
 	}
-	
+
 	f.open("d.hhc", "wt");
 	f.writeln(
 `<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><HTML><BODY>
