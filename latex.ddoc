@@ -1,5 +1,7 @@
-ET=\&
-CODE_ET=$(D &)
+SPEC_S=$(LAYOUT ,$1,$(ARGS $+))
+ESCAPES=/&/&/
+AMP=\&
+CODE_AMP=$(D &)
 CODE_PIPE=\lstinline^|^
 GT=>
 LT=<
@@ -15,6 +17,7 @@ PERCENT=PERCENT
 CODE_PERCENT=\verb|%|
 FULL_XREF=\href{phobos/std_$1.html#$2}{$(D std.$1.$2)}
 DDOC_COMMENT=% $0
+DDOC_KEYWORD=$0
 H4=\subsubsection{$0}
 H5=\paragraph{$0}
 SINGLEQUOTE=`$0'
@@ -46,8 +49,7 @@ DDOC=% Copyright (c) 1999-$(YEAR) by Digital Mars
 % All Rights Reserved Written by Walter Bright
 % http://www.digitalmars.com
 
-\documentclass[11pt]{article}
-%\usepackage{color}
+\documentclass[11pt]{memoir}
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{listings}
 \usepackage{hyperref}
@@ -55,12 +57,23 @@ DDOC=% Copyright (c) 1999-$(YEAR) by Digital Mars
 \usepackage{alltt}
 \usepackage{tabularx}
 \usepackage{multirow}
+\usepackage{hyperref}
+
+\hypersetup{pdftitle={D Programming Language Specification}}
+\hypersetup{colorlinks=true,linkcolor=red,urlcolor=Blue}
 
 \def\commentstyle{%
   \color{OliveGreen}%
   \textsl%
 }
-\lstset{language=C++,basicstyle=\ttfamily,escapeinside={/*[}{]*/},commentstyle=\commentstyle,morecomment=[n]{/+}{+/},stringstyle=\color{BrickRed},keywordstyle=\color{NavyBlue}}
+
+\newcommand\ccbox[1]{\mbox{\cc{#1}}}
+
+\lstset{language=C++,basicstyle=\ttfamily,escapeinside={/*[}{]*/}}
+\lstset{commentstyle=\commentstyle,morecomment=[n]{/+}{+/}}
+\lstset{stringstyle=\color{BrickRed},keywordstyle=\color{NavyBlue}}
+\lstset{basewidth={0.5em,0.5em},fontadjust=true}
+\lstset{linewidth=\textwidth}
 \lstset{morekeywords={@disable,   @property,
         @safe, @system, @trusted, abstract, alias, align, asm, assert,
         auto,  body, bool,  break, byte,  case, cast,  catch, cdouble,
@@ -78,11 +91,42 @@ DDOC=% Copyright (c) 1999-$(YEAR) by Digital Mars
         with,\#!, macro, pure, __FILE__, __LINE__, __gshared,
         __traits, __vector, __parameters}}
 
+% Nice line breaks.
+% See http://www.bollchen.de/blog/2011/04/good-looking-line-breaks-with-the-listings-package/
+\usepackage{MnSymbol}
+\lstset{prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\rhookswarrow}}}
+\lstset{postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\rcurvearrowse\space}}}
+\lstset{breaklines=true,breakatwhitespace=true}
 \sloppy
+
+% Page size
+\setstocksize{11in}{8.5in}
+%\settrims{0.9375in}{0.75in}
+% \setstocksize{9.125in}{7in}
+% \settrimmedsize{9.125in}{7in}{*}
+% %\trimLmarks
+\setlrmarginsandblock{1.125in}{0.875in}{*}
+% \setlength{\headheight}{0.17in}
+% \setlength{\headsep}{0.25in}
+% \setlength{\footskip}{0.35in}
+% % This is the margin from the upper edge to the text
+% \setlength{\uppermargin}{0.75in}
+% \setlength{\lowermargin}{0.75in}
+% % Adjust the margins to reflect the presence of header and footer
+% \addtolength{\uppermargin}{\headheight}
+% \addtolength{\uppermargin}{\headsep}
+% \addtolength{\lowermargin}{\footskip}
+% % This sets the height of the text proper
+% \setulmarginsandblock{\uppermargin}{\lowermargin}{*}
+% Commit
+\checkandfixthelayout
+
 \begin{document}
 \title{D Programming Language Specification}
 \date{}
+\frontmatter
 \maketitle
+\mainmatter
 
 $(BODY)
 \end{document}
@@ -96,9 +140,10 @@ NAVIGATION_SPEC=
 NAVIGATION_D=
 BOOKS=
 
-TOCENTRY = $(LI $(LINK2 #$+, $+))
+TOCENTRY = $(LI $(LINK2 $1, $+))
 LAYOUT=
-\section{$2}
+\clearpage
+\chapter{$2}
   $3
 
 CODE=$(D $0)
@@ -119,11 +164,12 @@ SCINI=\lstinline{$0}
 CONSOLE=\texttt{$0}
 MODDEFFILE=\lstinline{$0}
 
+GLINK=$(LINK2 $0, $(I $0))
 GLINK2=$(GLINK $2)
 DDLINK=$(LINK2 #$2, $3)
 DDLINK=$(LINK2 $1.html, $3)
-DDSUBLINK=$(LINK2 #$2, $3)
-DPLLINK=$(LINK2 http://dlang.org/$1, $2)
+DDSUBLINK=$(LINK2 $2, $3)
+DPLLINK=$(XLINK2 http://dlang.org/$1, $2)
 NOT_EBOOK=
 
 B=\textbf{$0}
@@ -148,7 +194,7 @@ $+
 \end{center}
 TABLE_3COLS=\begin{center}
 $(B $1)\\
-\begin{tabularx}{\textwidth}[2]{lXXl}
+\begin{tabularx}{\textwidth}[2]{ll>{\small\raggedright\arraybackslash}Xl}
 $+
 \bottomrule
 \end{tabularx}
@@ -182,8 +228,16 @@ LI=\item $0
 BIG=\large{$0}
 SMALL=\small{$0}
 BR=\hspace*{\fill}
+BR=
+
 LINK=\url{$0}
-LINK2=\href{$1}{$+}
+LINK2=\hyperlink{$1}{$+}
+LLINK2=\hyperlink{$1}{$+}
+XLINK2=\href{$1}{$+}
+RELATIVE_LINK2=$(LINK $1,$+)
+LNAME2=\hyperref[$1]{$+}
+DDSUBLINK=$(XLINK2 $1.html#$2, $3)
+
 RED={\color{red}$0}
 BLUE={\color{blue}$0}
 GREEN={\color{green}$0}
@@ -213,16 +267,14 @@ LIX=\item{$1} $(LIX $+)
 LIST=\begin{itemize}
 $(LIX $1, $+)
 \end{itemize}
-LNAME2=$+
-
-D_COMMENT=$(GREEN $0)
-D_STRING = $(RED $0)
-D_KEYWORD = $(BLUE $0)
-D_PSYMBOL = $(U $0)
-D_PARAM = $(I $0)
 
 D_COMMENT=$0
 D_STRING=$0
 D_KEYWORD=$0
 D_PSYMBOL = $(U $0)
 D_PARAM = $(I $0)
+
+TOC=\chapter*{$1},
+\markboth{\MakeUppercase{$1}}{}
+\addcontentsline{toc}{chapter}{$1}
+$+

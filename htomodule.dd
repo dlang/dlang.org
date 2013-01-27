@@ -12,7 +12,7 @@ $(D_S Converting C $(D .h) Files to D Modules,
 	inevitably some human judgement must be applied.
 	This is a guide to doing such conversions.
 
-<h4>Preprocessor</h4>
+$(H4 Preprocessor)
 
 	$(D .h) files can sometimes be a bewildering morass of layers of
 	macros, $(D #include) files, $(D #ifdef)'s, etc. D doesn't
@@ -31,7 +31,7 @@ $(CONSOLE
 	$(P Remove all the $(D #if), $(D #ifdef), $(D #include),
 	etc. statements.)
 
-<h4>Linkage</h4>
+$(H4 Linkage)
 
 	Generally, surround the entire module with:
 
@@ -44,7 +44,7 @@ extern (C)
 
 	to give it C linkage.
 
-<h4>Types</h4>
+$(H4 Types)
 
 	$(P A little global search and replace will take care of renaming
 	the C types to D types. The following table shows a typical mapping
@@ -96,12 +96,12 @@ extern (C)
 	<td>ptrdiff_t
 	)
 
-<h4>NULL</h4>
+$(H4 NULL)
 
 	$(D NULL) and $(D ((void*)0)) should be replaced
 	with $(D null).
 
-<h4>Numeric Literals</h4>
+$(H4 Numeric Literals)
 
 	Any $(SINGLEQUOTE L) or $(SINGLEQUOTE l) numeric literal suffixes should be removed,
 	as a C $(D long) is (usually) the same size as a D $(D int).
@@ -109,7 +109,7 @@ extern (C)
 	single $(SINGLEQUOTE L).
 	Any $(SINGLEQUOTE u) suffix will work the same in D.
 
-<h4>String Literals</h4>
+$(H4 String Literals)
 
 	In most cases, any $(SINGLEQUOTE L) prefix to a string can just be dropped,
 	as D will implicitly convert strings to wide characters if
@@ -126,7 +126,7 @@ L"string"
 "string"d	// for 32 bit wide characters
 ---------------------------
 
-<h4>Macros</h4>
+$(H4 Macros)
 
 	Lists of macros like:
 
@@ -211,7 +211,7 @@ const uint GT_TEXT16 = GT_CONSTRUCT!(4, GT_TEXT, 16);
 ---------------------------
 
 
-<h4>Declaration Lists</h4>
+$(H4 Declaration Lists)
 
 	D doesn't allow declaration lists to change the type.
 	Hence:
@@ -228,7 +228,7 @@ int q;
 int[3] t;
 ---------------------------
 
-<h4>Void Parameter Lists</h4>
+$(H4 Void Parameter Lists)
 
 	Functions that take no parameters:
 
@@ -244,7 +244,7 @@ int foo();
 
 $(V1
 
-<h4>Const Type Modifiers</h4>
+$(H4 Const Type Modifiers)
 
 	D has $(D const) as a storage class, not a type modifier. Hence, just
 	drop any $(D const) used as a type modifier:
@@ -259,7 +259,7 @@ void foo(const int *p, char *const q);
 void foo(int* p, char* q);
 ---------------------------
 )
-<h4>Extern Global C Variables</h4>
+$(H4 Extern Global C Variables)
 
 	Whenever a global variable is declared in D, it is also defined.
 	But if it's also defined by the C object file being linked in,
@@ -284,7 +284,7 @@ extern (C)
 ---------------------------
 
 
-<h4>Typedef</h4>
+$(H4 Typedef)
 
 	$(D alias) is the D equivalent to the C $(D typedef):
 
@@ -298,7 +298,7 @@ typedef int foo;
 alias int foo;
 ---------------------------
 
-<h4>Structs</h4>
+$(H4 Structs)
 
 	Replace declarations like:
 
@@ -319,7 +319,7 @@ struct Foo
 alias Foo* pFoo, lpFoo;
 ---------------------------
 
-<h4>Struct Member Alignment</h4>
+$(H4 Struct Member Alignment)
 
 	A good D implementation by default will align struct members the
 	same way as the C compiler it was designed to work with. But
@@ -347,7 +347,7 @@ struct Foo
 }
 ---------------------------
 
-<h4>Nested Structs</h4>
+$(H4 Nested Structs)
 
 $(CCODE
 struct Foo
@@ -392,7 +392,7 @@ struct Abc
 }
 ---------------------------
 
-<h4>$(D __cdecl), $(D __pascal), $(D __stdcall)</h4>
+$(H4 $(D __cdecl), $(D __pascal), $(D __stdcall))
 
 $(CCODE
 int __cdecl x;
@@ -410,7 +410,7 @@ extern (Pascal) int bar(int b);
 extern (Windows) int abc(int c);
 ---------------------------
 
-<h4>$(D __declspec(dllimport))</h4>
+$(H4 $(D __declspec(dllimport)))
 
 $(CCODE
 __declspec(dllimport) int __stdcall foo(int a);
@@ -422,7 +422,7 @@ __declspec(dllimport) int __stdcall foo(int a);
 export extern (Windows) int foo(int a);
 ---------------------------
 
-<h4>$(D __fastcall)</h4>
+$(H4 $(D __fastcall))
 
 	Unfortunately, D doesn't support the $(D __fastcall) convention.
 	Therefore, a shim will be needed, either written in C:

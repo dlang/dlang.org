@@ -351,8 +351,8 @@ $1
 $(UL $(ARGS $+))
     </div>
 
-TOCHEADER = <h2>$0</h2>
-TOCHEADERL = <h2><a href="$1" title="$2">$3</a></h2>
+TOCHEADER = $(H2 $0)
+TOCHEADERL = $(H2 <a href="$1" title="$2">$3</a>)
 TOCENTRY = $(LI $(LINK2 $1, $2))
 TOCENTRYT = $(LI <a href="$1" title="$2">$3</a>)
 TOCENTRYH = $(LI $(LINK2 $1, $2)$3)
@@ -370,7 +370,7 @@ TT=<tt>$0</tt>
 SUB=<sub>$0</sub>
 LNAME2=<a name="$1">$+</a>
 SECTION1=<h1>$1</h1>$+
-SECTION2=<h2>$1</h2>$+
+SECTION2=$(H2 $1)$+
 SECTION3=<h3>$1</h3>$+
 SECTION4=<h4>$1</h4>$+
 SECTION5=<h5>$1</h5>$+
@@ -416,13 +416,20 @@ NG_digitalmars_D_announce = <a href="$(NEWS digitalmars.D.announce,$0)">D.announ
 NG_DMDScript = <a href="$(NEWS DMDScript,$0)">DMDScript/$0</a>
 
 OPT=<sub>opt</sub>
-GLINK=$(LINK2 #$0, $(I $0))
-GLINK2=$(LINK2 $1.html#$2, $(I $2))
-GNAME=$(LNAME2 $0, $(I $0))
+
+LINK2=<a href="$1">$+</a>
+RELATIVE_LINK2=<a href="#$1">$+</a>
+LINK=$(LINK2 $0,$0)
+XLINK2=$(LINK2 $1,$+)
 DDLINK=$(LINK2 $1.html, $3)
-DDSUBLINK=$(LINK2 $1.html#$2, $3)
-DPLLINK=$(LINK2 $1, $2)
+DDSUBLINK=$(XLINK2 $1.html#$2, $3)
+GLINK=$(RELATIVE_LINK2 $0, $(I $0))
+GLINK2=$(LINK2 $1.html#$2, $(I $2))
+GLINK2=$(DDSUBLINK $1,$2,$(I $2))
+DPLLINK=$(LINK2 $1,$+)
+GNAME=$(LNAME2 $0, $(I $0))
 NOT_EBOOK=$0
+
 ASSIGNEXPRESSION=$(GLINK2 expression, AssignExpression)
 ISEXPRESSION=$(GLINK2 expression, IsExpression)
 META_KEYWORDS=D programming language
@@ -459,12 +466,13 @@ HTTPS = $(LINK2 https://$1,$2)
 LUCKY = $(HTTP
 google.com/search?btnI=I%27m+Feeling+Lucky&amp;ie=UTF-8&amp;oe=UTF-8&amp;q=$0,$0)
 
-ET=&amp;
-CODE_ET=$(D &amp;)
+AMP=&amp;
+CODE_AMP=$(D &amp;)
 CODE_PIPE=$(D |)
 GT=&gt;
 LT=&lt;
 REG=&copy;
+H2=<h2>$0</h2>
 H3=<h3>$0</h3>
 H4=<h4>$0</h4>
 CODE_LCURL=$(D {)
@@ -489,3 +497,4 @@ MULTICOL_CELL=<td colspan=$1>$+</th>
 TR2=$(TR $1 $2)
 TR3=$(TR $1 $2 $3)
 ELABORATE_HEADER=$(TR <th rowspan=2>D</th><th colspan=2>C</th></tr><tr><th scope="col">32 bit</th><th scope="col">64 bit</th>)
+TOC=$(SPEC_S $1,$+)
