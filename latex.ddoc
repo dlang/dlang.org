@@ -1,11 +1,13 @@
+ESCAPES=/&/&/ /</</ />/>/
 SPEC_S=$(LAYOUT ,$1,$(ARGS $+))
-ESCAPES=/&/&/
 AMP=\&
 CODE_AMP=$(D &)
 CODE_PIPE=\lstinline^|^
 GT=>
 LT=<
-REG=(c)
+GT_TEXT=$(D >)
+LT_TEXT=$(D <)
+REG=$(COPY)
 H2=\section{$0}
 H3=\subsection{$0}
 D=\lstinline|$0|
@@ -32,9 +34,11 @@ SECTION3=$(H3 $1) $+
 SECTION4=$(H4 $1) $+
 SECTION5=$(H5 $1) $+
 FOOTNOTE=\footnote{$0}
-SUP=\textsuperscript{$0}
-SUB=\textsubscript{$0}
-DOLLAR=$(D $)
+SUPERSCRIPT=\textsuperscript{$0}
+SUBSCRIPT=\textsubscript{$0}
+DOLLAR=\$
+CODE_DOLLAR=$(D $)
+RAW_DOLLAR=$
 NBSP=~
 HTMLTAG3=
 HASH=\#
@@ -44,6 +48,7 @@ MULTICOL_CELL=\multicolumn{$1}{l}{$+}
 ELABORATE_HEADER=\toprule\multirow{2}{*}{D}&\multicolumn{2}{l}{C}\\ & 32 bit & 64 bit\\\midrule
 TIMES=$\times$
 NDASH=--
+MULTICOLS=\begin{multicols}{$1}$+ \end{multicols}
 
 DDOC=% Copyright (c) 1999-$(YEAR) by Digital Mars
 % All Rights Reserved Written by Walter Bright
@@ -58,6 +63,12 @@ DDOC=% Copyright (c) 1999-$(YEAR) by Digital Mars
 \usepackage{tabularx}
 \usepackage{multirow}
 \usepackage{hyperref}
+\usepackage{multicol}
+\usepackage{longtable}
+\usepackage[T1]{fontenc}
+
+\premulticols=1pt
+\multicolsep=0pt
 
 \hypersetup{pdftitle={D Programming Language Specification}}
 \hypersetup{colorlinks=true,linkcolor=red,urlcolor=Blue}
@@ -90,6 +101,7 @@ DDOC=% Copyright (c) 1999-$(YEAR) by Digital Mars
         unittest,  ushort,  version,  void,  volatile,  wchar,  while,
         with,\#!, macro, pure, __FILE__, __LINE__, __gshared,
         __traits, __vector, __parameters}}
+\lstset{morecomment=[n]{/+}{+/}}
 
 % Nice line breaks.
 % See http://www.bollchen.de/blog/2011/04/good-looking-line-breaks-with-the-listings-package/
@@ -161,7 +173,8 @@ $0
 GNAME={\fontshape{sl}\selectfont $0}
 DDOCCODE=$(D_CODE $0)
 SCINI=\lstinline{$0}
-CONSOLE=\texttt{$0}
+CONSOLE=$(TT $0)
+TT=\texttt{$0}
 MODDEFFILE=\lstinline{$0}
 
 GLINK=$(LINK2 $0, $(I $0))
@@ -180,22 +193,22 @@ P= $0 \par
 DL=\begin{description}
 $0
 \end{description}
-DT=\item[$0]
+DT=\item $(B $0)
 DD=$0
 TABLE=\begin{tabular}[2]{llllllllllll}
 $0
 \end{tabular}
 TABLE_2COLS=\begin{center}
 $(B $1)\\*
-\begin{tabularx}{\textwidth}[2]{lXl}
-$+
+\begin{tabularx}{0.9\textwidth}[2]{l>{\small\arraybackslash}X}
+\toprule $+
 \bottomrule
 \end{tabularx}
 \end{center}
 TABLE_3COLS=\begin{center}
 $(B $1)\\
 \begin{tabularx}{\textwidth}[2]{ll>{\small\raggedright\arraybackslash}Xl}
-$+
+\toprule $+
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -209,7 +222,7 @@ $0
 TABLE2=\begin{center}
 $(B $1)\\
 \begin{tabular}[10]{llllllllllll}
-$+
+\toprule $+
 \bottomrule
 \end{tabular}
 \end{center}
@@ -219,9 +232,15 @@ TR3=$1 & $2 & $3 \\
 TH=$0 &
 TD=$0
 OL=\begin{enumerate}
+\setlength{\itemsep}{1pt}
+\setlength{\parskip}{0pt}
+\setlength{\parsep}{0pt}
 $0
 \end{enumerate}
 UL=\begin{itemize}
+\setlength{\itemsep}{1pt}
+\setlength{\parskip}{0pt}
+\setlength{\parsep}{0pt}
 $0
 \end{itemize}
 LI=\item $0
@@ -261,7 +280,7 @@ WHITE  = {\color{white}$0}
 COMMA=,
 THX=& $1 $(THX $+)
 TDX=& $1 $(TDX $+)
-THEAD=\toprule $1 $(THX $+) \\ \midrule
+THEAD=$1 $(THX $+) \\ \midrule
 TROW=$1 $(TDX $+) \\
 LIX=\item{$1} $(LIX $+)
 LIST=\begin{itemize}
@@ -278,3 +297,332 @@ TOC=\chapter*{$1},
 \markboth{\MakeUppercase{$1}}{}
 \addcontentsline{toc}{chapter}{$1}
 $+
+CHECKMARK=$\checkmark$
+SHY=\-
+METACODE=/*[$(I $0)]*/
+TABLE_SPECIAL=\begin{center}
+$(B $1)\\
+\begin{tabular}{p{0.2\textwidth}ll}
+$+
+\bottomrule
+\end{tabular}
+\end{center}
+LONGTABLE_2COLS=\begin{center}
+\begin{longtable}{lp{$1\textwidth}}
+\caption{$2}\\
+\toprule
+$3
+\endfirsthead
+\multicolumn{2}{c}%
+{\textit{(continued)}}\\
+\toprule
+$3
+\endhead
+\multicolumn{2}{r}{\hspace\fill$\hookleftarrow$}
+\endfoot
+\bottomrule
+\endlastfoot
+$4
+\end{longtable}
+\end{center}
+
+LONGTABLE_3COLS=\begin{center}
+\begin{longtable}{llp{$1\textwidth}}
+\caption{$2}\\
+\toprule
+$3
+\endfirsthead
+\multicolumn{3}{c}%
+{\textit{(continued)}}\\
+\toprule
+$3
+\endhead
+\multicolumn{3}{r}{\hspace\fill$\hookleftarrow$}
+\endfoot
+\bottomrule
+\endlastfoot
+$4
+\end{longtable}
+\end{center}
+
+LONGTABLE_5COLS=\begin{center}
+\begin{longtable}{lllll}
+\caption{$1}\\
+\toprule
+$2
+\endfirsthead
+\multicolumn{5}{c}%
+{\textit{(continued)}}\\
+\toprule
+$2
+\endhead
+\multicolumn{5}{r}{\hspace\fill$\hookleftarrow$}
+\endfoot
+\bottomrule
+\endlastfoot
+$3
+\end{longtable}
+\end{center}
+
+BLOCKQUOTE=\begin{quote}
+$(I $+)
+\par
+\hspace\fill -- $(I $1)
+\end{quote}
+
+MDASH=---
+
+$(COMMENT
+Most LaTeX equivalents for HTML named entities were taken from
+http://orgmode.org/worg/org-symbols.html
+)
+
+QUOT="
+OELIG_CAP=\OE
+OELIG=\oe
+SCARON_CAP=\v{S}
+SCARON=\v{s}
+YUML=\"{Y}
+CIRC=\char`\^
+TILDE=\textasciitilde
+ENSP=\enspace
+EMSP=
+THINSP=
+ZWNJ=
+ZWJ=
+LRM=
+RLM=
+NDASH=--
+MDASH=---
+LSQUO=\textquoteleft{}
+RSQUO=\textquoteright{}
+SBQUO=
+LDQUO=\textquotedblleft{}
+RDQUO=\textquotedblright{}
+BDQUO="
+DAGGER=\textdagger
+DAGGER_CAP=\textdaggerdbl{}
+PERMIL=\textperthousand{}
+LSAQUO=\guilsinglleft{}
+RSAQUO=\guilsinglright{}
+EURO=\texteuro{}
+NBSP=~
+IEXCL=!`
+CENT=\textcent{}
+POUND=\pounds{}
+CURREN=\textcurrency{}
+YEN=\textyen{}
+BRVBAR=\textbrokenbar{}
+SECT=\S
+UML=\textasciidieresis{}
+COPY=\textcopyright{}
+ORDF=\textordfeminine{}
+LAQUO=\guillemotleft{}
+NOT=\textlnot{}
+SHY=\-
+REG=\textregistered{}
+MACR=\textasciimacron{}
+DEG=\textdegree{}
+PLUSMN=\textpm{}
+SUP2=\texttwosuperior{}
+SUP3=\textthreesuperior{}
+ACUTE=$\acute{}$
+MICRO=\textmu{}
+PARA=\P{}
+MIDDOT=\textperiodcentered{}
+CEDIL=\c{}
+SUP1=\textonesuperior{}
+ORDM=\textordmasculine{}
+RAQUO=\guillemotright{}
+FRAC14=\textonequarter{}
+FRAC12=\textonehalf{}
+FRAC34=\textthreequarters{}
+IQUEST=?`
+AGRAVE_CAP=\`{A}
+AACUTE_CAP=\'{A}
+ACIRC_CAP=\^{A}
+ATILDE_CAP=\~{A}
+AUML_CAP=\"{A}
+ARING_CAP=\AA{}
+AELIG_CAP=\AE{}
+CCEDIL_CAP=\c{C}
+EGRAVE_CAP=\`{E}
+EACUTE_CAP=\'{E}
+ECIRC_CAP=\^{E}
+EUML_CAP=\"{E}
+IGRAVE_CAP=\`{I}
+IACUTE_CAP=\'{I}
+ICIRC_CAP=\^{I}
+IUML_CAP=\"{I}
+ETH_CAP=\DH{}
+NTILDE_CAP=\~{N}
+OGRAVE_CAP=\`{O}
+OACUTE_CAP=\'{O}
+OCIRC_CAP=\^{O}
+OTILDE_CAP=\~{O}
+OUML_CAP=\"{O}
+TIMES=\texttimes{}
+OSLASH_CAP=\O
+UGRAVE_CAP=\`{U}
+UACUTE_CAP=\'{U}
+UCIRC_CAP=\^{U}
+UUML_CAP=\"{U}
+YACUTE_CAP=\'{Y}
+THORN_CAP=\TH{}
+SZLIG=\ss{}
+AGRAVE=\`{a}
+AACUTE=\'{a}
+ACIRC=\^{a}
+ATILDE=\~{a}
+AUML=\"{a}
+ARING=\aa{}
+AELIG=\ae{}
+CCEDIL=\c{c}
+EGRAVE=\`{e}
+EACUTE=\'{e}
+ECIRC=\^{e}
+EUML=\"{e}
+IGRAVE=\`{i}
+IACUTE=\'{i}
+ICIRC=\^{i}
+IUML=\"{i}
+ETH=\dh{}
+NTILDE=\~{n}
+OGRAVE=\`{o}
+OACUTE=\'{o}
+OCIRC=\^{o}
+OTILDE=\~{o}
+OUML=\"{o}
+DIVIDE=\textdiv{}
+OSLASH=\o
+UGRAVE=\`{u}
+UACUTE=\'{u}
+UCIRC=\^{u}
+UUML=\"{u}
+YACUTE=\'{y}
+THORN=\th{}
+YUML=\"{y}
+FNOF=\textit{f}
+ALPHA_CAP=A
+BETA_CAP=B
+GAMMA_CAP=$\Gamma$
+DELTA_CAP=$\Delta$
+EPSILON_CAP=E
+ZETA_CAP=Z
+ETA_CAP=H
+THETA_CAP=$\Theta$
+IOTA_CAP=I
+KAPPA_CAP=K
+LAMBDA_CAP=$\Lambda$
+MU_CAP=M
+NU_CAP=N
+XI_CAP=$\Xi$
+OMICRON_CAP=O
+PI_CAP=$\Pi$
+RHO_CAP=P
+SIGMA_CAP=$\Sigma$
+TAU_CAP=T
+UPSILON_CAP=$\Upsilon$
+PHI_CAP=$\Phi$
+CHI_CAP=X
+PSI_CAP=$\Psi$
+OMEGA_CAP=$\Omega$
+ALPHA=$\alpha$
+BETA=$\beta$
+GAMMA=$\gamma$
+DELTA=$\delta$
+EPSILON=$\epsilon$
+ZETA=$\zeta$
+ETA=$\eta$
+THETA=$\theta$
+IOTA=$\iota$
+KAPPA=$\kappa$
+LAMBDA=$\lambda$
+MU=$\mu$
+NU=$\nu$
+XI=$\xi$
+OMICRON=\textit{o}
+PI=$\pi$
+RHO=$\rho$
+SIGMAF=$\varsigma$
+SIGMA=$\sigma$
+TAU=$\tau$
+UPSILON=$\upsilon$
+PHI=$\phi$
+CHI=$\chi$
+PSI=$\psi$
+OMEGA=$\omega$
+THETASYM=$\vartheta$
+UPSIH=$\Upsilon$
+PIV=$\varpi$
+BULL=\textbullet{}
+HELLIP=\dots{}
+PRIME_CAP=$\prime{}\prime{}$
+PRIME=$\prime{}$
+OLINE=$\overline{ }$
+FRASL=/
+WEIERP=$\wp$
+IMAGE=$\Im$
+REAL=$\Re$
+TRADE=\texttrademark{}
+ALEFSYM=$\aleph$
+LARR=$\leftarrow$
+UARR=$\uparrow$
+RARR=$\rightarrow$
+DARR=$\downarrow$
+HARR=$\leftrightarrow$
+CRARR=$\hookleftarrow$
+LARR_CAP=$\Leftarrow$
+UARR_CAP=$\Uparrow$
+RARR_CAP=$\Rightarrow$
+DARR_CAP=$\Downarrow$
+HARR_CAP=$\Leftrightarrow$
+FORALL=$\forall$
+PART=$\partial$
+EXIST=$\exists$
+EMPTY=$\emptyset$
+NABLA=$\nabla$
+ISIN=$\in$
+NOTIN=$\notin$
+NI=$\ni$
+PROD=$\prod$
+SUM=$\sum$
+MINUS=-
+LOWAST=$\ast$
+RADIC=$\sqrt{}$
+PROP=$\propto$
+INFIN=$\propto$
+ANG=$\angle$
+AND=$\wedge$
+OR=$\vee$
+CAP=$\cap$
+CUP=$\cup$
+INT=$\int$
+THERE4=$\therefore$
+SIM=$\sim$
+CONG=$\cong$
+ASYMP=$\asymp$
+NE=$\ne$
+EQUIV=$\equiv$
+LE=$\le$
+GE=$\ge$
+SUB=$\subset$
+SUP=$\supset$
+NSUB=$\not\subset$
+SUBE=$\subseteq$
+SUPE=$\supseteq$
+OPLUS=$\oplus$
+OTIMES=$\otimes$
+PERP=$\perp$
+SDOT=$\cdot$
+LCEIL=$\lceil$
+RCEIL=$\rceil$
+LFLOOR=$\lfloor$
+RFLOOR=$\rfloor$
+LOZ=$\diamond$
+SPADES=$\spadesuit$
+CLUBS=$\clubsuit$
+HEARTS=$\heartsuit$
+DIAMS=$\diamondsuit$
+LANG=$\langle$
+RANG=$\rangle$

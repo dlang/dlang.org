@@ -110,12 +110,10 @@ $(GNAME AssignExpression):
     $(GLINK ConditionalExpression) $(D |=) $(I AssignExpression)
     $(GLINK ConditionalExpression) $(D ^=) $(I AssignExpression)
     $(GLINK ConditionalExpression) $(D ~=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(D $(LT)$(LT)=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(D $(GT)$(GT)=) $(I AssignExpression)
-    $(GLINK ConditionalExpression) $(D $(GT)$(GT)$(GT)=) $(I AssignExpression)
-$(V2
-    $(GLINK ConditionalExpression) $(D ^^=) $(I AssignExpression))
-)
+    $(GLINK ConditionalExpression) $(D <)$(D <)$(D =) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D >>=) $(I AssignExpression)
+    $(GLINK ConditionalExpression) $(D >>>=) $(I AssignExpression)
+    $(V2 $(GLINK ConditionalExpression) $(D ^^=) $(I AssignExpression)))
 
         $(P The right operand is implicitly converted to the type of the
         left operand, and assigned to it. The result type is the type
@@ -143,7 +141,7 @@ a = cast(typeof(a))(a op b)
         $(UL
         $(LI operand $(D a) is only evaluated once)
         $(LI overloading $(I op) uses a different function than overloading $(I op)= does)
-        $(LI the left operand of $(D $(GT)$(GT)$(GT)=) does not undergo integral promotions before shifting)
+        $(LI the left operand of $(D >>>=) does not undergo integral promotions before shifting)
         )
 
 $(H3 Conditional Expressions)
@@ -389,18 +387,18 @@ $(H3 Relational Expressions)
 
 $(GRAMMAR
 $(GNAME RelExpression):
-    $(GLINK ShiftExpression) $(D $(LT)) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D $(LT)=) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D $(GT)) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D $(GT)=) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D !$(LT)$(GT)=) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D !$(LT)$(GT)) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D $(LT)$(GT)) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D $(LT)$(GT)=) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D !$(GT)) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D !$(GT)=) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D !$(LT)) $(GLINK ShiftExpression)
-    $(GLINK ShiftExpression) $(D !$(LT)=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D <) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D <)$(D =) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D >) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D >=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !<>=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !<>) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D <>) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D <>=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !>) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !>=) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !<) $(GLINK ShiftExpression)
+    $(GLINK ShiftExpression) $(D !<=) $(GLINK ShiftExpression)
 )
 
         $(P First, the integral promotions are done on the operands.
@@ -430,16 +428,17 @@ $(H4 Integer comparisons)
 
         $(TABLE2 Integer comparison operators,
         $(THEAD Operator, Relation)
-        $(TROW $(D $(LT)), less)
-        $(TROW $(D $(GT)), greater)
-        $(TROW $(D $(LT)=), less or equal)
-        $(TROW $(D $(GT)=), greater or equal)
+        $(TROW $(D <), less)
+        $(TROW $(D >), greater)
+        $(TROW $(D <)$(D =), less or equal)
+        $(TROW $(D >=), greater or equal)
         $(TROW $(D ==), equal)
         $(TROW $(D !=), not equal)
         )
 
         $(P It is an error to have one operand be signed and the other
-        unsigned for a $(D $(LT)), $(D $(LT)=), $(D $(GT)) or $(D $(GT)=) expression.
+        unsigned for a $(D <), $(D <)$(D =), $(D >) or
+        $(D >)$(D =) expression.
         Use casts to make both operands signed or both operands unsigned.
         )
 
@@ -460,18 +459,18 @@ $(H4 $(LNAME2 floating_point_comparisons, Floating point comparisons))
         $(THEAD Operator, Greater, Less, Equal, Unordered, Exception, Relation)
         $(TROW $(D ==),$(D F),$(D F),$(D T),$(D F),$(D no),equal)
         $(TROW $(D !=),$(D T),$(D T),$(D F),$(D T),$(D no),$(ARGS unordered, less, or greater))
-        $(TROW $(D $(GT)),$(D T),$(D F),$(D F),$(D F),$(D yes),$(ARGS greater))
-        $(TROW $(D $(GT)=),$(D T),$(D F),$(D T),$(D F),$(D yes),$(ARGS greater or equal))
-        $(TROW $(D $(LT)),$(D F),$(D T),$(D F),$(D F),$(D yes),$(ARGS less))
-        $(TROW $(D $(LT)=),$(D F),$(D T),$(D T),$(D F),$(D yes),$(ARGS less or equal))
-        $(TROW $(D !$(LT)$(GT)=),$(D F),$(D F),$(D F),$(D T),$(D no),$(ARGS unordered))
-        $(TROW $(D $(LT)$(GT)),$(D T),$(D T),$(D F),$(D F),$(D yes),$(ARGS less or greater))
-        $(TROW $(D $(LT)$(GT)=),$(D T),$(D T),$(D T),$(D F),$(D yes),$(ARGS less, equal, or greater))
-        $(TROW $(D !$(LT)=),$(D T),$(D F),$(D F),$(D T),$(D no),$(ARGS unordered or greater))
-        $(TROW $(D !$(LT)),$(D T),$(D F),$(D T),$(D T),$(D no),$(ARGS unordered, greater, or equal))
-        $(TROW $(D !$(GT)=),$(D F),$(D T),$(D F),$(D T),$(D no),$(ARGS unordered or less))
-        $(TROW $(D !$(GT)),$(D F),$(D T),$(D T),$(D T),$(D no),$(ARGS unordered, less, or equal))
-        $(TROW $(D !$(LT)$(GT)),$(D F),$(D F),$(D T),$(D T),$(D no),$(ARGS unordered or equal))
+        $(TROW $(D >),$(D T),$(D F),$(D F),$(D F),$(D yes),$(ARGS greater))
+        $(TROW $(D >=),$(D T),$(D F),$(D T),$(D F),$(D yes),$(ARGS greater or equal))
+        $(TROW $(D <),$(D F),$(D T),$(D F),$(D F),$(D yes),$(ARGS less))
+        $(TROW $(D <)$(D =),$(D F),$(D T),$(D T),$(D F),$(D yes),$(ARGS less or equal))
+        $(TROW $(D !)$(D <)$(D >)$(D =), $(D F),$(D F),$(D F),$(D T),$(D no),$(ARGS unordered))
+        $(TROW $(D <)$(D >),$(D T),$(D T),$(D F),$(D F),$(D yes),$(ARGS less or greater))
+        $(TROW $(D <)$(D >)$(D =),$(D T),$(D T),$(D T),$(D F),$(D yes),$(ARGS less, equal, or greater))
+        $(TROW $(D !<=),$(D T),$(D F),$(D F),$(D T),$(D no),$(ARGS unordered or greater))
+        $(TROW $(D !<),$(D T),$(D F),$(D T),$(D T),$(D no),$(ARGS unordered, greater, or equal))
+        $(TROW $(D !>=),$(D F),$(D T),$(D F),$(D T),$(D no),$(ARGS unordered or less))
+        $(TROW $(D !>),$(D F),$(D T),$(D T),$(D T),$(D no),$(ARGS unordered, less, or equal))
+        $(TROW $(D !<>),$(D F),$(D F),$(D T),$(D T),$(D no),$(ARGS unordered or equal))
         )
 
         $(H5 Notes:)
@@ -522,7 +521,7 @@ if ("hello" in foo)
 -------------
 
         $(P The $(D in) expression has the same precedence as the
-        relational expressions $(D $(LT)), $(D $(LT)=),
+        relational expressions $(D <), $(D <)$(D =),
         etc.
         The return value of the $(I InExpression) is $(D null)
         if the element is not in the array;
@@ -538,10 +537,9 @@ $(H3 Shift Expressions)
 $(GRAMMAR
 $(GNAME ShiftExpression):
     $(GLINK AddExpression)
-    $(I ShiftExpression) $(D $(LT)$(LT)) $(GLINK AddExpression)
-    $(I ShiftExpression) $(D $(GT)$(GT)) $(GLINK AddExpression)
-    $(I ShiftExpression) $(D $(GT)$(GT)$(GT)) $(GLINK AddExpression)
-)
+    $(I ShiftExpression) $(D <)$(D <) $(GLINK AddExpression)
+    $(I ShiftExpression) $(D >)$(D >) $(GLINK AddExpression)
+    $(I ShiftExpression) $(D >)$(D >)$(D >) $(GLINK AddExpression))
 
         $(P The operands must be integral types, and undergo the usual integral
         promotions. The result type is the type of the left operand after
@@ -549,9 +547,9 @@ $(GNAME ShiftExpression):
         by the right operand's value.
         )
 
-        $(P $(D $(LT)$(LT)) is a left shift.
-        $(D $(GT)$(GT)) is a signed right shift.
-        $(D $(GT)$(GT)$(GT)) is an unsigned right shift.
+        $(P $(D <)$(D <) is a left shift.
+        $(D >)$(D >) is a signed right shift.
+        $(D >)$(D >)$(D >) is an unsigned right shift.
         )
 
         $(P It's illegal to shift by the same or more bits than the size of the
@@ -665,7 +663,7 @@ $(H3 $(LNAME2 UnaryExpression, Unary Expressions))
 
 $(GRAMMAR
 $(GNAME UnaryExpression):
-    $(D &amp;) $(I UnaryExpression)
+    $(CODE_AMP) $(I UnaryExpression)
     $(D ++) $(I UnaryExpression)
     $(D --) $(I UnaryExpression)
     $(D *) $(I UnaryExpression)
@@ -1328,8 +1326,8 @@ $(H4 Lambdas)
 
 $(GRAMMAR
 $(GNAME Lambda):
-        $(IDENTIFIER) $(D =$(GT)) $(GLINK AssignExpression)
-        $(GLINK ParameterAttributes) $(D =$(GT)) $(GLINK AssignExpression)
+        $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
+        $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
 )
 
         $(P $(I Lambda)s are a shorthand syntax for $(GLINK FunctionLiteral)s.
@@ -1717,7 +1715,7 @@ void foo() {
 -------------
         )
 
-        $(LI $(D is $(LPAREN)) $(I Type) $(D :) $(I TypeSpecialization) $(D $(RPAREN))<br>
+        $(LI $(D is $(LPAREN)) $(I Type) $(D :) $(I TypeSpecialization) $(D $(RPAREN))$(BR)
         The condition is satisfied if $(I Type) is semantically
         correct and it is the same as
         or can be implicitly converted to $(I TypeSpecialization).
@@ -1771,7 +1769,7 @@ $(V1
 -------------
         )
 
-        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D $(RPAREN))<br>
+        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D $(RPAREN))$(BR)
         The condition is satisfied if $(I Type) is semantically
         correct. If so, $(I Identifier)
         is declared to be an alias of $(I Type).
@@ -1792,7 +1790,7 @@ void foo(bar x) {
 -------------
         )
 
-        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D :) $(I TypeSpecialization) $(D $(RPAREN))<br>
+        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D :) $(I TypeSpecialization) $(D $(RPAREN))$(BR)
 
         $(P
         The condition is satisfied if $(I Type) is the same as
@@ -1829,7 +1827,7 @@ void foo(bar x, abc a) {
         )
         )
 
-        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D ==) $(I TypeSpecialization) $(D $(RPAREN))<br>
+        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D ==) $(I TypeSpecialization) $(D $(RPAREN))$(BR)
 
 
         $(P The condition is satisfied if $(I Type) is semantically

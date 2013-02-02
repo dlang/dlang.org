@@ -166,8 +166,8 @@ class Foo {
 void test(Foo foo) {
   size_t o;
 
-  o = Foo.x$(B .offsetof); // error, Foo.x needs a 'this' reference
-  o = foo.x$(B .offsetof); // ok
+  o = Foo.x.offsetof; // error, Foo.x needs a 'this' reference
+  o = foo.x.offsetof; // ok
 }
 ------
 
@@ -289,10 +289,10 @@ class Abc {
 
 ------
 class Foo {
-  $(B this)(int x)  // declare constructor for Foo
+  this(int x)  // declare constructor for Foo
   {   ...
   }
-  $(B this)()
+  this()
   {   ...
   }
 }
@@ -308,7 +308,7 @@ class B : A {
   int j;
   this() {
     ...
-    $(B super)(3);  // call base constructor A.this(3)
+    super(3);  // call base constructor A.this(3)
     ...
   }
 }
@@ -326,7 +326,7 @@ class C {
     ...
   }
   this(int i) {
-    $(B this)();
+    this();
     j = i;
   }
 }
@@ -537,7 +537,7 @@ class Foo {
   static int b = 1;
   static int c = b + a; // error, not a constant initializer
 
-  $(B static this)()    // static constructor
+  static this()    // static constructor
   {
     a = b + 1;          // a is set to 2
     b = a * 2;          // b is set to 4
@@ -950,7 +950,7 @@ class Outer {
 
   static class Inner {
     int foo() {
-      return m;   // Error, Inner is static and m needs a $(B this)
+      return m;   // Error, Inner is static and m needs a this
       return n;   // Ok, n is static
     }
   }
@@ -1078,7 +1078,7 @@ class Outer {
 int bar() {
   Outer o = new Outer;
   o.a = 3;
-  Outer.Inner oi = $(B o).new Inner;
+  Outer.Inner oi = o.new Inner;
   return oi.foo();    // returns 3
 }
 ---------
@@ -1097,7 +1097,7 @@ int bar() {
 class Outer {
   class Inner {
     Outer foo() {
-      return this.$(B outer);
+      return this.outer;
     }
   }
 
@@ -1121,7 +1121,8 @@ $(H3 $(LNAME2 anonymous, Anonymous Nested Classes))
 
 $(GRAMMAR
 $(GNAME NewAnonClassExpression):
-    $(B new) $(GLINK2 expression, AllocatorArguments)$(OPT) $(B class) $(I ClassArguments)$(OPT) $(GLINK SuperClass)$(OPT) $(GLINK Interfaces)$(OPT) $(GLINK ClassBody)
+    $(D new) $(GLINK2 expression, AllocatorArguments)$(OPT) $(D class) $(I ClassArguments)$(OPT) $(GLINK SuperClass)$(OPT) $(GLINK Interfaces)$(OPT)
+    $(GLINK ClassBody)
 
 $(GNAME ClassArguments):
 	$(B $(LPAREN)) $(GLINK2 expression, ArgumentList)$(OPT) $(B $(RPAREN))
@@ -1130,12 +1131,12 @@ $(GNAME ClassArguments):
         $(P which is equivalent to:
         )
 
-------
-class $(I Identifier) : $(I SuperClass) $(I Interfaces)
-        $(I ClassBody)
+$(GRAMMAR
+$(D class) $(I Identifier) $(D :) $(I SuperClass) $(I Interfaces)
+    $(I ClassBody)
 
-new ($(I ArgumentList)) $(I Identifier) ($(I ArgumentList));
-------
+$(D new) $(D $(LPAREN))$(I ArgumentList)$(D $(RPAREN)) $(I Identifier) $(D $(LPAREN))$(I ArgumentList)$(D $(RPAREN));
+)
 
         $(P where $(I Identifier) is the name generated for the anonymous
         nested class.
@@ -1149,8 +1150,6 @@ $(SECTION3 $(LNAME2 ConstClass, Const, Immutable and Shared Classes))
         If a base class is const, immutable or shared, then all classes derived
         from it are also const, immutable or shared.
         )
-)
-
 )
 )
 

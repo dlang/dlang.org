@@ -12,14 +12,14 @@ $(GNAME FunctionBody):
     $(GLINK OutStatement) $(GLINK InStatement) $(GLINK BodyStatement)
 
 $(GNAME InStatement):
-    $(B in) $(GLINK2 statement, BlockStatement)
+    $(D in) $(GLINK2 statement, BlockStatement)
 
 $(GNAME OutStatement):
-    $(B out) $(GLINK2 statement, BlockStatement)
-    $(B out) $(B $(LPAREN)) $(I Identifier) $(B $(RPAREN)) $(GLINK2 statement, BlockStatement)
+    $(D out) $(GLINK2 statement, BlockStatement)
+    $(D out) $(D $(LPAREN)) $(I Identifier) $(D $(RPAREN)) $(GLINK2 statement, BlockStatement)
 
 $(GNAME BodyStatement):
-    $(B body) $(GLINK2 statement, BlockStatement)
+    $(D body) $(GLINK2 statement, BlockStatement)
 )
 
 
@@ -427,7 +427,7 @@ class A {
 }
 
 class B : A {
-  $(B alias A.foo foo;)
+  alias A.foo foo;
   override int foo(long x) { ... }
 }
 
@@ -456,7 +456,7 @@ import core.exception;
 
 class A {
    void set(long i) { }
-   void $(B set)(int i)  { }
+   void set(int i)  { }
 }
 class B : A {
    void set(long i) { }
@@ -465,10 +465,10 @@ class B : A {
 void foo(A a) {
   int i;
   try {
-    a.$(B set)(3);   // error, throws runtime exception since
+    a.set(3);   // error, throws runtime exception since
                 // A.set(int) should not be available from B
   }
-  catch ($(B HiddenFuncError) o) {
+  catch (HiddenFuncError o) {
      i = 1;
   }
   assert(i == 1);
@@ -491,15 +491,15 @@ void main() {
 
 ------
 class A {
-  void foo(int $(B x = 5)) { ... }
+  void foo(int x = 5) { ... }
 }
 
 class B : A {
-  void foo(int $(B x = 7)) { ... }
+  void foo(int x = 7) { ... }
 }
 
 class C : B {
-  void foo(int $(B x)) { ... }
+  void foo(int x) { ... }
 }
 
 
@@ -691,8 +691,8 @@ void bar(C c) {
 $(H4 $(LNAME2 parameters, Function Parameters))
 
 $(V1
-        $(P Parameters are $(B in), $(B out), $(B inout) or $(B lazy).
-        $(B in) is the default; the others work like
+        $(P Parameters are $(D in), $(D out), $(D inout) or $(D lazy).
+        $(D in) is the default; the others work like
         storage classes. For example:
 	)
 
@@ -700,21 +700,21 @@ $(V1
 int foo(in int x, out int y, inout int z, int q);
 ------
 
-        $(P x is $(B in), y is $(B out), z is $(B inout), and q is $(B in).
+        $(P x is $(D in), y is $(D out), z is $(D inout), and q is $(D in).
         )
 )
 $(V2
-        $(P Parameter storage classes are $(B in), $(B out),
-        $(B ref), $(B lazy), $(B const), $(B immutable), $(B shared),
-	$(B inout) or
-        $(B scope).
+        $(P Parameter storage classes are $(D in), $(D out),
+        $(D ref), $(D lazy), $(D const), $(D immutable), $(D shared),
+	$(D inout) or
+        $(D scope).
         For example:
 	)
 ------
 int foo(in int x, out int y, ref int z, int q);
 ------
 
-        $(P x is $(B in), y is $(B out), z is $(B ref), and q is none.
+        $(P x is $(D in), y is $(D out), z is $(D ref), and q is none.
         )
 )
 
@@ -727,7 +727,7 @@ int foo(in int x, out int y, ref int z, int q);
         possibly better code generation.)
         )
 
-	$(TABLE2 Parameter Storage Classes,
+	$(TABLE_2COLS Parameter Storage Classes,
 	$(THEAD Storage Class, Description)
 	$(TROW $(I none), parameter becomes a mutable copy of its argument)
 	$(V1 $(TROW $(D in), equivalent to $(I none)))
@@ -867,7 +867,7 @@ extern (C) int def(...); // error, must have at least one parameter
 	)
 
 	$(P Access to variadic arguments is done using the standard library
-	module $(V1 $(B std.c.stdarg))$(V2 $(B core.stdc.stdarg)).
+	module $(V1 $(D std.c.stdarg))$(V2 $(D core.stdc.stdarg)).
 	)
 
 ------
@@ -1517,11 +1517,11 @@ void test() {
         a $(I dynamic closure).
         )
 
-        $(P The $(B .ptr) property of a delegate will return the
+        $(P The $(D .ptr) property of a delegate will return the
         $(I frame pointer) value as a $(D void*).
         )
 
-        $(P The $(B .funcptr) property of a delegate will return the
+        $(P The $(D .funcptr) property of a delegate will return the
         $(I function pointer) value as a function type.
         )
 
@@ -1534,7 +1534,7 @@ $(H4 Anonymous Functions and Anonymous Delegates)
         $(P See $(GLINK2 expression, FunctionLiteral)s.
         )
 
-$(H3 main() Function)
+$(H3 $(D main()) Function)
 
         $(P For console programs, $(D main()) serves as the entry point.
         It gets called after all the module initializers are run, and
@@ -1587,7 +1587,7 @@ $(H3 $(LNAME2 interpretation, Compile Time Function Execution (CTFE)))
 
         $(LI
         The memory location of different memory blocks is not defined.
-        Ordered comparison ($(LT), $(LT)=, $(GT), $(GT)=) between two pointers is permitted
+        Ordered comparison ($(D <), $(D <)$(D =), $(D >), $(D >=)) between two pointers is permitted
         when both pointers point to the same array, or when at least one
         pointer is $(D null).
         )
@@ -1595,10 +1595,10 @@ $(H3 $(LNAME2 interpretation, Compile Time Function Execution (CTFE)))
         $(LI
         Pointer comparisons between independent memory blocks will generate
         a compile-time error, unless two such comparisons are combined
-        using $(D &&) or $(D ||) to yield a result which is independent of the
+        using $(D &&) or $(CODE_PIPE)$(CODE_PIPE) to yield a result which is independent of the
         ordering of memory blocks. Each comparison must consist of two pointer
-        expressions compared with $(D $(LT)), $(D $(LT)=), $(D $(GT)),
-        or $(D $(GT)=), and may optionally be
+        expressions compared with $(D <), $(D <)$(D =), $(D >),
+        or $(D >)$(D =), and may optionally be
         negated with $(D !).
 
         $(P
@@ -1608,7 +1608,7 @@ $(H3 $(LNAME2 interpretation, Compile Time Function Execution (CTFE)))
         pointers to memory block $(I Q), even when $(I P) and $(I Q) are
         unrelated memory blocks.
         It returns true if $(D [p1..p2]) lies inside $(D [q1..q2]), and false otherwise.
-        Similarly, the expression $(D (p1 $(LT) q1 || p2 $(GT) q2)) is true if
+        Similarly, the expression $(D (p1 < q1 || p2 > q2)) is true if
         $(D [p1..p2]) lies outside $(D [q1..q2]), and false otherwise.
         )
         )
@@ -1804,9 +1804,9 @@ $(H3 $(LNAME2 function-attribute-inference, Function Attribute Inference))
         $(P $(GLINK2 expression, FunctionLiteral)s and
         $(DDSUBLINK template, function-templates, function template)s, since their function bodies
         are always present, infer the
-        $(LINK2 pure-functions, $(B pure)),
-        $(LINK2 nothrow-functions, $(B nothrow)), and
-        $(LINK2 safe-functions, $(B @safe)) attributes unless
+        $(LINK2 pure-functions, $(D pure)),
+        $(LINK2 nothrow-functions, $(D nothrow)), and
+        $(LINK2 safe-functions, $(D @safe)) attributes unless
         specifically overridden.
         )
 
