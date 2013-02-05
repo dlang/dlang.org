@@ -3,7 +3,7 @@ Ddoc
 $(SPEC_S Declarations,
 
 $(GRAMMAR
-$(V1 $(GNAME Declaration):
+$(GNAME Declaration):
     $(GLINK TypedefDeclaration)
     $(GLINK AliasDeclaration)
     $(GLINK Decl)
@@ -13,17 +13,7 @@ $(GNAME TypedefDeclaration):
 
 $(GNAME AliasDeclaration):
     $(B alias) $(GLINK Decl)
-)$(V2 $(GNAME Declaration):
-    $(GLINK AliasDeclaration)
-    $(GLINK AliasThisDeclaration)
-    $(GLINK Decl)
 
-$(GNAME AliasDeclaration):
-    $(B alias) $(GLINK BasicType) $(GLINK Declarator)
-
-$(GNAME AliasThisDeclaration):
-    $(B alias) $(I Identifier) $(B this)
-)
 $(GNAME Decl):
     $(GLINK StorageClasses) $(I Decl)
     $(GLINK BasicType) $(GLINK Declarators) $(B ;)
@@ -52,11 +42,6 @@ $(GNAME BasicType):
     $(GLINK IdentifierList)
     $(GLINK Typeof)
     $(GLINK Typeof) $(B .) $(GLINK IdentifierList)
-$(V2          $(B const$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-        $(B immutable$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-        $(B shared$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-        $(B inout$(LPAREN)) $(GLINK Type) $(B $(RPAREN))
-)
 
 $(GNAME BasicTypeX):
     $(B bool)
@@ -88,8 +73,8 @@ $(GNAME BasicType2):
     $(B [) $(VEXPRESSION) $(B ])
     $(B [) $(VEXPRESSION) .. $(VEXPRESSION) $(B ])
     $(B [) $(GLINK Type) $(B ])
-    $(B delegate) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
-    $(B function) $(GLINK Parameters) $(V2 $(GLINK FunctionAttributes)$(OPT))
+    $(B delegate) $(GLINK Parameters)
+    $(B function) $(GLINK Parameters)
 
 $(GNAME Declarator):
     $(GLINK BasicType2)$(OPT) $(B $(LPAREN)) $(I Declarator) $(B $(RPAREN)) $(GLINK DeclaratorSuffixes)$(OPT)
@@ -103,7 +88,7 @@ $(GNAME DeclaratorSuffix):
     $(B [ ])
     $(B [) $(VEXPRESSION) $(B ])
     $(B [) $(GLINK Type) $(B ])
-    $(GLINK2 template, TemplateParameterList)$(OPT) $(GLINK Parameters) $(V2 $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT))
+    $(GLINK2 template, TemplateParameterList)$(OPT) $(GLINK Parameters)
 
 $(GNAME IdentifierList):
     $(I Identifier)
@@ -120,18 +105,9 @@ $(GNAME StorageClass):
     $(B auto)
     $(B const)
     $(B deprecated)
-$(V2      $(B enum)
-)    $(B extern)
+    $(B extern)
     $(B final)
-$(V2      $(B immutable)
-    $(B inout)
-    $(B shared)
-    $(B nothrow)
-    $(B override)
-    $(B pure)
-    $(B __gshared)
-    $(GLINK Property)
-)    $(B scope)
+    $(B scope)
     $(B static)
     $(B synchronized)
 
@@ -177,8 +153,7 @@ $(GNAME InOutX):
     $(B auto)
     $(B const)
     $(B final)
-$(V2      $(B immutable)
-)    $(B in)
+    $(B in)
     $(B inout)
     $(B lazy)
     $(B out)
@@ -186,16 +161,6 @@ $(V2      $(B immutable)
     $(B scope)
     $(B shared)
 
-$(V2
-$(GNAME FunctionAttributes):
-    $(GLINK FunctionAttribute)
-    $(GLINK FunctionAttribute) $(I FunctionAttributes)
-
-$(GNAME FunctionAttribute):
-    $(B nothrow)
-    $(B pure)
-    $(GLINK Property)
-)
 $(GNAME MemberFunctionAttributes):
     $(GLINK MemberFunctionAttribute)
     $(GLINK MemberFunctionAttribute) $(I MemberFunctionAttributes)
@@ -209,8 +174,6 @@ $(GNAME MemberFunctionAttribute):
 
 $(GNAME DefaultInitializerExpression):
     $(ASSIGNEXPRESSION)
-$(V2      $(B __FILE__)
-    $(B __LINE__))
 
 $(GNAME Initializer):
     $(GLINK VoidInitializer)
@@ -284,8 +247,7 @@ int $(B function)(char)[] x; // x is an array of
 --------------------
 
 $(P
-$(V1 C-style array, function pointer and pointer to array declarations are possible as an alternative:)
-$(V2 C-style array, function pointer and pointer to array declarations are deprecated:)
+C-style array, function pointer and pointer to array declarations are possible as an alternative:
 )
 
 --------------------
@@ -330,8 +292,7 @@ $(GNAME AutoDeclarationX):
 ----------
 static x = 3;      // x is type int
 auto y = 4u;       // y is type uint
-$(V1 auto s = "string"; // s is type char[6])
-$(V2 auto s = "string"; // s is type immutable(char)[])
+auto s = "string"; // s is type char[6]
 
 class C { ... }
 
@@ -344,17 +305,6 @@ auto c = new C();  // c is a handle to an instance of class C
         to the declaration at compile time, not run time.
         )
 
-$(V2
-        $(P An $(GLINK2 expression, ArrayLiteral)
-        is inferred to be a dynamic array
-        type rather than a static array:)
-
----
-auto v = ["hello", "world"]; // type is string[], not string[2]
----
-)
-
-$(V1
 <h3><a name="typedef">Type Defining</a></h3>
 
         $(P
@@ -380,7 +330,7 @@ default initializer of the underlying type:
 typedef int myint = 7;
 myint m;        // initialized to 7
 --------------------
-)
+
 
 <h3><a name="alias">Type Aliasing</a></h3>
 
@@ -406,11 +356,10 @@ void foo(int x) { . }
 void foo(myint m) { . } // error, multiply defined function foo
 --------------------
 
-$(V1
         $(P
         Type aliases are equivalent to the C typedef.
         )
-)
+
 
 <h3>Alias Declarations</h3>
 
@@ -575,7 +524,7 @@ void func() {
 --------------------
 
         $(P
-        There are $(V1 two) $(V2 three) special cases:
+        There are two special cases:
         $(OL
         $(LI $(B typeof(this)) will generate the type of what $(B this)
         would be in a non-static member function, even if not in a member
@@ -584,11 +533,6 @@ void func() {
         $(LI Analogously, $(B typeof(super)) will generate the type of what
         $(B super) would be in a non-static member function.
         )
-$(V2
-        $(LI $(B typeof(return)) will, when inside a function scope,
-        give the return type of that function.
-        )
-)
         )
         )
 
@@ -656,5 +600,5 @@ Macros:
         OPT=<sub>opt</sub>
         ASSIGNEXPRESSION=$(GLINK2 expression, AssignExpression)
         EXPRESSION=$(GLINK2 expression, Expression)
-        VEXPRESSION=$(V1 $(EXPRESSION))$(V2 $(ASSIGNEXPRESSION))
+        VEXPRESSION=$(EXPRESSION)
         FOO=
