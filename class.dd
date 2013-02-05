@@ -81,8 +81,7 @@ $(UL
             $(LI $(DDSUBLINK unittest, unittest, Unit Tests))
             $(LI $(LINK2 allocators, Class Allocators))
             $(LI $(LINK2 deallocators, Class Deallocators))
-$(V2
-            $(LI $(LINK2 AliasThis, Alias This)))
+            $(LI $(LINK2 AliasThis, Alias This))
         )
         )
 )
@@ -206,7 +205,6 @@ $(H3 $(LNAME2 member-functions, Member Functions))
         can be accessed.
         )
 
-$(V2
 	$(P Non-static member functions can have, in addition to the usual
 	$(GLINK2 declaration, FunctionAttribute)s, the attributes
 	$(D const), $(D immutable), $(D shared), or $(D inout).
@@ -222,7 +220,7 @@ class C {
     a = 3; // error, 'this' is immutable
   }
 ---
-)
+
 
 $(H3 $(LNAME2 synchronized-functions, Synchronized Functions))
 
@@ -259,7 +257,7 @@ $(H3 $(LNAME2 constructors, Constructors))
 $(GRAMMAR
 $(GNAME Constructor):
         $(B this) $(GLINK2 declaration, Parameters) $(GLINK2 function, FunctionBody)
-$(V2          $(GLINK2 template, TemplatedConstructor))
+         $(GLINK2 template, TemplatedConstructor)
 )
 
         $(P Members are always initialized to the
@@ -488,12 +486,11 @@ $(GNAME StaticConstructor):
 )
 
 	$(P
-        $(V1 A static constructor is a function that performs
-        initializations before the $(D main()) function gets control.)
+        
 
-        $(V2 A static constructor is a function that performs
+        A static constructor is a function that performs
         initializations of thread local data before the $(D main()) function gets control for
-	the main thread, and upon thread startup.)
+	the main thread, and upon thread startup.
 
 	Static constructors are used to initialize
         static class members
@@ -546,18 +543,12 @@ class Foo {
 ------
 
 	$(P
-	$(V1
-	If $(D main()) returns normally
-        (does not throw an exception), the static destructor is added
-        to the list of functions to be
-        called on program termination.
-	)
-	$(V2
-	If $(D main()) or the thread returns normally,
+	
+		If $(D main()) or the thread returns normally,
         (does not throw an exception), the static destructor is added
         to the list of functions to be
         called on thread termination.
-	)
+	
         Static constructors have empty parameter lists.
         )
 
@@ -605,7 +596,7 @@ class Foo {
 ------
 
 	$(P
-        A static destructor gets called on $(V1 program)$(V2 thread) termination,
+        A static destructor gets called on thread termination,
 	but only if the static constructor
         completed successfully.
         Static destructors have empty parameter lists.
@@ -631,7 +622,6 @@ class Foo {
 }
 ------
 
-$(V2
 $(H3 Shared Static Constructors)
 
 $(GRAMMAR
@@ -654,7 +644,7 @@ $(GNAME SharedStaticDestructor):
         in the reverse order that
         $(GLINK SharedStaticConstructor)s were executed.
         )
-)
+
 
 $(H3 $(LNAME2 invariants, Class Invariants))
 
@@ -785,7 +775,6 @@ delete f;
         $(DPLLINK memory.html#newdelete, Explicit Class Instance Allocation).
         )
 
-$(V2
 $(H3 $(LNAME2 AliasThis, Alias This))
 
 $(GRAMMAR
@@ -872,7 +861,7 @@ void test() {
         disallowed by raising an error.
         Note: Multiple $(I AliasThis) is currently unimplemented.
         )
-)
+
 
 $(H3 $(LNAME2 auto, Scope Classes))
 
@@ -999,66 +988,7 @@ void func() {
 }
 ------
 
-$(V1
-        While a non-static nested class can access the stack variables
-        of its enclosing function, that access becomes invalid once
-        the enclosing function exits:
 
-------
-class Base {
-  int foo() { return 1; }
-}
-
-Base func() {
-  int m = 3;
-
-  class Nested : Base {
-    int foo() { return m; }
-  }
-
-  Base b = new Nested;
-
-  assert(b.foo() == 3);       // Ok, func() is still active
-  return b;
-}
-
-int test() {
-  Base b = func();
-  return b.foo();             // Error, func().m is undefined
-}
-------
-
-        If this kind of functionality is needed, the way to make it work
-        is to make copies of the needed variables within the nested class's
-        constructor:
-
-------
-class Base {
-  int foo() { return 1; }
-}
-
-Base func() {
-  int m = 3;
-
-  class Nested : Base {
-    int m_;
-
-    this() { m_ = m; }
-    int foo() { return m_; }
-  }
-
-  Base b = new Nested;
-
-  assert(b.foo() == 3);       // Ok, func() is still active
-  return b;
-}
-
-int test() {
-  Base b = func();
-  return b.foo();             // Ok, using cached copy of func().m
-}
-------
-)
 
         $(P A $(I this) can be supplied to the creation of an
         inner class instance by prefixing it to the $(I NewExpression):
@@ -1141,7 +1071,6 @@ new ($(I ArgumentList)) $(I Identifier) ($(I ArgumentList));
         nested class.
         )
 
-$(V2
 $(SECTION3 $(LNAME2 ConstClass, Const, Immutable and Shared Classes))
         $(P If a $(I ClassDeclaration) has a $(CODE const), $(CODE immutable)
         or $(CODE shared) storage class, then it is as if each member of the class
@@ -1149,7 +1078,7 @@ $(SECTION3 $(LNAME2 ConstClass, Const, Immutable and Shared Classes))
         If a base class is const, immutable or shared, then all classes derived
         from it are also const, immutable or shared.
         )
-)
+
 
 )
 )
