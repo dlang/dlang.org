@@ -127,62 +127,7 @@ $(GNAME AlignAttribute):
     $(D align) $(D $(LPAREN)) $(GLINK2 lex, IntegerLiteral) $(D $(RPAREN))
 )
 
-$(V1
-        $(P Specifies the alignment of struct members. $(D align) by itself
-        sets it to the default, which matches the default member alignment
-        of the companion C compiler. $(I Integer) specifies the alignment
-        which matches the behavior of the companion C compiler when non-default
-        alignments are used.
-        )
 
-        $(P Matching the behavior of the companion C compiler can have some
-        surprising results, such as the following for Digital Mars C++:
-        )
-
----------------
-struct S {
-  align(4) byte a; // placed at offset 0
-  align(4) byte b; // placed at offset 1
-}
----------------
-
-        $(P $(I AlignAttribute) is meant for C ABI compatiblity, which is not
-        the same thing as binary compatibility across diverse platforms.
-        For that, use packed structs:
-        )
-
----------------
-align (1) struct S {
-  byte a;     // placed at offset 0
-  byte[3] filler1;
-  byte b;     // placed at offset 4
-  byte[3] filler2;
-}
----------------
-
-        $(P A value of 1 means that no alignment is done;
-        members are packed together.
-        )
-
-        $(P Do not align references or pointers that were allocated
-        using $(I NewExpression) on boundaries that are not
-        a multiple of $(D size_t). The garbage collector assumes that pointers
-        and references to gc allocated objects will be on $(D size_t)
-        byte boundaries. If they are not, undefined behavior will
-        result.
-        )
-
-        $(P $(I AlignAttribute) is ignored when applied to declarations
-        that are not struct members.
-        Whether it applies to class members or not is implementation defined.
-        )
-
-        $(P The $(I AlignAttribute) is reset to the default when
-        entering a struct, union, class, or function scope, and restored
-        when exiting that scope.
-        It is not inherited from a base class.
-        )
-)
 $(V2
         $(P Specifies the alignment of:)
 
@@ -386,60 +331,7 @@ const {
 }
 ---------------
 
-$(V1
-        $(P A const declaration without an initializer must be initialized
-        in a constructor (for class fields) or in a static constructor
-        (for static class members, or module variable declarations).
-        )
 
----------------
-const int x;
-const int y;
-
-static this()
-{
-  x = 3;   // ok
-  // error: y not initialized
-}
-
-void foo()
-{
-  x = 4; // error, x is const and not in static constructor
-}
-
-class C
-{
-  const int a;
-  const int b;
-  static const int c;
-  static const int d;
-
-  this() {
-    a = 3;      // ok
-    a = 4;      // ok, multiple initialization allowed
-    C p = this;
-    p.a = 4;    // error, only members of this instance
-    c = 5;      // error, should initialize in static constructor
-    // error, b is not initialized
-  }
-
-  this(int x) {
-    this();      // ok, forwarding constructor
-  }
-
-  static this() {
-    c = 3;       // ok
-    // error, d is not initialized
-  }
-}
----------------
-
-        $(P It is not an error to have const module variable declarations without
-        initializers if there is no constructor. This is to support the practice
-        of having modules serve only as declarations that are not linked in,
-        the implementation of it will be in another module that is linked in.
-        )
-)
 
 $(V2
 $(H3 $(LNAME2 immutable, immutable Attribute))

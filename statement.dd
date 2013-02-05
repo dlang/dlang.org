@@ -50,8 +50,7 @@ $(V2      $(GLINK FinalSwitchStatement)
     $(GLINK TryStatement)
     $(GLINK ScopeGuardStatement)
     $(GLINK ThrowStatement)
-$(V1    $(GLINK VolatileStatement)
-)    $(GLINK AsmStatement)
+    $(GLINK AsmStatement)
     $(GLINK PragmaStatement)
     $(GLINK MixinStatement)
 $(V2      $(GLINK ForeachRangeStatement))
@@ -299,12 +298,7 @@ while (i < 10) {
 
 $(H3 $(LNAME2 DoStatement, Do Statement))
 
-$(V1
-$(GRAMMAR
-$(I DoStatement):
-    $(D do) $(PSSCOPE) $(D  while $(LPAREN)) $(EXPRESSION) $(D $(RPAREN))
-)
-)
+
 $(V2
 $(GRAMMAR
 $(I DoStatement):
@@ -549,9 +543,9 @@ $(H4 Foreach over Associative Arrays)
         )
 
 --------------
-double[$(V1 char[])$(V2 string)] a; // index type is $(V1 char[])$(V2 string), value type is double
+double[$(V2 string)] a; // index type is $(V2 string), value type is double
 ...
-foreach ($(V1 char[])$(V2 string) s, double d; a)
+foreach ($(V2 string) s, double d; a)
 {
   writefln("a['%s'] = %g", s, d);
 }
@@ -733,7 +727,7 @@ void main() {
 
   foreach (T; TL)
   {
-    write$(V1 f)ln(typeid(T));
+    writeln(typeid(T));
   }
 }
 -----
@@ -791,11 +785,11 @@ int[] a;
 int[] b;
 foreach (int i; a)
 {
-  a = null;       $(V1            )// error
-  $(V2 a.length += 10;)$(V1 a.length = a.length + 10;) // error
-  a = b;          $(V1            )// error
+  a = null;       // error
+  $(V2 a.length += 10;) // error
+  a = b;          // error
 }
-a = null;         $(V1            )// ok
+a = null;         // ok
 --------------
 
 $(V2
@@ -920,27 +914,13 @@ $(V2
         statement, the default statement is transferred to.
         )
 
-$(V1
-        $(P If none of the case expressions match, and there is not a default
-        statement, a
-$(V1
-        $(LINK2 phobos/std_switcherr.html, $(CODE std.switcherr.SwitchError))
-)
-$(V2
-        $(LINK2 core_exception.html, $(CODE core.exception.SwitchError))
-)
-        is thrown.
-        )
-)
+
 $(V2
         $(P A switch statement must have a default statement.)
 )
 
         $(P
-$(V1
-        The case expressions must all evaluate to a constant value
-        or array.
-)
+
 $(V2
         The case expressions must all evaluate to a constant value
         or array, or a runtime initialized const or immutable variable of
@@ -957,9 +937,7 @@ $(V2
         gets control.
         There must be exactly one default statement.
 )
-$(V1
-        There may not be two or more default statements.
-)
+
         )
 
         $(P The $(GLINK ScopeStatementList) introduces a new scope.
@@ -980,29 +958,7 @@ switch (i) {
 }
 --------------
 
-$(V1
-        $(P Case statements 'fall through' to subsequent
-        case values. A break statement will exit the switch $(I BlockStatement).
-        For example:
-        )
 
---------------
-switch (i) {
-  case 1:
-    x = 3;
-  case 2:
-    x = 4;
-    break;
-
-  case 3,4,5:
-    x = 5;
-    break;
-}
---------------
-
-        $(P will set $(CODE x) to $(CODE 4) if $(CODE i) is $(CODE 1).
-        )
-)
 
 $(V2
         $(P A $(GLINK ScopeStatementList) must either be empty, or be ended with
@@ -1421,7 +1377,7 @@ $(GNAME FinallyStatement):
 )
 
         $(P $(I CatchParameter) declares a variable v of type T, where T is
-        $(V1 Object or derived from Object.)
+        
         $(V2 Throwable or derived from Throwable.)
         v is initialized by the throw expression if T is of the same type or a
         base class of the throw expression. The catch clause will be executed
@@ -1444,12 +1400,7 @@ $(GNAME FinallyStatement):
         the $(D try) $(I ScopeStatement) exits with a goto, break,
         continue, return, exception, or fall-through.
         )
-$(V1
-        $(P If an exception is raised in the $(I FinallyStatement) and
-        is not caught before the $(I FinallyStatement) is executed,
-        the new exception replaces any existing exception:
-        )
-)
+
 $(V2
         $(P If an exception is raised in the $(I FinallyStatement) and is not
         caught before the original exception is caught, it is chained to the
@@ -1491,13 +1442,7 @@ int main() {
 --------------
 
     prints:
-$(V1
-$(CONSOLE
-finally
-catch second
-done
-)
-)
+
 $(V2
 $(CONSOLE
 finally
@@ -1523,8 +1468,8 @@ $(I ThrowStatement):
     $(D throw) $(EXPRESSION) $(D ;)
 )
 
-        $(EXPRESSION) is evaluated and must be $(V1 an Object) $(V2 a Throwable) reference.
-        The $(V1 Object) $(V2 Throwable) reference is thrown as an exception.
+        $(EXPRESSION) is evaluated and must be  $(V2 a Throwable) reference.
+        The  $(V2 Throwable) reference is thrown as an exception.
 
 ---
 throw new Exception("message");
@@ -1555,17 +1500,7 @@ $(I ScopeGuardStatement):
         scope, they also are interleaved with the $(I ScopeGuardStatement)s
         in the reverse lexical order in which they appear.)
 
-$(V1
-----
-writef("1"); {
-  writef("2");
-  scope(exit) writef("3");
-  scope(exit) writef("4");
-  writef("5");
-}
-writefln();
-----
-)
+
 $(V2
 ----
 write("1"); {
@@ -1583,17 +1518,7 @@ $(CONSOLE
 12543
 )
 
-$(V1
-----
-{
-  scope(exit) writef("1");
-  scope(success) writef("2");
-  scope(exit) writef("3");
-  scope(success) writef("4");
-}
-writefln();
-----
-)
+
 $(V2
 ----
 {
@@ -1611,28 +1536,7 @@ $(CONSOLE
 4321
 )
 
-$(V1
-----
-class Foo {
-  this() { writef("0"); }
-  ~this() { writef("1"); }
-}
 
-try {
-  scope(exit) writef("2");
-  scope(success) writef("3");
-  scope Foo f = new Foo();
-  scope(failure) writef("4");
-  throw new Exception("msg");
-  scope(exit) writef("5");
-  scope(success) writef("6");
-  scope(failure) writef("7");
-}
-catch (Exception e) {
-}
-writefln();
-----
-)
 $(V2
 ----
 class Foo {
@@ -1665,26 +1569,7 @@ $(CONSOLE
         may not exit with a throw, goto, break, continue, or
         return; nor may it be entered with a goto.
 
-$(V1
-$(H3 $(LNAME2 VolatileStatement, Volatile Statement))
 
-        No code motion occurs across volatile statement boundaries.
-
-$(GRAMMAR
-$(I VolatileStatement):
-    $(D volatile) $(PSSEMI_PSCURLYSCOPE)
-    $(D volatile) $(D ;)
-)
-
-        $(PSSEMI_PSCURLYSCOPE) is evaluated.
-        Memory writes occurring before the $(PSSEMI_PSCURLYSCOPE) are
-        performed before any reads within or after the $(PSSEMI_PSCURLYSCOPE).
-        Memory reads occurring after the $(PSSEMI_PSCURLYSCOPE) occur after
-        any writes before or within $(PSSEMI_PSCURLYSCOPE) are completed.
-
-        $(P A volatile statement does not guarantee atomicity. For that,
-        use synchronized statements.)
-)
 
 $(H3 $(LNAME2 asm, Asm Statement))
 

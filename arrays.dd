@@ -49,12 +49,7 @@ int[3] s;
         a template expansion.
         )
 
-$(V1
-        $(P Static arrays are value types, but as in C
-        static arrays are passed to functions by reference
-        and cannot be returned from functions.
-        )
-)
+
 $(V2
         $(P Static arrays are value types. Unlike in C and D version 1,
         static arrays are passed to functions by value.
@@ -418,13 +413,7 @@ double matrix[3,3];
 
 $(H3 $(LNAME2 array-length, Array Length))
 
-$(V1
-        $(P Within the [ ] of a static or a dynamic array,
-        the variable $(D length)
-        is implicitly declared and set to the length of the array.
-        The symbol $(D $) can also be so used.
-        )
-)
+
 $(V2
         $(P Within the [ ] of a static or a dynamic array,
         the symbol $(D $)
@@ -440,15 +429,10 @@ int*   p = &foo[0];
 // These expressions are equivalent:
 bar[]
 bar[0 .. 4]
-$(V1 bar[0 .. length]
-)bar[0 .. $]
+bar[0 .. $]
 bar[0 .. bar.length]
 
-$(V1 p[0 .. length]         // 'length' is not defined, since p is not an array
-bar[0]+length       // 'length' is not defined, out of scope of [ ]
 
-bar[length-1]  // retrieves last element of the array
-)
 $(V2 p[0 .. $]      // '$' is not defined, since p is not an array
 bar[0]+$            // '$' is not defined, out of scope of [ ]
 
@@ -465,8 +449,7 @@ $(H3 $(LNAME2 array-properties, Array Properties))
 
         $(TROW
         $(ARGS $(D .init)),
-$(V1    $(ARGS returns the default initializer for the element type.)
-)
+
 $(V2    $(ARGS Returns an array literal with each element of the literal being the $(D .init)
         property of the array element type.
 )
@@ -597,10 +580,7 @@ $(V2    $(ARGS Returns an array literal with each element of the literal being t
         $(P For the $(D .sort) property to work on arrays of
         structs or unions, the struct or union definition must
         define the function:
-$(V1
-        $(D int opCmp(S)) or
-        $(D int opCmp(S*)).
-)
+
 $(V2
         $(D int opCmp(ref const S) const).
 )
@@ -651,38 +631,13 @@ array = array[0..7];
 
         $(P To maximize efficiency, the runtime always tries to resize the
         array in place to avoid extra copying.
-        $(V1 It will always do a copy if the new size is larger and the array
-        was not allocated via the new operator or a previous resize operation.)
+        
         $(V2 It will always do a copy if the new size is larger and the array
         was not allocated via the new operator or resizing in place would
         overwrite valid data in the array.)
         )
 
-$(V1    $(P This means that if there is an array slice immediately following the
-        array being resized, the resized array could overlap the slice; i.e.:
-        )
 
----------
-char[] a = new char[20];
-char[] b = a[0..10];
-char[] c = a[10..20];
-
-b.length = 15; // always resized in place because it is sliced
-               // from a[] which has enough memory for 15 chars
-b[11] = 'x';   // a[11] and c[1] are also affected
-
-a.length = 1;
-a.length = 20; // no net change to memory layout
-
-c.length = 12; // always does a copy because c[] is not at the
-               // start of a gc allocation block
-c[5] = 'y';    // does not affect contents of a[] or b[]
-
-a.length = 25; // may or may not do a copy
-a[3] = 'z';    // may or may not affect b[3] which still overlaps
-               // the old a[3]
----------
-)
 
 $(V2
         For example:
@@ -735,7 +690,7 @@ while (1) {
   c = getinput();
   if (!c)
     break;
-  $(V2 ++array.length;)$(V1 array.length = array.length + 1;)
+  $(V2 ++array.length;)
   array[array.length - 1] = c;
 }
 ---------
@@ -752,7 +707,7 @@ for (i = 0; ; i++) {
   if (!c)
     break;
   if (i == array.length)
-    $(V2 array.length *= 2;)$(V1 array.length = array.length * 2;)
+    $(V2 array.length *= 2;)
   array[i] = c;
 }
 array.length = i;
@@ -785,7 +740,7 @@ $(H3 $(LNAME2 bounds, Array Bounds Checking))
 
         $(P It is an error to index an array with an index that is less than
         0 or greater than or equal to the array length. If an index is
-        out of bounds, $(V1 an ArrayBoundsError)$(V2 a RangeError) exception is
+        out of bounds, $(V2 a RangeError) exception is
         raised if detected at runtime, and an error if detected at compile
         time.  A program may not rely on array bounds checking happening, for
         example, the following program is incorrect:
@@ -885,22 +840,7 @@ $(H4 $(LNAME2 strings, Strings))
         String literals are immutable (read only).
         )
 
-$(V1
----------
-char[] str;
-char[] str1 = "abc";
-str[0] = 'b';  // error, "abc" is read only, may crash
----------
 
-        $(P The name $(CODE string) is aliased to $(CODE char[]),
-        so the above declarations could be equivalently written as:
-        )
-
----------
-string str;
-string str1 = "abc";
----------
-)
 $(V2
 ---------
 char[] str1 = "abc";                // error, "abc" is not mutable
@@ -971,10 +911,7 @@ str ~= "\0";
         )
 
 ---------
-$(V1
-cast(wchar [])"abc" // this is an array of wchar characters
-"abc"w              // so is this
-)
+
 $(V2
 cast(immutable(wchar) [])"abc" // this is an array of wchar characters
 "abc"w                         // so is this
@@ -1065,7 +1002,7 @@ $(H4 $(LNAME2 implicit-conversions, Implicit Conversions))
 
         $(UL
         $(LI $(D T[]))
-        $(V1 $(LI $(D U[])))
+        
         $(V2 $(LI $(D const(U)[])))
         $(LI $(D void[]))
         )
@@ -1075,7 +1012,7 @@ $(H4 $(LNAME2 implicit-conversions, Implicit Conversions))
         )
 
         $(UL
-        $(V1 $(LI $(D U[])))
+        
         $(V2 $(LI $(D const(U)[])))
         $(LI $(D void[]))
         )

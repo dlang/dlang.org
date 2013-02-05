@@ -411,7 +411,7 @@ void test() {
   B b = new B();
   b.foo(1);  // calls B.foo(long), since A.foo(int) not considered
   A a = b;
-$(V1    a.foo(1);    // calls A.foo(int))
+
 $(V2    a.foo(1);    // issues runtime error (instead of calling A.foo(int)))
 }
 ------
@@ -567,11 +567,7 @@ $(H3 $(LNAME2 function-overloading, Function Overloading))
 $(V2
         $(P Literals do not match $(CODE ref) or $(CODE out) parameters.)
 )
-$(V1
-        $(P If two or more functions have the same match level,
-        it is an ambiguity error.
-        )
-)
+
 $(V2
         $(P If two or more functions have the same match level,
         then $(LNAME2 partial-ordering, $(I partial ordering))
@@ -690,19 +686,7 @@ void bar(C c) {
 
 $(H4 $(LNAME2 parameters, Function Parameters))
 
-$(V1
-        $(P Parameters are $(B in), $(B out), $(B inout) or $(B lazy).
-        $(B in) is the default; the others work like
-        storage classes. For example:
-	)
 
-------
-int foo(in int x, out int y, inout int z, int q);
-------
-
-        $(P x is $(B in), y is $(B out), z is $(B inout), and q is $(B in).
-        )
-)
 $(V2
         $(P Parameter storage classes are $(B in), $(B out),
         $(B ref), $(B lazy), $(B const), $(B immutable), $(B shared),
@@ -730,11 +714,11 @@ int foo(in int x, out int y, ref int z, int q);
 	$(TABLE2 Parameter Storage Classes,
 	$(THEAD Storage Class, Description)
 	$(TROW $(I none), parameter becomes a mutable copy of its argument)
-	$(V1 $(TROW $(D in), equivalent to $(I none)))
+	
 	$(V2 $(TROW $(D in), equivalent to $(D const scope)))
 	$(TROW $(D out), parameter is initialized upon function entry with the default value
 	for its type)
-	$(V1 $(TROW $(D inout), parameter is passed by reference))
+	
 	$(V2 $(TROW $(D ref),   parameter is passed by reference))
 	$(V2 $(TROW $(D scope), references in the parameter
 	cannot be escaped (e.g. assigned to a global variable)))
@@ -767,7 +751,7 @@ abc(y);
 // y is now 2
 
 
-void def($(V1 inout)$(V2 ref) int x) {
+void def($(V2 ref) int x) {
   x += 1;
 }
 
@@ -867,11 +851,11 @@ extern (C) int def(...); // error, must have at least one parameter
 	)
 
 	$(P Access to variadic arguments is done using the standard library
-	module $(V1 $(B std.c.stdarg))$(V2 $(B core.stdc.stdarg)).
+	module $(V2 $(B core.stdc.stdarg)).
 	)
 
 ------
-import $(V1 std.c.stdarg)$(V2 core.stdc.stdarg);
+import $(V2 core.stdc.stdarg);
 
 void test() {
   foo(3, 4, 5);   // first variadic argument is 5
@@ -908,18 +892,18 @@ int def(...);           // ok
 	To access them, the following import is required:
 
 ------
-import $(V1 std.stdarg)$(V2 core.vararg);
+import $(V2 core.vararg);
 ------
 
         These variadic functions have a special local variable declared for
         them,
-        $(D _argptr), which is a $(V1 $(D std.stdarg.va_list))$(V2 $(D core.vararg))
+        $(D _argptr), which is a $(V2 $(D core.vararg))
 	reference to the first of the variadic
         arguments. To access the arguments, $(D _argptr) must be used
 	in conjuction with $(D va_arg):
 
 ------
-import $(V1 std.stdarg)$(V2 core.vararg);
+import $(V2 core.vararg);
 
 void test() {
   foo(3, 4, 5);   // first variadic argument is 5
@@ -941,7 +925,7 @@ int foo(int x, int y, ...) {
 
 ------
 import std.stdio;
-import $(V1 std.stdarg)$(V2 core.vararg);
+import $(V2 core.vararg);
 
 class Foo { int x = 3; }
 class Bar { long y = 4; }
@@ -950,7 +934,7 @@ void printargs(int x, ...) {
   writefln("%d arguments", _arguments.length);
   for (int i = 0; i < _arguments.length; i++)
   {
-    $(V1 _arguments[i].print();)$(V2 writeln(_arguments[i]);)
+    $(V2 writeln(_arguments[i]);)
 
     if (_arguments[i] == typeid(int))
     {
@@ -1354,38 +1338,7 @@ struct Foo {
   }
 }
 ------
-$(V1
-        $(P Member functions of nested classes and structs do not have
-        access to the stack variables of the enclosing function, but
-        do have access to the other symbols:
-        )
 
-------
-void test() {
-  int j;
-  static int s;
-
-  struct Foo {
-    int a;
-
-    int bar() {
-      int c = s;  // ok, s is static
-      int d = j;  // error, no access to frame of test()
-
-      int foo() {
-        int e = s;    // ok, s is static
-        int f = j;    // error, no access to frame of test()
-        return c + a; // ok, frame of bar() is accessible,
-                      // so are members of Foo accessible via
-                      // the 'this' pointer to Foo.bar()
-      }
-
-      return 0;
-    }
-  }
-}
-------
-)
         $(P Nested functions always have the D function linkage type.
         )
 
@@ -1415,7 +1368,7 @@ void test() {
 
 	$(P Nested functions cannot be overloaded.)
 
-$(H4 $(LNAME2 closures, Delegates, Function Pointers, and $(V1 Dynamic) Closures))
+$(H4 $(LNAME2 closures, Delegates, Function Pointers, and  Closures))
 
         $(P A function pointer can point to a static nested function:)
 
@@ -1449,21 +1402,7 @@ void test() {
 }
 ------
 
-$(V1
-        $(P The stack variables, however, are not valid once the function
-        declaring them has exited, in the same manner that pointers to
-        stack variables are not valid upon exit from a function:
-        )
 
-------
-int* bar() {
-  int b;
-  test();
-  int i = dg(); // error, test.a no longer exists
-  return &b;    // error, bar.b not valid after bar() exits
-}
-------
-)
 $(V2
         $(P The stack variables referenced by a nested function are
         still valid even after the function exits (this is different
