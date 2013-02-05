@@ -12,7 +12,7 @@ $(P     Templates are D's approach to generic programming.
 
 $(GRAMMAR
 $(GNAME TemplateDeclaration):
-    $(B template) $(GLINK TemplateIdentifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(SUB $(I opt)))
+    $(B template) $(GLINK TemplateIdentifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN))
             $(B {) $(GLINK2 module, DeclDefs) $(B })
 
 $(GNAME TemplateIdentifier):
@@ -20,15 +20,13 @@ $(GNAME TemplateIdentifier):
 
 $(GNAME TemplateParameterList):
     $(GLINK TemplateParameter)
-$(V2      $(GLINK TemplateParameter) ,
-)    $(GLINK TemplateParameter) , $(I TemplateParameterList)
+    $(GLINK TemplateParameter) , $(I TemplateParameterList)
 
 $(GNAME TemplateParameter):
     $(GLINK TemplateTypeParameter)
     $(GLINK TemplateValueParameter)
     $(GLINK TemplateAliasParameter)
     $(GLINK TemplateTupleParameter)
-$(V2      $(GLINK TemplateThisParameter))
 )
 
 $(P     The body of the $(I TemplateDeclaration) must be syntactically correct
@@ -66,12 +64,10 @@ $(P
 $(GRAMMAR
 $(GNAME TemplateInstance):
     $(GLINK TemplateIdentifier) $(B !$(LPAREN)) $(GLINK TemplateArgumentList) $(B $(RPAREN))
-$(V2      $(GLINK TemplateIdentifier) $(B !) $(GLINK TemplateSingleArgument))
 
 $(GNAME TemplateArgumentList):
     $(GLINK TemplateArgument)
-$(V2      $(GLINK TemplateArgument) ,
-)    $(GLINK TemplateArgument) , $(I TemplateArgumentList)
+    $(GLINK TemplateArgument) , $(I TemplateArgumentList)
 
 $(GNAME TemplateArgument):
     $(GLINK2 declaration, Type)
@@ -87,21 +83,6 @@ $(GNAME SymbolTail):
     $(I Identifier) $(B .) $(I SymbolTail)
     $(GLINK TemplateInstance)
     $(GLINK TemplateInstance) $(B .) $(I SymbolTail)
-
-$(V2
-$(GNAME TemplateSingleArgument):
-    $(I Identifier)
-    $(GLINK2 declaration, BasicTypeX)
-    $(GLINK2 lex, CharacterLiteral)
-    $(GLINK2 lex, StringLiteral)
-    $(GLINK2 lex, IntegerLiteral)
-    $(GLINK2 lex, FloatLiteral)
-    $(B true)
-    $(B false)
-    $(B null)
-    $(B __FILE__)
-    $(B __LINE__)
-)
 )
 
 $(P
@@ -115,14 +96,6 @@ template TFoo(T) { alias T* t; }
 ...
 TFoo!(int).t x; // declare x to be of type int*
 ------
-
-$(V2
-        $(P If the $(GLINK TemplateArgument) is one token long, the parentheses can be omitted:
-        )
----
-TFoo!int.t x;   // same as TFoo!(int).t x;
----
-)
 
 $(P
         A template instantiation can be aliased:
@@ -363,44 +336,6 @@ alias TFoo!(char, int, int) foo4; // instantiates #4
         )
 
 
-$(V2
-<h2>Template This Parameters</h2>
-
-$(GRAMMAR
-$(GNAME TemplateThisParameter):
-    $(B this) $(I TemplateTypeParameter)
-)
-
-        $(P $(I TemplateThisParameter)s are used in member function templates
-        to pick up the type of the $(I this) reference.
-        )
----
-import std.stdio;
-
-struct S {
-  const void foo(this T)(int i) {
-    writeln(typeid(T));
-  }
-}
-
-void main() {
-  const(S) s;
-  (&s).foo(1);
-  S s2;
-  s2.foo(2);
-  immutable(S) s3;
-  s3.foo(3);
-}
----
-        $(P Prints:)
-
-$(CONSOLE
-const(S)
-S
-immutable(S)
-)
-)
-
 <h2>Template Value Parameters</h2>
 
 $(GRAMMAR
@@ -414,14 +349,7 @@ $(GNAME TemplateValueParameterSpecialization):
     $(B :) $(GLINK2 expression, ConditionalExpression)
 
 $(GNAME TemplateValueParameterDefault):
-$(V2     $(B = __FILE__)
-    $(B = __LINE__))
     $(B =) $(ASSIGNEXPRESSION)
-)
-
-$(V2
-        $(P The $(CODE __FILE__) and $(CODE __LINE__) expand to the source
-        file name and line number at the point of instantiation.)
 )
 
         $(P Template value parameter types can be any type which can
@@ -476,7 +404,6 @@ $(GNAME TemplateAliasParameterDefault):
         $(P Alias parameters enable templates to be parameterized with
         any type of D symbol, including global names, local names, typedef
         names, module names, template names, and template instance names.
-        $(V2 Literals can also be used as arguments to alias parameters.)
         )
 
         $(UL
@@ -574,20 +501,6 @@ void test() {
 ------
         )
 
-        $(V2 $(LI Literals
-------
-
-template Foo(alias X, alias Y) {
-  static int i = X;
-  static string s = Y;
-}
-
-void test() {
-  alias Foo!(3, "bar") foo;
-  writeln(foo.i, foo.s);  // prints 3bar
-}
-------
-        ))
         )
 
 <h2>$(LNAME2 variadic-templates, Template Tuple Parameters)</h2>
@@ -753,7 +666,7 @@ $(GNAME TemplatedConstructor):
     $(B this) $(B $(LPAREN)) $(GLINK2 template, TemplateParameterList) $(B $(RPAREN)) $(GLINK2 declaration, Parameters) $(GLINK Constraint)$(OPT) $(GLINK2 function, FunctionBody)
 )
 
-        $(P Templates can be used to form constructors for classes$(V2   and structs).
+        $(P Templates can be used to form constructors for classes.
         )
 
 <h2>Class Templates</h2>
@@ -789,13 +702,13 @@ class $(B Bar)(T) {
 
 $(GRAMMAR
 $(GNAME StructTemplateDeclaration):
-    $(B struct) $(I Identifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(OPT)) $(GLINK2 struct, StructBody)
+    $(B struct) $(I Identifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(GLINK2 struct, StructBody)
 
 $(GNAME UnionTemplateDeclaration):
-    $(B union) $(I Identifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(OPT)) $(GLINK2 struct, StructBody)
+    $(B union) $(I Identifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(GLINK2 struct, StructBody)
 
 $(GNAME InterfaceTemplateDeclaration):
-    $(B interface) $(I Identifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(V2 $(GLINK Constraint)$(OPT)) $(GLINK2 interface, BaseInterfaceList)$(OPT) $(GLINK2 interface, InterfaceBody)
+    $(B interface) $(I Identifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(GLINK2 interface, BaseInterfaceList)$(OPT) $(GLINK2 interface, InterfaceBody)
 )
 
         $(P Analogously to class templates, struct, union and interfaces
@@ -862,24 +775,6 @@ void $(B Foo)(T, U=T*)(T t) { U p; ... }
 int x;
 Foo(&x);    // T is int, U is int*
 ------
-
-$(V2    $(P Function templates can have their return types deduced based
-        on the first
-        $(GLINK2 statement, ReturnStatement)
-        in the function:
-        )
-
----
-auto $(B Square)(T)(T t) {
-  return t * t;
-}
----
-        $(P If there is more than one return statement, then the
-        types of the return statement expressions must match.
-        If there are no return statements, then the return type of the
-        function template is $(CODE void).
-        )
-)
 
 <h3>$(LNAME2 auto-ref-parameters, Function Templates with Auto Ref Parameters)</h3>
 
@@ -957,42 +852,6 @@ void test() {
   writefln("%s", factorial!(4)); // prints 24
 }
 ------
-
-$(V2
-<h2>Template Constraints</h2>
-
-$(GRAMMAR
-$(GNAME Constraint):
-    $(B if) $(B $(LPAREN)) $(I ConstraintExpression) $(B $(RPAREN))
-
-$(I ConstraintExpression):
-    $(I $(GLINK2 expression, Expression))
-)
-
-        $(P $(I Constraint)s are used to impose additional constraints
-        on matching arguments to a template beyond what is possible
-        in the $(GLINK TemplateParameterList).
-        The $(I ConstraintExpression) is computed at compile time
-        and returns a result that is converted to a boolean value.
-        If that value is true, then the template is matched,
-        otherwise the template is not matched.
-        )
-
-        $(P For example, the following function template only
-        matches with odd values of $(CODE N):
-        )
-
----
-void foo(int N)()
-        if (N & 1)
-{
-  ...
-}
-...
-foo!(3)();  // ok, matches
-foo!(4)();  // error, no match
----
-)
 
 <h2>Limitations</h2>
 

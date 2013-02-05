@@ -33,7 +33,6 @@ $(GNAME EnumMembers):
 $(GNAME EnumMember):
     $(I Identifier)
     $(I Identifier) $(B =) $(ASSIGNEXPRESSION)
-$(V2      $(GLINK2 declaration, Type) $(B =) $(ASSIGNEXPRESSION))
 )
 
         $(P Enum declarations are used to define a group of constants.
@@ -65,15 +64,6 @@ enum X { A, B, C }      // named enum
 $(V1
         $(P If the $(I EnumBaseType) is not explicitly set, it is set to
         type $(CODE int).)
-)
-$(V2
-        $(P If the $(I EnumBaseType) is not explicitly set, and the first
-        $(I EnumMember) has an initializer, it is set to the type of that
-        initializer. Otherwise, it defaults to
-        type $(CODE int).)
-
-        $(P Named enum members may not have individual $(I Type)s.
-        )
 )
 
         $(P A named enum member can be implicitly cast to its $(I EnumBaseType),
@@ -124,12 +114,6 @@ X.max    // is X.C
 X.sizeof // is same as int.sizeof
 ---
 
-$(V2
-        $(P The $(I EnumBaseType) of named enums must support comparison
-        in order to compute the $(CODE .max) and $(CODE .min) properties.
-        )
-)
-
 <h2>Anonymous Enums</h2>
 
         $(P If the enum $(I Identifier) is not present, then the enum
@@ -143,18 +127,6 @@ $(V2
 $(V1
         $(P It must be an integral type.
         If omitted, it defaults to $(B int).
-        )
-)
-$(V2
-        $(P If omitted, the $(I EnumMembers) can have different types.
-        Those types are given by the first of:
-        )
-
-        $(OL
-        $(LI The $(I Type), if present.)
-        $(LI The type of the $(I AssignExpression), if present.)
-        $(LI The type of the previous $(I EnumMember), if present.)
-        $(LI $(CODE int))
         )
 )
 
@@ -184,39 +156,6 @@ enum : long { A = 3, B }
 ---
 
         $(P Sets A=3, B=4 all of type long.)
-
-$(V2
----
-enum : string {
-  A = "hello",
-  B = "betty",
-  C     // error, cannot add 1 to "betty"
-}
----
-
----
-enum {
-  A = 1.2f,  // A is 1.2f of type float
-  B,         // B is 2.2f of type float
-  int C = 3, // C is 3 of type int
-  D          // D is 4 of type int
-}
----
-
-<h3>Manifest Constants</h3>
-
-        $(P If there is only one member of an anonymous enum, the { } can
-        be omitted:
-        )
-
----
-enum i = 4;      // i is 4 of type int
-enum long l = 3; // l is 3 of type long
----
-
-        $(P Such declarations are not lvalues, meaning their address
-        cannot be taken.)
-)
 
 )
 

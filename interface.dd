@@ -24,12 +24,6 @@ $(GNAME InterfaceBody):
         COM/OLE/ActiveX are called $(LINK2 #COM-Interfaces, $(I COM Interfaces)).
         )
 
-$(V2
-        $(P $(LINK2 #CPP-Interfaces, $(I C++ Interfaces)) are another
-        form of interfaces, meant to be binary compatible with C++.
-        )
-)
-
         $(P Interfaces cannot derive from classes; only from other interfaces.
         Classes cannot derive from an interface multiple times.
         )
@@ -68,38 +62,6 @@ interface D
     void bar() { }      // error, implementation not allowed
 }
 ------
-)
-$(V2
-        $(P Virtual interface member functions do not have implementations.
-        Interfaces are expected to implement static or final functions.
-        )
-
-------
-interface D
-{
-    void bar() { }      // error, implementation not allowed
-    static void foo() { } // ok
-    final void abc() { } // ok
-}
-------
-
-        $(P Classes that inherit from an interface may not override final or
-        static interface member functions.)
-
-------
-interface D {
-    void bar();
-    static void foo() { }
-    final void abc() { }
-}
-
-class C : D {
-    void bar() { } // ok
-    void foo() { } // error, cannot override static D.foo()
-    void abc() { } // error, cannot override final D.abc()
-}
-------
-
 )
         $(P All interface functions must be defined in a class that inherits
         from that interface:
@@ -196,35 +158,6 @@ class B : A, D
 }               // error, no foo() for interface D
 ------
 
-$(V2
-$(SECTION2 $(LNAME2 InterfaceContracts, Interfaces with Contracts),
-
-        $(P Interface member functions can have contracts even though there
-        is no body for the function. The contracts are inherited by any
-        class member function that implements that interface member function.
-        )
-
----
-interface I
-{
-    int foo(int i)
-      in { assert(i > 7); }
-      out (result) { assert(result & 1); }
-
-    void bar();
-}
----
-)
-
-$(SECTION2 $(LNAME2 ConstInterface, Const and Immutable Interfaces),
-        $(P If an interface has $(CODE const) or $(CODE immutable) storage
-        class, then all members of the interface are
-        $(CODE const) or $(CODE immutable).
-        This storage class is not inherited.
-        )
-)
-)
-
 $(SECTION2 $(LNAME2 COM-Interfaces, COM Interfaces),
 
         $(P A variant on interfaces is the COM interface. A COM interface is
@@ -251,51 +184,6 @@ $(SECTION2 $(LNAME2 COM-Interfaces, COM Interfaces),
         $(LI The first member of the $(D vtbl[]) is not the pointer
         to the InterfaceInfo, but the first virtual function pointer.)
         )
-)
-
-$(V2
-$(SECTION2 $(LNAME2 CPP-Interfaces, C++ Interfaces),
-
-        $(P C++ interfaces are interfaces declared with C++ linkage:
-        )
-
----
-extern (C++) interface Ifoo
-{
-    void foo();
-    void bar();
-}
----
-
-        $(P which is meant to correspond with the following C++ declaration:)
-
-$(CPPCODE
-class Ifoo
-{
-    virtual void foo();
-    virtual void bar();
-};
-)
-
-        $(P Any interface that derives from a C++ interface is also
-        a C++ interface.
-        A C++ interface differs from a D interface in that:
-        )
-
-        $(UL
-        $(LI It cannot be the argument of a $(I DeleteExpression).)
-        $(LI References cannot be upcast to the enclosing class object, nor
-        can they be downcast to a derived interface.)
-        $(LI The C++ calling convention is the default convention
-        for its member functions, rather than the D calling convention.)
-        $(LI The first member of the $(D vtbl[]) is not the pointer
-        to the $(D Interface), but the first virtual function pointer.)
-        )
-
-        $(P For more information, see
-        $(LINK2 http://lunesu.com/uploads/ModernCOMProgramminginD.pdf, Modern COM Programming in D)
-        )
-)
 )
 
 )

@@ -290,7 +290,7 @@ hello world!
         $(LI Copy binaries to $(D /usr/local/bin):
 
 $(CONSOLE
-sudo cp $(DMDDIR)/osx/bin/{dmd,$(DUMPOBJ),$(OBJ2ASM),$(SHELL)$(V2 ,rdmd)} /usr/local/bin
+sudo cp $(DMDDIR)/osx/bin/{dmd,$(DUMPOBJ),$(OBJ2ASM),$(SHELL)} /usr/local/bin
 sudo cp $(DMDDIR)/osx/bin/dmdx.conf /usr/local/bin/$(DMD_CONF)
 )
         )
@@ -563,11 +563,6 @@ $(WINDOWS
                 generate a .map file
           )
 
-$(V2
-          $(SWITCH $(B -noboundscheck),
-                turns off all array bounds checking, even for safe functions
-          )
-)
     $(WINDOWS
           $(SWITCH $(B -nofloat),
                 Prevents emission of $(B __fltused) reference in
@@ -606,20 +601,13 @@ $(V2
                 the runtime performance
                 of the generated code
           )
-$(V2
-          $(SWITCH $(B -property),
-                enforce use of @property on property functions
-          )
-)
+
           $(SWITCH $(B -quiet),
                 suppress non-essential compiler messages
           )
           $(SWITCH $(B -release),
                 $(V1 compile release version, which means not generating
                 code for contracts, asserts and array bounds checking)
-                $(V2 compile release version, which means not generating
-                code for contracts and asserts. Array bounds checking
-                is not done for system and trusted functions.)
           )
           $(SWITCH $(B -run) $(I srcfile args...)
                 compile, link, and run the program $(I srcfile) with the
@@ -651,12 +639,6 @@ $(COMMENT
           $(SWITCH $(B -version=)$(I ident),
                 compile in $(LINK2 version.html#version, version identifier) $(I ident)
           )
-$(V2
-          $(SWITCH $(B -vtls),
-                print informational messages identifying variables defaulting
-                to thread local storage. Handy for migrating to shared model.
-          )
-)
           $(SWITCH $(B -w),
                 enable $(LINK2 warnings.html, warnings)
           )
@@ -812,7 +794,6 @@ $(SCINI
 [Environment]
 LIB="%@P%\..\lib";\dm\lib
 $(V1 DFLAGS="-I%@P%\..\src\phobos")
-$(V2 DFLAGS="-I%@P%\..\src\phobos" "-I%@P%\..\src\druntime\import")
 LINKCMD="%@P%\..\..\dm\bin"
 DDOCFILE=mysettings.ddoc
 )
@@ -830,7 +811,6 @@ $(SCINI
 [Environment]
 LIB="c:$(DMDDIR)\bin\..\lib";\dm\lib
 $(V1 DFLAGS="-Ic:$(DMDDIR)\bin\..\src\phobos")
-$(V2 DFLAGS="-Ic:$(DMDDIR)\bin\..\src\phobos" "-Ic:$(DMDDIR)\bin\..\src\druntime\import")
 LINKCMD="c:$(DMDDIR)\bin\..\..\dm\bin"
 DDOCFILE=mysettings.ddoc
 )
@@ -878,7 +858,6 @@ $(SCINI
 ; to this file.
 [Environment]
 $(V1 DFLAGS=-I%@P%/../src/phobos)
-$(V2 DFLAGS=-I%@P%/../src/phobos -I%@P%/../src/druntime/import)
 )
 )
 
@@ -1052,30 +1031,11 @@ make -f $(OS).mak DMD=~/$(DMDDIR)/$(OS)/bin/dmd
 )
 )
 )
-$(V2
-$(WINDOWS
-$(CONSOLE
-cd $(DMDDIR)\src\druntime
-make -f win32.mak DMD=$(DMDDIR)\$(OS)\bin\dmd
-cd ..\phobos
-make -f win32.mak DMD=$(DMDDIR)\$(OS)\bin\dmd
-)
-)
-$(UNIX
-$(CONSOLE
-cd ~/$(DMDDIR)/src/druntime
-make -f posix.mak DMD=~/$(DMDDIR)/$(OS)/bin/dmd
-cd ../phobos
-make -f $(OS).mak DMD=~/$(DMDDIR)/$(OS)/bin/dmd
-)
-)
-)
-
 )
 
 Macros:
         TITLE=DMD Compiler for $(WINDOWS Windows)$(LINUX Linux)$(OSX OSX)$(FREEBSD FreeBSD)
         WIKI=DCompiler
-        LIB=$(WINDOWS phobos.lib)$(UNIX $(V1 libphobos.a)$(V2 libphobos2.a))
+        LIB=$(WINDOWS phobos.lib)$(UNIX $(V1 libphobos.a))
         DMD_CONF=$(LINK2 #dmd_conf, dmd.conf)
         SWITCH=$(DT $1)$(DD $+)

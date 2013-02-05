@@ -110,10 +110,8 @@ extern (C) {
 
         $(LI Registering the pointer with the garbage collector with the
         $(V1 std.gc.addRoot())
-        $(V2 $(LINK2 $(WEBURL)phobos/core_memory.html#addRoot, std.gc.addRoot()))
         or
         $(V1 std.gc.addRange())
-        $(V2 $(LINK2 $(WEBURL)phobos/core_memory.html#addRange, std.gc.addRange()))
         calls.)
 
         )
@@ -200,31 +198,6 @@ $(V1
         )
 )
 
-$(V2
-        $(TR
-        $(TD $(B c_long (in core.stdc.config)))
-        $(TD $(B long))
-        $(TD $(B long))
-        )
-
-        $(TR
-        $(TD $(B c_ulong (in core.stdc.config)))
-        $(TD $(B unsigned long))
-        $(TD $(B unsigned long))
-        )
-
-        $(TR
-        $(TD $(B long))
-        $(TD $(B long long))
-        $(TD $(B long (or long long)))
-        )
-
-        $(TR
-        $(TD $(B ulong))
-        $(TD $(B unsigned long long))
-        $(TD $(B unsigned long (or unsigned long long)))
-        )
-)
         $(TR
         $(TD $(B float))
         $(TD2 $(B float))
@@ -341,46 +314,6 @@ $(V1
         does not pin down the sizes of the types, so some care is needed.
         )
 
-$(V2
-<h2>Passing D Array Arguments to C Functions</h2>
-
-        $(P In C, arrays are passed to functions as pointers even if the function
-        prototype says its an array. In D, static arrays are passed by value,
-        not by reference. Thus, the function prototype must be adjusted to match
-        what C expects.)
-
-        $(TABLE2 D And C Function Prototype Equivalence,
-
-        $(TR
-        $(TH D type)
-        $(TH C type)
-        )
-
-        $(TR
-        $(TD $(I T)$(B *))
-        $(TD $(I T)$(B []))
-        )
-
-        $(TR
-        $(TD $(B ref) $(I T)$(B [)$(I dim)$(B ]))
-        $(TD $(I T)$(B [)$(I dim)$(B ]))
-        )
-
-        )
-
-        $(P For example:)
-
-$(CCODE
-void foo(int a[3]) { ... } // C code
-)
----
-extern (C)
-{
-  void foo(ref int[3] a); // D prototype
-}
----
-)
-
 <h2>Calling printf()</h2>
 
         $(P This mostly means checking that the
@@ -449,9 +382,6 @@ void foo(char[] string) {
         convention, and so must be in an $(D extern (C)) block.
         Use the $(D extern) storage class to indicate that the global is allocated
         in the C code, not the D code.
-        $(V2 C globals default to being in global, not thread local, storage.
-        To reference global storage
-        from D, use the $(D __gshared) storage class.)
         )
 
 ---

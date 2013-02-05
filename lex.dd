@@ -238,8 +238,6 @@ $(GNAME Token):
     $(B ^=)
     $(B ~)
     $(B ~=)
-    $(V2 $(B @))
-    $(V2 $(B =>))
 )
 
 <h3>Identifiers</h3>
@@ -283,9 +281,6 @@ $(GNAME StringLiteral):
 $(V1
     $(GLINK EscapeSequence))
     $(GLINK HexString)
-$(V2
-    $(GLINK DelimitedString)
-    $(GLINK TokenString))
 
 $(GNAME WysiwygString):
     $(B r") $(GLINK WysiwygCharacters) $(B ") $(GLINK StringPostfix)<sub>opt</sub>
@@ -350,20 +345,11 @@ $(GNAME StringPostfix):
     $(B c)
     $(B w)
     $(B d)
-
-$(V2
-$(GNAME DelimitedString):
-    $(B q") $(I Delimiter) $(GLINK WysiwygCharacters) $(I MatchingDelimiter) $(B ")
-
-$(GNAME TokenString):
-    $(B q{) $(GLINK Token)s $(B })
-)
 )
 
         $(P
         A string literal is either a double quoted string, a wysiwyg quoted
         string, an escape sequence,
-        $(V2 a delimited string, a token string,)
         or a hex string.
         )
 
@@ -465,7 +451,7 @@ x"00 FBCD 32FD 0A" // same as
         juxtaposition:
 
 --------------
-"hello " ~ "world" ~ $(V1 \n)$(V2 "\n") // forms the string
+"hello " ~ "world" ~ $(V1 \n) // forms the string
        // 'h','e','l','l','o',' ',
        // 'w','o','r','l','d',linefeed
 --------------
@@ -495,14 +481,7 @@ $(V1
         $(TROW $(B d), $(D dchar[]), $(D dstring))
         )
 )
-$(V2
-        $(TABLE2 String Literal Postfix Characters,
-        $(THEAD Postfix, Type, Aka)
-        $(TROW $(B c), $(D immutable(char)[]), $(D string))
-        $(TROW $(B w), $(D immutable(wchar)[]), $(D wstring))
-        $(TROW $(B d), $(D immutable(dchar)[]), $(D dstring))
-        )
-)
+
 ---
 "hello"c  // string
 "hello"w  // wstring
@@ -515,77 +494,6 @@ $(V2
 
         $(P String literals are read only. Writes to string literals
         cannot always be detected, but cause undefined behavior.)
-
-$(V2
-<h4>Delimited Strings</h4>
-
-        $(P Delimited strings use various forms of delimiters.
-        The delimiter, whether a character or identifer,
-        must immediately follow the " without any intervening whitespace.
-        The terminating delimiter must immediately precede the closing "
-        without any intervening whitespace.
-        A $(I nesting delimiter) nests, and is one of the
-        following characters:
-        )
-
-        $(TABLE2 Nesting Delimiters,
-        $(THEAD Delimiter, Matching Delimiter)
-        $(TROW [, ])
-        $(TROW $(LPAREN), $(RPAREN))
-        $(TROW &lt;, &gt;)
-        $(TROW {, })
-        )
-
----
-q"(foo(xxx))"   // "foo(xxx)"
-q"[foo{]"       // "foo{"
----
-
-        $(P If the delimiter is an identifier, the identifier must
-        be immediately followed by a newline, and the matching
-        delimiter is the same identifier starting at the beginning
-        of the line:
-        )
----
-writefln(q"EOS
-This
-is a multi-line
-heredoc string
-EOS"
-);
----
-        $(P The newline following the opening identifier is not part
-        of the string, but the last newline before the closing
-        identifier is part of the string. The closing identifier
-    must be placed on its own line at the leftmost column.
-        )
-
-        $(P Otherwise, the matching delimiter is the same as
-        the delimiter character:)
-
----
-q"/foo]/"       // "foo]"
-q"/abc/def/"    // error
----
-
-<h4>Token Strings</h4>
-
-        $(P Token strings open with the characters $(B q{) and close with
-        the token $(B }). In between must be valid D tokens.
-        The $(B {) and $(B }) tokens nest.
-        The string is formed of all the characters between the opening
-        and closing of the token string, including comments.
-        )
-
----
-q{foo}              // "foo"
-q{/*}*/ }           // "/*}*/ "
-q{ foo(q{hello}); } // " foo(q{hello}); "
-q{ __TIME__ }       // " __TIME__ ", i.e. it is not replaced with the time
-q{ __EOF__ }        // error, as __EOF__ is not a token, it's end of file
----
-
-)
 
 <h3>$(LNAME2 characterliteral, Character Literals)</h3>
 
@@ -1000,9 +908,7 @@ $(GNAME Keyword):
     $(B idouble)
     $(B if)
     $(B ifloat)
-$(V2
-    $(B immutable)
-)    $(B import)
+    $(B import)
     $(B in)
     $(B inout)
     $(B int)
@@ -1019,9 +925,7 @@ $(V2
     $(B module)
 
     $(B new)
-$(V2
-    $(B nothrow)
-)    $(B null)
+    $(B null)
 
     $(B out)
     $(B override)
@@ -1031,17 +935,13 @@ $(V2
     $(B private)
     $(B protected)
     $(B public)
-$(V2
-    $(B pure)
-)
+
     $(B real)
     $(B ref)
     $(B return)
 
     $(B scope)
-$(V2
-    $(B shared)
-)    $(B short)
+    $(B short)
     $(B static)
     $(B struct)
     $(B super)
@@ -1072,12 +972,7 @@ $(V2
     $(B wchar)
     $(B while)
     $(B with)
-$(V2
-    $(B __FILE__)
-    $(B __LINE__)
-    $(B __gshared)
-    $(B __thread)
-    $(B __traits))
+
 )
 
 <h3>$(LNAME2 specialtokens, Special Tokens)</h3>
@@ -1094,9 +989,7 @@ $(V1
         $(TROW $(CODE __LINE__), integer literal of the current source line number)
 )
         $(TROW $(CODE __DATE__), string literal of the date of compilation "$(I mmm dd yyyy)")
-$(V2
-        $(TROW $(CODE __EOF__), sets the scanner to the end of the file)
-)
+
         $(TROW $(CODE __TIME__), string literal of the time of compilation "$(I hh:mm:ss)")
         $(TROW $(CODE __TIMESTAMP__), string literal of the date and time of compilation "$(I www mmm dd hh:mm:ss yyyy)")
         $(TROW $(CODE __VENDOR__), $(ARGS Compiler vendor string, such as "Digital Mars D"))
