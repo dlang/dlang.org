@@ -51,8 +51,8 @@ $(H3 Using Classes as the KeyType)
 
         $(UL
         $(LI $(D hash_t toHash()))
-$(V1    $(LI $(D int opEquals(Object))))
-$(V2    $(LI $(D bool opEquals(Object))))
+
+   $(LI $(D bool opEquals(Object)))
         $(LI $(D int opCmp(Object)))
         )
 
@@ -70,7 +70,7 @@ class Foo {
 
   hash_t $(B toHash)() { return a + b; }
 
-$(V1    int $(B opEquals)(Object o))$(V2    bool $(B opEquals)(Object o))
+   bool $(B opEquals)(Object o)
   { Foo foo = cast(Foo) o;
     return foo && a == foo.a && b == foo.b;
   }
@@ -101,40 +101,14 @@ $(H3 Using Structs or Unions as the KeyType)
         )
 
 ---------
-$(V2 const) hash_t $(B toHash)();
-$(V1 int $(B opEquals)($(I KeyType)* s);)$(V2 const bool $(B opEquals)(ref const $(I KeyType) s);)
-$(V1 int $(B opCmp)($(I KeyType)* s);)$(V2 const int $(B opCmp)(ref const $(I KeyType) s);)
+const hash_t $(B toHash)();
+const bool $(B opEquals)(ref const $(I KeyType) s);
+const int $(B opCmp)(ref const $(I KeyType) s);
 ---------
 
         $(P For example:)
 
-$(V1
----------
-import std.string;
 
-struct MyString {
-  string str;
-
-  hash_t $(B toHash)()
-  { hash_t hash;
-    foreach (char c; str)
-      hash = (hash * 9) + c;
-    return hash;
-  }
-
-  bool $(B opEquals)(MyString* s)
-  {
-    return std.string.cmp(this.str, s.str) == 0;
-  }
-
-  int $(B opCmp)(MyString* s)
-  {
-    return std.string.cmp(this.str, s.str);
-  }
-}
----------
-)
-$(V2
 ---------
 import std.string;
 
@@ -159,7 +133,7 @@ struct MyString {
   }
 }
 ---------
-)
+
 
 
         $(P The implementation may use either $(D opEquals) or $(D opCmp) or
@@ -167,7 +141,6 @@ struct MyString {
         $(D opEquals) and $(D opCmp) are consistent with each other when
         the struct/union objects are the same or not.)
 
-$(V2
 $(H3 Runtime Initialization of Immutable AAs)
 
     $(P Immutable associative arrays are often desirable, but sometimes
@@ -199,7 +172,7 @@ unittest
     assert(aa["9"] == 9);
 }
 ---------
-)
+
 
 $(H3 Properties)
 
@@ -253,7 +226,6 @@ Properties for associative arrays are:
         )
         )
 
-$(V2
         $(TR
         $(TD $(B .byKey()))
         $(TD Returns a delegate suitable for use as an $(I Aggregate) to
@@ -278,7 +250,7 @@ $(V2
         else evaluates and returns $(I defaultValue).
         )
         )
-)
+
     )
 
 <hr>
@@ -292,7 +264,7 @@ $(H3 Associative Array Example: word count)
 ---------
 import std.file;         // D file I/O
 import std.stdio;
-import std.$(V1 ctype)$(V2 ascii);
+import std.ascii;
 
 void main (string[] args) {
   ulong totalWords, totalLines, totalChars;
@@ -303,44 +275,7 @@ void main (string[] args) {
   {
     ulong wordCount, lineCount, charCount;
 
-    $(V1 bool inWord;
-    size_t wordStart;
-
-    // read file into input buffer
-    auto input = cast(string)std.file.read(arg);
-
-    foreach (i, char c; input)
-    {
-      if (std.ctype.isdigit(c))
-      { // c is a digit (0..9)
-      }
-      else if (std.ctype.isalpha(c))
-      { // c is an ASCII letter (A..Z, a..z)
-        if (!inWord)
-        {
-          wordStart = i;
-          inWord = true;
-          ++wordCount;
-        }
-      }
-      else if (inWord)
-      {
-        auto word = input[wordStart .. i];
-        ++dictionary[word];   // increment count for word
-        inWord = false;
-      }
-      ++charCount;
-
-      // Let's consider the file has LF EOL.
-      if (c == '\n')
-        ++lineCount;
-    }
-    if (inWord)
-    {
-      auto word = input[wordStart .. $];
-      ++dictionary[word];
-    }
-)$(V2 foreach(line; File(arg).byLine())
+    foreach(line; File(arg).byLine())
     {
       bool inWord;
       size_t wordStart;
@@ -376,7 +311,7 @@ void main (string[] args) {
       tryFinishWord(line.length);
       ++lineCount;
     }
-)
+
     writefln("%8s%8s%8s %s", lineCount, wordCount, charCount, arg);
     totalWords += wordCount;
     totalLines += lineCount;
@@ -389,7 +324,7 @@ void main (string[] args) {
             totalLines, totalWords, totalChars);
   }
 
-  write$(V1 f)ln("-------------------------------------");
+  writeln("-------------------------------------");
   foreach (word; dictionary.keys.sort)
   {
     writefln("%3s %s", dictionary[word], word);
