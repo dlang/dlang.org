@@ -27,8 +27,8 @@ $(GNAME NonEmptyOrScopeBlockStatement):
 $(GNAME NonEmptyStatement):
     $(GLINK NonEmptyStatementNoCaseNoDefault)
     $(GLINK CaseStatement)
-$(V2      $(GLINK CaseRangeStatement)
-)    $(GLINK DefaultStatement)
+     $(GLINK CaseRangeStatement)
+    $(GLINK DefaultStatement)
 
 $(GNAME NonEmptyStatementNoCaseNoDefault):
     $(GLINK LabeledStatement)
@@ -40,8 +40,8 @@ $(GNAME NonEmptyStatementNoCaseNoDefault):
     $(GLINK ForStatement)
     $(GLINK ForeachStatement)
     $(GLINK SwitchStatement)
-$(V2      $(GLINK FinalSwitchStatement)
-)    $(GLINK ContinueStatement)
+     $(GLINK FinalSwitchStatement)
+    $(GLINK ContinueStatement)
     $(GLINK BreakStatement)
     $(GLINK ReturnStatement)
     $(GLINK GotoStatement)
@@ -53,7 +53,7 @@ $(V2      $(GLINK FinalSwitchStatement)
     $(GLINK AsmStatement)
     $(GLINK PragmaStatement)
     $(GLINK MixinStatement)
-$(V2      $(GLINK ForeachRangeStatement))
+     $(GLINK ForeachRangeStatement)
     $(GLINK2 version, ConditionalStatement)
     $(GLINK2 version, StaticAssert)
     $(GLINK2 template-mixin, TemplateMixin)
@@ -299,12 +299,11 @@ while (i < 10) {
 $(H3 $(LNAME2 DoStatement, Do Statement))
 
 
-$(V2
 $(GRAMMAR
 $(I DoStatement):
     $(D do) $(PSSCOPE) $(D  while $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(D ;)
 )
-)
+
 
         Do while statements implement simple loops.
 
@@ -484,14 +483,14 @@ $(H4 Foreach over Arrays of Characters)
         )
 
 --------------
-char[] a = "\xE2\x89\xA0"$(V2 .dup);  // \u2260 encoded as 3 UTF-8 bytes
+char[] a = "\xE2\x89\xA0".dup;  // \u2260 encoded as 3 UTF-8 bytes
 
 foreach (dchar c; a)
 {
   writefln("a[] = %x", c); // prints 'a[] = 2260'
 }
 
-dchar[] b = "\u2260"d$(V2 .dup);
+dchar[] b = "\u2260"d.dup;
 
 foreach (char c; b)
 {
@@ -543,15 +542,14 @@ $(H4 Foreach over Associative Arrays)
         )
 
 --------------
-double[$(V2 string)] a; // index type is $(V2 string), value type is double
+double[string] a; // index type is string, value type is double
 ...
-foreach ($(V2 string) s, double d; a)
+foreach (string s, double d; a)
 {
   writefln("a['%s'] = %g", s, d);
 }
 --------------
 
-$(V2
 $(H4 $(LNAME2 foreach_with_ranges, Foreach over Structs and Classes with Ranges))
 
         $(P Iteration over struct and class objects can be done with
@@ -606,7 +604,7 @@ for (auto __r = range; !__r.empty; __r.popBack())
         $(P If the foreach range properties do not exist, the $(D opApply)
         method will be used instead.
         )
-)
+
 
 $(H4 Foreach over Structs and Classes with opApply)
 
@@ -786,13 +784,12 @@ int[] b;
 foreach (int i; a)
 {
   a = null;       // error
-  $(V2 a.length += 10;) // error
+  a.length += 10; // error
   a = b;          // error
 }
 a = null;         // ok
 --------------
 
-$(V2
 $(H3 $(LNAME2 ForeachRangeStatement, Foreach Range Statement))
 
         A foreach range statement loops over the specified range.
@@ -845,7 +842,7 @@ void main() {
 $(CONSOLE
 foo0123456789
 )
-)
+
 
 $(H4 Break and Continue out of Foreach)
 
@@ -868,7 +865,7 @@ $(I SwitchStatement):
 $(GNAME CaseStatement):
     $(D case) $(GLINK2 expression, ArgumentList) $(D :) $(PSSEMI_PSCURLYSCOPE_LIST)
 
-$(V2 $(GNAME CaseRangeStatement):
+$(GNAME CaseRangeStatement):
     $(D case) $(GLINK FirstExp) $(D : .. case) $(GLINK LastExp) $(D :) $(PSSEMI_PSCURLYSCOPE_LIST)
 
 $(GNAME FirstExp):
@@ -876,7 +873,7 @@ $(GNAME FirstExp):
 
 $(GNAME LastExp):
     $(ASSIGNEXPRESSION)
-)
+
 $(GNAME DefaultStatement):
     $(D default :) $(PSSEMI_PSCURLYSCOPE_LIST)
 
@@ -904,39 +901,35 @@ $(GNAME StatementNoCaseNoDefault):
         are a comma separated list of expressions.
         )
 
-$(V2
         $(P A $(I CaseRangeStatement) is a shorthand for listing a series
         of case statements from $(I FirstExp) to $(I LastExp).
         )
-)
+
 
         $(P If none of the case expressions match, and there is a default
         statement, the default statement is transferred to.
         )
 
 
-$(V2
         $(P A switch statement must have a default statement.)
-)
+
 
         $(P
 
-$(V2
         The case expressions must all evaluate to a constant value
         or array, or a runtime initialized const or immutable variable of
         integral type.
-)
+
         They must be implicitly convertible to the type of the
         switch $(EXPRESSION).
         )
 
         $(P Case expressions must all evaluate to distinct values.
-$(V2
         Const or immutable variables must all have different names.
         If they share a value, the first case statement with that value
         gets control.
         There must be exactly one default statement.
-)
+
 
         )
 
@@ -960,7 +953,6 @@ switch (i) {
 
 
 
-$(V2
         $(P A $(GLINK ScopeStatementList) must either be empty, or be ended with
         a $(GLINK ContinueStatement), $(GLINK BreakStatement),
         $(GLINK ReturnStatement), $(GLINK GotoStatement), $(GLINK ThrowStatement)
@@ -999,7 +991,7 @@ switch (number)
 --------------
 
         $(P A break statement will exit the switch $(I BlockStatement).)
-)
+
 
         $(P $(LNAME2 string-switch, Strings can be used in switch expressions).
         For example:
@@ -1028,7 +1020,6 @@ switch (name) {
         performance interest.
         )
 
-$(V2
 $(H3 $(LNAME2 FinalSwitchStatement, Final Switch Statement))
 
 $(GRAMMAR
@@ -1048,7 +1039,7 @@ $(I FinalSwitchStatement):
         initialized value.)
         )
 
-)
+
 
 $(H3 $(LNAME2 ContinueStatement, Continue Statement))
 
@@ -1278,7 +1269,6 @@ with (Foo) {
 }
 --------------
 
-$(V2
         $(P Use of with object symbols that shadow local symbols with
         the same identifier are not allowed.
         This is to reduce the risk of inadvertant breakage of with
@@ -1297,7 +1287,7 @@ void main() {
   }
 }
 ---
-)
+
 
 $(H3 $(LNAME2 SynchronizedStatement, Synchronized Statement))
 
@@ -1378,7 +1368,7 @@ $(GNAME FinallyStatement):
 
         $(P $(I CatchParameter) declares a variable v of type T, where T is
         
-        $(V2 Throwable or derived from Throwable.)
+        Throwable or derived from Throwable.
         v is initialized by the throw expression if T is of the same type or a
         base class of the throw expression. The catch clause will be executed
         if the exception object is of type T or derived from T.
@@ -1401,7 +1391,6 @@ $(GNAME FinallyStatement):
         continue, return, exception, or fall-through.
         )
 
-$(V2
         $(P If an exception is raised in the $(I FinallyStatement) and is not
         caught before the original exception is caught, it is chained to the
         previous exception via the $(I next) member of $(I Throwable).
@@ -1419,7 +1408,7 @@ $(V2
         to the original exception (the head of the chain) if a bypass occurred,
         so that the entire exception history is retained.
     )
-)
+
 --------------
 import std.stdio;
 
@@ -1443,13 +1432,12 @@ int main() {
 
     prints:
 
-$(V2
 $(CONSOLE
 finally
 catch first
 done
 )
-)
+
 
         $(P A $(I FinallyStatement) may not exit with a goto, break,
         continue, or return; nor may it be entered with a goto.
@@ -1468,8 +1456,8 @@ $(I ThrowStatement):
     $(D throw) $(EXPRESSION) $(D ;)
 )
 
-        $(EXPRESSION) is evaluated and must be  $(V2 a Throwable) reference.
-        The  $(V2 Throwable) reference is thrown as an exception.
+        $(EXPRESSION) is evaluated and must be  a Throwable reference.
+        The  Throwable reference is thrown as an exception.
 
 ---
 throw new Exception("message");
@@ -1501,7 +1489,6 @@ $(I ScopeGuardStatement):
         in the reverse lexical order in which they appear.)
 
 
-$(V2
 ----
 write("1"); {
   write("2");
@@ -1511,7 +1498,7 @@ write("1"); {
 }
 writeln();
 ----
-)
+
         writes:
 
 $(CONSOLE
@@ -1519,7 +1506,6 @@ $(CONSOLE
 )
 
 
-$(V2
 ----
 {
   scope(exit) write("1");
@@ -1529,7 +1515,7 @@ $(V2
 }
 writeln();
 ----
-)
+
         writes:
 
 $(CONSOLE
@@ -1537,7 +1523,6 @@ $(CONSOLE
 )
 
 
-$(V2
 ----
 class Foo {
   this() { write("0"); }
@@ -1558,7 +1543,7 @@ catch (Exception e) {
 }
 writeln();
 ----
-)
+
         writes:
 
 $(CONSOLE
