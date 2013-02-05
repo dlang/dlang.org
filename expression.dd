@@ -27,7 +27,6 @@ $(SPEC_S Expressions,
 
         $(P
         $(GLINK AssignExpression),
-$(V1
         $(GLINK OrExpression),
         $(GLINK XorExpression),
         $(GLINK AndExpression),
@@ -36,7 +35,7 @@ $(V1
         $(GLINK AddExpression),
         $(GLINK CatExpression),
         $(GLINK MulExpression),
-)
+
         function parameters
         )
 
@@ -168,13 +167,12 @@ $(GNAME OrOrExpression):
 
 <h2>AndAnd Expressions</h2>
 
-$(V1
 $(GRAMMAR
 $(GNAME AndAndExpression):
     $(GLINK OrExpression)
     $(I AndAndExpression) $(B &&) $(GLINK OrExpression)
 )
-)
+
 
         $(P The result type of an $(I AndAndExpression) is bool, unless the right operand
         has type void, when the result is type void.
@@ -226,13 +224,12 @@ $(GNAME XorExpression):
 
 <h3>And Expressions</h3>
 
-$(V1
 $(GRAMMAR
 $(GNAME AndExpression):
     $(GLINK CmpExpression)
     $(I AndExpression) $(B &) $(GLINK CmpExpression)
 )
-)
+
 
         The operands are AND'd together.
 
@@ -680,7 +677,7 @@ $(GNAME UnaryExpression):
     $(GLINK NewExpression)
     $(GLINK DeleteExpression)
     $(GLINK CastExpression)
-    $(V1 $(GLINK PostfixExpression))
+    $(GLINK PostfixExpression)
 )
 
 <h3>Complement Expressions</h3>
@@ -881,7 +878,6 @@ else
         as a type paint, with the array length adjusted to match any change in
         element size. If there's not a match, a runtime error is generated.)
 
-$(V1
 ---
 import std.stdio;
 
@@ -897,7 +893,7 @@ int main() {
   return 0;
 }
 ---
-)
+
 
         $(P Casting a floating point literal from one type to another
         changes its type, but internally it is retained at full
@@ -1160,7 +1156,6 @@ $(GNAME StringLiterals):
         of the following types, they have equal weight:
         )
 
-$(V1
         $(TABLE1
         $(TROW $(D char*))
         $(TROW $(D wchar*))
@@ -1169,7 +1164,7 @@ $(V1
         $(TROW $(D wchar[]))
         $(TROW $(D dchar[]))
         )
-)
+
         $(P String literals have a 0 appended to them, which makes
         them easy to pass to C or C++ functions expecting a $(CODE const char*)
         string.
@@ -1451,7 +1446,7 @@ $(GNAME AssertExpression):
         )
 
         $(P The second $(I AssignExpression), if present, must be implicitly
-        convertible to type $(V1 $(D char[])).
+        convertible to type $(D char[]).
         It is evaluated if the
         result is false, and the string result is appended to the
         $(B AssertError)'s message.
@@ -1512,7 +1507,7 @@ $(GNAME ImportExpression):
 ---
 void foo() {
   // Prints contents of file foo.txt
-  write$(V1 f)ln( import("foo.txt") );
+  writefln( import("foo.txt") );
 }
 ---
 
@@ -1523,13 +1518,12 @@ $(GNAME TypeidExpression):
     $(B typeid $(LPAREN)) $(GLINK2 declaration, Type) $(B $(RPAREN))
 )
 
-$(V1
         $(P Returns an instance of class
         $(DPLLINK phobos/object.html, $(B TypeInfo))
         corresponding
         to $(I Type).
         )
-)
+
 
 <h3>IsExpression</h3>
 
@@ -1544,8 +1538,8 @@ $(GNAME IsExpression):
 
 $(GNAME TypeSpecialization):
     $(GLINK2 declaration, Type)
-$(V1    $(B typedef)
-)    $(B struct)
+    $(B typedef)
+    $(B struct)
     $(B union)
     $(B class)
     $(B interface)
@@ -1590,9 +1584,9 @@ alias int func(int);    // func is a alias to a function type
 void foo() {
   if ($(B is)(func[]) ) // not satisfied because arrays of
                         // functions are not allowed
-    write$(V1 f)ln("satisfied");
+    writefln("satisfied");
   else
-    write$(V1 f)ln("not satisfied");
+    writefln("not satisfied");
 
   if ($(B is)([][]))  // error, [][] is not a syntactically valid type
     ...
@@ -1611,9 +1605,9 @@ alias short bar;
 void foo(bar x) {
   if ( $(B is)(bar : int) )   // satisfied because short can be
                               // implicitly converted to int
-    write$(V1 f)ln("satisfied");
+    writefln("satisfied");
   else
-    write$(V1 f)ln("not satisfied");
+    writefln("not satisfied");
 }
 -------------
         )
@@ -1624,8 +1618,8 @@ void foo(bar x) {
         <p>
 
         If $(I TypeSpecialization) is one of
-$(V1            $(B typedef)
-)               $(B struct)
+                $(B typedef)
+                $(B struct)
                 $(B union)
                 $(B class)
                 $(B interface)
@@ -1637,19 +1631,18 @@ $(V1            $(B typedef)
 
 -------------
 alias short bar;
-$(V1 typedef char foo;)
+typedef char foo;
 void test(bar x) {
   if ( $(B is)(bar == int) ) // not satisfied because short is not
                         // the same type as int
-    write$(V1 f)ln("satisfied");
+    writefln("satisfied");
   else
-    write$(V1 f)ln("not satisfied");
-$(V1
+    writefln("not satisfied");
   if ( $(B is)(foo == typedef) ) // satisfied because foo is a typedef
-    write$(V1 f)ln("satisfied");
+    writefln("satisfied");
   else
-    write$(V1 f)ln("not satisfied");
-)}
+    writefln("not satisfied");
+}
 -------------
         )
 
@@ -1666,7 +1659,7 @@ void foo(bar x) {
   else
     alias long S;
 
-  write$(V1 f)ln(typeid(S));  // prints "short"
+  writefln(typeid(S));  // prints "short"
   if ( $(B is)(bar T) )  // error, $(I Identifier) T form can
                       // only be in $(GLINK2 version, StaticIfCondition)s
     ...
@@ -1695,12 +1688,12 @@ void foo(bar x, abc a) {
   else
     alias long S;
 
-  write$(V1 f)ln(typeid(S));  // prints "int"
+  writefln(typeid(S));  // prints "int"
 
   static if ( $(B is)(abc U : U*) )
   {
     U u;
-    write$(V1 f)ln(typeid(typeof(u)));  // prints "long"
+    writefln(typeid(typeof(u)));  // prints "long"
   }
 }
 -------------
@@ -1722,8 +1715,8 @@ void foo(bar x, abc a) {
         )
 
         $(P If $(I TypeSpecialization) is one of
-$(V1            $(B typedef)
-)               $(B struct)
+                $(B typedef)
+                $(B struct)
                 $(B union)
                 $(B class)
                 $(B interface)
@@ -1740,11 +1733,11 @@ $(V1            $(B typedef)
         $(TH keyword)
         $(TH alias type for $(I Identifier))
         )
-$(V1    $(TR
+        $(TR
         $(TD $(CODE typedef))
         $(TD the type that $(I Type) is a typedef of)
         )
-)
+
         $(TR
         $(TD $(CODE struct))
         $(TD $(I Type))
@@ -1799,7 +1792,6 @@ void foo(bar x) {
 }
 -------------
 
-$(V1
         $(P For example, to test to see if $(CODE X) is a typedef and
         its base type is int:
         )
@@ -1813,7 +1805,7 @@ else {
   static assert(0, "X is not a typedef");
 }
 ---
-)
+
         )
         )
 
