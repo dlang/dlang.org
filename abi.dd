@@ -89,7 +89,7 @@ $(TR $(TD $(I ptrsize)...) $(TD &nbsp;) $(TD vptr's for any interfaces implement
 
 $(TABLE2 Virtual Function Pointer Table Layout,
 $(TR $(TH size)         $(TH contents))
-$(TR $(TD $(I ptrsize)) $(TD pointer to instance of $(V1 ClassInfo)$(V2 TypeInfo)))
+$(TR $(TD $(I ptrsize)) $(TD pointer to instance of ClassInfo))
 $(TR $(TD $(I ptrsize)...) $(TD pointers to virtual member functions))
 )
 
@@ -152,12 +152,6 @@ $(SECTION3 Interfaces,
         that they were declared.
         This matches the COM object layout used by Windows.
         )
-    $(V2
-        $(P A C++ interface differs from a regular interface in that
-        it matches the layout of a C++ class using single inheritance
-        on the target machine.
-        )
-    )
 )
 
 $(SECTION3 Arrays,
@@ -192,11 +186,8 @@ $(SECTION3 Associative Arrays,
 
         $(P Associative arrays consist of a pointer to an opaque, implementation
         defined type.
-        $(V1 The current implementation is contained in and defined by
-         $(PHOBOSSRC internal/aaA.d).)
-        $(V2 The current implementation is contained in and defined by
-         $(DRUNTIMESRC rt/aaA.d).)
-        )
+        The current implementation is contained in and defined by
+        $(PHOBOSSRC internal/aaA.d).
 )
 
 $(SECTION3 Reference Types,
@@ -394,8 +385,7 @@ $(I Type):
     $(I Immutable)
     $(I Wild)
     $(I TypeArray)
-$(V2      $(I TypeNewArray)
-)    $(I TypeStaticArray)
+    $(I TypeStaticArray)
     $(I TypeAssocArray)
     $(I TypePointer)
     $(I TypeFunction)
@@ -445,9 +435,6 @@ $(I Wild):
 $(I TypeArray):
     $(B A) $(I Type)
 
-$(V2 $(I TypeNewArray):
-    $(B Ne) $(I Type)
-)
 $(I TypeStaticArray):
     $(B G) $(I Number) $(I Type)
 
@@ -458,7 +445,7 @@ $(I TypePointer):
     $(B P) $(I Type)
 
 $(I TypeFunction):
-    $(I CallConvention) $(V2 $(I FuncAttrs) )$(I Arguments) $(I ArgClose) $(I Type)
+    $(I CallConvention) $(I Arguments) $(I ArgClose) $(I Type)
 
 $(I CallConvention):
     $(B F)       $(GREEN // D)
@@ -467,49 +454,12 @@ $(I CallConvention):
     $(B V)       $(GREEN // Pascal)
     $(B R)       $(GREEN // C++)
 
-$(V2 $(I FuncAttrs):
-    $(I FuncAttr)
-    $(I FuncAttr) $(I FuncAttrs)
-
-$(I FuncAttr):
-    $(I empty)
-    $(I FuncAttrPure)
-    $(I FuncAttrNothrow)
-    $(I FuncAttrProperty)
-    $(I FuncAttrRef)
-    $(I FuncAttrTrusted)
-    $(I FuncAttrSafe)
-
-$(I FuncAttrPure):
-    $(B Na)
-
-$(I FuncAttrNothrow):
-    $(B Nb)
-
-$(I FuncAttrRef):
-    $(B Nc)
-
-$(I FuncAttrProperty):
-    $(B Nd)
-
-$(I FuncAttrTrusted):
-    $(B Ne)
-
-$(I FuncAttrSafe):
-    $(B Nf)
-)
-
 $(I Arguments):
     $(I Argument)
     $(I Argument) $(I Arguments)
 
 $(I Argument:)
-$(V2
-    $(I Argument2)
-    $(B M) $(I Argument2)     $(GREEN // scope)
-
-$(I Argument2:)
-)    $(I Type)
+    $(I Type)
     $(B J) $(I Type)     $(GREEN // out)
     $(B K) $(I Type)     $(GREEN // ref)
     $(B L) $(I Type)     $(GREEN // lazy)
@@ -666,8 +616,6 @@ $(SECTION4 Return Value,
         returned in EDX. The EDX value will probably be removed in
         the future; it's there for backwards compatibility with
         an earlier implementation of AA's.)
-
-        $(V2 $(LI References are returned as pointers in EAX.))
 
         $(LI Delegates are returned with the pointer to the function
         in EDX and the context pointer in EAX.)
