@@ -398,11 +398,11 @@ $(TABLE_SPECIAL $(ARGS Const, Immutable Comparison),
 const(int*)* p;
 ---
 ,
----
+$(CPPLISTING
 // Postfix:
 //ptr to const ptr to const int
 const int *const *p;
----
+)
 	)
 
 	$(TROW transitive const,
@@ -413,12 +413,12 @@ const int** p;
 **p = 3; // error
 ---
 ,
----
+$(CPPLISTING
 // No:
 // const ptr to ptr to int
 int** const p;
 **p = 3;    // ok
----
+)
 	)
 
 	$(TROW cast away const,
@@ -429,12 +429,12 @@ const(int)* p;
 int* q = cast(int*)p; // ok
 ---
 ,
----
+$(CPPLISTING
 // Yes:
 // ptr to const int
 const int* p;
 int* q = const_cast<int*>p; //ok
----
+)
 	)
 
 	$(TROW cast+mutate,
@@ -446,13 +446,13 @@ int* q = cast(int*)p;
 *q = 3;   // undefined behavior
 ---
 ,
----
+$(CPPLISTING
 // Yes:
 // ptr to const int
 const int* p;
 int* q = const_cast<int*>p;
 *q = 3;   // ok
----
+)
 	)
 
 	$(TROW overloading,
@@ -462,11 +462,11 @@ void foo(int x);
 void foo(const int x);  //ok
 ---
 ,
----
+$(CPPLISTING
 // No:
 void foo(int x);
 void foo(const int x);  //error
----
+)
 	)
 
 	$(TROW const/mutable aliasing,
@@ -483,7 +483,7 @@ int i = 3;
 foo(&i, &i);
 ---
 ,
----
+$(CPPLISTING
 // Yes:
 void foo(const int* x, int* y)
 {
@@ -494,7 +494,7 @@ void foo(const int* x, int* y)
 ...
 int i = 3;
 foo(&i, &i);
----
+)
 	)
 
 	$(TROW immutable/mutable aliasing,
