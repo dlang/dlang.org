@@ -43,7 +43,6 @@ int foo();
 	of it, and the implementation may be in another language such as C, assembler, etc.
 	)
 
-$(V2
 $(H4 $(LNAME2 pure-functions, Pure Functions))
 
         $(P Pure functions are functions which cannot access global or static, mutable
@@ -146,7 +145,6 @@ auto foo(int i) {
 }
 ---
 
-$(V2
 $(H4 $(LNAME2 auto-ref-functions, Auto Ref Functions))
 
         $(P Auto ref functions infer their return type just as
@@ -172,9 +170,8 @@ auto ref foo() { static int x; return x; }  // ref return
 auto ref foo(ref int x) { return 3; return x; }  // ok, value return
 auto ref foo(ref int x) { return x; return 3; }  // error, ref return, 3 is not an lvalue
 ---
-)
 
-$(V2
+
 $(H4 $(LNAME2 inout-functions, Inout Functions))
 
         $(P Functions that deal with mutable, const, or immutable types with
@@ -232,7 +229,7 @@ $(OL
         $(P $(B Note:) Shared types are not overlooked. Shared types cannot
         be matched with inout.
         )
-)
+
 
 $(H4 $(LNAME2 property-functions, Property Functions))
 
@@ -256,7 +253,7 @@ void foo() {
   bar(s.x);  // calls bar(s.x())
 }
 ---
-)
+
 
 $(H4 $(LNAME2 virtual-functions, Virtual Functions))
 
@@ -411,8 +408,8 @@ void test() {
   B b = new B();
   b.foo(1);  // calls B.foo(long), since A.foo(int) not considered
   A a = b;
-$(V1    a.foo(1);    // calls A.foo(int))
-$(V2    a.foo(1);    // issues runtime error (instead of calling A.foo(int)))
+
+   a.foo(1);    // issues runtime error (instead of calling A.foo(int))
 }
 ------
 
@@ -443,7 +440,6 @@ void bar(A a) {
 }
 ------
 
-$(V2
         $(P If such an $(I AliasDeclaration) is not used, the derived
         class's functions completely override all the functions of the
         same name in the base class, even if the types of the parameters
@@ -485,7 +481,7 @@ void main() {
         $(P The $(CODE HiddenFuncError) exception is not thrown if the
         hidden function is disjoint, as far as overloading is concerned,
         from all the other virtual functions is the inheritance hierarchy.)
-)
+
 
         $(P A function parameter's default value is not inherited:)
 
@@ -554,7 +550,7 @@ $(H3 $(LNAME2 function-overloading, Function Overloading))
         $(OL
         $(LI no match)
         $(LI match with implicit conversions)
-        $(V2 $(LI match with conversion to const))
+        $(LI match with conversion to const)
         $(LI exact match)
         )
 
@@ -564,15 +560,9 @@ $(H3 $(LNAME2 function-overloading, Function Overloading))
         for a function is the $(I worst) match level of each of its
         arguments.)
 
-$(V2
         $(P Literals do not match $(CODE ref) or $(CODE out) parameters.)
-)
-$(V1
-        $(P If two or more functions have the same match level,
-        it is an ambiguity error.
-        )
-)
-$(V2
+
+
         $(P If two or more functions have the same match level,
         then $(LNAME2 partial-ordering, $(I partial ordering))
         is used to try to find the best match.
@@ -607,14 +597,13 @@ void test() {
         $(P A function with a variadic argument is considered less
         specialized than a function without.
         )
-)
+
 
         $(P Functions defined with non-D linkage cannot be overloaded.
         because the name mangling does not take the parameter types
         into account.
         )
 
-$(V2
 $(H3 $(LNAME2 overload-sets, Overload Sets))
 
         $(P Functions declared at the same scope overload against each
@@ -685,25 +674,6 @@ void bar(C c) {
 }
 ---
 
-)
-
-
-$(H4 $(LNAME2 parameters, Function Parameters))
-
-$(V1
-        $(P Parameters are $(D in), $(D out), $(D inout) or $(D lazy).
-        $(D in) is the default; the others work like
-        storage classes. For example:
-	)
-
-------
-int foo(in int x, out int y, inout int z, int q);
-------
-
-        $(P x is $(D in), y is $(D out), z is $(D inout), and q is $(D in).
-        )
-)
-$(V2
         $(P Parameter storage classes are $(D in), $(D out),
         $(D ref), $(D lazy), $(D const), $(D immutable), $(D shared),
 	$(D inout) or
@@ -716,7 +686,6 @@ int foo(in int x, out int y, ref int z, int q);
 
         $(P x is $(D in), y is $(D out), z is $(D ref), and q is none.
         )
-)
 
         $(UL
         $(LI The function declaration makes it clear what the inputs and
@@ -730,21 +699,19 @@ int foo(in int x, out int y, ref int z, int q);
 	$(TABLE_2COLS Parameter Storage Classes,
 	$(THEAD Storage Class, Description)
 	$(TROW $(I none), parameter becomes a mutable copy of its argument)
-	$(V1 $(TROW $(D in), equivalent to $(I none)))
-	$(V2 $(TROW $(D in), equivalent to $(D const scope)))
+
+	$(TROW $(D in), equivalent to $(D const scope))
 	$(TROW $(D out), parameter is initialized upon function entry with the default value
 	for its type)
-	$(V1 $(TROW $(D inout), parameter is passed by reference))
-	$(V2 $(TROW $(D ref),   parameter is passed by reference))
-	$(V2 $(TROW $(D scope), references in the parameter
-	cannot be escaped (e.g. assigned to a global variable)))
+
+	$(TROW $(D ref),   parameter is passed by reference)
+	$(TROW $(D scope), references in the parameter
+	cannot be escaped (e.g. assigned to a global variable))
 	$(TROW $(D lazy), argument is evaluated by the called function and not by the caller)
-	$(V2
-	$(TROW $(D const), argument is implicitly converted to a const type)
+		$(TROW $(D const), argument is implicitly converted to a const type)
 	$(TROW $(D immutable), argument is implicitly converted to an immutable type)
 	$(TROW $(D shared), argument is implicitly converted to a shared type)
 	$(TROW $(D inout), argument is implicitly converted to an inout type)
-	)
 	)
 
 ------
@@ -767,7 +734,7 @@ abc(y);
 // y is now 2
 
 
-void def($(V1 inout)$(V2 ref) int x) {
+void def(ref int x) {
   x += 1;
 }
 
@@ -867,11 +834,15 @@ extern (C) int def(...); // error, must have at least one parameter
 	)
 
 	$(P Access to variadic arguments is done using the standard library
+<<<<<<< .merge_file_VpPKOy
 	module $(V1 $(D std.c.stdarg))$(V2 $(D core.stdc.stdarg)).
+=======
+	module $(B core.stdc.stdarg).
+>>>>>>> .merge_file_shMyRC
 	)
 
 ------
-import $(V1 std.c.stdarg)$(V2 core.stdc.stdarg);
+import core.stdc.stdarg;
 
 void test() {
   foo(3, 4, 5);   // first variadic argument is 5
@@ -908,18 +879,18 @@ int def(...);           // ok
 	To access them, the following import is required:
 
 ------
-import $(V1 std.stdarg)$(V2 core.vararg);
+import core.vararg;
 ------
 
         These variadic functions have a special local variable declared for
         them,
-        $(D _argptr), which is a $(V1 $(D std.stdarg.va_list))$(V2 $(D core.vararg))
+        $(D _argptr), which is a $(D core.vararg)
 	reference to the first of the variadic
         arguments. To access the arguments, $(D _argptr) must be used
 	in conjuction with $(D va_arg):
 
 ------
-import $(V1 std.stdarg)$(V2 core.vararg);
+import core.vararg;
 
 void test() {
   foo(3, 4, 5);   // first variadic argument is 5
@@ -941,7 +912,7 @@ int foo(int x, int y, ...) {
 
 ------
 import std.stdio;
-import $(V1 std.stdarg)$(V2 core.vararg);
+import core.vararg;
 
 class Foo { int x = 3; }
 class Bar { long y = 4; }
@@ -950,7 +921,7 @@ void printargs(int x, ...) {
   writefln("%d arguments", _arguments.length);
   for (int i = 0; i < _arguments.length; i++)
   {
-    $(V1 _arguments[i].print();)$(V2 writeln(_arguments[i]);)
+    writeln(_arguments[i]);
 
     if (_arguments[i] == typeid(int))
     {
@@ -1182,7 +1153,7 @@ void func(int x) {
 $(H3 $(LNAME2 Local Static Variables, Local Static Variables))
 
 	$(P Local variables in functions can be declared as static
-	$(V2 or $(D __gshared)) in which case they are statically allocated
+	or $(D __gshared) in which case they are statically allocated
 	rather than being allocated on the stack.
 	As such, their value persists beyond the exit of the function.
 	)
@@ -1197,9 +1168,9 @@ void foo() {
 
 	$(P The initializer for a static variable must be evaluatable at
 	compile time, and they are initialized upon the start of the thread
-	$(V2 (or the start of the program for $(D __gshared)).
+	(or the start of the program for $(D __gshared)).
 	There are no static constructors or static destructors
-	for static local variables.)
+	for static local variables.
 	)
 
 	$(P Although static variable name visibility follows the usual scoping
@@ -1354,38 +1325,7 @@ struct Foo {
   }
 }
 ------
-$(V1
-        $(P Member functions of nested classes and structs do not have
-        access to the stack variables of the enclosing function, but
-        do have access to the other symbols:
-        )
 
-------
-void test() {
-  int j;
-  static int s;
-
-  struct Foo {
-    int a;
-
-    int bar() {
-      int c = s;  // ok, s is static
-      int d = j;  // error, no access to frame of test()
-
-      int foo() {
-        int e = s;    // ok, s is static
-        int f = j;    // error, no access to frame of test()
-        return c + a; // ok, frame of bar() is accessible,
-                      // so are members of Foo accessible via
-                      // the 'this' pointer to Foo.bar()
-      }
-
-      return 0;
-    }
-  }
-}
-------
-)
         $(P Nested functions always have the D function linkage type.
         )
 
@@ -1415,7 +1355,7 @@ void test() {
 
 	$(P Nested functions cannot be overloaded.)
 
-$(H4 $(LNAME2 closures, Delegates, Function Pointers, and $(V1 Dynamic) Closures))
+$(H4 $(LNAME2 closures, Delegates, Function Pointers, and  Closures))
 
         $(P A function pointer can point to a static nested function:)
 
@@ -1449,22 +1389,7 @@ void test() {
 }
 ------
 
-$(V1
-        $(P The stack variables, however, are not valid once the function
-        declaring them has exited, in the same manner that pointers to
-        stack variables are not valid upon exit from a function:
-        )
 
-------
-int* bar() {
-  int b;
-  test();
-  int i = dg(); // error, test.a no longer exists
-  return &b;    // error, bar.b not valid after bar() exits
-}
-------
-)
-$(V2
         $(P The stack variables referenced by a nested function are
         still valid even after the function exits (this is different
         from D 1.0). This is called a $(I closure).
@@ -1480,7 +1405,7 @@ int* bar() {
   return &b;    // error, bar.b not valid after bar() exits
 }
 ------
-)
+
 
         $(P Delegates to non-static nested functions contain two pieces of
         data: the pointer to the stack frame of the lexically enclosing
@@ -1640,7 +1565,6 @@ int countTen(int x) {
 static assert(countTen(6) == 6); // OK
 static assert(countTen(12) == 12);  // invalid, modifies y.
 ---
-$(V2
     $(P The $(D __ctfe) boolean pseudo-variable, which evaluates to $(D_KEYWORD true)
         at compile time, but $(D_KEYWORD false) at run time, can be used to provide
         an alternative execution path to avoid operations which are forbidden
@@ -1648,7 +1572,7 @@ $(V2
         code generation and therefore has no run-time cost, even if no optimizer
         is used.
     )
-)
+
 
 	$(P In order to be executed at compile time, the function
 	must appear in a context where it must be so executed, for
@@ -1723,7 +1647,6 @@ const int x = foo("1");
         generated. A function template would be the appropriate
         method to implement this sort of thing.)
 
-$(V2
 $(H3 $(LNAME2 function-safety, Function Safety))
 
         $(P $(I Safe functions) are functions that are statically checked
@@ -1796,9 +1719,8 @@ $(H4 $(LNAME2 system-functions, System Functions))
 
         $(P System functions are $(B not) covariant with trusted or safe functions.
         )
-)
 
-$(V2
+
 $(H3 $(LNAME2 function-attribute-inference, Function Attribute Inference))
 
         $(P $(GLINK2 expression, FunctionLiteral)s and
@@ -1825,7 +1747,7 @@ $(H3 $(LNAME2 function-attribute-inference, Function Attribute Inference))
         $(P If a function attempts to test itself for those attributes, then
         the function is inferred as not having those attributes.
         )
-)
+
 
 )
 
