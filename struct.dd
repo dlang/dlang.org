@@ -1,6 +1,6 @@
 Ddoc
 
-$(SPEC_S Structs $(AMP) Unions,
+$(SPEC_S Structs and Unions,
 
          $(P Whereas classes are reference types, structs are value types.
              Any C struct can be exactly represented as a D struct, except non-static
@@ -24,7 +24,7 @@ $(SPEC_S Structs $(AMP) Unions,
         $(TROW reference type, $(UNCHECK), $(CHECK), $(UNCHECK),
         $(UNCHECK), $(UNCHECK))
         $(TROW data members, $(CHECK), $(CHECK), $(CHECK), $(CHECK), $(CHECK))
-        $(TROW hidden members, $(V1 $(UNCHECK))$(V2 $(CHECK)),
+        $(TROW hidden members, $(CHECK),
         $(CHECK), $(UNCHECK), $(CHECK), $(CHECK))
         $(TROW static members, $(CHECK), $(CHECK), $(UNCHECK),
         $(CHECK), $(CHECK))
@@ -36,16 +36,6 @@ $(SPEC_S Structs $(AMP) Unions,
         $(UNCHECK), $(CHECK), $(CHECK))
         $(TROW virtual member functions, $(UNCHECK), $(CHECK),
         $(UNCHECK), $(CHECK), $(CHECK))
-$(V1
-        $(TROW constructors $(UNCHECK), $(CHECK), $(UNCHECK),
-        $(CHECK), $(CHECK))
-        $(TROW destructors, $(UNCHECK), $(CHECK), $(UNCHECK),
-        $(CHECK), $(CHECK))
-        $(TROW RAII, $(UNCHECK), $(CHECK), $(UNCHECK), $(CHECK), $(CHECK))
-        $(TROW assign overload, $(UNCHECK), $(UNCHECK), $(UNCHECK),
-        $(CHECK), $(CHECK))
-)
-$(V2
         $(TROW $(LINK2 Struct-Constructor, constructors), $(CHECK),
         $(CHECK), $(UNCHECK), $(CHECK), $(CHECK))
         $(TROW $(LINK2 StructPostblit, postblit)/copy constructors,
@@ -59,7 +49,6 @@ $(V2
         $(TROW RAII, $(CHECK), $(CHECK), $(UNCHECK), $(CHECK), $(CHECK))
         $(TROW $(LINK2 AssignOverload, assign overload), $(CHECK),
         $(UNCHECK), $(UNCHECK), $(CHECK), $(CHECK))
-)
         $(TROW $(LINK2 StructLiteral, literals), $(CHECK), $(UNCHECK),
         $(UNCHECK), $(UNCHECK), $(UNCHECK))
         $(TROW operator overloading, $(CHECK), $(CHECK), $(UNCHECK),
@@ -85,12 +74,10 @@ $(V2
         $(UNCHECK), $(UNCHECK))
         $(TROW static destructor, $(CHECK), $(CHECK), $(UNCHECK),
         $(UNCHECK), $(UNCHECK))
-$(V2
         $(TROW const/immutable/shared, $(CHECK), $(CHECK), $(UNCHECK),
         $(UNCHECK), $(UNCHECK))
         $(TROW inner nesting, $(LINK2 nested, $(CHECK)), $(DDSUBLINK class,
         nested, $(CHECK)), $(UNCHECK), $(UNCHECK), $(UNCHECK))
-)
         )
 
 $(GRAMMAR
@@ -114,8 +101,8 @@ $(GNAME StructBodyDeclaration):
     $(GLINK2 module, DeclDef)
     $(GLINK StructAllocator)
     $(GLINK StructDeallocator)
-$(V2      $(GLINK StructPostblit)
-    $(GLINK2 class, AliasThis))
+     $(GLINK StructPostblit)
+    $(GLINK2 class, AliasThis)
 
 $(GNAME StructAllocator):
     $(GLINK2 class, ClassAllocator)
@@ -304,7 +291,6 @@ $(TABLE2 Struct Field Properties,
 $(THEAD Name, Description)
 $(TROW $(D .offsetof), Offset in bytes of field from beginning of struct))
 
-$(V2
 $(SECTION3 $(LNAME2 ConstStruct, Const and Immutable Structs),
 
         $(P A struct declaration can have a storage class of
@@ -324,9 +310,7 @@ void main() {
 }
 ----
 )
-)
 
-$(V2
 $(SECTION3 $(LNAME2 Struct-Constructor, Struct Constructors),
 
         $(P Struct constructors are used to initialize an instance
@@ -358,9 +342,7 @@ void main()
 }
 ------
 )
-)
 
-$(V2
 $(SECTION3 $(LNAME2 StructPostblit, Struct Postblits),
 
 $(GRAMMAR
@@ -401,9 +383,7 @@ struct S {
 
 	$(P Unions may not have fields that have postblits.)
 )
-)
 
-$(V2
 $(SECTION3 $(LNAME2 StructDestructor, Struct Destructors),
 
         $(P Destructors are called when an object goes out of scope.
@@ -413,9 +393,7 @@ $(SECTION3 $(LNAME2 StructDestructor, Struct Destructors),
 
 	$(P Unions may not have fields that have destructors.)
 )
-)
 
-$(V2
 $(SECTION3 $(LNAME2 AssignOverload, Assignment Overload),
 
         $(P While copy construction takes care of initializing
@@ -487,9 +465,8 @@ struct S {
         )
 
 )
-)
 
-$(V2
+
 $(H2 $(LNAME2 nested, Nested Structs))
 
         $(P A $(I nested struct) is a struct that is declared inside the scope
@@ -512,26 +489,7 @@ void foo() {
   s.bar(); // returns 11
 }
 ---
-$(V1
-        $(P Nested structs cannot be used as fields or as the
-        element type of an array:
-        )
 
----
-void foo() {
-  int i = 7;
-  struct SS {
-    int x,y;
-    int bar() { return x + i + 1; }
-  }
-  struct DD {
-    SS s;  // error, cannot be field
-  }
-  SS[3] a; // error, cannot be array element
-  SS[] a;  // error, cannot be array element
-}
----
-)
         $(P A struct can be prevented from being nested by
         using the static attribute, but then of course it
         will not be able to access variables from its enclosing
@@ -567,7 +525,7 @@ void main() {
   a.fun(2);
 }
 ---
-)
+
 
 )
 
