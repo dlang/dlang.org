@@ -387,33 +387,34 @@ $(SECTION2 Implicit Conversions,
 
 $(SECTION2 Comparing D Immutable and Const with C++ Const,
 
-$(TABLE2 $(ARGS Const, Immutable Comparison),
+$(TABLE_SPECIAL $(ARGS Const, Immutable Comparison),
 	$(THEAD Feature, D, C++98)
-	$(TROW const keyword, Yes, Yes)
-	$(TROW immutable keyword, Yes, No)
+	$(TROW $(D const) keyword, Yes, Yes)
+	$(TROW $(D immutable) keyword, Yes, No)
 	$(TROW const notation,
-	Functional:
 ---
+// Functional:
 //ptr to const ptr to const int
 const(int*)* p;
 ---
 ,
-	Postfix:
 $(CPPLISTING
+// Postfix:
 //ptr to const ptr to const int
 const int *const *p;
 )
 	)
 
-	$(TROW transitive const, Yes:
+	$(TROW transitive const,
 ---
+// Yes:
 //const ptr to const ptr to const int
 const int** p;
 **p = 3; // error
 ---
 ,
-	No:
 $(CPPLISTING
+// No:
 // const ptr to ptr to int
 int** const p;
 **p = 3;    // ok
@@ -421,56 +422,56 @@ int** const p;
 	)
 
 	$(TROW cast away const,
-	Yes:
 ---
+// Yes:
 // ptr to const int
 const(int)* p;
 int* q = cast(int*)p; // ok
 ---
 ,
-	Yes:
 $(CPPLISTING
+// Yes:
 // ptr to const int
 const int* p;
-int* q = const_cast$(LT)int*$(GT)p; //ok
+int* q = const_cast<int*>p; //ok
 )
 	)
 
-	$(TROW modification after casting away const,
-	No:
+	$(TROW cast+mutate,
 ---
+// No:
 // ptr to const int
 const(int)* p;
 int* q = cast(int*)p;
 *q = 3;   // undefined behavior
 ---
 ,
-	Yes:
 $(CPPLISTING
+// Yes:
 // ptr to const int
 const int* p;
-int* q = const_cast$(LT)int*$(GT)p;
+int* q = const_cast<int*>p;
 *q = 3;   // ok
 )
 	)
 
-	$(TROW overloading of top level const,
-	Yes:
+	$(TROW overloading,
 ---
+// Yes:
 void foo(int x);
 void foo(const int x);  //ok
 ---
 ,
-	No:
 $(CPPLISTING
+// No:
 void foo(int x);
 void foo(const int x);  //error
 )
 	)
 
-	$(TROW aliasing of const with mutable,
-	Yes:
+	$(TROW const/mutable aliasing,
 ---
+// Yes:
 void foo(const int* x, int* y)
 {
    bar(*x); // bar(3)
@@ -482,8 +483,8 @@ int i = 3;
 foo(&i, &i);
 ---
 ,
-	Yes:
 $(CPPLISTING
+// Yes:
 void foo(const int* x, int* y)
 {
    bar(*x); // bar(3)
@@ -492,13 +493,13 @@ void foo(const int* x, int* y)
 }
 ...
 int i = 3;
-foo(&amp;i, &amp;i);
+foo(&i, &i);
 )
 	)
 
-	$(TROW aliasing of immutable with mutable,
-	No:
+	$(TROW immutable/mutable aliasing,
 ---
+// No:
 void foo(immutable int* x, int* y) {
  bar(*x); // bar(3)
  *y = 4;  // undefined behavior
@@ -513,12 +514,12 @@ foo(cast(immutable)&i, &i);
 	)
 
 	$(TROW type of string literal,
-	immutable(char)[],
-	const char*
+	$(D immutable(char)[]),
+	$(D const char*)
 	)
 
 
-	$(TROW implicit conversion of string literal to non-const,
+	$(TROW string literal to non-const,
 	not allowed,
 	$(ARGS allowed, but deprecated)
 	)
@@ -542,8 +543,5 @@ Macros:
 	YES=<td class="compYes">Yes</td>
 	YES1=<td class="compYes"><a href="$1">Yes</a></td>
 	ERROR = $(RED $(B error))
-	COMMA=,
-META_KEYWORDS=D Programming Language, const, immutable
-META_DESCRIPTION=Comparison of const between the
-D programming language, C++, and C++0x
-
+    META_KEYWORDS=D Programming Language, const, immutable
+    META_DESCRIPTION=Comparison of const between the D programming language, C++, and C++0x
