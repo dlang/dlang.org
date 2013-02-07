@@ -140,7 +140,7 @@ $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC)
 ################################################################################
 
 all : phobos-prerelease druntime-prerelease druntime-release phobos-release \
-	html ${DOC_OUTPUT_DIR}/dlangspec.mobi
+	html ${DOC_OUTPUT_DIR}/dlangspec.mobi ${DOC_OUTPUT_DIR}/dlangspec.pdf
 
 all+pdf : $(ALL_FILES) $(PDFTARGETS)
 
@@ -217,18 +217,18 @@ $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
 # LaTeX
 ################################################################################
 
-# This should be:
-# However, for now we only produce a subset of files.
 dlangspec-tex.d : $(addsuffix .dd,$(SPEC_ROOT))
-	rdmd ../tools/catdoc.d -o=$@ $^
+	rdmd --force ../tools/catdoc.d -o=$@ $^
 
 dlangspec.tex : $(DDOC) latex.ddoc dlangspec-tex.d
 	$(DMD) -Df$@ $^
 
+# Run twice to fix multipage tables and \ref uses
 dlangspec.dvi : dlangspec.tex
 	latex $^
+	latex $^
 
-dlangspec.pdf : dlangspec.dvi
+$(DOC_OUTPUT_DIR)/dlangspec.pdf : dlangspec.dvi
 	dvipdf $^ $@
 
 ################################################################################
