@@ -50,6 +50,115 @@ class Sum {
 }
 ------
 
+$(H4 $(LNAME2 documented-unittests, Documented Unittests))
+
+$(P Documented unittests allow the developer to deliver code examples to the user,
+    while at the same time automatically verifying that the examples are valid. This
+    avoids the frequent problem of having outdated documentation for some piece of code.)
+
+$(P If a declaration is followed by a documented unittest, the code in
+    the unittest will be inserted in the $(B example) section of the declaration:)
+
+------
+/// Math class
+class Math
+{
+    /// add function
+    int add(int x, int y) { return x + y; }
+
+    ///
+    unittest
+    {
+        assert(add(2, 2) == 4);
+    }
+}
+
+///
+unittest
+{
+    auto math = new Math();
+    auto result = math.add(2, 2);
+}
+------
+
+$(P The above will generate the following documentation:)
+
+<dl><dt><big><a name="Math"></a>class <u>Math</u>;
+
+</big></dt>
+<dd><u>Math</u> class<br><br>
+<b>Example:</b><pre class="d_code"><font color=blue>auto</font> math = <font color=blue>new</font> <u>Math</u>;
+<font color=blue>auto</font> result = math.add(2, 2);
+</pre><br>
+
+<dl><dt><big><a name="Math.add"></a>int <u>add</u>(int <i>x</i>, int <i>y</i>);
+</big></dt>
+<dd><u>add</u> function<br><br>
+<b>Example:</b><pre class="d_code"><font color=blue>assert</font>(<u>add</u>(2, 2) == 4);
+</pre>
+</dd>
+</dl>
+</dd>
+</dl>
+
+$(P A unittest which is not documented, or is marked as private will not be
+    used to generate code samples.)
+
+$(P There can be multiple documented unittests and they can appear
+    in any order. They will be attached to the last non-unittest declaration:)
+
+------
+/// add function
+int add(int x, int y) { return x + y; }
+
+
+/// code sample generated
+unittest
+{
+    assert(add(1, 1) == 2);
+}
+
+/// code sample not generated because the unittest is private
+private unittest
+{
+    assert(add(2, 2) == 4);
+}
+
+unittest
+{
+    /// code sample not generated because the unittest isn't documented
+    assert(add(3, 3) == 6);
+}
+
+/// code sample generated, even if it only includes comments (or is empty)
+unittest
+{
+    /** assert(add(4, 4) == 8); */
+}
+------
+
+$(P The above will generate the following documentation:)
+
+<dl><dt><big><a name="add"></a>int <u>add</u>(int <i>x</i>, int <i>y</i>);
+
+</big></dt>
+<dd><u>add</u> function<br><br>
+<b>Examples:</b><br>
+code sample generated
+<pre class="d_code">
+<font color=blue>assert</font>(<u>add</u>(1, 1) == 2);
+</pre>
+<br><br><b>Examples:</b><br>
+code sample generated, even if it is empty or only includes comments
+
+<pre class="d_code">
+<font color=green>/** assert(add(4, 4) == 8); */</font>
+</pre>
+<br><br>
+</dd>
+</dl>
+
+
 $(H3 Versioning)
 
 	$(P The $(DDSUBLINK version, PredefinedVersions, version identifier)
