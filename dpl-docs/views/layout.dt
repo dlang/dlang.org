@@ -1,0 +1,122 @@
+!!! 5
+html(lang='en-US')
+  //
+    | Copyright (c) 1999-2012 by Digital Mars
+    | All Rights Reserved Written by Walter Bright
+    | http://www.digitalmars.com
+      
+  head
+    meta(http-equiv='content-type', content='text/html; charset=utf-8')
+    block title
+    title #{title} - D Programming Language - Digital Mars
+
+    link(rel="stylesheet", type="text/css", href="#{info.linkTo(null)}../css/ddox.css")
+    link(rel="stylesheet", href="#{info.linkTo(null)}../prettify/prettify.css", type="text/css")
+
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js', type='text/javascript')
+    script(src='#{info.linkTo(null)}../js/codemirror.js')
+    script(src='#{info.linkTo(null)}../js/d.js')
+    script(src='#{info.linkTo(null)}../js/run.js', type='text/javascript')
+    link(rel='stylesheet', href='#{info.linkTo(null)}../css/codemirror.css')
+    link(rel='stylesheet', type='text/css', href='#{info.linkTo(null)}../css/style.css')
+    script(src='#{info.linkTo(null)}../js/hyphenate.js', type='text/javascript')
+
+    script(type="text/javascript", src="#{info.linkTo(null)}../prettify/prettify.js")
+    script(type="text/javascript", src="#{info.linkTo(null)}../js/ddox.js")
+
+  body.hyphenate
+    #top
+      #search-box
+        form(method='get', action='http://google.com/search')
+          |<img src="#{info.linkTo(null)}../images/search-left.gif" width="11" height="22" alt=""><input id="q" name="q"><input id="search-submit" type="image" src="#{info.linkTo(null)}../images/search-button.gif">
+          input#domains(type='hidden', name='domains', value='dlang.org')
+          input#sourceid(type='hidden', name='sourceid', value='google-search')
+          #search-dropdown
+            select#sitesearch(name='sitesearch', size='1')
+              option(value='dlang.org') Entire D  Site
+              option(value='dlang.org/phobos') Library Reference
+              option(value='www.digitalmars.com/d/archives') Newsgroup Archives
+      #header
+        a(href='/')
+          img#logo(width='125', height='95', border='0', alt='D Logo', src='#{info.linkTo(null)}../images/dlogo.png')
+        a#d-language(href='/') D Programming Language 
+
+    #navigation
+      .navblock
+        form(method='get', action='http://www.google.com/search')
+          #searchbox
+            input(name='q', size='10', value='RTL Search', onfocus='if(this.value == "RTL Search"){this.value="";}')
+            input(type='hidden', name='domains', value='www.digitalmars.com')
+            input(type='hidden', name='sitesearch', value='dlang.org/phobos')
+            input(type='hidden', name='sourceid', value='google-search')
+            input(type='submit', name='submit', value='Go')
+        #toctop
+          ul
+            li
+              a(href='../index.html', title='D Programming Language') D
+            li
+              a(href='../spec.html', title='D Language Specification') Language
+            li
+              a(href='../phobos/index.html', title='D Runtime Library') Phobos
+            li
+              a(href='../phobos-prerelease/index.html', title='D Runtime Library (prerelease)') Phobos (prerelease)
+            li
+              a(href='../comparison.html', title='Language Comparisons') Comparisons
+      .navblock
+        block navigation
+    
+    #content
+      - if( auto modname = info.node.moduleName )
+        #tools
+          - string project, path_prefix, line_suffix;
+          - string target = "v2.061";
+          - if( modname.startsWith("core.") )
+            - project = "druntime", path_prefix = "src/";
+          - else
+            - project = "phobos", path_prefix = "";
+          - if( auto decl = cast(Declaration)info.node ) line_suffix = "#L"~to!string(decl.line);
+          - string filename = replace(modname, ".", "/") ~ ".d";
+
+          a.tip.button(href='https://github.com/D-Programming-Language/#{project}/blob/#{target}/#{path_prefix}#{filename}#{line_suffix}')
+            | View source code
+            span
+              | Display the source code in #{filename} from which this page was generated on
+              | github.
+
+          a.tip.button(href='https://github.com/D-Programming-Language/#{project}/edit/master/#{path_prefix}#{filename}')
+            | Improve this page
+            span
+              | Quickly fork, edit online, and submit a pull request for this page.
+              | Requires a signed-in GitHub account. This works well for small changes.
+              | If you'd like to make larger changes you may want to consider using
+              | local clone.
+
+          //- a.tip.button(href='http://www.prowiki.org/wiki4d/wiki.cgi?DocComments/Phobos/#{info.node.qualifiedName}')
+          a.tip.button(href='http://wiki.dlang.org/DocComments/Phobos/#{info.node.qualifiedName}')
+            | Page wiki
+            span
+              | View or edit the community-maintained wiki page associated with this page.
+
+      - auto hidx = std.string.indexOf(title, ' ');
+      - if( hidx > 0 && title[0 .. hidx] != "Module" )
+        h1!= title[0 .. hidx+1] ~ "<code><a href=\"" ~ info.linkTo(info.node.parent) ~ "\">" ~ info.node.moduleName ~ "</a>" ~ (cast(Module)info.node ? "" : "." ~ title[hidx+1 .. $]) ~ "</code>"
+      - else
+        h1= title
+      block body
+
+      br
+      br
+      br
+      br
+
+      // Google ad
+      script(type='text/javascript')
+      script(type='text/javascript', src='http://pagead2.googlesyndication.com/pagead/show_ads.js')
+ 
+    #copyright
+      block copyright
+      | | Page generated by <a href="https://github.com/rejectedsoftware/ddox">ddox</a>.
+
+    :javascript
+      setupDdox();
+      prettyPrint();
