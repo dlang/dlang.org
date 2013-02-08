@@ -3,16 +3,19 @@ here for completeness. Macros defer wherever possible to style classes.
 
 _=Simple tags, ordered alphabetically
 
+A = <a href="$1">$+</a>
 ADEF = <a name="$0"></a>
 AHTTP = <a href="http://$1">$+</a>
 AHTTPS = <a href="https://$1">$+</a>
 ALOCAL = <a href="#$1">$+</a>
 BIG = <big>$0</big>
-BR = <br>
+BR = <br />
 CHECKMARK = &#10004;
 DD = <dd>$0</dd>
 DIV = <div $1>$+</div>
 DIVC = $(DIV class="$1", $+)
+DIVCID = $(DIV class="$1" id="$2", $3)
+DIVID = $(DIV id="$1", $+)
 DL = <dl>$0</dl>
 DOUBLEQUOTE = $(LDQUO)$0$(RDQUO)
 DT = <dt>$0</dt>
@@ -20,6 +23,7 @@ ENUMERATE = $(OL $(ITEMS_HELPER $1, $+))
 ITEMIZE = $(UL $(ITEMS_HELPER $1, $+))
 ITEMS_HELPER = $(LI $1)$(ITEMS_HELPER $+)
 FONT = <font $1>$+</font>
+H1 = <h1>$0</h1>
 H2 = <h2>$0</h2>
 H3 = <h3>$0</h3>
 H4 = <h4>$0</h4>
@@ -27,13 +31,15 @@ I = <i>$0</i>
 LI = <li>$0</li>
 OL = <ol>$0</ol>
 P = <p>$0</p>
+PRE = <pre>$0</pre>
 SINGLEQUOTE = $(LSQUO)$0$(RSQUO)
+SMALL = <small>$0</small>
 SPAN = <span $1>$+</span>
 SPANC = $(SPAN class="$1", $+)
-SMALL = <small>$0</small>
 SUB = <sub>$0</sub>
 SUP = <sup>$0</sup>
 TABLE = <table>$0</table>
+TABLEC = <table class="$1">$+</table>
 TD = <td>$0</td>
 TD_HELPER = $(TD $1)$(TD_HELPER $+)
 TH = <th>$0</th>
@@ -47,8 +53,8 @@ UL = <ul>$0</ul>
 
 _=Defining anchors and linking
 
-LINK = <a href="$0">$0</a>
-LINK2 = <a href="$1">$+</a>
+LINK = $(A $0, $0)
+LINK2 = $(A $1, $+)
 
 _=Colors
 
@@ -83,7 +89,7 @@ DDOC = <html><head>
 <link rel="stylesheet" type="text/css" href="css/html.css" />
 <title>$(TITLE)</title>
 </head><body>
-<h1>$(TITLE)</h1>
+$(H1 $(TITLE))
 $(BODY)
 </body></html>
 
@@ -117,11 +123,11 @@ DDOC_CLASS_MEMBERS    = $(DDOC_MEMBERS $(DIVC class_members, $0))
 DDOC_STRUCT_MEMBERS   = $(DDOC_MEMBERS $(DIVC struct_members, $0))
 DDOC_ENUM_MEMBERS     = $(DDOC_MEMBERS $(DIVC enum_members, $0))
 DDOC_TEMPLATE_MEMBERS = $(DDOC_MEMBERS $(DIVC template_members, $0))
-DDOC_PARAMS    = $(DDOC_EXPLANATORY Params, $(TABLE $0))
+DDOC_PARAMS    = $(DDOC_EXPLANATORY Params, $(TABLEC params, $0))
 DDOC_PARAM_ROW = $(TR $0)
 DDOC_PARAM_ID  = $(TD $(SPANC param_id, $0))
 DDOC_PARAM_DESC  = $(TD $(SPANC param_desc, $0))
-DDOC_BLANKLINE = $(BR)$(BR)
+DDOC_BLANKLINE = $(BR)
 
 DDOC_ANCHOR  = $(ADEF $1)
 DDOC_PSYMBOL = $(SPANC psymbol, $0)
