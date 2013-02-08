@@ -14,16 +14,11 @@ $(CCODE
 )
 	$(P of C, in D there is:)
 
-$(V1
---------------------
-import std.c.windows.windows;
---------------------
-)
-$(V2
+
 --------------------
 import core.sys.windows.windows;
 --------------------
-)
+
 
 $(H2 Calling Conventions)
 
@@ -70,47 +65,7 @@ $(H2 Windows Executables)
 	)
 
 	$(LI $(CODE WinMain) must follow this form:
-$(V1
---------------------
-import core.runtime;
-import std.c.windows.windows;
-import std.string;
 
-extern (Windows)
-int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-            LPSTR lpCmdLine, int nCmdShow)
-{
-    int result;
-
-    void exceptionHandler(Throwable e) {
-        throw e;
-    }
-
-    try
-    {
-        Runtime.initialize(&exceptionHandler);
-        result = myWinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
-        Runtime.terminate(&exceptionHandler);
-    }
-    catch (Throwable e) // catch any uncaught exceptions
-    {
-        MessageBoxA(null, e.toString().toStringz, "Error",
-                    MB_OK | MB_ICONEXCLAMATION);
-        result = 0;     // failed
-    }
-
-  return result;
-}
-
-int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-              LPSTR lpCmdLine, int nCmdShow)
-{
-    // ... insert user code here ...
-    return 0;
-}
---------------------
-)
-$(V2
 --------------------
 import core.runtime;
 import core.sys.windows.windows;
@@ -149,7 +104,7 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     return 0;
 }
 --------------------
-)
+
 
 	The $(D myWinMain()) function is where the user code goes, the
 	rest of $(D WinMain) is boilerplate to initialize and shut down
