@@ -16,6 +16,7 @@ PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
 DOC_OUTPUT_DIR=$(ROOT_DIR)/web
 GIT_HOME=git@github.com:D-Programming-Language
+RSYNC_TARGET=d-programming@digitalmars.com:data/
 
 # Latest released version
 ifeq (,${LATEST})
@@ -31,7 +32,8 @@ ROOT_DIR=$(shell pwd)
 
 # Documents
 
-DDOC=macros.ddoc doc.ddoc ${LATEST}.ddoc
+DDOC=macros.ddoc html.ddoc dlang.ddoc doc.ddoc ${LATEST}.ddoc
+STDDOC=macros.ddoc html.ddoc dlang.ddoc std.ddoc ${LATEST}.ddoc
 
 IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico		\
 d3.gif d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
@@ -164,10 +166,10 @@ clean:
 	@echo You should issue manually: rm -rf ${DMD_DIR}.${LATEST} ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
 
 rsync : all
-	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
+	rsync -avz $(DOC_OUTPUT_DIR)/ $(RSYNC_TARGET)
 
 rsync-only :
-	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
+	rsync -avz $(DOC_OUTPUT_DIR)/ $(RSYNC_TARGET)
 
 pdf : $(PDFTARGETS)
 
@@ -252,11 +254,11 @@ ${DMD_DIR}/src/dmd :
 ################################################################################
 
 druntime-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
-${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd
+${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd ${DDOC}
 	rm -f $@
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
-		DOCFMT=../d-programming-language.org/std.ddoc
+        DOCFMT="$(addprefix ../d-programming-language.org/, $(STDDOC))"
 
 druntime-release : ${DOC_OUTPUT_DIR}/phobos/object.html
 ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
@@ -275,9 +277,10 @@ ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
 ################################################################################
 
 phobos-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html
-${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : \
+${DOC_OUTPUT_DIR}/phobos-prerelease/index.html :  ${DDOC} std.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
+      STDDOC="$(addprefix ../d-programming-language.org/, $(STDDOC))" \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-release: ${DOC_OUTPUT_DIR}/phobos/index.html
