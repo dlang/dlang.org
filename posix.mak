@@ -32,8 +32,8 @@ ROOT_DIR=$(shell pwd)
 
 # Documents
 
-DDOC=macros.ddoc html.ddoc dlang.ddoc doc.ddoc ${LATEST}.ddoc
-STDDOC=macros.ddoc html.ddoc dlang.ddoc std.ddoc ${LATEST}.ddoc
+DDOC=$(addprefix ddoc/, $(addsuffix .ddoc, macros html dlang doc ${LATEST}))
+STDDOC=$(addprefix ddoc/, $(addsuffix .ddoc, macros html dlang std ${LATEST}))
 
 IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico		\
 d3.gif d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
@@ -134,7 +134,7 @@ $(DOC_OUTPUT_DIR)/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-$(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC)
+$(DOC_OUTPUT_DIR)/dmd-%.html : ddoc/%.ddoc dcompiler.dd $(DDOC)
 	$(DMD) -c -o- -Df$@ $(DDOC) dcompiler.dd $<
 
 ################################################################################
@@ -157,11 +157,11 @@ $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
 	$(DMD) -c -o- -Df$@ $(DDOC) sitemap.dd
 	rm -rf sitemap.dd
 
-${LATEST}.ddoc :
+ddoc/${LATEST}.ddoc :
 	echo "LATEST=${LATEST}" >$@
 
 clean:
-	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
+	rm -rf $(DOC_OUTPUT_DIR) ddoc/${LATEST}.ddoc
 	rm -rf auto dlangspec-tex.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex)
 	@echo You should issue manually: rm -rf ${DMD_DIR}.${LATEST} ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
 
@@ -201,8 +201,8 @@ d-tools.pdf:
 dlangspec.d : $(addsuffix .dd,$(SPEC_ROOT))
 	rdmd ../tools/catdoc.d -o=$@ $^
 
-dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d
-	$(DMD) $(DDOC) ebook.ddoc dlangspec.d
+dlangspec.html : $(DDOC) ddoc/ebook.ddoc dlangspec.d
+	$(DMD) $(DDOC) ddoc/ebook.ddoc dlangspec.d
 
 dlangspec.zip : dlangspec.html ebook.css
 	rm -f $@
@@ -222,7 +222,7 @@ $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
 dlangspec-tex.d : $(addsuffix .dd,$(SPEC_ROOT))
 	rdmd --force ../tools/catdoc.d -o=$@ $^
 
-dlangspec.tex : $(DDOC) latex.ddoc dlangspec-tex.d
+dlangspec.tex : $(DDOC) ddoc/latex.ddoc dlangspec-tex.d
 	$(DMD) -Df$@ $^
 
 # Run twice to fix multipage tables and \ref uses
@@ -254,44 +254,46 @@ ${DMD_DIR}/src/dmd :
 ################################################################################
 
 druntime-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
-${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd ${DDOC}
+${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd ${STDDOC}
 	rm -f $@
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 \
+	export WD=`pwd` && ${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
-        DOCFMT="$(addprefix ../d-programming-language.org/, $(STDDOC))"
+        DOCFMT="$(addprefix $$WD/, $(STDDOC))"
 
 druntime-release : ${DOC_OUTPUT_DIR}/phobos/object.html
-${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
+${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd ${STDDOC}
 	rm -f $@
 	[ -d ${DRUNTIME_DIR}.${LATEST} ] || \
 	  git clone ${GIT_HOME}/druntime ${DRUNTIME_DIR}.${LATEST}/
 	cd ${DRUNTIME_DIR}.${LATEST} && git checkout v${LATEST}
 	${MAKE} --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak clean
-	${MAKE} --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak \
+	export WD=`pwd` && ${MAKE} --directory=${DRUNTIME_DIR}.${LATEST} \
+      -f posix.mak -j 4 \
 	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
-	  DOCFMT=../d-programming-language.org/std.ddoc -j 4
+      DOCFMT="$(addprefix $$WD/, $(STDDOC))"
 
 ################################################################################
 # phobos, latest released build and current build
 ################################################################################
 
 phobos-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html
-${DOC_OUTPUT_DIR}/phobos-prerelease/index.html :  ${DDOC} std.ddoc \
+${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : ${DMD_DIR}/src/dmd ${STDDOC} \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
-	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
-      STDDOC="$(addprefix ../d-programming-language.org/, $(STDDOC))" \
+	export WD=`pwd` && ${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
+      STDDOC="$(addprefix $$WD/, $(STDDOC))" \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-release: ${DOC_OUTPUT_DIR}/phobos/index.html
-${DOC_OUTPUT_DIR}/phobos/index.html : \
+${DOC_OUTPUT_DIR}/phobos/index.html : ${DMD_DIR}.${LATEST}/src/dmd  ${STDDOC} \
 	    ${DOC_OUTPUT_DIR}/phobos/object.html
 	[ -d ${PHOBOS_DIR}.${LATEST} ] || \
 	  git clone ${GIT_HOME}/phobos ${PHOBOS_DIR}.${LATEST}/
 	cd ${PHOBOS_DIR}.${LATEST} && git checkout v${LATEST}
-	${MAKE} --directory=${PHOBOS_DIR}.${LATEST} -f posix.mak -j 4 \
-	  release html \
+	export WD=`pwd` && ${MAKE} --directory=${PHOBOS_DIR}.${LATEST} \
+      -f posix.mak -j 4 release html \
 	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
 	  DDOC=${DMD_DIR}.${LATEST}/src/dmd \
 	  DRUNTIME_PATH=${DRUNTIME_DIR}.${LATEST} \
+      STDDOC="$(addprefix $$WD/, $(STDDOC))" \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos
