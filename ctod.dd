@@ -57,7 +57,6 @@ $(UL
 	$(LI $(LINK2 #structcmp, Comparing structs))
 	$(LI $(LINK2 #stringcmp, Comparing strings))
 	$(LI $(LINK2 #sort, Sorting arrays))
-	$(LI $(LINK2 #volatile, Volatile memory access))
 	$(LI $(LINK2 #strings, String literals))
 	$(LI $(LINK2 #traversal, Data Structure Traversal))
 	$(LI $(LINK2 #ushr, Unsigned Right Shift))
@@ -300,7 +299,7 @@ The length of an array is accessible through the property "length".
 
 ----------------------------
 int array[17];
-for (i = 0; i < array.length; i++)
+foreach (i; 0 .. array.length)
    func(array[i]);
 ----------------------------
 
@@ -344,7 +343,7 @@ $(H4 The D Way)
 
 ----------------------------
 int[] array;
-
+int x;
 array.length = array.length + 1;
 array[array.length - 1] = x;
 ----------------------------
@@ -482,7 +481,7 @@ $(H3 <a name="funcvoid">Functions that have no arguments</a>)
 $(H4 The C Way)
 
 $(CCODE
-void function(void);
+void foo(void);
 )
 
 $(H4 The D Way)
@@ -492,7 +491,7 @@ $(H4 The D Way)
        arguments.
 
 ----------------------------
-void function()
+void foo()
 {
    ...
 }
@@ -509,16 +508,17 @@ $(H4 The C Way)
 $(CCODE
     for (i = 0; i &lt; 10; i++)
     {
-       for (j = 0; j &lt; 10; j++)
-       {
-	   if (j == 3)
-	       goto Louter;
-	   if (j == 4)
-	       goto L2;
-       }
-     L2:
-       ;
+        for (j = 0; j &lt; 10; j++)
+        {
+            if (j == 3)
+                goto Louter;
+            if (j == 4)
+                goto L2;
+        }
+        L2:
+        ;
     }
+
 Louter:
     ;
 )
@@ -531,17 +531,17 @@ $(H4 The D Way)
 
 ----------------------------
 Louter:
-   for (i = 0; i < 10; i++)
-   {
-       for (j = 0; j < 10; j++)
-       {
-	   if (j == 3)
-	       break Louter;
-	   if (j == 4)
-	       continue Louter;
-       }
-   }
-   // break Louter goes here
+    for (i = 0; i < 10; i++)
+    {
+        for (j = 0; j < 10; j++)
+        {
+            if (j == 3)
+                break Louter;
+            if (j == 4)
+                continue Louter;
+        }
+    }
+    // break Louter goes here
 ----------------------------
 
 <hr><!-- ============================================ -->
@@ -683,16 +683,16 @@ $(H4 The D Way)
 ----------------------------
 struct ABC
 {
-   int z;               // z is aligned to the default
+    int z;              // z is aligned to the default
 
- align (1) int x;       // x is byte aligned
- align (4)
- {
-   ...                  // declarations in {} are dword aligned
- }
- align (2):             // switch to word alignment from here on
+    align (1) int x;    // x is byte aligned
+    align (4)
+    {
+        ...             // declarations in {} are dword aligned
+    }
+    align (2):          // switch to word alignment from here on
 
-   int y;               // y is word aligned
+    int y;              // y is word aligned
 }
 ----------------------------
 
@@ -929,17 +929,18 @@ char quoteString[] = "\"[^\\\\]*(\\\\.[^\\\\]*)*\"";
 )
 $(H4 The D Way)
 
-	Within strings, it is WYSIWYG (what you see is what you get).
-	Escapes are in separate strings. So:
+    D has both C-style string literals which can use escaping,
+    and WYSIWYG (what you see is what you get) raw strings
+    usable with the $(B `foo`) and $(B r"bar") syntax:
 
 ----------------------------
-char[] file = `c:\root\file.c`;
-char[] quoteString = "\""  r"[^\\]*(\\.[^\\]*)*"  "\"";
+string file = r"c:\root\file.c";  // c:\root\file.c
+string quotedString = `"[^\\]*(\\.[^\\]*)*"`;  // "[^\\]*(\\.[^\\]*)*"
 ----------------------------
 
        The famous hello world string becomes:
 ----------------------------
-char[] hello = "hello world\n";
+string hello = "hello world\n";
 ----------------------------
 
 <hr><!-- ============================================ -->
@@ -963,10 +964,16 @@ tchar string[] = TEXT("hello");
 )
 $(H4 The D Way)
 
-The type of a string is determined by semantic analysis, so there is no need to wrap strings in a macro call:
+The type of a string is determined by semantic analysis, so there is no need to wrap strings in a macro call. Alternatively if type inference is used the string can have a $(B c), $(B w) or $(B d) suffix, representing UTF-8, UTF-16 and UTF-32 encoding, respectively. If no suffix is used the type is inferred to be a UTF-8 string:
 -----------------------------
-char[] foo_ascii = "hello";        // string is taken to be ascii
-wchar[] foo_wchar = "hello";       // string is taken to be wchar
+string  utf8  = "hello";     // UTF-8 string
+wstring utf16 = "hello";     // UTF-16 string
+dstring utf32 = "hello";     // UTF-32 string
+
+auto str    = "hello";       // UTF-8 string
+auto _utf8  = "hello"c;      // UTF-8 string
+auto _utf16 = "hello"w;      // UTF-16 string
+auto _utf32 = "hello"d;      // UTF-32 string
 -----------------------------
 
 <hr><!-- ============================================ -->
@@ -985,7 +992,7 @@ $(H4 The D Way)
 -----------------------------
 enum COLORS { red, blue, green }
 
-char[][COLORS.max + 1] cstring =
+string[COLORS.max + 1] cstring =
 [
     COLORS.red   : "red",
     COLORS.blue  : "blue",
@@ -1061,23 +1068,28 @@ if (memcmp(&h,&HANDLE_INIT,sizeof(Handle)) != 0)
 
 $(H4 The D Way)
 
-	No need for idiomatic constructions like the above. Just write:
+    D has powerful metaprogramming abilties which allow it to implement
+    $(D typedef) as a library feature. Simply import $(B std.typecons) and
+    use the $(B Typedef) template:
 
 -----------------------------
-typedef void* Handle;
+import std.typecons;
+
+alias Handle = Typedef!(void*);
 void foo(void*);
 void bar(Handle);
 
 Handle h;
-foo(h);
-bar(h);
+foo(h);  // syntax error
+bar(h);  // ok
 -----------------------------
 
-	To handle a default value, add an initializer to the typedef,
-	and refer to it with the $(D .init) property:
+	To handle a default value, pass the initializer to the $(B Typedef)
+    template as the second argument and refer to it with the
+    $(D .init) property:
 
 -----------------------------
-typedef void* Handle = cast(void*)(-1);
+alias Handle = Typedef!(void*, cast(void*)-1);
 Handle h;
 h = func();
 if (h != Handle.init)
@@ -1139,9 +1151,9 @@ $(H4 The C Way)
 
 	The library function strcmp() is used:
 $(CCODE
-char string[] = "hello";
+char str[] = "hello";
 
-if (strcmp(string, "betty") == 0)	// do strings match?
+if (strcmp(str, "betty") == 0)	// do strings match?
     ...
 )
 
@@ -1153,9 +1165,9 @@ $(H4 The D Way)
 	Why not use the == operator?
 
 -----------------------------
-char[] string = "hello";
+string str = "hello";
 
-if (string == "betty")
+if (str == "betty")
     ...
 -----------------------------
 
@@ -1167,9 +1179,9 @@ if (string == "betty")
 	$(P D supports comparison operators on strings, too:)
 
 -----------------------------
-char[] string = "hello";
+string str = "hello";
 
-if (string < "betty")
+if (str < "betty")
     ...
 -----------------------------
 
@@ -1204,35 +1216,15 @@ qsort(array, sizeof(array)/sizeof(array[0]),
 
 $(H4 The D Way)
 
-	Sorting couldn't be easier:
+    D has a powerful $(B std.algorithm) module with optimized
+    sorting routines, which work for any built-in or user-defined
+    type which can be compared:
 
 -----------------------------
+import std.algorithm;
 type[] array;
 ...
-array.sort;      // sort array in-place
------------------------------
-
-<hr><!-- ============================================ -->
-$(H3 <a name="volatile">Volatile memory access</a>)
-
-$(H4 The C Way)
-
-	To access volatile memory, such as shared memory
-	or memory mapped I/O, a pointer to volatile is created:
-$(CCODE
-volatile int *p = address;
-
-i = *p;
-)
-
-$(H4 The D Way)
-
-	D has volatile as a statement type, not as a type modifier:
-
------------------------------
-int* p = address;
-
-volatile { i = *p; }
+sort(array);      // sort array in-place
 -----------------------------
 
 <hr><!-- ============================================ -->
@@ -1342,35 +1334,38 @@ $(H4 The D Way)
 
 -----------------------------
 class Symbol
-{   char[] id;
+{
+    char[] id;
     Symbol left;
     Symbol right;
 }
 
 Symbol symbol_membersearch(Symbol[] table, char[] id)
-{   Symbol sm;
+{
+    Symbol sm;
 
     void membersearchx(Symbol s)
     {
-	while (s)
-	{
-	    if (id == s.id)
-	    {
-		if (sm)
-		    error("ambiguous member %s\n", id);
-		sm = s;
-	    }
+        while (s)
+        {
+            if (id == s.id)
+            {
+                if (sm)
+                    error("ambiguous member %s\n", id);
+                sm = s;
+            }
 
-	    if (s.left)
-		membersearchx(s.left);
-	    s = s.right;
-	}
+            if (s.left)
+                membersearchx(s.left);
+            s = s.right;
+        }
     }
 
     for (int i = 0; i < table.length; i++)
     {
-	membersearchx(table[i]);
+        membersearchx(table[i]);
     }
+
     return sm;
 }
 -----------------------------
@@ -1483,8 +1478,8 @@ class Collection
 
     void apply(void delegate(int) fp)
     {
-	for (int i = 0; i < array.length; i++)
-	    fp(array[i]);
+        for (int i = 0; i < array.length; i++)
+            fp(array[i]);
     }
 }
 
@@ -1494,8 +1489,8 @@ void func(Collection c)
 
     void comp_max(int i)
     {
-	if (i > max)
-	    max = i;
+        if (i > max)
+            max = i;
     }
 
     c.apply(&amp;comp_max);
