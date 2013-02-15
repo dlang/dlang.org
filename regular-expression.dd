@@ -14,7 +14,7 @@ $(D_S Regular Expressions,
     needs flexible solutions.
     )
     $(P Here is where $(LUCKY regular expressions) come in handy, often succinctly called as regexes.
-     Regexes are simple yet powerful language for defining patterns of strings, 
+     Regexes are simple yet powerful language for defining patterns of strings,
      put together with a substitution mechanism, they form a Swiss Army knife of text processing.
      They are considered so useful that a number of languages provides built-in support
      for regular expressions. This does $(B not) nessary mean that
@@ -22,7 +22,7 @@ $(D_S Regular Expressions,
      $(B convenient and friendly syntax) for typical operations and usage patterns.
     )
     $(P The D programming language provides a standard library module $(STD regex).
-     Being a highly expressive systems language, D allows regexes to be $(I efficiently) implemented 
+     Being a highly expressive systems language, D allows regexes to be $(I efficiently) implemented
      within the language itself, yet have the same level of readability and usability as built-in version would provide.
      We'll see below how close to built-in regexes look and feel we can achieve.
     )
@@ -59,7 +59,7 @@ void main(string argv[]){
         The internal representation used to do the actual work is cached, to speed up subsequent calls. )
         )
     )
-    $(P Continuing with the phone number example, it could be useful to get the exact value of 
+    $(P Continuing with the phone number example, it could be useful to get the exact value of
     country code, as well as the whole number. For the sake of experiment let's also explicitly store
     compiled regex pattern via $(D regex) to see how it works.
     )
@@ -74,7 +74,7 @@ assert(m.captures[1] == "31");
 //but here it is
 static assert(is(typeof(phoneReg) : Regex!char));
     ---
-   
+
     $(H3 To search and replace)
     $(P There is a frequent need to find all matches in piece of text.
     Picking an easy task, let's see how to filter out all white space-only lines.
@@ -87,7 +87,7 @@ foreach(m; match(buffer, regex(r"^.*[^\p{WhiteSpace}]+.*$","gm"))){
     writeln(m.hit); //hit is a shorthand for m.captures[0]
 }
     ---
-    $(P It just works as the result of match is an input range. 
+    $(P It just works as the result of match is an input range.
     An element type is Captures for the string type being used, it is a random access range of submatches.
     I won't go into full detail of the range concept, suffice to say, that it's a primary way of representing sequences of data in D.
     Random access here implies one can peek at any element with direct indexing. To have a feeling of how this affects the API:
@@ -166,12 +166,12 @@ void main(string[] argv){
     write(converted);
 }
     ---
-    $(P Getting current conversion rates and supporting more currencies is left as an exercise for the reader. 
+    $(P Getting current conversion rates and supporting more currencies is left as an exercise for the reader.
     What at work here is so-called replace with delegate, analogous to a callout ability found in other languages and regex libraries.
     The magic is simple: whenever replace finds a match it calls a user supplied callback on the captured piece,
     then it uses the return value as replacement. And so on for other matches, given the "g" flag of regex.
     )
-   
+
     $(P I couldn't resist to spice this example up with yet another feature - named groups.
     Names work just like opaque aliases for numbers of captured subexpressions.
     Meaning that with the same exact regular expression one could as well change these lines to:
@@ -185,7 +185,7 @@ if(!price[3].empty)
     )
 
     $(H3 More features, more options)
-   
+
     $(P As core functionallity was already presented, let's move on to extras.
     Sometimes it's useful to do almost the opposite of searching - split up input using regex as separator.
     Like the following sample, that outputs text by sentences:
@@ -197,14 +197,14 @@ foreach(sentence; splitter(argv[1], regex(r"(?<=[.?!]+(?![?!]))\s*")))
     $(P Again the type of splitter is range, thus allowing foreach iteration.
     Notice the usage of lookaround in regex, it's a neat trick here as
     stripping off final punctuation is not our intention. Breaking down this example, (?<=[.?!]) part looks behind for first ., ? or !.
-    This get us half way to our goal because \s* also matches between elements of punctuation like "?!", 
+    This get us half way to our goal because \s* also matches between elements of punctuation like "?!",
     so a negative lookahead is introduced $(I inside lookbehind) to make sure we are past all of the punctuation marks.
     Admittedly, barrage of ? and ! makes this regex rather obscure, more then it's actually is.
     Observe that there are no restrictions on contents of lookaround expressions,
-    one can go for lookahead inside lookbehind and so on. 
+    one can go for lookahead inside lookbehind and so on.
     However in general it's recommended to use them sparingly, keeping them as weapon of last resort.
     )
-   
+
     $(P Now for something completely different yet exactly the same. For one, there is an ability
     to precompile constant regex at compile-time:
     )
@@ -214,7 +214,7 @@ assert(match("What was that? Boo-hoo?", r));
     ---
     $(P Importantly it's the exact same Regex object that works through all of the API we've seen so far.
     It's just takes less then 1 μs of run-time to initialize.
-    Run-time version took around 10-20 μs on my machine, 
+    Run-time version took around 10-20 μs on my machine,
     keep in mind that it was a trivial pattern.
     )
     $(P Now stepping futher in this direction there is an ability to construct specialized
@@ -234,23 +234,23 @@ assert(m.captures[1] == "31");
     ---
     $(P In this particular case it matched roughly 50% faster for me though I haven't done comprehensive analysis of this case.
     Not to spoil the excitement, but as of this writing the feature is experimental and temporarily lacks some extensions.
-    Continuing the gloomy trend, be warned that compiler might choke on it, and it's also less tested. 
+    Continuing the gloomy trend, be warned that compiler might choke on it, and it's also less tested.
     That being said, there is no doubt ctRegex facility will only improve over time.
     So start with run-time version, then go compile-time if willing to experiment or
     when need to squeeze out some more performance.
     )
-   
+
     $(H3 Conclusion)
     $(P The article represents a walkthrough of $(D std.regex) focused on showcasing the API.
     By following a series of easy yet meaningful tasks, its features are exposed in combinations,
     that underline the elegance and flexibility of this library solution.
-    The good thing that not only the API is natural, but it also follows established 
+    The good thing that not only the API is natural, but it also follows established
     standards and integrates well with the rest of Phobos.
     Putting together its major features for a short-list, $(STD regex) is:
     )
      $(UL
      $(LI Fully Unicode-aware, qualifies to standard full level 1 Unicode support)
-     $(LI Lots of modern extensions, including unlimited generalized lookaround. 
+     $(LI Lots of modern extensions, including unlimited generalized lookaround.
      It makes porting regexes from other libraries a breeze)
      $(LI Lean API that consists of a few flexible tools: $(D match), $(D replace), $(D splitter) )
      $(LI Uniform and powerful, with unique abilities like precompiling regex or using ctRegex

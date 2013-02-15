@@ -2,26 +2,26 @@ Ddoc
 
 $(SPEC_S Properties,
 
-	$(P Every type and expression has properties that can be queried:)
+        $(P Every type and expression has properties that can be queried:)
 
 $(TABLE2 Property Examples,
-$(THEAD Expression,	Value)
-$(TROW $(D int.sizeof),	yields 4)
-$(TROW $(D float.nan),	yields the floating point nan (Not A Number) value)
-$(TROW $(D (float).nan),	yields the floating point nan value)
-$(TROW $(D (3).sizeof),	yields 4 (because 3 is an int))
+$(THEAD Expression,     Value)
+$(TROW $(D int.sizeof), yields 4)
+$(TROW $(D float.nan),  yields the floating point nan (Not A Number) value)
+$(TROW $(D (float).nan),        yields the floating point nan value)
+$(TROW $(D (3).sizeof), yields 4 (because 3 is an int))
 
-$(TROW $(D int.init),	default initializer for int's)
-$(TROW $(D int.mangleof),	yields the string "i")
-$(TROW $(D int.stringof),	yields the string "int")
-$(TROW $(D (1+2).stringof),	yields the string "1 + 2")
+$(TROW $(D int.init),   default initializer for int's)
+$(TROW $(D int.mangleof),       yields the string "i")
+$(TROW $(D int.stringof),       yields the string "int")
+$(TROW $(D (1+2).stringof),     yields the string "1 + 2")
 )
 
 $(BR)
 
 $(TABLE2 Properties for All Types,
 $(THEAD  Property, Description)
-$(TROW $(LINK2 init, $(D .init)),	initializer)
+$(TROW $(LINK2 init, $(D .init)),       initializer)
 $(TROW $(LINK2 sizeof, $(D .sizeof)), size in bytes (equivalent to C's sizeof(type)))
 $(TROW $(LINK2 alignof, $(D .alignof)), alignment size)
 $(TROW $(D .mangleof), string representing the $(SINGLEQUOTE mangled) representation of the type)
@@ -32,7 +32,7 @@ $(BR)
 
 $(TABLE2 Properties for Integral Types,
 $(THEAD Property, Description)
-$(TROW $(D .init),	initializer (0))
+$(TROW $(D .init),      initializer (0))
 $(TROW $(D .max), maximum value)
 $(TROW $(D .min), minimum value)
 )
@@ -67,12 +67,12 @@ $(TROW $(LINK2 classinfo, $(D .classinfo)), Information about the dynamic type o
 
 $(SECTION3 $(LNAME2 init, .init) Property,
 
-	$(P $(B .init) produces a constant expression that is the default
-	initializer. If applied to a type, it is the default initializer
-	for that type. If applied to a variable or field, it is the
-	default initializer for that variable or field's type.
-	For example:
-	)
+        $(P $(B .init) produces a constant expression that is the default
+        initializer. If applied to a type, it is the default initializer
+        for that type. If applied to a variable or field, it is the
+        default initializer for that variable or field's type.
+        For example:
+        )
 
 ----------------
 int a;
@@ -97,12 +97,12 @@ Foo.init.a  // is 0
 Foo.init.b  // is 7
 ----------------
 
-	$(P $(B Note:) $(B .init) produces a default initialized object, not
-	default constructed. That means using $(B .init) is sometimes incorrect.)
+        $(P $(B Note:) $(B .init) produces a default initialized object, not
+        default constructed. That means using $(B .init) is sometimes incorrect.)
 
     $(OL
-	$(LI If $(B T) is a nested struct, the context pointer in $(B T.init)
-	is $(B null).)
+        $(LI If $(B T) is a nested struct, the context pointer in $(B T.init)
+        is $(B null).)
 
 ----------------
 void main() {
@@ -117,8 +117,8 @@ void main() {
 }
 ----------------
 
-	$(LI If $(B T) is a struct which has $(CODE @disable this();), $(B T.init)
-	might return a logically incorrect object.)
+        $(LI If $(B T) is a struct which has $(CODE @disable this();), $(B T.init)
+        might return a logically incorrect object.)
 
 ----------------
 struct S {
@@ -141,14 +141,14 @@ void main() {
 
 $(SECTION3 $(LNAME2 stringof, .stringof) Property,
 
-	$(P $(B .stringof) produces a constant string that is the
-	source representation of its prefix.
-	If applied to a type, it is the string for that type.
-	If applied to an expression, it is the source representation
-	of that expression. Semantic analysis is not done
-	for that expression.
-	For example:
-	)
+        $(P $(B .stringof) produces a constant string that is the
+        source representation of its prefix.
+        If applied to a type, it is the string for that type.
+        If applied to an expression, it is the source representation
+        of that expression. Semantic analysis is not done
+        for that expression.
+        For example:
+        )
 
 ----------------
 module test;
@@ -175,13 +175,13 @@ void main() {
 
 $(SECTION3 $(LNAME2 sizeof, .sizeof Property),
 
-	$(P $(CODE e.sizeof) gives the size in bytes of the expression
-	$(D e).
-	)
+        $(P $(CODE e.sizeof) gives the size in bytes of the expression
+        $(D e).
+        )
 
-	$(P When getting the size of a member, it is not necessary for
-	there to be a $(I this) object:
-	)
+        $(P When getting the size of a member, it is not necessary for
+        there to be a $(I this) object:
+        )
 
 ---
 struct S {
@@ -196,43 +196,43 @@ void test() {
 }
 ---
 
-	$(P $(CODE .sizeof) applied to a class object returns the size of
-	the class reference, not the class instantiation.)
+        $(P $(CODE .sizeof) applied to a class object returns the size of
+        the class reference, not the class instantiation.)
 
 )
 
 $(SECTION3 $(LNAME2 alignof, .alignof Property),
 
-	$(P $(CODE .alignof) gives the aligned size of an expression or type.
-	For example, an aligned size of 1 means that it is aligned on
-	a byte boundary, 4 means it is aligned on a 32 bit boundary.
-	)
+        $(P $(CODE .alignof) gives the aligned size of an expression or type.
+        For example, an aligned size of 1 means that it is aligned on
+        a byte boundary, 4 means it is aligned on a 32 bit boundary.
+        )
 )
 
 $(SECTION3 $(LNAME2 classinfo, .classinfo) Property,
 
-	$(P $(CODE .classinfo) provides information about the dynamic type
-	of a class object.
-	
-	It returns a reference to type $(DPLLINK
-	phobos/object.html#TypeInfo_Class, $(D object.TypeInfo_Class)).
-	)
+        $(P $(CODE .classinfo) provides information about the dynamic type
+        of a class object.
 
-	$(P $(CODE .classinfo) applied to an interface gives the information for
-	the interface, not the class it might be an instance of.
-	)
+        It returns a reference to type $(DPLLINK
+        phobos/object.html#TypeInfo_Class, $(D object.TypeInfo_Class)).
+        )
+
+        $(P $(CODE .classinfo) applied to an interface gives the information for
+        the interface, not the class it might be an instance of.
+        )
 )
 
 $(SECTION3 $(LNAME2 classproperties, User Defined Properties),
 
-	$(P Properties are functions that can be syntactically treated
-	as if they were fields or variables. Properties can be read from or written to.
-	A property is read by calling a methhod or function with no arguments;
-	a property is written by calling a method or function with its argument
-	being the value it is set to.
-	)
+        $(P Properties are functions that can be syntactically treated
+        as if they were fields or variables. Properties can be read from or written to.
+        A property is read by calling a methhod or function with no arguments;
+        a property is written by calling a method or function with its argument
+        being the value it is set to.
+        )
 
-	$(P A simple property would be:)
+        $(P A simple property would be:)
 
 
 ----------------
@@ -246,12 +246,12 @@ private:
 }
 ----------------
 
-	$(P Properties are marked with the $(CODE @property) attribute.
-	Properties may only have zero or one parameter, and may not be variadic.
-	Property functions may not be overloaded with non-property functions.
-	)
+        $(P Properties are marked with the $(CODE @property) attribute.
+        Properties may only have zero or one parameter, and may not be variadic.
+        Property functions may not be overloaded with non-property functions.
+        )
 
-	$(P To use it:)
+        $(P To use it:)
 
 ----------------
 int test() {
@@ -262,28 +262,28 @@ int test() {
 }
 ----------------
 
-	$(P The absence of a read method means that the property is write-only.
-	The absence of a write method means that the property is read-only.
-	Multiple write methods can exist; the correct one is selected using
-	the usual function overloading rules.
-	)
+        $(P The absence of a read method means that the property is write-only.
+        The absence of a write method means that the property is read-only.
+        Multiple write methods can exist; the correct one is selected using
+        the usual function overloading rules.
+        )
 
-	$(P In all the other respects, these methods are like any other methods.
-	They can be static, have different linkages,  have their address taken, etc.
-	)
+        $(P In all the other respects, these methods are like any other methods.
+        They can be static, have different linkages,  have their address taken, etc.
+        )
 
 
-	$(P $(B Note:) Properties can be the lvalue of an
-	$(I op)=, ++, or -- operator if they return a ref.
-	)
+        $(P $(B Note:) Properties can be the lvalue of an
+        $(I op)=, ++, or -- operator if they return a ref.
+        )
 
-	$(P The built in properties $(CODE .sizeof), $(CODE .alignof), and $(CODE .mangleof)
-	may not be declared as fields or methods in structs, unions, classes or enums.
-	)
+        $(P The built in properties $(CODE .sizeof), $(CODE .alignof), and $(CODE .mangleof)
+        may not be declared as fields or methods in structs, unions, classes or enums.
+        )
 
-	$(P If a .property is applied to a user-defined property, the .property is applied
-	to the result of the function call.
-	)
+        $(P If a .property is applied to a user-defined property, the .property is applied
+        to the result of the function call.
+        )
 
 ---
 void main() {
@@ -302,7 +302,7 @@ void main() {
 )
 
 Macros:
-	TITLE=Properties
-	 WIKI=Property
-	CATEGORY_SPEC=$0
+        TITLE=Properties
+         WIKI=Property
+        CATEGORY_SPEC=$0
 
