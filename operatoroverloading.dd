@@ -2,61 +2,61 @@ Ddoc
 
 $(SPEC_S Operator Overloading,
 
-	$(P Operator overloading is accomplished by rewriting operators whose
-	operands are class or struct objects into calls to specially named
-	member functions. No additional syntax is used.
-	)
+        $(P Operator overloading is accomplished by rewriting operators whose
+        operands are class or struct objects into calls to specially named
+        member functions. No additional syntax is used.
+        )
 
-	$(UL
-	$(LI $(RELATIVE_LINK2 Unary, Unary Operator Overloading))
-	$(LI $(RELATIVE_LINK2 Cast, Cast Operator Overloading))
-	$(LI $(RELATIVE_LINK2 Binary, Binary Operator Overloading))
-	$(LI $(RELATIVE_LINK2 equals, Overloading $(D ==) and $(D !=)))
-	$(LI $(RELATIVE_LINK2 compare, Overloading $(D <), $(D <)$(D =),
-	$(D <), and $(D <)$(D =)))
-	$(LI $(RELATIVE_LINK2 FunctionCall, Function Call Operator Overloading))
-	$(LI $(RELATIVE_LINK2 Assignment, Assignment Operator Overloading))
-	$(LI $(RELATIVE_LINK2 OpAssign, Op Assignment Operator Overloading))
-	$(LI $(RELATIVE_LINK2 Array, Index Operator Overloading))
-	$(LI $(RELATIVE_LINK2 Slice, Slice Operator Overloading))
-	$(LI $(RELATIVE_LINK2 Dispatch, Forwarding))
-	)
+        $(UL
+        $(LI $(RELATIVE_LINK2 Unary, Unary Operator Overloading))
+        $(LI $(RELATIVE_LINK2 Cast, Cast Operator Overloading))
+        $(LI $(RELATIVE_LINK2 Binary, Binary Operator Overloading))
+        $(LI $(RELATIVE_LINK2 equals, Overloading $(D ==) and $(D !=)))
+        $(LI $(RELATIVE_LINK2 compare, Overloading $(D <), $(D <)$(D =),
+        $(D <), and $(D <)$(D =)))
+        $(LI $(RELATIVE_LINK2 FunctionCall, Function Call Operator Overloading))
+        $(LI $(RELATIVE_LINK2 Assignment, Assignment Operator Overloading))
+        $(LI $(RELATIVE_LINK2 OpAssign, Op Assignment Operator Overloading))
+        $(LI $(RELATIVE_LINK2 Array, Index Operator Overloading))
+        $(LI $(RELATIVE_LINK2 Slice, Slice Operator Overloading))
+        $(LI $(RELATIVE_LINK2 Dispatch, Forwarding))
+        )
 
 $(H2 $(LNAME2 Unary, Unary Operator Overloading))
 
-	$(TABLE2 Overloadable Unary Operators,
-	$(THEAD $(I op), $(I rewrite))
-	$(TROW
-	$(ARGS $(D -)$(I e)),
-	$(ARGS $(I e)$(D .opUnary!("-")()))
-	)
-	$(TROW
-	$(ARGS $(D +)$(I e)),
-	$(ARGS $(I e)$(D .opUnary!("+")()))
-	)
-	$(TROW
-	$(ARGS $(D ~)$(I e)),
-	$(ARGS $(I e)$(D .opUnary!("~")()))
-	)
+        $(TABLE2 Overloadable Unary Operators,
+        $(THEAD $(I op), $(I rewrite))
+        $(TROW
+        $(ARGS $(D -)$(I e)),
+        $(ARGS $(I e)$(D .opUnary!("-")()))
+        )
+        $(TROW
+        $(ARGS $(D +)$(I e)),
+        $(ARGS $(I e)$(D .opUnary!("+")()))
+        )
+        $(TROW
+        $(ARGS $(D ~)$(I e)),
+        $(ARGS $(I e)$(D .opUnary!("~")()))
+        )
 
-	$(TROW
-	$(ARGS $(D *)$(I e)),
-	$(ARGS $(I e)$(D .opUnary!("*")()))
-	)
+        $(TROW
+        $(ARGS $(D *)$(I e)),
+        $(ARGS $(I e)$(D .opUnary!("*")()))
+        )
 
-	$(TROW
-	$(ARGS $(D ++)$(I e)),
-	$(ARGS $(I e)$(D .opUnary!("++")()))
-	)
+        $(TROW
+        $(ARGS $(D ++)$(I e)),
+        $(ARGS $(I e)$(D .opUnary!("++")()))
+        )
 
-	$(TROW
-	$(ARGS $(D --)$(I e)),
-	$(ARGS $(I e)$(D .opUnary!("--")()))
-	)
-	)
+        $(TROW
+        $(ARGS $(D --)$(I e)),
+        $(ARGS $(I e)$(D .opUnary!("--")()))
+        )
+        )
 
-	$(P For example, in order to overload the - (negation) operator for struct S, and
-	no other operator:)
+        $(P For example, in order to overload the - (negation) operator for struct S, and
+        no other operator:)
 
 ---
 struct S {
@@ -74,173 +74,173 @@ int foo(S s) {
 
 $(H3 Postincrement $(I e)$(D ++) and Postdecrement $(I e)$(D --) Operators)
 
-	$(P These are not directly overloadable, but instead are rewritten
-	in terms of the ++$(I e) and --$(I e) prefix operators:
-	)
+        $(P These are not directly overloadable, but instead are rewritten
+        in terms of the ++$(I e) and --$(I e) prefix operators:
+        )
 
-	$(TABLE2 Postfix Operator Rewrites,
-	$(THEAD $(I op), $(I rewrite))
-	$(TROW
-	$(ARGS $(I e)$(D --)),
-	$(ARGS $(D $(LPAREN)auto t =) $(I e)$(D , --)$(I e)$(D , t$(RPAREN))))
-	$(TROW
-	$(ARGS $(I e)$(D ++)),
-	$(ARGS $(D $(LPAREN)auto t =) $(I e)$(D , ++)$(I e)$(D , t$(RPAREN))))
-	)
+        $(TABLE2 Postfix Operator Rewrites,
+        $(THEAD $(I op), $(I rewrite))
+        $(TROW
+        $(ARGS $(I e)$(D --)),
+        $(ARGS $(D $(LPAREN)auto t =) $(I e)$(D , --)$(I e)$(D , t$(RPAREN))))
+        $(TROW
+        $(ARGS $(I e)$(D ++)),
+        $(ARGS $(D $(LPAREN)auto t =) $(I e)$(D , ++)$(I e)$(D , t$(RPAREN))))
+        )
 
 $(H3 Overloading Index Unary Operators)
 
-	$(TABLE2 Overloadable Index Unary Operators,
-	$(THEAD $(I op), $(I rewrite))
-	$(TROW
-	$(D -)$(I a)$(D [)$(ARGUMENTS)$(D ]),
-	$(ARGS $(I a)$(D .opIndexUnary!("-")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))))
-	$(TROW
-	$(D +)$(I a)$(D [)$(ARGUMENTS)$(D ]),
-	$(I a)$(D .opIndexUnary!("+")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))
-	)
-	$(TROW
-	$(D ~)$(I a)$(D [)$(ARGUMENTS)$(D ]),
-	$(I a)$(D .opIndexUnary!("~")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))
-	)
-	$(TROW
-	$(D *)$(I a)$(D [)$(ARGUMENTS)$(D ]),
-	$(I a)$(D .opIndexUnary!("*")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))
-	)
-	$(TROW
-	$(D ++)$(I a)$(D [)$(ARGUMENTS)$(D ]),
-	$(I a)$(D .opIndexUnary!("++")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))
-	)
-	$(TROW
-	$(D --)$(I a)$(D [)$(ARGUMENTS)$(D ]),
-	$(I a)$(D .opIndexUnary!("--")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))
-	)
-	)
+        $(TABLE2 Overloadable Index Unary Operators,
+        $(THEAD $(I op), $(I rewrite))
+        $(TROW
+        $(D -)$(I a)$(D [)$(ARGUMENTS)$(D ]),
+        $(ARGS $(I a)$(D .opIndexUnary!("-")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))))
+        $(TROW
+        $(D +)$(I a)$(D [)$(ARGUMENTS)$(D ]),
+        $(I a)$(D .opIndexUnary!("+")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))
+        )
+        $(TROW
+        $(D ~)$(I a)$(D [)$(ARGUMENTS)$(D ]),
+        $(I a)$(D .opIndexUnary!("~")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))
+        )
+        $(TROW
+        $(D *)$(I a)$(D [)$(ARGUMENTS)$(D ]),
+        $(I a)$(D .opIndexUnary!("*")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))
+        )
+        $(TROW
+        $(D ++)$(I a)$(D [)$(ARGUMENTS)$(D ]),
+        $(I a)$(D .opIndexUnary!("++")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))
+        )
+        $(TROW
+        $(D --)$(I a)$(D [)$(ARGUMENTS)$(D ]),
+        $(I a)$(D .opIndexUnary!("--")$(LPAREN))$(ARGUMENTS)$(D $(RPAREN))
+        )
+        )
 
 $(H3 Overloading Slice Unary Operators)
 
-	$(TABLE2 Overloadable Slice Unary Operators,
-	$(THEAD $(I op), $(I rewrite))
-	$(TROW
-	$(D -)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("-")$(LPAREN))$(SLICE2)$(D $(RPAREN))
-	)
+        $(TABLE2 Overloadable Slice Unary Operators,
+        $(THEAD $(I op), $(I rewrite))
+        $(TROW
+        $(D -)$(I a)$(D [)$(SLICE)$(D ]),
+        $(I a)$(D .opSliceUnary!("-")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+        )
 
-	$(TROW
-	$(D +)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("+")$(LPAREN))$(SLICE2)$(D $(RPAREN))
-	)
+        $(TROW
+        $(D +)$(I a)$(D [)$(SLICE)$(D ]),
+        $(I a)$(D .opSliceUnary!("+")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+        )
 
-	$(TROW
-	$(D ~)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("~")$(LPAREN))$(SLICE2)$(D $(RPAREN))
-	)
+        $(TROW
+        $(D ~)$(I a)$(D [)$(SLICE)$(D ]),
+        $(I a)$(D .opSliceUnary!("~")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+        )
 
-	$(TROW
-	$(D *)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("*")$(LPAREN))$(SLICE2)$(D $(RPAREN))
-	)
+        $(TROW
+        $(D *)$(I a)$(D [)$(SLICE)$(D ]),
+        $(I a)$(D .opSliceUnary!("*")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+        )
 
-	$(TROW
-	$(D ++)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("++")$(LPAREN))$(SLICE2)$(D $(RPAREN))
-	)
+        $(TROW
+        $(D ++)$(I a)$(D [)$(SLICE)$(D ]),
+        $(I a)$(D .opSliceUnary!("++")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+        )
 
-	$(TROW
-	$(D --)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("--")$(LPAREN))$(SLICE2)$(D $(RPAREN))
-	)
+        $(TROW
+        $(D --)$(I a)$(D [)$(SLICE)$(D ]),
+        $(I a)$(D .opSliceUnary!("--")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+        )
 
-	$(TROW
-	$(D -)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("-")())
-	)
+        $(TROW
+        $(D -)$(I a)$(D [ ]),
+        $(I a)$(D .opSliceUnary!("-")())
+        )
 
-	$(TROW
-	$(D +)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("+")())
-	)
+        $(TROW
+        $(D +)$(I a)$(D [ ]),
+        $(I a)$(D .opSliceUnary!("+")())
+        )
 
-	$(TROW
-	$(D ~)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("~")())
-	)
+        $(TROW
+        $(D ~)$(I a)$(D [ ]),
+        $(I a)$(D .opSliceUnary!("~")())
+        )
 
-	$(TROW
-	$(D *)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("*")())
-	)
+        $(TROW
+        $(D *)$(I a)$(D [ ]),
+        $(I a)$(D .opSliceUnary!("*")())
+        )
 
-	$(TROW
-	$(D ++)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("++")())
-	)
+        $(TROW
+        $(D ++)$(I a)$(D [ ]),
+        $(I a)$(D .opSliceUnary!("++")())
+        )
 
-	$(TROW
-	$(D --)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("--")())
-	)
-	)
+        $(TROW
+        $(D --)$(I a)$(D [ ]),
+        $(I a)$(D .opSliceUnary!("--")())
+        )
+        )
 
 $(H2 $(LNAME2 Cast, Cast Operator Overloading))
 
-	$(TABLE2 Cast Operators,
-	$(THEAD $(I op), $(I rewrite))
-	$(TROW
-	$(D cast$(LPAREN))$(I type) $(I e)$(D $(RPAREN)),
-	$(I e)$(D .opCast!$(LPAREN))$(I type)$(D $(RPAREN)())
-	)
-	)
+        $(TABLE2 Cast Operators,
+        $(THEAD $(I op), $(I rewrite))
+        $(TROW
+        $(D cast$(LPAREN))$(I type) $(I e)$(D $(RPAREN)),
+        $(I e)$(D .opCast!$(LPAREN))$(I type)$(D $(RPAREN)())
+        )
+        )
 
 
 $(H3 Boolean Operations)
 
-	$(P Notably absent from the list of overloaded unary operators is the !
-	logical negation operator. More obscurely absent is a unary operator
-	to convert to a bool result.
-	Instead, these are covered by a rewrite to:
-	)
+        $(P Notably absent from the list of overloaded unary operators is the !
+        logical negation operator. More obscurely absent is a unary operator
+        to convert to a bool result.
+        Instead, these are covered by a rewrite to:
+        )
 ---
 opCast!(bool)(e)
 ---
 
-	$(P So,)
+        $(P So,)
 
 ---
 if (e)   =>  if (e.opCast!(bool))
 if (!e)  =>  if (!e.opCast!(bool))
 ---
 
-	$(P etc., whenever a bool result is expected. This only happens, however, for
-	instances of structs. Class references are converted to bool by checking to
-	see if the class reference is null or not.
-	)
+        $(P etc., whenever a bool result is expected. This only happens, however, for
+        instances of structs. Class references are converted to bool by checking to
+        see if the class reference is null or not.
+        )
 
 $(H2 $(LNAME2 Binary, Binary Operator Overloading))
 
-	$(P The following binary operators are overloadable:)
+        $(P The following binary operators are overloadable:)
 
-	$(TABLE2 Overloadable Binary Operators,
-	$(TROW $(D +), $(D -), $(D *), $(D /), $(CODE_PERCENT), $(D ^^), $(CODE_AMP))
-	$(TROW $(CODE_PIPE), $(D ^), $(D <)$(D <), $(D >)$(D >), $(D >)$(D >)$(D >), $(D ~), $(D in))
-	)
+        $(TABLE2 Overloadable Binary Operators,
+        $(TROW $(D +), $(D -), $(D *), $(D /), $(CODE_PERCENT), $(D ^^), $(CODE_AMP))
+        $(TROW $(CODE_PIPE), $(D ^), $(D <)$(D <), $(D >)$(D >), $(D >)$(D >)$(D >), $(D ~), $(D in))
+        )
 
-	$(P The expression:)
+        $(P The expression:)
 ---
 a $(METACODE op) b
 ---
-	$(P is rewritten as both:)
+        $(P is rewritten as both:)
 ---
 a.opBinary!("$(METACODE op)")(b)
 b.opBinaryRight!("$(METACODE op)")(a)
 ---
 
-	$(P and the one with the $(SINGLEQUOTE better) match is selected.
-	It is an error for both to equally match.
-	)
+        $(P and the one with the $(SINGLEQUOTE better) match is selected.
+        It is an error for both to equally match.
+        )
 
-	$(P Operator overloading for a number of operators can be done at the same time.
-	For example, if only the + or - operators are supported:)
+        $(P Operator overloading for a number of operators can be done at the same time.
+        For example, if only the + or - operators are supported:)
 
 ---
 T opBinary(string op)(T rhs) {
@@ -250,7 +250,7 @@ T opBinary(string op)(T rhs) {
 }
 ---
 
-	$(P To do them all en masse:)
+        $(P To do them all en masse:)
 
 ---
 T opBinary(string op)(T rhs) {
@@ -261,16 +261,16 @@ T opBinary(string op)(T rhs) {
 
 $(H2 $(LNAME2 equals, Overloading $(D ==) and $(D !=)))
 
-	$(P Expressions of the form $(CODE a != b) are rewritten as $(CODE !(a == b)).)
+        $(P Expressions of the form $(CODE a != b) are rewritten as $(CODE !(a == b)).)
 
-	$(P Given $(CODE a == b) :)
+        $(P Given $(CODE a == b) :)
 
 $(OL
-	$(LI If a and b are both class objects, then the expression is rewritten as:
+        $(LI If a and b are both class objects, then the expression is rewritten as:
 ---
 .object.opEquals(a, b)
 ---
-	$(P and that function is implemented as:)
+        $(P and that function is implemented as:)
 ---
 bool opEquals(Object a, Object b) {
   if (a is b) return true;
@@ -279,26 +279,26 @@ bool opEquals(Object a, Object b) {
   return a.opEquals(b) && b.opEquals(a);
 }
 ---
-	)
-	$(LI Otherwise the expressions $(CODE a.opEquals(b)) and
-	$(CODE b.opEquals(a)) are tried. If both resolve to the same opEquals
-	function, then the expression is rewritten to be $(CODE a.opEquals(b)).
-	)
-	$(LI If one is a better match then the other, or one compiles and the other
-	does not, the one is selected.)
-	$(LI Otherwise, an error results.)
+        )
+        $(LI Otherwise the expressions $(CODE a.opEquals(b)) and
+        $(CODE b.opEquals(a)) are tried. If both resolve to the same opEquals
+        function, then the expression is rewritten to be $(CODE a.opEquals(b)).
+        )
+        $(LI If one is a better match then the other, or one compiles and the other
+        does not, the one is selected.)
+        $(LI Otherwise, an error results.)
 )
 
-	$(P If overridding Object.opEquals() for classes, the class member function
-	signature should look like:)
+        $(P If overridding Object.opEquals() for classes, the class member function
+        signature should look like:)
 ---
 class C {
   override bool opEquals(Object o) { ... }
 }
 ---
 
-	$(P If structs declare an opEquals member function, it should follow the following
-	form:)
+        $(P If structs declare an opEquals member function, it should follow the following
+        form:)
 ---
 struct S {
   bool opEquals(ref const S s) { ... }  // for l-values (e.g. variables)
@@ -316,37 +316,37 @@ struct S {
 
 $(H2 $(LNAME2 compare, Overloading $(D <), $(D <)$(D =), $(D >), and $(D >)$(D =)))
 
-	$(P Comparison operations are rewritten as follows:)
+        $(P Comparison operations are rewritten as follows:)
 
-	$(TABLE2 Overloadable Unary Operators,
-	$(THEAD comparison, rewrite 1, rewrite 2)
-	$(TROW $(D a) $(D <) $(D b), $(D a.opCmp(b)) $(D <)
-	$(D 0), $(ARGS $(D b.opCmp(a)) $(D >) $(D 0)))
-	$(TROW $(D a) $(D <)$(D= b), $(ARGS $(D a.opCmp(b))
-	$(D <)$(D= 0)), $(ARGS $(D b.opCmp(a)) $(D >)$(D = 0)))
-	$(TROW $(D a) $(D >)$(D b), $(ARGS $(D a.opCmp(b))
-	$(D >) $(D 0)), $(ARGS $(D b.opCmp(a)) $(D <) $(D 0)))
-	$(TROW $(D a) $(D >)$(D = b), $(ARGS $(D a.opCmp(b))
-	$(D >)$(D = 0)), $(ARGS $(D b.opCmp(a)) $(D <)$(D= 0)))
-	)
+        $(TABLE2 Overloadable Unary Operators,
+        $(THEAD comparison, rewrite 1, rewrite 2)
+        $(TROW $(D a) $(D <) $(D b), $(D a.opCmp(b)) $(D <)
+        $(D 0), $(ARGS $(D b.opCmp(a)) $(D >) $(D 0)))
+        $(TROW $(D a) $(D <)$(D= b), $(ARGS $(D a.opCmp(b))
+        $(D <)$(D= 0)), $(ARGS $(D b.opCmp(a)) $(D >)$(D = 0)))
+        $(TROW $(D a) $(D >)$(D b), $(ARGS $(D a.opCmp(b))
+        $(D >) $(D 0)), $(ARGS $(D b.opCmp(a)) $(D <) $(D 0)))
+        $(TROW $(D a) $(D >)$(D = b), $(ARGS $(D a.opCmp(b))
+        $(D >)$(D = 0)), $(ARGS $(D b.opCmp(a)) $(D <)$(D= 0)))
+        )
 
-	$(P Both rewrites are tried. If only one compiles, that one is taken.
-	If they both resolve to the same function, the first
-	rewrite is done. If they resolve to different functions, the best matching one
-	is used. If they both match the same, but are different functions, an ambiguity
-	error results.
-	)
+        $(P Both rewrites are tried. If only one compiles, that one is taken.
+        If they both resolve to the same function, the first
+        rewrite is done. If they resolve to different functions, the best matching one
+        is used. If they both match the same, but are different functions, an ambiguity
+        error results.
+        )
 
-	$(P If overriding Object.opCmp() for classes, the class member function
-	signature should look like:)
+        $(P If overriding Object.opCmp() for classes, the class member function
+        signature should look like:)
 ---
 class C {
   override int opCmp(Object o) { ... }
 }
 ---
 
-	$(P If structs declare an opCmp member function, it should follow the following
-	form:)
+        $(P If structs declare an opCmp member function, it should follow the following
+        form:)
 ---
 struct S {
   int opCmp(ref const S s) const { ... }
@@ -355,9 +355,9 @@ struct S {
 
 $(H2 $(LNAME2 FunctionCall, Function Call Operator Overloading $(D f())))
 
-	$(P The function call operator, (), can be overloaded by
-	declaring a function named $(B opCall):
-	)
+        $(P The function call operator, (), can be overloaded by
+        declaring a function named $(B opCall):
+        )
 
 -------
 struct F {
@@ -374,20 +374,20 @@ void test() {
 }
 -------
 
-	$(P In this way a struct or class object can behave as if it
-	were a function.
-	)
+        $(P In this way a struct or class object can behave as if it
+        were a function.
+        )
 
 $(H2 $(LNAME2 Assignment, Assignment Operator Overloading))
 
-	$(P The assignment operator $(CODE =) can be overloaded if the
-	lvalue is a struct aggregate, and $(CODE opAssign)
-	is a member function of that aggregate.)
+        $(P The assignment operator $(CODE =) can be overloaded if the
+        lvalue is a struct aggregate, and $(CODE opAssign)
+        is a member function of that aggregate.)
 
-	$(P The assignment operator cannot be overloaded for rvalues
-	that can be implicitly cast to the lvalue type.
-	Furthermore, the following parameter signatures for $(CODE opAssign)
-	are not allowed:)
+        $(P The assignment operator cannot be overloaded for rvalues
+        that can be implicitly cast to the lvalue type.
+        Furthermore, the following parameter signatures for $(CODE opAssign)
+        are not allowed:)
 
 ---
 opAssign(...)
@@ -397,21 +397,21 @@ opAssign(T ...)
 opAssign(T, U = defaultValue, etc.)
 ---
 
-	$(P where $(I T) is the same type as the aggregate type $(I A),
-	is implicitly
-	convertible to $(I A), or if $(I A) is a struct and $(I T)
-	is a pointer to a type that is
-	implicitly convertible to $(I A).
-	)
+        $(P where $(I T) is the same type as the aggregate type $(I A),
+        is implicitly
+        convertible to $(I A), or if $(I A) is a struct and $(I T)
+        is a pointer to a type that is
+        implicitly convertible to $(I A).
+        )
 
 $(H3 Index Assignment Operator Overloading)
 
-	$(P If the left hand side of an assignment is an index operation
-	on a struct or class instance,
-	it can be overloaded by providing an opIndexAssign member function.
-	Expressions of the form $(D a[)$(ARGUMENTS)$(D ] = c) are rewritten
-	as $(D a.opIndexAssign$(LPAREN)c,) $(ARGUMENTS)$(D $(RPAREN)).
-	)
+        $(P If the left hand side of an assignment is an index operation
+        on a struct or class instance,
+        it can be overloaded by providing an opIndexAssign member function.
+        Expressions of the form $(D a[)$(ARGUMENTS)$(D ] = c) are rewritten
+        as $(D a.opIndexAssign$(LPAREN)c,) $(ARGUMENTS)$(D $(RPAREN)).
+        )
 
 -------
 struct A {
@@ -426,13 +426,13 @@ void test() {
 
 $(H3 Slice Assignment Operator Overloading)
 
-	$(P If the left hand side of an assignment is a slice operation
-	on a struct or class instance,
-	it can be overloaded by providing an opSliceAssign member function.
-	Expressions of the form $(CODE a[)$(SLICE)$(D ] = c) are rewritten
-	as $(CODE a.opSliceAssign$(LPAREN)c,) $(SLICE2)$(D $(RPAREN)), and
-	$(CODE a[] = c) as $(CODE a.opSliceAssign(c)).
-	)
+        $(P If the left hand side of an assignment is a slice operation
+        on a struct or class instance,
+        it can be overloaded by providing an opSliceAssign member function.
+        Expressions of the form $(CODE a[)$(SLICE)$(D ] = c) are rewritten
+        as $(CODE a.opSliceAssign$(LPAREN)c,) $(SLICE2)$(D $(RPAREN)), and
+        $(CODE a[] = c) as $(CODE a.opSliceAssign(c)).
+        )
 
 -------
 struct A {
@@ -451,20 +451,20 @@ void test() {
 
 $(H2 $(LNAME2 OpAssign, Op Assignment Operator Overloading))
 
-	$(P The following op assignment operators are overloadable:)
+        $(P The following op assignment operators are overloadable:)
 
-	$(TABLE2 Overloadable Op Assignment Operators,
-	$(TROW $(D +=), $(D -=), $(D *=), $(D /=), $(CODE_PERCENT)$(D =), $(D ^^=), $(CODE_AMP)$(D =))
-	$(TROW $(CODE_PIPE)$(D =), $(D ^=), $(D <)$(D <)$(D =),
-	$(D >)$(D >)$(D =), $(D >)$(D >)$(D >)$(D =), $(D ~=), $(NBSP))
-	)
+        $(TABLE2 Overloadable Op Assignment Operators,
+        $(TROW $(D +=), $(D -=), $(D *=), $(D /=), $(CODE_PERCENT)$(D =), $(D ^^=), $(CODE_AMP)$(D =))
+        $(TROW $(CODE_PIPE)$(D =), $(D ^=), $(D <)$(D <)$(D =),
+        $(D >)$(D >)$(D =), $(D >)$(D >)$(D >)$(D =), $(D ~=), $(NBSP))
+        )
 
-	$(P The expression:)
+        $(P The expression:)
 ---
 a $(METACODE op)= b
 ---
 
-	$(P is rewritten as:)
+        $(P is rewritten as:)
 
 ---
 a.opOpAssign!("$(METACODE op)")(b)
@@ -472,14 +472,14 @@ a.opOpAssign!("$(METACODE op)")(b)
 
 $(H3 Index Op Assignment Operator Overloading)
 
-	$(P If the left hand side of an $(I op)= is an index expression on
-	a struct or class instance and opIndexOpAssign is a member:)
+        $(P If the left hand side of an $(I op)= is an index expression on
+        a struct or class instance and opIndexOpAssign is a member:)
 
 ---
 a[$(METACODE $(ARGUMENTS))] $(METACODE op)= c
 ---
 
-	$(P it is rewritten as:)
+        $(P it is rewritten as:)
 
 ---
 a.opIndexOpAssign!("$(METACODE op)")(c, $(METACODE $(ARGUMENTS)))
@@ -487,26 +487,26 @@ a.opIndexOpAssign!("$(METACODE op)")(c, $(METACODE $(ARGUMENTS)))
 
 $(H3 Slice Op Assignment Operator Overloading)
 
-	$(P If the left hand side of an $(I op)= is a slice expression on
-	a struct or class instance and opSliceOpAssign is a member:)
+        $(P If the left hand side of an $(I op)= is a slice expression on
+        a struct or class instance and opSliceOpAssign is a member:)
 
 ---
 a[$(METACODE $(SLICE))] $(METACODE op)= c
 ---
 
-	$(P it is rewritten as:)
+        $(P it is rewritten as:)
 
 ---
 a.opSliceOpAssign!("$(METACODE op)")(c, $(METACODE $(SLICE2)))
 ---
 
-	$(P and)
+        $(P and)
 
 ---
 a[] $(METACODE op)= c
 ---
 
-	$(P it is rewritten as:)
+        $(P it is rewritten as:)
 
 ---
 a.opSliceOpAssign!("$(METACODE op)")(c)
@@ -514,10 +514,10 @@ a.opSliceOpAssign!("$(METACODE op)")(c)
 
 $(H2 $(LNAME2 Array, Index Operator Overloading))
 
-	$(P The array index operator, $(D a[)$(ARGUMENTS)$(D ]), can be overloaded by
-	declaring a function named $(D opIndex) with one
-	or more parameters.
-	)
+        $(P The array index operator, $(D a[)$(ARGUMENTS)$(D ]), can be overloaded by
+        declaring a function named $(D opIndex) with one
+        or more parameters.
+        )
 
 -------
 struct A {
@@ -531,20 +531,20 @@ void test() {
 }
 -------
 
-	$(P In this way a struct or class object can behave as if it
-	were an array.
-	)
+        $(P In this way a struct or class object can behave as if it
+        were an array.
+        )
 
-	$(P If an index expression can be rewritten using opIndexAssign or opIndexOpAssign,
-	those are preferred over opIndex.
-	)
+        $(P If an index expression can be rewritten using opIndexAssign or opIndexOpAssign,
+        those are preferred over opIndex.
+        )
 
 $(H2 $(LNAME2 Slice, Slice Operator Overloading))
 
-	$(P Overloading the slicing operator means overloading expressions
-	like $(CODE a[]) and $(D a[)$(SLICE)$(D ]).
-	This can be done by declaring a member function named $(B opSlice).
-	)
+        $(P Overloading the slicing operator means overloading expressions
+        like $(CODE a[]) and $(D a[)$(SLICE)$(D ]).
+        This can be done by declaring a member function named $(B opSlice).
+        )
 
 -------
 class A {
@@ -562,15 +562,15 @@ void test() {
 }
 -------
 
-	$(P If a slice expression can be rewritten using opSliceAssign or opSliceOpAssign,
-	those are preferred over opSlice.
-	)
+        $(P If a slice expression can be rewritten using opSliceAssign or opSliceOpAssign,
+        those are preferred over opSlice.
+        )
 
 $(H2 $(LNAME2 Dispatch, Forwarding))
 
-	$(P Member names not found in a class or struct can be forwarded
-	to a template function named $(CODE opDispatch) for resolution.
-	)
+        $(P Member names not found in a class or struct can be forwarded
+        to a template function named $(CODE opDispatch) for resolution.
+        )
 
 ---
 import std.stdio;
@@ -610,10 +610,10 @@ void main() {
 )
 
 Macros:
-	TITLE=Operator Overloading
-	WIKI=OperatorOverloading
-	CATEGORY_SPEC=$0
-	ARGUMENTS=$(I b)$(SUB 1), $(I b)$(SUB 2), ... $(I b)$(SUB n)
-	SLICE=$(I i)..$(I j)
-	SLICE2=$(I i), $(I j)
-	FOO=
+        TITLE=Operator Overloading
+        WIKI=OperatorOverloading
+        CATEGORY_SPEC=$0
+        ARGUMENTS=$(I b)$(SUB 1), $(I b)$(SUB 2), ... $(I b)$(SUB n)
+        SLICE=$(I i)..$(I j)
+        SLICE2=$(I i), $(I j)
+        FOO=

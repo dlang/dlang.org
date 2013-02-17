@@ -2,16 +2,16 @@ Ddoc
 
 $(SPEC_S $(TITLE),
 
-	$(P Although D is designed to make it easy to port code between
-	32 and 64 bit modes, being a systems programming language,
-	dependencies can creep in. This guide points out what changes
-	between the two.
-	)
+        $(P Although D is designed to make it easy to port code between
+        32 and 64 bit modes, being a systems programming language,
+        dependencies can creep in. This guide points out what changes
+        between the two.
+        )
 
 $(SECTION2 Versions,
-	$(P Not all code can be made portable between 32 and 64 bits,
-	and must be versioned. The following works:
-	)
+        $(P Not all code can be made portable between 32 and 64 bits,
+        and must be versioned. The following works:
+        )
 
 ---
 version (X86)
@@ -22,68 +22,68 @@ else
     static assert("unsupported target")
 ---
 
-	$(P It is best to write versioning in that manner to give a compile
-	time error on a new target, rather than guessing in advance what, for example,
-	a 64 bit ARM target might require.
-	Experience shows that guesses about how an unfamiliar platform might work
-	always get it wrong.
-	Save those decisions for when one is actually working on a 64 bit ARM.
-	)
+        $(P It is best to write versioning in that manner to give a compile
+        time error on a new target, rather than guessing in advance what, for example,
+        a 64 bit ARM target might require.
+        Experience shows that guesses about how an unfamiliar platform might work
+        always get it wrong.
+        Save those decisions for when one is actually working on a 64 bit ARM.
+        )
 )
 
 $(SECTION2 Size Changes,
 
-	$(P The size of pointers and references will increase from 4
-	to 8 bytes. The $(D size_t) alias moves from $(D uint) to
-	$(D ulong), and the $(D ptrdiff_t) alias moves from $(D int)
-	to $(D long).
-	)
+        $(P The size of pointers and references will increase from 4
+        to 8 bytes. The $(D size_t) alias moves from $(D uint) to
+        $(D ulong), and the $(D ptrdiff_t) alias moves from $(D int)
+        to $(D long).
+        )
 
-	$(P The sizes of compound types based on these will also increase.
-	This includes dynamic arrays, associative arrays, delegates,
-	and class references.
-	)
+        $(P The sizes of compound types based on these will also increase.
+        This includes dynamic arrays, associative arrays, delegates,
+        and class references.
+        )
 )
 
 $(SECTION2 Structs,
 
-	$(P The size of the struct and the alignment of its fields
-	will change, in order to match the C ABI of the equivalent
-	C struct.
-	)
+        $(P The size of the struct and the alignment of its fields
+        will change, in order to match the C ABI of the equivalent
+        C struct.
+        )
 )
 
 $(SECTION2 Classes,
 
-	$(P The size of the class and the alignment of its fields
-	will change, in order to match the alignment most suitable
-	for the 64 bit mode, and in order to accommodate the increased
-	size of pointers and references.
-	)
+        $(P The size of the class and the alignment of its fields
+        will change, in order to match the alignment most suitable
+        for the 64 bit mode, and in order to accommodate the increased
+        size of pointers and references.
+        )
 )
 
 $(SECTION2 printf,
 
-	$(P Since $(D printf) is a C function, it follows C typing rules.
-	This can have consequences for using them with D types.
-	)
+        $(P Since $(D printf) is a C function, it follows C typing rules.
+        This can have consequences for using them with D types.
+        )
 
-	$(TABLE1
-	$(TR <th rowspan=2>D Type</th> <th colspan=2>printf format</th>)
-	$(TR $(TH 32 bit) $(TH 64 bit))
-	$(TR $(TD $(I T)*) $(TD %p) $(TD %p))
-	$(TR $(TD long) $(TD %lld) $(TD %d))
-	$(TR $(TD ulong) $(TD %llu) $(TD %u))
-	$(TR $(TD ptrdiff_t) $(TD %td) $(TD %td))
-	$(TR $(TD size_t) $(TD %zu) $(TD %zu))
-	)
+        $(TABLE1
+        $(TR <th rowspan=2>D Type</th> <th colspan=2>printf format</th>)
+        $(TR $(TH 32 bit) $(TH 64 bit))
+        $(TR $(TD $(I T)*) $(TD %p) $(TD %p))
+        $(TR $(TD long) $(TD %lld) $(TD %d))
+        $(TR $(TD ulong) $(TD %llu) $(TD %u))
+        $(TR $(TD ptrdiff_t) $(TD %td) $(TD %td))
+        $(TR $(TD size_t) $(TD %zu) $(TD %zu))
+        )
 
-	$(P For 32 bit code, it was common to use the $(D %.*s) format
-	to print strings. This relied on the 32 bit C ABI interpreting the
-	components of a dynamic array as separate length and pointer arguments.
-	64 bit parameter passing is different, and so the length and pointer
-	should be done explicitly:
-	)
+        $(P For 32 bit code, it was common to use the $(D %.*s) format
+        to print strings. This relied on the 32 bit C ABI interpreting the
+        components of a dynamic array as separate length and pointer arguments.
+        64 bit parameter passing is different, and so the length and pointer
+        should be done explicitly:
+        )
 
 ---
 string s;
@@ -95,9 +95,9 @@ printf("s = '%.*s'\n", s.length, s.ptr); // 32 and 64 bit
 
 $(SECTION2 Inline Assembly,
 
-	$(P Naturally, inline assembly for 32 bit code won't work for 64 bit code.
-	The versioning statements to use are:
-	)
+        $(P Naturally, inline assembly for 32 bit code won't work for 64 bit code.
+        The versioning statements to use are:
+        )
 
 ---
 version (D_InlineAsm_X86)
@@ -108,24 +108,24 @@ else
     static assert("unsupported target");
 ---
 
-	$(P The 64 bit inline assembler uses the syntax found in the Intel
-	and AMD instruction set references.
-	)
+        $(P The 64 bit inline assembler uses the syntax found in the Intel
+        and AMD instruction set references.
+        )
 )
 
 $(SECTION2 Variadic Arguments,
 
-	$(P How variadic arguments work in 64 bits is radically different from
-	32 bits. They are not a simple array on the stack. You will need to use
-	the functions and templates in $(D std.c.stdarg) to access them.
-	)
+        $(P How variadic arguments work in 64 bits is radically different from
+        32 bits. They are not a simple array on the stack. You will need to use
+        the functions and templates in $(D std.c.stdarg) to access them.
+        )
 
 )
 
 )
 
 Macros:
-	TITLE=Porting 32 Bit Code to 64 Bits
-	WIKI=32To64
-	CATEGORY_HOWTOS=$0
+        TITLE=Porting 32 Bit Code to 64 Bits
+        WIKI=32To64
+        CATEGORY_HOWTOS=$0
 

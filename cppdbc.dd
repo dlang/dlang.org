@@ -2,97 +2,97 @@ Ddoc
 
 $(COMMUNITY D's Contract Programming vs C++'s,
 
-	$(P Many people have written me saying that D's Contract Programming
-	(DbC) does not add anything that C++ does not already support.
-	They go on to illustrate their point with a technique for doing DbC in
-	C++.)
+        $(P Many people have written me saying that D's Contract Programming
+        (DbC) does not add anything that C++ does not already support.
+        They go on to illustrate their point with a technique for doing DbC in
+        C++.)
 
-	$(P It makes sense to review what DbC is, how it is done in D,
-	and stack that up with what each of the various C++ DbC techniques
-	can do.)
+        $(P It makes sense to review what DbC is, how it is done in D,
+        and stack that up with what each of the various C++ DbC techniques
+        can do.)
 
-	$(P Digital Mars C++ adds
-	<a href="http://digitalmars.com/ctg/contract.html">extensions to C++</a>
-	to support DbC, but they are not covered here because they are not
-	part of standard C++ and are not supported by any other C++ compiler.)
+        $(P Digital Mars C++ adds
+        <a href="http://digitalmars.com/ctg/contract.html">extensions to C++</a>
+        to support DbC, but they are not covered here because they are not
+        part of standard C++ and are not supported by any other C++ compiler.)
 
 $(H2 Contract Programming in D)
 
-	This is more fully documented in the D
-	<a href="dbc.html">Contract Programming</a> document.
-	To sum up, DbC in D has the following characteristics:
+        This is more fully documented in the D
+        <a href="dbc.html">Contract Programming</a> document.
+        To sum up, DbC in D has the following characteristics:
 
-	$(OL
+        $(OL
 
-	$(LI The $(I assert) is the basic contract.
-	)
+        $(LI The $(I assert) is the basic contract.
+        )
 
-	$(LI When an assert contract fails, it throws an exception.
-	Such exceptions can be caught and handled, or allowed to
-	terminate the program.
-	)
+        $(LI When an assert contract fails, it throws an exception.
+        Such exceptions can be caught and handled, or allowed to
+        terminate the program.
+        )
 
-	$(LI Classes can have $(I class invariants) which are
-	checked upon entry and exit of each public class member function,
-	the exit of each constructor, and the entry of the destructor.
-	)
+        $(LI Classes can have $(I class invariants) which are
+        checked upon entry and exit of each public class member function,
+        the exit of each constructor, and the entry of the destructor.
+        )
 
-	$(LI Assert contracts on object references check the class
-	invariant for that object.
-	)
+        $(LI Assert contracts on object references check the class
+        invariant for that object.
+        )
 
-	$(LI Class invariants are inherited, that means that a derived
-	class invariant will implicitly call the base class invariant.
-	)
+        $(LI Class invariants are inherited, that means that a derived
+        class invariant will implicitly call the base class invariant.
+        )
 
-	$(LI Functions can have $(I preconditions) and $(I postconditions).
-	)
+        $(LI Functions can have $(I preconditions) and $(I postconditions).
+        )
 
-	$(LI For member functions in a class inheritance hierarchy, the
-	precondition of a derived class function are OR'd together
-	with the preconditions of all the functions it overrides.
-	The postconditions are AND'd together.
-	)
+        $(LI For member functions in a class inheritance hierarchy, the
+        precondition of a derived class function are OR'd together
+        with the preconditions of all the functions it overrides.
+        The postconditions are AND'd together.
+        )
 
-	$(LI By throwing a compiler switch, DbC code can be enabled
-	or can be withdrawn from the compiled code.
-	)
+        $(LI By throwing a compiler switch, DbC code can be enabled
+        or can be withdrawn from the compiled code.
+        )
 
-	$(LI Code works semantically the same with or without DbC
-	checking enabled.
-	)
+        $(LI Code works semantically the same with or without DbC
+        checking enabled.
+        )
 
-	)
+        )
 
 $(H2 Contract Programming in C++)
 
 $(H3 The $(D assert) Macro)
 
-	$(P C++ does have the basic $(D assert) macro, which tests its argument
-	and if it fails, aborts the program. $(D assert) can be turned
-	on and off with the $(D NDEBUG) macro.)
+        $(P C++ does have the basic $(D assert) macro, which tests its argument
+        and if it fails, aborts the program. $(D assert) can be turned
+        on and off with the $(D NDEBUG) macro.)
 
-	$(P $(D assert) does not know anything about class invariants,
-	and does not throw an exception when it fails. It just aborts
-	the program after writing a message. $(D assert) relies on
-	a macro text preprocessor to work.)
+        $(P $(D assert) does not know anything about class invariants,
+        and does not throw an exception when it fails. It just aborts
+        the program after writing a message. $(D assert) relies on
+        a macro text preprocessor to work.)
 
-	$(P $(D assert) is where explicit support for DbC in Standard C++
-	begins and ends.)
+        $(P $(D assert) is where explicit support for DbC in Standard C++
+        begins and ends.)
 
 $(H3 Class Invariants)
 
-	Consider a class invariant in D:
+        Consider a class invariant in D:
 
 ----------
 class A
 {
     $(CODE_HIGHLIGHT invariant)() { ...contracts... }
 
-    this() { ... }	// constructor
-    ~this() { ... }	// destructor
+    this() { ... }      // constructor
+    ~this() { ... }     // destructor
 
-    void foo() { ... }	// public member function
+    void foo() { ... }  // public member function
 }
 
 class B : A
@@ -102,8 +102,8 @@ class B : A
 }
 ----------
 
-	To accomplish the equivalent in C++ (thanks to Bob Bell for providing
-	this):
+        To accomplish the equivalent in C++ (thanks to Bob Bell for providing
+        this):
 
 $(CCODE
 template<typename T>
@@ -140,10 +140,10 @@ void A::foo()
 class B : public A {
     public:
 #ifdef DBG
-	virtual void invariant()
-	{   ...contracts...
-	   A::invariant();
-	}
+        virtual void invariant()
+        {   ...contracts...
+           A::invariant();
+        }
 #endif
        void bar();
 };
@@ -158,22 +158,22 @@ void B::barG()
 }
 )
 
-	There's an additional complication with $(D A::foo()). Upon every
-	normal exit from the function, the $(D invariant()) should be
-	called.
-	This means that code that looks like:
+        There's an additional complication with $(D A::foo()). Upon every
+        normal exit from the function, the $(D invariant()) should be
+        called.
+        This means that code that looks like:
 
 $(CCODE
 int A::foo()
 {
     ...
     if (...)
-	return bar();
+        return bar();
     return 3;
 }
 )
 
-	would need to be written as:
+        would need to be written as:
 
 $(CCODE
 int A::foo()
@@ -183,17 +183,17 @@ int A::foo()
     ...
     if (...)
     {
-	result = bar();
-	check_invariant(*this);
-	return result;
+        result = bar();
+        check_invariant(*this);
+        return result;
     }
     check_invariant(*this);
     return 3;
 }
 )
 
-	Or recode the function so it has a single exit point.
-	One possibility to mitigate this is to use RAII techniques:
+        Or recode the function so it has a single exit point.
+        One possibility to mitigate this is to use RAII techniques:
 
 $(CCODE
 int A::foo()
@@ -207,17 +207,17 @@ int A::foo()
 #endif
     ...
     if (...)
-	return bar();
+        return bar();
     return 3;
 }
 )
 
-	The #if DBC is still there because some compilers may not
-	optimize the whole thing away if check_invariants compiles to nothing.
+        The #if DBC is still there because some compilers may not
+        optimize the whole thing away if check_invariants compiles to nothing.
 
 $(H2 Preconditions and Postconditions)
 
-	Consider the following in D:
+        Consider the following in D:
 
 ----------
 void foo()
@@ -225,31 +225,31 @@ void foo()
     out { ...postconditions... }
     body
     {
-	...implementation...
+        ...implementation...
     }
 ----------
 
-	This is nicely handled in C++ with the nested Sentry struct:
+        This is nicely handled in C++ with the nested Sentry struct:
 
 $(CCODE
 void foo()
 {
     struct Sentry
     {   Sentry() { ...preconditions... }
-	~Sentry() { ...postconditions... }
+        ~Sentry() { ...postconditions... }
     } sentry;
     ...implementation...
 }
 )
 
-	$(P If the preconditions and postconditions consist of nothing
-	more than $(D assert) macros, the whole doesn't need to
-	be wrapped in a $(D #ifdef) pair, since a good C++ compiler will
-	optimize the whole thing away if the $(D assert)s are turned off.)
+        $(P If the preconditions and postconditions consist of nothing
+        more than $(D assert) macros, the whole doesn't need to
+        be wrapped in a $(D #ifdef) pair, since a good C++ compiler will
+        optimize the whole thing away if the $(D assert)s are turned off.)
 
-	$(P But suppose $(D foo()) sorts an array, and the postcondition needs
-	to walk the array and verify that it really is sorted. Now
-	the shebang needs to be wrapped in $(D #ifdef):)
+        $(P But suppose $(D foo()) sorts an array, and the postcondition needs
+        to walk the array and verify that it really is sorted. Now
+        the shebang needs to be wrapped in $(D #ifdef):)
 
 $(CCODE
 void foo()
@@ -257,20 +257,20 @@ void foo()
 #ifdef DBC
     struct Sentry
     {   Sentry() { ...preconditions... }
-	~Sentry() { ...postconditions... }
+        ~Sentry() { ...postconditions... }
     } sentry;
 #endif
     ...implementation...
 }
 )
 
-	$(P (One can make use of the C++ rule that templates are only
-	instantiated when used can be used to avoid the $(D #ifdef), by
-	putting the conditions into a template function referenced
-	by the $(D assert).))
+        $(P (One can make use of the C++ rule that templates are only
+        instantiated when used can be used to avoid the $(D #ifdef), by
+        putting the conditions into a template function referenced
+        by the $(D assert).))
 
-	$(P Let's add a return value to $(D foo()) that needs to be checked in
-	the postconditions. In D:)
+        $(P Let's add a return value to $(D foo()) that needs to be checked in
+        the postconditions. In D:)
 
 ----------
 int foo()
@@ -278,14 +278,14 @@ int foo()
     out (result) { ...postconditions... }
     body
     {
-	...implementation...
-	if (...)
-	    return bar();
-	return 3;
+        ...implementation...
+        if (...)
+            return bar();
+        return 3;
     }
 ----------
 
-	In C++:
+        In C++:
 
 $(CCODE
 int foo()
@@ -293,17 +293,17 @@ int foo()
 #ifdef DBC
     struct Sentry
     {   int result;
-	Sentry() { ...preconditions... }
-	~Sentry() { ...postconditions... }
+        Sentry() { ...preconditions... }
+        ~Sentry() { ...postconditions... }
     } sentry;
 #endif
     ...implementation...
     if (...)
     {   int i = bar();
 #ifdef DBC
-	sentry.result = i;
+        sentry.result = i;
 #endif
-	return i;
+        return i;
     }
 #ifdef DBC
     sentry.result = 3;
@@ -312,7 +312,7 @@ int foo()
 }
 )
 
-	Now add a couple parameters to $(D foo()). In D:
+        Now add a couple parameters to $(D foo()). In D:
 
 ----------
 int foo(int a, int b)
@@ -320,14 +320,14 @@ int foo(int a, int b)
     out (result) { ...postconditions... }
     body
     {
-	...implementation...
-	if (...)
-	    return bar();
-	return 3;
+        ...implementation...
+        if (...)
+            return bar();
+        return 3;
     }
 ----------
 
-	In C++:
+        In C++:
 
 $(CCODE
 int foo(int a, int b)
@@ -335,67 +335,67 @@ int foo(int a, int b)
 #ifdef DBC
     struct Sentry
     {   int a, b;
-	int result;
-	Sentry(int a, int b)
-	{   this->a = a;
-	    this->b = b;
-	    ...preconditions...
-	}
-	~Sentry() { ...postconditions... }
+        int result;
+        Sentry(int a, int b)
+        {   this->a = a;
+            this->b = b;
+            ...preconditions...
+        }
+        ~Sentry() { ...postconditions... }
     } sentry(a,b);
 #endif
     ...implementation...
-	if (...)
-	{   int i = bar();
+        if (...)
+        {   int i = bar();
 #ifdef DBC
-	    sentry.result = i;
+            sentry.result = i;
 #endif
-	    return i;
-	}
+            return i;
+        }
 #ifdef DBC
-	sentry.result = 3;
+        sentry.result = 3;
 #endif
-	return 3;
+        return 3;
 }
 )
 
 $(H2 Preconditions and Postconditions for Member Functions)
 
-	Consider the use of preconditions and postconditions for a
-	polymorphic function in D:
+        Consider the use of preconditions and postconditions for a
+        polymorphic function in D:
 
 ----------
 class A
 {
     void foo()
-	in { ...Apreconditions... }
-	out { ...Apostconditions... }
-	body
-	{
-	    ...implementation...
-	}
+        in { ...Apreconditions... }
+        out { ...Apostconditions... }
+        body
+        {
+            ...implementation...
+        }
 }
 
 class B : A
 {
     void foo()
-	in { ...Bpreconditions... }
-	out { ...Bpostconditions... }
-	body
-	{
-	    ...implementation...
-	}
+        in { ...Bpreconditions... }
+        out { ...Bpostconditions... }
+        body
+        {
+            ...implementation...
+        }
 }
 ----------
 
-	The semantics for a call to $(D B.foo()) are:
+        The semantics for a call to $(D B.foo()) are:
 
-	$(UL
-	$(LI Either Apreconditions or Bpreconditions must be satisfied.)
-	$(LI Both Apostconditions and Bpostconditions must be satisfied.)
-	)
+        $(UL
+        $(LI Either Apreconditions or Bpreconditions must be satisfied.)
+        $(LI Both Apostconditions and Bpostconditions must be satisfied.)
+        )
 
-	Let's get this to work in C++:
+        Let's get this to work in C++:
 
 $(CCODE
 class A
@@ -411,15 +411,15 @@ protected:
 
     void foo_internal()
     {
-	...implementation...
+        ...implementation...
     }
 
 public:
     virtual void foo()
     {
-	foo_preconditions();
-	foo_internal();
-	foo_postconditions();
+        foo_preconditions();
+        foo_internal();
+        foo_postconditions();
     }
 };
 
@@ -436,59 +436,59 @@ protected:
 
     void foo_internal()
     {
-	...implementation...
+        ...implementation...
     }
 
 public:
     virtual void foo()
     {
-	assert(foo_preconditions() || A::foo_preconditions());
-	foo_internal();
-	A::foo_postconditions();
-	foo_postconditions();
+        assert(foo_preconditions() || A::foo_preconditions());
+        foo_internal();
+        A::foo_postconditions();
+        foo_postconditions();
     }
 };
 )
 
-	Something interesting has happened here. The preconditions can
-	no longer be done using $(D assert), since the results need
-	to be OR'd together. I'll leave as a reader exercise adding
-	in a class invariant, function return values for $(D foo()),
-	and parameters
-	for $(D foo()).
+        Something interesting has happened here. The preconditions can
+        no longer be done using $(D assert), since the results need
+        to be OR'd together. I'll leave as a reader exercise adding
+        in a class invariant, function return values for $(D foo()),
+        and parameters
+        for $(D foo()).
 
 $(H2 Conclusion)
 
-	$(P These C++ techniques can work up to a point. But, aside from
-	$(D assert), they are not standardized and so will vary from
-	project to project. Furthermore, they require much tedious
-	adhesion to a particular convention, and add significant clutter
-	to the code. Perhaps that's why it's rarely seen in practice.)
+        $(P These C++ techniques can work up to a point. But, aside from
+        $(D assert), they are not standardized and so will vary from
+        project to project. Furthermore, they require much tedious
+        adhesion to a particular convention, and add significant clutter
+        to the code. Perhaps that's why it's rarely seen in practice.)
 
-	$(P By adding support for DbC into the language, D offers an easy
-	way to use DbC and get it right. Being in the language standardizes
-	the way it will be used from project to project.)
+        $(P By adding support for DbC into the language, D offers an easy
+        way to use DbC and get it right. Being in the language standardizes
+        the way it will be used from project to project.)
 
 $(H2 References)
 
-	$(P Chapter C.11 introduces the theory and rationale of
-	Contract Programming in
-	<a href="http://www.amazon.com/exec/obidos/ASIN/0136291554/classicempire">
-	Object-Oriented Software Construction
-	</a><br>
-	Bertrand Meyer, Prentice Hall)
+        $(P Chapter C.11 introduces the theory and rationale of
+        Contract Programming in
+        <a href="http://www.amazon.com/exec/obidos/ASIN/0136291554/classicempire">
+        Object-Oriented Software Construction
+        </a><br>
+        Bertrand Meyer, Prentice Hall)
 
-	$(P Chapters 24.3.7.1 to 24.3.7.3 discuss Contract Programming in C++ in
-	<a href="http://www.amazon.com/exec/obidos/ASIN/0201700735/classicempire">
-	The C++ Programming Language Special Edition
-	</a><br>
-	Bjarne Stroustrup, Addison-Wesley)
+        $(P Chapters 24.3.7.1 to 24.3.7.3 discuss Contract Programming in C++ in
+        <a href="http://www.amazon.com/exec/obidos/ASIN/0201700735/classicempire">
+        The C++ Programming Language Special Edition
+        </a><br>
+        Bjarne Stroustrup, Addison-Wesley)
 
 )
 
 Macros:
-	TITLE=D's Contract Programming vs C++'s
-	WIKI=CppDbc
+        TITLE=D's Contract Programming vs C++'s
+        WIKI=CppDbc
 
 
-	CATEGORY_OVERVIEW=$0
+        CATEGORY_OVERVIEW=$0

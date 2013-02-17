@@ -36,62 +36,62 @@ $(GNAME EnumMember):
     $(GLINK2 declaration, Type) $(B =) $(ASSIGNEXPRESSION)
 )
 
-	$(P Enum declarations are used to define a group of constants.
-	They come in two forms:
-	)
-	$(OL
-	$(LI Named enums, which have an $(I EnumTag).)
-	$(LI Anonymous enums, which do not have an $(I EnumTag).)
-	)
+        $(P Enum declarations are used to define a group of constants.
+        They come in two forms:
+        )
+        $(OL
+        $(LI Named enums, which have an $(I EnumTag).)
+        $(LI Anonymous enums, which do not have an $(I EnumTag).)
+        )
 
 $(H2 Named Enums)
 
-	$(P
-	Named enums are used to declare related
-	constants and group them by giving them a unique type.
-	The $(I EnumMembers)
-	are declared in the scope of the enum $(I EnumTag).
-	The enum $(I EnumTag) declares a new type, and all
-	the $(I EnumMembers) have that type.
-	)
+        $(P
+        Named enums are used to declare related
+        constants and group them by giving them a unique type.
+        The $(I EnumMembers)
+        are declared in the scope of the enum $(I EnumTag).
+        The enum $(I EnumTag) declares a new type, and all
+        the $(I EnumMembers) have that type.
+        )
 
-	$(P This defines a new type $(CODE X) which has values
-	$(CODE X.A=0), $(CODE X.B=1), $(CODE X.C=2):)
+        $(P This defines a new type $(CODE X) which has values
+        $(CODE X.A=0), $(CODE X.B=1), $(CODE X.C=2):)
 
 ------
-enum X { A, B, C }	// named enum
+enum X { A, B, C }      // named enum
 ------
 
 
-	$(P If the $(I EnumBaseType) is not explicitly set, and the first
-	$(I EnumMember) has an initializer, it is set to the type of that
-	initializer. Otherwise, it defaults to
-	type $(CODE int).)
+        $(P If the $(I EnumBaseType) is not explicitly set, and the first
+        $(I EnumMember) has an initializer, it is set to the type of that
+        initializer. Otherwise, it defaults to
+        type $(CODE int).)
 
-	$(P Named enum members may not have individual $(I Type)s.
-	)
+        $(P Named enum members may not have individual $(I Type)s.
+        )
 
 
-	$(P A named enum member can be implicitly cast to its $(I EnumBaseType),
-	but $(I EnumBaseType) types
-	cannot be implicitly cast to an enum type.
-	)
+        $(P A named enum member can be implicitly cast to its $(I EnumBaseType),
+        but $(I EnumBaseType) types
+        cannot be implicitly cast to an enum type.
+        )
 
-	$(P The value of an $(I EnumMember) is given by its initializer.
-	If there is no initializer, it is given the value of the
-	previous $(I EnumMember) + 1. If it is the first $(I EnumMember),
-	it's value is 0.
-	)
+        $(P The value of an $(I EnumMember) is given by its initializer.
+        If there is no initializer, it is given the value of the
+        previous $(I EnumMember) + 1. If it is the first $(I EnumMember),
+        it's value is 0.
+        )
 
-	$(P An $(I EmptyEnumBody) signifies an opaque enum - the enum members are
-	unknown.)
+        $(P An $(I EmptyEnumBody) signifies an opaque enum - the enum members are
+        unknown.)
 
 $(H3 Enum Default Initializer)
 
-	$(P The $(CODE .init) property of an enum type is the value
-	of the first member of that enum.
-	This is also the default initializer for the enum type.
-	)
+        $(P The $(CODE .init) property of an enum type is the value
+        of the first member of that enum.
+        This is also the default initializer for the enum type.
+        )
 
 ------
 enum X { A=3, B, C }
@@ -100,18 +100,18 @@ X x;      // x is initialized to 3
 
 $(H3 Enum Properties)
 
-	$(P Enum properties only exist for named enums.
-	)
+        $(P Enum properties only exist for named enums.
+        )
 
-	$(TABLE1
-	$(CAPTION Named Enum Properties)
-	$(TROW $(D .init), First enum member value)
-	$(TROW $(D .min), Smallest value of enum)
-	$(TROW $(D .max), Largest value of enum)
-	$(TROW $(D .sizeof), Size of storage for an enumerated value)
-	)
+        $(TABLE1
+        $(CAPTION Named Enum Properties)
+        $(TROW $(D .init), First enum member value)
+        $(TROW $(D .min), Smallest value of enum)
+        $(TROW $(D .max), Largest value of enum)
+        $(TROW $(D .sizeof), Size of storage for an enumerated value)
+        )
 
-	$(P For example:)
+        $(P For example:)
 
 ---
 enum X { A=3, B, C }
@@ -120,60 +120,60 @@ X.max    // is X.C
 X.sizeof // is same as int.sizeof
 ---
 
-	$(P The $(I EnumBaseType) of named enums must support comparison
-	in order to compute the $(CODE .max) and $(CODE .min) properties.
-	)
+        $(P The $(I EnumBaseType) of named enums must support comparison
+        in order to compute the $(CODE .max) and $(CODE .min) properties.
+        )
 
 
 $(H2 Anonymous Enums)
 
-	$(P If the enum $(I Identifier) is not present, then the enum
-	is an $(I anonymous enum), and the $(I EnumMembers) are declared
-	in the scope the $(I EnumDeclaration) appears in.
-	No new type is created; the $(I EnumMembers) have the type of the
-	$(I EnumBaseType).
-	)
+        $(P If the enum $(I Identifier) is not present, then the enum
+        is an $(I anonymous enum), and the $(I EnumMembers) are declared
+        in the scope the $(I EnumDeclaration) appears in.
+        No new type is created; the $(I EnumMembers) have the type of the
+        $(I EnumBaseType).
+        )
 
-	The $(I EnumBaseType) is the underlying type of the enum.
+        The $(I EnumBaseType) is the underlying type of the enum.
 
-	$(P If omitted, the $(I EnumMembers) can have different types.
-	Those types are given by the first of:
-	)
+        $(P If omitted, the $(I EnumMembers) can have different types.
+        Those types are given by the first of:
+        )
 
-	$(OL
-	$(LI The $(I Type), if present.)
-	$(LI The type of the $(I AssignExpression), if present.)
-	$(LI The type of the previous $(I EnumMember), if present.)
-	$(LI $(CODE int))
-	)
+        $(OL
+        $(LI The $(I Type), if present.)
+        $(LI The type of the $(I AssignExpression), if present.)
+        $(LI The type of the previous $(I EnumMember), if present.)
+        $(LI $(CODE int))
+        )
 
 
 ------
-enum { A, B, C }	// anonymous enum
+enum { A, B, C }        // anonymous enum
 ------
 
-	$(P Defines the constants A=0, B=1, C=2, all of type int.)
+        $(P Defines the constants A=0, B=1, C=2, all of type int.)
 
-	$(P Enums must have at least one member.
-	)
+        $(P Enums must have at least one member.
+        )
 
-	$(P The value of an $(I EnumMember) is given by its initializer.
-	If there is no initializer, it is given the value of the
-	previous $(I EnumMember) + 1. If it is the first $(I EnumMember),
-	it's value is 0.
-	)
+        $(P The value of an $(I EnumMember) is given by its initializer.
+        If there is no initializer, it is given the value of the
+        previous $(I EnumMember) + 1. If it is the first $(I EnumMember),
+        it's value is 0.
+        )
 
 ------
 enum { A, B = 5+7, C, D = 8+C, E }
 ------
 
-	$(P Sets A=0, B=12, C=13, D=21, and E=22, all of type int.)
+        $(P Sets A=0, B=12, C=13, D=21, and E=22, all of type int.)
 
 ---
 enum : long { A = 3, B }
 ---
 
-	$(P Sets A=3, B=4 all of type long.)
+        $(P Sets A=3, B=4 all of type long.)
 
 ---
 enum : string {
@@ -194,23 +194,23 @@ enum {
 
 $(H3 Manifest Constants)
 
-	$(P If there is only one member of an anonymous enum, the { } can
-	be omitted:
-	)
+        $(P If there is only one member of an anonymous enum, the { } can
+        be omitted:
+        )
 
 ---
 enum i = 4;      // i is 4 of type int
 enum long l = 3; // l is 3 of type long
 ---
 
-	$(P Such declarations are not lvalues, meaning their address
-	cannot be taken.)
+        $(P Such declarations are not lvalues, meaning their address
+        cannot be taken.)
 
 
 )
 
 Macros:
-	TITLE=Enums
-	WIKI=Enum
-	CATEGORY_SPEC=$0
+        TITLE=Enums
+        WIKI=Enum
+        CATEGORY_SPEC=$0
 

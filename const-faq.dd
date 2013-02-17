@@ -2,92 +2,92 @@ Ddoc
 
 $(D_S const(FAQ),
 
-	$(P D's $(D const)/$(D immutable) system is unique, and so there
-	are a lot of questions about it.  )
+        $(P D's $(D const)/$(D immutable) system is unique, and so there
+        are a lot of questions about it.  )
 
-	$(UL
+        $(UL
 
-	$(ITEMR const, Why does D have const?)
-	$(ITEMR principles, What principles drove the D const design?)
-	$(ITEMR transitive-const, What is $(I transitive const)?)
-	$(ITEMR head-const, What is $(I head const)?)
-	$(ITEMR tail-const, What is $(I tail const)?)
-	$(ITEMR logical-const, What is $(I logical const)?)
-	$(ITEMR readonly, Why not use $(I readonly) to mean read only view?)
-	$(ITEMR java-const, Why did Java reject const?)
-	$(ITEMR cpp-const, How does const differ in C++?)
-	$(ITEMR invariant-strings, Why are strings immutable?)
-	$(ITEMR const-parameters, Why aren't function parameters const by default?)
-	$(ITEMR static-members, Are static class members covered by transitive const?)
-	$(ITEMR invariant, What is $(I immutable) good for?)
-	)
+        $(ITEMR const, Why does D have const?)
+        $(ITEMR principles, What principles drove the D const design?)
+        $(ITEMR transitive-const, What is $(I transitive const)?)
+        $(ITEMR head-const, What is $(I head const)?)
+        $(ITEMR tail-const, What is $(I tail const)?)
+        $(ITEMR logical-const, What is $(I logical const)?)
+        $(ITEMR readonly, Why not use $(I readonly) to mean read only view?)
+        $(ITEMR java-const, Why did Java reject const?)
+        $(ITEMR cpp-const, How does const differ in C++?)
+        $(ITEMR invariant-strings, Why are strings immutable?)
+        $(ITEMR const-parameters, Why aren't function parameters const by default?)
+        $(ITEMR static-members, Are static class members covered by transitive const?)
+        $(ITEMR invariant, What is $(I immutable) good for?)
+        )
 
 $(ITEM const, Why does D have const?)
 
-	$(P People often express frustration with const and immutable
-	in D 2.0 and wonder if it is worth it.
-	)
+        $(P People often express frustration with const and immutable
+        in D 2.0 and wonder if it is worth it.
+        )
 
-	$(OL
+        $(OL
 
-	$(LI It makes function interfaces more self-documenting. Without
-	transitive const, for all pointer/reference parameters one must rely on
-	the documentation (which is always missing, out of date, or wrong). Note
-	that without transitivity, C++ const is nearly useless for such
-	self-documentation, which is why C++ programmers tend to rely on
-	convention instead.
-	)
+        $(LI It makes function interfaces more self-documenting. Without
+        transitive const, for all pointer/reference parameters one must rely on
+        the documentation (which is always missing, out of date, or wrong). Note
+        that without transitivity, C++ const is nearly useless for such
+        self-documentation, which is why C++ programmers tend to rely on
+        convention instead.
+        )
 
-	$(LI It makes for interfaces that can be relied upon, which becomes
-	increasingly important the more people that are involved with the code.
-	In other words, it scales very well. People who are involved with
-	projects with large teams of programmers say that lack of const
-	makes their lives difficult because they cannot rely on the compiler to
-	enforce convention. The larger the team, the worse it gets. Managing
-	APIs is critical to a large project - it's why BASIC doesn't scale (for
-	an extreme example).
-	)
+        $(LI It makes for interfaces that can be relied upon, which becomes
+        increasingly important the more people that are involved with the code.
+        In other words, it scales very well. People who are involved with
+        projects with large teams of programmers say that lack of const
+        makes their lives difficult because they cannot rely on the compiler to
+        enforce convention. The larger the team, the worse it gets. Managing
+        APIs is critical to a large project - it's why BASIC doesn't scale (for
+        an extreme example).
+        )
 
-	$(LI Const transitivity makes for some interesting optimization
-	opportunities. The value of this has not been explored or exploited.
-	)
+        $(LI Const transitivity makes for some interesting optimization
+        opportunities. The value of this has not been explored or exploited.
+        )
 
-	$(LI Here's the biggie. Points 1..3 are insignificant in comparison. The
-	future of programming will be multicore, multithreaded. Languages that
-	make it easy to program them will supplant languages that don't.
-	Transitive const is key to bringing D into this paradigm. The surge in
-	use of Haskell and Erlang is evidence of this coming trend (the killer
-	feature of those languages is they make it easy to do multiprogramming).
-	C++ cannot be retrofitted to supporting multiprogramming in a manner
-	that makes it accessible. D isn't there yet, but it will be, and
-	transitive const will be absolutely fundamental to making it work.
-	)
-	)
+        $(LI Here's the biggie. Points 1..3 are insignificant in comparison. The
+        future of programming will be multicore, multithreaded. Languages that
+        make it easy to program them will supplant languages that don't.
+        Transitive const is key to bringing D into this paradigm. The surge in
+        use of Haskell and Erlang is evidence of this coming trend (the killer
+        feature of those languages is they make it easy to do multiprogramming).
+        C++ cannot be retrofitted to supporting multiprogramming in a manner
+        that makes it accessible. D isn't there yet, but it will be, and
+        transitive const will be absolutely fundamental to making it work.
+        )
+        )
 
-	$(P Of course, for writing single-threaded one man programs of
-	fairly modest size, const is not particularly useful.
-	And in D const can be effectively ignored by just not using it, or
-	by using D 1.0. The only place const is imposed is with the immutable
-	string type.
-	)
+        $(P Of course, for writing single-threaded one man programs of
+        fairly modest size, const is not particularly useful.
+        And in D const can be effectively ignored by just not using it, or
+        by using D 1.0. The only place const is imposed is with the immutable
+        string type.
+        )
 
 $(ITEM principles, What principles drove the D const design?)
 
-	$(OL
-	$(LI It will be mathematically sound. That means there
-	are no legal escapes from it.)
-	$(LI Any type can be wrapped in a struct and the resulting
-	struct can still exhibit the same const behavior - in other
-	words, no magic behavior for certain types.)
-	$(LI Const behavior will be transitive.)
-	$(LI Const behavior for type T will be equivalent for all types T.)
-	)
+        $(OL
+        $(LI It will be mathematically sound. That means there
+        are no legal escapes from it.)
+        $(LI Any type can be wrapped in a struct and the resulting
+        struct can still exhibit the same const behavior - in other
+        words, no magic behavior for certain types.)
+        $(LI Const behavior will be transitive.)
+        $(LI Const behavior for type T will be equivalent for all types T.)
+        )
 
 $(ITEM transitive-const, What is $(I transitive const)?)
 
-	$(P Transitive const means that once const is applied to a type,
-	it applies recursively to every sub-component of that type. Hence:
-	)
+        $(P Transitive const means that once const is applied to a type,
+        it applies recursively to every sub-component of that type. Hence:
+        )
 
 ---
 const(int*)** p;
@@ -97,49 +97,49 @@ p += 1;   // ok, p is mutable
 ***p += 1; // error, ***p is const
 ---
 
-	$(P With transitivity, there is no way to have a
-	$(I const pointer to mutable int).
-	)
+        $(P With transitivity, there is no way to have a
+        $(I const pointer to mutable int).
+        )
 
-	$(P C++ const is not transitive.)
+        $(P C++ const is not transitive.)
 
 $(ITEM head-const, What is $(I head const)?)
 
-	$(P Head const is where the const applies only to the component
-	of the type adjacent to the const. For example:
-	)
+        $(P Head const is where the const applies only to the component
+        of the type adjacent to the const. For example:
+        )
 
 ---
 headconst(int**) p;
 ---
-	$(P would be read as p being a: $(I const pointer to mutable pointer
-	to mutable int.) D does not have head const (the $(CODE headconst) is
-	there just for illustrative purposes), but C++ const is
-	a head const system.
-	)
+        $(P would be read as p being a: $(I const pointer to mutable pointer
+        to mutable int.) D does not have head const (the $(CODE headconst) is
+        there just for illustrative purposes), but C++ const is
+        a head const system.
+        )
 
 $(ITEM tail-const, What is $(I tail const)?)
 
-	$(P Tail const is the complement of head const - everything reachable
-	from the const type is also const except for the top level. For
-	example:
-	)
+        $(P Tail const is the complement of head const - everything reachable
+        from the const type is also const except for the top level. For
+        example:
+        )
 
 ---
 tailconst(int**) p;
 ---
-	$(P would be read as p being a: $(I mutable pointer to const pointer
-	to const int.) Head const combined with tail const yields transitive
-	const.
-	D doesn't have $(CODE tailconst) (the keyword is there just for
-	illustrative purposes) as a distinct type constructor.
-	)
+        $(P would be read as p being a: $(I mutable pointer to const pointer
+        to const int.) Head const combined with tail const yields transitive
+        const.
+        D doesn't have $(CODE tailconst) (the keyword is there just for
+        illustrative purposes) as a distinct type constructor.
+        )
 
 $(ITEM logical-const, What is $(I logical const)?)
 
-	$(P $(I Logical const) refers to data that appears to be constant
-	to an observer, but is not actually const. An example would be
-	an object that does lazy evaluation:)
+        $(P $(I Logical const) refers to data that appears to be constant
+        to an observer, but is not actually const. An example would be
+        an object that does lazy evaluation:)
 
 ---
 struct Foo {
@@ -149,9 +149,9 @@ struct Foo {
     int length()
     {   if (!len_done)
         {   len = strlen(str);
-	    len_done = true;
+            len_done = true;
         }
-	return len;
+        return len;
     }
     this(char* str) { this.str = str; }
 }
@@ -159,136 +159,136 @@ const Foo f = Foo("hello");
 bar(f.length);
 ---
 
-	$(P The example evaluates $(CODE f.len) only if it is needed.
-	$(CODE Foo) is logically const, because to the observer of the object
-	its return values never change after construction.
-	The $(CODE mutable) qualifier says that even if an instance
-	of $(CODE Foo) is const, those fields can still change.
-	While C++ supports the notion of logical const, D does not,
-	and D does not have a $(CODE mutable) qualifier.
-	)
+        $(P The example evaluates $(CODE f.len) only if it is needed.
+        $(CODE Foo) is logically const, because to the observer of the object
+        its return values never change after construction.
+        The $(CODE mutable) qualifier says that even if an instance
+        of $(CODE Foo) is const, those fields can still change.
+        While C++ supports the notion of logical const, D does not,
+        and D does not have a $(CODE mutable) qualifier.
+        )
 
-	$(P The problem with logical const is that const is no longer
-	transitive. Not being transitive means there is the potential
-	for threading race conditions, and there is no way to determine
-	if an opaque const type has mutable members or not.
-	)
+        $(P The problem with logical const is that const is no longer
+        transitive. Not being transitive means there is the potential
+        for threading race conditions, and there is no way to determine
+        if an opaque const type has mutable members or not.
+        )
 
-	$(P Reference:
-	$(LINK2 http://www.linuxtopia.org/online_books/programming_books/thinking_in_c++/Chapter08_025.html, mutable: bitwise vs. logical const)
-	)
+        $(P Reference:
+        $(LINK2 http://www.linuxtopia.org/online_books/programming_books/thinking_in_c++/Chapter08_025.html, mutable: bitwise vs. logical const)
+        )
 
 $(ITEM readonly, Why not use $(I readonly) to mean read only view?)
 
-	$(P $(I Readonly) has a well established meaning in software to
-	mean ROM, or Read Only Memory that can never be changed.
-	For computers with hardware protection for memory pages, readonly
-	also means that the memory contents cannot be altered.
-	Using readonly in D to mean a read only view of memory that could
-	be altered by another alias or thread runs counter to this.
-	)
+        $(P $(I Readonly) has a well established meaning in software to
+        mean ROM, or Read Only Memory that can never be changed.
+        For computers with hardware protection for memory pages, readonly
+        also means that the memory contents cannot be altered.
+        Using readonly in D to mean a read only view of memory that could
+        be altered by another alias or thread runs counter to this.
+        )
 
 $(ITEM java-const, Why did Java reject const?)
 
-	$(P $(LINK http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4211070)
-	)
+        $(P $(LINK http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4211070)
+        )
 
 $(ITEM cpp-const, How does const differ in C++?)
 
-	$(P C++ has a const system that is closer to D's than any other
-	language, but it still has huge differences:)
+        $(P C++ has a const system that is closer to D's than any other
+        language, but it still has huge differences:)
 
-	$(OL
-	$(LI const is not transitive)
-	$(LI no immutables)
-	$(LI const objects can have mutable members)
-	$(LI const can be legally cast away and the data modified)
-	$(LI $(CODE const T) and $(CODE T) are not always distinct types)
-	)
+        $(OL
+        $(LI const is not transitive)
+        $(LI no immutables)
+        $(LI const objects can have mutable members)
+        $(LI const can be legally cast away and the data modified)
+        $(LI $(CODE const T) and $(CODE T) are not always distinct types)
+        )
 
 $(ITEM invariant-strings, Why are strings immutable?)
 
-	$(P $(LINK2 http://drdobbs.com/blogs/architecture-and-design/228700475, Immutable Strings)
-	)
+        $(P $(LINK2 http://drdobbs.com/blogs/architecture-and-design/228700475, Immutable Strings)
+        )
 
 $(ITEM const-parameters, Why aren't function parameters const by default?)
 
-	$(P Since most (nearly all?) function parameters will not be modified,
-	it would seem to make sense to make them all const by default,
-	and one would have to specifically mark as mutable those that would
-	be changed. The problems with this are:
-	)
+        $(P Since most (nearly all?) function parameters will not be modified,
+        it would seem to make sense to make them all const by default,
+        and one would have to specifically mark as mutable those that would
+        be changed. The problems with this are:
+        )
 
-	$(OL
+        $(OL
 
-	$(LI It would be a huge break from past D practice, and practice
-	in C, C++, Java, C#, etc.)
-	$(LI It would require a new keyword, say $(CODE mutable).)
-	$(LI And worst, it would make declarations inconsistent:
+        $(LI It would be a huge break from past D practice, and practice
+        in C, C++, Java, C#, etc.)
+        $(LI It would require a new keyword, say $(CODE mutable).)
+        $(LI And worst, it would make declarations inconsistent:
 ---
 void foo(int* p) {
    int* q;
    ...
 }
 ---
-	$(CODE p) points to const, and $(CODE q) points to mutable.
-	This kind of inconsistency leads to all sorts of mistakes.
-	It also makes it very hard to write generic code that deals with
-	types.
-	)
-	)
+        $(CODE p) points to const, and $(CODE q) points to mutable.
+        This kind of inconsistency leads to all sorts of mistakes.
+        It also makes it very hard to write generic code that deals with
+        types.
+        )
+        )
 
-	$(P Using $(CODE in) can mitigate the ugliness of having to annotate
-	with $(CODE const):)
+        $(P Using $(CODE in) can mitigate the ugliness of having to annotate
+        with $(CODE const):)
 ---
 void str_replace(in char[] haystack, in char[] needle);
 ---
 
 $(ITEM static-members, Are static class members covered by transitive const?)
 
-	$(P A static class member is part of the global state of a program,
-	not part of the state of an object. Thus, a class having a mutable
-	static member does not violate the transitive constness of an object
-	of that class.
-	)
+        $(P A static class member is part of the global state of a program,
+        not part of the state of an object. Thus, a class having a mutable
+        static member does not violate the transitive constness of an object
+        of that class.
+        )
 
 $(ITEM invariant, What is $(I immutable) good for?)
 
-	$(P Immutable data, once initialized, is never changed.
-	This has many uses:
-	)
+        $(P Immutable data, once initialized, is never changed.
+        This has many uses:
+        )
 
-	$(UL
-	$(LI Access to immutable data need not be synchronized
-	when multiple threads read it.)
-	$(LI Data races, tearing, sequential consistency, and
-	cache consistency are all non-issues when working with
-	immutable data.)
-	$(LI Pure functions can only accept immutable parameters.)
-	$(LI When doing a $(I deep copy) of a data structure,
-	the immutable portions need not be copied.)
-	$(LI Invariance allows a large chunk of data to be treated
-	as a value type even if it is passed around by reference
-	(strings are the most common case of this).)
-	$(LI Immutable type provides more self-documenting information
-	to the programmer.)
-	$(LI Immutable data can be placed in hardware protected read-only
-	memory, or even in ROMs.)
-	$(LI If immutable data does change, it is a sure sign of a memory
-	corruption bug, and it is possible to automatically check for
-	such data integrity.)
-	$(LI Immutable types provide for many program optimization
-	opportunities.)
-	)
+        $(UL
+        $(LI Access to immutable data need not be synchronized
+        when multiple threads read it.)
+        $(LI Data races, tearing, sequential consistency, and
+        cache consistency are all non-issues when working with
+        immutable data.)
+        $(LI Pure functions can only accept immutable parameters.)
+        $(LI When doing a $(I deep copy) of a data structure,
+        the immutable portions need not be copied.)
+        $(LI Invariance allows a large chunk of data to be treated
+        as a value type even if it is passed around by reference
+        (strings are the most common case of this).)
+        $(LI Immutable type provides more self-documenting information
+        to the programmer.)
+        $(LI Immutable data can be placed in hardware protected read-only
+        memory, or even in ROMs.)
+        $(LI If immutable data does change, it is a sure sign of a memory
+        corruption bug, and it is possible to automatically check for
+        such data integrity.)
+        $(LI Immutable types provide for many program optimization
+        opportunities.)
+        )
 
-	$(P $(I const) acts as a bridge between the mutable and immutable
-	worlds, so a single function can be used to accept both types
-	of arguments.)
+        $(P $(I const) acts as a bridge between the mutable and immutable
+        worlds, so a single function can be used to accept both types
+        of arguments.)
 )
 
 Macros:
-	TITLE=const(FAQ)
-	WIKI=constFAQ
-	CATEGORY_FAQ=$0
-	ITEMR=$(LI $(LINK2 #$1, $+))
-	ITEM=<hr>$(H3 <a name="$1">$+</a>)
+        TITLE=const(FAQ)
+        WIKI=constFAQ
+        CATEGORY_FAQ=$0
+        ITEMR=$(LI $(LINK2 #$1, $+))
+        ITEM=<hr>$(H3 <a name="$1">$+</a>)
