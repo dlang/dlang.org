@@ -3,7 +3,7 @@
 DMD=dmd
 
 SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
-	overview.dd mixin.dd memory.dd interface.dd windows.dd				\
+	news.dd overview.dd mixin.dd memory.dd interface.dd windows.dd		\
 	dll.dd htomodule.dd faq.dd dstyle.dd wc.dd changelog.dd				\
 	glossary.dd acknowledgements.dd dcompiler.dd builtin.dd				\
 	comparison.dd rationale.dd code_coverage.dd exception-safe.dd		\
@@ -14,7 +14,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd pdf-intro-cover.dd pdf-spec-cover.dd pdf-tools-cover.dd	\
 	intro-to-datetime.dd simd.dd deprecate.dd download.dd				\
-	32-64-portability.dd 
+	32-64-portability.dd
 
 SPECSRC=spec.dd lex.dd module.dd declaration.dd type.dd property.dd		\
 	attribute.dd pragma.dd expression.dd statement.dd arrays.dd			\
@@ -32,7 +32,7 @@ IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
 PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
 TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
-	overview.html lex.html module.html declaration.html					\
+	news.html overview.html lex.html module.html declaration.html		\
 	type.html property.html attribute.html pragma.html					\
 	expression.html statement.html arrays.html struct.html class.html	\
 	enum.html function.html operatoroverloading.html template.html		\
@@ -57,7 +57,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
         d-array-article.html
 
 
-PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
+PDFINTRO=index.html news.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html			\
 	cppdbc.html
 
@@ -228,6 +228,8 @@ mixin.html : $(DDOC) mixin.dd
 module.html : $(DDOC) module.dd
 
 operatoroverloading.html : $(DDOC) operatoroverloading.dd
+
+news.html : $(DDOC) news.dd
 
 overview.html : $(DDOC) overview.dd
 
