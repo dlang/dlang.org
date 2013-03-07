@@ -19,7 +19,7 @@ $code = $_POST['code'];
 $stdin = $_POST['stdin'];
 $args = $_POST['args'];
 
-$str = "compiler=dmd2&code=$code&stdin=$stdin&args=$args&unittest=1";
+$str = "compiler=dmd2&code=$code&stdin=$stdin&args=$args&unittest=1&debug=0&disassembly=0";
 
 $result = "";
 $fp = fsockopen("dpaste.dzfl.pl", 80, $errno,$errstr, 15); 
