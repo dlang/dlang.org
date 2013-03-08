@@ -19,6 +19,7 @@ $(SPEC_S Operator Overloading,
 	$(LI $(RELATIVE_LINK2 OpAssign, Op Assignment Operator Overloading))
 	$(LI $(RELATIVE_LINK2 Array, Index Operator Overloading))
 	$(LI $(RELATIVE_LINK2 Slice, Slice Operator Overloading))
+	$(LI $(RELATIVE_LINK2 Dollar, Dollar Operator Overloading))
 	$(LI $(RELATIVE_LINK2 Dispatch, Forwarding))
 	)
 
@@ -539,9 +540,38 @@ void test() {
 	those are preferred over opIndex.
 	)
 
-	$(P Within the arguments to array index operator, $(D $) gets
-	translated to $(D opDollar), which can be overloaded by a struct or
-	class object.
+$(H2 $(LNAME2 Slice, Slice Operator Overloading))
+
+	$(P Overloading the slicing operator means overloading expressions
+	like $(CODE a[]) and $(D a[)$(SLICE)$(D ]).
+	This can be done by declaring a member function named $(B opSlice).
+	)
+
+-------
+class A {
+  int $(CODE_HIGHLIGHT opSlice)();  // overloads a[]
+  int $(CODE_HIGHLIGHT opSlice)(size_t x, size_t y); // overloads a[i .. j]
+}
+
+void test() {
+  A a = new A();
+  int i;
+  int v;
+
+  i = a$(CODE_HIGHLIGHT []);         // same as i = a.opSlice();
+  i = a$(CODE_HIGHLIGHT [)3..4$(CODE_HIGHLIGHT ]);  // same as i = a.opSlice(3,4);
+}
+-------
+
+	$(P If a slice expression can be rewritten using opSliceAssign or opSliceOpAssign,
+	those are preferred over opSlice.
+	)
+
+$(H2 $(LNAME2 Dollar, Dollar Operator Overloading))
+
+	$(P Within the arguments to array index and slicing operators, $(D $)
+	gets translated to $(D opDollar), which can be overloaded by a struct
+	or class object.
 	)
 
 ------
@@ -581,37 +611,16 @@ void test() {
 	can be returned to implement multidimensional arrays.
 	)
 
-	$(P If opIndex is declared with only one argument, the compile-time
-	argument to $(D opDollar) may be omitted. In this case, it is illegal
-	to use $(D $) inside an array indexing expression with more than one
-	argument.
+	$(P If $(D opIndex) is declared with only one argument, the
+	compile-time argument to $(D opDollar) may be omitted. In this case, it
+	is illegal to use $(D $) inside an array indexing expression with more
+	than one argument.
 	)
 
-$(H2 $(LNAME2 Slice, Slice Operator Overloading))
-
-	$(P Overloading the slicing operator means overloading expressions
-	like $(CODE a[]) and $(D a[)$(SLICE)$(D ]).
-	This can be done by declaring a member function named $(B opSlice).
-	)
-
--------
-class A {
-  int $(CODE_HIGHLIGHT opSlice)();  // overloads a[]
-  int $(CODE_HIGHLIGHT opSlice)(size_t x, size_t y); // overloads a[i .. j]
-}
-
-void test() {
-  A a = new A();
-  int i;
-  int v;
-
-  i = a$(CODE_HIGHLIGHT []);         // same as i = a.opSlice();
-  i = a$(CODE_HIGHLIGHT [)3..4$(CODE_HIGHLIGHT ]);  // same as i = a.opSlice(3,4);
-}
--------
-
-	$(P If a slice expression can be rewritten using opSliceAssign or opSliceOpAssign,
-	those are preferred over opSlice.
+	$(P Note that $(D opDollar) does not have to return an integer index;
+	it can return any type as long as that type is understood by $(D
+	opIndex). For example, a special token can be returned by $(D opDollar)
+	to implement slicing of infinite ranges.
 	)
 
 $(H2 $(LNAME2 Dispatch, Forwarding))
