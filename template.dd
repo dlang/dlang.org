@@ -408,6 +408,61 @@ S
 immutable(S)
 )
 
+    $(P This is especially useful when used with inheritance. For example,
+        you might want to implement a final base method which returns a derived
+        class type. Typically you would return a base type, but this won't allow
+        you to call or access derived properties of the type:)
+
+---
+interface Addable(T)
+{
+    final auto add(T t)
+    {
+        return this;
+    }
+}
+
+class List(T) : Addable!T
+{
+    List remove(T t)
+    {
+        return this;
+    }
+}
+
+void main()
+{
+    auto list = new List!int;
+    list.add(1).remove(1);  // error: no 'remove' method for Addable!int
+}
+---
+
+    $(P Here the method $(B add) returns the base type, which doesn't implement the
+    $(D remove) method. The $(D template this) parameter can be used for this purpose:)
+
+---
+interface Addable(T)
+{
+    final R add(this R)(T t)
+    {
+        return cast(R)this;  // cast is necessary, but safe
+    }
+}
+
+class List(T) : Addable!T
+{
+    List remove(T t)
+    {
+        return this;
+    }
+}
+
+void main()
+{
+    auto list = new List!int;
+    list.add(1).remove(1);  // ok
+}
+---
 
 $(H2 Template Value Parameters)
 
