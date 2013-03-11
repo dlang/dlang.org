@@ -3,8 +3,199 @@ Ddoc
 $(D_S D Change Log,
 
 $(COMMENT $(UPCOMING
-	$(LI Shared libraries for Linux)
+    $(LI Shared libraries for Linux)
 ))
+
+$(COMMENT VERSION 0vv, Mmm dd, 20yy, =================================================,
+$(BUGSTITLE Language Changes,
+)
+
+$(BR)$(BIG List of all bug fixes and enhancements:)
+
+$(BUGSTITLE DMD Compiler regressions,
+)
+
+$(BUGSTITLE DMD Compiler bugs,
+)
+
+$(BUGSTITLE DMD Compiler enhancements,
+)
+
+$(BUGSTITLE Phobos regressions,
+)
+
+$(BUGSTITLE Phobos bugs,
+)
+
+$(BUGSTITLE Phobos enhancements,
+)
+
+$(BUGSTITLE Druntime regressions,
+)
+
+$(BUGSTITLE Druntime bugs,
+)
+
+$(BUGSTITLE Druntime enhancements,
+)
+
+$(BUGSTITLE Website regressions,
+)
+
+$(BUGSTITLE Website bugs,
+)
+
+$(BUGSTITLE Website enhancements,
+)
+)
+
+$(COMMENT VERSION 063, Mmm dd, 2013, =================================================,
+$(BUGSTITLE Language Changes,
+
+$(LI $(BUGZILLA 2486): taking address of slice rvalue is valid)
+
+    Before:
+    ----
+    void foo(ref int[] slice)
+    {
+        slice = [4, 5, 6];
+    }
+    void main()
+    {
+        int[] arr = [1, 2, 3];
+        foo(arr);          // OK
+        assert(arr == [4, 5, 6]);  // expected, but...
+        foo(arr[0 .. 2]);  // bug!
+        assert(arr == [4, 5, 6]);  // foo has no effect
+    }
+    ----
+
+    After:
+    ----
+        foo(arr[0 .. 2]);  // Error, arr[0 .. 2] is not an rvalue
+    ----
+
+$(LI $(BUGZILLA 3449): const and invariant struct members do not behave according to spec)
+
+    Before:
+    ----
+    struct S1 { int x; immutable int value; }
+    struct S2 { int x; immutable int value = 1; }
+    static assert(S1.sizeof == int.sizeof * 2);
+    static assert(S2.sizeof == int.sizeof);  // bug!
+    static assert(S2.value == 1);  // wrong constant folding
+    ----
+
+    After:
+    ----
+    static assert(S1.sizeof == int.sizeof * 2);
+    static assert(S2.sizeof == int.sizeof * 2);  // value is now field!
+    static assert(S2.value == 1);  // Error: need 'this' for 'value'
+    ----
+
+$(LI $(BUGZILLA 3825): AAs entries are default initialized before the new value is evaluated)
+
+    Before:
+    ----
+    int[int] aa;
+    aa[1] = aa[1] + 1;   // no Error thrown
+    assert(aa[1] == 1);  // bug!
+    ----
+
+    After:
+    ----
+    int[int] aa;
+    aa[1] = aa[1] + 1;   // RangeError thrown
+    // Because aa[1] is not yet exist before setting
+    ----
+
+$(LI $(BUGZILLA 8819): void static array should have init built-in property)
+
+    Before:
+    ----
+    // error, because void has no default initializer
+    void[3] vsa1;
+    // also error, but not useful for generic programming
+    void[3] vsa2 = (void[3]).init;
+    ----
+
+    After:
+    ----
+    // still error, OK
+    void[3] vsa1;
+    // allowed!
+    void[3] vsa2 = (void[3]).init;
+    writeln(vsa2);  // Prints "[0, 0, 0]"
+    ----
+
+$(LI $(BUGZILLA 7511): attribute inference does not work for methods of templated aggregates)
+
+    After:
+    ----
+    import std.range, std.algorithm;
+    void main() pure @safe nothrow
+    {
+        int[] arr = [1, 2, 3];
+        auto x = arr.map!(x => x * 2).cycle().take(4);  // works
+        assert(equal(x, [2, 4, 6, 2]));
+    }
+    ----
+
+$(LI $(BUGZILLA 8959): IsExpression should support syntax which has no Identifier in all cases)
+
+    After:
+    ----
+    import std.typecons;
+    void main()
+    {
+        auto t = tuple(1, "hello");
+        static if (is(typeof(t) : TX!(TL), alias TX, TL...))
+        {   // no dummy identifier (e.g. _Dummy) necessary
+            pragma(msg, TX);  // prints "Tuple(Specs...)"
+            pragma(msg, TL);  // prints "(int, string)"
+        }
+    }
+    ----
+)
+
+$(BR)$(BIG List of all bug fixes and enhancements:)
+
+$(BUGSTITLE DMD Compiler regressions,
+)
+
+$(BUGSTITLE DMD Compiler bugs,
+)
+
+$(BUGSTITLE DMD Compiler enhancements,
+)
+
+$(BUGSTITLE Phobos regressions,
+)
+
+$(BUGSTITLE Phobos bugs,
+)
+
+$(BUGSTITLE Phobos enhancements,
+)
+
+$(BUGSTITLE Druntime regressions,
+)
+
+$(BUGSTITLE Druntime bugs,
+)
+
+$(BUGSTITLE Druntime enhancements,
+)
+
+$(BUGSTITLE Website regressions,
+)
+
+$(BUGSTITLE Website bugs,
+)
+
+$(BUGSTITLE Website enhancements,
+)
+)
 
 $(VERSION 062, Feb 18, 2013, =================================================,
 $(BUGSTITLE Language Changes,
