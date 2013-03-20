@@ -31,7 +31,7 @@ ROOT_DIR=$(shell pwd)
 
 # Documents
 
-DDOC=macros.ddoc doc.ddoc ${LATEST}.ddoc
+DDOC=macros.ddoc doc.ddoc ${LATEST}.ddoc $(NODATETIME)
 
 IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico		\
 d3.gif d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
