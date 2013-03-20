@@ -37,14 +37,14 @@ $(D_S Regular Expressions,
     Ok, going for an international format should make it more strict. As this is the first time, let's
     put together a full program:
     ---
-import std.stdio, std.regex;
-void main(string argv[]){
-    string phone = argv[1]; //assuming phone is passed as first argument on the command line
-    if(match(phone, r"^\+[1-9][0-9]* [0-9 ]*$"))
-        writeln("It looks like a phone number.");
-    else
-        writeln("Nope, it's not a phone number.");
-}
+    import std.stdio, std.regex;
+    void main(string argv[]){
+        string phone = argv[1]; //assuming phone is passed as first argument on the command line
+        if(match(phone, r"^\+[1-9][0-9]* [0-9 ]*$"))
+            writeln("It looks like a phone number.");
+        else
+            writeln("Nope, it's not a phone number.");
+    }
     ---
     And that's it! Just keep in mind the boundaries of regular expressions power - to truly establish a
     validness of a phone number, one has to try dialing it or contact the authority.
@@ -64,15 +64,15 @@ void main(string argv[]){
     compiled regex pattern via $(D regex) to see how it works.
     )
     ---
-string phone = "+31 650 903 7158"; //fictional, any coincidence is just that
-auto phoneReg = regex(r"^\+([1-9][0-9]*) [0-9 ]*$");
-auto m = match(phone, phoneReg);
-assert(m);
-assert(m.captures[0] == "+31 650 903 7158");
-assert(m.captures[1] == "31");
-//you shouldn't really care about the type of regex object,
-//but here it is
-static assert(is(typeof(phoneReg) : Regex!char));
+    string phone = "+31 650 903 7158"; //fictional, any coincidence is just that
+    auto phoneReg = regex(r"^\+([1-9][0-9]*) [0-9 ]*$");
+    auto m = match(phone, phoneReg);
+    assert(m);
+    assert(m.captures[0] == "+31 650 903 7158");
+    assert(m.captures[1] == "31");
+    //you shouldn't really care about the type of regex object,
+    //but here it is
+    static assert(is(typeof(phoneReg) : Regex!char));
     ---
    
     $(H3 To search and replace)
@@ -82,10 +82,10 @@ static assert(is(typeof(phoneReg) : Regex!char));
     Instead $(D std.regex) provides a natural syntax for looping over all matches via plain foreach.
     )
     ---
-auto buffer = std.file.readText("regex.d");
-foreach(m; match(buffer, regex(r"^.*[^\p{WhiteSpace}]+.*$","gm"))){
-    writeln(m.hit); //hit is a shorthand for m.captures[0]
-}
+    auto buffer = std.file.readText("regex.d");
+    foreach(m; match(buffer, regex(r"^.*[^\p{WhiteSpace}]+.*$","gm"))){
+        writeln(m.hit); //hit is a shorthand for m.captures[0]
+    }
     ---
     $(P It just works as the result of match is an input range. 
     An element type is Captures for the string type being used, it is a random access range of submatches.
@@ -93,23 +93,22 @@ foreach(m; match(buffer, regex(r"^.*[^\p{WhiteSpace}]+.*$","gm"))){
     Random access here implies one can peek at any element with direct indexing. To have a feeling of how this affects the API:
     )
     ---
-auto m = match("Ranges are hot!", r"(\w)\w*(\w)"); //at least 3 "word" symbols
-assert(m.front[0] == "Ranges");
-//m.captures is a historical alias for the first element of match range (.front).
-assert(m.captures[1] == m.front[1]);
-auto captures = m.front;
-assert(captures[2] == "s");
-foreach(c; captures)
-    writeln(c); //will show lines: Ranges, R, s
-
+    auto m = match("Ranges are hot!", r"(\w)\w*(\w)"); //at least 3 "word" symbols
+    assert(m.front[0] == "Ranges");
+    //m.captures is a historical alias for the first element of match range (.front).
+    assert(m.captures[1] == m.front[1]);
+    auto captures = m.front;
+    assert(captures[2] == "s");
+    foreach(c; captures)
+        writeln(c); //will show lines: Ranges, R, s
     ---
     $(P By playing by the rules $(STD regex) gets some nice benefits in interaction with other modules e.g.
     this is how one could count non-empty lines in text buffer
     (just don't forget to import $(STD algorithm) when trying that at home):
     )
     ---
-auto buffer = std.file.readText("regex.d");
-int count = count(match(text, regex(r"^.*\P{WhiteSpace}+.*$","gm")));
+    auto buffer = std.file.readText("regex.d");
+    int count = count(match(text, regex(r"^.*\P{WhiteSpace}+.*$","gm")));
     ---
     $(P This by the way tells me that $(STD regex) has 7128 non-blank lines as of this writing. But let's get back to the regular expression itself.
     A seasoned regex user catches instantly that Unicode properties are supported with perl-style \p{xxx}, to spice that all of Scripts and Blocks are supported.
@@ -132,9 +131,9 @@ int count = count(match(text, regex(r"^.*\P{WhiteSpace}+.*$","gm")));
     For instance to replace all dates in a text from "MM/dd/YYYY" format to a sortable version of "YYYY-MM-dd":
     )
     ---
-auto text = readText(...);
-auto replaced = replace(text,
-    regex(r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})","g"), "$(DOLLAR)3-$(DOLLAR)1-$(DOLLAR)2");
+    auto text = readText(...);
+    auto replaced = replace(text,
+        regex(r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})","g"), "$(DOLLAR)3-$(DOLLAR)1-$(DOLLAR)2");
     ---
     $(P The "all dates" part comes from the fact that regex has global option set, omit it to replace only the first occurrence.
     As seen the replacement is controlled by format string not unlike one in C's famous printf.
@@ -149,22 +148,22 @@ auto replaced = replace(text,
     For the sake of example let it be UK pounds and US dollars.
     )
     ---
-import std.conv, std.regex, std.range, std.file, std.stdio;
-import std.string : format;
+    import std.conv, std.regex, std.range, std.file, std.stdio;
+    import std.string : format;
 
-void main(string[] argv){
-    immutable ratio = 1.5824; //UK pounds to US dollar as of this writing
-    auto to_dollars(Captures!string price){
-        real value = to!real(price["integer"]);
-        if(!price["fraction"].empty)
-            value += 0.01*to!real(price["fraction"]);
-        return format("$%.2f",value * ratio);
+    void main(string[] argv){
+        immutable ratio = 1.5824; //UK pounds to US dollar as of this writing
+        auto to_dollars(Captures!string price){
+            real value = to!real(price["integer"]);
+            if(!price["fraction"].empty)
+                value += 0.01*to!real(price["fraction"]);
+            return format("$%.2f",value * ratio);
+        }
+        string text = std.file.readText(argv[1]);
+        auto converted = replace!to_dollars(text,
+                regex(r"£\s*(?P<integer>[0-9]+)(\.(?P<fraction>[0-9]{2}))?","g"));
+        write(converted);
     }
-    string text = std.file.readText(argv[1]);
-    auto converted = replace!to_dollars(text,
-            regex(r"£\s*(?P<integer>[0-9]+)(\.(?P<fraction>[0-9]{2}))?","g"));
-    write(converted);
-}
     ---
     $(P Getting current conversion rates and supporting more currencies is left as an exercise for the reader. 
     What at work here is so-called replace with delegate, analogous to a callout ability found in other languages and regex libraries.
@@ -176,9 +175,9 @@ void main(string[] argv){
     Names work just like opaque aliases for numbers of captured subexpressions.
     Meaning that with the same exact regular expression one could as well change these lines to:
     ---
-real value = to!real(price[1]);
-if(!price[3].empty)
-            value += 0.01*to!real(price[3]);
+    real value = to!real(price[1]);
+    if(!price[3].empty)
+        value += 0.01*to!real(price[3]);
     ---
     Though that lacks readability and is not future proof. Also note that optional captures are still represented,
     it's just they can be an empty string if not matched.
@@ -191,8 +190,8 @@ if(!price[3].empty)
     Like the following sample, that outputs text by sentences:
     )
     ---
-foreach(sentence; splitter(argv[1], regex(r"(?<=[.?!]+(?![?!]))\s*")))
-    writeln(sentence);
+    foreach(sentence; splitter(argv[1], regex(r"(?<=[.?!]+(?![?!]))\s*")))
+        writeln(sentence);
     ---
     $(P Again the type of splitter is range, thus allowing foreach iteration.
     Notice the usage of lookaround in regex, it's a neat trick here as
@@ -209,8 +208,8 @@ foreach(sentence; splitter(argv[1], regex(r"(?<=[.?!]+(?![?!]))\s*")))
     to precompile constant regex at compile-time:
     )
     ---
-static r = regex("Boo-hoo");
-assert(match("What was that? Boo-hoo?", r));
+    static r = regex("Boo-hoo");
+    assert(match("What was that? Boo-hoo?", r));
     ---
     $(P Importantly it's the exact same Regex object that works through all of the API we've seen so far.
     It's just takes less then 1 μs of run-time to initialize.
@@ -224,13 +223,13 @@ assert(match("What was that? Boo-hoo?", r));
     $(P Recalling the phone number example:
     )
     ---
-//It's only a 5 characters difference!
-string phone = "+31 650 903 7158";
-auto phoneReg = ctRegex!r"^\+([1-9][0-9]*) [0-9 ]*$";
-auto m = match(phone, phoneReg);
-assert(m);
-assert(m.captures[0] == "+31 650 903 7158");
-assert(m.captures[1] == "31");
+    //It's only a 5 characters difference!
+    string phone = "+31 650 903 7158";
+    auto phoneReg = ctRegex!r"^\+([1-9][0-9]*) [0-9 ]*$";
+    auto m = match(phone, phoneReg);
+    assert(m);
+    assert(m.captures[0] == "+31 650 903 7158");
+    assert(m.captures[1] == "31");
     ---
     $(P In this particular case it matched roughly 50% faster for me though I haven't done comprehensive analysis of this case.
     Not to spoil the excitement, but as of this writing the feature is experimental and temporarily lacks some extensions.
