@@ -67,12 +67,13 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements				\
 	const-faq COM comparison cpptod ctod D1toD2 d-array-article			\
 	d-floating-point deprecate dll dmd-freebsd dmd-linux dmd-osx		\
 	dmd-windows download dstyle exception-safe faq features2 glossary	\
-	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod		\
-	htomodule index intro intro-to-datetime lazy-evaluation memory		\
-	migrate-to-shared mixin overview pdf-intro-cover pdf-spec-cover		\
-	pdf-tools-cover pretod rationale rdmd regular-expression safed		\
-	std_consolidated_header template-comparison templates-revisited		\
-	tuple variadic-function-templates warnings wc windbg windows
+	gsoc2011 gsoc2012 gsoc2012-template gsoc2013 gsoc2013-template		\
+	hijack howto-promote htod htomodule index intro intro-to-datetime	\
+	lazy-evaluation memory migrate-to-shared mixin overview				\
+	pdf-intro-cover pdf-spec-cover pdf-tools-cover pretod rationale		\
+	rdmd regular-expression safed std_consolidated_header				\
+	template-comparison templates-revisited tuple						\
+	variadic-function-templates warnings wc windbg windows
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
