@@ -369,19 +369,36 @@ $(GNAME StructPostblit):
         etc. For example:
         )
 
----
-struct S {
-  int[] a;    // array is privately owned by this instance
-  this(this) {
-    a = a.dup;
-  }
-  ~this() {
-    delete a;
-  }
-}
----
+        ---
+        struct S {
+          int[] a;    // array is privately owned by this instance
+          this(this) {
+            a = a.dup;
+          }
+          ~this() {
+            delete a;
+          }
+        }
+        ---
 
-	$(P Unions may not have fields that have postblits.)
+        $(P Disabling struct postblit makes the object not copyable.
+        )
+
+        ---
+        struct T {
+          @disable this(this);  // disabling makes T not copyable
+        }
+        struct S {
+          T t;   // uncopyable member makes S also not copyable
+        }
+
+        void main() {
+          S s;
+          S t = s; // error, S is not copyable
+        }
+        ---
+
+        $(P Unions may not have fields that have postblits.)
 )
 
 $(SECTION3 $(LNAME2 StructDestructor, Struct Destructors),
