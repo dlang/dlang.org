@@ -11,7 +11,7 @@ $(GNAME Attribute):
     $(RELATIVE_LINK2 linkage, $(I LinkageAttribute))
     $(RELATIVE_LINK2 align, $(I AlignAttribute))
     $(GLINK2 pragma, Pragma)
-    $(RELATIVE_LINK2 deprecated, $(D deprecated))
+    $(RELATIVE_LINK2 deprecated, $(I DeprecatedAttribute))
     $(GLINK ProtectionAttribute)
     $(D static)
     $(RELATIVE_LINK2 linkage, $(D extern))
@@ -214,20 +214,36 @@ auto sz = S.sizeof;  // 12
 
 $(H3 $(LNAME2 deprecated, Deprecated Attribute))
 
+$(GRAMMAR
+$(GNAME DeprecatedAttribute):
+    $(D deprecated)
+    $(D deprecated $(LPAREN)) $(GLINK2 lex, StringLiteral) $(D $(RPAREN))
+)
+
         $(P It is often necessary to deprecate a feature in a library,
         yet retain it for backwards compatibility. Such
         declarations can be marked as deprecated, which means
         that the compiler can be set to produce an error
-        if any code refers to deprecated
-        declarations:
+        if any code refers to deprecated declarations:
         )
 
----------------
-deprecated
-{
-  void oldFoo();
-}
----------------
+        ---------------
+        deprecated
+        {
+          void oldFoo();
+        }
+
+        oldFoo();   // Deprecated: function test.oldFoo is deprecated
+        ---------------
+
+        $(P Optional $(GLINK2 lex, StringLiteral) can show additional
+        information in the deprecation message.
+        )
+
+        ---------------
+        deprecated("Don't use bar") void oldBar();
+        oldBar();   // Deprecated: function test.oldBar is deprecated - Don't use bar
+        ---------------
 
         $(P $(D Implementation Note:) The compiler should have a switch
         specifying if deprecated declarations should be compiled with
