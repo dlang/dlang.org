@@ -13,19 +13,19 @@ $(GNAME Attribute):
     $(GLINK2 pragma, Pragma)
     $(RELATIVE_LINK2 deprecated, $(I DeprecatedAttribute))
     $(GLINK ProtectionAttribute)
-    $(D static)
+    $(RELATIVE_LINK2 static, $(D static))
     $(RELATIVE_LINK2 linkage, $(D extern))
     $(D final)
     $(D synchronized)
     $(RELATIVE_LINK2 override, $(D override))
     $(RELATIVE_LINK2 abstract, $(D abstract))
-    $(RELATIVE_LINK2 const, $(D const))
     $(RELATIVE_LINK2 auto, $(D auto))
     $(RELATIVE_LINK2 scope, $(D scope))
-    $(RELATIVE_LINK2 gshared, $(D __gshared))
-    $(RELATIVE_LINK2 shared, $(D shared))
+    $(RELATIVE_LINK2 const, $(D const))
     $(RELATIVE_LINK2 immutable, $(D immutable))
     $(RELATIVE_LINK2 inout, $(D inout))
+    $(RELATIVE_LINK2 shared, $(D shared))
+    $(RELATIVE_LINK2 gshared, $(D __gshared))
     $(RELATIVE_LINK2 disable, $(D @disable))
 
 
@@ -325,50 +325,79 @@ Foo f1; // error, could be either A.Foo or B.Foo
 B.Foo f2; // ok
 ---------------
 
-$(H3 $(LNAME2 const, Const Attribute))
+$(H3 $(LNAME2 const, $(D const) Attribute))
 
-        $(P The $(D const) attribute declares constants that can be
-        evaluated at compile time. For example:
+        $(P The $(D const) attribute affects the type of declared symbol,
+        and modifies the type to $(D const).
         )
 
----------------
-const int foo = 7;
+        ---------------
+        const int foo = 7;
+        static assert(is(typeof(foo) == const(int)));
 
-const {
-  double bar = foo + 6;
-}
----------------
+        const {
+          double bar = foo + 6;
+        }
+        static assert(is(typeof(bar) == const(double)));
 
+        class C {
+          const void foo();
+          const {
+            void bar();
+          }
+          void baz() const;
+        }
+        pragma(msg, typeof(C.foo)); // const void()
+        pragma(msg, typeof(C.bar)); // const void()
+        pragma(msg, typeof(C.baz)); // const void()
+        static assert(is(typeof(C.foo) == typeof(C.bar)) &&
+                      is(typeof(C.bar) == typeof(C.baz)));
+        ---------------
 
+$(H3 $(LNAME2 immutable, $(D immutable) Attribute))
 
-$(H3 $(LNAME2 immutable, immutable Attribute))
+        $(P The $(D immutable) attribute affects the type of declared symbol,
+        and modifies the type to $(D immutable), same as $(D const) does.
+        )
 
-$(H3 $(LNAME2 gshared, $(D __gshared Attribute)))
+$(H3 $(LNAME2 inout, $(D inout) Attribute))
+
+        $(P The $(D inout) attribute affects the type of declared symbol,
+        and modifies the type to $(D inout), same as $(D const) does.
+        )
+
+$(H3 $(LNAME2 shared, $(D shared) Attribute))
+
+        $(P The $(D shared) attribute affects the type of declared symbol,
+        and modifies the type to $(D shared), same as $(D const) does.
+        )
+
+$(H3 $(LNAME2 gshared, $(D __gshared) Attribute))
 
         $(P By default, non-immutable global declarations reside in thread local
         storage. When a global variable is marked with the $(D __gshared)
         attribute, its value is shared across all threads.)
 
----
-int foo;            // Each thread has its own exclusive copy of foo.
-__gshared int bar;  // bar is shared by all threads.
----
+        ---
+        int foo;            // Each thread has its own exclusive copy of foo.
+        __gshared int bar;  // bar is shared by all threads.
+        ---
 
         $(P $(D __gshared) may also be applied to member variables and local
         variables. In these cases, $(D __gshared) is equivalent to $(D static),
         except that the variable is shared by all threads rather than being
         thread local.)
 
----
-class Foo {
-  __gshared int bar;
-}
+        ---
+        class Foo {
+          __gshared int bar;
+        }
 
-int foo() {
-  __gshared int bar = 0;
-  return bar++; // Not thread safe.
-}
----
+        int foo() {
+          __gshared int bar = 0;
+          return bar++; // Not thread safe.
+        }
+        ---
 
         $(P Unlike the $(D shared) attribute, $(D __gshared) provides no
         safe-guards against data races or other multi-threaded synchronization
@@ -377,11 +406,7 @@ int foo() {
 
         $(P $(D __gshared) is disallowed in safe mode.)
 
-$(H3 $(LNAME2 shared, shared Attribute))
-
-$(H3 $(LNAME2 inout, inout Attribute))
-
-$(H3 $(LNAME2 disable, @disable Attribute))
+$(H3 $(LNAME2 disable, $(D @disable) Attribute))
 
         $(P A reference to a declaration marked with the $(CODE @disable) attribute causes
         a compile time error.
@@ -432,7 +457,7 @@ class Foo2 : Foo {
 }
 ---------------
 
-$(H3 Static Attribute)
+$(H3 $(LNAME2 static, Static Attribute))
 
         $(P The $(D static) attribute applies to functions and data.
         It means that the declaration does not apply to a particular
