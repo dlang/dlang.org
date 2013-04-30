@@ -271,13 +271,13 @@ $(GNAME Constructor):
         there can be a static initializer to be
         used instead of the default:
         )
-------
-class Abc {
-  int a;      // default initializer for a is 0
-  long b = 7; // default initializer for b is 7
-  float f;    // default initializer for f is NAN
-}
-------
+        ------
+        class Abc {
+          int a;      // default initializer for a is 0
+          long b = 7; // default initializer for b is 7
+          float f;    // default initializer for f is NAN
+        }
+        ------
 
         This static initialization is done before any constructors are
         called.
@@ -285,50 +285,50 @@ class Abc {
         $(P Constructors are defined with a function name of $(B this)
         and having no return value:)
 
-------
-class Foo {
-  $(CODE_HIGHLIGHT this)(int x)  // declare constructor for Foo
-  {   ...
-  }
-  $(CODE_HIGHLIGHT this)()
-  {   ...
-  }
-}
-------
+        ------
+        class Foo {
+          $(CODE_HIGHLIGHT this)(int x)  // declare constructor for Foo
+          {   ...
+          }
+          $(CODE_HIGHLIGHT this)()
+          {   ...
+          }
+        }
+        ------
 
         Base class construction is done by calling the base class
         constructor by the name $(B super):
 
-------
-class A { this(int y) { } }
+        ------
+        class A { this(int y) { } }
 
-class B : A {
-  int j;
-  this() {
-    ...
-    $(CODE_HIGHLIGHT super)(3);  // call base constructor A.this(3)
-    ...
-  }
-}
-------
+        class B : A {
+          int j;
+          this() {
+            ...
+            $(CODE_HIGHLIGHT super)(3);  // call base constructor A.this(3)
+            ...
+          }
+        }
+        ------
 
         $(P Constructors can also call other constructors for the same class
         in order to share common initializations
         $(LNAME2 delegating-constructors, (this is called delegating constructors)):
         )
 
-------
-class C {
-  int j;
-  this() {
-    ...
-  }
-  this(int i) {
-    $(CODE_HIGHLIGHT this)();
-    j = i;
-  }
-}
-------
+        ------
+        class C {
+          int j;
+          this() {
+            ...
+          }
+          this(int i) {
+            $(CODE_HIGHLIGHT this)();
+            j = i;
+          }
+        }
+        ------
 
         If no call to constructors via $(B this) or $(B super) appear
         in a constructor, and the base class has a constructor, a call
@@ -337,41 +337,41 @@ class C {
         $(P If there is no constructor for a class, but there is a constructor
         for the base class, a default constructor of the form:)
 
-------
-this() { }
-------
+        ------
+        this() { }
+        ------
 
         $(P is implicitly generated.)
 
         $(P Class object construction is very flexible, but some restrictions
         apply:)
 
-        $(OL
+    $(OL
         $(LI It is illegal for constructors to mutually call each other,
-	although the compiler is not required to detect it. It will result
-	in undefined behavior.
+        although the compiler is not required to detect it. It will result
+        in undefined behavior.
 
-------
-this() { this(1); }
-this(int i) { this(); } // illegal, cyclic constructor calls
-------
+        ------
+        this() { this(1); }
+        this(int i) { this(); } // illegal, cyclic constructor calls
+        ------
         )
 
         $(LI If any constructor call appears inside a constructor, any
         path through the constructor must make exactly one constructor
         call:
 
-------
-this()  { a || super(); }       // illegal
+        ------
+        this()  { a || super(); }       // illegal
 
-this() { (a) ? this(1) : super(); }     // ok
+        this() { (a) ? this(1) : super(); }     // ok
 
-this() {
-  for (...) {
-    super();  // illegal, inside loop
-  }
-}
-------
+        this() {
+          for (...) {
+            super();  // illegal, inside loop
+          }
+        }
+        ------
         )
 
         $(LI It is illegal to refer to $(B this) implicitly or explicitly
@@ -379,18 +379,17 @@ this() {
 
         $(LI Constructor calls cannot appear after labels (in order to make
         it easy to check for the previous conditions in the presence of goto's).)
-
-        )
+    )
 
         $(P Instances of class objects are created with $(I NewExpression)s:)
 
-------
-A a = new A(3);
-------
+        ------
+        A a = new A(3);
+        ------
 
         $(P The following steps happen:)
 
-$(OL
+    $(OL
         $(LI Storage is allocated for the object.
         If this fails, rather than return $(B null), an
         $(B OutOfMemoryError) is thrown.
@@ -417,7 +416,66 @@ $(OL
         $(LI If class invariant checking is turned on, the class invariant
         is called at the end of the constructor.
         )
-)
+    )
+
+        $(P Constructors can have member function attributes $(D const),
+        $(D immutable), and $(D shared). The constructible object qualifiers
+        would be restricted by them.
+        )
+        ------
+        class C {
+          this();   // non-shared mutable constructor
+        }
+
+        // create mutable object
+        C m = new C();
+
+        // create const object by mutable constructor
+        const C c2 = new const C();
+
+        // mutable constructor cannot create immutable object
+        // immutable C i = new immutable C();
+
+        // mutable constructor cannot create shared object
+        // shared C s = new shared C();
+        ------
+
+        $(P Constructors can be overloaded with different attributes.
+        )
+        ------
+        class C {
+          this();               // non-shared mutable constructor
+          this() shared;        // shared mutable constructor
+          this() immutable;     // immutable constructor
+        }
+
+        C m = new C();
+        shared s = new shared C();
+        immutable i = new immutable C();
+        ------
+
+        $(P If the constructor can create unique object, the object would be
+        implicitly convertible to any qualifiers.
+        )
+        ------
+        class C {
+          this() pure;
+          // Based on the definition, this creates mutable object. But the
+          // created object never have any mutable global data.
+          // Then compiler can guarantee that the created object is unique.
+
+          this(int[] arr) immutable pure;
+          // Based on the definition, this creates immutable object. But the
+          // argument int[] never appear in the created object so it isn't
+          // implicitly convertible to immutable. And also it never have any
+          // immutable global data.
+          // Then compiler can guarantee that the created object is unique.
+        }
+
+        immutable i = new immutable C();           // this() pure is called
+        shared s = new shared C();                 // this() pure is called
+        C m = new C([1,2,3]);       // this(int[]) immutable pure is called
+        ------
 
 $(H3 $(LNAME2 destructors, Destructors))
 
