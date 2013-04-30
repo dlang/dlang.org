@@ -389,28 +389,47 @@ void test() {
 $(H2 $(LNAME2 Assignment, Assignment Operator Overloading))
 
 	$(P The assignment operator $(CODE =) can be overloaded if the
-	lvalue is a struct aggregate, and $(CODE opAssign)
+	left hand side is a struct aggregate, and $(CODE opAssign)
 	is a member function of that aggregate.)
 
-	$(P The assignment operator cannot be overloaded for rvalues
-	that can be implicitly cast to the lvalue type.
-	Furthermore, the following parameter signatures for $(CODE opAssign)
-	are not allowed:)
+	For struct types, operator overloading for the identity assignment
+	is allowed.
 
----
-opAssign(...)
-opAssign(T)
-opAssign(T, ...)
-opAssign(T ...)
-opAssign(T, U = defaultValue, etc.)
----
+	---
+	struct S {
+	  // identiy assignment, allowed.
+	  void $(CODE_HIGHLIGHT opAssign)(S rhs);
 
-	$(P where $(I T) is the same type as the aggregate type $(I A),
-	is implicitly
-	convertible to $(I A), or if $(I A) is a struct and $(I T)
-	is a pointer to a type that is
-	implicitly convertible to $(I A).
-	)
+	  // not identity assignment, so allowed.
+	  void $(CODE_HIGHLIGHT opAssign)(int);
+	}
+	S s;
+	s = S();      // Rewritten to s.opAssign(S());
+	s = 1;        // Rewritten to s.opAssign(1);
+	---
+
+	However for class types, identity assignment is not allowed. All class
+	types have reference semantics, so identity assignment should rebind
+	the referencee.
+
+	---
+	class C {
+	  // If X is the same type as C or the type which
+	  // implicitly convertible to C, the opAssign
+	  // would accept identity assignment, so disallowed.
+	  // C opAssign(...);
+	  // C opAssign(X);
+	  // C opAssign(X, ...);
+	  // C opAssign(X ...);
+	  // C opAssign(X, U = defaultValue, etc.);
+
+	  // not identity assignment, so allowed.
+	  void $(CODE_HIGHLIGHT opAssign)(int);
+	}
+	C c = new C();
+	c = new C();  // Rebinding referencee
+	c = 1;        // Rewritten to c.opAssign(1);
+	---
 
 $(H3 Index Assignment Operator Overloading)
 
