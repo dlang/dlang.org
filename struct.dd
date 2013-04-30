@@ -320,27 +320,48 @@ $(SECTION3 $(LNAME2 Struct-Constructor, Struct Constructors),
         are default initialized to their $(CODE .init) value.
         )
 
-------
-struct S {
-  int x, y;
+        ------
+        struct S {
+          int x, y;
 
-  this()  // error, cannot implement default ctor for structs
-  {
-  }
+          this()  // error, cannot implement default ctor for structs
+          {
+          }
 
-  this(int a, int b)
-  {
-    x = a;
-    y = b;
-  }
-}
+          this(int a, int b)
+          {
+            x = a;
+            y = b;
+          }
+        }
 
-void main()
-{
-  S a = S(4, 5);
-  auto b = S();  // same as auto b = S.init;
-}
-------
+        void main()
+        {
+          S a = S(4, 5);
+          auto b = S();  // same as auto b = S.init;
+        }
+        ------
+
+        $(P If struct constructor is annotated with $(D @disable) and has
+        empty parameter, the struct is disabled construction without calling
+        other constructor.
+        )
+        ------
+        struct S {
+          int x;
+
+          // Disables default construction, function body can be empty.
+          @disable this();
+
+          this(int v) { x = v; }
+        }
+        void main()
+        {
+          //S s;        // default construction is disabled
+          //S s = S();  // also disabled
+          S s = S(1);   // construction with calling constructor
+        }
+        ------
 )
 
 $(SECTION3 $(LNAME2 StructPostblit, Struct Postblits),
