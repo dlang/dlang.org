@@ -267,18 +267,18 @@ $(H2 $(LNAME2 equals, Overloading $(D ==) and $(D !=)))
 
 $(OL
 	$(LI If a and b are both class objects, then the expression is rewritten as:
----
-.object.opEquals(a, b)
----
+	---
+	.object.opEquals(a, b)
+	---
 	$(P and that function is implemented as:)
----
-bool opEquals(Object a, Object b) {
-  if (a is b) return true;
-  if (a is null || b is null) return false;
-  if (typeid(a) == typeid(b)) return a.opEquals(b);
-  return a.opEquals(b) && b.opEquals(a);
-}
----
+	---
+	bool opEquals(Object a, Object b) {
+	  if (a is b) return true;
+	  if (a is null || b is null) return false;
+	  if (typeid(a) == typeid(b)) return a.opEquals(b);
+	  return a.opEquals(b) && b.opEquals(a);
+	}
+	---
 	)
 	$(LI Otherwise the expressions $(CODE a.opEquals(b)) and
 	$(CODE b.opEquals(a)) are tried. If both resolve to the same opEquals
@@ -291,27 +291,35 @@ bool opEquals(Object a, Object b) {
 
 	$(P If overridding Object.opEquals() for classes, the class member function
 	signature should look like:)
----
-class C {
-  override bool opEquals(Object o) { ... }
-}
----
+	---
+	class C {
+	  override bool opEquals(Object o) { ... }
+	}
+	---
 
-	$(P If structs declare an opEquals member function, it should follow the following
-	form:)
----
-struct S {
-  bool opEquals(ref const S s) { ... }  // for l-values (e.g. variables)
-  bool opEquals(const S s) { ... }      // for r-values (e.g. temporaries)
-}
----
+	$(P If structs declare an opEquals member function for the identity comparison,
+	it could have some forms:)
+	---
+	struct S {
+	  // lhs should be mutable object
+	  bool opEquals(const S s) { ... }        // for r-values (e.g. temporaries)
+	  bool opEquals(ref const S s) { ... }    // for l-values (e.g. variables)
 
-    $(P Alternatively you can declare a single templated opEquals function with an $(XLINK2 template.html#auto-ref-parameters, auto ref) parameter:)
----
-struct S {
-  bool opEquals()(auto ref const S s) inout { ... }  // for l-values and r-values
-}
----
+	  // both hand side can be const object
+	  bool opEquals(const S s) const { ... }  // for r-values (e.g. temporaries)
+	}
+	---
+
+	$(P Alternatively, you can declare a single templated opEquals
+	function with an $(XLINK2 template.html#auto-ref-parameters, auto ref)
+	parameter:)
+	---
+	struct S {
+	  // for l-values and r-values,
+	  // with converting both hand side implicitly to const
+	  bool opEquals()(auto ref const S s) const { ... }
+	}
+	---
 
 
 $(H2 $(LNAME2 compare, Overloading $(D <), $(D <)$(D =), $(D >), and $(D >)$(D =)))
