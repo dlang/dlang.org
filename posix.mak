@@ -15,12 +15,12 @@ DMD_DIR=../dmd
 PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
 DOC_OUTPUT_DIR=$(ROOT_DIR)/web
-GIT_HOME=git@github.com:D-Programming-Language
+GIT_HOME=https://github.com/D-Programming-Language
 
 # Latest released version
 ifeq (,${LATEST})
 LATEST:=$(shell cd ${DMD_DIR} && \
-  git fetch --tags git@github.com:D-Programming-Language/dmd && \
+  git fetch --tags https://github.com/D-Programming-Language/dmd && \
   git tag | grep '^v[0-9]\.[0-9]*$$' | sed 's/^v//' | sort -nr | head -n 1)
 endif
 ifeq (,${LATEST})
@@ -67,7 +67,7 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements				\
 	const-faq COM comparison cpptod ctod D1toD2 d-array-article			\
 	d-floating-point deprecate dll dmd-freebsd dmd-linux dmd-osx		\
 	dmd-windows download dstyle exception-safe faq features2 glossary	\
-	gsoc2011 gsoc2012 gsoc2012-template gsoc2013 gsoc2013-template		\
+	gsoc2011 gsoc2012 gsoc2012-template \
 	hijack howto-promote htod htomodule index intro intro-to-datetime	\
 	lazy-evaluation memory migrate-to-shared mixin overview				\
 	pdf-intro-cover pdf-spec-cover pdf-tools-cover pretod rationale		\
