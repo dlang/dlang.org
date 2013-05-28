@@ -335,6 +335,11 @@ $(document).ready(function()
         $(this).css("display", "none");
     });
 
+    var currentPage = $(location).attr('pathname');
+    
+    if (currentPage != "/" && currentPage != "/index.html")
+        return; // temporary workaround
+
     $('pre[class=d_code]').each(function(index) 
     {
         var stripedText = $(this).text().replace(/\s/gm,'');
@@ -503,7 +508,7 @@ $(document).ready(function()
                 },
                 error: function() 
                 {
-                    output.html("Temporarily unavaible");
+                    output.html("Temporarily unavailable");
                     runBtn.attr("disabled", false);
                 }
             });
