@@ -6,10 +6,1265 @@ $(COMMENT $(UPCOMING
 	$(LI Shared libraries for Linux)
 ))
 
+$(VERSION 063, Jan 01, 2013, =================================================,
+
+$(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 staticfields, Const and immutable fields with initializers are no longer implicitly static.))
+$(LI $(RELATIVE_LINK2 ctorqualifier, Constructor qualifiers are taken into account when constructing objects.))
+$(LI $(RELATIVE_LINK2 structuralcompare, Struct members which require non-bitwise comparison are now properly compared.))
+$(LI $(RELATIVE_LINK2 slicecopy, Array copy operations now always require using the slice syntax.))
+$(LI $(RELATIVE_LINK2 passtype, Types no longer act as arguments in typeof expressions.))
+$(LI $(RELATIVE_LINK2 foreachref, The index variable in a foreach range is no longer implicitly a reference.))
+$(LI $(RELATIVE_LINK2 hashentry, Associative array entries are no longer default-initialized before assignment.))
+$(LI $(RELATIVE_LINK2 constinherit, The const attribute is no longer inherited in overriden methods.))
+$(LI $(RELATIVE_LINK2 typeofnullconv, typeof(null) no longer implicitly converts to T[].))
+$(LI $(RELATIVE_LINK2 templatethisattrib, The Template This Parameter now changes the member function qualifier.))
+$(LI $(RELATIVE_LINK2 sliceref, Array slices are now r-values.))
+$(LI $(RELATIVE_LINK2 thisrefaccess, Accessing a non-static field without a $(D this) reference is only allowed in certain contexts.))
+$(LI $(RELATIVE_LINK2 implicitarrayptr, Arrays no longer implicitly convert to a pointer.))
+)
+
+$(BUGSTITLE Language Enhancements,
+$(LI $(RELATIVE_LINK2 uniqueinference, Expressions which return unique objects can be implicitly castable to immutable.))
+$(LI $(RELATIVE_LINK2 staticarrayvoid, Static array of void can now be user-initialized.))
+$(LI $(RELATIVE_LINK2 multiinvariant, Aggregates can now contain multiple invariants.))
+$(LI $(RELATIVE_LINK2 attribinference, Methods of templated aggregates can now infer attributes.))
+$(LI $(RELATIVE_LINK2 isexpident, $(B is expression) no longer requires an identifier.))
+$(LI $(RELATIVE_LINK2 implicitarraycast, Dynamic arrays of known size can be implicitly cast to static arrays in some contexts.))
+$(LI $(RELATIVE_LINK2 tupleinitvoid, Tuples can now be void-initialized.))
+$(LI $(RELATIVE_LINK2 tupleequality, Tuples can now be compared for equality.))
+$(LI $(RELATIVE_LINK2 templconstraint, Template constraints can now be put after the inheritance list.))
+$(LI $(RELATIVE_LINK2 initfield, Fields with initializers can now be re-initialized in a const constructor.))
+$(LI $(RELATIVE_LINK2 isnestedtrait, Added the $(B isNested) trait for discovery of aggregates and functions with context pointers.))
+$(LI $(RELATIVE_LINK2 nestedtemplate, Templates can now be nested inside of functions.))
+$(LI $(RELATIVE_LINK2 ufcslocalimport, UFCS now works with scoped local imports.))
+$(LI $(RELATIVE_LINK2 prettyfunc, Added $(D __FUNCTION__), $(D __PRETTY_FUNCTION__) and $(D __MODULE__).))
+$(LI $(RELATIVE_LINK2 deprecatedmacro, DDoc: Deprecated declarations are now wrapped in a $(B DEPRECATED) macro.))
+$(LI $(RELATIVE_LINK2 documentedunittest, Added documented unittest feature for verifiable code example generation.))
+)
+
+$(BUGSTITLE Compiler Enhancements,
+$(LI $(RELATIVE_LINK2 mainswitch, Added -main switch which adds an empty main function.))
+$(LI $(RELATIVE_LINK2 minimalcov, Added -cov=percentage switch for minimal coverage tests.))
+$(LI $(RELATIVE_LINK2 symbolmangle, Added ability to override the mangling of a symbol with a compiler pragma.))
+)
+
+$(BUGSTITLE Phobos Changes,
+$(LI $(RELATIVE_LINK2 scopedtypeof, std.typecons.scoped implementation changed, potentially breaking some user-code.))
+)
+
+$(BUGSTITLE Phobos Enhancements,
+$(LI $(RELATIVE_LINK2 newstdprocess, std.process has been redesigned from the ground up and introduces a new API and functionality.))
+$(LI $(RELATIVE_LINK2 getoptbool, std.getopt can now set booleans to false.))
+$(LI $(RELATIVE_LINK2 ownertid, Added ownerTid property in std.concurrency.))
+)
+
+$(HR)
+
+$(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 staticfields, Const and immutable fields with initializers are no longer implicitly static:))
+
+$(P Fields in an aggregate which are not static will now always be addressable.
+This means they occupy space in the object:)
+
+---------
+struct S
+{
+    // used to be implicitly static in 2.062, now non-static in 2.063
+    immutable int[] arr = [1, 2];
+
+    // ditto
+    const int[] arr2 = [1, 2];
+}
+---------
+
+$(P This means that code which accessed such declarations without the $(D this)
+reference will no longer compile. Additionally code which depended on the size
+of a structure with such fields will have to be fixed:)
+
+---------
+struct S
+{
+    immutable int[] arr = [1, 2];
+}
+
+void main()
+{
+    auto x = S.arr;  // error in 2.063, needs 'this'
+
+    // used to be size 1 in 2.062 and earlier
+    static assert(S.sizeof == size_t.sizeof + size_t.sizeof);  // ptr + length for the array
+}
+---------
+
+$(P To make the field static again, simply use the static keyword. Alternatively
+make the field an $(D enum) to turn it into a manifest constant:)
+
+---------
+struct S
+{
+    static immutable int[] arr = [1, 2];
+    enum arr2 = [1, 2];
+}
+---------
+
+$(P Note however that manifest constants which are arrays are allocated on each usage,
+so you may prefer using $(D static) instead.)
+
+$(H3 Rationale:)
+
+$(P Making a field implicitly static based on whether it is const/immutable and has an initializer leads to confusion. The $(D static) keyword can be used to explicitly make any field static.)
+
+$(LI $(LNAME2 ctorqualifier, Constructor qualifiers are taken into account when constructing objects:))
+
+$(P A qualified constructor is now invoked when a $(D const)/$(D immutable)/$(D shared) aggregate object is
+    instantiated, respectively:)
+
+---------
+import std.stdio;
+
+class C
+{
+    this()           { writeln("1"); }
+    this() const     { writeln("2"); }
+    this() immutable { writeln("3"); }
+    this() shared    { writeln("4"); }
+}
+
+void main()
+{
+    auto a = new C;           // writes "1"
+    auto b = new const C;     // writes "2"
+    auto c = new immutable C; // writes "3"
+    auto d = new shared C;    // writes "4"
+}
+---------
+
+
+$(P This has the consequence that aggregates which have only $(D immutable) or $(D shared)
+    constructors can no longer be used to instantiate mutable objects:)
+
+---------
+class C
+{
+    this() immutable { }
+    this() shared { }
+}
+
+void main()
+{
+    auto c1 = new C;           // disallowed
+    auto c2 = new immutable C; // ok
+    auto c3 = new shared C;    // ok
+}
+---------
+
+$(P On the other hand, aggregates which do not have $(D shared) or $(D immutable) constructors can
+    no longer be used to construct $(D shared) or $(D immutable) objects, respectively:)
+
+---------
+class C
+{
+    this() { }
+}
+
+void main()
+{
+    auto c1 = new C;           // ok
+    auto c2 = new immutable C; // disallowed
+    auto c3 = new shared C;    // disallowed
+}
+---------
+
+$(P However, if an aggregate has a $(D pure) constructor it can be used to construct an object with any type constructor:)
+
+---------
+class C
+{
+    this() pure { }
+}
+
+void main()
+{
+    auto c1 = new C;  // ok
+    auto c2 = new immutable C;  // ok
+    auto c3 = new shared C;  // ok
+}
+---------
+
+$(LI $(LNAME2 structuralcompare, Struct members which require non-bitwise comparison are now properly compared.))
+
+$(P In earlier releases some struct members such as arrays would be bitwise-compared in a comparison operation.
+    This has now been changed to be a structural comparison instead:)
+
+---------
+struct S
+{
+    char[] data;
+}
+
+void main ()
+{
+    auto s1 = S("foo".dup);
+    auto s2 = S("foo".dup);
+
+    assert(s1.data !is s2.data);  // both are unique data
+
+    assert(s1 == s2);   // passes in 2.063
+    assert(s1.data == s2.data);  // equivalent of above
+}
+---------
+
+$(P If an $(D opEquals) function is not present the compiler rewrites the expression
+    $(CODE s1 == s2) to $(CODE s1.tupleof == s2.tupleof). Comparing $(D .tupleof) expressions is
+    also a feature new to D in the 2.063 release.)
+
+$(LI $(LNAME2 slicecopy, Array copy operations now always require using the slice syntax:))
+
+$(P The right-hand-side of an array copy operation now requires using the slice syntax:)
+
+---------
+void main()
+{
+    int[][2] x;
+    int[] y;
+    int[] z;
+
+    x[] = z;    // copies z (pointer + length) 2 times to x
+    y[] = z;    // copies each element of z into y (compiler emits warning)
+}
+---------
+
+$(P If the user intended to write such code they must use the slice syntax for both the source and target arrays:)
+
+---------
+void main()
+{
+    int[][2] x;
+    int[] y;
+    int[] z;
+
+    y[] = z[];  // copies each element of z into y (no warnings)
+}
+---------
+
+$(H3 Rationale:)
+
+$(P The compiler will emit a warning to make the user aware that the copy operation is arbitrarily expensive.)
+
+$(LI $(LNAME2 passtype, Types no longer act as arguments in $(D typeof) expressions:))
+
+$(P A type can no longer be passed to a function as a value of that type:)
+
+---------
+T[] foo(T)(T t)
+{
+    return null;
+}
+
+void main()
+{
+    alias int Int;
+
+    // used to work (only with an alias), now a compiler error
+    alias typeof(foo(Int)) IntArray;
+}
+---------
+
+$(P If the user wants to pass an argument of a certain type, they can use the $(D .init) property:)
+
+---------
+T[] foo(T)(T t)
+{
+    return null;
+}
+
+void main()
+{
+    alias typeof(foo(int.init)) IntArray;  // ok
+}
+---------
+
+$(H3 Rationale:)
+
+$(P Treating types as expressions in special contexts only leads to confusion.
+Instead, the $(D .init) property can be used for such purposes.)
+
+$(LI $(LNAME2 foreachref, The index variable in a foreach range is no longer implicitly a reference:))
+
+$(P The index variable in a foreach range is now by default a value type:)
+
+---------
+void main()
+{
+    size_t count;
+    foreach (n; 0 .. 10)
+    {
+        ++n;
+        ++count;
+    }
+    assert(count == 10);  // passes
+}
+---------
+
+$(P If the user wants to modify the index variable he must use the $(D ref) keyword:)
+
+---------
+void main()
+{
+    size_t count;
+    foreach (ref n; 0 .. 10)
+    {
+        ++n;
+        ++count;
+    }
+    assert(count == 5);
+}
+---------
+
+
+$(H3 Rationale:)
+
+$(P Making the index variable implicitly $(D ref) can introduce bugs that are hard to track down.)
+
+$(LI $(LNAME2 hashentry, Associative array entries are no longer default-initialized before assignment:))
+
+$(P An associative array entry used to be default-initialized before assignment took place:)
+
+---------
+void main()
+{
+    int[int] aa;
+    aa[1] = aa[1] + 1;   // no Error thrown in 2.062
+    assert(aa[1] == 1);  // worked in 2.062
+}
+---------
+
+$(P In 2.063, accessing an entry which does not exist will now throw a RangeError:)
+
+---------
+void main()
+{
+    int[int] aa;
+    aa[1] = aa[1] + 1;   // RangeError thrown in 2.063
+}
+---------
+
+$(H3 Rationale:)
+
+$(P Default-initialization during assignment can be a source of bugs.)
+
+$(LI $(LNAME2 constinherit, The const attribute is no longer inherited in overriden methods.))
+
+$(P Method overrides no longer inherit constness of the base method:)
+
+---------
+class A
+{
+    void foo() const { }
+}
+
+class B : A
+{
+    // used to work in 2.062, now an error
+    override void foo() { }  // note missing 'const'
+}
+---------
+
+$(P If the user wants to override a const method he has to mark the overriden
+    method as const:)
+
+---------
+class A
+{
+    void foo() const { }
+}
+
+class B : A
+{
+    override void foo() const { }  // ok
+}
+---------
+
+$(P The feature allows introducing new overloads based on the constness of the method:)
+
+---------
+class A
+{
+    void foo() const { }
+}
+
+class B : A
+{
+    // introduces new overload (not override!)
+    void foo() { }
+
+    // if the above overload is introduced the user must either:
+    // a: re-introduce the const overload to prevent function hijacking
+    alias super.foo foo;  // without this you will get a compiler error
+
+    // or b: provide a properly typed override:
+    override void foo() const { }
+}
+---------
+
+
+$(LI $(LNAME2 typeofnullconv, $(D typeof(null)) no longer implicitly converts to T[]:))
+
+$(P The following code used to be allowed:)
+
+---------
+void f(int[] function() del)
+{
+    assert(!del());  // fails
+}
+
+typeof(null) g() { return null; }
+
+void main()
+{
+    f(&g);
+    f(() => null);
+}
+---------
+
+$(P However the implicit conversion would end up generating wrong code.
+    To work around this, make sure the return type is typed properly,
+    or use $(CODE (T[]).init) in the return expression of a lambda expression:)
+
+---------
+void f(int[] function() del)
+{
+    assert(!del());  // passes
+}
+
+int[] g() { return null; }  // fixed return type
+
+void main()
+{
+    f(&g);  // ok
+    f(() => (int[]).init);  // ok
+}
+---------
+
+$(LI $(LNAME2 templatethisattrib, The Template This Parameter now changes the member function qualifier:))
+
+$(P The $(LINK2 template.html#TemplateThisParameter, Template This Parameter) can now be used to infer
+the qualifier of $(D this) to member functions:)
+
+---------
+struct S
+{
+    void foo(this T)()
+    {
+    }
+}
+
+void main()
+{
+     immutable S s;
+     s.foo();  // makes S.foo immutable
+}
+---------
+
+$(LI $(LNAME2 sliceref, Array slices are now r-values:))
+
+$(P Array slices are no longer l-values. This means an address can no longer be
+taken of a slice, and slices cannot be passed by ref to functions:)
+
+---------
+void foo(ref int[] arr) { arr = new int[10]; }
+
+void main()
+{
+    int[] arr;
+    foo(arr);  // ok
+    assert(arr.length == 10);
+
+    foo(arr[]);  // disallowed in 2.063, the slice is an r-value
+    auto ptr = &arr[1..2];  // disallowed in 2.063, cannot take address of r-value
+}
+---------
+
+$(P To work around this you can make your function take an r-value if it doesn't
+    need to reassign and resize the slice, but only needs to read or modify its contents.
+    Otherwise, to accept both l-values and r-values you can make your function take
+    its argument by `auto ref`:)
+
+---------
+void take(int[] arr) { }
+void takeRef(ref int[] arr) { }
+void takeAutoRef(T)(auto ref T[] arr) { }
+
+void main()
+{
+    int[] arr = [1, 2, 3, 4];
+    take(arr);          // ok
+    takeRef(arr);       // ok
+    takeAutoRef(arr);   // ok
+
+    int[] arr2 = arr[1 .. 2];
+    take(arr2);         // ok, arr2 is a variable
+    takeRef(arr2);      // ditto
+    takeAutoRef(arr2);  // ditto
+
+    take(arr[1 .. 2]);         // ok
+    takeRef(arr[1 .. 2]);      // error, cannot pass r-value by reference
+    takeAutoRef(arr[1 .. 2]);  // ok
+}
+---------
+
+$(H3 Rationale:)
+
+$(P Passing slices by reference had no observable effect when reassigning or
+resizing such a slice at the call site, therefore such slices should by default be r-values.
+For example, the following code used to be allowed but is now a compile-time error:)
+
+---------
+void reAssign(ref int[] arr) { arr = new int[2]; }
+void reSize(ref int[] arr)   { arr.length = 10; }
+
+void main()
+{
+    int[] arr = [1, 2, 3, 4];
+
+    reAssign(arr[0 .. 4]);  // reassigning has no observable effect at the call site
+    assert(arr == [1, 2, 3, 4]);
+
+    reSize(arr[0 .. 4]);    // resizing has no observable effect at the call site
+    assert(arr.length == 4);
+}
+---------
+
+$(LI $(LNAME2 thisrefaccess, Accessing a non-static field without a $(D this) reference is only allowed in certain contexts:))
+
+$(P Accessing non-static fields used to be allowed in many contexts, but is now limited to only a few:)
+
+$(P - $(D offsetof), $(D init), and other built-in properties are allowed:)
+
+---------
+struct S { int field; }
+
+void main()
+{
+    auto a = S.field.offsetof;  // ok, statically known
+    auto c = S.field.max;       // ditto
+    auto d = S.field;           // disallowed, no `this` reference
+}
+---------
+
+$(P - When invoking static methods of a non-static field:)
+
+---------
+struct Foo
+{
+    static struct Bar
+    {
+        static int get() { return 0; }
+    }
+
+    Bar bar;
+}
+
+void main()
+{
+    static assert(Foo.bar.get() == 0);  // ok, equivalent to `typeof(Foo.bar).get()'
+}
+---------
+
+$(P - When accessing static fields implicitly using an $(LINK2 class.html#AliasThis, $(D alias this)) expression:)
+
+---------
+struct Foo
+{
+    static struct Bar
+    {
+        static int get() { return 0; }
+    }
+
+    Bar bar;
+    alias bar this;
+}
+
+void main()
+{
+    static assert(Foo.get() == 0);  // ok, equivalent to 'typeof(Foo.bar).get()'
+}
+---------
+
+$(LI $(LNAME2 implicitarrayptr, Arrays no longer implicitly convert to a pointer:))
+
+$(P The implicit conversion of an array to a pointer was a deprecated feature:)
+
+---------
+void foo(int* p) { }
+
+void main()
+{
+    int[] arr = [1, 2];
+    foo(arr);   // ok if -d switch is used during compilation
+}
+---------
+
+$(P This feature has now been completely removed. The workaround is to either
+    use the $(D .ptr) property, or explicitly pass the pointer to the first element:)
+
+---------
+void foo(int* p) { }
+
+void main()
+{
+    int[] arr = [1, 2];
+    foo(arr);      // compile error
+    foo(arr.ptr);  // ok
+    foo(&arr[0]);  // ok
+}
+---------
+)
+
+$(BUGSTITLE Language Enhancements,
+
+$(LI $(LNAME2 uniqueinference, Expressions which return unique objects can be implicitly castable to immutable:))
+
+$(P Expressions such as $(D new) for objects and arrays, and $(D dup) for arrays, can now be inferred to be unique.
+    This allows the compiler to implicitly convert such an expression to immutable:)
+
+---------
+class C { }
+
+void main()
+{
+    immutable int[] arr1 = new int[](3);   // ok
+    immutable int[] arr2 = [1, 2, 3].dup;  // ok in 2.063
+    immutable C[] arr3 = [new C, new C].dup;  // ok in 2.063
+}
+---------
+
+$(LI $(LNAME2 staticarrayvoid, Static array of void can now be user-initialized.))
+
+$(P A static array of void could not be initialized in user-code:)
+
+---------
+void main()
+{
+    void[2] varr1;  // error in 2.062
+    void[2] varr2 = (void[2]).init;  // error in 2.062
+    void[2] varr3 = void;  // ok in 2.062
+}
+---------
+
+$(P In 2.063, an explicit initializer can be used:)
+
+---------
+void main()
+{
+    void[2] varr1;  // still an error in 2.063
+    void[2] varr2 = (void[2]).init;  // ok in 2.063
+    void[2] varr3 = void;  // ok in 2.063
+}
+---------
+
+$(P The $(D .init) property effectively zero-initializes the array.)
+
+$(H3 Rationale:)
+
+$(P The restriction has been lifted to allow generic code to use $(D .init) without
+having to specialize for static void arrays.)
+
+$(LI $(LNAME2 multiinvariant, Aggregates can now contain multiple invariants:))
+
+$(P If an aggregate type has multiple invariants, the invariants' bodies will be merged
+    into a single invariant function and will be run in sequence. Note that the code in
+    one invariant cannot reference code or data in another invariant:)
+
+---------
+struct S
+{
+    int x;
+
+    void foo() { }
+
+    invariant()
+    {
+        int local;
+        assert(x != 0);
+    }
+
+    invariant()
+    {
+        // local = 1;  // invariant does not have access to the other invariant's body
+        assert(x % 2 == 0);
+    }
+}
+
+void main()
+{
+    S s = S(2);
+    s.foo();  // invoking public function triggers both invariants in sequence
+}
+---------
+
+$(LI $(LNAME2 attribinference, Methods of templated aggregates can now infer attributes:))
+
+$(P If a function with some attributes instantiates a templated aggregate,
+    it's member functions will infer those attributes:)
+
+---------
+struct S(T)
+{
+    T square(T x)
+    {
+        return x * x;
+    }
+}
+
+void main() pure
+{
+    S!int s;  // S!int.foo becomes pure and callable from main()
+    assert(s.square(2) == 4);  // ok
+}
+---------
+
+$(LI $(LNAME2 isexpident, $(B is expression) no longer requires an identifier:))
+
+$(P In some cases the $(LINK2 expression.html#IsExpression, is expression) required an
+    identifier even when you didn't have a use for it:)
+
+---------
+void main()
+{
+    alias AA = string[int];
+
+    static if (is(AA _ == V[K], V, K))
+    {
+        pragma(msg, _);  // prints string[int]
+        pragma(msg, K);  // prints int
+        pragma(msg, V);  // prints string
+    }
+}
+---------
+
+$(P The identifier is no longer required, so the above can be rewritten to:)
+
+---------
+void main()
+{
+    alias AA = string[int];
+
+    static if (is(AA == V[K], V, K))
+    {
+        pragma(msg, AA); // prints string[int]
+        pragma(msg, K);  // prints int
+        pragma(msg, V);  // prints string
+    }
+}
+---------
+
+$(LI $(LNAME2 implicitarraycast, Dynamic arrays of known size can be implicitly cast to static arrays in some contexts:))
+
+$(P In some contexts the compiler knows the size of a dynamic array or of a slice of an array.
+    In such a case the compiler will allow an implicit conversion to a static array of the same size:)
+
+---------
+void foo(int[4] x) { }
+
+void main()
+{
+    int[] arr = [1, 2, 3, 4, 5, 6, 7, 8];
+    foo(arr[0 .. 4]);  // ok
+}
+---------
+
+$(P Another example, where a string is converted to a reference to a static array:)
+
+---------
+string str = "aaaabbbbccccdddd";
+
+void foo(ref const(char)[16] buf)
+{
+    assert(buf.ptr is str.ptr);
+}
+
+void main()
+{
+    foo(str[0..16]);  // ok
+}
+---------
+
+$(H3 Limitations:)
+
+$(P - This feature does not yet work with complex expressions where it might be
+    reasonable to assume the size of a slice:)
+
+---------
+void foo(int[4] x) { }
+
+void main()
+{
+    int[] arr = [1, 2, 3, 4, 5, 6, 7, 8];
+    foreach (i; 0 .. 4)
+    {
+        foo(arr[i .. i + 4]);  // not yet supported
+    }
+}
+---------
+
+$(LI $(LNAME2 tupleinitvoid, Tuples can now be void-initialized:))
+
+$(P You can now void-initialize a tuple variable:)
+
+---------
+template Tuple(T...)
+{
+    alias T Tuple;
+}
+
+void main()
+{
+    Tuple!(int, int) tup1 = void;  // ok
+}
+---------
+
+Upon such initialization the values in the tuple are undetermined.
+
+$(LI $(LNAME2 templconstraint, Template constraints can now be put after the inheritance list:))
+
+$(P Template constraints used to be allowed only before the inheritance list, leading to
+    code where the inheritance list could be hard to spot:)
+
+---------
+class Foo(T1, T2)
+    if (is(T1 == int) && is(T2 == string)) : Base
+{
+}
+---------
+
+$(P This restriction has been lifted, so you can now write:)
+
+---------
+class Foo(T1, T2) : Base
+    if (is(T1 == int) && is(T2 == string))
+{
+}
+---------
+
+$(LI $(LNAME2 tupleequality, Tuples can now be compared for equality:))
+
+$(P Example:)
+
+---------
+struct Tuple(T...) { T field; alias field this; }
+
+void main()
+{
+    auto tup1 = Tuple!(int, int)(1, 2);
+    auto tup2 = Tuple!(int, int)(1, 2);
+    auto tup3 = Tuple!(int, int)(1, 3);
+
+    assert(tup1 == tup2);  // works since 2.063
+    assert(tup1 != tup3);  // works since 2.063
+}
+---------
+
+$(P This also means you can now compare $(B ParameterStorageClassTuple) instances from std.traits:)
+
+---------
+import std.traits;
+
+void func1(ref int x, ref int y) { }
+void func2(ref float x, ref float y) { }
+
+void main()
+{
+    alias Storages = ParameterStorageClassTuple;
+    assert(Storages!func1 == Storages!func2);
+}
+---------
+
+$(P In addition to that, builtin $(D .tupleof) expressions can be used to easily compare fields of an aggregate:)
+
+---------
+struct S
+{
+    char[] a, b;
+
+    // Implements equality test against another instance of this type.
+    // This can also be used as a workaround for Issue 3789.
+    bool opEquals(S rhs) { return this.tupleof == rhs.tupleof; }
+}
+
+void main()
+{
+    S s1 = S("a".dup, "b".dup);
+    S s2 = S("a".dup, "b".dup);
+    assert(s1 == s2);
+}
+---------
+
+$(P This also allows you to implement a structural equality test against an instance of a different
+    type:)
+
+---------
+struct S1
+{
+    char[] a, b;
+
+    // Implements a structural equality test against any other type T
+    bool opEquals(T)(T rhs) { return this.tupleof == rhs.tupleof; }
+}
+
+struct S2
+{
+    string x, y;
+}
+
+void main()
+{
+    auto s1 = S1("123".dup, "456".dup);
+    auto s2 = S2("123", "456");
+    assert(s1 == s2);
+}
+---------
+
+
+$(P Since tuples can be sliced you can use this feature to compare a subset of tuples:)
+
+---------
+struct S
+{
+    int a, b, c, d, e;
+
+    bool opEquals(S rhs)
+    {
+        // compares a, b, d, and e
+        return this.tupleof[0..2] == rhs.tupleof[0..2] &&
+               this.tupleof[3..5] == rhs.tupleof[3..5];
+    }
+}
+
+void main()
+{
+    S s1 = S(1, 2, 0, 3, 4);
+    S s2 = S(1, 2, 1, 3, 4);
+    assert(s1 == s2);
+}
+---------
+
+$(LI $(LNAME2 initfield, Fields with initializers can now be re-initialized in a const constructor:))
+
+$(P You can now initialize a field in a const constructor even if
+    such a field already has an initializer:)
+
+---------
+struct S
+{
+    bool field = true;
+
+    this(int v) const
+    {
+        field = false;  // ok
+    }
+}
+---------
+
+$(LI $(LNAME2 isnestedtrait, Added the $(B isNested) trait for discovery of aggregates and functions with context pointers:))
+
+$(P The new $(XLINK2 traits.html#isNested, isNested) trait allows you to discover whether an aggregate or function
+    contains a context pointer:)
+
+---------
+void main()
+{
+    int x;
+
+    struct S1 { void f() { x++; } }
+    static struct S2 { }
+
+    void f1() { x++; }
+    static void f2() { }
+
+    static assert(__traits(isNested, S1));
+    static assert(__traits(isNested, f1));
+    static assert(!__traits(isNested, S2));
+    static assert(!__traits(isNested, f2));
+}
+---------
+
+$(LI $(LNAME2 nestedtemplate, Templates can now be nested inside of functions:))
+
+---------
+void test()
+{
+    template ArrayOf(T) { alias ArrayOf = T[]; }
+    static assert(is(ArrayOf!int == int[]));
+}
+---------
+
+$(P Allowing $(D template)'s inside of functions will enable better encapsulation and avoid the
+    pollution of module-scoped symbol names.)
+
+$(LI $(LNAME2 ufcslocalimport, UFCS now works with scoped local imports:))
+
+$(P Functions that are made available through a local import are now picked up when using Uniform Function Call Syntax:)
+
+---------
+module foo;
+string concat(string arg1, string arg2) { return arg1 ~ arg2; }
+---------
+
+---------
+module test;
+void main()
+{
+    import foo;
+    assert("foo".concat("bar") == "foobar");  // UFCS now works
+}
+---------
+
+$(P This feature also works for imports within aggregates. Note that local imports have a higher precedence than
+    module-scoped imports.)
+
+$(LI $(LNAME2 prettyfunc, Added $(D __FUNCTION__), $(D __PRETTY_FUNCTION__) and $(D __MODULE__):))
+
+$(P A new set of $(LINK2 traits.html#specialkeywords, special keywords) were added. Together with $(D __FILE__) and $(D __LINE__) they form a complete feature set that is useful in debugging code:)
+
+---------
+module test;
+import std.stdio;
+
+void test(string file = __FILE__, size_t line = __LINE__, string mod = __MODULE__,
+          string func = __FUNCTION__, string pretty = __PRETTY_FUNCTION__)
+{
+    writefln("file: '%s', line: '%s', module: '%s',\nfunction: '%s', pretty function: '%s'",
+             file, line, mod, func, pretty);
+}
+
+int main(string[] args)
+{
+    test();
+    return 0;
+}
+---------
+
+$(P The above will output:)
+
+$(CONSOLE
+file: 'test.d', line: '13', module: 'test',
+function: 'test.main', pretty function: 'int test.main(string[] args)'
+)
+
+$(LI $(LNAME2 deprecatedmacro, DDoc: Deprecated declarations are now wrapped in a $(B DEPRECATED) macro:))
+
+---------
+module test;
+
+/// sum function
+deprecated int sum(int x, int y) { return x + y; }
+---------
+
+$(P By default the macro expands to its argument. It can be overriden by the user, for example:)
+
+$(P $(B macros.ddoc:))
+
+---------
+DEPRECATED=<del>$(DOLLAR)0</del>
+---------
+
+$(P The above ddoc file can then be used when the documentation is being generated:)
+
+$(CONSOLE
+$ dmd -D -o- test.d macros.ddoc
+)
+
+$(LI $(LNAME2 documentedunittest, Added documented unittest feature for verifiable code example generation:))
+
+$(P Documented unittests which follow any symbol declarations are now used to generate example sections for the symbol
+    when generating DDOC documentation. Example:)
+
+---------
+/// sum function
+int sum(int x, int y) { return x + y; }
+
+///
+unittest
+{
+    assert(sum(2, 2) == 4);
+}
+---------
+
+$(P The body of the unittest will be part of the documentation of the sum function. This allows the
+    implementor of the function to keep their examples always up-to-date.)
+
+)
+
+
+$(BUGSTITLE Compiler Enhancements,
+$(LI $(LNAME2 mainswitch, Added -main switch which adds an empty main function:))
+
+$(P The $(B -main) switch is primarily useful when unittesting libraries:)
+
+---------
+module test;
+
+int sum(int a, int b) { return a + b; }
+unittest
+{
+    assert(sum(2, 2) == 4);
+}
+---------
+
+$(P The above library would need a $(B main()) function for the unittests to run,
+    and $(B -main) can be used for this purpose:)
+
+$(CONSOLE
+$ dmd -unittest -main -run test.d
+)
+
+$(LI $(LNAME2 minimalcov, Added -cov=percentage switch for minimal coverage tests.))
+
+$(P The $(B -cov) switch now has an optional percentage setting which makes the
+    executable emit an error when the coverage doesn't meet the specified requirement:)
+
+---------
+module test;
+
+void test1() { int x = 5; }
+void test2() { int x = 5; }
+void test3() { int x = 5; }
+
+void main()
+{
+    test1();
+    test2();
+}
+---------
+
+$(P Example of coverage testing:)
+
+$(CONSOLE
+$ dmd -cov=90 test.d
+$ test
+Error: test.d is 80% covered, less than required 90%
+)
+
+)
+
+$(LI $(LNAME2 symbolmangle, Added ability to override the mangling of a symbol with a compiler pragma:))
+
+$(P The new $(CODE pragma(mangle, ...)) directive allows you to set a custom mangling for any symbol:)
+
+---------
+pragma(mangle, "module") extern(C) void module_();
+---------
+
+$(P The above allows linking to a C function named "module", which ordinarily we wouldn't be
+    able to link to directly since "module" is a reserved D keyword.)
+
+$(BUGSTITLE Phobos Changes,
+
+$(LI $(LNAME2 scopedtypeof, std.typecons.scoped implementation changed, potentially breaking some user-code:))
+
+$(P User-code which used the $(D std.traits.ReturnType) trait to retrieve the type of a $(D scoped) call will have to be
+    changed to use the $(D typeof) operator instead:)
+
+---------
+class A
+{
+    this() {}
+    this(int) {}
+}
+
+class B
+{
+    // ReturnType!(scoped!A) a;  // disallowed in 2.063
+    typeof(scoped!A()) a;        // rewritten, compiles in 2.063
+
+    this()
+    {
+        a = scoped!A(1);  // would not compile in 2.062, but works with syntax used for 2.063
+    }
+}
+---------
+
+$(P The reason for this change is that the $(D ReturnType) trait would retrieve the wrong type when a class
+    had multiple constructors, and this would cause initializing the field to fail.)
+
+$(P Another benefit of the new implementation is that $(D scoped) can now be aliased for usability purposes:)
+
+---------
+class A
+{
+    this(int) { }
+}
+
+void main()
+{
+    alias scoped!A scopeA;
+    auto a = scopeA(1);
+}
+---------
+
+)
+
+$(BUGSTITLE Phobos Enhancements,
+
+$(LI $(LNAME2 newstdprocess, $(STDMODREF process, std.process) has been redesigned from the ground up and introduces a new API and functionality:))
+
+$(P The new $(STDMODREF process, std.process) module introduces functionality for invoking processes with custom pipe redirection,
+the ability to wait for processes to finish, and the ability to kill processes. The full list of features
+can be found in the $(STDMODREF process, std.process) documentation.)
+
+$(LI $(LNAME2 getoptbool, $(STDMODREF getopt, std.getopt) can now set booleans to false:))
+
+$(P Example code:)
+
+---------
+void main(string[] args)
+{
+    bool flag = true;
+    getopt(args, &flag);
+}
+---------
+
+$(P When invoked via $(CODE --flag=false), it will set $(B flag) to $(D false).)
+
+$(LI $(LNAME2 ownertid, Added ownerTid property in $(STDMODREF concurrency, std.concurrency):))
+
+$(P It is now easier to send a message from a child thread to its
+owner thread. Simply use the $(B ownerTid) property to get the owner
+thread's Tid identifier:)
+
+---------
+void fun()
+{
+    string res = receiveOnly!string();
+    assert(res == "Main calling");
+
+    ownerTid.send("Child responding");  // new
+}
+
+void main()
+{
+    auto child = spawn(&fun);
+    child.send("Main calling");
+
+    string res = receiveOnly!string();
+    assert(res == "Child responding");
+}
+---------
+
+$(P If the owner thread has exited, accessing ownerTid from any
+    of its child threads will throw a $(B TidMissingException).)
+
+)
+
+)
+
 $(VERSION 062, Feb 18, 2013, =================================================,
 $(BUGSTITLE Language Changes,
 
-$(LI typeof() change:)
+$(LI $(D typeof()) change:)
 
 $(P As a result of fixing $(BUGZILLA 6408), the usage of $(D typeof()) and indexing may require changes to user code:)
 
@@ -4676,3 +5931,4 @@ Macros:
 	DRUNTIMEBUGSFIXED2=$(LINK2 http://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=regression&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&component=druntime&resolution=FIXED&product=D, Druntime Bugs Fixed)
 	PHOBOSBUGSFIXED2=$(LINK2 http://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=regression&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&component=Phobos&resolution=FIXED&product=D, Phobos Bugs Fixed)
 
+    STDMODREF = <a href="phobos/std_$1.html">$(D $2)</a>
