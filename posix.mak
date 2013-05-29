@@ -276,13 +276,13 @@ ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
 ################################################################################
 
 phobos-prerelease : ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html
-${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : \
+${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : std.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
-	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
+	DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-release: ${DOC_OUTPUT_DIR}/phobos/index.html
-${DOC_OUTPUT_DIR}/phobos/index.html : \
+${DOC_OUTPUT_DIR}/phobos/index.html : std.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos/object.html
 	[ -d ${PHOBOS_DIR}.${LATEST} ] || \
 	  git clone ${GIT_HOME}/phobos ${PHOBOS_DIR}.${LATEST}/
