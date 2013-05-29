@@ -292,4 +292,5 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : std.ddoc \
 	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
 	  DDOC=${DMD_DIR}.${LATEST}/src/dmd \
 	  DRUNTIME_PATH=${DRUNTIME_DIR}.${LATEST} \
-	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos
+	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
+	  STDDOC="`pwd`/$(LATEST).ddoc `pwd`/std.ddoc"
