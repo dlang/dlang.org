@@ -25,7 +25,7 @@ $(LI $(RELATIVE_LINK2 implicitarrayptr, Arrays no longer implicitly convert to a
 )
 
 $(BUGSTITLE Language Enhancements,
-$(LI $(RELATIVE_LINK2 uniqueinference, Expressions which return unique objects can be implicitly castable to immutable.))
+$(LI $(RELATIVE_LINK2 uniqueinference, Expressions which return unique objects can be implicitly casted to immutable.))
 $(LI $(RELATIVE_LINK2 staticarrayvoid, Static array of void can now be user-initialized.))
 $(LI $(RELATIVE_LINK2 multiinvariant, Aggregates can now contain multiple invariants.))
 $(LI $(RELATIVE_LINK2 attribinference, Methods of templated aggregates can now infer attributes.))
@@ -67,18 +67,18 @@ $(BUGSTITLE Language Changes,
 
 $(LI $(LNAME2 staticfields, Const and immutable fields with initializers are now warned about:))
 
-$(P Eventually, they will be deprecated, and then will be an error. Such fields should now
+$(P Eventually, they will be deprecated, and then will trigger an error. Such fields should now
 be changed to enum, static or immutable.)
 
-$(P Eventually, new behavior for them will be enabled, as follows:)
+$(P In a future release, a new behavior for them will be enabled:)
 
-$(P Fields in an aggregate which are not static will now always be addressable.
-This means they occupy space in the object:)
+$(P Fields in an aggregate which are not static will always be addressable.
+This means they will occupy space in the object:)
 
 ---------
 struct S
 {
-    // used to be implicitly static in 2.062, now non-static in 2.063
+    // used to be implicitly static in 2.062, now warns. In a future release it will become non-static.
     immutable int[] arr = [1, 2];
 
     // ditto
@@ -98,9 +98,9 @@ struct S
 
 void main()
 {
-    auto x = S.arr;  // error in 2.063, needs 'this'
+    auto x = S.arr;  // becomes an error in a future release, 'arr' will require the 'this' reference.
 
-    // used to be size 1 in 2.062 and earlier
+    // S is size 1 in 2.062 and 2.063. In a future release this will change and the following static assert will pass.
     static assert(S.sizeof == size_t.sizeof + size_t.sizeof);  // ptr + length for the array
 }
 ---------
@@ -497,7 +497,7 @@ void main()
 $(P To work around this you can make your function take an r-value if it doesn't
     need to reassign and resize the slice, but only needs to read or modify its contents.
     Otherwise, to accept both l-values and r-values you can make your function take
-    its argument by `auto ref`:)
+    its argument by $(D auto ref):)
 
 ---------
 void take(int[] arr) { }
@@ -632,7 +632,7 @@ void main()
 
 $(BUGSTITLE Language Enhancements,
 
-$(LI $(LNAME2 uniqueinference, Expressions which return unique objects can be implicitly castable to immutable:))
+$(LI $(LNAME2 uniqueinference, Expressions which return unique objects can be implicitly casted to immutable:))
 
 $(P Expressions such as $(D new) for objects and arrays, and $(D dup) for arrays, can now be inferred to be unique.
     This allows the compiler to implicitly convert such an expression to immutable:)
@@ -833,7 +833,7 @@ void main()
 }
 ---------
 
-Upon such initialization the values in the tuple are undetermined.
+$(P Upon such initialization the values in the tuple are undetermined.)
 
 $(LI $(LNAME2 templconstraint, Template constraints can now be put after the inheritance list:))
 
@@ -897,7 +897,6 @@ struct S
     char[] a, b;
 
     // Implements equality test against another instance of this type.
-    // This can also be used as a workaround for Issue 3789.
     bool opEquals(S rhs) { return this.tupleof == rhs.tupleof; }
 }
 
@@ -1155,8 +1154,6 @@ $ test
 Error: test.d is 80% covered, less than required 90%
 )
 
-)
-
 $(LI $(LNAME2 symbolmangle, Added ability to override the mangling of a symbol with a compiler pragma:))
 
 $(P The new $(CODE pragma(mangle, ...)) directive allows you to set a custom mangling for any symbol:)
@@ -1167,6 +1164,8 @@ pragma(mangle, "module") extern(C) void module_();
 
 $(P The above allows linking to a C function named "module", which ordinarily we wouldn't be
     able to link to directly since "module" is a reserved D keyword.)
+
+)
 
 $(BUGSTITLE Phobos Changes,
 
