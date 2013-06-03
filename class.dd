@@ -418,9 +418,9 @@ $(GNAME Constructor):
         )
     )
 
-        $(P Constructors can have member function attributes $(D const),
-        $(D immutable), and $(D shared). The constructible object qualifiers
-        would be restricted by them.
+        $(P Constructors can have one of these member function attributes:
+        $(D const), $(D immutable), and $(D shared). Construction of qualified
+        objects will then be restricted to the implemented qualified constructors.
         )
         ------
         class C {
@@ -430,13 +430,13 @@ $(GNAME Constructor):
         // create mutable object
         C m = new C();
 
-        // create const object by mutable constructor
+        // create const object using by mutable constructor
         const C c2 = new const C();
 
-        // mutable constructor cannot create immutable object
+        // a mutable constructor cannot create an immutable object
         // immutable C i = new immutable C();
 
-        // mutable constructor cannot create shared object
+        // a mutable constructor cannot create a shared object
         // shared C s = new shared C();
         ------
 
@@ -454,22 +454,23 @@ $(GNAME Constructor):
         immutable i = new immutable C();
         ------
 
-        $(P If the constructor can create unique object, the object would be
-        implicitly convertible to any qualifiers.
+        $(P If the constructor can create unique object (e.g. if it is pure),
+        the object can be implicitly convertible to any qualifiers.
         )
         ------
         class C {
           this() pure;
-          // Based on the definition, this creates mutable object. But the
-          // created object never have any mutable global data.
+          // Based on the definition, this creates a mutable object. But the
+          // created object cannot contain any mutable global data.
           // Then compiler can guarantee that the created object is unique.
 
           this(int[] arr) immutable pure;
-          // Based on the definition, this creates immutable object. But the
-          // argument int[] never appear in the created object so it isn't
-          // implicitly convertible to immutable. And also it never have any
+          // Based on the definition, this creates an immutable object. But the
+          // argument int[] never appears in the created object so it isn't
+          // implicitly convertible to immutable. Also, it cannot store any
           // immutable global data.
-          // Then compiler can guarantee that the created object is unique.
+          // Therefore the compiler can guarantee that the created object is
+          // unique.
         }
 
         immutable i = new immutable C();           // this() pure is called
