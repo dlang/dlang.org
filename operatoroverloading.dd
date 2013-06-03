@@ -298,7 +298,7 @@ $(OL
 	---
 
 	$(P If structs declare an opEquals member function for the identity comparison,
-	it could have some forms:)
+	it could have several forms, such as:)
 	---
 	struct S {
 	  // lhs should be mutable object
@@ -400,7 +400,7 @@ $(H2 $(LNAME2 Assignment, Assignment Operator Overloading))
 	  // identiy assignment, allowed.
 	  void $(CODE_HIGHLIGHT opAssign)(S rhs);
 
-	  // not identity assignment, so allowed.
+	  // not identity assignment, also allowed.
 	  void $(CODE_HIGHLIGHT opAssign)(int);
 	}
 	S s;
@@ -409,21 +409,21 @@ $(H2 $(LNAME2 Assignment, Assignment Operator Overloading))
 	---
 
 	However for class types, identity assignment is not allowed. All class
-	types have reference semantics, so identity assignment should rebind
-	the referencee.
+	types have reference semantics, so identity assignment by default rebinds
+	the left-hand-side to the argument at the right, and this is not overridable.
 
 	---
 	class C {
-	  // If X is the same type as C or the type which
-	  // implicitly convertible to C, the opAssign
-	  // would accept identity assignment, so disallowed.
+	  // If X is the same type as C or the type which is
+	  // implicitly convertible to C, then opAssign would
+	  // accept identity assignment, which is disallowed.
 	  // C opAssign(...);
 	  // C opAssign(X);
 	  // C opAssign(X, ...);
 	  // C opAssign(X ...);
 	  // C opAssign(X, U = defaultValue, etc.);
 
-	  // not identity assignment, so allowed.
+	  // not an identity assignment - allowed
 	  void $(CODE_HIGHLIGHT opAssign)(int);
 	}
 	C c = new C();
