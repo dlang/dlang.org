@@ -320,34 +320,96 @@ $(SECTION3 $(LNAME2 Struct-Constructor, Struct Constructors),
         are default initialized to their $(CODE .init) value.
         )
 
-------
-struct S {
-  int x, y;
+        ------
+        struct S {
+          int x, y;
 
-  this()  // error, cannot implement default ctor for structs
-  {
-  }
+          this()  // error, cannot implement default ctor for structs
+          {
+          }
 
-  this(int a, int b)
-  {
-    x = a;
-    y = b;
-  }
-}
+          this(int a, int b)
+          {
+            x = a;
+            y = b;
+          }
+        }
 
-void main()
-{
-  S a = S(4, 5);
-  auto b = S();  // same as auto b = S.init;
-}
-------
+        void main()
+        {
+          S a = S(4, 5);
+          auto b = S();  // same as auto b = S.init;
+        }
+        ------
+
+        $(P A constructor qualifier allows the object to be constructed with
+        that specific qualifier.
+        )
+
+        ------
+        struct S1 {
+          int[] a;
+          this(int n) { a = new int[](n); }
+        }
+        struct S2 {
+          int[] a;
+          this(int n) immutable { a = new int[](n); }
+        }
+        void main()
+        {
+          // Mutable constructor creates mutable object.
+          S1 m1 = S1(1);
+
+          // Constructed mutable object is implicitly convertible to const.
+          const S1 c1 = S1(1);
+
+          // Constructed mutable object is not implicitly convertible to immutable.
+          // immutable i1 = S1(1);
+
+          // Mutable constructor cannot construct immutable object.
+          // auto x1 = immutable S1(1);
+
+          // Immutable constructor cannot construct mutable object.
+          // auto x2 = S2(1);
+
+          // Constructed immutable object is not implicitly convertible to mutable.
+          // S2 m2 = immutable S2(1);
+
+          // Constructed immutable object is implicitly convertible to const.
+          const S2 c2 = immutable S2(1);
+
+          // Immutable constructor creates immutable object.
+          immutable i2 = immutable S2(1);
+        }
+        ------
+
+        $(P If struct constructor is annotated with $(D @disable) and has
+        empty parameter, the struct is disabled construction without calling
+        other constructor.
+        )
+        ------
+        struct S {
+          int x;
+
+          // Disables default construction, function body can be empty.
+          @disable this();
+
+          this(int v) { x = v; }
+        }
+        void main()
+        {
+          //S s;        // default construction is disabled
+          //S s = S();  // also disabled
+          S s = S(1);   // construction with calling constructor
+        }
+        ------
 )
 
 $(SECTION3 $(LNAME2 StructPostblit, Struct Postblits),
 
 $(GRAMMAR
 $(GNAME StructPostblit):
-    $(B this(this)) $(GLINK2 function, FunctionBody)
+    $(B this(this)) $(GLINK2 declaration, MemberFunctionAttributes)$(OPT) $(GLINK2 function, FunctionBody)
 )
 
         $(P $(I Copy construction) is defined as initializing
@@ -369,19 +431,36 @@ $(GNAME StructPostblit):
         etc. For example:
         )
 
----
-struct S {
-  int[] a;    // array is privately owned by this instance
-  this(this) {
-    a = a.dup;
-  }
-  ~this() {
-    delete a;
-  }
-}
----
+        ---
+        struct S {
+          int[] a;    // array is privately owned by this instance
+          this(this) {
+            a = a.dup;
+          }
+          ~this() {
+            delete a;
+          }
+        }
+        ---
 
-	$(P Unions may not have fields that have postblits.)
+        $(P Disabling struct postblit makes the object not copyable.
+        )
+
+        ---
+        struct T {
+          @disable this(this);  // disabling makes T not copyable
+        }
+        struct S {
+          T t;   // uncopyable member makes S also not copyable
+        }
+
+        void main() {
+          S s;
+          S t = s; // error, S is not copyable
+        }
+        ---
+
+        $(P Unions may not have fields that have postblits.)
 )
 
 $(SECTION3 $(LNAME2 StructDestructor, Struct Destructors),
@@ -391,7 +470,7 @@ $(SECTION3 $(LNAME2 StructDestructor, Struct Destructors),
         object.
         )
 
-	$(P Unions may not have fields that have destructors.)
+        $(P Unions may not have fields that have destructors.)
 )
 
 $(SECTION3 $(LNAME2 AssignOverload, Assignment Overload),
