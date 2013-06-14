@@ -345,6 +345,10 @@ void main()
 					if (line.contains(`<script src="http://digg.com/tools/diggthis.js"`))
 						skip = true;
 
+					// skip hyphenation (bad performance in IE with large pages)
+					if (line.contains(`<script src="/js/hyphenate.js"`))
+						skip = true;
+
 					while (!skip && line.test(re_extern_js))
 					{
 						auto url = match.captures[1].replace(`\`, `/`);
