@@ -192,6 +192,8 @@ void main()
 	auto re_link_pl      = regex(`<li><a href="(http://www.digitalmars.com/d)?/?(\d\.\d)?/index.html" title="D Programming Language \d\.\d">`);
 	auto re_def          = regex(`<dt><big>(.*)<u>([^<]+)<`);
 	auto re_css_margin   = regex(`margin-left:\s*1[35]em;`);
+	auto re_res_path     = regex(`<(img|script) src="/([^/])`);
+	auto re_extern_js    = regex(`<script src=['"]((https?:)?//[^'"]+)['"]`);
 
 	nav = new Nav(null, null);
 
@@ -339,8 +341,35 @@ void main()
 						if (!/*re_link*/match.captures[1].startsWith("http://"))
 							addKeyword(/*re_link*/match.captures[3], absoluteUrl(fileName, /*re_link*/match.captures[1]));
 
-					if (line.contains(`<script src="/js`))
-						line = line.replace(`<script src="/`, `<script src="` ~ "../".replicate(fileName[ROOT.length+1..$].split(dirSeparator).length-1));
+					// skip "digg this"
+					if (line.contains(`<script src="http://digg.com/tools/diggthis.js"`))
+						skip = true;
+
+					// skip hyphenation (bad performance in IE with large pages)
+					if (line.contains(`<script src="/js/hyphenate.js"`))
+						skip = true;
+
+					while (!skip && line.test(re_extern_js))
+					{
+						auto url = match.captures[1].replace(`\`, `/`);
+						auto fn = url.split("?")[0].split("/")[$-1];
+						auto dst = "chm/js/" ~ fn;
+
+						if (!dst.exists)
+						{
+							writefln("Downloading %s to %s...", url, dst);
+							import std.net.curl, etc.c.curl;
+							auto http = HTTP();
+							http.handle.set(CurlOption.ssl_verifypeer, false); // curl's default SSL trusted root certificate store is outdated/incomplete
+							if (!dst.dirName().exists) dst.dirName().mkdirRecurse();
+							std.file.write(dst, get(url, http));
+						}
+
+						line = line.replace(url, "/js/" ~ fn);
+					}
+
+					while (line.test(re_res_path))
+						line = line.replace(match.captures[0], `<` ~ match.captures[1] ~ ` src="` ~ "../".replicate(fileName[ROOT.length+1..$].split(dirSeparator).length-1) ~ match.captures[2]);
 
 					// skip Google ads
 					if (line.startsWith(`<!-- Google ad -->`))
@@ -356,10 +385,6 @@ void main()
 					}
 					if (line.contains(`<div id="content"`))
 						skip = nextSkip = false;
-
-					// skip "digg this"
-					if (line.contains(`<script src="http://digg.com/tools/diggthis.js"`))
-						skip = true;
 
 					if (!skip)
 						newlines ~= line;
