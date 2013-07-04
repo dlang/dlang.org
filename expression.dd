@@ -811,10 +811,10 @@ $(GNAME CastQual):
         to $(GLINK2 declaration, Type).
         )
 
--------------
-cast(foo) -p; // cast (-p) to type foo
-(foo) - p;      // subtract p from foo
--------------
+        -------------
+        cast(foo) -p; // cast (-p) to type foo
+        (foo) - p;      // subtract p from foo
+        -------------
 
         $(P Any casting of a class reference to a
         derived class reference is done with a runtime check to make sure it
@@ -823,32 +823,32 @@ cast(foo) -p; // cast (-p) to type foo
         $(D dynamic_cast) operator in C++.
         )
 
--------------
-class A { ... }
-class B : A { ... }
+        -------------
+        class A { ... }
+        class B : A { ... }
 
-void test(A a, B b) {
-  B bx = a;         // error, need cast
-  B bx = cast(B) a; // bx is null if a is not a B
-  A ax = b;         // no cast needed
-  A ax = cast(A) b; // no runtime check needed for upcast
-}
--------------
+        void test(A a, B b) {
+          B bx = a;         // error, need cast
+          B bx = cast(B) a; // bx is null if a is not a B
+          A ax = b;         // no cast needed
+          A ax = cast(A) b; // no runtime check needed for upcast
+        }
+        -------------
 
         $(P In order to determine if an object $(D o) is an instance of
         a class $(D B) use a cast:
         )
 
--------------
-if (cast(B) o)
-{
-  // o is an instance of B
-}
-else
-{
-  // o is not an instance of B
-}
--------------
+        -------------
+        if (cast(B) o)
+        {
+          // o is an instance of B
+        }
+        else
+        {
+          // o is not an instance of B
+        }
+        -------------
 
         $(P Casting a pointer type to and from a class type is done as a type paint
         (i.e. a reinterpret cast).)
@@ -858,69 +858,80 @@ else
         as a type paint, with the array length adjusted to match any change in
         element size. If there's not a match, a runtime error is generated.)
 
+        ---
+        import std.stdio;
 
----
-import std.stdio;
+        int main() {
+          byte[] a = [1,2,3];
+          auto b = cast(int[])a; // runtime array cast misalignment
 
-int main() {
-  byte[] a = [1,2,3];
-  auto b = cast(int[])a; // runtime array cast misalignment
-
-  int[] c = [1, 2, 3];
-  auto d = cast(byte[])c; // ok
-  // prints:
-  // [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]
-  writeln(d);
-  return 0;
-}
----
+          int[] c = [1, 2, 3];
+          auto d = cast(byte[])c; // ok
+          // prints:
+          // [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]
+          writeln(d);
+          return 0;
+        }
+        ---
 
         $(P Casting a floating point literal from one type to another
         changes its type, but internally it is retained at full
         precision for the purposes of constant folding.
         )
 
----
-void test() {
-  real a = 3.40483L;
-  real b;
-  b = 3.40483;     // literal is not truncated to double precision
-  assert(a == b);
-  assert(a == 3.40483);
-  assert(a == 3.40483L);
-  assert(a == 3.40483F);
-  double d = 3.40483; // truncate literal when assigned to variable
-  assert(d != a);     // so it is no longer the same
-  const double x = 3.40483; // assignment to const is not
-  assert(x == a);     // truncated if the initializer is visible
-}
----
+        ---
+        void test() {
+          real a = 3.40483L;
+          real b;
+          b = 3.40483;     // literal is not truncated to double precision
+          assert(a == b);
+          assert(a == 3.40483);
+          assert(a == 3.40483L);
+          assert(a == 3.40483F);
+          double d = 3.40483; // truncate literal when assigned to variable
+          assert(d != a);     // so it is no longer the same
+          const double x = 3.40483; // assignment to const is not
+          assert(x == a);     // truncated if the initializer is visible
+        }
+        ---
 
         $(P Casting a value $(I v) to a struct $(I S), when value is not a struct
         of the same type, is equivalent to:
         )
 
----
-S(v)
----
+        ---
+        S(v)
+        ---
 
         $(P Casting to a $(GLINK CastQual) replaces the qualifiers to the type of
         the $(GLINK UnaryExpression).)
 
----
-shared int x;
-assert(is(typeof(cast(const)x) == const int));
----
+        ---
+        shared int x;
+        assert(is(typeof(cast(const)x) == const int));
+        ---
 
         $(P Casting with no $(GLINK Type) or $(GLINK CastQual) removes
         any top level $(D const), $(D immutable), $(D shared) or $(D inout)
         type modifiers from the type
         of the $(GLINK UnaryExpression).)
 
----
-shared int x;
-assert(is(typeof(cast()x) == int));
----
+        ---
+        shared int x;
+        assert(is(typeof(cast()x) == int));
+        ---
+
+        $(P Casting an expression to $(D void) type is allowed to mark that
+        the result is unused. On $(GLINK2 statement, ExpressionStatement),
+        it could be used properly to avoid "has no effect" error.)
+
+        ----
+        void foo(lazy void exp) {}
+        void main() {
+          foo(10);              // NG - has no effect in expression '10'
+          foo(cast(void)10);    // OK
+        }
+        ----
 
 $(H3 Pow Expressions)
 
