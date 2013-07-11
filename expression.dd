@@ -1294,34 +1294,42 @@ $(H4 Lambdas)
 $(GRAMMAR
 $(GNAME Lambda):
     $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
-    $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
+    $(D function)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
+    $(D delegate)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
 )
 
-        $(P $(I Lambda)s are a shorthand syntax for $(GLINK FunctionLiteral)s.
-        The first form is equivalent to:
+        $(P $(I Lambda)s are a shorthand syntax for $(GLINK FunctionLiteral)s.)
+
+    $(OL
+        $(LI $(P Just one $(IDENTIFIER) is rewritten to
+             $(GLINK2 declaration, Parameters):)
+
+             $(D $(LPAREN)) $(IDENTIFIER) $(D $(RPAREN))
         )
+        $(LI $(P The following part $(D =>) $(I AssignExpression) is rewritten to
+             $(GLINK2 function, FunctionBody):)
 
-$(P $(D $(LPAREN)) $(IDENTIFIER) $(D $(RPAREN)) $(D { return) $(I
-AssignExpression) $(D ; }))
+             $(D { return) $(I AssignExpression) $(D ; })
+        )
+    )
 
-        $(P And the second:)
+        Example usage:
+        ---
+        import std.stdio;
 
-$(P $(I ParameterAttributes) $(D { return) $(I AssignExpression) $(D ; }))
+        void main() {
+            auto i = 3;
+            auto twice  = function (int x) => x * 2;
+            auto square = delegate (int x) => x * x;
 
-Example usage:
----
-import std.stdio;
+            auto n = 5;
+            auto mul_n = (int x) => x * n;
 
-void main() {
-    auto i=3;
-    auto square = (int x) => x*x;
-    auto twice  = (int x) => x*2;
-
-    writeln(square(i));  // prints 9
-    writeln(twice(i));   // prints 6
-}
----
-
+            writeln(twice(i));   // prints 6
+            writeln(square(i));  // prints 9
+            writeln(mul_n(i));   // prints 15
+        }
+        ---
 
 
 $(H4 Function Literals)
@@ -1354,104 +1362,104 @@ $(GNAME ParameterAttributes):
 
         $(P For example:)
 
--------------
-int function(char c) fp; // declare pointer to a function
+        -------------
+        int function(char c) fp; // declare pointer to a function
 
-void test() {
-  static int foo(char c) { return 6; }
+        void test() {
+          static int foo(char c) { return 6; }
 
-  fp = &foo;
-}
--------------
+          fp = &foo;
+        }
+        -------------
 
         is exactly equivalent to:
 
--------------
-int function(char c) fp;
+        -------------
+        int function(char c) fp;
 
-void test() {
-  fp = function int(char c) { return 6;} ;
-}
--------------
+        void test() {
+          fp = function int(char c) { return 6;} ;
+        }
+        -------------
 
         And:
 
--------------
-int abc(int delegate(long i));
+        -------------
+        int abc(int delegate(long i));
 
-void test() {
-  int b = 3;
-  int foo(long c) { return 6 + b; }
+        void test() {
+          int b = 3;
+          int foo(long c) { return 6 + b; }
 
-  abc(&foo);
-}
--------------
+          abc(&foo);
+        }
+        -------------
 
         is exactly equivalent to:
 
--------------
-int abc(int delegate(long i));
+        -------------
+        int abc(int delegate(long i));
 
-void test() {
-  int b = 3;
+        void test() {
+          int b = 3;
 
-  abc( delegate int(long c) { return 6 + b; } );
-}
--------------
+          abc( delegate int(long c) { return 6 + b; } );
+        }
+        -------------
 
         $(P and the following where the return type $(D int) and
         $(D function)/$(D delegate) are inferred:)
 
--------------
-int abc(int delegate(long i));
-int def(int function(long s));
+        -------------
+        int abc(int delegate(long i));
+        int def(int function(long s));
 
-void test() {
-  int b = 3;
+        void test() {
+          int b = 3;
 
-  abc( (long c) { return 6 + b; } );  // inferred to delegate
-  def( (long c) { return c * 2; } );  // inferred to function
-//def( (long c) { return c * b; } );  // error!
-  // Because the FunctionBody accesses b, then the function literal type
-  // is inferred to delegate. But def cannot receive delegate.
-}
--------------
+          abc( (long c) { return 6 + b; } );  // inferred to delegate
+          def( (long c) { return c * 2; } );  // inferred to function
+        //def( (long c) { return c * b; } );  // error!
+          // Because the FunctionBody accesses b, then the function literal type
+          // is inferred to delegate. But def cannot receive delegate.
+        }
+        -------------
 
         If the type of a function literal can be uniquely determined from its context,
         the parameter type inference is possible.
 
--------------
-void foo(int function(int) fp);
+        -------------
+        void foo(int function(int) fp);
 
-void test() {
-  int function(int) fp = (n) { return n * 2; };
-  // The type of parameter n is inferred to int.
+        void test() {
+          int function(int) fp = (n) { return n * 2; };
+          // The type of parameter n is inferred to int.
 
-  foo((n) { return n * 2; });
-  // The type of parameter n is inferred to int.
-}
--------------
+          foo((n) { return n * 2; });
+          // The type of parameter n is inferred to int.
+        }
+        -------------
 
         Anonymous delegates can behave like arbitrary statement literals.
         For example, here an arbitrary statement is executed by a loop:
 
--------------
-double test() {
-  double d = 7.6;
-  float f = 2.3;
+        -------------
+        double test() {
+          double d = 7.6;
+          float f = 2.3;
 
-  void loop(int k, int j, void delegate() statement) {
-    for (int i = k; i < j; i++) {
-      statement();
-    }
-  }
+          void loop(int k, int j, void delegate() statement) {
+            for (int i = k; i < j; i++) {
+              statement();
+            }
+          }
 
-  loop(5, 100, { d += 1; } );
-  loop(3, 10,  { f += 3; } );
+          loop(5, 100, { d += 1; } );
+          loop(3, 10,  { f += 3; } );
 
-  return d + f;
-}
--------------
+          return d + f;
+        }
+        -------------
 
         When comparing with $(DDSUBLINK function, nested, nested functions),
         the $(D function) form is analogous to static
