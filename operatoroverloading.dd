@@ -364,27 +364,60 @@ struct S {
 $(H2 $(LNAME2 FunctionCall, Function Call Operator Overloading $(D f())))
 
 	$(P The function call operator, (), can be overloaded by
-	declaring a function named $(B opCall):
+	declaring a function named $(CODE opCall):
 	)
 
--------
-struct F {
-  int $(CODE_HIGHLIGHT opCall)();
-  int $(CODE_HIGHLIGHT opCall)(int x, int y, int z);
-}
+	-------
+	struct F {
+	  int $(CODE_HIGHLIGHT opCall)();
+	  int $(CODE_HIGHLIGHT opCall)(int x, int y, int z);
+	}
 
-void test() {
-  F f;
-  int i;
+	void test() {
+	  F f;
+	  int i;
 
-  i = f();      // same as i = f.opCall();
-  i = f(3,4,5); // same as i = f.opCall(3,4,5);
-}
--------
+	  i = f();      // same as i = f.opCall();
+	  i = f(3,4,5); // same as i = f.opCall(3,4,5);
+	}
+	-------
 
 	$(P In this way a struct or class object can behave as if it
 	were a function.
 	)
+
+	$(P $(CODE static opCall) also works as expected for function call operator with
+	type names.
+	)
+
+	-------
+	struct Double {
+	  $(CODE_HIGHLIGHT static) int $(CODE_HIGHLIGHT opCall)(int x) { return x * 2; }
+	}
+	void test() {
+	  int i = Double(2);
+	  assert(i == 4);
+	}
+	-------
+
+	$(P Note that merely declaring $(D opCall) automatically disables
+	$(XLINK2 struct.html#StructLiteral, struct literal) syntax.
+	To avoid the limitation, you need to also declare $(XLINK2 Struct-Constructor,
+	constructor) so that it takes priority over $(D opCall) in $(D Type(...)) syntax.
+	)
+
+	-------
+	struct Multiplier {
+	  int factor;
+	  this(int num) { factor = num; }
+	  int opCall(int value) { return value * factor; }
+	}
+	void test() {
+	  Multiplier m = Multiplier(10);  // invoke constructor
+	  int result = m(5);              // invoke opCall
+	  assert(result == 50);
+	}
+	-------
 
 $(H2 $(LNAME2 Assignment, Assignment Operator Overloading))
 
@@ -570,7 +603,7 @@ $(H2 $(LNAME2 Slice, Slice Operator Overloading))
 
 	$(P Overloading the slicing operator means overloading expressions
 	like $(CODE a[]) and $(D a[)$(SLICE)$(D ]).
-	This can be done by declaring a member function named $(B opSlice).
+	This can be done by declaring a member function named $(CODE opSlice).
 	)
 
 -------
