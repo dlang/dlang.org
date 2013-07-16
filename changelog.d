@@ -81,7 +81,7 @@ $(VERSION 075, Aug 2, 2012, =================================================,
     )
 )
 
-<div id=version>
+<div class="version">
 $(UL 
 	$(NEW1 075)
 	$(NEW1 074)
@@ -2332,7 +2332,7 @@ Macros:
 	NEW1 = $(LI What's new for <a href="#new1_$0">D 1.$0</a>)
 
 	VERSION=
-	<div id=version>
+	<div class="version">
 	$(B $(LARGE <a name="new1_$1">
 	  Version
 	  <a HREF="http://ftp.digitalmars.com/dmd.1.$1.zip" title="D 1.$1">D 1.$1</a>
