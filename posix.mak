@@ -42,7 +42,7 @@ search-left.gif search-bg.gif search-button.gif tdpl.jpg				\
 ubuntu_logo.png win32_logo.png)
 
 JAVASCRIPT=$(addprefix js/, codemirror.js d.js hyphenate.js	\
-run.js run-main-website.js)
+hyphenate-selectively.js run.js run-main-website.js)
 
 STYLES=css/style.css css/print.css css/codemirror.css
 
