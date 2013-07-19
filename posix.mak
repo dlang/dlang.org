@@ -34,7 +34,7 @@ ROOT_DIR=$(shell pwd)
 DDOC=macros.ddoc doc.ddoc ${LATEST}.ddoc $(NODATETIME)
 
 IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico		\
-d3.gif d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
+d3.png d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
 dmlogo-smaller.gif download.png fedora_logo.png freebsd_logo.png		\
 gentoo_logo.png github-ribbon.png gradient-green.jpg gradient-red.jpg	\
 globe.gif linux_logo.png mac_logo.png opensuse_logo.png pen.gif			\
