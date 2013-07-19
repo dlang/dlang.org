@@ -27,7 +27,7 @@ SPECSRC=spec.dd lex.dd module.dd declaration.dd type.dd property.dd		\
 DDOC=macros.ddoc windows.ddoc doc.ddoc $(NODATETIME)
 
 ASSETS=images\*.* css\*.*
-IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
+IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 
 PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
