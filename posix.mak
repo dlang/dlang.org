@@ -304,23 +304,39 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : std.ddoc ${LATEST}.ddoc \
 # phobos and druntime, latest released build and current build (DDOX version)
 ################################################################################
 
-apidocs-prerelease : ${DMD_DIR}/src/dmd
-	${DMD_DIR}/src/dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
-	${DPL_DOCS} filter .tmp/docs.json --min-protection=Protected --only-documented
-	${DPL_DOCS} generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master .tmp/docs.json ${DOC_OUTPUT_DIR}/phobos-prerelease
-	rm -r .tmp
+apidocs-prerelease : docs-prerelease.json
+	${DPL_DOCS} generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc\
+	  --override-macros=std-ddox-override.ddoc --package-order=std\
+	  --git-target=master docs-prerelease.json ${DOC_OUTPUT_DIR}/phobos-prerelease
 
-apidocs-release : ${DMD_DIR}.${LATEST}/src/dmd
+apidocs-release : docs.json
+	${DPL_DOCS} generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc\
+	  --override-macros=std-ddox-override.ddoc --package-order=std\
+	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/phobos
+
+apidocs-serve : docs-prerelease.json
+	${DPL_DOCS} serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc\
+	  --override-macros=std-ddox-override.ddoc --package-order=std\
+	  --git-target=master --web-file-dir=. docs-prerelease.json
+
+docs.json : ${DMD_DIR}.${LATEST}/src/dmd
+	mkdir .tmp || true
+	[ -d ${DRUNTIME_DIR}.${LATEST} ] || \
+	  git clone ${GIT_HOME}/druntime ${DRUNTIME_DIR}.${LATEST}/
+	cd ${DRUNTIME_DIR}.${LATEST} && git checkout v${LATEST}
 	[ -d ${PHOBOS_DIR}.${LATEST} ] || \
 	  git clone ${GIT_HOME}/phobos ${PHOBOS_DIR}.${LATEST}/
 	cd ${PHOBOS_DIR}.${LATEST} && git checkout v${LATEST}
-	${DMD_DIR}.${LATEST}/src/dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
-	${DPL_DOCS} filter .tmp/docs.json --min-protection=Protected --only-documented
-	${DPL_DOCS} generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=v${LATEST} .tmp/docs.json ${DOC_OUTPUT_DIR}/phobos
+	find ${DRUNTIME_DIR}.${LATEST}/src -name '*.d' | sed -e /unittest.d/d -e /gcstub/d > .tmp/files.txt
+	find ${PHOBOS_DIR}.${LATEST} -name '*.d' | sed -e /unittest.d/d -e /format/d -e /windows/d >> .tmp/files.txt
+	${DMD_DIR}.${LATEST}/src/dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
+	${DPL_DOCS} filter docs.json --min-protection=Protected --only-documented
 	rm -r .tmp
 
-apidocs-serve : ${DMD_DIR}/src/dmd
-	${DMD_DIR}/src/dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
-	${DPL_DOCS} filter .tmp/docs.json --min-protection=Protected --only-documented
-	${DPL_DOCS} serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. .tmp/docs.json
+docs-prerelease.json : ${DMD_DIR}/src/dmd
+	mkdir .tmp || true
+	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' -e /unittest/d > .tmp/files.txt
+	find ${PHOBOS_DIR} -name '*.d' | sed -e /uittest.d/d -e /format/d -e /windows/d >> .tmp/files.txt
+	${DMD_DIR}/src/dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs-prerelease.json @.tmp/files.txt
+	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected --only-documented
 	rm -r .tmp
