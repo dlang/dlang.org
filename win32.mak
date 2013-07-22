@@ -351,14 +351,16 @@ clean:
 
 ################# DDOX based API docs #########################
 
-apidocs:
-	dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
-	$(DPL_DOCS) filter .tmp/docs.json --min-protection=Protected --only-documented
-	$(DPL_DOCS) generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master .tmp/docs.json phobos
-	rmdir /s /q .tmp
+apidocs: docs.json
+	$(DPL_DOCS) generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master docs.json phobos
 
-apidocs-serve:
-	dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
-	$(DPL_DOCS) filter .tmp/docs.json --min-protection=Protected --only-documented
-	$(DPL_DOCS) serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. .tmp/docs.json
+apidocs-serve: docs.json
+	$(DPL_DOCS) serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. docs.json
+
+docs.json:
+	mkdir .tmp
+	dir /s /b /a-d ..\druntime\src\*.d | findstr /V "unittest.d gcstub" > .tmp/files.txt	
+	dir /s /b /a-d ..\phobos\*.d | findstr /V "unittest.d linux osx format.d" >> .tmp/files.txt
+	dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
+	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented
 	rmdir /s /q .tmp
