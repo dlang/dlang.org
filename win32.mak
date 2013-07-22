@@ -1,6 +1,7 @@
 # makefile to build html files for DMD
 
 DMD=dmd
+DPL_DOCS=../tools/dpl-docs/dpl-docs.exe
 
 SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
 	overview.dd mixin.dd memory.dd interface.dd windows.dd				\
@@ -346,4 +347,12 @@ clean:
 	del $(CHMTARGETS)
 	del chmgen.obj chmgen.exe
 	if exist chm rmdir /S /Q chm
+	if exist phobos rmdir /S /Q phobos
 
+################# DDOX based API docs #########################
+
+apidocs:
+	dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
+	$(DPL_DOCS) filter .tmp/docs.json --min-protection=Protected --only-documented
+	$(DPL_DOCS) generate-html --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master .tmp/docs.json phobos
+	rmdir /s /q .tmp
