@@ -354,11 +354,11 @@ clean:
 apidocs:
 	dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
 	$(DPL_DOCS) filter .tmp/docs.json --min-protection=Protected --only-documented
-	$(DPL_DOCS) generate-html --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master .tmp/docs.json phobos
+	$(DPL_DOCS) generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master .tmp/docs.json phobos
 	rmdir /s /q .tmp
 
 apidocs-serve:
 	dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
 	$(DPL_DOCS) filter .tmp/docs.json --min-protection=Protected --only-documented
-	$(DPL_DOCS) serve-html --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. .tmp/docs.json
+	$(DPL_DOCS) serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. .tmp/docs.json
 	rmdir /s /q .tmp

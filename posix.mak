@@ -307,7 +307,7 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : std.ddoc ${LATEST}.ddoc \
 apidocs-prerelease : ${DMD_DIR}/src/dmd
 	${DMD_DIR}/src/dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
 	${DPL_DOCS} filter .tmp/docs.json --min-protection=Protected --only-documented
-	${DPL_DOCS} generate-html --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master .tmp/docs.json ${DOC_OUTPUT_DIR}/phobos-prerelease
+	${DPL_DOCS} generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master .tmp/docs.json ${DOC_OUTPUT_DIR}/phobos-prerelease
 	rm -r .tmp
 
 apidocs-release : ${DMD_DIR}.${LATEST}/src/dmd
@@ -316,5 +316,11 @@ apidocs-release : ${DMD_DIR}.${LATEST}/src/dmd
 	cd ${PHOBOS_DIR}.${LATEST} && git checkout v${LATEST}
 	${DMD_DIR}.${LATEST}/src/dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
 	${DPL_DOCS} filter .tmp/docs.json --min-protection=Protected --only-documented
-	${DPL_DOCS} generate-html --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=v${LATEST} .tmp/docs.json ${DOC_OUTPUT_DIR}/phobos
+	${DPL_DOCS} generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=v${LATEST} .tmp/docs.json ${DOC_OUTPUT_DIR}/phobos
+	rm -r .tmp
+
+apidocs-serve : ${DMD_DIR}/src/dmd
+	${DMD_DIR}/src/dmd -c -o- -version=StdDdoc -Dd.tmp/ -Xf.tmp/docs.json @api-docs-files.txt
+	${DPL_DOCS} filter .tmp/docs.json --min-protection=Protected --only-documented
+	${DPL_DOCS} serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. .tmp/docs.json
 	rm -r .tmp
