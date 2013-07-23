@@ -44,6 +44,7 @@ $(GNAME TraitsKeyword):
     $(GBLINK getProtection)
     $(GBLINK getVirtualFunctions)
     $(GBLINK getVirtualMethods)
+    $(GBLINK getUnitTests)
     $(GBLINK parent)
     $(GBLINK classInstanceSize)
     $(GBLINK getVirtualIndex)
@@ -547,6 +548,79 @@ int()
 void()
 int()
 2
+)
+
+$(H2 $(GNAME getUnitTests))
+
+	$(P
+		Takes one argument, a symbol of an aggregate (e.g. struct/class/module).
+		The result is a tuple of all the unit test functions of that aggregate.
+		The functions returned are like normal nested static functions,
+		$(DDSUBLINK glossary, ctfe, CTEF) will work and
+		$(DDSUBLINK attribute, uda, UDA's) will be accessible.
+	)
+
+	$(H4 Note:)
+
+	$(P
+		The -unittest flag needs to be passed to the compiler. If the flag
+		is not passed $(CODE __traits(getUnitTests)) will always return an
+		empty tuple.
+	)
+
+---
+module foo;
+
+import core.runtime;
+import std.stdio;
+
+struct name { string name; }
+
+class Foo {
+  unittest {
+    writeln("foo.Foo.unittest");
+  }
+}
+
+@name("foo") unittest {
+  writeln("foo.unittest");
+}
+
+template Tuple (T...)
+{
+  alias Tuple = T;
+}
+
+shared static this()
+{
+  // Override the default unit test runner to do nothing. After that, "main" will
+  // be called.
+  Runtime.moduleUnitTester = { return true; };
+}
+
+void main() {
+  writeln("start main");
+
+  alias tests = Tuple!(__traits(getUnitTests, foo));
+  static assert(tests.length == 1);
+
+  alias attributes = Tuple!(__traits(getAttributes, tests[0]));
+  static assert(attributes.length == 1);
+
+  foreach (test; tests)
+    test();
+
+  foreach (test; __traits(getUnitTests, Foo))
+    test();
+}
+---
+
+	$(P By default, the above will print:)
+
+$(CONSOLE
+start main
+foo.unittest
+foo.Foo.unittest
 )
 
 $(H2 $(GNAME parent))
