@@ -32,6 +32,7 @@ $(GNAME TraitsKeyword):
     $(GBLINK isAbstractFunction)
     $(GBLINK isFinalFunction)
     $(GBLINK isStaticFunction)
+    $(GBLINK isOverrideFunction)
     $(GBLINK isRef)
     $(GBLINK isOut)
     $(GBLINK isLazy)
@@ -265,6 +266,32 @@ void main() {
   writeln(__traits(isFinalFunction, S.bar));	  // false
   writeln(__traits(isFinalFunction, C.foo));	  // true
   writeln(__traits(isFinalFunction, FC.foo));  // true
+}
+---
+
+$(H2 $(GNAME isOverrideFunction))
+
+	$(P Takes one argument. If that argument is a function marked with
+	$(D_KEYWORD override), $(B true) is returned, otherwise $(B false).
+	)
+
+---
+import std.stdio;
+
+class Base {
+  void foo() { }
+}
+
+class Foo : Base
+{
+  override void foo() { }
+  void bar() { }
+}
+
+void main() {
+  writeln(__traits(isOverrideFunction, Base.foo));	// false
+  writeln(__traits(isOverrideFunction, Foo.foo));	// true
+  writeln(__traits(isOverrideFunction, Foo.bar));	// false
 }
 ---
 
