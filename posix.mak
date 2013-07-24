@@ -41,8 +41,8 @@ globe.gif linux_logo.png mac_logo.png opensuse_logo.png pen.gif			\
 search-left.gif search-bg.gif search-button.gif tdpl.jpg				\
 ubuntu_logo.png win32_logo.png)
 
-JAVASCRIPT=$(addprefix js/, codemirror.js d.js hyphenate.js	\
-hyphenate-selectively.js run.js run-main-website.js)
+JAVASCRIPT=$(addprefix js/, codemirror.js d.js run.js	\
+run-main-website.js)
 
 STYLES=css/style.css css/print.css css/codemirror.css
 
