@@ -233,13 +233,13 @@ $(OL
 
 $(H4 $(LNAME2 property-functions, Property Functions))
 
-        $(P Property functions are tagged with the $(CODE @property)
+        $(P Property functions are tagged with the $(D @property)
         attribute. They cannot be called with parentheses (hence
-        acting like properties excepting some cases).
+        they act like fields except in some cases).
         )
 
         $(P If a property function has no parameters, it works as a getter.
-        If has exactly one parameter, it work as a setter.
+        If has exactly one parameter, it works as a setter.
         )
 
         ---
@@ -259,8 +259,10 @@ $(H4 $(LNAME2 property-functions, Property Functions))
           s.x;        // lowered to s.x()
           s.x = 3;    // lowered to s.x(3)
 
-          //s.x();    // NG: lowered to s.x()(), then int value is not callable
-          //s.x(3);   // NG: lowered to s.x()(3), then int value is not callable
+          //s.x();    // NG: lowered to s.x()(), but the int value
+                      //     returned by s.x() is not callable
+          //s.x(3);   // NG: lowered to s.x()(3), but the int value
+                      //     returned by s.x() is not callable
           assert(s.adder(1, 2) == 3);
                       // OK lowered to s.adder()(1, 2)
         }
@@ -284,8 +286,8 @@ $(H4 $(LNAME2 property-functions, Property Functions))
         }
         ---
 
-        $(P In most places getter property functions are evaluated immediately.
-        One exceptional case is address operator.
+        $(P In most places, getter property functions are called immediately.
+        One exceptional case is the address operator.
         )
 
         ---
@@ -309,15 +311,16 @@ $(H4 $(LNAME2 property-functions, Property Functions))
         }
         ---
 
-        $(P Even if the given operand is property function, address operator
-        returns the address of the property function.
+        $(P Even if the given operand is a property function, the address operator
+        returns the address of the property function rather than the address of
+        its return value.
         )
 
 
 $(H4 $(LNAME2 optional-parenthesis, Optional parenthesis))
 
         $(P If a function call does not take any arguments syntactically,
-        it is callable without parenthesis, like as getter $(RELATIVE_LINK2
+        it is callable without parenthesis, like a getter $(RELATIVE_LINK2
         property-functions, property functions).
         )
 
@@ -335,7 +338,7 @@ $(H4 $(LNAME2 optional-parenthesis, Optional parenthesis))
         }
         ---
 
-        $(P However, assignment syntax is disallowed unlike property functions.
+        $(P However, assignment syntax is disallowed unlike with property functions.
         )
 
         ---
