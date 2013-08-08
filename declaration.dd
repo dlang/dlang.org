@@ -531,33 +531,33 @@ $(GNAME Typeof):
         of an expression. For example:
         )
 
---------------------
-void func(int i) {
- typeof(i) j;       // j is of type int
- typeof(3 + 6.0) x; // x is of type double
- typeof(1)* p;      // p is of type pointer to int
- int[typeof(p)] a;  // a is of type int[int*]
+        --------------------
+        void func(int i) {
+         typeof(i) j;       // j is of type int
+         typeof(3 + 6.0) x; // x is of type double
+         typeof(1)* p;      // p is of type pointer to int
+         int[typeof(p)] a;  // a is of type int[int*]
 
- writefln("%d", typeof('c').sizeof); // prints 1
- double c = cast(typeof(1.0))j; // cast j to double
-}
---------------------
+         writefln("%d", typeof('c').sizeof); // prints 1
+         double c = cast(typeof(1.0))j; // cast j to double
+        }
+        --------------------
 
         $(P
         $(I Expression) is not evaluated, just the type of it is
         generated:
         )
 
---------------------
-void func() {
- int i = 1;
- typeof(++i) j; // j is declared to be an int, i is not incremented
- writefln("%d", i);  // prints 1
-}
---------------------
+        --------------------
+        void func() {
+         int i = 1;
+         typeof(++i) j; // j is declared to be an int, i is not incremented
+         writefln("%d", i);  // prints 1
+        }
+        --------------------
 
         $(P There are  three special cases: )
-        $(OL
+    $(OL
         $(LI $(D typeof(this)) will generate the type of what $(D this)
         would be in a non-static member function, even if not in a member
         function.
@@ -568,26 +568,35 @@ void func() {
         $(LI $(D typeof(return)) will, when inside a function scope,
         give the return type of that function.
         )
+    )
 
+        --------------------
+        class A { }
+
+        class B : A {
+         typeof(this) x;  // x is declared to be a B
+         typeof(super) y; // y is declared to be an A
+        }
+
+        struct C {
+           static typeof(this) z;  // z is declared to be a C
+
+          typeof(super) q; // error, no super struct for C
+        }
+
+        typeof(this) r;   // error, no enclosing struct or class
+        --------------------
+
+        $(P If the expression is a $(XLINK2 function.html#property-functions,
+        Property Function), $(D typeof) gives its return type.
         )
 
-
---------------------
-class A { }
-
-class B : A {
- typeof(this) x;  // x is declared to be a B
- typeof(super) y; // y is declared to be an A
-}
-
-struct C {
-   static typeof(this) z;  // z is declared to be a C
-
-  typeof(super) q; // error, no super struct for C
-}
-
-typeof(this) r;   // error, no enclosing struct or class
---------------------
+        --------------------
+        struct S {
+          @property int foo() { return 1; }
+        }
+        typeof(S.foo) n;  // n is declared to be an int
+        --------------------
 
         $(P
         Where $(I Typeof) is most useful is in writing generic
