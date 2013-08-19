@@ -1063,7 +1063,6 @@ $(GNAME PrimaryExpression):
     $(GLINK StringLiterals)
     $(GLINK ArrayLiteral)
     $(GLINK AssocArrayLiteral)
-    $(GLINK Lambda)
     $(GLINK FunctionLiteral)
     $(GLINK AssertExpression)
     $(GLINK MixinExpression)
@@ -1288,48 +1287,6 @@ $(GNAME ValueExpression):
         are inserted as arguments in place of the tuple.
         )
 
-$(H4 Lambdas)
-
-$(GRAMMAR
-$(GNAME Lambda):
-    $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
-    $(D function)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
-    $(D delegate)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
-)
-
-        $(P $(I Lambda)s are a shorthand syntax for $(GLINK FunctionLiteral)s.)
-
-    $(OL
-        $(LI $(P Just one $(IDENTIFIER) is rewritten to
-             $(GLINK2 declaration, Parameters):)
-
-             $(D $(LPAREN)) $(IDENTIFIER) $(D $(RPAREN))
-        )
-        $(LI $(P The following part $(D =>) $(I AssignExpression) is rewritten to
-             $(GLINK2 function, FunctionBody):)
-
-             $(D { return) $(I AssignExpression) $(D ; })
-        )
-    )
-
-        Example usage:
-        ---
-        import std.stdio;
-
-        void main() {
-            auto i = 3;
-            auto twice  = function (int x) => x * 2;
-            auto square = delegate (int x) => x * x;
-
-            auto n = 5;
-            auto mul_n = (int x) => x * n;
-
-            writeln(twice(i));   // prints 6
-            writeln(square(i));  // prints 9
-            writeln(mul_n(i));   // prints 15
-        }
-        ---
-
 
 $(H4 Function Literals)
 
@@ -1339,6 +1296,7 @@ $(GNAME FunctionLiteral):
     $(D delegate) $(GLINK2 declaration, Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK2 function, FunctionBody)
     $(GLINK ParameterAttributes) $(GLINK2 function, FunctionBody)
     $(GLINK2 function, FunctionBody)
+    $(GLINK Lambda)
 
 $(GNAME ParameterAttributes):
     $(GLINK2 declaration, Parameters)
@@ -1424,8 +1382,8 @@ $(GNAME ParameterAttributes):
         }
         -------------
 
-        If the type of a function literal can be uniquely determined from its context,
-        the parameter type inference is possible.
+        $(P If the type of a function literal can be uniquely determined from its context,
+        the parameter type inference is possible.)
 
         -------------
         void foo(int function(int) fp);
@@ -1439,8 +1397,8 @@ $(GNAME ParameterAttributes):
         }
         -------------
 
-        Anonymous delegates can behave like arbitrary statement literals.
-        For example, here an arbitrary statement is executed by a loop:
+        $(P Anonymous delegates can behave like arbitrary statement literals.
+        For example, here an arbitrary statement is executed by a loop:)
 
         -------------
         double test() {
@@ -1460,12 +1418,55 @@ $(GNAME ParameterAttributes):
         }
         -------------
 
-        When comparing with $(DDSUBLINK function, nested, nested functions),
+        $(P When comparing with $(DDSUBLINK function, nested, nested functions),
         the $(D function) form is analogous to static
         or non-nested functions, and the $(D delegate) form is
         analogous to non-static nested functions. In other words,
         a delegate literal can access stack variables in its enclosing
-        function, a function literal cannot.
+        function, a function literal cannot.)
+
+
+$(H4 Lambdas)
+
+$(GRAMMAR
+$(GNAME Lambda):
+    $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
+    $(D function)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
+    $(D delegate)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
+)
+
+        $(P $(I Lambda)s are a shorthand syntax for $(GLINK FunctionLiteral)s.)
+
+    $(OL
+        $(LI $(P Just one $(IDENTIFIER) is rewritten to
+             $(GLINK2 declaration, Parameters):)
+
+             $(D $(LPAREN)) $(IDENTIFIER) $(D $(RPAREN))
+        )
+        $(LI $(P The following part $(D =>) $(I AssignExpression) is rewritten to
+             $(GLINK2 function, FunctionBody):)
+
+             $(D { return) $(I AssignExpression) $(D ; })
+        )
+    )
+
+        Example usage:
+        ---
+        import std.stdio;
+
+        void main() {
+            auto i = 3;
+            auto twice  = function (int x) => x * 2;
+            auto square = delegate (int x) => x * x;
+
+            auto n = 5;
+            auto mul_n = (int x) => x * n;
+
+            writeln(twice(i));   // prints 6
+            writeln(square(i));  // prints 9
+            writeln(mul_n(i));   // prints 15
+        }
+        ---
 
 
 $(H4 Assert Expressions)
