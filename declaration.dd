@@ -27,6 +27,7 @@ $(GNAME Decl):
     $(GLINK BasicType) $(GLINK Declarators) $(D ;)
     $(GLINK BasicType) $(GLINK Declarator) $(GLINK2 function, FunctionBody)
     $(GLINK AutoDeclaration)
+    $(GLINK MultiVarDeclaration)
 
 $(GNAME Declarators):
     $(I DeclaratorInitializer)
@@ -355,6 +356,51 @@ auto c = new C();  // c is a handle to an instance of class C
 auto v = ["hello", "world"]; // type is string[], not string[2]
 ---
 
+
+
+$(H3 $(LNAME2 MultiVarDeclaration, Multiple variable declaration))
+
+$(GRAMMAR
+$(GNAME MultiVarDeclaration):
+    $(GLINK StorageClasses) $(D $(LPAREN)) $(GLINK InferredParams) $(D $(RPAREN)) $(D =) $(GLINK Initializer) $(D ;)
+    $(D $(LPAREN)) $(GLINK StorageClasses) $(GLINK InferredParams) $(D $(RPAREN)) $(D =) $(GLINK Initializer) $(D ;)
+    $(D $(LPAREN)) $(GLINK BasicType) $(GLINK Declarator) $(D $(RPAREN)) $(D =) $(GLINK Initializer) $(D ;)
+    $(D $(LPAREN)) $(GLINK BasicType) $(GLINK Declarator) $(D ,) $(GLINK InferredParams) $(D $(RPAREN)) $(D =) $(GLINK Initializer) $(D ;)
+
+$(GNAME InferredParams):
+    $(GLINK InferredParam)
+    $(GLINK InferredParam) $(D ,) $(I InferredParams)
+
+$(GNAME InferredParam):
+    $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarator)
+    $(GLINK StorageClasses)$(OPT) $(I Identifier)
+)
+
+Declaring one or more variables with parentheses implicitly decomposes the tuple initializer.
+
+        ----------
+        template Seq(EL...) { alias EL Seq; }
+
+        (int[] indices, string[] months) = Seq!([1, 2, 3], ["Jan", "Feb", "Mar"]);
+        // declared with explicit types
+
+        (const name, auto age) = Seq!("John", 23);
+        // declared with just storage class. Each type is inferred from the elements of the initializer,
+        static assert(is(typeof(name) == const string));
+        static assert(is(typeof(age) == int));
+
+        auto (x, y) = Seq!(1, 2);
+        // all variable types are inferred
+        ----------
+
+"Library tuples" (combination of $(D alias this) and tuple fields) are also supported.
+
+        ----------
+        struct MyTuple(TL...) { TL field; alias field this; }
+        auto makeMyTuple(TL...)(TL args) { return MyTuple!(TL)(args); }
+
+        auto (s, t, u) = makeMyTuple(3.14, "hello", [1:"world"]);
+        ----------
 
 
 
