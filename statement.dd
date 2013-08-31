@@ -1033,8 +1033,36 @@ $(I FinalSwitchStatement):
         $(UL
         $(LI No $(GLINK DefaultStatement) is allowed.)
         $(LI No $(GLINK CaseRangeStatement)s are allowed.)
-        $(LI If the switch $(EXPRESSION) is of enum type, all
-        the enum members must appear in the $(GLINK CaseStatement)s.)
+        $(LI If the switch $(EXPRESSION) is of an enum type, all
+        the enum members must appear in the $(GLINK CaseStatement)s.
+        Otherwise a compiler error is emitted.)
+
+        $(LI In non-release builds, if the switch $(EXPRESSION) is
+        of an enum type and if the input does not equal any of the
+        enum's possible member values, a $(D SwitchError) is thrown.
+        For example:
+
+        ---
+        void main()
+        {
+            enum E { a, b }
+
+            E e = cast(E)-1;
+
+            final switch (e)  // throws a SwitchError at runtime
+            {
+                case E.a: break;
+                case E.b: break;
+            }
+        }
+        ---
+
+        Note that this check is not made in release builds.
+
+        For safe enum conversion you should prefer to use the
+        $(D std.conv.to) conversion function rather than an
+        explicit cast.)
+
         $(LI The case expressions cannot evaluate to a run time
         initialized value.)
         )
@@ -1367,7 +1395,7 @@ $(GNAME FinallyStatement):
 )
 
         $(P $(I CatchParameter) declares a variable v of type T, where T is
-        
+
         Throwable or derived from Throwable.
         v is initialized by the throw expression if T is of the same type or a
         base class of the throw expression. The catch clause will be executed
