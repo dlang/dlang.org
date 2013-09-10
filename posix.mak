@@ -65,7 +65,7 @@ SPEC_ROOT=spec lex module declaration type property attribute pragma	\
 PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements				\
 	ascii-table bugstats.php builtin changelog code_coverage concepts	\
 	const-faq COM comparison cpptod ctod D1toD2 d-array-article			\
-	d-floating-point deprecate dll dmd-freebsd dmd-linux dmd-osx		\
+	d-floating-point deprecate dll dll-linux dmd-freebsd dmd-linux dmd-osx		\
 	dmd-windows download dstyle exception-safe faq features2 glossary	\
 	gsoc2011 gsoc2012 gsoc2012-template \
 	hijack howto-promote htod htomodule index intro intro-to-datetime	\
@@ -94,7 +94,7 @@ PDFSPEC=spec.html intro.html lex.html module.html declaration.html		\
 	interfaceToC.html cpp_interface.html portability.html entity.html	\
 	memory-safe-d.html abi.html simd.html
 
-PDFHOWTOS=windows.html dll.html COM.html htomodule.html
+PDFHOWTOS=windows.html dll.html dll-linux.html COM.html htomodule.html
 
 PDFARTICLES=d-floating-point.html migrate-to-shared.html hijack.html	\
 	const3.html memory.html exception-safe.html							\
