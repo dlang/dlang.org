@@ -4,7 +4,7 @@ $(SPEC_S Structs and Unions,
 
          $(P Whereas classes are reference types, structs are value types.
              Any C struct can be exactly represented as a D struct, except non-static
-             $(LINK2 nested, function-nested D structs) which access the context of
+             $(RELATIVE_LINK2 nested, function-nested D structs) which access the context of
              their enclosing scope.
              Structs and unions are meant as simple aggregations of data, or as a way
              to paint a data structure over hardware or an external type. External
@@ -59,7 +59,7 @@ $(SPEC_S Structs and Unions,
         $(UNCHECK))
         $(TROW unit tests, $(CHECK), $(CHECK), $(UNCHECK), $(UNCHECK),
         $(UNCHECK))
-        $(TROW synchronizable $(UNCHECK), $(CHECK), $(UNCHECK), $(UNCHECK),
+        $(TROW synchronizable, $(UNCHECK), $(CHECK), $(UNCHECK), $(UNCHECK),
         $(UNCHECK))
         $(TROW parameterizable, $(CHECK), $(CHECK), $(UNCHECK),
         $(CHECK), $(CHECK))
@@ -76,8 +76,8 @@ $(SPEC_S Structs and Unions,
         $(UNCHECK), $(UNCHECK))
         $(TROW const/immutable/shared, $(CHECK), $(CHECK), $(UNCHECK),
         $(UNCHECK), $(UNCHECK))
-        $(TROW inner nesting, $(LINK2 nested, $(CHECK)), $(DDSUBLINK class,
-        nested, $(CHECK)), $(UNCHECK), $(UNCHECK), $(UNCHECK))
+        $(TROW inner nesting, $(RELATIVE_LINK2 nested, $(CHECK)),
+        $(DDSUBLINK class, nested, $(CHECK)), $(UNCHECK), $(UNCHECK), $(UNCHECK))
         )
 
 $(GRAMMAR
@@ -255,17 +255,19 @@ $(H3 $(LNAME2 StructLiteral, Struct Literals))
         $(P Struct literals consist of the name of the struct followed
         by a parenthesized argument list:)
 
----
-struct S { int x; float y; }
+        ---
+        struct S { int x; float y; }
 
-int foo(S s) { return s.x; }
+        int foo(S s) { return s.x; }
 
-foo( S(1, 2) ); // set field x to 1, field y to 2
----
+        foo( S(1, 2) ); // set field x to 1, field y to 2
+        ---
 
         $(P Struct literals are syntactically like function calls.
         If a struct has a member function named $(CODE opCall), then
-        struct literals for that struct are not possible.
+        struct literals for that struct are not possible. See also
+        $(XLINK2 operatoroverloading.html#FunctionCall, opCall operator overloading)
+        for the issue workaround.
         It is an error if there are more arguments than fields of
         the struct.
         If there are fewer arguments than fields, the remaining
@@ -291,7 +293,7 @@ $(TABLE2 Struct Field Properties,
 $(THEAD Name, Description)
 $(TROW $(D .offsetof), Offset in bytes of field from beginning of struct))
 
-$(SECTION3 $(LNAME2 ConstStruct, Const and Immutable Structs),
+$(SECTION3 $(LNAME2 ConstStruct, Const, Immutable and Shared Structs),
 
         $(P A struct declaration can have a storage class of
         $(CODE const), $(CODE immutable) or $(CODE shared). It has an equivalent
@@ -299,16 +301,16 @@ $(SECTION3 $(LNAME2 ConstStruct, Const and Immutable Structs),
         $(CODE const), $(CODE immutable) or $(CODE shared).
         )
 
-----
-const struct S { int a; int b = 2; }
+        ----
+        const struct S { int a; int b = 2; }
 
-void main() {
-  S s = S(3); // initializes s.a to 3
-  S t;        // initializes t.a to 0
-  t = s;      // error, t is const
-  t.a = 4;    // error, t.a is const
-}
-----
+        void main() {
+          S s = S(3); // initializes s.a to 3
+          S t;        // initializes t.a to 0
+          t = s;      // error, t.a and t.b are const, so cannot modify them.
+          t.a = 4;    // error, t.a is const
+        }
+        ----
 )
 
 $(SECTION3 $(LNAME2 Struct-Constructor, Struct Constructors),
@@ -320,34 +322,96 @@ $(SECTION3 $(LNAME2 Struct-Constructor, Struct Constructors),
         are default initialized to their $(CODE .init) value.
         )
 
-------
-struct S {
-  int x, y;
+        ------
+        struct S {
+          int x, y;
 
-  this()  // error, cannot implement default ctor for structs
-  {
-  }
+          this()  // error, cannot implement default ctor for structs
+          {
+          }
 
-  this(int a, int b)
-  {
-    x = a;
-    y = b;
-  }
-}
+          this(int a, int b)
+          {
+            x = a;
+            y = b;
+          }
+        }
 
-void main()
-{
-  S a = S(4, 5);
-  auto b = S();  // same as auto b = S.init;
-}
-------
+        void main()
+        {
+          S a = S(4, 5);
+          auto b = S();  // same as auto b = S.init;
+        }
+        ------
+
+        $(P A constructor qualifier allows the object to be constructed with
+        that specific qualifier.
+        )
+
+        ------
+        struct S1 {
+          int[] a;
+          this(int n) { a = new int[](n); }
+        }
+        struct S2 {
+          int[] a;
+          this(int n) immutable { a = new int[](n); }
+        }
+        void main()
+        {
+          // Mutable constructor creates mutable object.
+          S1 m1 = S1(1);
+
+          // Constructed mutable object is implicitly convertible to const.
+          const S1 c1 = S1(1);
+
+          // Constructed mutable object is not implicitly convertible to immutable.
+          // immutable i1 = S1(1);
+
+          // Mutable constructor cannot construct immutable object.
+          // auto x1 = immutable S1(1);
+
+          // Immutable constructor cannot construct mutable object.
+          // auto x2 = S2(1);
+
+          // Constructed immutable object is not implicitly convertible to mutable.
+          // S2 m2 = immutable S2(1);
+
+          // Constructed immutable object is implicitly convertible to const.
+          const S2 c2 = immutable S2(1);
+
+          // Immutable constructor creates immutable object.
+          immutable i2 = immutable S2(1);
+        }
+        ------
+
+        $(P If struct constructor is annotated with $(D @disable) and has
+        empty parameter, the struct is disabled construction without calling
+        other constructor.
+        )
+        ------
+        struct S {
+          int x;
+
+          // Disables default construction, function body can be empty.
+          @disable this();
+
+          this(int v) { x = v; }
+        }
+        void main()
+        {
+          //S s;        // default construction is disabled
+          //S s = S();  // also disabled
+          S s = S(1);   // construction with calling constructor
+        }
+        ------
 )
 
 $(SECTION3 $(LNAME2 StructPostblit, Struct Postblits),
 
 $(GRAMMAR
 $(GNAME StructPostblit):
-    $(B this(this)) $(GLINK2 function, FunctionBody)
+    $(B this(this)) $(GLINK2 declaration, MemberFunctionAttributes)$(OPT) $(GLINK2 function, FunctionBody)
 )
 
         $(P $(I Copy construction) is defined as initializing
@@ -369,19 +433,36 @@ $(GNAME StructPostblit):
         etc. For example:
         )
 
----
-struct S {
-  int[] a;    // array is privately owned by this instance
-  this(this) {
-    a = a.dup;
-  }
-  ~this() {
-    delete a;
-  }
-}
----
+        ---
+        struct S {
+          int[] a;    // array is privately owned by this instance
+          this(this) {
+            a = a.dup;
+          }
+          ~this() {
+            delete a;
+          }
+        }
+        ---
 
-	$(P Unions may not have fields that have postblits.)
+        $(P Disabling struct postblit makes the object not copyable.
+        )
+
+        ---
+        struct T {
+          @disable this(this);  // disabling makes T not copyable
+        }
+        struct S {
+          T t;   // uncopyable member makes S also not copyable
+        }
+
+        void main() {
+          S s;
+          S t = s; // error, S is not copyable
+        }
+        ---
+
+        $(P Unions may not have fields that have postblits.)
 )
 
 $(SECTION3 $(LNAME2 StructDestructor, Struct Destructors),
@@ -391,42 +472,44 @@ $(SECTION3 $(LNAME2 StructDestructor, Struct Destructors),
         object.
         )
 
-	$(P Unions may not have fields that have destructors.)
+        $(P Unions may not have fields that have destructors.)
 )
 
 $(SECTION3 $(LNAME2 AssignOverload, Assignment Overload),
 
         $(P While copy construction takes care of initializing
         an object from another object of the same type,
+        or elaborate destruction is needed for the type,
         assignment is defined as copying the contents of one
         object over another, already initialized, type:
         )
 
----
-struct S { ... }
-S s;      // default construction of s
-S t = s;  // t is copy-constructed from s
-t = s;    // t is assigned from s
----
+        ---
+        struct S { ... }  // S has postblit or destructor
+        S s;      // default construction of s
+        S t = s;  // t is copy-constructed from s
+        t = s;    // t is assigned from s
+        ---
 
         $(P Struct assignment $(CODE t=s) is defined to be semantically
         equivalent to:
         )
 
----
-t.opAssign(s);
----
+        ---
+        t.opAssign(s);
+        ---
 
         $(P where $(CODE opAssign) is a member function of S:)
 
----
-S* opAssign(ref const S s)
-{   ... bitcopy *this into tmp ...
-    ... bitcopy s into *this ...
-    ... call destructor on tmp ...
-    return this;
-}
----
+        ---
+        ref S opAssign(S s)
+        {
+          S tmp = this;   // bitcopy this into tmp
+          this = s;       // bitcopy s into this
+          tmp.__dtor();   // call destructor on tmp
+          return this;
+        }
+        ---
 
         $(P While the compiler will generate a default $(CODE opAssign)
         as needed, a user-defined one can be supplied. The user-defined
@@ -438,25 +521,25 @@ S* opAssign(ref const S s)
         is if the struct has a reference to a local buffer:
         )
 
----
-struct S {
-  int[] buf;
-  int a;
+        ---
+        struct S {
+          int[] buf;
+          int a;
 
-  S* opAssign(ref const S s) {
-    a = s.a;
-    return this;
-  }
+          ref S opAssign(ref const S s) {
+            a = s.a;
+            return this;
+          }
 
-  this(this) {
-    buf = buf.dup;
-  }
+          this(this) {
+            buf = buf.dup;
+          }
 
-  ~this() {
-    delete buf;
-  }
-}
----
+          ~this() {
+            delete buf;
+          }
+        }
+        ---
 
         $(P Here, $(CODE S) has a temporary workspace $(CODE buf[]).
         The normal postblit

@@ -107,9 +107,11 @@ $(GNAME TemplateSingleArgument):
     $(B false)
     $(B null)
     $(B this)
-    $(B __FILE__)
-    $(B __LINE__)
-
+    $(D $(XLINK2 traits.html#specialkeywords, __FILE__))
+    $(D $(XLINK2 traits.html#specialkeywords, __MODULE__))
+    $(D $(XLINK2 traits.html#specialkeywords, __LINE__))
+    $(D $(XLINK2 traits.html#specialkeywords, __FUNCTION__))
+    $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__))
 )
 
 $(P
@@ -406,6 +408,61 @@ S
 immutable(S)
 )
 
+    $(P This is especially useful when used with inheritance. For example,
+        you might want to implement a final base method which returns a derived
+        class type. Typically you would return a base type, but this won't allow
+        you to call or access derived properties of the type:)
+
+---
+interface Addable(T)
+{
+    final auto add(T t)
+    {
+        return this;
+    }
+}
+
+class List(T) : Addable!T
+{
+    List remove(T t)
+    {
+        return this;
+    }
+}
+
+void main()
+{
+    auto list = new List!int;
+    list.add(1).remove(1);  // error: no 'remove' method for Addable!int
+}
+---
+
+    $(P Here the method $(B add) returns the base type, which doesn't implement the
+    $(D remove) method. The $(D template this) parameter can be used for this purpose:)
+
+---
+interface Addable(T)
+{
+    final R add(this R)(T t)
+    {
+        return cast(R)this;  // cast is necessary, but safe
+    }
+}
+
+class List(T) : Addable!T
+{
+    List remove(T t)
+    {
+        return this;
+    }
+}
+
+void main()
+{
+    auto list = new List!int;
+    list.add(1).remove(1);  // ok
+}
+---
 
 $(H2 Template Value Parameters)
 
@@ -420,14 +477,13 @@ $(GNAME TemplateValueParameterSpecialization):
     $(B :) $(GLINK2 expression, ConditionalExpression)
 
 $(GNAME TemplateValueParameterDefault):
-    $(B = __FILE__)
-    $(B = __LINE__)
-    $(B =) $(ASSIGNEXPRESSION)
+    $(D = $(D $(XLINK2 traits.html#specialkeywords, __FILE__)))
+    $(D = $(D $(XLINK2 traits.html#specialkeywords, __MODULE__)))
+    $(D = $(D $(XLINK2 traits.html#specialkeywords, __LINE__)))
+    $(D = $(D $(XLINK2 traits.html#specialkeywords, __FUNCTION__)))
+    $(D = $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__)))
+    $(D =) $(ASSIGNEXPRESSION)
 )
-
-        $(P The $(CODE __FILE__) and $(CODE __LINE__) expand to the source
-        file name and line number at the point of instantiation.)
-
 
         $(P Template value parameter types can be any type which can
         be statically initialized at compile time.
@@ -766,6 +822,7 @@ $(H2 Class Templates)
 $(GRAMMAR
 $(GNAME ClassTemplateDeclaration):
     $(B class) $(I Identifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK2 class, BaseClassList)$(OPT) $(GLINK2 class, ClassBody)
+    $(B class) $(I Identifier) $(B $(LPAREN)) $(GLINK TemplateParameterList) $(B $(RPAREN)) $(GLINK2 class, BaseClassList)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK2 class, ClassBody)
 )
 
         $(P If a template declares exactly one member, and that member is a class

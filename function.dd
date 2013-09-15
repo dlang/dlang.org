@@ -233,27 +233,124 @@ $(OL
 
 $(H4 $(LNAME2 property-functions, Property Functions))
 
-        $(P Property functions are tagged with the $(CODE @property)
-        attribute. They can be called without parentheses (hence
-        acting like properties).
+        $(P Property functions are tagged with the $(D @property)
+        attribute. They cannot be called with parentheses (hence
+        they act like fields except in some cases).
         )
 
----
-struct S {
-  int m_x;
-  @property {
-    int x() { return m_x; }
-    int x(int newx) { return m_x = newx; }
-  }
-}
+        $(P If a property function has no parameters, it works as a getter.
+        If has exactly one parameter, it works as a setter.
+        )
 
-void foo() {
-  S s;
-  s.x = 3;   // calls s.x(int)
-  bar(s.x);  // calls bar(s.x())
-}
----
+        ---
+        struct S {
+          int m_x;
+          @property {
+            int x() { return m_x; }
+            int x(int newx) { return m_x = newx; }
 
+            int function(int, int) adder() {
+              return function int(int a, int b) { return a + b; }
+            }
+          }
+        }
+        void main() {
+          S s;
+          s.x;        // lowered to s.x()
+          s.x = 3;    // lowered to s.x(3)
+
+          //s.x();    // NG: lowered to s.x()(), but the int value
+                      //     returned by s.x() is not callable
+          //s.x(3);   // NG: lowered to s.x()(3), but the int value
+                      //     returned by s.x() is not callable
+          assert(s.adder(1, 2) == 3);
+                      // OK lowered to s.adder()(1, 2)
+        }
+        ---
+
+        $(P If a getter property function returns a reference to other storage,
+        it also works as a setter.
+        )
+
+        ---
+        struct S {
+          int m_x;
+          @property ref int x() { return m_x; }
+        }
+        void main() {
+          S s;
+          int n = s.x;  // s.x()
+          assert(s.m_x == n);
+          s.x = 2;      // s.x() = 2;
+          assert(s.m_x == 2);
+        }
+        ---
+
+        $(P In most places, getter property functions are called immediately.
+        One exceptional case is the address operator.
+        )
+
+        ---
+        struct S {
+          int m_x;
+          @property     int x1() { return m_x; }
+          @property ref int x2() { return m_x; }
+        }
+        void main() {
+          S s;
+          auto x1 = &s.x1;
+          auto x2 = &s.x2;
+          static assert(is(typeof(x1) == delegate));
+          static assert(is(typeof(x2) == delegate));
+          // Both x1 and x2 are delegate, not int pointer.
+
+          int n = x1();
+          assert(s.m_x == n);
+          x2() = 1;
+          assert(s.m_x == 1);
+        }
+        ---
+
+        $(P Even if the given operand is a property function, the address operator
+        returns the address of the property function rather than the address of
+        its return value.
+        )
+
+
+$(H4 $(LNAME2 optional-parenthesis, Optional parenthesis))
+
+        $(P If a function call does not take any arguments syntactically,
+        it is callable without parenthesis, like a getter $(RELATIVE_LINK2
+        property-functions, property functions).
+        )
+
+        ---
+        void foo() {}   // no arguments
+        void bar(int[] arr) {}  // for UFCS
+
+        void main() {
+          foo();        // OK
+          foo;          // also OK
+
+          int[] arr;
+          arr.bar();    // OK
+          arr.bar;      // also OK
+        }
+        ---
+
+        $(P However, assignment syntax is disallowed unlike with property functions.
+        )
+
+        ---
+        struct S {
+          void foo(int) {}  // one argument
+        }
+        void main() {
+          S s;
+          s.foo(1);     // OK
+          //s.foo = 1;  // disallowed
+        }
+        ---
 
 $(H4 $(LNAME2 virtual-functions, Virtual Functions))
 
@@ -673,6 +770,8 @@ void bar(C c) {
   A.foo(1); // calls A.foo(long)
 }
 ---
+
+$(H4 $(LNAME2 parameters, Function Parameters))
 
         $(P Parameter storage classes are $(D in), $(D out),
         $(D ref), $(D lazy), $(D const), $(D immutable), $(D shared),
@@ -1743,6 +1842,93 @@ $(H3 $(LNAME2 function-attribute-inference, Function Attribute Inference))
         $(P If a function attempts to test itself for those attributes, then
         the function is inferred as not having those attributes.
         )
+
+$(H3 $(LNAME2 pseudo-member, Uniform Function Call Syntax (UFCS)))
+
+        $(P D has the ability to replace the access for not present member
+        to the free function call.)
+
+        ---
+        void func(X thisObj);
+
+        X obj;
+        obj.func();
+        // If 'obj' does not have regular member 'func',
+        // it's automatically rewritten to 'func(obj)'
+        ---
+
+        $(P It also works with $(D @property) functions:)
+
+        ---
+        @property prop(X thisObj);
+        @property prop(X thisObj, int value);
+
+        X obj;
+        obj.prop;      // Rewrites to: prop(obj);
+        obj.prop = 1;  // Rewrites to: prop(obj, 1);
+        ---
+
+        $(P Syntactically parenthesis-less check for $(D @property)
+        functions is done at the same time as UFCS rewrite.)
+
+        $(P When UFCS rewrie is necessary, compiler searches the name
+        on accessible module level scope, in order from the innermost scope.)
+
+        ---
+        module a;
+        void foo(X);
+        alias boo = foo;
+        void main() {
+          void bar(X);
+          import b : baz;  // void baz(X);
+
+          X obj;
+          obj.foo();    // OK, calls a.foo;
+          //obj.bar();  // NG, UFCS does not see nested functions
+          obj.baz();    // OK, calls b.baz, because it is declared at the
+                        // top level scope of module b
+
+          import b : boo = baz;
+          obj.boo();    // OK, calls aliased b.baz instead of a.boo (== a.foo),
+                        // because the declared alias name 'boo' in local scope
+                        // overrides module scope name
+        }
+        class C {
+          void mfoo(X);
+          static void sbar(X);
+          import b : ibaz = baz;  // void baz(X);
+          void test() {
+            X obj;
+            //obj.mfoo();  // NG, UFCS does not see member functions
+            //obj.sbar();  // NG, UFCS does not see static member functions
+            obj.ibaz();    // OK, ibaz is an alias of baz which declared at
+                           //     the top level scope of module b
+          }
+        }
+        ---
+
+        $(P The reason why local symbols are not considered by UFCS, is
+        to avoid unexpected name conflicts. See below problematic examples.)
+
+        ---
+        int front(int[] arr) { return arr[0]; }
+
+        void main() {
+          int[] a = [1,2,3];
+          auto x = a.front();   // call .front by UFCS
+
+          auto front = x;       // front is now a variable
+          auto y = a.front();   // Error, front is not a function
+        }
+
+        class C {
+          int[] arr;
+          int front() {
+            return arr.front(); // Error, C.front is not callable
+                                // using argument types (int[])
+          }
+        }
+        ---
 
 
 )

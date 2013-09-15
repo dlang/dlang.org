@@ -8,25 +8,26 @@ $(GNAME AttributeSpecifier):
     $(GLINK Attribute) $(GLINK DeclarationBlock)
 
 $(GNAME Attribute):
-    $(LINK2 #linkage, $(I LinkageAttribute))
-    $(LINK2 #align, $(I AlignAttribute))
+    $(RELATIVE_LINK2 linkage, $(I LinkageAttribute))
+    $(RELATIVE_LINK2 align, $(I AlignAttribute))
     $(GLINK2 pragma, Pragma)
-    $(LINK2 #deprecated, $(D deprecated))
+    $(RELATIVE_LINK2 deprecated, $(I DeprecatedAttribute))
     $(GLINK ProtectionAttribute)
-    $(D static)
-    $(LINK2 #linkage, $(D extern))
+    $(RELATIVE_LINK2 static, $(D static))
+    $(RELATIVE_LINK2 linkage, $(D extern))
     $(D final)
     $(D synchronized)
-    $(LINK2 #override, $(D override))
-    $(LINK2 #abstract, $(D abstract))
-    $(LINK2 #const, $(D const))
-    $(LINK2 #auto, $(D auto))
-    $(LINK2 #scope, $(D scope))
-    $(LINK2 #gshared, $(D __gshared))
-    $(LINK2 #shared, $(D shared))
-    $(LINK2 #immutable, $(D immutable))
-    $(LINK2 #inout, $(D inout))
-    $(LINK2 #disable, $(D @disable))
+    $(RELATIVE_LINK2 override, $(D override))
+    $(RELATIVE_LINK2 abstract, $(D abstract))
+    $(RELATIVE_LINK2 auto, $(D auto))
+    $(RELATIVE_LINK2 scope, $(D scope))
+    $(RELATIVE_LINK2 const, $(D const))
+    $(RELATIVE_LINK2 immutable, $(D immutable))
+    $(RELATIVE_LINK2 inout, $(D inout))
+    $(RELATIVE_LINK2 shared, $(D shared))
+    $(RELATIVE_LINK2 gshared, $(D __gshared))
+    $(RELATIVE_LINK2 disable, $(D @disable))
+    $(RELATIVE_LINK2 property, $(D @property))
 
 
 $(GNAME DeclarationBlock):
@@ -96,13 +97,6 @@ extern (C):
 ---------------
 extern (D):
 ---------------
-
-        $(P or:)
-
----------------
-extern:
----------------
-
 
         $(P Windows API conventions are:)
 
@@ -221,24 +215,39 @@ auto sz = S.sizeof;  // 12
 
 $(H3 $(LNAME2 deprecated, Deprecated Attribute))
 
+$(GRAMMAR
+$(GNAME DeprecatedAttribute):
+    $(D deprecated)
+    $(D deprecated $(LPAREN)) $(GLINK2 lex, StringLiteral) $(D $(RPAREN))
+)
+
         $(P It is often necessary to deprecate a feature in a library,
         yet retain it for backwards compatibility. Such
-        declarations can be marked as deprecated, which means
-        that the compiler can be set to produce an error
-        if any code refers to deprecated
-        declarations:
+        declarations can be marked as $(D deprecated), which means
+        that the compiler can be instructed to produce an error
+        if any code refers to deprecated declarations:
         )
 
----------------
-deprecated
-{
-  void oldFoo();
-}
----------------
+        ---------------
+        deprecated
+        {
+          void oldFoo();
+        }
+
+        oldFoo();   // Deprecated: function test.oldFoo is deprecated
+        ---------------
+
+        $(P Optional $(GLINK2 lex, StringLiteral) can show additional
+        information in the deprecation message.
+        )
+
+        ---------------
+        deprecated("Don't use bar") void oldBar();
+        oldBar();   // Deprecated: function test.oldBar is deprecated - Don't use bar
+        ---------------
 
         $(P $(D Implementation Note:) The compiler should have a switch
-        specifying if deprecated declarations should be compiled with
-        out complaint or not.
+        specifying if $(D deprecated) should be ignored, cause a warning, or cause an error during compilation.
         )
 
 
@@ -316,50 +325,79 @@ Foo f1; // error, could be either A.Foo or B.Foo
 B.Foo f2; // ok
 ---------------
 
-$(H3 $(LNAME2 const, Const Attribute))
+$(H3 $(LNAME2 const, $(D const) Attribute))
 
-        $(P The $(D const) attribute declares constants that can be
-        evaluated at compile time. For example:
+        $(P The $(D const) attribute changes the type of the declared symbol from $(D T) to $(D const(T)),
+        where $(D T) is the type specified (or inferred) for the introduced symbol in the absence of $(D const).
         )
 
----------------
-const int foo = 7;
+        ---------------
+        const int foo = 7;
+        static assert(is(typeof(foo) == const(int)));
 
-const {
-  double bar = foo + 6;
-}
----------------
+        const {
+          double bar = foo + 6;
+        }
+        static assert(is(typeof(bar) == const(double)));
 
+        class C {
+          const void foo();
+          const {
+            void bar();
+          }
+          void baz() const;
+        }
+        pragma(msg, typeof(C.foo)); // const void()
+        pragma(msg, typeof(C.bar)); // const void()
+        pragma(msg, typeof(C.baz)); // const void()
+        static assert(is(typeof(C.foo) == typeof(C.bar)) &&
+                      is(typeof(C.bar) == typeof(C.baz)));
+        ---------------
 
+$(H3 $(LNAME2 immutable, $(D immutable) Attribute))
 
-$(H3 $(LNAME2 immutable, immutable Attribute))
+        $(P The $(D immutable) attribute modifies the type from $(D T) to $(D immutable(T)),
+        the same way as $(D const) does.
+        )
 
-$(H3 $(LNAME2 gshared, $(D __gshared Attribute)))
+$(H3 $(LNAME2 inout, $(D inout) Attribute))
+
+        $(P The $(D inout) attribute modifies the type from $(D T) to $(D inout(T)),
+        the same way as $(D const) does.
+        )
+
+$(H3 $(LNAME2 shared, $(D shared) Attribute))
+
+        $(P The $(D shared) attribute modifies the type from $(D T) to $(D shared(T)),
+        the same way as $(D const) does.
+        )
+
+$(H3 $(LNAME2 gshared, $(D __gshared) Attribute))
 
         $(P By default, non-immutable global declarations reside in thread local
         storage. When a global variable is marked with the $(D __gshared)
         attribute, its value is shared across all threads.)
 
----
-int foo;            // Each thread has its own exclusive copy of foo.
-__gshared int bar;  // bar is shared by all threads.
----
+        ---
+        int foo;            // Each thread has its own exclusive copy of foo.
+        __gshared int bar;  // bar is shared by all threads.
+        ---
 
         $(P $(D __gshared) may also be applied to member variables and local
         variables. In these cases, $(D __gshared) is equivalent to $(D static),
         except that the variable is shared by all threads rather than being
         thread local.)
 
----
-class Foo {
-  __gshared int bar;
-}
+        ---
+        class Foo {
+          __gshared int bar;
+        }
 
-int foo() {
-  __gshared int bar = 0;
-  return bar++; // Not thread safe.
-}
----
+        int foo() {
+          __gshared int bar = 0;
+          return bar++; // Not thread safe.
+        }
+        ---
 
         $(P Unlike the $(D shared) attribute, $(D __gshared) provides no
         safe-guards against data races or other multi-threaded synchronization
@@ -368,11 +406,7 @@ int foo() {
 
         $(P $(D __gshared) is disallowed in safe mode.)
 
-$(H3 $(LNAME2 shared, shared Attribute))
-
-$(H3 $(LNAME2 inout, inout Attribute))
-
-$(H3 $(LNAME2 disable, @disable Attribute))
+$(H3 $(LNAME2 disable, $(D @disable) Attribute))
 
         $(P A reference to a declaration marked with the $(CODE @disable) attribute causes
         a compile time error.
@@ -380,24 +414,25 @@ $(H3 $(LNAME2 disable, @disable Attribute))
         at compile time rather than relying on generating a runtime error.
         )
 
----
-struct T {
-  @disable this(this) { } // disabling this makes T not copyable
-}
+        ---
+        @disable void foo() { }
 
-struct S {
-  T t;   // uncopyable member makes S also not copyable
-}
+        void main() {
+          foo();   // error, foo is disabled
+        }
+        ---
 
-@disable void foo() { }
+        $(P $(XLINK2 struct.html#Struct-Constructor, Disabling struct no-arg constructor)
+        disallows default construction of the struct.
+        )
 
-void main() {
-  S s;
-  S t = s; // error, S is not copyable
-  foo();   // error, foo is disabled
-}
----
+        $(P $(XLINK2 struct.html#StructPostblit, Disabling struct postblit)
+        makes the struct not copyable.
+        )
 
+$(H3 $(LNAME2 property, $(D @property) Attribute))
+
+        $(P See $(XLINK2 function.html#property-functions, Property Functions)).
 
 $(H3 $(LNAME2 override, Override Attribute))
 
@@ -423,7 +458,7 @@ class Foo2 : Foo {
 }
 ---------------
 
-$(H3 Static Attribute)
+$(H3 $(LNAME2 static, Static Attribute))
 
         $(P The $(D static) attribute applies to functions and data.
         It means that the declaration does not apply to a particular

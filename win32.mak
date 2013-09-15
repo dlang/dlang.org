@@ -14,7 +14,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd pdf-intro-cover.dd pdf-spec-cover.dd pdf-tools-cover.dd	\
 	intro-to-datetime.dd simd.dd deprecate.dd download.dd				\
-	32-64-portability.dd 
+	32-64-portability.dd dll-linux.dd
 
 SPECSRC=spec.dd lex.dd module.dd declaration.dd type.dd property.dd		\
 	attribute.dd pragma.dd expression.dd statement.dd arrays.dd			\
@@ -24,10 +24,10 @@ SPECSRC=spec.dd lex.dd module.dd declaration.dd type.dd property.dd		\
 	float.dd iasm.dd ddoc.dd interfaceToC.dd cpp_interface.dd			\
 	portability.dd entity.dd memory-safe-d.dd abi.dd simd.dd
 
-DDOC=macros.ddoc windows.ddoc doc.ddoc
+DDOC=macros.ddoc windows.ddoc doc.ddoc $(NODATETIME)
 
 ASSETS=images\*.* css\*.*
-IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.gif d4.gif d5.gif favicon.gif
+IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 
 PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
@@ -54,7 +54,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
 	unittest.html hash-map.html pdf-intro-cover.html					\
 	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
 	simd.html deprecate.html download.html 32-64-portability.html \
-        d-array-article.html
+        d-array-article.html dll-linux.html
 
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
@@ -74,7 +74,7 @@ PDFSPEC=lex.html module.html declaration.html type.html property.html	\
 	iasm.html ddoc.html interfaceToC.html cpp_interface.html			\
 	portability.html entity.html memory-safe-d.html abi.html simd.html
 
-PDFHOWTOS=windows.html dll.html COM.html htomodule.html
+PDFHOWTOS=windows.html dll.html COM.html htomodule.html dll-linux.html
 
 PDFARTICLES=d-floating-point.html migrate-to-shared.html hijack.html const3.html \
 	memory.html exception-safe.html templates-revisited.html regular-expression.html \
@@ -166,6 +166,8 @@ declaration.html : $(DDOC) declaration.dd
 deprecate.html : $(DDOC) deprecate.dd
 
 dll.html : $(DDOC) dll.dd
+
+dll-linux.html : $(DDOC) dll-linux.dd
 
 download.html : $(DDOC) download.dd
 

@@ -8,11 +8,12 @@ License:   http://boost.org/LICENSE_1_0.txt, Boost License 1.0
 Authors:   Damian Ziemba
 */
 var mainPage = new Array();
-mainPage["009ba3ceac6bd78508a63f9accad76e4"] = ["The D programming language. Modern convenience. Modeling power. Native efficiency."];
-mainPage["853e60713dabdab425050f223b99c42a"] = [];
-mainPage["76ceeb17682e2526aa9ea7d7466aa3fd"] = [];
-mainPage["7c9d5ce9665a98908d87ad3c86d67b5f"] = ["The D programming language. Modern convenience. Modeling power. Native efficiency."];
-mainPage["c9f07c3922f6f0c09b674faf6ee5f1ef"] = [];
-mainPage["10a1e2e1621161e5111fb68b8066880b"] = [];
-mainPage["6884eef02be9806125ac6980c1e9200c"] = ["", "text.txt"];
-mainPage["054879444f1bb79ae8b22869bdafc873"] = [];
+
+//The top one
+mainPage["27d33ceb10933b5541f5447f4bf1fc17"] = ["The D programming language. Modern convenience. Modeling power. Native efficiency."];
+
+//Automatic memory management makes for safe..
+mainPage["54f2095e83f8ef851a711db0a29b0e26"] = ["", "text.txt"];
+
+//Built-in linear and associative arrays, slices, and ranges make daily programmin
+mainPage["6c843684c0231b847f933e6d7b5a697a"] = ["The D programming language. Modern convenience. Modeling power. Native efficiency."];

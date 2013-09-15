@@ -15,21 +15,21 @@ $(D_S dmd - $(WINDOWS Windows)$(LINUX Linux)$(OSX Mac OS X)$(FREEBSD FreeBSD) D 
 	$(FREEBSD $(LI dmd for $(LINK2 dmd-windows.html, Windows)))
 	$(FREEBSD $(LI dmd for $(LINK2 dmd-linux.html,   Linux)))
 	$(FREEBSD $(LI dmd for $(LINK2 dmd-osx.html,     OSX)))
-	$(LI $(LINK2 #requirements, Requirements and Downloads))
-	$(LI $(LINK2 #files, Files))
-	$(LI $(LINK2 #installation, Installation))
-	$(WINDOWS $(LI $(LINK2 #example, Example)))
-	$(LI $(LINK2 #switches, Compiler Arguments and Switches))
-	$(LI $(LINK2 #linking, Linking))
-	$(LI $(LINK2 #environment, Environment Variables))
-	$(WINDOWS $(LI $(LINK2 #sc_ini, sc.ini Initialization File)))
+	$(LI $(RELATIVE_LINK2 requirements, Requirements and Downloads))
+	$(LI $(RELATIVE_LINK2 files, Files))
+	$(LI $(RELATIVE_LINK2 installation, Installation))
+	$(WINDOWS $(LI $(RELATIVE_LINK2 example, Example)))
+	$(LI $(RELATIVE_LINK2 switches, Compiler Arguments and Switches))
+	$(LI $(RELATIVE_LINK2 linking, Linking))
+	$(LI $(RELATIVE_LINK2 environment, Environment Variables))
+	$(WINDOWS $(LI $(RELATIVE_LINK2 sc_ini, sc.ini Initialization File)))
 	$(UNIX $(LI $(DMD_CONF) Initialization File))
-	$(WINDOWS $(LI $(LINK2 #problems, Common Installation Problems)))
-	$(LI $(LINK2 #differences, Differences between Windows and Linux versions))
-	$(LI $(LINK2 #interface_files, D Interface Files))
-	$(LI $(LINK2 #library, Building Libraries))
-	$(LI $(LINK2 #compiling_dmd, Compiling dmd))
-	$(LI $(LINK2 #compiling_phobos, Compiling Phobos))
+	$(WINDOWS $(LI $(RELATIVE_LINK2 problems, Common Installation Problems)))
+	$(LI $(RELATIVE_LINK2 differences, Differences between Windows and Linux versions))
+	$(LI $(RELATIVE_LINK2 interface_files, D Interface Files))
+	$(LI $(RELATIVE_LINK2 library, Building Libraries))
+	$(LI $(RELATIVE_LINK2 compiling_dmd, Compiling dmd))
+	$(LI $(RELATIVE_LINK2 compiling_phobos, Compiling Phobos))
 	)
 
 $(H2 $(LNAME2 requirements, Requirements and Downloads))
@@ -38,7 +38,7 @@ $(H2 $(LNAME2 requirements, Requirements and Downloads))
 	$(LI $(LINK2 http://www.digitalmars.com/d/download.html, Download D Compiler))
 
     $(WINDOWS
-	$(LI 32 bit Windows (Win32) operating system, such as Windows XP)
+	$(LI Windows operating system, Windows XP or later, 32 or 64 bit)
 
 	$(LI Download
 	 <a href="http://ftp.digitalmars.com/dmc.zip" title="download dmc.zip">
@@ -344,7 +344,7 @@ $(H2 $(LNAME2 switches, Compiler Arguments and Switches))
 		)
 		$(TR
 		$(TD $(B .di))
-		$(TD $(LINK2 #interface_files, D interface files))
+		$(TD $(RELATIVE_LINK2 interface_files, D interface files))
 		)
 		$(TR
 		$(TD $(B .$(OBJEXT)))
@@ -386,8 +386,19 @@ $(WINDOWS
 		compile only, do not link
 	  )
 
-	  $(SWITCH $(B -cov),
-		instrument for $(LINK2 code_coverage.html, code coverage analysis)
+	  $(SWITCH2 -cov,
+		$(P Perform $(LINK2 code_coverage.html, code coverage analysis) and generate
+		.lst file with report.)
+---
+dmd -cov -unittest myprog.d
+---
+	  )
+
+	  $(SWITCH $(B -cov=)$(I nnn),
+		Perform $(LINK2 code_coverage.html, code coverage analysis), generate
+		.lst file with report, and error at runtime if code coverage is less than
+	        $(I nnn)% of the executable lines. This can be integrated into the build
+		test process to ensure minimum unit test coverage.
 	  )
 
 	  $(SWITCH $(B -D),
@@ -405,16 +416,17 @@ $(WINDOWS
 	  )
 
 	  $(SWITCH $(B -d),
-		silently allow deprecated features
+		Silently allow $(DDLINK deprecate,deprecate,deprecated features) and use of symbols with
+		$(DDSUBLINK attribute, deprecated, deprecated attributes).
 	  )
 
 	  $(SWITCH $(B -dw),
-		show deprecated features as warnings
+		treat use of deprecated features and attributes as warnings
 		$(B (this is the default))
 	  )
 
 	  $(SWITCH $(B -de),
-		show deprecated features as errors
+		treat use of deprecated features and attributes as errors
 	  )
 
 	  $(SWITCH $(B -debug),
@@ -428,12 +440,14 @@ $(WINDOWS
 	  )
 
 	  $(SWITCH $(B -debuglib=)$(I libname),
-		link in $(I libname) as the default library when
-		compiling for symbolic debugging instead of $(B $(LIB))
+		Link in $(I libname) as the default library when
+		compiling for symbolic debugging instead of $(B $(LIB)).
+		If $(I libname) is not supplied, then no default library is linked in.
 	  )
 	  $(SWITCH $(B -defaultlib=)$(I libname),
-		link in $(I libname) as the default library when
-		not compiling for symbolic debugging instead of $(B $(LIB))
+		Link in $(I libname) as the default library when
+		not compiling for symbolic debugging instead of $(B $(LIB)).
+		If $(I libname) is not supplied, then no default library is linked in.
 	  )
 	  $(SWITCH $(B -deps=)$(I filename),
 		write module dependencies as text to $(I filename)
@@ -449,7 +463,7 @@ $(WINDOWS
 
 	  $(SWITCH $(B -g),
     $(WINDOWS
-		add CodeView 4 symbolic debug info with
+		add CodeView symbolic debug info with
 		$(LINK2 abi.html#codeview, D extensions)
 		for debuggers such as
 		$(LINK2 http://ddbg.mainia.de/releases.html, Ddbg)
@@ -464,7 +478,7 @@ $(WINDOWS
 
 	  $(SWITCH $(B -gc),
     $(WINDOWS
-		add CodeView 4 symbolic debug info in C format
+		add CodeView symbolic debug info in C format
 		for debuggers such as
 		$(D $(DMDDIR)\bin\windbg)
     )
@@ -480,7 +494,7 @@ $(WINDOWS
 	  )
 
 	  $(SWITCH $(B -H),
-		generate $(LINK2 #interface_files, D interface file)
+		generate $(RELATIVE_LINK2 interface_files, D interface file)
 	  )
 
 	  $(SWITCH $(B -Hd)$(I dir),
@@ -539,7 +553,7 @@ $(WINDOWS
 		Compiled source modules may be partitioned into several object
 		modules to improve granularity.
 		The name of the library is taken from the name of the first
-		source module to be compiled. This can be overridden with
+		source module to be compiled. This name can be overridden with
 		the $(B -of) switch.
 	  )
 
@@ -553,6 +567,27 @@ $(WINDOWS
 		compile a 64 bit executable. This is the default for the 64 bit dmd.
 	  )
     )
+
+    $(WINDOWS
+	  $(SWITCH $(B -m32),
+		Compile a 32 bit executable. This is the default.
+		The generated object code is in OMF and is meant to be used with the
+		$(LINK2 http://www.digitalmars.com/download/freecompiler.html, Digital Mars C/C++ compiler).
+	  )
+
+	  $(SWITCH $(B -m64),
+		Compile a 64 bit executable.
+		The generated object code is in MS-COFF and is meant to be used with the
+		$(LINK2 http://www.amazon.com/gp/product/B0038KTO8S/ref=as_li_qf_sp_asin_il_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=B0038KTO8S&linkCode=as2&tag=classicempire, Microsoft Visual Studio 10)
+		or later compiler.
+	  )
+    )
+
+	  $(SWITCH $(B -main),
+        Add a default $(D main()) function when compiling. This is useful when
+        unittesting a library, as it enables the user to run the unittests
+        in a library without having to manually define an entry-point function.
+	  )
 
 	  $(SWITCH $(B -man),
     $(WINDOWS
@@ -586,7 +621,7 @@ $(WINDOWS
 
 	  $(SWITCH $(B -O),
 		Optimize generated code. For fastest executables, compile
-		with the $(B -O -release -inline) switches together.
+		with the $(B -O -release -inline -noboundscheck) switches together.
 	  )
 
 	  $(SWITCH $(B -o-),
@@ -624,7 +659,7 @@ $(WINDOWS
 		suppress non-essential compiler messages
 	  )
 	  $(SWITCH $(B -release),
-		
+
 		compile release version, which means not generating
 		code for contracts and asserts. Array bounds checking
 		is not done for system and trusted functions.
@@ -642,9 +677,14 @@ $(COMMENT
 	  )
 )
     $(UNIX
-	  $(SWITCH $(B -shared),
+          $(SWITCH2 -shared,
 		generate shared library
 	  )
+    )
+    $(WINDOWS
+          $(SWITCH2 -shared,
+                generate DLL library
+          )
     )
 	  $(SWITCH $(B -unittest),
 		compile in $(LINK2 unittest.html, unittest) code, turns on asserts, and sets the
@@ -691,8 +731,8 @@ $(H2 $(LNAME2 linking, Linking))
 	)
 
     $(WINDOWS
-	$(P The programs must be linked with the D runtime library $(B phobos.lib),
-	followed by the C runtime library $(B snn.lib).
+	$(P 32 bit programs must be linked with the D runtime library $(B phobos.lib),
+	followed by the Digital Mars C runtime library $(B snn.lib).
 	This is done automatically as long as the directories for the
 	libraries are on the LIB environment variable path. A typical
 	way to set LIB would be:
@@ -707,11 +747,15 @@ set LIB=$(DMDDIR)\lib;\dm\lib
 	valid only for Windows executable files. Do not use the resulting
 	.obj files in a DLL.
 	To compile modules into .obj files that can be used in an exe or
-	DLL, compile with $(B -c).
+	DLL, compile with $(B -c) and $(B -shared).
 	)
 
-	$(P Linking is done using the
+	$(P Linking 32 bit programs is done using the
 	$(LINK2 http://www.digitalmars.com/ctg/optlink.html, optlink) linker.
+	)
+
+	$(P Linking 64 bit programs is done using the
+	Microsoft linker.
 	)
      )
      $(UNIX
@@ -742,11 +786,20 @@ set LIB=$(DMDDIR)\lib;\dm\lib
 
 	$(DT $(B LINKCMD))
 	$(DD $(B dmd) normally runs the linker by looking for $(B link.exe)
-	along the $(B PATH). To use a specific linker instead, set the
+	along the $(B PATH). To use a specific linker for 32 bit programs instead, set the
 	$(B LINKCMD) environment variable to it. For example:)
 
 $(CONSOLE
 set LINKCMD=\dmd\windows\bin\link
+)
+
+	$(DT $(B LINKCMD64))
+	$(DD $(B dmd) normally runs the linker by looking for $(B link.exe)
+	along the $(B PATH). To use a specific linker for 64 bit programs instead, set the
+	$(B LINKCMD64) environment variable to it. For example:)
+
+$(CONSOLE
+set LINKCMD64=C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\amd64\link.exe
 )
 
 	$(DT $(B PATH))
@@ -1036,7 +1089,7 @@ make -f win32.mak
 $(UNIX
 $(CONSOLE
 cd ~/$(DMDDIR)/src/dmd
-make -f $(OS).mak
+make -f posix.mak
 )
 )
 
@@ -1059,7 +1112,7 @@ $(CONSOLE
 cd ~/$(DMDDIR)/src/druntime
 make -f posix.mak DMD=~/$(DMDDIR)/$(OS)/bin/dmd
 cd ../phobos
-make -f $(OS).mak DMD=~/$(DMDDIR)/$(OS)/bin/dmd
+make -f posix.mak DMD=~/$(DMDDIR)/$(OS)/bin/dmd
 )
 )
 
@@ -1070,6 +1123,7 @@ Macros:
 	TITLE=DMD Compiler for $(WINDOWS Windows)$(LINUX Linux)$(OSX OSX)$(FREEBSD FreeBSD)
 	WIKI=DCompiler
 	LIB=$(WINDOWS phobos.lib)$(UNIX libphobos2.a)
-	DMD_CONF=$(LINK2 #dmd_conf, dmd.conf)
+	DMD_CONF=$(RELATIVE_LINK2 dmd_conf, dmd.conf)
 	SWITCH=$(DT $1)$(DD $+)
+        SWITCH2=$(DT $(LNAME2 switch$1,$(B $1)))$(DD $+)
 	CATEGORY_DOWNLOAD=$0

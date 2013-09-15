@@ -47,7 +47,6 @@ $(H3 $(LNAME2 order-of-evaluation, Order Of Evaluation))
         )
 -------------
 i = i++;
-c = a + (a = b);
 -------------
         $(P If the compiler can determine that the result of an expression
         is illegally dependent on the order of evaluation, it can issue
@@ -650,7 +649,7 @@ $(GNAME UnaryExpression):
     $(D !) $(I UnaryExpression)
     $(GLINK ComplementExpression)
     $(D $(LPAREN)) $(GLINK2 declaration, Type) $(D $(RPAREN) .) $(IDENTIFIER)
-    $(GLINK NewExpression)
+    $(D $(LPAREN)) $(GLINK2 declaration, Type) $(D $(RPAREN) .) $(GLINK2 template, TemplateInstance)
     $(GLINK DeleteExpression)
     $(GLINK CastExpression)
     $(GLINK PowExpression)
@@ -674,9 +673,12 @@ $(H4 New Expressions)
 
 $(GRAMMAR
 $(GNAME NewExpression):
+    $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type)
+    $(GLINK NewExpressionWithArgs)
+
+$(GNAME NewExpressionWithArgs):
     $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(D [) $(GLINK AssignExpression) $(D ])
     $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
-    $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type)
     $(GLINK2 class, NewAnonClassExpression)
 
 $(GNAME AllocatorArguments):
@@ -808,10 +810,10 @@ $(GNAME CastQual):
         to $(GLINK2 declaration, Type).
         )
 
--------------
-cast(foo) -p; // cast (-p) to type foo
-(foo) - p;      // subtract p from foo
--------------
+        -------------
+        cast(foo) -p; // cast (-p) to type foo
+        (foo) - p;      // subtract p from foo
+        -------------
 
         $(P Any casting of a class reference to a
         derived class reference is done with a runtime check to make sure it
@@ -820,32 +822,32 @@ cast(foo) -p; // cast (-p) to type foo
         $(D dynamic_cast) operator in C++.
         )
 
--------------
-class A { ... }
-class B : A { ... }
+        -------------
+        class A { ... }
+        class B : A { ... }
 
-void test(A a, B b) {
-  B bx = a;         // error, need cast
-  B bx = cast(B) a; // bx is null if a is not a B
-  A ax = b;         // no cast needed
-  A ax = cast(A) b; // no runtime check needed for upcast
-}
--------------
+        void test(A a, B b) {
+          B bx = a;         // error, need cast
+          B bx = cast(B) a; // bx is null if a is not a B
+          A ax = b;         // no cast needed
+          A ax = cast(A) b; // no runtime check needed for upcast
+        }
+        -------------
 
         $(P In order to determine if an object $(D o) is an instance of
         a class $(D B) use a cast:
         )
 
--------------
-if (cast(B) o)
-{
-  // o is an instance of B
-}
-else
-{
-  // o is not an instance of B
-}
--------------
+        -------------
+        if (cast(B) o)
+        {
+          // o is an instance of B
+        }
+        else
+        {
+          // o is not an instance of B
+        }
+        -------------
 
         $(P Casting a pointer type to and from a class type is done as a type paint
         (i.e. a reinterpret cast).)
@@ -855,69 +857,80 @@ else
         as a type paint, with the array length adjusted to match any change in
         element size. If there's not a match, a runtime error is generated.)
 
+        ---
+        import std.stdio;
 
----
-import std.stdio;
+        int main() {
+          byte[] a = [1,2,3];
+          auto b = cast(int[])a; // runtime array cast misalignment
 
-int main() {
-  byte[] a = [1,2,3];
-  auto b = cast(int[])a; // runtime array cast misalignment
-
-  int[] c = [1, 2, 3];
-  auto d = cast(byte[])c; // ok
-  // prints:
-  // [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]
-  writeln(d);
-  return 0;
-}
----
+          int[] c = [1, 2, 3];
+          auto d = cast(byte[])c; // ok
+          // prints:
+          // [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]
+          writeln(d);
+          return 0;
+        }
+        ---
 
         $(P Casting a floating point literal from one type to another
         changes its type, but internally it is retained at full
         precision for the purposes of constant folding.
         )
 
----
-void test() {
-  real a = 3.40483L;
-  real b;
-  b = 3.40483;     // literal is not truncated to double precision
-  assert(a == b);
-  assert(a == 3.40483);
-  assert(a == 3.40483L);
-  assert(a == 3.40483F);
-  double d = 3.40483; // truncate literal when assigned to variable
-  assert(d != a);     // so it is no longer the same
-  const double x = 3.40483; // assignment to const is not
-  assert(x == a);     // truncated if the initializer is visible
-}
----
+        ---
+        void test() {
+          real a = 3.40483L;
+          real b;
+          b = 3.40483;     // literal is not truncated to double precision
+          assert(a == b);
+          assert(a == 3.40483);
+          assert(a == 3.40483L);
+          assert(a == 3.40483F);
+          double d = 3.40483; // truncate literal when assigned to variable
+          assert(d != a);     // so it is no longer the same
+          const double x = 3.40483; // assignment to const is not
+          assert(x == a);     // truncated if the initializer is visible
+        }
+        ---
 
         $(P Casting a value $(I v) to a struct $(I S), when value is not a struct
         of the same type, is equivalent to:
         )
 
----
-S(v)
----
+        ---
+        S(v)
+        ---
 
         $(P Casting to a $(GLINK CastQual) replaces the qualifiers to the type of
         the $(GLINK UnaryExpression).)
 
----
-shared int x;
-assert(is(typeof(cast(const)x) == const int));
----
+        ---
+        shared int x;
+        assert(is(typeof(cast(const)x) == const int));
+        ---
 
         $(P Casting with no $(GLINK Type) or $(GLINK CastQual) removes
         any top level $(D const), $(D immutable), $(D shared) or $(D inout)
         type modifiers from the type
         of the $(GLINK UnaryExpression).)
 
----
-shared int x;
-assert(is(typeof(cast()x) == int));
----
+        ---
+        shared int x;
+        assert(is(typeof(cast()x) == int));
+        ---
+
+        $(P Casting an expression to $(D void) type is allowed to mark that
+        the result is unused. On $(GLINK2 statement, ExpressionStatement),
+        it could be used properly to avoid "has no effect" error.)
+
+        ----
+        void foo(lazy void exp) {}
+        void main() {
+          foo(10);              // NG - has no effect in expression '10'
+          foo(cast(void)10);    // OK
+        }
+        ----
 
 $(H3 Pow Expressions)
 
@@ -1039,8 +1052,11 @@ $(GNAME PrimaryExpression):
     $(D true)
     $(D false)
     $(D $)
-    $(D __FILE__)
-    $(D __LINE__)
+    $(D $(XLINK2 traits.html#specialkeywords, __FILE__))
+    $(D $(XLINK2 traits.html#specialkeywords, __MODULE__))
+    $(D $(XLINK2 traits.html#specialkeywords, __LINE__))
+    $(D $(XLINK2 traits.html#specialkeywords, __FUNCTION__))
+    $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__))
     $(GLINK2 lex, IntegerLiteral)
     $(GLINK2 lex, FloatLiteral)
     $(GLINK CharacterLiteral)
@@ -1052,6 +1068,7 @@ $(GNAME PrimaryExpression):
     $(GLINK AssertExpression)
     $(GLINK MixinExpression)
     $(GLINK ImportExpression)
+    $(GLINK NewExpressionWithArgs)
     $(DDSUBLINK declaration, BasicTypeX, $(I BasicType)) $(D .) $(IDENTIFIER)
     $(GLINK2 declaration, Typeof)
     $(GLINK TypeidExpression)
@@ -1276,34 +1293,42 @@ $(H4 Lambdas)
 $(GRAMMAR
 $(GNAME Lambda):
     $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
-    $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
+    $(D function)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
+    $(D delegate)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
 )
 
-        $(P $(I Lambda)s are a shorthand syntax for $(GLINK FunctionLiteral)s.
-        The first form is equivalent to:
+        $(P $(I Lambda)s are a shorthand syntax for $(GLINK FunctionLiteral)s.)
+
+    $(OL
+        $(LI $(P Just one $(IDENTIFIER) is rewritten to
+             $(GLINK2 declaration, Parameters):)
+
+             $(D $(LPAREN)) $(IDENTIFIER) $(D $(RPAREN))
         )
+        $(LI $(P The following part $(D =>) $(I AssignExpression) is rewritten to
+             $(GLINK2 function, FunctionBody):)
 
-$(P $(D $(LPAREN)) $(IDENTIFIER) $(D $(RPAREN)) $(D { return) $(I
-AssignExpression) $(D ; }))
+             $(D { return) $(I AssignExpression) $(D ; })
+        )
+    )
 
-        $(P And the second:)
+        Example usage:
+        ---
+        import std.stdio;
 
-$(P $(I ParameterAttributes) $(D { return) $(I AssignExpression) $(D ; }))
+        void main() {
+            auto i = 3;
+            auto twice  = function (int x) => x * 2;
+            auto square = delegate (int x) => x * x;
 
-Example usage:
----
-import std.stdio;
+            auto n = 5;
+            auto mul_n = (int x) => x * n;
 
-void main() {
-    auto i=3;
-    auto square = (int x) => x*x;
-    auto twice  = (int x) => x*2;
-
-    writeln(square(i));  // prints 9
-    writeln(twice(i));   // prints 6
-}
----
-
+            writeln(twice(i));   // prints 6
+            writeln(square(i));  // prints 9
+            writeln(mul_n(i));   // prints 15
+        }
+        ---
 
 
 $(H4 Function Literals)
@@ -1336,104 +1361,104 @@ $(GNAME ParameterAttributes):
 
         $(P For example:)
 
--------------
-int function(char c) fp; // declare pointer to a function
+        -------------
+        int function(char c) fp; // declare pointer to a function
 
-void test() {
-  static int foo(char c) { return 6; }
+        void test() {
+          static int foo(char c) { return 6; }
 
-  fp = &foo;
-}
--------------
+          fp = &foo;
+        }
+        -------------
 
         is exactly equivalent to:
 
--------------
-int function(char c) fp;
+        -------------
+        int function(char c) fp;
 
-void test() {
-  fp = function int(char c) { return 6;} ;
-}
--------------
+        void test() {
+          fp = function int(char c) { return 6;} ;
+        }
+        -------------
 
         And:
 
--------------
-int abc(int delegate(long i));
+        -------------
+        int abc(int delegate(long i));
 
-void test() {
-  int b = 3;
-  int foo(long c) { return 6 + b; }
+        void test() {
+          int b = 3;
+          int foo(long c) { return 6 + b; }
 
-  abc(&foo);
-}
--------------
+          abc(&foo);
+        }
+        -------------
 
         is exactly equivalent to:
 
--------------
-int abc(int delegate(long i));
+        -------------
+        int abc(int delegate(long i));
 
-void test() {
-  int b = 3;
+        void test() {
+          int b = 3;
 
-  abc( delegate int(long c) { return 6 + b; } );
-}
--------------
+          abc( delegate int(long c) { return 6 + b; } );
+        }
+        -------------
 
         $(P and the following where the return type $(D int) and
         $(D function)/$(D delegate) are inferred:)
 
--------------
-int abc(int delegate(long i));
-int def(int function(long s));
+        -------------
+        int abc(int delegate(long i));
+        int def(int function(long s));
 
-void test() {
-  int b = 3;
+        void test() {
+          int b = 3;
 
-  abc( (long c) { return 6 + b; } );  // inferred to delegate
-  def( (long c) { return c * 2; } );  // inferred to function
-//def( (long c) { return c * b; } );  // error!
-  // Because the FunctionBody accesses b, then the function literal type
-  // is inferred to delegate. But def cannot receive delegate.
-}
--------------
+          abc( (long c) { return 6 + b; } );  // inferred to delegate
+          def( (long c) { return c * 2; } );  // inferred to function
+        //def( (long c) { return c * b; } );  // error!
+          // Because the FunctionBody accesses b, then the function literal type
+          // is inferred to delegate. But def cannot receive delegate.
+        }
+        -------------
 
         If the type of a function literal can be uniquely determined from its context,
         the parameter type inference is possible.
 
--------------
-void foo(int function(int) fp);
+        -------------
+        void foo(int function(int) fp);
 
-void test() {
-  int function(int) fp = (n) { return n * 2; };
-  // The type of parameter n is inferred to int.
+        void test() {
+          int function(int) fp = (n) { return n * 2; };
+          // The type of parameter n is inferred to int.
 
-  foo((n) { return n * 2; });
-  // The type of parameter n is inferred to int.
-}
--------------
+          foo((n) { return n * 2; });
+          // The type of parameter n is inferred to int.
+        }
+        -------------
 
         Anonymous delegates can behave like arbitrary statement literals.
         For example, here an arbitrary statement is executed by a loop:
 
--------------
-double test() {
-  double d = 7.6;
-  float f = 2.3;
+        -------------
+        double test() {
+          double d = 7.6;
+          float f = 2.3;
 
-  void loop(int k, int j, void delegate() statement) {
-    for (int i = k; i < j; i++) {
-      statement();
-    }
-  }
+          void loop(int k, int j, void delegate() statement) {
+            for (int i = k; i < j; i++) {
+              statement();
+            }
+          }
 
-  loop(5, 100, { d += 1; } );
-  loop(3, 10,  { f += 3; } );
+          loop(5, 100, { d += 1; } );
+          loop(3, 10,  { f += 3; } );
 
-  return d + f;
-}
--------------
+          return d + f;
+        }
+        -------------
 
         When comparing with $(DDSUBLINK function, nested, nested functions),
         the $(D function) form is analogous to static
@@ -1589,6 +1614,8 @@ $(GNAME IsExpression):
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D $(RPAREN))
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D :) $(GLINK TypeSpecialization) $(D $(RPAREN))
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D ==) $(GLINK TypeSpecialization) $(D $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D :) $(GLINK TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
+    $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(D ==) $(GLINK TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D $(RPAREN))
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D :) $(GLINK TypeSpecialization) $(D $(RPAREN))
     $(D is $(LPAREN)) $(GLINK2 declaration, Type) $(IDENTIFIER) $(D ==) $(GLINK TypeSpecialization) $(D $(RPAREN))
@@ -1834,8 +1861,10 @@ void foo(bar x) {
 
         )
 
-        $(LI $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D :) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))$(BR)
-        $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D ==) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
+        $(LI $(D is $(LPAREN)) $(I Type) $(D :) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))$(BR)
+             $(D is $(LPAREN)) $(I Type) $(D ==) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))$(BR)
+             $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D :) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))$(BR)
+             $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D ==) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
 
         $(P More complex types can be pattern matched; the
         $(GLINK2 template, TemplateParameterList) declares symbols based on the
@@ -1844,10 +1873,18 @@ void foo(bar x) {
         )
 
 ---
-import std.stdio;
+import std.stdio, std.typecons;
 
 void main() {
+  alias Tuple!(int, string) Tup;
   alias long[char[]] AA;
+
+  static if (is(Tup : TX!TL, alias TX, TL...))
+  {
+    writeln(is(TX!(int, long) == Tuple!(int, long)));  // true
+    writeln(typeid(TL[0]));  // int
+    writeln(typeid(TL[1]));  // immutable(char)[]
+  }
 
   static if (is(AA T : T[U], U : const char[]))
   {
