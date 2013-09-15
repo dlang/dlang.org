@@ -16,6 +16,7 @@ PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
 DOC_OUTPUT_DIR=$(ROOT_DIR)/web
 GIT_HOME=https://github.com/D-Programming-Language
+RSYNC_TARGET=d-programming@digitalmars.com:data/
 
 # Latest released version
 ifeq (,${LATEST})
