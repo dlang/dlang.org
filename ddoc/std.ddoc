@@ -9,25 +9,46 @@ D_RUN_CODE = <div><div class="d_code">$1</div><div class="d_run_code"><textarea 
 DDOC =
 $(HEADER)
 $(SCRIPT
-/* Declaration nesting level */
-var nestingLevel = 0;
-function incNestingLevel() { ++nestingLevel; }
-function decNestingLevel() { --nestingLevel; }
-/* Symbol definition */
-var lastSymbolDefined = '';
-function defineSymbol(sym) {
-  if (nestingLevel > 0) return;
-  if (sym == lastSymbolDefined) return;
-  var a = document.getElementById("quicklist");
-  if (!a) return;
-  if (lastSymbolDefined != '') document.getElementById("quickindex").style.display = "";
-  if (true) lastSymbolDefined = sym;
-  a.innerHTML = a.innerHTML + '<option value="' + sym + '">' + sym + '</option>';
-}
-/* Jumping to a specific anchor */
-function jumpTo(a) {
-  window.location.hash = "#." + a.value;
-}
+    /* Declaration nesting level */
+    var nestingLevel = 0;
+    function incNestingLevel() { ++nestingLevel; }
+    function decNestingLevel() { --nestingLevel; }
+    /* Symbol definition */
+    var lastSymbolDefined = '';
+    var values = new Array;
+
+    function defineSymbol(sym) {
+      if (nestingLevel > 0) return;
+      if (sym == lastSymbolDefined) return;
+      if (true) lastSymbolDefined = sym;
+      values.push(sym);
+    }
+
+    /* Jumping to a specific anchor */
+    function jumpTo(a) {
+      window.location.hash = "#." + a.value;
+    }
+
+    function listanchors()
+    {
+        if (typeof inhibitQuickIndex !== 'undefined') return;
+        var a = document.getElementById("quickindex");
+        if (!a) return;
+
+        values.sort();
+
+        var newText = "";
+        for(var i = 0; i < values.length; i++) {
+            var a = values[i];
+            var text = a;
+            newText += ' &nbsp;\x3Ca class="jumpto" href="\x23' + a +
+                '"\x3E\x3Cspan class="notranslate donthyphenate"\x3E' + text + '\x3C/span\x3E\x3C/a\x3E';
+        }
+        if (newText != "") newText = "\x3Cp\x3E\x3Cb\x3EJump to:\x3C/b\x3E" + newText + "\x3C/p\x3E";
+        var a = document.getElementById("quickindex");
+        a.innerHTML = newText;
+    }
+    jQuery(document).ready(listanchors);
 )
 </head>
 <body class='hyphenate'>
@@ -36,11 +57,12 @@ $(DIVID navigation, $(TOP) $(NAVIGATION_PHOBOS))
 $(DIVID content,
   $(PAGE_TOOLS)
   $(H1 $(TITLE))
-  $(DIV style="display: none;" class=quickindex id=quickindex,
+  $(COMMENT style="display: none;" class=quickindex id=quickindex,
     $(B Jump to:) $(T select, onchange="jumpTo(quicklist)" id="quicklist" name="jumpto",
       <option value=''>$(DARR)</option>
     )
   )
+  $(DIVCID quickindex, quickindex, )
   $(BODY)
   $(GOOGLE_FOOTER 6203743411)
 )
