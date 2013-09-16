@@ -1,0 +1,230 @@
+BASE = ..
+
+CXREF = <a href="core_$1.html#$2">$(D core.$1.$2)</a>
+
+D_CODE = <pre class="d_code">$0</pre>
+
+D_RUN_CODE = <div><div class="d_code">$1</div><div class="d_run_code"><textarea class="d_code" style="display: none;">$4</textarea><div class="d_code_stdin"><span class="d_code_title">Standard input</span><br /><textarea class="d_code_stdin">$2</textarea></div><div class="d_code_args"><span class="d_code_title">Command line arguments</span><br /><textarea class="d_code_args">$3</textarea></div><div class="d_code_output"><span class="d_code_title">Application output</span><br /><textarea class="d_code_output" readonly>Running...</textarea></div><input type="button" class="editButton" value="Edit"><input type="button" class="argsButton" value="Args"><input type="button" class="inputButton" value="Input"><input type="button" class="runButton" value="Run"><input type="button" class="resetButton" value="Reset"></div></div>
+
+DDOC =
+$(HEADER)
+$(SCRIPT
+    /* Declaration nesting level */
+    var nestingLevel = 0;
+    function incNestingLevel() { ++nestingLevel; }
+    function decNestingLevel() { --nestingLevel; }
+    /* Symbol definition */
+    var lastSymbolDefined = '';
+    var values = new Array;
+
+    function defineSymbol(sym) {
+      if (nestingLevel > 0) return;
+      if (sym == lastSymbolDefined) return;
+      if (true) lastSymbolDefined = sym;
+      values.push(sym);
+    }
+
+    /* Jumping to a specific anchor */
+    function jumpTo(a) {
+      window.location.hash = "#." + a.value;
+    }
+
+    function listanchors()
+    {
+        if (typeof inhibitQuickIndex !== 'undefined') return;
+        var a = document.getElementById("quickindex");
+        if (!a) return;
+
+        values.sort();
+
+        var newText = "";
+        for(var i = 0; i < values.length; i++) {
+            var a = values[i];
+            var text = a;
+            newText += ' &nbsp;\x3Ca class="jumpto" href="\x23' + a +
+                '"\x3E\x3Cspan class="notranslate donthyphenate"\x3E' + text + '\x3C/span\x3E\x3C/a\x3E';
+        }
+        if (newText != "") newText = "\x3Cp\x3E\x3Cb\x3EJump to:\x3C/b\x3E" + newText + "\x3C/p\x3E";
+        var a = document.getElementById("quickindex");
+        a.innerHTML = newText;
+    }
+    jQuery(document).ready(listanchors);
+)
+</head>
+<body class='hyphenate'>
+$(TOPMATTER)
+$(DIVID navigation, $(TOP) $(NAVIGATION_PHOBOS))
+$(DIVID content,
+  $(PAGE_TOOLS)
+  $(H1 $(TITLE))
+  $(COMMENT style="display: none;" class=quickindex id=quickindex,
+    $(B Jump to:) $(T select, onchange="jumpTo(quicklist)" id="quicklist" name="jumpto",
+      <option value=''>$(DARR)</option>
+    )
+  )
+  $(DIVCID quickindex, quickindex, )
+  $(BODY)
+  $(GOOGLE_FOOTER 6203743411)
+)
+$(FOOTER)
+</body>
+</html>
+
+DDOC_CLASS_MEMBERS =
+$(SCRIPT incNestingLevel();)
+$(DDOC_MEMBERS $(DIVC class_members, $0))
+$(SCRIPT decNestingLevel();)
+
+DDOC_ENUM_MEMBERS=
+$(SCRIPT incNestingLevel();)
+$(DDOC_MEMBERS $(DIVC enum_members, $0))
+$(SCRIPT decNestingLevel();)
+
+DDOC_STRUCT_MEMBERS =
+$(SCRIPT incNestingLevel();)
+$(DDOC_MEMBERS $(DIVC struct_members, $0))
+$(SCRIPT decNestingLevel();)
+
+DDOC_TEMPLATE_MEMBERS =
+$(SCRIPT incNestingLevel();)
+$(DDOC_MEMBERS $(DIVC template_members, $0))
+$(SCRIPT decNestingLevel();)
+
+DRUNTIMESRC = $(AHTTPS github.com/D-Programming-Language/druntime/blob/master/src/$0, $0)
+
+ECXREF = <a href="etc_c_$1.html#$2">$(D etc.c.$1.$2)</a>
+
+LEADINGROW = <tr class=leadingrow><td colspan=2>$(B $(EM $(NBSP)$(NBSP)$(NBSP)$(NBSP)$0))</td></tr>
+
+LREF = <a href="#$1">$(D $1)</a>
+
+NAVIGATION_PHOBOS =
+$(DIVC navblock,
+  $(UL
+    $(LI <a href="object.html" title="root of object hierarchy">object</a>)
+  )
+  $(H2 <a href="index.html#std" title="D standard modules">std</a>)
+  $(UL
+	$(STD_LINE algorithm, General-purpose algorithms)
+	$(STD_LINE array, Array functions)
+	$(STD_LINE ascii, Functions which operate on ASCII characters)
+	$(STD_LINE base64, Encode/decode base64 format)
+	$(STD_LINE bigint, Arbitrary-precision ('bignum') arithmetic)
+	$(STD_LINE bitmanip, Bit-level manipulation)
+	$(STD_LINE compiler, Information about the D compiler implementation)
+	$(STD_LINE complex, Complex numbers)
+	$(STD_LINE concurrency, Message Passing)
+	$(STD_LINE container, Containers)
+	$(STD_LINE conv, Conversion across types)
+	$(STD_LINE csv, CSV file parser)
+	$(STD_LINE datetime, Date and time-related types and functions)
+	$(STD_LINE encoding, Character and string encoding)
+	$(STD_LINE exception, Exceptions and error handling)
+	$(STD_LINE file, Basic file operations)
+	$(STD_LINE format, Formatted conversions of values to strings)
+	$(STD_LINE functional, Functional-style support)
+	$(STD_LINE getopt, Command line options)
+	$(STD_LINE json, JSON reader)
+	$(STD_LINE math, Math functions)
+	$(STD_LINE mathspecial, Mathematical special functions)
+	$(STD_LINE metastrings, Metaprogramming with strings)
+	$(STD_LINE mmfile, Memory mapped files)
+	$(STD_LINE numeric, Numeric algorithms)
+	$(STD_LINE outbuffer, Assemble data into an array of bytes)
+	$(STD_LINE parallelism, High-level primitives for SMP parallelism)
+	$(STD_LINE path, Manipulate file names, path names, etc.)
+	$(STD_LINE process, Create/destroy processes)
+	$(STD_LINE random, Random number generation)
+	$(STD_LINE range, Ranges)
+	$(STD_LINE regex, Regular expressions)
+	$(STD_LINE signals, Signals)
+	$(STD_LINE socket, Sockets)
+	$(STD_LINE socketstream, Stream for a blocking, connected Socket)
+	$(STD_LINE stdio, Standard I/O)
+	$(STD_LINE cstream, Stream I/O)
+	$(STD_LINE stream, Stream I/O)
+	$(STD_LINE string, Basic string operations)
+	$(STD_LINE system, Inquire about the CPU, operating system)
+	$(STD_LINE traits, Type traits)
+	$(STD_LINE typecons, Type constructors)
+	$(STD_LINE typetuple, Type tuples)
+	$(STD_LINE uni, Unicode classification)
+	$(STD_LINE uri, Encode and decode Uniform Resource Identifiers (URIs))
+	$(STD_LINE utf, Encode and decode utf character encodings)
+	$(STD_LINE uuid, Generate and use UUIDs)
+	$(STD_LINE variant, Stores all types in a uniform, dynamically-checked representation)
+	$(STD_LINE xml, XML file processing)
+	$(STD_LINE zip, Read/write zip archives)
+	$(STD_LINE zlib, Compression / Decompression of data)
+	$(STD2_LINE net, curl, High level curl wrapper)
+	$(STD2_LINE net, isemail, Validate e-mail addresses)
+	$(STD2_LINE digest, crc, CRC digest functions)
+	$(STD2_LINE digest, digest, API for digest functions)
+	$(STD2_LINE digest, md, MD digest functions)
+	$(STD2_LINE digest, ripemd, RIPEMD digest functions)
+	$(STD2_LINE digest, sha, SHA digest functions)
+	$(STD2_LINE windows, charset, Conversion to/from Windows character sets)
+  )
+    $(H2 <a href="index.html#etc" title="D etc modules">etc</a>)
+    $(UL
+	$(LI <a href="etc_c_curl.html" title="Interface to libcurl library">etc.c.curl</a>)
+	$(LI <a href="etc_c_sqlite3.html" title="Interface to sqlite3 library">etc.c.sqlite3</a>)
+	$(LI <a href="etc_c_zlib.html" title="Interface to zlib library">etc.c.zlib</a>)
+    )
+    $(H2 <a href="index.html#core" title="D core modules">core</a>)
+    $(UL
+	$(LI <a href="core_atomic.html" title="Atomic operations">core.atomic</a>)
+	$(LI <a href="core_bitop.html" title="Bitwise operations">core.bitop</a>)
+	$(LI <a href="core_cpuid.html" title="CPU identification">core.cpuid</a>)
+	$(LI <a href="core_demangle.html" title="D symbol mangling">core.demangle</a>)
+	$(LI <a href="core_exception.html" title="Root of exception hierarchy">core.exception</a>)
+	$(LI <a href="core_memory.html" title="Interface to memory management">core.memory</a>)
+	$(LI <a href="core_runtime.html" title="Interface to D runtime library internals">core.runtime</a>)
+	$(LI <a href="core_simd.html" title="Builtin SIMD intrinsics">core.simd</a>)
+	$(LI <a href="core_thread.html" title="Thread management">core.thread</a>)
+	$(LI <a href="core_time.html" title="Core time functionality">core.time</a>)
+	$(LI <a href="core_vararg.html" title="Variable function arguments">core.vararg</a>)
+	$(LI <a href="core_sync_barrier.html" title="Synchronizing progress of a group of threads">core.sync.barrier</a>)
+	$(LI <a href="core_sync_condition.html" title="Synchronized condition checking">core.sync.condition</a>)
+	$(LI <a href="core_sync_config.html" title="Stuff for core.sync">core.sync.config</a>)
+	$(LI <a href="core_sync_exception.html" title="SyncException">core.sync.exception</a>)
+	$(LI <a href="core_sync_mutex.html" title="Mutexes">core.sync.mutex</a>)
+	$(LI <a href="core_sync_rwmutex.html" title="R/W mutually exclusive access">core.sync.rwmutex</a>)
+	$(LI <a href="core_sync_semaphore.html" title="Semaphores">core.sync.semaphore</a>)
+    )
+)
+
+PHOBOSSRC = $(AHTTPS github.com/D-Programming-Language/phobos/blob/master/$0, $0)
+
+SAMPLESRC = $(AHTTPS github.com/D-Programming-Language/dmd/blob/master/samples/$0, /dmd/samples/d/$0)
+
+STD_LINE = $(LI $(T a, href="std_$1.html" title="$(ARGS $+)", std.$1))
+
+STD2_LINE = $(LI $(T a, href="std_$1_$2.html" title="$(ARGS $3,$4)", std.$1.$2))
+
+TABLE = <table cellspacing=0 cellpadding=5><caption>$1</caption>$2</table>
+
+TOP=
+<div class="navblock">
+<form method="get" action="http://google.com/search">
+<div id="searchbox">
+<input name="q" size="10" value="RTL Search" onFocus='if(this.value == "RTL Search"){this.value="";}'>
+<input type="hidden" name="domains" value="www.digitalmars.com">
+<input type="hidden" name="sitesearch" value="dlang.org/phobos">
+<input type="hidden" name="sourceid" value="google-search">
+<input type="submit" name="submit" value="Go">
+</div>
+</form>
+$(DIVID toctop,
+  $(UL
+    $(LI <a href="../index.html" title="D Programming Language">D</a>)
+    $(LI <a href="../spec.html" title="D Language Specification">Language</a>)
+    $(LI <a href="../phobos/index.html" title="D Runtime Library">Phobos</a>)
+    $(LI <a href="../phobos-prerelease/index.html" title="D Runtime Library (prerelease)">Phobos (prerelease)</a>)
+    $(LI <a href="../comparison.html" title="Language Comparisons">Comparisons</a>)
+  )
+)
+</div>
+
+XREF = <a href="std_$1.html#$2">$(D std.$1.$2)</a>
+
