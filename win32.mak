@@ -352,7 +352,7 @@ clean:
 ################# DDOX based API docs #########################
 
 apidocs: docs.json
-	$(DPL_DOCS) generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master docs.json phobos
+	$(DPL_DOCS) generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master docs.json library
 
 apidocs-serve: docs.json
 	$(DPL_DOCS) serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. docs.json
@@ -362,5 +362,5 @@ docs.json:
 	dir /s /b /a-d ..\druntime\src\*.d | findstr /V "unittest.d gcstub" > .tmp/files.txt	
 	dir /s /b /a-d ..\phobos\*.d | findstr /V "unittest.d linux osx format.d" >> .tmp/files.txt
 	dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
-	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented
+	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented --ex=gc. --ex=rt. --ex=std.internal.
 	rmdir /s /q .tmp

@@ -307,12 +307,12 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : std.ddoc ${LATEST}.ddoc \
 apidocs-prerelease : docs-prerelease.json
 	${DPL_DOCS} generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc\
 	  --override-macros=std-ddox-override.ddoc --package-order=std\
-	  --git-target=master docs-prerelease.json ${DOC_OUTPUT_DIR}/phobos-prerelease
+	  --git-target=master docs-prerelease.json ${DOC_OUTPUT_DIR}/library-prerelease
 
 apidocs-release : docs.json
 	${DPL_DOCS} generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc\
 	  --override-macros=std-ddox-override.ddoc --package-order=std\
-	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/phobos
+	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
 
 apidocs-serve : docs-prerelease.json
 	${DPL_DOCS} serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc\
@@ -338,5 +338,5 @@ docs-prerelease.json : ${DMD_DIR}/src/dmd
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' -e /unittest/d > .tmp/files.txt
 	find ${PHOBOS_DIR} -name '*.d' | sed -e /uittest.d/d -e /format/d -e /windows/d >> .tmp/files.txt
 	${DMD_DIR}/src/dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs-prerelease.json @.tmp/files.txt
-	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected --only-documented
+	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected --only-documented --ex=gc. --ex=rt. --ex=std.internal.
 	rm -r .tmp
