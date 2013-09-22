@@ -329,7 +329,7 @@ d.hhp d.hhc d.hhk : chmgen.exe $(TARGETS)
 	chmgen
 
 d.chm : d.hhp d.hhc d.hhk
-	cmd /C ""$(HHC)" d.hhp"
+	-cmd /C ""$(HHC)" d.hhp"
 
 ################# Other #########################
 
