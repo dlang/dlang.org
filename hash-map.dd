@@ -13,21 +13,22 @@ $(SPEC_S Associative Arrays,
         within the [ ] of an array declaration:
         )
 
----------
-int[string] b;    // associative array b of ints that are
-                  // indexed by an array of characters.
-                  // The $(CODE_HIGHLIGHT KeyType) is string
-b["hello"] = 3;   // set value associated with key "hello" to 3
-func(b["hello"]); // pass 3 as parameter to func()
----------
+        ---------
+        int[string] b;    // associative array b of ints that are
+                          // indexed by an array of characters.
+                          // The $(CODE_HIGHLIGHT KeyType) is string
+        b["hello"] = 3;   // set value associated with key "hello" to 3
+        func(b["hello"]); // pass 3 as parameter to func()
+        ---------
 
         $(P Particular keys in an associative array can be removed with the
         remove function:
         )
 
----------
-b.$(CODE_HIGHLIGHT remove)("hello");
----------
+        ---------
+        b.$(CODE_HIGHLIGHT remove)("hello");
+        ---------
+
         $(P remove(key) does nothing if the given $(I key) does not exist and
         returns $(B false).  If the given $(I key) does exist, it removes it
         from the AA and returns $(B true).
@@ -37,12 +38,12 @@ b.$(CODE_HIGHLIGHT remove)("hello");
         if the key is in the associative array, or $(D null) if not:
         )
 
----------
-int* p;
-p = ("hello" $(CODE_HIGHLIGHT in) b);
-if (p !is (B null))
-        ...
----------
+        ---------
+        int* p;
+        p = ("hello" $(CODE_HIGHLIGHT in) b);
+        if (p !is (B null))
+                ...
+        ---------
 
         $(P $(I KeyType)s cannot be functions or voids.
         )
@@ -70,27 +71,27 @@ $(H3 Using Classes as the KeyType)
 
         $(P For example:)
 
----
-class Foo {
-  int a, b;
+        ---
+        class Foo {
+          int a, b;
 
-  hash_t $(CODE_HIGHLIGHT toHash)() { return a + b; }
+          hash_t $(CODE_HIGHLIGHT toHash)() { return a + b; }
 
-  bool $(CODE_HIGHLIGHT opEquals)(Object o)
-  { Foo foo = cast(Foo) o;
-    return foo && a == foo.a && b == foo.b;
-  }
+          bool $(CODE_HIGHLIGHT opEquals)(Object o)
+          { Foo foo = cast(Foo) o;
+            return foo && a == foo.a && b == foo.b;
+          }
 
-  int $(CODE_HIGHLIGHT opCmp)(Object o)
-  { Foo foo = cast(Foo) o;
-    if (!foo)
-      return -1;
-    if (a == foo.a)
-      return b - foo.b;
-    return a - foo.a;
-  }
-}
----
+          int $(CODE_HIGHLIGHT opCmp)(Object o)
+          { Foo foo = cast(Foo) o;
+            if (!foo)
+              return -1;
+            if (a == foo.a)
+              return b - foo.b;
+            return a - foo.a;
+          }
+        }
+        ---
 
         $(P The implementation may use either $(D opEquals) or $(D opCmp) or
         both. Care should be taken so that the results of
@@ -106,43 +107,125 @@ $(H3 Using Structs or Unions as the KeyType)
         by providing the following functions as struct members:
         )
 
----------
-const hash_t $(CODE_HIGHLIGHT opHash)();
-const bool $(CODE_HIGHLIGHT opEquals)(ref const KeyType s);
-const int $(CODE_HIGHLIGHT opCmp)(ref const KeyType s);
----------
+        ---------
+        const hash_t $(CODE_HIGHLIGHT opHash)();
+        const bool $(CODE_HIGHLIGHT opEquals)(ref const KeyType s);
+        const int $(CODE_HIGHLIGHT opCmp)(ref const KeyType s);
+        ---------
 
         $(P For example:)
 
----------
-import std.string;
+        ---------
+        import std.string;
 
-struct MyString {
-  string str;
+        struct MyString {
+          string str;
 
-  const hash_t $(CODE_HIGHLIGHT toHash)()
-  { hash_t hash;
-    foreach (char c; str)
-      hash = (hash * 9) + c;
-    return hash;
-  }
+          const hash_t $(CODE_HIGHLIGHT toHash)()
+          { hash_t hash;
+            foreach (char c; str)
+              hash = (hash * 9) + c;
+            return hash;
+          }
 
-  const bool $(CODE_HIGHLIGHT opEquals)(ref const MyString s)
-  {
-    return std.string.cmp(this.str, s.str) == 0;
-  }
+          const bool $(CODE_HIGHLIGHT opEquals)(ref const MyString s)
+          {
+            return std.string.cmp(this.str, s.str) == 0;
+          }
 
-  const int $(CODE_HIGHLIGHT opCmp)(ref const MyString s)
-  {
-    return std.string.cmp(this.str, s.str);
-  }
-}
----------
+          const int $(CODE_HIGHLIGHT opCmp)(ref const MyString s)
+          {
+            return std.string.cmp(this.str, s.str);
+          }
+        }
+        ---------
 
         $(P The implementation may use either $(D opEquals) or $(D opCmp) or
         both. Care should be taken so that the results of
         $(D opEquals) and $(D opCmp) are consistent with each other when
         the struct/union objects are the same or not.)
+
+$(H3 Construction or assignment on setting AA entries)
+
+    $(P When an AA indexing access appears on the left side of an assignment operator,
+        it is specially handled for setting AA entry associated with the key.
+
+        ---------
+        string[int] aa;
+        string s;
+        s = aa[1];          // throws RangeError in runtime
+        aa[1] = "hello";    // handled for setting AA entry
+        s = aa[1];          // succeeds to lookup
+        assert(s == "hello");
+        ---------
+    )
+
+    $(P If the assigned value type is equivalent with the AA element type:
+
+      $(OL
+        $(LI If the indexing key does not yet exist in AA, a new AA entry will be
+        allocated, and it will be initialized with the assigned value.)
+        $(LI If the indexing key already exists in the AA, the setting runs normal
+        assignment.)
+      )
+
+        ---------
+        struct S {
+          int val;
+          void opAssign(S rhs) { this.val = rhs.val * 2; }
+        }
+        S[int] aa;
+        aa[1] = S(10);  // first setting initializes the entry aa[1]
+        assert(aa[1].val == 10);
+        aa[1] = S(10);  // second setting invokes normal assignment, and
+                        // operator-overloading rewrites it to member opAssign function.
+        assert(aa[1].val == 20);
+        ---------
+    )
+
+    $(P Even if the assigned value type is not equivalent with the AA element type,
+        it could invoke operator overloading with normal indexing access.
+
+        ---------
+        struct S {
+          int val;
+          void opAssign(int v) { this.val = v * 2; }
+        }
+        S[int] aa;
+        aa[1] = 10;     // is rewitten to: aa[1].opAssign(10), and
+                        // throws RangeError before opAssign is called
+        ---------
+
+        However, if the AA element type is struct and it supports implicit constructor
+        call from the assigned value, the construction is used for the setting
+        AA entry.
+
+        ---------
+        struct S {
+          int val;
+          this(int v) { this.val = v; }
+          void opAssign(int v) { this.val = v * 2; }
+        }
+        S s = 1;    // OK, rewritten to: S s = S(1);
+          s = 1;    // OK, rewritten to: s.opAssign(1);
+
+        S[int] aa;
+        aa[1] = 10; // first setting is rewritten to: aa[1] = S(10);
+        assert(aa[1].val == 10);
+        aa[1] = 10; // second setting is rewritten to: aa[1].opAssign(10);
+        assert(aa[1].val == 20);
+        ---------
+
+        This is designed for efficient memory reuse with some value-semantics
+        structs, eg. $(LINK2 phobos/std_bigint.html#BigInt, BigInt).
+
+        ---------
+        import std.bigint;
+        BigInt[string] aa;
+        aa["a"] = 10;   // construct BigInt(10) and move it in AA
+        aa["a"] = 20;   // call aa["a"].opAssign(20)
+        ---------
+    )
 
 $(H3 Runtime Initialization of Immutable AAs)
 
@@ -150,31 +233,32 @@ $(H3 Runtime Initialization of Immutable AAs)
         initialization must be done at runtime. This can be achieved with
         a constructor (static constructor depending on scope),
         a buffer associative array and $(D assumeUnique):)
----------
-immutable long[string] aa;
 
-static this()
-{
-    import std.exception : assumeUnique;
-    import std.conv : to;
+        ---------
+        immutable long[string] aa;
 
-    long[string] temp; // mutable buffer
-    foreach(i; 0 .. 10)
-    {
-        temp[to!string(i)] = i;
-    }
-    temp.rehash; // for faster lookups
+        static this()
+        {
+            import std.exception : assumeUnique;
+            import std.conv : to;
 
-    aa = assumeUnique(temp);
-}
+            long[string] temp; // mutable buffer
+            foreach(i; 0 .. 10)
+            {
+                temp[to!string(i)] = i;
+            }
+            temp.rehash; // for faster lookups
 
-unittest
-{
-    assert(aa["1"] == 1);
-    assert(aa["5"] == 5);
-    assert(aa["9"] == 9);
-}
----------
+            aa = assumeUnique(temp);
+        }
+
+        unittest
+        {
+            assert(aa["1"] == 1);
+            assert(aa["5"] == 5);
+            assert(aa["9"] == 9);
+        }
+        ---------
 
 
 $(H3 Properties)
@@ -216,76 +300,76 @@ $(H3 Associative Array Example: word count)
         over code points and functions from $(LINK2 phobos/std_uni.html,std.uni).
         )
 
----------
-import std.file;         // D file I/O
-import std.stdio;
-import std.ascii;
+        ---------
+        import std.file;         // D file I/O
+        import std.stdio;
+        import std.ascii;
 
-void main (string[] args) {
-  ulong totalWords, totalLines, totalChars;
-  ulong[string] dictionary;
+        void main (string[] args) {
+          ulong totalWords, totalLines, totalChars;
+          ulong[string] dictionary;
 
-  writefln("   lines   words   bytes file");
-  foreach (arg; args[1 .. $]) // for each argument except the first one
-  {
-    ulong wordCount, lineCount, charCount;
-
-    foreach(line; File(arg).byLine())
-    {
-      bool inWord;
-      size_t wordStart;
-
-      void tryFinishWord(size_t wordEnd)
-      {
-        if (inWord)
-        {
-          auto word = line[wordStart .. wordEnd];
-          ++dictionary[word.idup];   // increment count for word
-          inWord = false;
-        }
-      }
-
-      foreach (i, char c; line)
-      {
-        if (std.ascii.isDigit(c))
-        { // c is a digit (0..9)
-        }
-        else if (std.ascii.isAlpha(c))
-        { // c is an ASCII letter (A..Z, a..z)
-          if (!inWord)
+          writefln("   lines   words   bytes file");
+          foreach (arg; args[1 .. $]) // for each argument except the first one
           {
-            wordStart = i;
-            inWord = true;
-            ++wordCount;
+            ulong wordCount, lineCount, charCount;
+
+            foreach(line; File(arg).byLine())
+            {
+              bool inWord;
+              size_t wordStart;
+
+              void tryFinishWord(size_t wordEnd)
+              {
+                if (inWord)
+                {
+                  auto word = line[wordStart .. wordEnd];
+                  ++dictionary[word.idup];   // increment count for word
+                  inWord = false;
+                }
+              }
+
+              foreach (i, char c; line)
+              {
+                if (std.ascii.isDigit(c))
+                { // c is a digit (0..9)
+                }
+                else if (std.ascii.isAlpha(c))
+                { // c is an ASCII letter (A..Z, a..z)
+                  if (!inWord)
+                  {
+                    wordStart = i;
+                    inWord = true;
+                    ++wordCount;
+                  }
+                }
+                else
+                  tryFinishWord(i);
+                ++charCount;
+              }
+              tryFinishWord(line.length);
+              ++lineCount;
+            }
+
+            writefln("%8s%8s%8s %s", lineCount, wordCount, charCount, arg);
+            totalWords += wordCount;
+            totalLines += lineCount;
+            totalChars += charCount;
+          }
+
+          if (args.length > 2)
+          {
+            writefln("-------------------------------------\n%8s%8s%8s total",
+                    totalLines, totalWords, totalChars);
+          }
+
+          writeln("-------------------------------------");
+          foreach (word; dictionary.keys.sort)
+          {
+            writefln("%3s %s", dictionary[word], word);
           }
         }
-        else
-          tryFinishWord(i);
-        ++charCount;
-      }
-      tryFinishWord(line.length);
-      ++lineCount;
-    }
-
-    writefln("%8s%8s%8s %s", lineCount, wordCount, charCount, arg);
-    totalWords += wordCount;
-    totalLines += lineCount;
-    totalChars += charCount;
-  }
-
-  if (args.length > 2)
-  {
-    writefln("-------------------------------------\n%8s%8s%8s total",
-            totalLines, totalWords, totalChars);
-  }
-
-  writeln("-------------------------------------");
-  foreach (word; dictionary.keys.sort)
-  {
-    writefln("%3s %s", dictionary[word], word);
-  }
-}
----------
+        ---------
 
 )
 
