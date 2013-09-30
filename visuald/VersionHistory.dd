@@ -1,0 +1,583 @@
+Ddoc
+
+2013-05-10 Version 0.3.36
+ $(UL
+  $(LI added debug settings to new DMD/GDC project template )
+  $(LI regressions caused by switching to installation as VS2010/VS2012 extension:
+   $(UL
+    $(LI executable path contained untranslated \n)
+    $(LI no Visual D colors added)
+   )
+  )
+  $(LI only force separate link if "Monitor OPTLINK dependencies" is enabled)
+  $(LI /SUBSYSTEM switches lost when building through optlink directly)
+  $(LI added project option "Use of Deprecated Features causes Error" that maps to -de)
+  $(LI tweaked parser to support new language features:
+   $(UL
+    $(LI version(assert))
+    $(LI user defined attributes @identifier_opt(arguments) or @identifier)
+    $(LI alias id = type)
+    $(LI alias this = id)
+    $(LI deprecated("message"))
+    $(LI added keyword __parameters)
+   )
+  )
+  $(LI tweaked parser to support undocumented language features:
+   $(UL
+    $(LI ref anywhere in foreach type to support "foreach(const ref x; range)")
+    $(LI prefix lambda with function/delegate)
+    $(LI added keyword __argTypes)
+   )
+  )
+  $(LI syntax highlighting and semantic now fully support version identifiers according 
+    to http://dlang.org/version.html )
+  $(LI improved parser/semantics: 
+   $(UL
+    $(LI fix "forgetting" type of function parameters after first evaluation)
+    $(LI fix a number of crashes during semantics)
+    $(LI improved parser recovery after too many closing braces)
+   )
+  )
+  $(LI when cloning a configuration in the configuation manager, debug info settings were lost)
+  $(LI compiling a single file now reports success)
+  $(LI avoid asking to save project file when closing VS and the project has already been saved)
+  $(LI fixed crashes due to bug in precise GC with arrays just below page size)
+  $(LI adjusted JSON interpretation for symbol lookup and parameter tooltips to new format in dmd 2.062)
+  $(LI some tweaks to C++ to D converter)
+  $(LI basic LDC support)
+  $(LI added new option pages for DMD/GDC/LDC directories)
+  $(LI linker messages from GDC and MS linker can now be demangled aswell)
+  $(LI additional command line arguments now placed at the very end to avoid GDC linker troubles)
+  $(LI DParser by Alexander Bothe (https://github.com/aBothe/D_Parser) integrated as an alternative
+    semantic engine )
+  $(LI added command "Compile and Run" to execute current text buffer or selection via rdmd)
+  $(LI added command "Open Language Options" for easier access to the settings page)
+  $(LI added option "Colorize coverage from .LST file" to highlight lines from code coverage output)
+ )
+ 
+2012-12-03 Version 0.3.35
+ $(UL
+  $(LI new linker option to disable using global and standard library search paths)
+  $(LI add preliminary support for upcoming dmd win64 compiler)
+  $(LI add '/' to '\' translation for macro replacements of $(OUTDIR) and $(INTDIR))
+  $(LI fixed build variable $(VSINSTALLDIR) (pointed to parent directory of expected dir))
+  $(LI added build project to translate sdk to D)
+  $(LI adjusted to changes to dependency file in dmd 2.061)
+  $(LI fixed Visual Studio sometimes renamed to VisualD in the window title)
+  $(LI fixed parser recovery with multiple syntax errors at module scope)
+  $(LI project options: added $(Configuration) to expand to the same as $(ConfigurationName) for compatibility with VC++ projects)
+  $(LI project config: controls now have style WS_TABSTOP to allow keyboard navigation)
+  $(LI goto definition now uses semantic analysis to find declaration)
+  $(LI semantic analysis now enabled by default (removed experimental status))
+  $(LI semantics: add .ptr property to dynamic array)
+  $(LI now installed as an "extension" to VS 2010 and VS 2012)
+  $(LI fixed missing output files when a VC project has a project dependency on a D library project)
+  $(LI setting "Demangle names in link errors" never saved)
+  $(LI fixed macros not expanded in "other compiler" when figuring out what linker to be called directly)
+  $(LI now expanding response files in sc.ini or additional compiler options when looking for import or linker directives)
+  $(LI added D icon to vdserver.exe)
+  $(LI added console application project template with configurations for DMD and GDC for Win32 and x86)
+  $(LI fixed spurious crashes due to bug in precise garbage collection)
+ )
+ 
+2012-10-12 Version 0.3.34
+ $(UL
+  $(LI fix exceptions in NDepend when opening context menu on D project)
+  $(LI delete file from project now uses VS environment dialog (avoiding dialog when moving project items))
+  $(LI fixed "build phobos browse info" failing for dmd 2.059)
+  $(LI dependency on other projects: only output files with known file types are now passed to the dmd/gdc command line)
+  $(LI linker error messages can now be decompressed and demangled (thanks to Benjamin Thaut for providing the code))
+  $(LI lexer now allows unicode characters from std.uni.isAlpha in identifiers)
+  $(LI fix: when building phobos browse info the implicitely added JSON path was not saved to options)
+  $(LI fix calling cv2pdb for D1)
+  $(LI goto definition: if ".." is used to reference the source file path, it could be opened twice in the editor)
+  $(LI new item: package and module name now filled with some guess)
+  $(LI optlink now called directly with file monitoring: this allows passing the library path directly (making the DMD_LIB 
+    patch in sc.ini redundant) and detecting library and source dependencies )
+  $(LI parser could not recover from error in module statement, also improved recovery from error in enum declaration)
+  $(LI parse errors in modules imported during semantic analysis could cause dramatic troubles)
+  $(LI fixed parsing problems with function literal attributes and enumerators)
+  $(LI outlining: adding lines before collapsed region could unfold the regions)
+  $(LI fix: underlined syntax error could lag behind by a keystroke)
+  $(LI tweak completion box:
+   $(UL
+    $(LI from browse info: template arguments and contraint stripped from symbol now)
+    $(LI avoid delayed opening of completion box when typing non-identifier characters)
+    $(LI completion box now closed for a lot of navigation and editing commands)
+    $(LI improved speed for large symbol lists)
+   )
+  )
+  $(LI status line now cleared after parsing of imports has finished)
+  $(LI fix installation for VS2012)
+  $(LI now runs on an almost precise garbage collector)
+  $(LI DLL project template now has a linker definition file)
+ )
+
+2012-06-19 Version 0.3.33
+ $(UL
+  $(LI debugger project settings now stored in solution options file, not in project file)
+  $(LI regression: clean project failed, now deletes files given by wildcard recursively)
+  $(LI token replace: fixed freeze when trying to replace no tokens)
+  $(LI cv2pdb: new version 0.25 that allows specifying a different pdb file being embedded 
+    into the binary and supports VS11 )
+  $(LI cv2pdb: exposed command line options in the project options)
+  $(LI intellisense tool tip now shows enumerator value)
+  $(LI moved parser and semantic analysis into another process)
+  $(LI GDC: user specified libraries are now appended after the source files to the command 
+    line to avoid linker problems )
+  $(LI improved performance when indenting multiple lines of code)
+  $(LI remove project item: now asks whether file on disk should also be removed)
+  $(LI parser: added support for linkage specification inside alias)
+  $(LI version highlighting now supports the "version(V):" syntax)
+  $(LI tweaked vsi2d to also convert the Windows 8 SDK and VS2012 SDK)
+  $(LI added wizard to create packages from the new item dialog)
+  $(LI improved import statement detection for expansion and goto definition)
+ )
+
+2012-03-14 Version 0.3.32
+ $(UL
+  $(LI new version of cv2pdb with better handling of unicode characters in path names and better
+    support for local variables in DWARF debug info )
+  $(LI new version of mago with string literal support for associative array keys and easier stepping into main)
+  $(LI some changes to reduce memory leaks due to false pointers)
+  $(LI fixed parser to disambiguate MixinStatement and MixinExpression)
+  $(LI added support for __vector(T) to parser)
+  $(LI goto definition: if executed on an import statement, now searching file through import paths)
+  $(LI fixed lexer to not treat in_x as an operator followed by an identifier "_x")
+  $(LI fixed regression: import expansions only listed folders, no modules)
+  $(LI fixed custom command: project would not restore if multiple commands are used)
+  $(LI project properties: added output type DLL for easier switching between DMD and GDC)
+  $(LI project properties: added subsystem option, use "not set" if you have to specify a specific windows version)
+  $(LI fixed underlining syntax errors shows only first error)
+  $(LI fixed option "Show expansions when" not saving state "writing an identifier")
+  $(LI added icon for disabled project item (tool set to "None"))
+  $(LI version highlighting now supports versions DigitalMars/GNU and Win32/Win64)
+  $(LI fixed building static lib with GDC and a space in the library file name)
+ )
+
+2012-03-14 Version 0.3.31
+ $(UL
+  $(LI added option to "Intellisense" page to configure trigger of code completion)
+  $(LI delay code definition window update until caret at the same position for a second to avoid pauses while
+    navigating through the source )
+  $(LI added support for building with GDC)
+  $(LI added platform support for "x64" (use with GDC only))
+  $(LI includes new version 0.23 of cv2pdb that now also converts DWARF to pdb)
+  $(LI tweaked idl2d to convert files to build with dmd 2.058)
+  $(LI new version of mago:
+   $(UL
+    $(LI fixed possible stall when starting debugging)
+    $(LI support for associative arrays in expressions)
+    $(LI fixed problem with loading debug info of large projects)
+   )
+  )
+  $(LI property: fixed editing multiple configurations at once)
+  $(LI added Compile command to syntax check the current source file)
+  $(LI parser now supports new delegate syntax (x) => x)
+  $(LI project config: shown command line now updated when pressing "Apply")
+  $(LI fix resource include with spaces)
+  $(LI fix always rebuilding if a dependent library project target has spaces in the path name)
+ )
+
+2012-01-07 Version 0.3.30
+ $(UL
+  $(LI fixed utf8 to OLE string conversion, that could get in the way when using non ascii file names)
+  $(LI property pages now adjust their font and size to the IDE environment)
+  $(LI __ctfe is now highlighted as a keyword)
+  $(LI scope(identifier) with wrong identifier shown as a parse error)
+  $(LI completion automatically inserts now if there is only one candidate)
+  $(LI completion of import modules now restricted to files, not symbols)
+  $(LI colorizer now asks the parser whether "is" and "in" are used as operators)
+  $(LI debugger data tooltip now grabs ident1.ident2 expressions when hovering ident2)
+  $(LI added checkbox for options -gs and -property to project configuration)
+  $(LI added new color to highlight predefined versions)
+  $(LI creating new folder now initiates renaming it)
+  $(LI fixed error message capture for error list in case the message also contains "filename(lineno):")
+  $(LI new options page "Tools->Options->Text Editor->D->Intellisense" to select sources of code completion)
+  $(LI experimental tooltips and code completion from semantic analysis of source code)
+  $(LI project configuration: new debugger option to redirect stdout to the debugger output window)
+  $(LI project configuration: new option to pause after running program without debugger)
+  $(LI added option to "Tools->Options->Projects and Solutions->Visual D Settings" to stop a solution build
+    if a project fails to build )
+ )
+
+2011-12-03 Version 0.3.29
+ $(UL
+  $(LI highlighting: new colors for user defined list of types (defaults to basic types in object.d))
+  $(LI disabled versions: fixed wrong highlighting when editing before conditional)
+  $(LI token replace dialog: fixed empty dialog when opening with default size)
+  $(LI fixed crash when building a project with a configuration that is not available in a dependent project)
+  $(LI fixed freeze in startup due to thread starting issues (probably only happened with more than 2 cores))
+  $(LI added C++ to D conversion wizard)
+  $(LI added installation for Visual Studio 11)
+  $(LI tweaked dialogs to better integrate with VS)
+ )
+
+2011-10-25 Version 0.3.28
+ $(UL
+  $(LI mago debugger: fixed crash when there is no sstStaticSym section in the debug info)
+  $(LI mago debugger: fixed local variables not shown in last function of an object file)
+  $(LI mago debugger: fixed display of TLS variables)
+  $(LI mago debugger: added workaround for bad line number debug info, causing mago to switch to assembly easily)
+  $(LI mago debugger: globals and statics can now be displayed without specifying complete scope)
+  $(LI cv2pdb: fixed patching of autoexp.dat when the install path contained spaces)
+  $(LI fix: the import path set in the global options never made it to the command line)
+  $(LI fixed parser to accept "class B() if(true) : A {}")
+  $(LI fixed parser to support import as statement)
+  $(LI building druntime browse info now uses src folder (di files look ugly and do not compile))
+  $(LI building browse info now writes to "Visual D" output pane)
+  $(LI F1 searches language and phobos documentation for help on identifier)
+  $(LI added highlighting of asm block, using new colors "Visual D Register/Mnemonic" and "Disabled/Token String" variants)
+  $(LI parsing and outlining now aborted when text changes, so editing is more responsive with large source files)
+ )
+
+2011-09-24 Version 0.3.27
+ $(UL
+  $(LI smart reindenting line when typing last char of sole "in", "out" and "body")
+  $(LI tweaked smart indenting with respect to enumerators, arrays, labels and more)
+  $(LI paste a full line or more now causes automatic reindentation (global option to disable))
+  $(LI automatic reindentation was not triggered when typing '{', '}', etc (win 7/8 only?))
+  $(LI fix: build phobos browse information broken in last version)
+  $(LI some internal errors are now reported to the output window (like failing to parse JSON file))
+  $(LI fixed bad display when deleting characters from line with outlining)
+  $(LI new option to show demangled symbols in the Error List (not the output window))
+ )
+
+2011-08-25 Version 0.3.26
+ $(UL
+  $(LI fixed regression in last version: single file compilation did not build any d files)
+  $(LI single file compilation: avoid relinking every time)
+  $(LI seperate compile and link: no longer trashes dependencies in link step)
+  $(LI goto definition, search symbol: now line number adjusted according to changes since last successful build)
+  $(LI fix: resource files in sub folders would not build because the same folders were expected in the intermediate directory)
+  $(LI global settings: split page into directories/settings pages to make option "Show build time" accessible)
+  $(LI global settings: added option to disable sorting projects)
+  $(LI parser now accepts "do {} while(cond)" without trailing ';')
+  $(LI project options macro $(PROJECTNAME) now uses the name in the solution instead of the project file name)
+  $(LI fixed bad indentation of first contract)
+  $(LI fixed colorization of first token after debug condition without arguments)
+  $(LI "is" now always colored as operator, not as keyword)
+  $(LI updated to build with dmd 2.055beta)
+ )
+
+2011-06-19 Version 0.3.25
+ $(UL
+  $(LI fixed version information of the DLL)
+  $(LI error list: warnings are no longer shown as errors)
+  $(LI project name added to buildlog.html to allow multiple projects with the same intermediate dir)
+  $(LI fixed highlighting of version(unittest) and debug without identifier)
+  $(LI friendlier error message if debug executable or working dir do not exist)
+  $(LI reduced parsing thread priority to interfere less with editing)
+  $(LI adjusted vsi2d to build with the latest VS2010 SDK)
+  $(LI Visual D now builds with DMD 2.053)
+  $(LI moved from std.date to std.datetime to fix some time displays)
+  $(LI moved outlining into parse thread to reduce delays when editing large files)
+  $(LI added warning to library search path settings)
+  $(LI d-files now set to UTF8 encoding if not already marked by BOM)
+  $(LI fixed transparent window frame around dialogs in VS2010)
+  $(LI added drag'n'drop of project folders)
+  $(LI added support for "Stop Outlining" and "Toggle All Outlining")
+  $(LI tweaked outlining for multi-dimensional arrays and token strings)
+  $(LI build order of custom/resource compilations now sorted by dependencies)
+  $(LI project items now sorted alphabetically)
+  $(LI fixed a few more issues with relative paths causing a source file to be opened twice in the editor)
+ )
+
+2011-05-08 Version 0.3.24
+ $(UL
+  $(LI fixed crash when installing/uninstalling other Visual Studio plugins)
+  $(LI added menu entry "Open Website" to browse the visual D Website inside Visual Studio)
+  $(LI added support for Object Browser and Class View)
+  $(LI now runs a parser in the background to underline syntax errors)
+  $(LI fixed scanning of floating point literals starting with '.')
+  $(LI default colors for identifiers, numbers and operators now follow the "Plain Text" setting)
+  $(LI new version 0.1.2 of mago that fixes some issues with exceptions and improves the call stack display)
+  $(LI if a source file is used in multiple project, it is no longer opened multiple times in the editor)
+  $(LI improved lookup speed in browse info, now removing duplicate entries for eponymous templates)
+  $(LI fixed issues with quoted arguments with trailing backslash in settings)
+  $(LI browse info now updated when JSON paths changed in global options)
+  $(LI fixed spurious crash when removing multiple lines )
+ )
+
+2011-03-09 Version 0.3.23
+ $(UL
+  $(LI fixed issue on x64 with threads without TLS that crept back in by migrating to DMD 2.052)
+  $(LI separate compile and link: removed -X,-D,-H from the link step to avoid creating empty files)
+  $(LI new compilation mode: compile only to set your link step manually in the post-build step)
+  $(LI jumping to errors in files that exist in several projects now jump to the correct source)
+ )
+
+2011-02-27 Version 0.3.22
+ $(UL
+  $(LI Visual D now builds with DMD 2.052)
+  $(LI fixed WindowsApp template to build with DMD 2.052)
+  $(LI fixed some COM leaks)
+  $(LI paste ring menu no longer stops when repeating the first entry and 
+    avoids duplicate entries )
+  $(LI new token search and replace dialog)
+  $(LI new compilation mode: compile and link in separate steps allowing multiple object files)
+  $(LI the option "Statement completion -> Parameter information" is now respected,)
+    showing the parameter tooltip when writing the opening parenthesis
+  $(LI smart-indent now respects the contents of the new line when inserting a line break)
+  $(LI now supporting the Code Definition Window)
+ )
+
+2011-01-29 Version 0.3.21
+ $(UL
+  $(LI fix: identifiers extracted for "Goto Definition" stopped at digits)
+  $(LI fix: clean removed ddoc files from the doc directory, but not html files)
+  $(LI added macro expansion to modules.ddoc setting)
+  $(LI added context menu to show paste ring buffer and insert from it)
+  $(LI brace highlighting now done in idle handling, so it also works when moving
+    the caret with the mouse )
+  $(LI brace matching now also includes strings and nested comments)
+  $(LI goto matching brace now implemented (the VS implementation does not work 
+    well with D) )
+  $(LI completion: items are no longer displayed multiple times)
+  $(LI improved handling of unicode characters in environment and batch files)
+  $(LI installer now adds a "D Exception" to the "Win32 Exception" list to allow)
+    the debugger to stop when a D exception is thrown
+ )
+
+2010-12-31 Version 0.3.20
+ $(UL
+  $(LI basic outlining support (disable with check box on global text editor page
+    if it is causing trouble, manually activate it with "Outlining -> Collapse to Definitions") )
+  $(LI added build time output (set check box on global project option page))
+  $(LI fixed missing newline after post build command)
+  $(LI fix: suffix L was not recognized on floats)
+  $(LI code completion and goto definition now also work in comments or strings)
+  $(LI ddoc files in project now also passed to DMD automatically)
+  $(LI support for generating modules.ddoc for CanDyDOC)
+ )
+
+2010-12-11 Version 0.3.19
+ $(UL
+  $(LI fixed [] being a single token confusing brace matching)
+  $(LI fixed some issues with detecting floating point numbers)
+  $(LI fixed issues with bad colorization state)
+  $(LI fixed crash when a project in a solution could no longer be found)
+  $(LI now packaged with cv2pdb 0.19)
+ )
+
+2010-11-07 Version 0.3.18
+ $(UL
+  $(LI linker errors with file name on the same line did not make it into the error list)
+  $(LI added color "Visual D Operator" to "Fonts and Colors" setup)
+  $(LI added version/debug colorizations (colors "Visual D Disabled ..."))
+  $(LI added q{} token string colorizations (colors "Visual D Token String ..."))
+  $(LI additional tools settings page under TextEditor->D->Colorizer)
+  $(LI fixed broken search file dialog introduced in last version)
+  $(LI project configuration: added single file compilation option)
+  $(LI project configuration: changed defaults for "file to clean" and "json path"
+    to better support single file compilation )
+  $(LI fixed incomplete parsing of escaped file names in dependency files)
+  $(LI improved dependency file parsing speed)
+  $(LI bugfix: imports with selective import symbols could miss from dependent import files)
+  $(LI now packaged with cv2pdb 0.18)
+  $(LI now packaged with new mago version, including better exception handling and 
+    disassembly support )
+  $(LI fixed mago deinstallation, added mago to Visual Studio About window)
+  $(LI added token identifier enumerator to lexer)
+ )
+
+2010-09-29 Version 0.3.17
+ $(UL
+  $(LI improved support for mercurial-scc, AnkhSVN and VisualHG)
+  $(LI (un)comment/format selection did not work with selection created from bottom to top)
+  $(LI (un)comment selection now works similer to C++ always adding/removing comments, toggle
+    comments is now a new Visual D command )
+  $(LI fixed DLL loading on xp64)
+  $(LI command "Build phobos browse info" now uses $(APPDATA)\VisualD\json as the default path
+    to avoid access rights problems )
+  $(LI command "Build phobos browse info" now also works for D1)
+ )
+
+2010-09-24 Version 0.3.16
+ $(UL
+  $(LI now Visual D itself also compiles against VSI SDK for Visual Studio 2010 and Windows SDK v7.1)
+  $(LI empty dependency file now causes rebuild)
+  $(LI new command "Build phobos browse info")
+  $(LI added support for Mago debugger)
+  $(LI fixed dmd option for profiling)
+  $(LI fixed bad status message for matching parenthesis)
+  $(LI now supports command comment/uncomment selected lines)
+  $(LI improved smart indentation)
+  $(LI block re-indentation now works as a single command with respect to undo/redo)
+  $(LI now packaged with cv2pdb 0.17)
+  $(LI fixed loading DLLs (including Visual D) on Windows Server 2003)
+  $(LI now installer includes Mago debugger)
+  $(LI new profiler window to display trace.log)
+  $(LI fixed bad variable replacement when building project name shorter than 4 characters)
+ )
+
+2010-08-11 Version 0.3.15
+ $(UL
+  $(LI when reading import paths from sc.ini, the directory is determined by searching dmd.exe 
+    through the executable paths setting and the PATH environment variable )
+  $(LI fixed freeze when searching indentation level for smart indent (might also affect brace
+    matching) )
+  $(LI now packaged with cv2pdb 0.16.)
+  $(LI fixed crash when running along-side the Qt-Addin for Visual Studio)
+ )
+
+2010-07-23 Version 0.3.14
+ $(UL
+  $(LI fixed parameter tooltips on VS2010)
+  $(LI fixed debugger data tooltips on VS2010)
+  $(LI fixed handling of quoted file/path names)
+  $(LI updated bitmaps in about box and templates to the website logo)
+  $(LI added command VisualD.ParameterInfo to avoid hook by Visual Assist)
+  $(LI fixed import completion for packages accessed through project import path settings)
+  $(LI goto definition now displays error in status line if no definition found or opening source file fails)
+  $(LI now jumping to definition if multiple definitions exist on the same line)
+  $(LI brace highlighting now shows error in status line for mismatched brackets)
+  $(LI brace highlighting now also shows begin/end of block comments)
+  $(LI fixed pasting html text not omitting format information)
+  $(LI now using environment variable DMD_LIB to pass library path to DMD, please update DMDs sc.ini accordingly)
+  $(LI now build checks whether output files are actually created to avoid silent link failure)
+  $(LI generating JSON output is now the default setting for new projects)
+ )
+
+2010-07-09 Version 0.3.13
+ $(UL
+  $(LI renaming a file in the project did not ensure the project to be saved)
+  $(LI dragging a directory into the project now creates a folder and adds all files and folders found in that directory but those that start with ".")
+  $(LI added project option "Enable informational warnings" (dmd option -wi))
+  $(LI resource files now have command "View Code")
+  $(LI fix: completion did not detect beginning of word at line end)
+  $(LI fix: skipping through a string literal with ctrl-left/right skipped the whole string)
+  $(LI now handling some optional project properties to keep AnkhSvn happy.)
+  $(LI SCC status of project items is now shown (but not updated yet))
+  $(LI minor tweak of the ConsoleApp template)
+  $(LI more files translated from the Windows SDK)
+  $(LI now using label "reportError" instead of "xit" in build batches)
+  $(LI options with multiple arguments are now delimited by both ';' and white spaces, use quotes if any of these need to be part of a file name)
+ )
+
+2010-06-25 Version 0.3.12
+ $(UL
+  $(LI stricter string handling to avoid crashes when launching debugger in VS2010)
+  $(LI the windows application template's sub-system version now defaults to 4.0)
+  $(LI added new project item template for package creating both folder in project and 
+    directory on disk )
+  $(LI if a directory exists with the name of the folder, the default location
+    of a new project item now defaults to this directory )
+  $(LI renaming a file in the project renames it on disk as well)
+  $(LI improved build process, it should now be possible to compile Visual D following
+    the instruction on http://www.dsource.org/projects/visuald/wiki/Build_from_source )
+  $(LI updated to cv2pdb 0.14.)
+ )
+
+2010-06-10 Version 0.3.11
+ $(UL
+  $(LI error messages now forwarded to error list)
+  $(LI Visual D settings now stored in the user area of the registry)
+  $(LI added library search path to project settings (you need to append ";%LIB%" to
+    the LIB setting in DMD's sc.ini for this to work) )
+  $(LI command VisualD.ShowScope now displays the scope of the caret in the 
+    status line )
+  $(LI Visual D now creates its own menu, expecting to be filled with more commands
+    in the future and to avoid cluttering other menus )
+  $(LI Search window commands are now called VisualD.SearchFile and VisualD.SearchSymbol
+    (you might need to reassign keyboard shortcuts) )
+  $(LI Thanks to Alix Pexton, the web site has a professional looking new logo.)
+ )
+
+2010-06-03 Version 0.3.10
+ $(UL
+  $(LI updated to cv2pdb 0.13 which allows debugging under plain VS2010 and is
+    more stable when evaluating arrays in the debugger )
+  $(LI now built with debug symbols to allow crash analysis. See
+    [download:downloads/visuald_pdb.zip] for symbols for the latest version)
+  $(LI fix: project property dialog did not popup with saved D version)
+  $(LI added the possibility to stop a build)
+  $(LI new logo now used in about box)
+ )
+
+2010-05-28 Version 0.3.9
+ $(UL
+  $(LI new file/symbol search window)
+  $(LI word-completion can now be expanded to symbol lookup by pressing Ctrl-Space again)
+  $(LI installation now reenables package, in case you told VS to skip loading it)
+  $(LI now using machine-translated SDK instead of std.windows)
+  $(LI fixed COM leak)
+  $(LI fix: file opened through "goto definition"/"find in files" sometimes warns
+    "already opened in editor")
+  $(LI fix: "goto error" sometimes would not jump to error with message 
+    "cannot find the file specified")
+  $(LI fix: last version would not let you select any but the first entry of an
+    expansion list)
+  $(LI symbol information now updated after project load, it's no longer necessary
+    to build once)
+ )
+
+2010-05-08 Version 0.3.8
+ $(UL
+  $(LI added function parameter tooltips)
+  $(LI fix: resource files would not be updated when used with tool "Auto")
+  $(LI fix: custom built files always added to linker command line)
+  $(LI fix: fixed initialization exception when no windows-SDK installed)
+  $(LI fix: build only worked as admin on x64)
+  $(LI fix: spurious crashes on x64)
+  $(LI improved WindowsApp project template (added libs, sets application subsystem))
+ )
+
+2010-04-27 Version 0.3.7
+ $(UL
+  $(LI force CR/LF pairs in batch commands instead of LF only end-of-line.)
+ )
+
+2010-04-26 Version 0.3.6
+ $(UL
+  $(LI fixed COM and memory leaks)
+  $(LI projects with a lot of files now build with response files)
+  $(LI when only removing file or changing folder name, project was not saved)
+  $(LI support for operation "Rebuild")
+  $(LI option "other compiler" and map file were not quoted when containing spaces)
+  $(LI added build logging to $(IntDir)\buildlog.html)
+  $(LI added macros SAFEPROJECTPATH/DIR/FILENAME/EXT/NAME identical to PROJECT*, but
+    without spaces)
+ )
+
+2010-04-22 Version 0.3.5
+ $(UL
+  $(LI added cv2pdb to installer)
+  $(LI support for operations on multiselection in solution explorer)
+  $(LI added option "D 2.043" to pass corresponding flag to cv2pdb)
+  $(LI macros in all debug options are now expanded)
+  $(LI fixed crashes on COM objects that were garbage-collected while still in use)
+ )
+
+2010-04-20 Version 0.3.4
+ $(UL
+  $(LI added support for command Edit.InvokeSnippetFromShortcut)
+  $(LI installer now requests admin execution level, so it does not fail on Vista or Windows7)
+  $(LI removed VS Express version from installer)
+ )
+
+2010-04-18 Version 0.3.3
+ $(UL
+  $(LI now shows full version in about box)
+  $(LI added README, LICENSE and CHANGES to installer)
+  $(LI added DnD inside project)
+  $(LI fixed registration of D templates for "New File")
+  $(LI fixed multi-hreading issue, e.g. causing find in entire solution to fail)
+  $(LI added "Clean" project)
+  $(LI cleaned up and added more project templates )
+ )
+
+2010-04-14 Version 0.3.2
+ $(UL
+  $(LI added switch "use other compiler" to project settings)
+  $(LI disabled settings if respective enable switch is off)
+ )
+  
+2010-04-13 Version 0.3.1
+ $(UL
+  $(LI initial release)
+ )
+
+Macros:
+	TITLE = Version History
+

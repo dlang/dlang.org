@@ -1,0 +1,65 @@
+Ddoc
+
+$(P The click-through-installer will guide you through the intallation process. The installer lets you select the
+Visual Studio Version for which you want Visual D to be installed. It will always install
+for all users, not only for a single user.)
+
+$(P To compile your application, you must have $(LINK2 http://www.digitalmars.com/d/download.html, DMD) or 
+$(LINK2 https://bitbucket.org/goshawk/gdc/wiki/Home, GDC) installed.)
+
+$(P Visual D does $(B not) work with any of the $(B Express) version of Visual Studio. Other than the 
+commercial editions, the Express versions do not support loading third party extensions and add-ins.)
+
+$(P A $(B free) alternative are the integrated $(B Visual Studio Shell) distributions, that can be downloaded
+here: ($(LINK2 http://www.microsoft.com/downloads/details.aspx?FamilyID=40646580-97FA-4698-B65F-620D4B4B1ED7&displaylang=en, VS Shell 2008),
+$(LINK2 http://www.microsoft.com/downloads/details.aspx?FamilyID=8e5aa7b6-8436-43f0-b778-00c3bca733d3&displaylang=en, VS Shell 2010)) and 
+VS Shell 2012 (see below for links). The shells are identical with the Visual Studio IDE, but stripped of any language support. It
+still contains the native debugger that can be used to debug D applications.)
+
+$(P For debugging applications, you should also install cv2pdb which is now included in the
+Visual D installer. Please make sure, changes to Common7\Packages\Debugger\autoexp.dat do
+not mix with previous manual installations of $(LINK2 http://svn.dsource.org/projects/cv2pdb, cv2pdb). 
+Visual D also installs the alternative debug engine mago that does not need cv2pdb.)
+
+$(P Unfortunately, the Visual Studio Shells 2008 and 2010 are missing one file, that is needed for 
+the conversion of the debug information by cv2pdb. This is $(B msobj80.dll) for VS2008 and $(B msobj100.dll) for VS2010 
+and must be extracted from a standard installation, the Visual C Express edition or the Windows SDK. 
+You might also find it installed by other Microsoft products.
+Put this file alongside mspdbcore.dll, normally in $(LESS)VS-installation-path$(GREATER)\Common7\IDE.)
+
+$(P The Visual Studio Shell 2012 is installed with two packages, the 
+$(LINK2 http://www.microsoft.com/en-us/download/details.aspx?id=30670, isolated shell) followed by the 
+$(LINK2 http://www.microsoft.com/en-us/download/details.aspx?id=30663, integrated package). Fortunately it
+has all the files needed for debugging, and the Visual D installer patches the installation to 
+make the x64 debugger work.)
+
+$(H2 Using GDC)
+
+$(P To use GDC as the compiler to build D files, you will first have to install the MinGW environment and the GDC compiler:)
+$(UL
+  $(LI MinGW64 installer: $(LINK http://tdm-gcc.tdragon.net/))
+  $(LI GDC binaries: $(LINK https://bitbucket.org/goshawk/gdc/downloads))
+)
+
+$(P Add the MinGW64/bin path to your PATH environment variable or the executable path list in the "GDC Directories" 
+option page. Then switch the "Compiler" option in the project configuration to "GDC".)
+
+$(P To create a 64-bit executable, you will have to add a new platform to the project and solution 
+in the configuration manager.)
+
+$(P Known issues:)
+$(UL
+  $(LI when building a library you should change the output file name extension to ".a".)
+  $(LI when building a library object files will be generated into the project directory, not the 
+    intermediate directory, because there seems to be no GDC option to change the output folder for multiple files.)
+)
+
+$(H3 Debugging)
+
+$(P cv2pdb has been extended to also convert from DWARF debug information to PDB, so it 
+is possible to debug applications built with GDC in Visual Studio. Be sure to select
+the "Visual Studio" debugger in the debugger project settings. Mago cannot be used 
+as the debug engine, it currently only supports the DMD CodeView debug format.)
+
+Macros:
+	TITLE=Installation

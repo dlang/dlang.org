@@ -1,0 +1,97 @@
+Ddoc
+
+$(P The latest sources of Visual D are available from the github repository at 
+https://github.com/D-programming-Language/visuald.)
+
+$(H2 Prerequisites)
+
+$(P You need the following tools to build Visual D:)
+$(UL
+  $(LI Visual Studio 2008/2010/2012 (other version might also work, but I haven't tried a lot))
+  $(LI $(LINK2 http://www.microsoft.com/downloads/details.aspx?displaylang=en&FamilyID=59ec6ec3-4273-48a3-ba25-dc925a45584d, Visual Studio Integration SDK for VS2008)
+  or $(LINK2 http://www.microsoft.com/downloads/en/details.aspx?FamilyID=47305cf4-2bea-43c0-91cd-1b853602dcc5, Visual Studio Integration SDK for VS2010))
+  $(LI Windows SDK 6.0A (included in VS2008) or SDK 7.0A (included in VS2010) or SDK v7.1 (included in the Windows 7 SDK), other versions might also work.)
+  $(LI DMD 2.059 or newer)
+  $(LI coffimplib ($(LINK2 ftp://ftp.digitalmars.com/coffimplib.zip, ftp)))
+  $(LI for installer: $(LINK2 http://nsis.sourceforge.net/Download, NSIS))
+  $(LI for debugging: $(LINK2 http://www.dsource.org/projects/cv2pdb, cv2pdb))
+)
+
+$(H2 Building Visual D)
+
+$(P The Visual D source code is usually updated to work with the latest release version 
+of DMD (2.059 as of now), so you should use this release of the compiler when using 
+the latest svn/git checkout.)
+
+$(P The standard build procedure for the release version is to execute 
+"nmake" in the trunk directory. $(B Please check the variable settings at the 
+top of the Makefile and adjust them to the installation directories on your system.))
+
+$(P If you want to start developing or debugging, you should execute
+"$(B nmake sdk)" at least once to build the necessary D translations from
+the Windows and Visual Studio SDK. Afterwards you can use Visual D itself with the 
+solution visuald_vs9.sln or visuald_vs10.sln, respectively.)
+
+$(H3 Known issues)
+$(UL
+ $(LI building the parser library with stock DMD causes an "Out of memory" error. There are two 
+   options how to fix this:
+  $(UL
+   $(LI enable the LARGE_ADDRESS_AWARE bit inside dmd.exe with this simple tool: 
+    $(LINK http://www.dsource.org/projects/visuald/browser/trunk/tools/largeadr.d) (if you are running a 
+	32-bit OS, you will also need to boot with the /3GB switch))
+   $(LI build DMD with the Microsoft compiler instead of the Digital Mars compiler 
+    (This also has the benefit of an executable that compiles about twice as fast))
+  )
+ )
+ $(LI building '''pkgcmd.cto''' from pkgcmd.ctc needs CTC.exe from the VS2008 VSI SDK. 
+    This program is no longer available in the 2010 VSI SDK. Therefore, a precompiled version of 
+	pkgcmd.cto is committed. If the build rule fails please make sure pkgcmd.cto  is newer than 
+	pkgcmd.ctc to skip this build step.)
+
+ $(LI A druntime patch is necessary for correct name demangling in the profiler window:
+  $(UL
+   $(LI $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=4852, Issue 4852): Support to suppress function signature in the profiler window)
+  )
+  Compiling Visual D without this patch is still possible, the compiler will detect it and use compatibility code emitting messages to that respect.
+ )
+)
+
+$(H2 Deployment)
+
+$(P You should debug the plugin within Visual Studio 2008/2010 using a different
+branch in the registry, so it does not interfere with your working
+environment.)
+
+$(UL
+ $(LI VS2008: To create a configuration named "D"
+  $(UL
+   $(LI As administrator, execute from the command line:
+    $(PRE $(LESS)path-to-visual-studio-sdk$(GREATER)\VisualStudioIntegration\Tools\Bin\VSRegEx.exe getorig 9.0 D)
+   )
+   $(LI and register the compiled debug plugin with
+    $(PRE trunk\nsis\register.bat)
+   )
+   $(LI The IDE can then be started with the new settings branch via
+    $(PRE devenv /RootSuffix D)
+   )
+  )
+ )
+ $(LI VS2010/VS2012: The mechanism has dramatically changed with VS2010, as the non-standard registry settings are rebuilt 
+   on every start of Visual Studio. 
+  $(UL
+   $(LI Put the files from trunk\nsis\extensions into the folder 
+     $(DOLLAR)(APPDATA)\Local\Microsoft\VisualStudio\10.0D\Extensions\VisualD (replace 10.0D with 11.0D for VS2012))
+   $(LI in visuald.pkgdef, replace the path "M:\\s\\d\\visuald\\trunk\\bin\\debug\\visuald.dll" with your debug build output path.)
+   $(LI Start the IDE with the new settings branch via)
+    $(PRE devenv /RootSuffix D)
+   $(LI Visual D will now be shown in the Extension Manager where it has to be enabled.)
+  )
+ )
+)
+
+$(P Good luck!)
+
+Macros:
+	TITLE=Building from Source
+	

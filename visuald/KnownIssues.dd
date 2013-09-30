@@ -1,0 +1,75 @@
+Ddoc
+
+$(P
+Please consult the ticket view for issues within Visual D. Some irritating behaveour is not
+caused by Visual D - these are listed here:)
+
+$(H2 Visual Studio Express)
+
+$(P Visual D does not work with any of the Express version of Visual Studio. These editions do not
+support loading third party extensions and add-ins.)
+
+$(P A free alternative are the integrated Visual Studio Shell distributions.
+The shells are identical with the Visual Studio IDE, but stripped of any language support. It
+still contains the native debugger that can be used to debug D applications. Please see the
+$(LINK2 installation.html, installation page) for download links.)
+
+$(P Unfortunately, the Visual Studio Shell is missing one file, that is needed for the conversion of 
+the debug information by cv2pdb. This is msobj80.dll for VS2008 and msobj100.dll for VS2010 and must 
+be extracted from a standard installation, the Visual C Express edition or the Windows SDK. You might
+also find it installed by other Microsoft products.)
+
+$(H2 Library search path not passed to linker)
+
+$(P Even though Visual D allows to set a library search path, this does not work with 
+the default installation of DMD. Optlink, the linker used by DMD, only accepts the path 
+in the LIB environment variable (this is set by Visual D), but dmd overwrites it with 
+the settings in its configuration file sc.ini.)
+
+$(P You should change the LIB setting in <dmd-installation-path>\windows\bin\sc.ini to this:
+$(PRE
+  LIB="%@P%\..\lib";\dm\lib;%DMD_LIB% 
+)
+to pass through the value set by Visual D. Since version 0.3.14, DMD_LIB is used instead of LIB to avoid conflicts
+with the environment variable LIB being used by other compilers.)
+
+$(H2 No parameter tool tips when running alongside Visual Assist)
+
+$(P Visual Assist is an extension to Visual Studio that adds a lot of editing functionality 
+to most languages supported by VS, but not D. Unfortunately it interferes with Visual D. A 
+known effect is that parameter info tool tips don't work in Visual D while Visual Assist is
+active in VS2005 or VS2008 (reported to not happen in VS2010). There are several work-arounds for this:)
+$(UL
+  $(LI disable Visual Assist while programming in D)
+  $(LI assign your favorite keyboard shortcut to the command "VisualD.!ParameterInfo".)
+  $(LI add the following Visual Studio macro
+   $(PRE
+    Sub ParameterInfo()
+        If Not ActiveDocument Is Nothing Then
+            If ActiveDocument.Language = "D" Then
+                DTE.ExecuteCommand("VisualD.ParameterInfo")
+            Else
+                DTE.ExecuteCommand("Edit.ParameterInfo")
+            End If
+        End If
+    End Sub
+   )
+   and assign the standard !ParameterInfo shortcut (Ctrl-Shift-Space) to this function.
+  )
+)
+
+
+$(H2 Process MsMpEng.exe eats a lot of CPU )
+
+$(P The process MsMpEng.exe is part of the Windows Defender anti virus protection system. 
+It seems that it monitors inter-process communication, if it is configured to "real-time protect"
+your system, but doing so takes noticeable CPU performance. If Visual D is configured to parse 
+or semantically analyze the source code, it delegates this to a separate process vdserver.exe.
+This requires considerable data transfer between processes.)
+
+$(P As a result, Windows Defender can harm performance of Visual D. To avoid this,
+add the Visual Studio process devenv.exe to the list of Excluded Processes in the 
+settings of Windows Defender.)
+
+Macros:
+	TITLE=Known Issues
