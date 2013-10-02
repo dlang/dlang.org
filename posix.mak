@@ -16,6 +16,9 @@ PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
 DOC_OUTPUT_DIR=$(ROOT_DIR)/web
 GIT_HOME=https://github.com/D-Programming-Language
+DPL_DOCS=../tools/dpl-docs/dpl-docs
+DPL_DOCS_FLAGS=--std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --
+GIT_HOME=git@github.com:D-Programming-Language
 
 # Latest released version
 ifeq (,${LATEST})
@@ -39,12 +42,14 @@ dmlogo-smaller.gif download.png fedora_logo.png freebsd_logo.png		\
 gentoo_logo.png github-ribbon.png gradient-green.jpg gradient-red.jpg	\
 globe.gif linux_logo.png mac_logo.png opensuse_logo.png pen.gif			\
 search-left.gif search-bg.gif search-button.gif tdpl.jpg				\
-ubuntu_logo.png win32_logo.png)
+tree-item-closed.png tree-item-open.png ubuntu_logo.png win32_logo.png)
 
 JAVASCRIPT=$(addprefix js/, codemirror.js d.js run.js	\
 run-main-website.js)
 
-STYLES=css/style.css css/print.css css/codemirror.css
+STYLES=css/style.css css/print.css css/codemirror.css css/ddox.css
+
+PRETTIFY=prettify/prettify.css prettify/prettify.js
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php	\
 howtos.html language-reference.html robots.txt process.php
@@ -117,7 +122,7 @@ PDFOPTIONS=--header-left [section] --header-right [page]			\
 PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
-$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
+$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT) $(PRETTIFY))
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
@@ -294,3 +299,44 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : std.ddoc ${LATEST}.ddoc \
 	  DRUNTIME_PATH=${DRUNTIME_DIR}.${LATEST} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
 	  STDDOC="`pwd`/$(LATEST).ddoc `pwd`/std.ddoc"
+
+################################################################################
+# phobos and druntime, latest released build and current build (DDOX version)
+################################################################################
+
+apidocs-prerelease : docs-prerelease.json
+	${DPL_DOCS} generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc\
+	  --override-macros=std-ddox-override.ddoc --package-order=std\
+	  --git-target=master docs-prerelease.json ${DOC_OUTPUT_DIR}/library-prerelease
+
+apidocs-release : docs.json
+	${DPL_DOCS} generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc\
+	  --override-macros=std-ddox-override.ddoc --package-order=std\
+	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
+
+apidocs-serve : docs-prerelease.json
+	${DPL_DOCS} serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc\
+	  --override-macros=std-ddox-override.ddoc --package-order=std\
+	  --git-target=master --web-file-dir=. docs-prerelease.json
+
+docs.json : ${DMD_DIR}.${LATEST}/src/dmd
+	mkdir .tmp || true
+	[ -d ${DRUNTIME_DIR}.${LATEST} ] || \
+	  git clone ${GIT_HOME}/druntime ${DRUNTIME_DIR}.${LATEST}/
+	cd ${DRUNTIME_DIR}.${LATEST} && git checkout v${LATEST}
+	[ -d ${PHOBOS_DIR}.${LATEST} ] || \
+	  git clone ${GIT_HOME}/phobos ${PHOBOS_DIR}.${LATEST}/
+	cd ${PHOBOS_DIR}.${LATEST} && git checkout v${LATEST}
+	find ${DRUNTIME_DIR}.${LATEST}/src -name '*.d' | sed -e /unittest.d/d -e /gcstub/d > .tmp/files.txt
+	find ${PHOBOS_DIR}.${LATEST} -name '*.d' | sed -e /unittest.d/d -e /format/d -e /windows/d >> .tmp/files.txt
+	${DMD_DIR}.${LATEST}/src/dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
+	${DPL_DOCS} filter docs.json --min-protection=Protected --only-documented
+	rm -r .tmp
+
+docs-prerelease.json : ${DMD_DIR}/src/dmd
+	mkdir .tmp || true
+	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' -e /unittest/d > .tmp/files.txt
+	find ${PHOBOS_DIR} -name '*.d' | sed -e /uittest.d/d -e /format/d -e /windows/d >> .tmp/files.txt
+	${DMD_DIR}/src/dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs-prerelease.json @.tmp/files.txt
+	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected --only-documented --ex=gc. --ex=rt. --ex=std.internal.
+	rm -r .tmp
