@@ -32,6 +32,7 @@ ROOT_DIR=$(shell pwd)
 # Documents
 
 DDOC=macros.ddoc doc.ddoc ${LATEST}.ddoc $(NODATETIME)
+DDOC_VISUALD=macros.ddoc html.ddoc visuald/visuald.ddoc
 
 IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico		\
 d3.png d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
@@ -40,6 +41,19 @@ gentoo_logo.png github-ribbon.png gradient-green.jpg gradient-red.jpg	\
 globe.gif linux_logo.png mac_logo.png opensuse_logo.png pen.gif			\
 search-left.gif search-bg.gif search-button.gif tdpl.jpg				\
 ubuntu_logo.png win32_logo.png)
+
+IMAGES_VISUALD=$(addprefix visuald/images/, \
+codesnippet.png colors.png compile_and_run_opt.png						\
+completion.png coverage.png cppwizard.png d_exceptions.png debug.png	\
+dmd_directories.png doc_config.png download.png editor-options.png		\
+extmanager.png fullvs.png import_completion.png intellisense_options.png	\
+ldc_compiler.png newproject.png objectbrowser.PNG outlining.png			\
+parameterinfo.png pastemenu.PNG profiler.png project_config.png			\
+prop_codegen.png prop_debug.png prop_doc.png searchfile.png				\
+searchmenu.png searchsymbol.png showscope.png solutionexplorer.png		\
+strings.png syntaxerror.png tokenreplace.png tokenreplacemenu.png		\
+toolopt_project.png vd_logo.png vd_logo2.png versionhighlight.png		\
+visuald_menu.png visuald_settings.png)
 
 JAVASCRIPT=$(addprefix js/, codemirror.js d.js run.js	\
 run-main-website.js)
@@ -75,7 +89,14 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements				\
 	template-comparison templates-revisited tuple						\
 	variadic-function-templates warnings wc windbg windows
 
+PAGES_VISUALD=BrowseInfo BuildFromSource CppConversion Debugging		\
+	Editor Features GlobalOptions Installation KnownIssues Profiling	\
+	ProjectConfig ProjectWizard ReportingBugs Search StartPage			\
+	TokenReplace VersionHistory
+
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
+
+TARGETS_VISUALD=$(addprefix visuald/,$(addsuffix .html,$(PAGES_VISUALD)))
 
 PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
 	ctod.html cpptod.html pretod.html template-comparison.html
@@ -117,11 +138,15 @@ PDFOPTIONS=--header-left [section] --header-right [page]			\
 PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
-$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
+$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT) \
+$(TARGETS_VISUALD) $(IMAGES_VISUALD))
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
 # Pattern rulez
+
+$(DOC_OUTPUT_DIR)/visuald/%.html : visuald/%.dd $(DDOC_VISUALD)
+	$(DMD) -c -o- -Df$@ $(DDOC_VISUALD) $<
 
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC)
 	$(DMD) -c -o- -Df$@ $(DDOC) $<

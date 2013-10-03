@@ -1,0 +1,238 @@
+Ddoc
+
+$(P Visual D can help you converting your C++ code base to D. Even though it is 
+capable of some quite extensive reorganization of the code, don't expect to get 
+compilable and runnable code out of the box. Helping the converter with additional
+replacement rules and manual additional editing of the result might be necessary. 
+
+$(P The conversion consists of a number of steps:)
+$(UL
+    $(LI convert text into a stream of tokens with preceding white space or comments)
+    $(LI convert/expand preprocessor directives, so that the text is no longer a mixture 
+	  of two languages. Conditionals are replaced by constructs that should fit into a 
+	  tree hierarchy similar to "static if" in D.)
+    $(LI apply user specified replacement rules (pre))
+    $(LI parse the text with a (slightly sloppy) C++ parser into a syntax tree)
+    $(LI perform a number of transformations on the tree)
+    $(LI apply user specified replacement rules (post))
+    $(LI write output including adding a prefix to D keywords that are not C++ keywords)
+)
+
+$(P You can invoke the C++ conversion wizard from the Visual D menu.)
+
+$(IMG_CENTER images/cppwizard.png)
+
+$(P Options:)
+$(UL
+    $(LI Convert: Input files/Current document/Current selection. When selecting 
+	  "Input files", a whole source code base can be converted, writing files to 
+	  the output directory. Otherwise, the text in the editor is replaced. If you
+	  have not changed the text and selection after the last conversion, redoing 
+	  the conversion will use the initial code to better allow tweaking options.)
+
+    $(LI Input dir: base directory of input file specifications)
+    $(LI Files and directories: filename pattern to include into conversion, prefix 
+	  with '+' to recurse into subdirectories, prefix with '-' to exclude files from
+	  the list of files specified so far.)
+    $(LI Source code header: header to write into output files. The identifier 
+	  MODULENAME is replaced with the module name of the generated D file. If it
+	  is not specified in the header, a module statement will be prepended to it.)
+    $(LI Output dir: the directory where to write output files to.)
+    $(LI Write intermediate files: To debug problems during the conversion, 
+	  intermediate files can be written to sub directories "pass1" (after the 
+	  proprocessor handling) and "pass2" (after the code reorganization, but 
+	  before the final replacements).)
+    $(LI Preprocessor expansions: only the preprocessor identifiers given here 
+	  will be expanded. All other preprocessor directives are translated to 
+	  corresponding D code. If no assignment is given, the first definition within 
+	  the input source code is used. If preprocessor conditionals are expanded, only 
+	  the active code path is written to the output file.)
+    $(LI Version conditionals: normally, preprocessor conditionals are translated 
+	  to "static if" conditions, but if an identifier is specified here, version 
+	  conditionals are used.)
+    $(LI Pre and post token replacements: some constructs are not parsable or 
+	  don't convert well. With the token replacements you can inject some replacement 
+	  rules into the conversion process. The replacement follows the $(LINK2 TokenReplace.html
+	  Token Search and Replace) functionality. The syntax of the rule is
+	 $(PRE [filename-pattern::] search-pattern => replacement )
+	 If you want to span the rule across multiple lines, use the \ line splicing mechanism.
+	)
+    $(LI Value/reference types: sometimes the parser or the converter stumbles across 
+	  unknown identifiers that might be types. You can help it specifying them here.
+	  Value or reference semantics determine whether an indirection is removed from
+	  pointer declarations.)
+    $(LI Keyword prefix: identifiers that are keywords in D, but not in C++, are 
+	  prefixed with the given text.)
+    $(LI Package prefix: module names are prefixed with the given package identifier)
+    $(LI Load/Save: save and restore the current dialog settings)
+    $(LI Convert: start the conversion)
+)
+
+$(P When using the converter on the current selection (there is also a command 
+VisualD.ConvertSelection that you can assign to a keyboard shortcut) you should 
+select complete declarations, e.g. variable or class declarations and functions. 
+Otherwise the parser will stumble.)
+
+$(P This tool is the result of generalizing an attempt to convert the dmd front 
+end code to D, so please don't be surprised to find some unexpected special casings 
+from time to time. The result of that attempt was that the converted code was 
+parsable, but did not pass all semantic stages.)
+
+$(H2 Running from the console)
+
+$(P There is also a command line version of this wizard available 
+in the downloads folder: 
+$(LINK2 http://www.dsource.org/projects/visuald/browser/downloads/cpp2d.exe?format=raw, cpp2d.exe))
+
+$(P You can pass a config file to the converter that has been saved by the wizard dialog.
+$(PRE cpp2d -config myoptions.c2d [files-specs...])
+If you pass files to the program, file specifications in the configuration file are ignored.)
+
+$(P See $(LINK2 http://www.dsource.org/projects/visuald/browser/trunk/c2d/dmd.c2d, here) 
+for an example of a configuration file to get started on converting the dmd front end.)
+
+$(H2 Examples)
+
+$(P Here are some examples of what the converter can do for you:)
+
+Move member and field implementation into class declaration.
+$(CMP_CPP_D
+class C {
+  // comments are usually kept
+  static int x;
+  DECL *foo(int flags = 0);
+};
+,
+struct C {
+  // comments are usually kept
+  static int x = 3;
+  // moved with the implementation
+ DECL *foo(int flags = 0) { return null; }
+};
+)
+
+
+Convert constructor and call super constructor
+$(CMP_CPP_D
+struct A : B {
+    A() : B(1) { }
+    A(int x) : B(x) { }
+};
+,
+class A : B {
+    this() { super(1); }
+    this(int x) { super(x); }
+};
+)
+
+Split declarations for variables with different types
+$(CMP_CPP_D
+int a = sizeof(void *);
+int x$(_j) *y = (int*)null;
+,
+int a = (void *).sizeof;
+int x;
+int *y = cast(int *)null;
+)
+
+Add enumerator type to constants of named enumerator values
+$(CMP_CPP_D
+typedef enum { e1$(_j) e2 } EX;
+enum ENUM { kEnum };
+int foo() {
+    Ident id = (op == kEnum) ? 0 : 1;
+}
+,
+ enum unnamed_1 { e1$_j e2 }alias unnamed_1 EX;
+enum ENUM { kEnum };
+int foo() {
+    Ident id = (op == ENUM.kEnum) ? 0 : 1;
+}
+)
+
+Simple template translations
+$(CMP_CPP_D
+template&lt;typename TYPE&gt;
+struct ArrayBase : Array { 
+    TYPE* data;
+};
+template&lt;typename S$_j class T&gt;
+double foo(S s$_j T t) { return s+t; }
+,
+class ArrayBase( TYPE) : Array { 
+    TYPE* data;
+};
+
+double foo( S$_j T)(S s$_j T t) { return s+t; }
+)
+
+Preprocessor macros are converted to enum, alias or templates
+$(CMP_CPP_D
+#define K1 1 // keep comment
+#define K2 (K1+K1)
+#define K3 K1
+#define SQR(n) (n)*(n)
+,
+enum K1 =  1; // keep comment
+enum K2 =  (K1+K1);
+alias K3 K1;
+ auto SQR( ARG1 )(ARG1 n) { return  n*n; }
+)
+
+Preprocessor conditionals are converted to static if or can be removed when specified in the "expansions" field
+$(CMP_CPP_D
+#define ABC 1
+  a = 1;
+#if ABC
+  b = 2;
+#endif
+  c = 3;
+,
+enum ABC = 1;
+  a = 1;
+static if(ABC) {
+  b = 2;
+}
+  c = 3;
+)
+
+
+It can deal with a number of complicated uses of preprocessor conditionals, but they can get much more difficult to read.
+$(CMP_CPP_D
+void foo(x) {
+  if (x)
+    c = 0;
+#if COND1 // comment
+  else if (a)
+#elif COND2
+  else if (b)
+#endif
+    c = 1;
+}
+,
+void foo(x) {
+  if (x)
+    c = 0;
+else if(true) static if(COND1) // comment
+  /*else*/ if (a)
+goto L_T4; else goto L_F4; else static if(COND2)
+  /*else*/ if (b)
+goto L_T4; else goto L_F4; else goto L_T4; else L_F4: if(0) L_T4:
+    c = 1;
+}
+)
+
+Macros:
+TITLE=C++ Conversion Wizard
+_j = ,
+CMP_CPP_D=
+<div align="center">
+<table width="90%" style="border: 1px solid #ccc;margin: 0 0 0em 0em;" bgcolor="#F0F0F0">
+<tr bgcolor="#C0C0C0"><th>C++</th><th>D</th></tr>
+<tr><td width="45%" bgcolor="#FFF0F0"><pre style="background-color: #FFF0F0; border: 0px;margin: 0 0 0em 0em;">
+$1
+</pre></td><td width="45%" bgcolor="#F0F0FF"><pre style="background-color: #F0F0FF; border: 0px;margin: 0 0 0em 0em;">
+$2
+</pre></td></tr>
+</table>
+</div>
