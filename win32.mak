@@ -1,6 +1,7 @@
 # makefile to build html files for DMD
 
 DMD=dmd
+DPL_DOCS=../tools/dpl-docs/dpl-docs.exe
 
 SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
 	overview.dd mixin.dd memory.dd interface.dd windows.dd				\
@@ -346,4 +347,20 @@ clean:
 	del $(CHMTARGETS)
 	del chmgen.obj chmgen.exe
 	if exist chm rmdir /S /Q chm
+	if exist phobos rmdir /S /Q phobos
 
+################# DDOX based API docs #########################
+
+apidocs: docs.json
+	$(DPL_DOCS) generate-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master docs.json library
+
+apidocs-serve: docs.json
+	$(DPL_DOCS) serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. docs.json
+
+docs.json:
+	mkdir .tmp
+	dir /s /b /a-d ..\druntime\src\*.d | findstr /V "unittest.d gcstub" > .tmp/files.txt	
+	dir /s /b /a-d ..\phobos\*.d | findstr /V "unittest.d linux osx format.d" >> .tmp/files.txt
+	dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
+	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented --ex=gc. --ex=rt. --ex=std.internal.
+	rmdir /s /q .tmp
