@@ -167,6 +167,7 @@ ${LATEST}.ddoc :
 clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
 	rm -rf auto dlangspec-tex.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex)
+	rm -f docs.json docs-prerelease.json
 	@echo You should issue manually: rm -rf ${DMD_DIR}.${LATEST} ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
 
 rsync : all
