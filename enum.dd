@@ -33,15 +33,16 @@ $(GNAME EnumMembers):
 $(GNAME EnumMember):
     $(I Identifier)
     $(I Identifier) $(B =) $(ASSIGNEXPRESSION)
-    $(GLINK2 declaration, Type) $(B =) $(ASSIGNEXPRESSION)
+    $(GLINK2 declaration, Type) $(I Identifier) $(B =) $(ASSIGNEXPRESSION)
 )
 
 	$(P Enum declarations are used to define a group of constants.
-	They come in two forms:
+	They come in these forms:
 	)
 	$(OL
 	$(LI Named enums, which have an $(I EnumTag).)
 	$(LI Anonymous enums, which do not have an $(I EnumTag).)
+	$(LI Manifest constants.)
 	)
 
 $(H2 Named Enums)
@@ -64,8 +65,8 @@ enum X { A, B, C }	// named enum
 
 
 	$(P If the $(I EnumBaseType) is not explicitly set, and the first
-	$(I EnumMember) has an initializer, it is set to the type of that
-	initializer. Otherwise, it defaults to
+	$(I EnumMember) has an $(ASSIGNEXPRESSION), it is set to the type of that
+	$(ASSIGNEXPRESSION). Otherwise, it defaults to
 	type $(CODE int).)
 
 	$(P Named enum members may not have individual $(I Type)s.
@@ -77,11 +78,40 @@ enum X { A, B, C }	// named enum
 	cannot be implicitly cast to an enum type.
 	)
 
-	$(P The value of an $(I EnumMember) is given by its initializer.
-	If there is no initializer, it is given the value of the
-	previous $(I EnumMember) + 1. If it is the first $(I EnumMember),
-	it's value is 0.
+	$(P The value of an $(I EnumMember) is given by its $(ASSIGNEXPRESSION).
+	If there is no $(ASSIGNEXPRESSION) and it is the first $(I EnumMember),
+	its value is $(CODE $(GLINK EnumBaseType).init).
 	)
+
+	$(P If there is no $(ASSIGNEXPRESSION) and it is not the first $(I EnumMember),
+	it is given the value of the previous $(CODE $(I EnumMember)+1).
+	If the value of the previous $(I EnumMember) is $(CODE $(GLINK EnumBaseType).max),
+	it is an error.
+	If the value of the previous $(CODE $(I EnumMember)+1) is the same as the
+	value of the previous $(I EnumMember), it is an error. (This can happen
+	with floating point types.)
+	)
+
+	$(P All $(I EnumMember)s are in scope for the $(ASSIGNEXPRESSION)s.
+	)
+
+---
+enum A = 3;
+enum B {
+  A = A // error, circular reference
+}
+enum C {
+  A = B,  // A = 4
+  B = D,  // B = 4
+  C = 3,  // C = 3
+  D       // D = 4
+}
+enum E : C {
+  E1 = C.D,
+  E2      // error, C.D is C.max
+}
+---
+
 
 	$(P An $(I EmptyEnumBody) signifies an opaque enum - the enum members are
 	unknown.)
@@ -130,18 +160,16 @@ $(H2 Anonymous Enums)
 	$(P If the enum $(I Identifier) is not present, then the enum
 	is an $(I anonymous enum), and the $(I EnumMembers) are declared
 	in the scope the $(I EnumDeclaration) appears in.
-	No new type is created; the $(I EnumMembers) have the type of the
-	$(I EnumBaseType).
+	No new type is created.
 	)
 
-	The $(I EnumBaseType) is the underlying type of the enum.
-
-	$(P If omitted, the $(I EnumMembers) can have different types.
+	$(P The $(I EnumMembers) can have different types.
 	Those types are given by the first of:
 	)
 
 	$(OL
 	$(LI The $(I Type), if present.)
+	$(LI The $(I EnumBaseType), if present.)
 	$(LI The type of the $(I AssignExpression), if present.)
 	$(LI The type of the previous $(I EnumMember), if present.)
 	$(LI $(CODE int))
@@ -149,7 +177,7 @@ $(H2 Anonymous Enums)
 
 
 ------
-enum { A, B, C }	// anonymous enum
+enum { A, B, C }  // anonymous enum
 ------
 
 	$(P Defines the constants A=0, B=1, C=2, all of type int.)
@@ -157,10 +185,22 @@ enum { A, B, C }	// anonymous enum
 	$(P Enums must have at least one member.
 	)
 
-	$(P The value of an $(I EnumMember) is given by its initializer.
-	If there is no initializer, it is given the value of the
-	previous $(I EnumMember) + 1. If it is the first $(I EnumMember),
-	it's value is 0.
+	$(P The value of an $(I EnumMember) is given by its $(ASSIGNEXPRESSION).
+	If there is no $(ASSIGNEXPRESSION) and it is the first $(I EnumMember),
+	its value is the $(CODE .init) property of the $(I EnumMember)'s type.
+	)
+
+	$(P If there is no $(ASSIGNEXPRESSION) and it is not the first $(I EnumMember),
+	it is given the value of the previous $(CODE $(I EnumMember)+1).
+	If the value of the previous $(I EnumMember) is the $(CODE .max) property
+	if the previous $(I EnumMember)'s type,
+	it is an error.
+	If the value of the previous $(CODE $(I EnumMember)+1) is the same as the
+	value of the previous $(I EnumMember), it is an error. (This can happen
+	with floating point types.)
+	)
+
+	$(P All $(I EnumMember)s are in scope for the $(ASSIGNEXPRESSION)s.
 	)
 
 ------
@@ -192,7 +232,7 @@ enum {
 }
 ---
 
-$(H3 Manifest Constants)
+$(H2 Manifest Constants)
 
 	$(P If there is only one member of an anonymous enum, the { } can
 	be omitted:
