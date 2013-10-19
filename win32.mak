@@ -346,6 +346,7 @@ clean:
 	del $(PDFTARGETS)
 	del $(CHMTARGETS)
 	del chmgen.obj chmgen.exe
+	del docs.json
 	if exist chm rmdir /S /Q chm
 	if exist phobos rmdir /S /Q phobos
 
@@ -359,7 +360,7 @@ apidocs-serve: docs.json
 
 docs.json:
 	mkdir .tmp
-	dir /s /b /a-d ..\druntime\src\*.d | findstr /V "unittest.d gcstub" > .tmp/files.txt	
+	dir /s /b /a-d ..\druntime\src\*.d | findstr /V "unittest.d gcstub" > .tmp/files.txt
 	dir /s /b /a-d ..\phobos\*.d | findstr /V "unittest.d linux osx format.d" >> .tmp/files.txt
 	dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
 	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented --ex=gc. --ex=rt. --ex=std.internal.
