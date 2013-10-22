@@ -28,6 +28,8 @@ $(LI $(RELATIVE_LINK2 pure_conv_format, $(D std.conv.to) and $(D std.string.form
 $(LI $(RELATIVE_LINK2 generic_strip, Introduced generic $(D strip)/$(D stripLeft)/$(D stripRight) functions.))
 $(LI $(RELATIVE_LINK2 translate_buffer, Introduced an overload of $(D std.string.translate) which can take a buffer, avoiding the need for implicit memory allocations.))
 $(LI $(RELATIVE_LINK2 current_path, Introduced the $(D thisExePath) function to retrieve the executable path of the currently running process.))
+$(LI $(RELATIVE_LINK2 regex_api, New API for std.regex $(D match)/$(D replace) functions. ))
+$(LI $(RELATIVE_LINK2 ct_regex, Compile-time $(D std.regex.ctRegex) now supports lookaround just like run-time one.))
 )
 
 $(BR)$(BIG $(RELATIVE_LINK2 list2064, List of all bug fixes and enhancements in D 2.064.))
@@ -674,7 +676,103 @@ void main(string[] args)
     assert(args[0] == thisExePath());
 }
 ---------
+$(LI $(LNAME2 regex_api, New API for std.regex $(D match)/$(D replace) functions:)) 
 
+$(P The old API based around "g"(=global) flag was confusing and error prone.
+Moreover in some cases it was already being overriden by a function as is the case
+with $(D std.regex.splitter).)
+
+$(P New version ties the operation to the function in question, thus being simpler to
+understand without extra context. For the moment the "g" flag is kept working as
+is but the new API always overrides it where applicable. Another addition in the new
+API is an overload for the $(D replace) family of functions to work directly with
+output ranges.)
+
+$(P To understand the difference in the API compare 2 samples below.)
+
+$(P Before 2.064:)
+---
+void main()
+{
+    import std.regex, std.algorithm, std.range, std.stdio, std.string;
+    auto m = "3.141592".match(`(\d+)\.(\d+)`);
+    // m is a range of ranges
+    assert(m.front.equal(["3.141592", "3", "141592"]));
+ 
+    // global vs non-global    
+    auto word = regex(`(\w)\w*`);
+    auto gword = regex(`(\w)\w*`, "g");
+    auto list = "tomatoes, potatoes, pineapple";
+    // this will print only 'tomatoes', which raised many questions
+    foreach(item; list.match(word))
+        writeln(item.hit); 
+ 
+    // while this will print each of them
+    foreach(item; list.match(gword))
+        writeln(item.hit); 
+ 
+    auto justFirst = replace!(m => toUpper(m[1]) ~ m[0].drop(1))(list, word);
+    assert(justFirst == "Tomatoes, potatoes, pineapple");
+    auto allOfThem = replace!(m => toUpper(m[1]) ~ m[0].drop(1))(list, gword);
+    assert(allOfThem == "Tomatoes, Potatoes, Pineapple");
+}
+---
+$(P After 2.064:)
+---
+void main()
+{    
+    import std.regex, std.algorithm, std.range, std.stdio, std.string;
+    auto m = "3.141592".matchFirst(`(\d+)\.(\d+)`);
+    // m is simply a range of submatches 
+    assert(m.equal(["3.141592", "3", "141592"])); 
+ 
+    auto word = regex(`(\w)\w*`);
+    auto list = "tomatoes, potatoes, pineapple";
+    // iterates over submatches so it will print 2 lines:
+    // tomatoes  
+    // t
+    foreach(item; list.matchFirst(word))
+        writeln(item);
+    // so just to get the whole match:
+    assert(list.matchFirst(word).hit == "tomatoes");
+ 
+    // now there is no need to check if it has "g" option
+    // it's crystal clear in the function name    
+    foreach(item; list.matchAll(word))
+        writeln(item.hit);
+ 
+    auto justFirst = replaceFirst!(m => toUpper(m[1]) ~ m[0].drop(1))(list, word);
+    assert(justFirst == "Tomatoes, potatoes, pineapple");
+    auto allOfThem = replaceAll!(m => toUpper(m[1]) ~ m[0].drop(1))(list, word);
+    assert(allOfThem == "Tomatoes, Potatoes, Pineapple");
+ 
+    // NEW feature - if there is no need to allocate, the resulting string
+    // replacement may be just sent directly to the wire (an OutputRange)
+    auto sink = stdout.lockingTextWriter();
+    replaceAllInto!(m => toUpper(m[1]) ~ m[0].drop(1))(sink, list, word);
+}
+---
+ 
+$(P The old API still works, even though eventual deprecation is planned. 
+Also note the new functionality in form of *Into functions that forward the 
+replacement directly to an output range avoiding extra pressure on the heap.)
+
+$(LI $(LNAME2 ct_regex, Compile-time $(D std.regex.ctRegex) now supports lookaround just like run-time one:))
+
+$(P Now $(D ctRegex) supports full syntax spectrum of run-time one except for set
+algebra inside of a character class. For instance, the following now compiles and 
+passes:)
+---
+void main()
+{
+    import std.regex;
+    // a word, but not a title-cased ASCII
+    // ?<! inside of () means "negative lookbehind"
+    auto pat = ctRegex!`\w+(?<![A-Z][a-z]*)`;
+    assert(!"Hello".match(pat));
+    assert("good_bay".match(pat));
+}
+---
 )
 
 $(BR)$(BIG $(LNAME2 list2064, List of all bug fixes and enhancements in D 2.064:))
