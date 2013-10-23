@@ -11,6 +11,8 @@ $(LI $(RELATIVE_LINK2 postfix_new, Postfix expressions are now allowed after a $
 $(LI $(RELATIVE_LINK2 ifti_deduction, Implicit Function Template Instantiation now supports enclosing type/scope deduction.))
 $(LI $(RELATIVE_LINK2 ddoc_warning, DDoc can now warn the user when the symbol names in a ddoc comment do not match the actual code.))
 $(LI $(RELATIVE_LINK2 slice_pointer, Strings literals which are sliced are now implicitly convertible to a char pointer.))
+$(LI $(RELATIVE_LINK2 function_template_overload, Templated and non-template functions can now be overloaded against each other.))
+$(LI $(RELATIVE_LINK2 template_overload_set, Cross-module template declarations can now make an overload set.))
 )
 
 $(BUGSTITLE Compiler Changes,
@@ -321,6 +323,77 @@ void main()
     call(ab);   // allowed in 2.064
 }
 ---------
+
+
+$(LI $(LNAME2 function_template_overload, Templated and non-template functions can now be overloaded against each other:))
+
+---------
+auto foo(int n) { return 1; }
+auto foo(T)(T t) { return 2; }
+
+void main()
+{
+    assert(foo(100) == 1);
+    assert(foo("a") == 2);
+
+    // Integer literal 10L can be converted to int without loss of precisions.
+    // Then the call matches to foo(int n).
+    assert(foo(10L) == 1);
+
+    // A runtime variable 'num' typed long is not implicitly convertible to int.
+    // Then the call matches to foo(T)(T t).
+    long num = 10L;
+    assert(foo(num) == 2);
+}
+---------
+
+
+$(LI $(LNAME2 template_overload_set, Cross-module template declarations can now make an overload set:))
+
+$(P Template declarations are now overloadable just like regular function declarations. Templates with matching names from multiple modules will introduce an overload set:)
+
+---------
+module a;
+
+template Traits(T) if (is(T == double))
+{
+    enum Traits = "abc";
+}
+
+auto func(T, A...)(A args) if (is(T == double))
+{
+    return 1;
+}
+---------
+---------
+module b;
+
+template Traits(T) if (is(T == string))
+{
+    enum Traits = "def";
+}
+
+auto func(T, A...)(A args) if (is(T == string))
+{
+    return 1;
+}
+---------
+---------
+module c;
+import a, b;
+static assert(Traits!double == "abc");  // matches to a.Traits
+static assert(Traits!string == "def");  // matches to b.Traits
+void main()
+{
+    assert(func!double(1, "msg") == 1);  // matches to a.func(T, A...)
+    assert(func!string(1, "msg") == 2);  // matches to b.func(T, A...)
+}
+---------
+
+$(H3 Limitations:)
+
+$(P Merging template overload sets by using an alias declaration is currently not supported.
+The limitation will be lifted in a future release.)
 )
 
 $(BUGSTITLE Compiler Changes,
