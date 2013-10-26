@@ -19,6 +19,7 @@ $(SPEC_S Operator Overloading,
 	$(LI $(RELATIVE_LINK2 OpAssign, Op Assignment Operator Overloading))
 	$(LI $(RELATIVE_LINK2 Array, Index Operator Overloading))
 	$(LI $(RELATIVE_LINK2 Slice, Slice Operator Overloading))
+	$(LI $(RELATIVE_LINK2 Dollar, Dollar Operator Overloading))
 	$(LI $(RELATIVE_LINK2 Dispatch, Forwarding))
 	)
 
@@ -624,6 +625,62 @@ void test() {
 
 	$(P If a slice expression can be rewritten using opSliceAssign or opSliceOpAssign,
 	those are preferred over opSlice.
+	)
+
+$(H2 $(LNAME2 Dollar, Dollar Operator Overloading))
+
+	$(P Within the arguments to array index and slicing operators, $(D $)
+	gets translated to $(D opDollar), which can be overloaded by a struct
+	or class object.
+	)
+
+------
+struct Rectangle {
+  int width, height;
+  int[][] impl;
+  this(int w, int h) {
+    width = w;
+    height = h;
+    impl = new int[w][h];
+  }
+  int opIndex(size_t i1, size_t i2) {
+    return impl[i1][i2];
+  }
+  int opDollar(size_t pos)() {
+    static if (pos==0)
+      return width;
+    else
+      return height;
+  }
+}
+
+void test() {
+  auto r = Rectangle(10,20);
+  int i = r[$-1, 0];    // same as: r.opIndex(r.opDollar!0, 0),
+                        // which is r.opIndex(r.width-1, 0)
+  int j = r[0, $-1];    // same as: r.opIndex(0, r.opDollar!1)
+                        // which is r.opIndex(0, r.height-1)
+}
+------
+
+	$(P As the above example shows, a different compile-time argument is
+	passed to $(D opDollar) depending on which argument it appears in. A
+	$(D $) appearing in the first argument gets translated to $(D
+	opDollar!0), a $(D $) appearing in the second argument gets translated
+	to $(D opDollar!1), and so on. Thus, the appropriate value for $(D $)
+	can be returned to implement multidimensional arrays.
+	)
+
+	$(P If $(D opIndex) is declared with only one argument, the
+	compile-time argument to $(D opDollar) may be omitted. In this case, it
+	is illegal to use $(D $) inside an array indexing expression with more
+	than one argument.
+	)
+
+	$(P Note that $(D opDollar) does not have to return an integer index;
+	it can return any type as long as that type is understood by $(D
+	opIndex). For example, a special token can be returned by $(D opDollar)
+	to implement slicing of infinite ranges.
 	)
 
 $(H2 $(LNAME2 Dispatch, Forwarding))
