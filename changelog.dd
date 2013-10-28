@@ -469,7 +469,7 @@ void main()
     // print out the errors or the statistics.
     if (errors.length)
     {
-        writefln("Some unittests failed:\n");
+        writeln("Some unittests failed:\n");
         foreach (error; errors)
             writeln(error);
     }
@@ -749,7 +749,7 @@ void main(string[] args)
     assert(args[0] == thisExePath());
 }
 ---------
-$(LI $(LNAME2 regex_api, New API for std.regex $(D match)/$(D replace) functions:)) 
+$(LI $(LNAME2 regex_api, New API for std.regex $(D match)/$(D replace) functions:))
 
 $(P The old API based around "g"(=global) flag was confusing and error prone.
 Moreover in some cases it was already being overriden by a function as is the case
@@ -771,19 +771,19 @@ void main()
     auto m = "3.141592".match(`(\d+)\.(\d+)`);
     // m is a range of ranges
     assert(m.front.equal(["3.141592", "3", "141592"]));
- 
-    // global vs non-global    
+
+    // global vs non-global
     auto word = regex(`(\w)\w*`);
     auto gword = regex(`(\w)\w*`, "g");
     auto list = "tomatoes, potatoes, pineapple";
     // this will print only 'tomatoes', which raised many questions
     foreach(item; list.match(word))
-        writeln(item.hit); 
- 
+        writeln(item.hit);
+
     // while this will print each of them
     foreach(item; list.match(gword))
-        writeln(item.hit); 
- 
+        writeln(item.hit);
+
     auto justFirst = replace!(m => toUpper(m[1]) ~ m[0].drop(1))(list, word);
     assert(justFirst == "Tomatoes, potatoes, pineapple");
     auto allOfThem = replace!(m => toUpper(m[1]) ~ m[0].drop(1))(list, gword);
@@ -793,47 +793,47 @@ void main()
 $(P After 2.064:)
 ---
 void main()
-{    
+{
     import std.regex, std.algorithm, std.range, std.stdio, std.string;
     auto m = "3.141592".matchFirst(`(\d+)\.(\d+)`);
-    // m is simply a range of submatches 
-    assert(m.equal(["3.141592", "3", "141592"])); 
- 
+    // m is simply a range of submatches
+    assert(m.equal(["3.141592", "3", "141592"]));
+
     auto word = regex(`(\w)\w*`);
     auto list = "tomatoes, potatoes, pineapple";
     // iterates over submatches so it will print 2 lines:
-    // tomatoes  
+    // tomatoes
     // t
     foreach(item; list.matchFirst(word))
         writeln(item);
     // so just to get the whole match:
     assert(list.matchFirst(word).hit == "tomatoes");
- 
+
     // now there is no need to check if it has "g" option
-    // it's crystal clear in the function name    
+    // it's crystal clear in the function name
     foreach(item; list.matchAll(word))
         writeln(item.hit);
- 
+
     auto justFirst = replaceFirst!(m => toUpper(m[1]) ~ m[0].drop(1))(list, word);
     assert(justFirst == "Tomatoes, potatoes, pineapple");
     auto allOfThem = replaceAll!(m => toUpper(m[1]) ~ m[0].drop(1))(list, word);
     assert(allOfThem == "Tomatoes, Potatoes, Pineapple");
- 
+
     // NEW feature - if there is no need to allocate, the resulting string
     // replacement may be just sent directly to the wire (an OutputRange)
     auto sink = stdout.lockingTextWriter();
     replaceAllInto!(m => toUpper(m[1]) ~ m[0].drop(1))(sink, list, word);
 }
 ---
- 
-$(P The old API still works, even though eventual deprecation is planned. 
-Also note the new functionality in form of *Into functions that forward the 
+
+$(P The old API still works, even though eventual deprecation is planned.
+Also note the new functionality in form of *Into functions that forward the
 replacement directly to an output range avoiding extra pressure on the heap.)
 
 $(LI $(LNAME2 ct_regex, Compile-time $(D std.regex.ctRegex) now supports lookaround just like run-time one:))
 
 $(P Now $(D ctRegex) supports full syntax spectrum of run-time one except for set
-algebra inside of a character class. For instance, the following now compiles and 
+algebra inside of a character class. For instance, the following now compiles and
 passes:)
 ---
 void main()
