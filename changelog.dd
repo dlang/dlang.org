@@ -22,6 +22,7 @@ $(LI $(RELATIVE_LINK2 deps_printing, Allow printing dependencies to stdout for t
 $(BUGSTITLE Compiler Enhancements,
 $(LI $(RELATIVE_LINK2 getunittest_trait, Introduced the $(D getUnitTests) trait for retrieval and custom execution of unittests.))
 $(LI $(RELATIVE_LINK2 getvirtualindex_trait, Introduced the $(D getVirtualIndex) trait to get the index of a virtual function.))
+$(LI $(RELATIVE_LINK2 isoverridefunction_trait, Introduced the $(D isOverrideFunction) trait which indicates if a function is overridden or not.))
 )
 
 $(BUGSTITLE Phobos enhancements,
@@ -527,6 +528,25 @@ void main()
     pragma(msg, __traits(getVirtualIndex, __traits(getOverloads, D, "doo")[2]));
 }
 ---------
+
+$(LI $(LNAME2 isoverridefunction_trait, Introduced the $(D isOverrideFunction) trait which indicates if a function is overridden or not:))
+
+---
+class Base
+{
+    void foo() { }
+}
+
+class Foo : Base
+{
+    override void foo() { }
+    void bar() { }
+}
+
+static assert (__traits(isOverrideFunction, Base.foo) == false);
+static assert (__traits(isOverrideFunction, Foo.foo));
+static assert (__traits(isOverrideFunction, Foo.bar) == false);
+---
 )
 
 $(BUGSTITLE Phobos enhancements,
