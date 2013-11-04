@@ -22,6 +22,7 @@ $(LI $(RELATIVE_LINK2 deps_printing, Allow printing dependencies to stdout for t
 $(BUGSTITLE Compiler Enhancements,
 $(LI $(RELATIVE_LINK2 getunittest_trait, Introduced the $(D getUnitTests) trait for retrieval and custom execution of unittests.))
 $(LI $(RELATIVE_LINK2 getvirtualindex_trait, Introduced the $(D getVirtualIndex) trait to get the index of a virtual function.))
+$(LI $(RELATIVE_LINK2 isoverridefunction_trait, Introduced the $(D isOverrideFunction) trait which indicates if a function is overridden or not.))
 )
 
 $(BUGSTITLE Phobos enhancements,
@@ -527,6 +528,25 @@ void main()
     pragma(msg, __traits(getVirtualIndex, __traits(getOverloads, D, "doo")[2]));
 }
 ---------
+
+$(LI $(LNAME2 isoverridefunction_trait, Introduced the $(D isOverrideFunction) trait which indicates if a function is overridden or not:))
+
+---
+class Base
+{
+    void foo() { }
+}
+
+class Foo : Base
+{
+    override void foo() { }
+    void bar() { }
+}
+
+static assert (__traits(isOverrideFunction, Base.foo) == false);
+static assert (__traits(isOverrideFunction, Foo.foo));
+static assert (__traits(isOverrideFunction, Foo.bar) == false);
+---
 )
 
 $(BUGSTITLE Phobos enhancements,
@@ -740,13 +760,16 @@ $(P With the $(D thisExePath) function you can retrieve the current executable p
 
 ---------
 import std.file;
+import std.stdio;
 
 void main(string[] args)
 {
-    // note: typically args[0] already contains the executable path,
-    // but you may not always parse the command-line arguments,
-    // or you may want to access the exe path from another function.
-    assert(args[0] == thisExePath());
+    // Prints the full path of the current running executable.
+    // Note: this may, or may not be the same as args[0]. The content
+    // of args[0] is dependent of how the application was invoked, thisExePath()
+    // is not. It's also possible to access thisExePath() from other parts of the
+    // code than main.
+    writeln(thisExePath());
 }
 ---------
 $(LI $(LNAME2 regex_api, New API for std.regex $(D match)/$(D replace) functions:)) 
