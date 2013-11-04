@@ -478,6 +478,71 @@ $(GNAME Constructor):
         C m = new C([1,2,3]);       // this(int[]) immutable pure is called
         ------
 
+$(H3 $(LNAME2 field-init, Field initialization inside constructor))
+
+    $(P Inside constructor, the first instance field assignment is specially
+        handled for its initialization.
+    )
+
+        ------
+        class C {
+          int num;
+          this() {
+            num = 1;  // initialize
+            num = 2;  // assignment
+          }
+        }
+        ------
+
+    $(P If the field type has opAssign method, it won't be used for initialization.)
+
+        ------
+        struct A {
+          this(int n) {}
+          void opAssign(A rhs) {}
+        }
+        class C {
+          A val;
+          this() {
+            val = A(1);  // A(1) is moved in this.val for initializing
+            val = A(2);  // rewritten to val.opAssign(A(2))
+          }
+        }
+        ------
+
+    $(P If the field type is not modifiable, multiple initialization will be rejected.)
+
+        ------
+        class C {
+          immutable int num;
+          this() {
+            num = 1;  // OK
+            num = 2;  // Error: multiple field initialization
+          }
+        }
+        ------
+
+    $(P If the assignment expression for the field initialization may be invoked
+        multiple times, it would als be rejected.
+    )
+
+        ------
+        class C {
+          immutable int num;
+          immutable string str;
+          this() {
+            foreach (i; 0..2) {
+              num = 1;      // Error: field initialization not allowed in loops
+            }
+            size_t i = 0;
+          Label:
+            str = "hello";  // Error: field initialization not allowed after labels
+            if (i++ < 2)
+              goto Label;
+          }
+        }
+        ------
+
 $(H3 $(LNAME2 destructors, Destructors))
 
 $(GRAMMAR
