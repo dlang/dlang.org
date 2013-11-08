@@ -13,7 +13,7 @@
 #"trivial",17
 #"enhancement",707
 
-$url = 'http://d.puremagic.com/issues/report.cgi?' . $_SERVER["QUERY_STRING"];
+$url = 'https://d.puremagic.com/issues/report.cgi?' . $_SERVER["QUERY_STRING"];
 $data = file_get_contents($url);
 $lines = explode("\n", $data);
 unset($lines[0]);
@@ -27,7 +27,7 @@ foreach ($lines as $line)
 
 echo $result;
 
-#$url = 'http://d.puremagic.com/issues/buglist.cgi?' . $_SERVER["QUERY_STRING"];
+#$url = 'https://d.puremagic.com/issues/buglist.cgi?' . $_SERVER["QUERY_STRING"];
 #echo $url;
 #$data = file_get_contents($url);
 #$regex = '/(\d+) issues found/';
