@@ -2,7 +2,7 @@ Ddoc
 
 $(SPEC_S Grammar,
 
-$(H3 lex.dd)
+$(H3 lex)
 
 $(GRAMMAR
 $(GNAME Character):
@@ -602,14 +602,84 @@ $(GNAME Filespec):
     $(D ") $(GLINK Characters) $(D ")
 )
 
-$(H3 entity.dd)
-
 $(GRAMMAR
 $(GNAME NamedCharacterEntity):
     $(CODE_AMP) $(GLINK_LEX Identifier) $(D ;)
 )
 
-$(H3 expression.dd)
+$(H3 type)
+
+$(GRAMMAR
+$(GNAME Type):
+    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType)
+    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType) $(GLINK Declarator2)
+
+$(GNAME BasicType):
+    $(GLINK BasicTypeX)
+    $(D .) $(GLINK IdentifierList)
+    $(GLINK IdentifierList)
+    $(GLINK Typeof)
+    $(GLINK Typeof) $(D .) $(GLINK IdentifierList)
+    $(D const$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
+    $(D immutable$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
+    $(D shared$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
+    $(D inout$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
+
+$(GNAME BasicTypeX):
+    $(D bool)
+    $(D byte)
+    $(D ubyte)
+    $(D short)
+    $(D ushort)
+    $(D int)
+    $(D uint)
+    $(D long)
+    $(D ulong)
+    $(D char)
+    $(D wchar)
+    $(D dchar)
+    $(D float)
+    $(D double)
+    $(D real)
+    $(D ifloat)
+    $(D idouble)
+    $(D ireal)
+    $(D cfloat)
+    $(D cdouble)
+    $(D creal)
+    $(D void)
+
+$(GNAME BasicType2):
+    $(D *)
+    $(D [ ])
+    $(D [) $(ASSIGNEXPRESSION) $(D ])
+    $(D [) $(ASSIGNEXPRESSION) .. $(ASSIGNEXPRESSION) $(D ])
+    $(D [) $(GLINK Type) $(D ])
+    $(D delegate) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
+    $(D function) $(GLINK Parameters) $(GLINK FunctionAttributes)$(OPT)
+
+$(GNAME IdentifierList):
+    $(I Identifier)
+    $(I Identifier) $(D .) $(I IdentifierList)
+    $(GLINK TemplateInstance)
+    $(GLINK TemplateInstance) $(D .) $(I IdentifierList)
+
+$(GNAME TypeCtors):
+    $(GLINK TypeCtor)
+    $(GLINK TypeCtor) $(I TypeCtors)
+
+$(GNAME TypeCtor):
+    $(D const)
+    $(D immutable)
+    $(D inout)
+    $(D shared)
+
+$(GNAME Typeof):
+    $(D typeof $(LPAREN)) $(EXPRESSION) $(D $(RPAREN))
+    $(D typeof $(LPAREN)) $(D return) $(D $(RPAREN))
+)
+
+$(H3 expression)
 
 $(GRAMMAR
 $(GNAME Expression):
@@ -788,6 +858,15 @@ $(GNAME ArgumentList):
     $(GLINK AssignExpression)
     $(GLINK AssignExpression) $(D ,)
     $(GLINK AssignExpression) $(D ,) $(I ArgumentList)
+)
+
+$(GRAMMAR
+$(GNAME NewAnonClassExpression):
+    $(D new) $(GLINK AllocatorArguments)$(OPT) $(D class) $(I ClassArguments)$(OPT) $(GLINK SuperClass)$(OPT) $(GLINK Interfaces)$(OPT)
+    $(GLINK ClassBody)
+
+$(GNAME ClassArguments):
+    $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
 )
 
 $(GRAMMAR
@@ -983,8 +1062,6 @@ $(GNAME TypeSpecialization):
     $(D __parameters)
 )
 
-$(H3 traits.dd)
-
 $(GRAMMAR
 $(GNAME TraitsExpression):
     $(D __traits) $(D $(LPAREN)) $(GLINK TraitsKeyword) $(D ,) $(GLINK TraitsArguments) $(D $(RPAREN))
@@ -1045,7 +1122,7 @@ $(GNAME Special Keywords):
     $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__))
 )
 
-$(H3 statement.dd)
+$(H3 statement)
 
 $(GRAMMAR
 $(GNAME Statement):
@@ -1340,7 +1417,7 @@ $(I MixinStatement):
     $(D mixin) $(D $(LPAREN)) $(ASSIGNEXPRESSION) $(D $(RPAREN)) $(D ;)
 )
 
-$(H3 iasm.dd)
+$(H3 iasm)
 
 $(GRAMMAR
 $(GNAME AsmInstruction):
@@ -1509,14 +1586,16 @@ $(GNAME AsmTypePrefix):
     $(D real ptr)
 )
 
-$(H3 declaration.dd)
+$(H3 declaration)
 
 $(GRAMMAR
 $(GNAME Declaration):
     $(GLINK AliasDeclaration)
     $(GLINK AliasThisDeclaration)
     $(GLINK Decl)
+)
 
+$(GRAMMAR
 $(GNAME AliasDeclaration):
     $(D alias) $(GLINK BasicType) $(GLINK Declarator)
     $(D alias) $(GLINK AliasInitializerList)
@@ -1527,10 +1606,23 @@ $(GNAME AliasInitializerList):
 
 $(GNAME AliasInitializer):
     $(I Identifier) $(D =) $(GLINK Type)
+)
 
+$(GRAMMAR
 $(GNAME AliasThisDeclaration):
     $(D alias) $(I Identifier) $(D this)
+)
 
+$(GRAMMAR
+$(GNAME AutoDeclaration):
+    $(GLINK StorageClasses) $(I AutoDeclarationX) $(D ;)
+
+$(GNAME AutoDeclarationX):
+    $(I Identifier) $(D =) $(GLINK Initializer)
+    $(I AutoDeclarationX) $(D ,) $(I Identifier) $(D =) $(GLINK Initializer)
+)
+
+$(GRAMMAR
 $(GNAME Decl):
     $(GLINK StorageClasses) $(I Decl)
     $(GLINK BasicType) $(GLINK Declarators) $(D ;)
@@ -1553,53 +1645,13 @@ $(GNAME DeclaratorIdentifier):
     $(I Identifier)
     $(I Identifier) $(D =) $(GLINK Initializer)
 
-$(GNAME BasicType):
-    $(GLINK BasicTypeX)
-    $(D .) $(GLINK IdentifierList)
-    $(GLINK IdentifierList)
-    $(GLINK Typeof)
-    $(GLINK Typeof) $(D .) $(GLINK IdentifierList)
-    $(D const$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
-    $(D immutable$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
-    $(D shared$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
-    $(D inout$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
-
-$(GNAME BasicTypeX):
-    $(D bool)
-    $(D byte)
-    $(D ubyte)
-    $(D short)
-    $(D ushort)
-    $(D int)
-    $(D uint)
-    $(D long)
-    $(D ulong)
-    $(D char)
-    $(D wchar)
-    $(D dchar)
-    $(D float)
-    $(D double)
-    $(D real)
-    $(D ifloat)
-    $(D idouble)
-    $(D ireal)
-    $(D cfloat)
-    $(D cdouble)
-    $(D creal)
-    $(D void)
-
-$(GNAME BasicType2):
-    $(D *)
-    $(D [ ])
-    $(D [) $(ASSIGNEXPRESSION) $(D ])
-    $(D [) $(ASSIGNEXPRESSION) .. $(ASSIGNEXPRESSION) $(D ])
-    $(D [) $(GLINK Type) $(D ])
-    $(D delegate) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
-    $(D function) $(GLINK Parameters) $(GLINK FunctionAttributes)$(OPT)
-
 $(GNAME Declarator):
     $(GLINK BasicType2)$(OPT) $(D $(LPAREN)) $(I Declarator) $(D $(RPAREN)) $(GLINK DeclaratorSuffixes)$(OPT)
     $(GLINK BasicType2)$(OPT) $(I Identifier) $(GLINK DeclaratorSuffixes)$(OPT)
+
+$(GNAME Declarator2):
+    $(GLINK BasicType2)$(OPT) $(GLINK DeclaratorSuffixes)$(OPT)
+    $(GLINK BasicType2)$(OPT) $(D $(LPAREN)) $(I Declarator2) $(D $(RPAREN)) $(GLINK DeclaratorSuffixes)$(OPT)
 
 $(GNAME DeclaratorSuffixes):
     $(GLINK DeclaratorSuffix)
@@ -1610,13 +1662,9 @@ $(GNAME DeclaratorSuffix):
     $(D [) $(ASSIGNEXPRESSION) $(D ])
     $(D [) $(GLINK Type) $(D ])
     $(GLINK TemplateParameters)$(OPT) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT)
+)
 
-$(GNAME IdentifierList):
-    $(I Identifier)
-    $(I Identifier) $(D .) $(I IdentifierList)
-    $(GLINK TemplateInstance)
-    $(GLINK TemplateInstance) $(D .) $(I IdentifierList)
-
+$(GRAMMAR
 $(GNAME StorageClasses):
     $(GLINK StorageClass)
     $(GLINK StorageClass) $(I StorageClasses)
@@ -1637,35 +1685,52 @@ $(GNAME StorageClass):
     $(D scope)
     $(D static)
     $(D synchronized)
+)
 
-$(GNAME Property):
-    $(D @) $(GLINK PropertyIdentifier)
 
-$(GNAME PropertyIdentifier):
-    $(D property)
-    $(D safe)
-    $(D trusted)
-    $(D system)
-    $(D disable)
+$(GRAMMAR
+$(GNAME Initializer):
+    $(GLINK VoidInitializer)
+    $(GLINK NonVoidInitializer)
 
-$(GNAME TypeCtors):
-    $(GLINK TypeCtor)
-    $(GLINK TypeCtor) $(I TypeCtors)
+$(GNAME VoidInitializer):
+    $(D void)
 
-$(GNAME TypeCtor):
-    $(D const)
-    $(D immutable)
-    $(D inout)
-    $(D shared)
+$(GNAME NonVoidInitializer):
+    $(ASSIGNEXPRESSION)
+    $(GLINK ArrayInitializer)
+    $(GLINK StructInitializer)
 
-$(GNAME Type):
-    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType)
-    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType) $(GLINK Declarator2)
+$(GNAME ArrayInitializer):
+    $(D [ ])
+    $(D [) $(GLINK ArrayMemberInitializations) $(D ])
 
-$(GNAME Declarator2):
-    $(GLINK BasicType2)$(OPT) $(GLINK DeclaratorSuffixes)$(OPT)
-    $(GLINK BasicType2)$(OPT) $(D $(LPAREN)) $(I Declarator2) $(D $(RPAREN)) $(GLINK DeclaratorSuffixes)$(OPT)
+$(GNAME ArrayMemberInitializations):
+    $(GLINK ArrayMemberInitialization)
+    $(GLINK ArrayMemberInitialization) $(D ,)
+    $(GLINK ArrayMemberInitialization) $(D ,) $(I ArrayMemberInitializations)
 
+$(GNAME ArrayMemberInitialization):
+    $(GLINK NonVoidInitializer)
+    $(ASSIGNEXPRESSION) $(D :) $(GLINK NonVoidInitializer)
+
+$(GNAME StructInitializer):
+    $(D {  })
+    $(D {) $(GLINK StructMemberInitializers) $(D })
+
+$(GNAME StructMemberInitializers):
+    $(GLINK StructMemberInitializer)
+    $(GLINK StructMemberInitializer) $(D ,)
+    $(GLINK StructMemberInitializer) $(D ,) $(I StructMemberInitializers)
+
+$(GNAME StructMemberInitializer):
+    $(GLINK NonVoidInitializer)
+    $(I Identifier) $(D :) $(GLINK NonVoidInitializer)
+)
+
+$(H3 function)
+
+$(GRAMMAR
 $(GNAME Parameters):
     $(D $(LPAREN)) $(GLINK ParameterList) $(D $(RPAREN))
     $(D ( ))
@@ -1715,7 +1780,9 @@ $(GNAME MemberFunctionAttribute):
     $(D inout)
     $(D shared)
     $(GLINK FunctionAttribute)
+)
 
+$(GRAMMAR
 $(GNAME DefaultInitializerExpression):
     $(ASSIGNEXPRESSION)
     $(D $(XLINK2 traits.html#specialkeywords, __FILE__))
@@ -1723,64 +1790,7 @@ $(GNAME DefaultInitializerExpression):
     $(D $(XLINK2 traits.html#specialkeywords, __LINE__))
     $(D $(XLINK2 traits.html#specialkeywords, __FUNCTION__))
     $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__))
-
-$(GNAME Initializer):
-    $(GLINK VoidInitializer)
-    $(GLINK NonVoidInitializer)
-
-$(GNAME NonVoidInitializer):
-    $(ASSIGNEXPRESSION)
-    $(GLINK ArrayInitializer)
-    $(GLINK StructInitializer)
-
-$(GNAME ArrayInitializer):
-    $(D [ ])
-    $(D [) $(GLINK ArrayMemberInitializations) $(D ])
-
-$(GNAME ArrayMemberInitializations):
-    $(GLINK ArrayMemberInitialization)
-    $(GLINK ArrayMemberInitialization) $(D ,)
-    $(GLINK ArrayMemberInitialization) $(D ,) $(I ArrayMemberInitializations)
-
-$(GNAME ArrayMemberInitialization):
-    $(GLINK NonVoidInitializer)
-    $(ASSIGNEXPRESSION) $(D :) $(GLINK NonVoidInitializer)
-
-$(GNAME StructInitializer):
-    $(D {  })
-    $(D {) $(GLINK StructMemberInitializers) $(D })
-
-$(GNAME StructMemberInitializers):
-    $(GLINK StructMemberInitializer)
-    $(GLINK StructMemberInitializer) $(D ,)
-    $(GLINK StructMemberInitializer) $(D ,) $(I StructMemberInitializers)
-
-$(GNAME StructMemberInitializer):
-    $(GLINK NonVoidInitializer)
-    $(I Identifier) $(D :) $(GLINK NonVoidInitializer)
 )
-
-$(GRAMMAR
-$(GNAME AutoDeclaration):
-    $(GLINK StorageClasses) $(I AutoDeclarationX) $(D ;)
-
-$(GNAME AutoDeclarationX):
-    $(I Identifier) $(D =) $(GLINK Initializer)
-    $(I AutoDeclarationX) $(D ,) $(I Identifier) $(D =) $(GLINK Initializer)
-)
-
-$(GRAMMAR
-$(GNAME Typeof):
-    $(D typeof $(LPAREN)) $(EXPRESSION) $(D $(RPAREN))
-    $(D typeof $(LPAREN)) $(D return) $(D $(RPAREN))
-)
-
-$(GRAMMAR
-$(GNAME VoidInitializer):
-    $(D void)
-)
-
-$(H3 function.dd)
 
 $(GRAMMAR
 $(GNAME FunctionBody):
@@ -1802,34 +1812,74 @@ $(GNAME BodyStatement):
     $(D body) $(GLINK BlockStatement)
 )
 
-$(H3 unittest.dd)
-
 $(GRAMMAR
+$(GNAME Constructor):
+    $(D this) $(GLINK Parameters) $(GLINK FunctionBody)
+    $(GLINK TemplatedConstructor)
+
+$(GNAME TemplatedConstructor):
+    $(D this) $(GLINK TemplateParameters) $(GLINK Parameters) $(GLINK Constraint)$(OPT) $(GLINK FunctionBody)
+
+$(GNAME Destructor):
+    $(D ~ this ( )) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
+
+$(GNAME StructPostblit):
+    $(D this(this)) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
+
+$(GNAME ClassAllocator):
+    $(D new) $(GLINK Parameters) $(GLINK FunctionBody)
+
+$(GNAME ClassDeallocator):
+    $(D delete) $(GLINK Parameters) $(GLINK FunctionBody)
+
+$(GNAME Invariant):
+    $(D invariant ( )) $(GLINK BlockStatement)
+
 $(GNAME UnitTest):
     $(D unittest) $(GLINK FunctionBody)
 )
 
-$(H3 class.dd)
+$(GRAMMAR
+$(GNAME StaticConstructor):
+    $(D static this ( )) $(GLINK FunctionBody)
+
+$(GNAME StaticDestructor):
+    $(D static ~ this ( )) $(GLINK FunctionBody)
+
+$(GNAME SharedStaticConstructor):
+    $(D shared static this ( )) $(GLINK FunctionBody)
+
+$(GNAME SharedStaticDestructor):
+    $(D shared static ~ this ( )) $(GLINK FunctionBody)
+)
+
+$(H3 aggregate)
 
 $(GRAMMAR
+$(GNAME AggregateDeclaration):
+    $(GLINK ClassDeclaration)
+    $(GLINK InterfaceDeclaration)
+    $(GLINK StructDeclaration)
+    $(GLINK UnionDeclaration)
+
 $(GNAME ClassDeclaration):
     $(D class) $(I Identifier) $(GLINK BaseClassList)$(OPT) $(GLINK ClassBody)
-    $(GLINK ClassTemplateDeclaration)
+    $(D class) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK BaseClassList)$(OPT) $(GLINK ClassBody)
+    $(D class) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK BaseClassList)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK ClassBody)
 
-$(GNAME BaseClassList):
-    $(D :) $(GLINK SuperClass)
-    $(D :) $(GLINK SuperClass) $(D ,) $(GLINK Interfaces)
-    $(D :) $(GLINK Interfaces)
+$(GNAME InterfaceDeclaration):
+    $(D interface) $(I Identifier) $(GLINK BaseInterfaceList)$(OPT) $(GLINK InterfaceBody)
+    $(D interface) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK BaseInterfaceList)$(OPT) $(GLINK InterfaceBody)
 
-$(GNAME SuperClass):
-    $(I Identifier)
+$(GNAME StructDeclaration):
+    $(D struct) $(I Identifier) $(D ;)
+    $(D struct) $(I Identifier) $(GLINK StructBody)
+    $(D struct) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK StructBody)
 
-$(GNAME Interfaces):
-    $(GLINK Interface)
-    $(GLINK Interface) $(D ,) $(I Interfaces)
-
-$(GNAME Interface):
-    $(I Identifier)
+$(GNAME UnionDeclaration):
+    $(D union) $(I Identifier) $(D ;)
+    $(D union) $(I Identifier) $(GLINK StructBody)
+    $(D union) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK StructBody)
 
 $(GNAME ClassBody):
     $(D {) $(D })
@@ -1844,92 +1894,9 @@ $(GNAME ClassBodyDeclaration):
     $(GLINK Invariant)
     $(GLINK ClassAllocator)
     $(GLINK ClassDeallocator)
-)
-
-$(GRAMMAR
-$(GNAME Constructor):
-    $(D this) $(GLINK Parameters) $(GLINK FunctionBody)
-    $(GLINK TemplatedConstructor)
-)
-
-$(GRAMMAR
-$(GNAME Destructor):
-    $(D ~ this ( )) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
-)
-
-$(GRAMMAR
-$(GNAME StaticConstructor):
-    $(D static this ( )) $(GLINK FunctionBody)
-)
-
-$(GRAMMAR
-$(GNAME StaticDestructor):
-    $(D static ~ this ( )) $(GLINK FunctionBody)
-)
-
-$(GRAMMAR
-$(GNAME SharedStaticConstructor):
-    $(D shared static this ( )) $(GLINK FunctionBody)
-)
-
-$(GRAMMAR
-$(GNAME SharedStaticDestructor):
-    $(D shared static ~ this ( )) $(GLINK FunctionBody)
-)
-
-$(GRAMMAR
-$(GNAME Invariant):
-    $(D invariant ( )) $(GLINK BlockStatement)
-)
-
-$(GRAMMAR
-$(GNAME ClassAllocator):
-    $(D new) $(GLINK Parameters) $(GLINK FunctionBody)
-)
-
-$(GRAMMAR
-$(GNAME ClassDeallocator):
-    $(D delete) $(GLINK Parameters) $(GLINK FunctionBody)
-)
-
-$(GRAMMAR
-$(GNAME AliasThis):
-    $(D alias) $(I Identifier) $(D this;)
-)
-
-$(GRAMMAR
-$(GNAME NewAnonClassExpression):
-    $(D new) $(GLINK AllocatorArguments)$(OPT) $(D class) $(I ClassArguments)$(OPT) $(GLINK SuperClass)$(OPT) $(GLINK Interfaces)$(OPT)
-    $(GLINK ClassBody)
-
-$(GNAME ClassArguments):
-    $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
-)
-
-$(H3 interface.dd)
-
-$(GRAMMAR
-$(GNAME InterfaceDeclaration):
-    $(D interface) $(I Identifier) $(GLINK BaseInterfaceList)$(OPT) $(GLINK InterfaceBody)
-    $(GLINK InterfaceTemplateDeclaration)
-
-$(GNAME BaseInterfaceList):
-    $(D :) $(GLINK InterfaceClasses)
 
 $(GNAME InterfaceBody):
     $(D {) $(GLINK DeclDefs)$(OPT) $(D })
-)
-
-$(H3 struct.dd)
-
-$(GRAMMAR
-$(GNAME AggregateDeclaration):
-    $(D struct) $(I Identifier) $(GLINK StructBody)
-    $(D union) $(I Identifier) $(GLINK StructBody)
-    $(D struct) $(I Identifier) $(D ;)
-    $(D union) $(I Identifier) $(D ;)
-    $(GLINK StructTemplateDeclaration)
-    $(GLINK UnionTemplateDeclaration)
 
 $(GNAME StructBody):
     $(D {) $(D })
@@ -1954,11 +1921,31 @@ $(GNAME StructDeallocator):
 )
 
 $(GRAMMAR
-$(GNAME StructPostblit):
-    $(D this(this)) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
+$(GNAME BaseClassList):
+    $(D :) $(GLINK SuperClass)
+    $(D :) $(GLINK SuperClass) $(D ,) $(GLINK Interfaces)
+    $(D :) $(GLINK Interfaces)
+
+$(GNAME BaseInterfaceList):
+    $(D :) $(GLINK InterfaceClasses)
+
+$(GNAME SuperClass):
+    $(I Identifier)
+
+$(GNAME Interfaces):
+    $(GLINK Interface)
+    $(GLINK Interface) $(D ,) $(I Interfaces)
+
+$(GNAME Interface):
+    $(I Identifier)
 )
 
-$(H3 enum.dd)
+$(GRAMMAR
+$(GNAME AliasThis):
+    $(D alias) $(I Identifier) $(D this;)
+)
+
+$(H3 enum)
 
 $(GRAMMAR
 $(GNAME EnumDeclaration):
@@ -1994,7 +1981,7 @@ $(GNAME EnumMember):
     $(GLINK Type) $(I Identifier) $(D =) $(ASSIGNEXPRESSION)
 )
 
-$(H3 template.dd)
+$(H3 template)
 
 $(GRAMMAR
 $(GNAME TemplateDeclaration):
@@ -2019,6 +2006,12 @@ $(GNAME TemplateParameter):
     $(GLINK TemplateAliasParameter)
     $(GLINK TemplateTupleParameter)
     $(GLINK TemplateThisParameter)
+
+$(GNAME Constraint):
+    $(D if) $(D $(LPAREN)) $(I ConstraintExpression) $(D $(RPAREN))
+
+$(I ConstraintExpression):
+    $(I $(GLINK Expression))
 )
 
 $(GRAMMAR
@@ -2126,38 +2119,6 @@ $(GNAME TemplateTupleParameter):
 )
 
 $(GRAMMAR
-$(GNAME TemplatedConstructor):
-    $(D this) $(GLINK TemplateParameters) $(GLINK Parameters) $(GLINK Constraint)$(OPT) $(GLINK FunctionBody)
-)
-
-$(GRAMMAR
-$(GNAME ClassTemplateDeclaration):
-    $(D class) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK BaseClassList)$(OPT) $(GLINK ClassBody)
-    $(D class) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK BaseClassList)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK ClassBody)
-)
-
-$(GRAMMAR
-$(GNAME StructTemplateDeclaration):
-    $(D struct) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK StructBody)
-
-$(GNAME UnionTemplateDeclaration):
-    $(D union) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK StructBody)
-
-$(GNAME InterfaceTemplateDeclaration):
-    $(D interface) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK BaseInterfaceList)$(OPT) $(GLINK InterfaceBody)
-)
-
-$(GRAMMAR
-$(GNAME Constraint):
-    $(D if) $(D $(LPAREN)) $(I ConstraintExpression) $(D $(RPAREN))
-
-$(I ConstraintExpression):
-    $(I $(GLINK Expression))
-)
-
-$(H3 template-mixin.dd)
-
-$(GRAMMAR
 $(GNAME TemplateMixinDeclaration):
     $(D mixin) $(D template) $(GLINK TemplateIdentifier) $(GLINK TemplateParameters) $(V2 $(GLINK Constraint)$(OPT))
             $(D {) $(GLINK DeclDefs) $(D })
@@ -2179,7 +2140,7 @@ $(GNAME MixinIdentifier):
     $(I Identifier)
 )
 
-$(H3 attribute.dd)
+$(H3 attribute)
 
 $(GRAMMAR
 $(GNAME AttributeSpecifier):
@@ -2189,9 +2150,10 @@ $(GNAME AttributeSpecifier):
 $(GNAME Attribute):
     $(GLINK LinkageAttribute)
     $(GLINK AlignAttribute)
-    $(GLINK Pragma)
     $(GLINK DeprecatedAttribute)
     $(GLINK ProtectionAttribute)
+    $(GLINK Property)
+    $(GLINK Pragma)
     $(D static)
     $(D extern)
     $(D final)
@@ -2205,8 +2167,6 @@ $(GNAME Attribute):
     $(D inout)
     $(D shared)
     $(D __gshared)
-    $(D @disable)
-    $(D @property)
 
 $(GNAME DeclarationBlock):
     $(GLINK DeclDef)
@@ -2248,6 +2208,16 @@ $(GNAME ProtectionAttribute):
 )
 
 $(GRAMMAR
+$(GNAME Property):
+    $(D @) $(GLINK PropertyIdentifier)
+
+$(GNAME PropertyIdentifier):
+    $(D property)
+    $(D safe)
+    $(D trusted)
+    $(D system)
+    $(D disable)
+
 $(GNAME StorageClass):
     $(GLINK UserDefinedAttribute)
 
@@ -2256,15 +2226,13 @@ $(GNAME UserDefinedAttribute):
     @CallExpression
 )
 
-$(H3 pragma.dd)
-
 $(GRAMMAR
 $(GNAME Pragma):
     $(D pragma) $(D $(LPAREN)) $(I Identifier) $(D $(RPAREN))
     $(D pragma) $(D $(LPAREN)) $(I Identifier) $(D ,) $(GLINK ArgumentList) $(D $(RPAREN))
 )
 
-$(H3 version.dd)
+$(H3 conditional)
 
 $(GRAMMAR
 $(GNAME ConditionalDeclaration):
@@ -2291,38 +2259,30 @@ $(GNAME Condition):
     $(GLINK VersionCondition)
     $(GLINK DebugCondition)
     $(GLINK StaticIfCondition)
-)
 
-$(GRAMMAR
 $(GNAME VersionCondition):
     $(D version $(LPAREN)) $(GLINK_LEX IntegerLiteral) $(D $(RPAREN))
     $(D version $(LPAREN)) $(I Identifier) $(D $(RPAREN))
     $(D version $(LPAREN)) $(D unittest) $(D $(RPAREN))
     $(D version $(LPAREN)) $(D assert) $(D $(RPAREN))
+
+$(GNAME DebugCondition):
+    $(D debug)
+    $(D debug $(LPAREN)) $(GLINK_LEX IntegerLiteral) $(D $(RPAREN))
+    $(D debug $(LPAREN)) $(I Identifier) $(D $(RPAREN))
+
+$(GNAME StaticIfCondition):
+    $(D static if $(LPAREN)) $(ASSIGNEXPRESSION) $(D $(RPAREN))
 )
 
 $(GRAMMAR
 $(GNAME VersionSpecification):
     $(D version =) $(I Identifier) $(D ;)
     $(D version =) $(GLINK_LEX IntegerLiteral) $(D ;)
-)
 
-$(GRAMMAR
-$(GNAME DebugCondition):
-    $(D debug)
-    $(D debug $(LPAREN)) $(GLINK_LEX IntegerLiteral) $(D $(RPAREN))
-    $(D debug $(LPAREN)) $(I Identifier) $(D $(RPAREN))
-)
-
-$(GRAMMAR
 $(GNAME DebugSpecification):
     $(D debug =) $(I Identifier) $(D ;)
     $(D debug =) $(GLINK_LEX IntegerLiteral) $(D ;)
-)
-
-$(GRAMMAR
-$(GNAME StaticIfCondition):
-    $(D static if $(LPAREN)) $(ASSIGNEXPRESSION) $(D $(RPAREN))
 )
 
 $(GRAMMAR
@@ -2331,7 +2291,7 @@ $(GNAME StaticAssert):
     $(D static assert $(LPAREN)) $(ASSIGNEXPRESSION) $(D ,) $(ASSIGNEXPRESSION) $(D $(RPAREN);)
 )
 
-$(H3 module.dd)
+$(H3 module)
 
 $(GRAMMAR
 $(GNAME Module):
@@ -2346,8 +2306,6 @@ $(GNAME DeclDef):
     $(GLINK AttributeSpecifier)
     $(GLINK ImportDeclaration)
     $(GLINK EnumDeclaration)
-    $(GLINK ClassDeclaration)
-    $(GLINK InterfaceDeclaration)
     $(GLINK AggregateDeclaration)
     $(GLINK Declaration)
     $(GLINK Constructor)
