@@ -18,7 +18,6 @@ DOC_OUTPUT_DIR=$(ROOT_DIR)/web
 GIT_HOME=https://github.com/D-Programming-Language
 DPL_DOCS=../tools/dpl-docs/dpl-docs
 DPL_DOCS_FLAGS=--std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --
-GIT_HOME=git@github.com:D-Programming-Language
 
 # Latest released version
 ifeq (,${LATEST})
