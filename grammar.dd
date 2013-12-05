@@ -873,18 +873,7 @@ $(GNAME DeleteExpression):
 $(GRAMMAR
 $(GNAME CastExpression):
     $(D cast $(LPAREN)) $(GLINK Type) $(D $(RPAREN)) $(GLINK UnaryExpression)
-    $(D cast $(LPAREN)) $(I CastQual) $(D $(RPAREN)) $(GLINK UnaryExpression)
-    $(D cast $(LPAREN)) $(D $(RPAREN)) $(GLINK UnaryExpression)
-
-$(GNAME CastQual):
-    $(D const)
-    $(D const shared)
-    $(D shared const)
-    $(D inout)
-    $(D inout shared)
-    $(D shared inout)
-    $(D immutable)
-    $(D shared)
+    $(D cast $(LPAREN)) $(GLINK TypeCtors)$(OPT) $(D $(RPAREN)) $(GLINK UnaryExpression)
 )
 
 $(GRAMMAR
@@ -932,18 +921,12 @@ $(GNAME PrimaryExpression):
     $(D true)
     $(D false)
     $(D $)
-    $(D $(XLINK2 traits.html#specialkeywords, __FILE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __MODULE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __LINE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __FUNCTION__))
-    $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__))
     $(GLINK_LEX IntegerLiteral)
     $(GLINK_LEX FloatLiteral)
     $(GLINK_LEX CharacterLiteral)
     $(GLINK StringLiterals)
     $(GLINK ArrayLiteral)
     $(GLINK AssocArrayLiteral)
-    $(GLINK Lambda)
     $(GLINK FunctionLiteral)
     $(GLINK AssertExpression)
     $(GLINK MixinExpression)
@@ -955,6 +938,7 @@ $(GNAME PrimaryExpression):
     $(GLINK IsExpression)
     $(D $(LPAREN)) $(I Expression) $(D $(RPAREN))
     $(GLINK TraitsExpression)
+    $(GLINK SpecialKeyword)
 )
 
 $(GRAMMAR
@@ -987,18 +971,17 @@ $(GNAME ValueExpression):
 )
 
 $(GRAMMAR
-$(GNAME Lambda):
-    $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
-    $(D function)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
-    $(D delegate)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
-)
-
-$(GRAMMAR
 $(GNAME FunctionLiteral):
+    $(GLINK Lambda)
     $(D function) $(GLINK Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK FunctionBody)
     $(D delegate) $(GLINK Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK FunctionBody)
     $(GLINK ParameterAttributes) $(GLINK FunctionBody)
     $(GLINK FunctionBody)
+
+$(GNAME Lambda):
+    $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
+    $(D function)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
+    $(D delegate)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
 
 $(GNAME ParameterAttributes):
     $(GLINK Parameters)
@@ -1110,7 +1093,7 @@ $(GNAME TraitsArgument):
 )
 
 $(GRAMMAR
-$(GNAME Special Keywords):
+$(GNAME SpecialKeyword):
     $(D $(XLINK2 traits.html#specialkeywords, __FILE__))
     $(D $(XLINK2 traits.html#specialkeywords, __MODULE__))
     $(D $(XLINK2 traits.html#specialkeywords, __LINE__))
@@ -1593,14 +1576,11 @@ $(GNAME Declaration):
 $(GRAMMAR
 $(GNAME AliasDeclaration):
     $(D alias) $(GLINK BasicType) $(GLINK Declarator)
-    $(D alias) $(GLINK AliasInitializerList)
+    $(D alias) $(I AliasDeclarationX)
 
-$(GNAME AliasInitializerList):
-    $(GLINK AliasInitializer)
-    $(GLINK AliasInitializer) $(D ,) $(I AliasInitializerList)
-
-$(GNAME AliasInitializer):
+$(GNAME AliasDeclarationX):
     $(I Identifier) $(D =) $(GLINK Type)
+    $(I AliasDeclarationX) $(D ,) $(I Identifier) $(D =) $(GLINK Type)
 )
 
 $(GRAMMAR
@@ -1686,9 +1666,12 @@ $(GNAME VoidInitializer):
     $(D void)
 
 $(GNAME NonVoidInitializer):
-    $(ASSIGNEXPRESSION)
+    $(GLINK ExpInitializer):
     $(GLINK ArrayInitializer)
     $(GLINK StructInitializer)
+
+$(GNAME ExpInitializer):
+    $(GLINK AssignExpression)
 
 $(GNAME ArrayInitializer):
     $(D [) $(GLINK ArrayMemberInitializations)$(OPT) $(D ])
@@ -1771,11 +1754,7 @@ $(GNAME MemberFunctionAttribute):
 $(GRAMMAR
 $(GNAME DefaultInitializerExpression):
     $(ASSIGNEXPRESSION)
-    $(D $(XLINK2 traits.html#specialkeywords, __FILE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __MODULE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __LINE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __FUNCTION__))
-    $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__))
+    $(GLINK SpecialKeyword)
 )
 
 $(GRAMMAR
@@ -1993,11 +1972,7 @@ $(GNAME TemplateSingleArgument):
     $(D false)
     $(D null)
     $(D this)
-    $(D $(XLINK2 traits.html#specialkeywords, __FILE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __MODULE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __LINE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __FUNCTION__))
-    $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__))
+    $(GLINK SpecialKeyword)
 )
 
 $(GRAMMAR
@@ -2030,12 +2005,8 @@ $(GNAME TemplateValueParameterSpecialization):
     $(D :) $(GLINK ConditionalExpression)
 
 $(GNAME TemplateValueParameterDefault):
-    $(D = $(D $(XLINK2 traits.html#specialkeywords, __FILE__)))
-    $(D = $(D $(XLINK2 traits.html#specialkeywords, __MODULE__)))
-    $(D = $(D $(XLINK2 traits.html#specialkeywords, __LINE__)))
-    $(D = $(D $(XLINK2 traits.html#specialkeywords, __FUNCTION__)))
-    $(D = $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__)))
     $(D =) $(ASSIGNEXPRESSION)
+    $(D =) $(GLINK SpecialKeyword)
 )
 
 $(GRAMMAR
