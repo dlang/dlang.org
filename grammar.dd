@@ -1202,7 +1202,8 @@ $(I IfStatement):
 $(GNAME IfCondition):
     $(EXPRESSION)
     $(D auto) $(I Identifier) $(D =) $(EXPRESSION)
-    $(GLINK BasicType) $(GLINK Declarator) $(D =) $(EXPRESSION)
+    $(GLINK TypeCtors) $(I Identifier) $(D =) $(EXPRESSION)
+    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType) $(GLINK Declarator) $(D =) $(EXPRESSION)
 
 $(GNAME ThenStatement):
     $(PSSCOPE)
@@ -1630,7 +1631,8 @@ $(GNAME DeclaratorSuffix):
     $(D [ ])
     $(D [) $(ASSIGNEXPRESSION) $(D ])
     $(D [) $(GLINK Type) $(D ])
-    $(GLINK TemplateParameters)$(OPT) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT)
+    $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
+    $(GLINK TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT)
 )
 
 $(GRAMMAR
@@ -1639,21 +1641,24 @@ $(GNAME StorageClasses):
     $(GLINK StorageClass) $(I StorageClasses)
 
 $(GNAME StorageClass):
-    $(D abstract)
-    $(D auto)
-    $(GLINK TypeCtor)
     $(D deprecated)
     $(D enum)
+    $(D static)
     $(D extern)
+    $(D abstract)
     $(D final)
-    $(D nothrow)
     $(D override)
-    $(D pure)
+    $(D synchronized)
+    $(D auto)
+    $(D scope)
+    $(D const)
+    $(D immutable)
+    $(D inout)
+    $(D shared)
     $(D __gshared)
     $(GLINK Property)
-    $(D scope)
-    $(D static)
-    $(D synchronized)
+    $(D pure)
+    $(D nothrow)
 )
 
 
@@ -1779,8 +1784,8 @@ $(GNAME BodyStatement):
 
 $(GRAMMAR
 $(GNAME Constructor):
-    $(D this) $(GLINK Parameters) $(GLINK FunctionBody)
-    $(D this) $(GLINK TemplateParameters) $(GLINK Parameters) $(GLINK Constraint)$(OPT) $(GLINK FunctionBody)
+    $(D this) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
+    $(D this) $(GLINK TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK FunctionBody)
 
 $(GNAME Destructor):
     $(D ~ this ( )) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
@@ -1806,13 +1811,13 @@ $(GNAME StaticConstructor):
     $(D static this ( )) $(GLINK FunctionBody)
 
 $(GNAME StaticDestructor):
-    $(D static ~ this ( )) $(GLINK FunctionBody)
+    $(D static ~ this ( )) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
 
 $(GNAME SharedStaticConstructor):
     $(D shared static this ( )) $(GLINK FunctionBody)
 
 $(GNAME SharedStaticDestructor):
-    $(D shared static ~ this ( )) $(GLINK FunctionBody)
+    $(D shared static ~ this ( )) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
 )
 
 $(H3 aggregate)
@@ -1825,23 +1830,34 @@ $(GNAME AggregateDeclaration):
     $(GLINK UnionDeclaration)
 
 $(GNAME ClassDeclaration):
+    $(D class) $(I Identifier) $(D ;)
     $(D class) $(I Identifier) $(GLINK BaseClassList)$(OPT) $(GLINK AggregateBody)
     $(D class) $(I Identifier) $(GLINK TemplateParameters) $(GLINK Constraint)$(OPT) $(GLINK BaseClassList)$(OPT) $(GLINK AggregateBody)
-    $(D class) $(I Identifier) $(GLINK TemplateParameters) $(GLINK BaseClassList)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK AggregateBody)
+    $(D class) $(I Identifier) $(GLINK TemplateParameters) $(GLINK BaseClassList) $(GLINK Constraint) $(GLINK AggregateBody)
 
 $(GNAME InterfaceDeclaration):
+    $(D interface) $(I Identifier) $(D ;)
     $(D interface) $(I Identifier) $(GLINK BaseInterfaceList)$(OPT) $(GLINK AggregateBody)
     $(D interface) $(I Identifier) $(GLINK TemplateParameters) $(GLINK Constraint)$(OPT) $(GLINK BaseInterfaceList)$(OPT) $(GLINK AggregateBody)
+    $(D interface) $(I Identifier) $(GLINK TemplateParameters) $(GLINK BaseInterfaceList) $(GLINK Constraint) $(GLINK AggregateBody)
 
 $(GNAME StructDeclaration):
     $(D struct) $(I Identifier) $(D ;)
     $(D struct) $(I Identifier) $(GLINK AggregateBody)
     $(D struct) $(I Identifier) $(GLINK TemplateParameters) $(GLINK Constraint)$(OPT) $(GLINK AggregateBody)
+    $(GLINK AnonStructDeclaration)
+
+$(GNAME AnonStructDeclaration):
+    $(D struct) $(GLINK AggregateBody)
 
 $(GNAME UnionDeclaration):
     $(D union) $(I Identifier) $(D ;)
     $(D union) $(I Identifier) $(GLINK AggregateBody)
     $(D union) $(I Identifier) $(GLINK TemplateParameters) $(GLINK Constraint)$(OPT) $(GLINK AggregateBody)
+    $(GLINK AnonUnionDeclaration)
+
+$(GNAME AnonUnionDeclaration):
+    $(D union) $(GLINK AggregateBody)
 
 $(GNAME AggregateBody):
     $(D {) $(GLINK DeclDefs)$(OPT) $(D })
@@ -2058,14 +2074,13 @@ $(GNAME Attribute):
     $(GLINK AlignAttribute)
     $(GLINK DeprecatedAttribute)
     $(GLINK ProtectionAttribute)
-    $(GLINK Property)
     $(GLINK Pragma)
     $(D static)
     $(D extern)
-    $(D final)
-    $(D synchronized)
-    $(D override)
     $(D abstract)
+    $(D final)
+    $(D override)
+    $(D synchronized)
     $(D auto)
     $(D scope)
     $(D const)
@@ -2073,6 +2088,9 @@ $(GNAME Attribute):
     $(D inout)
     $(D shared)
     $(D __gshared)
+    $(GLINK Property)
+    $(D pure)
+    $(D nothrow)
 
 $(GNAME DeclarationBlock):
     $(GLINK DeclDef)
