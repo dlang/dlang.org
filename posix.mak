@@ -22,7 +22,7 @@ DPL_DOCS_FLAGS=--std-macros=std-ddox.ddoc --override-macros=std-ddox-override.dd
 # Latest released version
 ifeq (,${LATEST})
 LATEST:=$(shell cd ${DMD_DIR} && \
-  git fetch --tags https://github.com/D-Programming-Language/dmd && \
+  git fetch --tags ${GIT_HOME}/dmd && \
   git tag | grep '^v[0-9][0-9.]*$$' | sed 's/^v//' | sort -nr | head -n 1)
 endif
 ifeq (,${LATEST})
