@@ -167,7 +167,7 @@ clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
 	rm -rf auto dlangspec-tex.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex)
 	rm -f docs.json docs-prerelease.json
-	@echo You should issue manually: rm -rf ${DMD_DIR}.${LATEST} ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
+	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST}
 
 rsync : all
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
@@ -246,7 +246,7 @@ ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} : ../% :
 	[ -d $@ ] || git clone ${GIT_HOME}/$* $@/
 
 # LATEST
-${DMD_DIR}.${LATEST} ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST} : ../%.${LATEST} :
+${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} : ../%-${LATEST} :
 	[ -d $@ ] || git clone ${GIT_HOME}/$* $@/
 	cd $@ && git checkout v${LATEST}
 
@@ -258,9 +258,9 @@ ${DMD_DIR}/src/dmd : ${DMD_DIR}
 	${MAKE} --directory=${DMD_DIR}/src -f posix.mak clean
 	${MAKE} --directory=${DMD_DIR}/src -f posix.mak -j 4
 
-${DMD_DIR}.${LATEST}/src/dmd : ${DMD_DIR}.${LATEST}
-	${MAKE} --directory=${DMD_DIR}.${LATEST}/src -f posix.mak clean
-	${MAKE} --directory=${DMD_DIR}.${LATEST}/src -f posix.mak -j 4
+${DMD_DIR}-${LATEST}/src/dmd : ${DMD_DIR}-${LATEST}
+	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak clean
+	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak -j 4
 
 ################################################################################
 # druntime, latest released build and current build
@@ -273,12 +273,12 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT=`pwd`/std.ddoc
 
-druntime-release : ${DRUNTIME_DIR}.${LATEST} ${DOC_OUTPUT_DIR}/phobos/object.html
-${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}.${LATEST}/src/dmd
+druntime-release : ${DRUNTIME_DIR}-${LATEST} ${DOC_OUTPUT_DIR}/phobos/object.html
+${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}-${LATEST}/src/dmd
 	rm -f $@
-	${MAKE} --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak clean
-	${MAKE} --directory=${DRUNTIME_DIR}.${LATEST} -f posix.mak \
-	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
+	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak clean
+	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak \
+	  DMD=${DMD_DIR}-${LATEST}/src/dmd \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
 	  DOCFMT=`pwd`/std.ddoc -j 4
 
@@ -292,14 +292,14 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : std.ddoc \
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
 	DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
-phobos-release : ${PHOBOS_DIR}.${LATEST} ${DOC_OUTPUT_DIR}/phobos/index.html
+phobos-release : ${PHOBOS_DIR}-${LATEST} ${DOC_OUTPUT_DIR}/phobos/index.html
 ${DOC_OUTPUT_DIR}/phobos/index.html : std.ddoc ${LATEST}.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos/object.html
-	${MAKE} --directory=${PHOBOS_DIR}.${LATEST} -f posix.mak -j 4 \
+	${MAKE} --directory=${PHOBOS_DIR}-${LATEST} -f posix.mak -j 4 \
 	  release html \
-	  DMD=${DMD_DIR}.${LATEST}/src/dmd \
-	  DDOC=${DMD_DIR}.${LATEST}/src/dmd \
-	  DRUNTIME_PATH=${DRUNTIME_DIR}.${LATEST} \
+	  DMD=${DMD_DIR}-${LATEST}/src/dmd \
+	  DDOC=${DMD_DIR}-${LATEST}/src/dmd \
+	  DRUNTIME_PATH=${DRUNTIME_DIR}-${LATEST} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
 	  STDDOC="`pwd`/$(LATEST).ddoc `pwd`/std.ddoc"
 
@@ -322,11 +322,11 @@ apidocs-serve : docs-prerelease.json
 	  --override-macros=std-ddox-override.ddoc --package-order=std\
 	  --git-target=master --web-file-dir=. docs-prerelease.json
 
-docs.json : ${DMD_DIR}.${LATEST}/src/dmd ${DRUNTIME_DIR}.${LATEST} ${PHOBOS_DIR}.${LATEST}
+docs.json : ${DMD_DIR}-${LATEST}/src/dmd ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST}
 	mkdir .tmp || true
-	find ${DRUNTIME_DIR}.${LATEST}/src -name '*.d' | sed -e /unittest.d/d -e /gcstub/d > .tmp/files.txt
-	find ${PHOBOS_DIR}.${LATEST} -name '*.d' | sed -e /unittest.d/d -e /format/d -e /windows/d >> .tmp/files.txt
-	${DMD_DIR}.${LATEST}/src/dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
+	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | sed -e /unittest.d/d -e /gcstub/d > .tmp/files.txt
+	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | sed -e /unittest.d/d -e /format/d -e /windows/d >> .tmp/files.txt
+	${DMD_DIR}-${LATEST}/src/dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
 	${DPL_DOCS} filter docs.json --min-protection=Protected --only-documented
 	rm -r .tmp
 
