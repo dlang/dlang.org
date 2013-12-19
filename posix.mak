@@ -248,7 +248,7 @@ ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} : ../% :
 # LATEST
 ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} : ../%-${LATEST} :
 	[ -d $@ ] || git clone ${GIT_HOME}/$* $@/
-	cd $@ && git checkout v${LATEST}
+	if [ -d $@/.git ]; then cd $@ && git checkout v${LATEST}; fi
 
 ################################################################################
 # dmd compiler, latest released build and current build
