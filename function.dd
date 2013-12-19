@@ -465,7 +465,7 @@ void main() {
 
 $(H4 $(LNAME2 function-inheritance, Function Inheritance and Overriding))
 
-        A functions in a derived class with the same name and parameter
+        A function in a derived class with the same name and parameter
         types as a function in a base class overrides that function:
 
 ------
@@ -697,7 +697,7 @@ void test() {
 
 
         $(P Functions defined with non-D linkage cannot be overloaded.
-        because the name mangling does not take the parameter types
+        This is because the name mangling might not take the parameter types
         into account.
         )
 
@@ -789,7 +789,7 @@ int foo(in int x, out int y, ref int z, int q);
         $(UL
         $(LI The function declaration makes it clear what the inputs and
         outputs to the function are.)
-        $(LI It eliminates the need for IDL as a separate language.)
+        $(LI It eliminates the need for IDL (interface description language) as a separate language.)
         $(LI It provides more information to the compiler, enabling more
         error checking and
         possibly better code generation.)
@@ -860,7 +860,7 @@ void dotimes(int n, lazy void exp) {
 
 void test() {
   int x;
-  dotimes(3, writefln(x++));
+  dotimes(3, writeln(x++));
 }
 ---
 
@@ -1690,9 +1690,9 @@ int square(int i) {
 
 void foo() {
   static j = square(3);     // compile time
-  writefln(j);
-  writefln(square(4));      // run time
-  writefln(eval!(square(5))); // compile time
+  writeln(j);
+  writeln(square(4));      // run time
+  writeln(eval!(square(5))); // compile time
 }
 ---
 
@@ -1845,8 +1845,9 @@ $(H3 $(LNAME2 function-attribute-inference, Function Attribute Inference))
 
 $(H3 $(LNAME2 pseudo-member, Uniform Function Call Syntax (UFCS)))
 
-        $(P D has the ability to replace the access for not present member
-        to the free function call.)
+        $(P A free function can be called with a syntax that looks as if the function
+        were a member function of its first parameter type.
+        )
 
         ---
         void func(X thisObj);
@@ -1856,6 +1857,10 @@ $(H3 $(LNAME2 pseudo-member, Uniform Function Call Syntax (UFCS)))
         // If 'obj' does not have regular member 'func',
         // it's automatically rewritten to 'func(obj)'
         ---
+
+	$(P This provides a way to add functions to a class 
+	externally as if they were public final member functions. 
+	)
 
         $(P It also works with $(D @property) functions:)
 
@@ -1871,7 +1876,7 @@ $(H3 $(LNAME2 pseudo-member, Uniform Function Call Syntax (UFCS)))
         $(P Syntactically parenthesis-less check for $(D @property)
         functions is done at the same time as UFCS rewrite.)
 
-        $(P When UFCS rewrie is necessary, compiler searches the name
+        $(P When UFCS rewrite is necessary, compiler searches the name
         on accessible module level scope, in order from the innermost scope.)
 
         ---

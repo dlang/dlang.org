@@ -2,7 +2,7 @@ Ddoc
 
 $(D_S D Change Log,
 
-$(VERSION 064, October 19, 2013, =================================================,
+$(VERSION 064, November 5, 2013, =================================================,
 
 $(BUGSTITLE Language Enhancements,
 $(LI $(RELATIVE_LINK2 import_package, Introduced the ability to define and import package modules.))
@@ -11,6 +11,8 @@ $(LI $(RELATIVE_LINK2 postfix_new, Postfix expressions are now allowed after a $
 $(LI $(RELATIVE_LINK2 ifti_deduction, Implicit Function Template Instantiation now supports enclosing type/scope deduction.))
 $(LI $(RELATIVE_LINK2 ddoc_warning, DDoc can now warn the user when the symbol names in a ddoc comment do not match the actual code.))
 $(LI $(RELATIVE_LINK2 slice_pointer, Strings literals which are sliced are now implicitly convertible to a char pointer.))
+$(LI $(RELATIVE_LINK2 function_template_overload, Templated and non-template functions can now be overloaded against each other.))
+$(LI $(RELATIVE_LINK2 template_overload_set, Cross-module template declarations can now make an overload set.))
 )
 
 $(BUGSTITLE Compiler Changes,
@@ -20,6 +22,7 @@ $(LI $(RELATIVE_LINK2 deps_printing, Allow printing dependencies to stdout for t
 $(BUGSTITLE Compiler Enhancements,
 $(LI $(RELATIVE_LINK2 getunittest_trait, Introduced the $(D getUnitTests) trait for retrieval and custom execution of unittests.))
 $(LI $(RELATIVE_LINK2 getvirtualindex_trait, Introduced the $(D getVirtualIndex) trait to get the index of a virtual function.))
+$(LI $(RELATIVE_LINK2 isoverridefunction_trait, Introduced the $(D isOverrideFunction) trait which indicates if a function is overridden or not.))
 )
 
 $(BUGSTITLE Phobos enhancements,
@@ -28,6 +31,8 @@ $(LI $(RELATIVE_LINK2 pure_conv_format, $(D std.conv.to) and $(D std.string.form
 $(LI $(RELATIVE_LINK2 generic_strip, Introduced generic $(D strip)/$(D stripLeft)/$(D stripRight) functions.))
 $(LI $(RELATIVE_LINK2 translate_buffer, Introduced an overload of $(D std.string.translate) which can take a buffer, avoiding the need for implicit memory allocations.))
 $(LI $(RELATIVE_LINK2 current_path, Introduced the $(D thisExePath) function to retrieve the executable path of the currently running process.))
+$(LI $(RELATIVE_LINK2 regex_api, New API for std.regex $(D match)/$(D replace) functions. ))
+$(LI $(RELATIVE_LINK2 ct_regex, Compile-time $(D std.regex.ctRegex) now supports lookaround just like run-time one.))
 )
 
 $(BR)$(BIG $(RELATIVE_LINK2 list2064, List of all bug fixes and enhancements in D 2.064.))
@@ -68,21 +73,8 @@ public import libweb.server;
 ---------
 
 $(P Notice that the package module must always have the file name $(D package.d). The module name
-is the qualified name of the package. For example, if the package module belonged to a sub-package
-it would be named as follows:)
-
-$(P $(B libweb/utils/package.d:))
-
----------
-module libweb.utils;  // fully qualified name of the package, not just "utils"!
-
-// example imports to to modules belonging to the libweb.utils package
-public import libweb.utils.conv;
-public import libweb.utils.text;
----------
-
-$(P The user then uses the standard import syntax to import a package module, simply using the module declaration
-name to import the package:)
+is the qualified name of the package. The user then uses the standard import syntax to import a
+package module, simply using the module declaration name to import the package:)
 
 $(P $(B test.d:))
 
@@ -95,6 +87,32 @@ void main()
 {
     startServer();
     startClient();
+}
+---------
+
+$(P The following is an example of a package module of a sub-package:)
+
+$(P $(B libweb/utils/package.d:))
+
+---------
+module libweb.utils;  // fully qualified name of the package, not just "utils"!
+
+// publicly import modules from within the 'libweb.utils' package.
+public import libweb.utils.conv;
+public import libweb.utils.text;
+---------
+
+$(P To import this subpackage, use the standard module import declaration:)
+
+$(P $(B test.d:))
+
+---------
+module test;
+
+import libweb.utils;
+
+void main()
+{
 }
 ---------
 
@@ -119,7 +137,7 @@ template isIntOrFloat(T)
     static if (is(T == int) || is(T == float))
         enum isIntOrFloat = true;
     else
-        enum isIntOrFloat = true;
+        enum isIntOrFloat = false;
 }
 
 void main()
@@ -319,6 +337,77 @@ void main()
     call(ab);   // allowed in 2.064
 }
 ---------
+
+
+$(LI $(LNAME2 function_template_overload, Templated and non-template functions can now be overloaded against each other:))
+
+---------
+auto foo(int n) { return 1; }
+auto foo(T)(T t) { return 2; }
+
+void main()
+{
+    assert(foo(100) == 1);
+    assert(foo("a") == 2);
+
+    // Integer literal 10L can be converted to int without loss of precisions.
+    // Then the call matches to foo(int n).
+    assert(foo(10L) == 1);
+
+    // A runtime variable 'num' typed long is not implicitly convertible to int.
+    // Then the call matches to foo(T)(T t).
+    long num = 10L;
+    assert(foo(num) == 2);
+}
+---------
+
+
+$(LI $(LNAME2 template_overload_set, Cross-module template declarations can now make an overload set:))
+
+$(P Template declarations are now overloadable just like regular function declarations. Templates with matching names from multiple modules will introduce an overload set:)
+
+---------
+module a;
+
+template Traits(T) if (is(T == double))
+{
+    enum Traits = "abc";
+}
+
+auto func(T, A...)(A args) if (is(T == double))
+{
+    return 1;
+}
+---------
+---------
+module b;
+
+template Traits(T) if (is(T == string))
+{
+    enum Traits = "def";
+}
+
+auto func(T, A...)(A args) if (is(T == string))
+{
+    return 2;
+}
+---------
+---------
+module c;
+import a, b;
+static assert(Traits!double == "abc");  // matches to a.Traits
+static assert(Traits!string == "def");  // matches to b.Traits
+void main()
+{
+    assert(func!double(1, "msg") == 1);  // matches to a.func(T, A...)
+    assert(func!string(1, "msg") == 2);  // matches to b.func(T, A...)
+}
+---------
+
+$(H3 Limitations:)
+
+$(P Merging template overload sets by using an alias declaration is currently not supported.
+The limitation will be lifted in a future release.)
 )
 
 $(BUGSTITLE Compiler Changes,
@@ -394,7 +483,7 @@ void main()
     // print out the errors or the statistics.
     if (errors.length)
     {
-        writefln("Some unittests failed:\n");
+        writeln("Some unittests failed:\n");
         foreach (error; errors)
             writeln(error);
     }
@@ -452,6 +541,25 @@ void main()
     pragma(msg, __traits(getVirtualIndex, __traits(getOverloads, D, "doo")[2]));
 }
 ---------
+
+$(LI $(LNAME2 isoverridefunction_trait, Introduced the $(D isOverrideFunction) trait which indicates whether or not a function is overriding:))
+
+---
+class Base
+{
+    void foo() { }
+}
+
+class Foo : Base
+{
+    override void foo() { }
+    void bar() { }
+}
+
+static assert (__traits(isOverrideFunction, Base.foo) == false);
+static assert (__traits(isOverrideFunction, Foo.foo)  == true);
+static assert (__traits(isOverrideFunction, Foo.bar)  == false);
+---
 )
 
 $(BUGSTITLE Phobos enhancements,
@@ -464,7 +572,7 @@ The class could also be implemented in another library for which you do not have
 which means you wouldn't be able to edit the inheritance list of that class.)
 
 $(P The new $(D wrap) function allows you to perform a $(I structural cast), allowing a class object to
-act as if it were an object of another type. For example:)
+act as if it were an object of another type. For example (note: for now please pass the -allinst flag to dmd when compiling):)
 
 ---------
 import std.typecons;
@@ -596,7 +704,7 @@ unittest
 
 $(LI $(LNAME2 pure_conv_format, $(D std.conv.to) and $(D std.string.format) are now pure functions:))
 
-$(P Since 2.064, pure functions can take advantage of $(D conv) and $(D format). For example:)
+$(P Since 2.064, pure functions can take advantage of $(D to) and $(D format). For example:)
 
 ---------
 import std.conv;
@@ -665,16 +773,115 @@ $(P With the $(D thisExePath) function you can retrieve the current executable p
 
 ---------
 import std.file;
+import std.stdio;
 
 void main(string[] args)
 {
-    // note: typically args[0] already contains the executable path,
-    // but you may not always parse the command-line arguments,
-    // or you may want to access the exe path from another function.
-    assert(args[0] == thisExePath());
+    // Prints the full path of the current running executable.
+    // Note: this may, or may not be the same as args[0]. The content
+    // of args[0] is dependent of how the application was invoked, thisExePath()
+    // is not. It's also possible to access thisExePath() from other parts of the
+    // code than main.
+    writeln(thisExePath());
 }
 ---------
+$(LI $(LNAME2 regex_api, New API for std.regex $(D match)/$(D replace) functions:))
 
+$(P The old API based around "g"(=global) flag was confusing and error prone.
+Moreover in some cases it was already being overriden by a function as is the case
+with $(D std.regex.splitter).)
+
+$(P New version ties the operation to the function in question, thus being simpler to
+understand without extra context. For the moment the "g" flag is kept working as
+is but the new API always overrides it where applicable. Another addition in the new
+API is an overload for the $(D replace) family of functions to work directly with
+output ranges.)
+
+$(P To understand the difference in the API compare 2 samples below.)
+
+$(P Before 2.064:)
+---
+void main()
+{
+    import std.regex, std.algorithm, std.range, std.stdio, std.string;
+    auto m = "3.141592".match(`(\d+)\.(\d+)`);
+    // m is a range of ranges
+    assert(m.front.equal(["3.141592", "3", "141592"]));
+
+    // global vs non-global
+    auto word = regex(`(\w)\w*`);
+    auto gword = regex(`(\w)\w*`, "g");
+    auto list = "tomatoes, potatoes, pineapple";
+    // this will print only 'tomatoes', which raised many questions
+    foreach(item; list.match(word))
+        writeln(item.hit);
+
+    // while this will print each of them
+    foreach(item; list.match(gword))
+        writeln(item.hit);
+
+    auto justFirst = replace!(m => toUpper(m[1]) ~ m[0].drop(1))(list, word);
+    assert(justFirst == "Tomatoes, potatoes, pineapple");
+    auto allOfThem = replace!(m => toUpper(m[1]) ~ m[0].drop(1))(list, gword);
+    assert(allOfThem == "Tomatoes, Potatoes, Pineapple");
+}
+---
+$(P After 2.064:)
+---
+void main()
+{
+    import std.regex, std.algorithm, std.range, std.stdio, std.string;
+    auto m = "3.141592".matchFirst(`(\d+)\.(\d+)`);
+    // m is simply a range of submatches
+    assert(m.equal(["3.141592", "3", "141592"]));
+
+    auto word = regex(`(\w)\w*`);
+    auto list = "tomatoes, potatoes, pineapple";
+    // iterates over submatches so it will print 2 lines:
+    // tomatoes
+    // t
+    foreach(item; list.matchFirst(word))
+        writeln(item);
+    // so just to get the whole match:
+    assert(list.matchFirst(word).hit == "tomatoes");
+
+    // now there is no need to check if it has "g" option
+    // it's crystal clear in the function name
+    foreach(item; list.matchAll(word))
+        writeln(item.hit);
+
+    auto justFirst = replaceFirst!(m => toUpper(m[1]) ~ m[0].drop(1))(list, word);
+    assert(justFirst == "Tomatoes, potatoes, pineapple");
+    auto allOfThem = replaceAll!(m => toUpper(m[1]) ~ m[0].drop(1))(list, word);
+    assert(allOfThem == "Tomatoes, Potatoes, Pineapple");
+
+    // NEW feature - if there is no need to allocate, the resulting string
+    // replacement may be just sent directly to the wire (an OutputRange)
+    auto sink = stdout.lockingTextWriter();
+    replaceAllInto!(m => toUpper(m[1]) ~ m[0].drop(1))(sink, list, word);
+}
+---
+
+$(P The old API still works, even though eventual deprecation is planned.
+Also note the new functionality in form of *Into functions that forward the
+replacement directly to an output range avoiding extra pressure on the heap.)
+
+$(LI $(LNAME2 ct_regex, Compile-time $(D std.regex.ctRegex) now supports lookaround just like run-time one:))
+
+$(P Now $(D ctRegex) supports full syntax spectrum of run-time one except for set
+algebra inside of a character class. For instance, the following now compiles and
+passes:)
+---
+void main()
+{
+    import std.regex;
+    // a word, but not a title-cased ASCII
+    // ?<! inside of () means "negative lookbehind"
+    auto pat = ctRegex!`\w+(?<![A-Z][a-z]*)`;
+    assert(!"Hello".match(pat));
+    assert("good_bay".match(pat));
+}
+---
 )
 
 $(BR)$(BIG $(LNAME2 list2064, List of all bug fixes and enhancements in D 2.064:))
@@ -7526,13 +7733,13 @@ Macros:
 	<div class="version">
 	$(B $(LARGE <a name="new2_$1">
 	  Version
-	  <a HREF="http://ftp.digitalmars.com/dmd.2.$1.zip" title="D 2.$1">D 2.$1</a>
+	  <a HREF="http://dlang.org/download.html" title="D 2.$1">D 2.$1</a>
 	))
 	$(SMALL $(I $2, $3))
 	$5
 	</div>
 
-	BUGZILLA = <a href="http://d.puremagic.com/issues/show_bug.cgi?id=$0">Bugzilla $0</a>
+	BUGZILLA = <a href="https://d.puremagic.com/issues/show_bug.cgi?id=$0">Bugzilla $0</a>
 	CPPBUGZILLA = <a href="http://bugzilla.digitalmars.com/issues/show_bug.cgi?id=$0">Bugzilla $0</a>
 	DSTRESS = dstress $0
 	BUGSFIXED = <div class="bugsfixed">$(H4 Bugs Fixed) $(UL $0 )</div>
@@ -7548,9 +7755,9 @@ Macros:
 	TRENAME=$(TR $(TD $(CODE $1)) $(TD $(CODE $2)))
 	LII= $(LI $(D $1) $(UL $+ ))
 
-	WHATSNEW2=$(LINK2 http://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=enhancement&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&resolution=FIXED&product=D, New/Changed Features)
-	DMDBUGSFIXED2=$(LINK2 http://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=regression&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&component=DMD&resolution=FIXED&product=D, DMD Bugs Fixed)
-	DRUNTIMEBUGSFIXED2=$(LINK2 http://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=regression&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&component=druntime&resolution=FIXED&product=D, Druntime Bugs Fixed)
-	PHOBOSBUGSFIXED2=$(LINK2 http://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=regression&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&component=Phobos&resolution=FIXED&product=D, Phobos Bugs Fixed)
+	WHATSNEW2=$(LINK2 https://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=enhancement&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&resolution=FIXED&product=D, New/Changed Features)
+	DMDBUGSFIXED2=$(LINK2 https://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=regression&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&component=DMD&resolution=FIXED&product=D, DMD Bugs Fixed)
+	DRUNTIMEBUGSFIXED2=$(LINK2 https://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=regression&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&component=druntime&resolution=FIXED&product=D, Druntime Bugs Fixed)
+	PHOBOSBUGSFIXED2=$(LINK2 https://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=regression&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&component=Phobos&resolution=FIXED&product=D, Phobos Bugs Fixed)
 
     STDMODREF = <a href="phobos/std_$1.html">$(D $2)</a>

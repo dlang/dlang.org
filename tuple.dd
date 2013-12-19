@@ -67,12 +67,14 @@ TP[1] f = TP[2];	// f is declared as a float and initialized to 3
 	$(P and even sliced:)
 
 ---
-alias TP[0..length-1] TQ; // TQ is now the same as Tuple!(float, float)
+alias TP[0..$-1] TQ; // TQ is now the same as Tuple!(float, float)
 ---
 
-	$(P Yes, $(B length) is defined within the [ ]s.
-	There is one restriction: the indices for indexing and slicing
-	must be evaluatable at compile time.)
+	$(P There is one restriction: the indices for indexing and slicing
+	must be evaluatable at compile time.
+	When used within [ ]s $ is defined as the length of the tuple
+	being indexed or sliced.
+	)
 
 ---
 void foo(int i)
@@ -83,7 +85,7 @@ void foo(int i)
 
 	$(P These make it simple to produce the $(SINGLEQUOTE head) and $(SINGLEQUOTE tail)
 	of a tuple. The head is just TP[0], the tail
-	is TP[1 .. length].
+	is TP[1 .. $].
 	Given the head and tail, mix with a little conditional
 	compilation, and we can implement some classic recursive
 	algorithms with templates.
@@ -99,10 +101,10 @@ template Erase(T, TL...)
         alias TL Erase;
     else static if (is(T == TL[0]))
 	// match with first in tuple, return tail
-        alias TL[1 .. length] Erase;
+        alias TL[1 .. $] Erase;
     else
 	// no match, return head concatenated with recursive tail operation
-        alias Tuple!(TL[0], Erase!(T, TL[1 .. length])) Erase;
+        alias Tuple!(TL[0], Erase!(T, TL[1 .. $])) Erase;
 }
 ---
 
@@ -120,7 +122,7 @@ $(H3 Type Tuples)
 int foo(int x, long y);
 
 ...
-static if (is(foo P == function))
+static if (is(typeof(foo) P == function))
     alias P TP;
 // TP is now the same as Tuple!(int, long)
 ---
@@ -201,7 +203,7 @@ alias Tuple!(3, 7L, 6.8) ET;
 ...
 writeln(ET);            // prints 376.8
 writeln(ET[1]);         // prints 7
-writeln(ET[1..length]); // prints 76.8
+writeln(ET[1..$]); // prints 76.8
 ---
 
 	$(P It can be used to create an array literal:)

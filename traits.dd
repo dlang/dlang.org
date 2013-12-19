@@ -32,17 +32,20 @@ $(GNAME TraitsKeyword):
     $(GBLINK isAbstractFunction)
     $(GBLINK isFinalFunction)
     $(GBLINK isStaticFunction)
+    $(GBLINK isOverrideFunction)
     $(GBLINK isRef)
     $(GBLINK isOut)
     $(GBLINK isLazy)
     $(GBLINK hasMember)
     $(GBLINK identifier)
+    $(GBLINK getAliasThis)
     $(GBLINK getAttributes)
     $(GBLINK getMember)
     $(GBLINK getOverloads)
     $(GBLINK getProtection)
     $(GBLINK getVirtualFunctions)
     $(GBLINK getVirtualMethods)
+    $(GBLINK getUnitTests)
     $(GBLINK parent)
     $(GBLINK classInstanceSize)
     $(GBLINK getVirtualIndex)
@@ -268,6 +271,32 @@ void main() {
 }
 ---
 
+$(H2 $(GNAME isOverrideFunction))
+
+	$(P Takes one argument. If that argument is a function marked with
+	$(D_KEYWORD override), $(B true) is returned, otherwise $(B false).
+	)
+
+---
+import std.stdio;
+
+class Base {
+  void foo() { }
+}
+
+class Foo : Base
+{
+  override void foo() { }
+  void bar() { }
+}
+
+void main() {
+  writeln(__traits(isOverrideFunction, Base.foo));	// false
+  writeln(__traits(isOverrideFunction, Foo.foo));	// true
+  writeln(__traits(isOverrideFunction, Foo.bar));	// false
+}
+---
+
 $(H2 $(GNAME isStaticFunction))
 
 	$(P Takes one argument. If that argument is a static function,
@@ -334,6 +363,14 @@ $(H2 $(GNAME identifier))
 	$(P Takes one argument, a symbol. Returns the identifier
 	for that symbol as a string literal.
 	)
+
+$(H2 $(GNAME getAliasThis))
+
+    $(P Takes one argument, a symbol of aggregate type.
+        If the given aggregate type has $(D alias this), returns a list of
+        $(D alias this) names, by a tuple of $(D string)s.
+        Otherwise returns an empty tuple.
+    )
 
 $(SECTION2 $(GNAME getAttributes),
     $(P
@@ -520,6 +557,79 @@ int()
 void()
 int()
 2
+)
+
+$(H2 $(GNAME getUnitTests))
+
+	$(P
+		Takes one argument, a symbol of an aggregate (e.g. struct/class/module).
+		The result is a tuple of all the unit test functions of that aggregate.
+		The functions returned are like normal nested static functions,
+		$(DDSUBLINK glossary, ctfe, CTEF) will work and
+		$(DDSUBLINK attribute, uda, UDA's) will be accessible.
+	)
+
+	$(H4 Note:)
+
+	$(P
+		The -unittest flag needs to be passed to the compiler. If the flag
+		is not passed $(CODE __traits(getUnitTests)) will always return an
+		empty tuple.
+	)
+
+---
+module foo;
+
+import core.runtime;
+import std.stdio;
+
+struct name { string name; }
+
+class Foo {
+  unittest {
+    writeln("foo.Foo.unittest");
+  }
+}
+
+@name("foo") unittest {
+  writeln("foo.unittest");
+}
+
+template Tuple (T...)
+{
+  alias Tuple = T;
+}
+
+shared static this()
+{
+  // Override the default unit test runner to do nothing. After that, "main" will
+  // be called.
+  Runtime.moduleUnitTester = { return true; };
+}
+
+void main() {
+  writeln("start main");
+
+  alias tests = Tuple!(__traits(getUnitTests, foo));
+  static assert(tests.length == 1);
+
+  alias attributes = Tuple!(__traits(getAttributes, tests[0]));
+  static assert(attributes.length == 1);
+
+  foreach (test; tests)
+    test();
+
+  foreach (test; __traits(getUnitTests, Foo))
+    test();
+}
+---
+
+	$(P By default, the above will print:)
+
+$(CONSOLE
+start main
+foo.unittest
+foo.Foo.unittest
 )
 
 $(H2 $(GNAME parent))

@@ -53,8 +53,7 @@ DDOC = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 <link rel="stylesheet" type="text/css" href="../css/style.css">
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
-<script src="/js/codemirror.js"></script>
-<script src="/js/d.js"></script>
+<script src="/js/codemirror-compressed.js"></script>
 <script src="/js/run.js" type="text/javascript"></script>
 
 <script type="text/javascript">
@@ -84,7 +83,11 @@ function listanchors()
         var li = a.lastIndexOf('.');
         return a.slice(li + 1);
     }
-    values.sort(function(a,b){return lastName(a) > lastName(b)});
+    values.sort(function(a,b){
+        return function(aa, bb){
+            return aa == bb ? 0 : (aa < bb ? -1 : 1);
+        }(lastName(a), lastName(b));
+    });
 
     for(var i = 0; i < values.length; i++) {
         var a = values[i];
@@ -330,7 +333,7 @@ XREF = <a href="std_$1.html#$2">$(D std.$1.$2)</a>
 CXREF = <a href="core_$1.html#$2">$(D core.$1.$2)</a>
 ECXREF = <a href="etc_c_$1.html#$2">$(D etc.c.$1.$2)</a>
 LREF = <a href="#$1">$(D $1)</a>
-BUGZILLA = $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=$0, Bugzilla $0)
+BUGZILLA = $(LINK2 https://d.puremagic.com/issues/show_bug.cgi?id=$0, Bugzilla $0)
 PRE = <pre>$0</pre>
 PHOBOSSRC=$(LINK2 https://github.com/D-Programming-Language/phobos/blob/master/$0, $0)
 DRUNTIMESRC=$(LINK2 https://github.com/D-Programming-Language/druntime/blob/master/src/$0, $0)

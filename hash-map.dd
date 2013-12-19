@@ -6,9 +6,6 @@ $(SPEC_S Associative Arrays,
         and can be sparsely populated. The index for an associative array
         is called the $(I key), and its type is called the $(I KeyType).)
 
-        $(P $(BLUE $(B Note:)) The built-in associative arrays do not preserve the order
-        of the keys inserted into the array.)
-
         $(P Associative arrays are declared by placing the $(I KeyType)
         within the [ ] of an array declaration:
         )
@@ -20,6 +17,10 @@ $(SPEC_S Associative Arrays,
         b["hello"] = 3;   // set value associated with key "hello" to 3
         func(b["hello"]); // pass 3 as parameter to func()
         ---------
+
+        $(P $(BLUE $(B Note:)) The built-in associative arrays do not preserve the order
+        of the keys inserted into the array. In particular, in a $(D foreach) loop the 
+        order in which the elements are iterated is unspecified.)
 
         $(P Particular keys in an associative array can be removed with the
         remove function:
@@ -41,14 +42,13 @@ $(SPEC_S Associative Arrays,
         ---------
         int* p;
         p = ("hello" $(CODE_HIGHLIGHT in) b);
-        if (p !is (B null))
+        if (p !is $(B null))
                 ...
         ---------
 
-        $(P $(I KeyType)s cannot be functions or voids.
+        $(P Neither the $(I KeyType)s nor the element types of an associative 
+        array can be functions or voids.
         )
-
-        $(P The element types of an associative array cannot be functions or voids.)
 
 $(H3 Using Classes as the KeyType)
 
@@ -108,7 +108,7 @@ $(H3 Using Structs or Unions as the KeyType)
         )
 
         ---------
-        const hash_t $(CODE_HIGHLIGHT opHash)();
+        const hash_t $(CODE_HIGHLIGHT toHash)();
         const bool $(CODE_HIGHLIGHT opEquals)(ref const KeyType s);
         const int $(CODE_HIGHLIGHT opCmp)(ref const KeyType s);
         ---------
@@ -192,7 +192,7 @@ $(H3 Construction or assignment on setting AA entries)
           void opAssign(int v) { this.val = v * 2; }
         }
         S[int] aa;
-        aa[1] = 10;     // is rewitten to: aa[1].opAssign(10), and
+        aa[1] = 10;     // is rewritten to: aa[1].opAssign(10), and
                         // throws RangeError before opAssign is called
         ---------
 
@@ -217,7 +217,7 @@ $(H3 Construction or assignment on setting AA entries)
         ---------
 
         This is designed for efficient memory reuse with some value-semantics
-        structs, eg. $(LINK2 phobos/std_bigint.html#BigInt, BigInt).
+        structs, eg. $(FULL_XREF bigint,BigInt).
 
         ---------
         import std.bigint;
@@ -309,7 +309,7 @@ $(H3 Associative Array Example: word count)
           ulong totalWords, totalLines, totalChars;
           ulong[string] dictionary;
 
-          writefln("   lines   words   bytes file");
+          writeln("   lines   words   bytes file");
           foreach (arg; args[1 .. $]) // for each argument except the first one
           {
             ulong wordCount, lineCount, charCount;

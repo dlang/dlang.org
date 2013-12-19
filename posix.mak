@@ -18,7 +18,6 @@ DOC_OUTPUT_DIR=$(ROOT_DIR)/web
 GIT_HOME=https://github.com/D-Programming-Language
 DPL_DOCS=../tools/dpl-docs/dpl-docs
 DPL_DOCS_FLAGS=--std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --
-GIT_HOME=git@github.com:D-Programming-Language
 
 # Latest released version
 ifeq (,${LATEST})
@@ -44,7 +43,7 @@ globe.gif linux_logo.png mac_logo.png opensuse_logo.png pen.gif			\
 search-left.gif search-bg.gif search-button.gif tdpl.jpg				\
 tree-item-closed.png tree-item-open.png ubuntu_logo.png win32_logo.png)
 
-JAVASCRIPT=$(addprefix js/, codemirror.js d.js run.js	\
+JAVASCRIPT=$(addprefix js/, codemirror-compressed.js run.js	\
 run-main-website.js)
 
 STYLES=css/style.css css/print.css css/codemirror.css css/ddox.css
