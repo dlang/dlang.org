@@ -28,7 +28,18 @@ $(GNAME Attribute):
     $(RELATIVE_LINK2 gshared, $(D __gshared))
     $(RELATIVE_LINK2 disable, $(D @disable))
     $(RELATIVE_LINK2 property, $(D @property))
+    $(GLINK Property)
 
+$(GNAME Property):
+    $(D @) $(GLINK PropertyIdentifier)
+    $(GLINK UserDefinedAttribute)
+
+$(GNAME PropertyIdentifier):
+    $(D property)
+    $(D safe)
+    $(D trusted)
+    $(D system)
+    $(D disable)
 
 $(GNAME DeclarationBlock):
     $(GLINK2 module, DeclDef)
@@ -572,12 +583,10 @@ $(SECTION3 $(LNAME2 uda, User Defined Attributes),
         )
 
 $(GRAMMAR
-$(GNAME StorageClass):
-    $(GLINK UserDefinedAttribute)
-
 $(GNAME UserDefinedAttribute):
-    @(ArgumentList)
-    @CallExpression
+    $(D @ $(LPAREN)) $(GLINK2 grammar, ArgumentList) $(D $(RPAREN))
+    $(D @) $(I Identifier)
+    $(D @) $(I Identifier) $(D $(LPAREN)) $(GLINK2 grammar, ArgumentList)$(OPT) $(D $(RPAREN))
 )
         $(P
             And looks like:
