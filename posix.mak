@@ -247,15 +247,15 @@ $(DOC_OUTPUT_DIR)/dlangspec.pdf : dlangspec.dvi
 # Git clone rules
 ################################################################################
 
-# HEAD
-../%/.cloned :
-	[ -d $(@D) ] || git clone ${GIT_HOME}/$* $(@D)/
-	touch $@
-
 # LATEST
 ../%-${LATEST}/.cloned :
 	[ -d $(@D) ] || git clone ${GIT_HOME}/$* $(@D)/
 	if [ -d $(@D)/.git ]; then cd $(@D) && git checkout v${LATEST}; fi
+	touch $@
+
+# HEAD
+../%/.cloned :
+	[ -d $(@D) ] || git clone ${GIT_HOME}/$* $(@D)/
 	touch $@
 
 ################################################################################
