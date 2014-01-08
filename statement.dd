@@ -71,7 +71,7 @@ $(GNAME NonEmptyStatementNoCaseNoDefault):
 $(H3 $(LNAME2 ScopeStatement, Scope Statements))
 
 $(GRAMMAR
-$(I ScopeStatement):
+$(GNAME ScopeStatement):
     $(GLINK NonEmptyStatement)
     $(GLINK BlockStatement)
 )
@@ -119,7 +119,7 @@ $(P
 $(H3 $(LNAME2 ScopeBlockStatement, Scope Block Statements))
 
 $(GRAMMAR
-$(I ScopeBlockStatement):
+$(GNAME ScopeBlockStatement):
     $(GLINK BlockStatement)
 )
 
@@ -134,10 +134,10 @@ $(P     Statements can be labeled. A label is an identifier that
 )
 
 $(GRAMMAR
-$(I LabeledStatement):
-    $(I Identifier) :
-    $(I Identifier) : $(PSSEMI)
-    $(I Identifier) : $(PSSEMI_PSCURLYSCOPE)
+$(GNAME LabeledStatement):
+    $(I Identifier) $(D :)
+    $(I Identifier) $(D :) $(PSSEMI)
+    $(I Identifier) $(D :) $(PSSEMI_PSCURLYSCOPE)
 )
 
 $(P
@@ -162,7 +162,7 @@ $(P
 $(H3 $(LNAME2 BlockStatement, Block Statement))
 
 $(GRAMMAR
-$(I BlockStatement):
+$(GNAME BlockStatement):
     $(D { })
     $(D {) $(GLINK StatementList) $(D })
 
@@ -178,7 +178,7 @@ $(P
 $(H3 $(LNAME2 ExpressionStatement, Expression Statement))
 
 $(GRAMMAR
-$(I ExpressionStatement):
+$(GNAME ExpressionStatement):
     $(EXPRESSION) $(D ;)
 )
 
@@ -203,8 +203,8 @@ $(H3 $(LNAME2 DeclarationStatement, Declaration Statement))
         Declaration statements declare variables and types.
 
 $(GRAMMAR
-$(I DeclarationStatement):
-    $(I Declaration)
+$(GNAME DeclarationStatement):
+    $(GLINK2 declaration, Declaration)
 )
 
         $(P Some declaration statements:)
@@ -220,7 +220,7 @@ $(H3 $(LNAME2 IfStatement, If Statement))
         If statements provide simple conditional execution of statements.
 
 $(GRAMMAR
-$(I IfStatement):
+$(GNAME IfStatement):
     $(D if $(LPAREN)) $(GLINK IfCondition) $(D $(RPAREN)) $(GLINK ThenStatement)
     $(D if $(LPAREN)) $(GLINK IfCondition) $(D $(RPAREN)) $(GLINK ThenStatement) $(D else) $(GLINK ElseStatement)
 
@@ -277,7 +277,7 @@ writeln(m.pre);         // error, m undefined
 $(H3 $(LNAME2 WhileStatement, While Statement))
 
 $(GRAMMAR
-$(I WhileStatement):
+$(GNAME WhileStatement):
     $(D while $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
 )
 
@@ -306,7 +306,7 @@ $(H3 $(LNAME2 DoStatement, Do Statement))
 
 
 $(GRAMMAR
-$(I DoStatement):
+$(GNAME DoStatement):
     $(D do) $(PSSCOPE) $(D  while $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(D ;)
 )
 
@@ -337,8 +337,8 @@ $(H3 $(LNAME2 ForStatement, For Statement))
         test, and increment clauses.
 
 $(GRAMMAR
-$(I ForStatement):
-    $(D for $(LPAREN))$(GLINK Initialize) $(I Test)$(OPT) $(D ;) $(GLINK Increment)$(OPT)$(D $(RPAREN)) $(PSSCOPE)
+$(GNAME ForStatement):
+    $(D for $(LPAREN)) $(GLINK Initialize) $(I Test)$(OPT) $(D ;) $(GLINK Increment)$(OPT) $(D $(RPAREN)) $(PSSCOPE)
 
 $(GNAME Initialize):
     $(D ;)
@@ -409,8 +409,8 @@ $(H3 $(LNAME2 ForeachStatement, Foreach Statement))
         A foreach statement loops over the contents of an aggregate.
 
 $(GRAMMAR
-$(I ForeachStatement):
-    $(I Foreach) $(D $(LPAREN))$(GLINK ForeachTypeList) $(D ;) $(GLINK Aggregate)$(D $(RPAREN)) $(PS0)
+$(GNAME ForeachStatement):
+    $(I Foreach) $(D $(LPAREN)) $(GLINK ForeachTypeList) $(D ;) $(GLINK ForeachAggregate) $(D $(RPAREN)) $(PS0)
 
 $(GNAME Foreach):
     $(D foreach)
@@ -421,15 +421,15 @@ $(GNAME ForeachTypeList):
     $(GLINK ForeachType) , $(I ForeachTypeList)
 
 $(GNAME ForeachType):
-    $(D ref)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
-    $(D ref)$(OPT) $(I Identifier)
+    $(D ref)$(OPT) $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
+    $(D ref)$(OPT) $(GLINK2 declaration, TypeCtors)$(OPT) $(I Identifier)
 
-$(GNAME Aggregate):
+$(GNAME ForeachAggregate):
     $(EXPRESSION)
 )
 
 $(P
-        $(I Aggregate) is evaluated. It must evaluate to an expression
+        $(I ForeachAggregate) is evaluated. It must evaluate to an expression
         of type static array, dynamic array, associative array,
         struct, class, delegate, or tuple.
         The $(PS0) is executed, once for each element of the
@@ -694,7 +694,7 @@ $(CONSOLE
 
 $(H4 Foreach over Delegates)
 
-        $(P If $(I Aggregate) is a delegate, the type signature of
+        $(P If $(I ForeachAggregate) is a delegate, the type signature of
         the delegate is of the same as for $(D opApply). This enables
         many different named looping strategies to coexist in the same
         class or struct.)
@@ -774,7 +774,7 @@ $(CONSOLE
 
         $(P If not specified, the $(I Type)s in the $(I ForeachType) can be
         inferred from
-        the type of the $(I Aggregate).
+        the type of the $(I ForeachAggregate).
         )
 
 $(H4 Foreach Restrictions)
@@ -801,8 +801,8 @@ $(H3 $(LNAME2 ForeachRangeStatement, Foreach Range Statement))
         A foreach range statement loops over the specified range.
 
 $(GRAMMAR
-$(I ForeachRangeStatement):
-    $(GLINK Foreach) $(LPAREN)$(GLINK ForeachType) $(D ;) $(GLINK LwrExpression) $(D ..) $(GLINK UprExpression) $(D $(RPAREN)) $(PSSCOPE)
+$(GNAME ForeachRangeStatement):
+    $(GLINK Foreach) $(D $(LPAREN)) $(GLINK ForeachType) $(D ;) $(GLINK LwrExpression) $(D ..) $(GLINK UprExpression) $(D $(RPAREN)) $(PSSCOPE)
 
 $(GNAME LwrExpression):
     $(EXPRESSION)
@@ -865,7 +865,7 @@ $(H3 $(LNAME2 SwitchStatement, Switch Statement))
         expression.
 
 $(GRAMMAR
-$(I SwitchStatement):
+$(GNAME SwitchStatement):
     $(D switch $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
 
 $(GNAME CaseStatement):
@@ -1029,7 +1029,7 @@ switch (name) {
 $(H3 $(LNAME2 FinalSwitchStatement, Final Switch Statement))
 
 $(GRAMMAR
-$(I FinalSwitchStatement):
+$(GNAME FinalSwitchStatement):
     $(D final switch $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
 )
 
@@ -1050,7 +1050,7 @@ $(I FinalSwitchStatement):
 $(H3 $(LNAME2 ContinueStatement, Continue Statement))
 
 $(GRAMMAR
-$(I ContinueStatement):
+$(GNAME ContinueStatement):
     $(D continue) $(I Identifier)$(OPT) $(D ;)
 )
 
@@ -1085,7 +1085,7 @@ for (i = 0; i < 10; i++)
 $(H3 $(LNAME2 BreakStatement, Break Statement))
 
 $(GRAMMAR
-$(I BreakStatement):
+$(GNAME BreakStatement):
     $(D break) $(I Identifier)$(OPT) $(D ;)
 )
 
@@ -1117,7 +1117,7 @@ for (i = 0; i < 10; i++)
 $(H3 $(LNAME2 ReturnStatement, Return Statement))
 
 $(GRAMMAR
-$(I ReturnStatement):
+$(GNAME ReturnStatement):
     $(D return) $(EXPRESSION)$(OPT) $(D ;)
 )
 
@@ -1167,7 +1167,7 @@ int foo(int x)
 $(H3 $(LNAME2 GotoStatement, Goto Statement))
 
 $(GRAMMAR
-$(I GotoStatement):
+$(GNAME GotoStatement):
     $(D goto) $(I Identifier) $(D ;)
     $(D goto) $(D default) $(D ;)
     $(D goto) $(D case) $(D ;)
@@ -1224,7 +1224,7 @@ $(H3 $(LNAME2 WithStatement, With Statement))
         to the same object.
 
 $(GRAMMAR
-$(I WithStatement):
+$(GNAME WithStatement):
     $(D with) $(D $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
     $(D with) $(D $(LPAREN)) $(GLINK2 template, Symbol) $(D $(RPAREN)) $(PSSCOPE)
     $(D with) $(D $(LPAREN)) $(GLINK2 template, TemplateInstance) $(D $(RPAREN)) $(PSSCOPE)
@@ -1302,7 +1302,7 @@ $(H3 $(LNAME2 SynchronizedStatement, Synchronized Statement))
         )
 
 $(GRAMMAR
-$(I SynchronizedStatement):
+$(GNAME SynchronizedStatement):
     $(D synchronized) $(PSSCOPE)
     $(D synchronized $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
 )
@@ -1349,7 +1349,7 @@ $(H3 $(LNAME2 TryStatement, Try Statement))
         Exception handling is done with the try-catch-finally statement.
 
 $(GRAMMAR
-$(I TryStatement):
+$(GNAME TryStatement):
     $(D try) $(PSSCOPE) $(GLINK Catches)
     $(D try) $(PSSCOPE) $(GLINK Catches) $(GLINK FinallyStatement)
     $(D try) $(PSSCOPE) $(GLINK FinallyStatement)
@@ -1458,7 +1458,7 @@ $(H3 $(LNAME2 ThrowStatement, Throw Statement))
         Throw an exception.
 
 $(GRAMMAR
-$(I ThrowStatement):
+$(GNAME ThrowStatement):
     $(D throw) $(EXPRESSION) $(D ;)
 )
 
@@ -1472,7 +1472,7 @@ throw new Exception("message");
 $(H3 $(LNAME2 ScopeGuardStatement, Scope Guard Statement))
 
 $(GRAMMAR
-$(I ScopeGuardStatement):
+$(GNAME ScopeGuardStatement):
     $(D scope(exit)) $(PSCURLYSCOPE)
     $(D scope(success)) $(PSCURLYSCOPE)
     $(D scope(failure)) $(PSCURLYSCOPE)
@@ -1568,8 +1568,7 @@ $(H3 $(LNAME2 asm, Asm Statement))
 
 $(GRAMMAR
 $(GNAME AsmStatement):
-    $(D asm { })
-    $(D asm {) $(GLINK AsmInstructionList) $(D })
+    $(D asm {) $(GLINK AsmInstructionList)$(OPT) $(D })
 
 $(GNAME AsmInstructionList):
     $(GLINK2 iasm, AsmInstruction) $(D ;)
@@ -1642,14 +1641,14 @@ else
 $(H3 $(LNAME2 PragmaStatement, Pragma Statement))
 
 $(GRAMMAR
-$(I PragmaStatement):
+$(GNAME PragmaStatement):
     $(GLINK2 pragma, Pragma) $(PSSEMI)
 )
 
 $(H3 $(LNAME2 MixinStatement, Mixin Statement))
 
 $(GRAMMAR
-$(I MixinStatement):
+$(GNAME MixinStatement):
     $(D mixin) $(D $(LPAREN)) $(ASSIGNEXPRESSION) $(D $(RPAREN)) $(D ;)
 )
 
