@@ -5,27 +5,26 @@ $(SPEC_S Declarations,
 $(GRAMMAR
 $(GNAME Declaration):
     $(GLINK AliasDeclaration)
-    $(GLINK AliasThisDeclaration)
+    $(GLINK2 struct, AggregateDeclaration)
+    $(GLINK2 enum, EnumDeclaration)
+    $(GLINK2 module, ImportDeclaration)
     $(GLINK Decl)
+)
 
+$(GRAMMAR
 $(GNAME AliasDeclaration):
     $(D alias) $(GLINK BasicType) $(GLINK Declarator)
-    $(D alias) $(GLINK AliasInitializerList)
+    $(D alias) $(I AliasDeclarationX)
 
-$(GNAME AliasInitializerList):
-    $(GLINK AliasInitializer)
-    $(GLINK AliasInitializer) $(D ,) $(I AliasInitializerList)
-
-$(GNAME AliasInitializer):
+$(GNAME AliasDeclarationX):
     $(I Identifier) $(D =) $(GLINK Type)
+    $(I AliasDeclarationX) $(D ,) $(I Identifier) $(D =) $(GLINK Type)
+)
 
-$(GNAME AliasThisDeclaration):
-    $(D alias) $(I Identifier) $(D this)
-
+$(GRAMMAR
 $(GNAME Decl):
-    $(GLINK StorageClasses) $(I Decl)
-    $(GLINK BasicType) $(GLINK Declarators) $(D ;)
-    $(GLINK BasicType) $(GLINK Declarator) $(GLINK2 function, FunctionBody)
+    $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarators) $(D ;)
+    $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarator) $(GLINK2 function, FunctionBody)
     $(GLINK AutoDeclaration)
 
 $(GNAME Declarators):
@@ -46,14 +45,11 @@ $(GNAME DeclaratorIdentifier):
 
 $(GNAME BasicType):
     $(GLINK BasicTypeX)
-    $(D .)$(GLINK IdentifierList)
+    $(D .) $(GLINK IdentifierList)
     $(GLINK IdentifierList)
     $(GLINK Typeof)
     $(GLINK Typeof) $(D .) $(GLINK IdentifierList)
-    $(D const$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
-    $(D immutable$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
-    $(D shared$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
-    $(D inout$(LPAREN)) $(GLINK Type) $(D $(RPAREN))
+    $(GLINK TypeCtor) $(D $(LPAREN)) $(GLINK Type) $(D $(RPAREN))
 
 $(GNAME BasicTypeX):
 $(MULTICOLS 5,
@@ -125,20 +121,10 @@ $(MULTICOLS 5,     $(D abstract)
     $(D override)
     $(D pure)
     $(D __gshared)
-    $(GLINK Property)
+    $(GLINK2 attribute, Property)
     $(D scope)
     $(D static)
     $(D synchronized))
-
-$(GNAME Property):
-    $(D @) $(GLINK PropertyIdentifier)
-
-$(GNAME PropertyIdentifier):
-    $(D property)
-    $(D safe)
-    $(D trusted)
-    $(D system)
-    $(D disable)
 
 $(GNAME TypeCtors):
     $(GLINK TypeCtor)
@@ -159,8 +145,7 @@ $(GNAME Declarator2):
     $(GLINK BasicType2)$(OPT) $(D $(LPAREN)) $(I Declarator2) $(D $(RPAREN)) $(GLINK DeclaratorSuffixes)$(OPT)
 
 $(GNAME Parameters):
-    $(D $(LPAREN)) $(GLINK ParameterList) $(D $(RPAREN))
-    $(D ( ))
+    $(D $(LPAREN)) $(GLINK ParameterList)$(OPT) $(D $(RPAREN))
 
 $(GNAME ParameterList):
     $(GLINK Parameter)
@@ -195,7 +180,7 @@ $(GNAME FunctionAttributes):
 $(GNAME FunctionAttribute):
     $(D nothrow)
     $(D pure)
-    $(GLINK Property)
+    $(GLINK2 attribute, Property)
 
 $(GNAME MemberFunctionAttributes):
     $(GLINK MemberFunctionAttribute)
@@ -210,24 +195,24 @@ $(GNAME MemberFunctionAttribute):
 
 $(GNAME DefaultInitializerExpression):
     $(ASSIGNEXPRESSION)
-    $(D $(XLINK2 traits.html#specialkeywords, __FILE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __MODULE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __LINE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __FUNCTION__))
-    $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__))
+    $(GLINK2 traits, SpecialKeyword)
+)
 
+$(GRAMMAR
 $(GNAME Initializer):
     $(GLINK VoidInitializer)
     $(GLINK NonVoidInitializer)
 
 $(GNAME NonVoidInitializer):
-    $(ASSIGNEXPRESSION)
+    $(GLINK ExpInitializer):
     $(GLINK ArrayInitializer)
     $(GLINK StructInitializer)
 
+$(GNAME ExpInitializer):
+    $(ASSIGNEXPRESSION)
+
 $(GNAME ArrayInitializer):
-    $(D [ ])
-    $(D [) $(GLINK ArrayMemberInitializations) $(D ])
+    $(D [) $(GLINK ArrayMemberInitializations)$(OPT) $(D ])
 
 $(GNAME ArrayMemberInitializations):
     $(GLINK ArrayMemberInitialization)
@@ -239,8 +224,7 @@ $(GNAME ArrayMemberInitialization):
     $(ASSIGNEXPRESSION) $(D :) $(GLINK NonVoidInitializer)
 
 $(GNAME StructInitializer):
-    $(D {  })
-    $(D {) $(GLINK StructMemberInitializers) $(D })
+    $(D {) $(GLINK StructMemberInitializers)$(OPT) $(D })
 
 $(GNAME StructMemberInitializers):
     $(GLINK StructMemberInitializer)
@@ -524,7 +508,8 @@ $(H3 $(LNAME2 typeof, $(D typeof)))
 $(GRAMMAR
 $(GNAME Typeof):
     $(D typeof $(LPAREN)) $(EXPRESSION) $(D $(RPAREN))
-    $(D typeof $(LPAREN)) $(D return) $(D $(RPAREN)))
+    $(D typeof $(LPAREN)) $(D return) $(D $(RPAREN))
+)
 
         $(P
         $(I Typeof) is a way to specify a type based on the type

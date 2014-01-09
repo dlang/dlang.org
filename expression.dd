@@ -516,7 +516,8 @@ $(GNAME ShiftExpression):
     $(GLINK AddExpression)
     $(I ShiftExpression) $(D <)$(D <) $(GLINK AddExpression)
     $(I ShiftExpression) $(D >)$(D >) $(GLINK AddExpression)
-    $(I ShiftExpression) $(D >)$(D >)$(D >) $(GLINK AddExpression))
+    $(I ShiftExpression) $(D >)$(D >)$(D >) $(GLINK AddExpression)
+)
 
         $(P The operands must be integral types, and undergo the usual integral
         promotions. The result type is the type of the left operand after
@@ -589,7 +590,7 @@ $(H3 Cat Expressions)
 
 $(GRAMMAR
 $(GNAME CatExpression):
-    $(I AddExpression) $(D ~) $(GLINK MulExpression)
+    $(GLINK AddExpression) $(D ~) $(GLINK MulExpression)
 )
 
         $(P A $(I CatExpression) concatenates arrays, producing
@@ -659,7 +660,7 @@ $(H4 Complement Expressions)
 
 $(GRAMMAR
 $(GNAME ComplementExpression):
-    $(D ~) $(I UnaryExpression)
+    $(D ~) $(GLINK UnaryExpression)
 )
 
         $(P $(I ComplementExpression)s work on integral types (except bool).
@@ -678,7 +679,7 @@ $(GNAME NewExpression):
 
 $(GNAME NewExpressionWithArgs):
     $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(D [) $(GLINK AssignExpression) $(D ])
-    $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
+    $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
     $(GLINK2 class, NewAnonClassExpression)
 
 $(GNAME AllocatorArguments):
@@ -792,18 +793,7 @@ $(H4 Cast Expressions)
 $(GRAMMAR
 $(GNAME CastExpression):
     $(D cast $(LPAREN)) $(GLINK2 declaration, Type) $(D $(RPAREN)) $(GLINK UnaryExpression)
-    $(D cast $(LPAREN)) $(I CastQual) $(D $(RPAREN)) $(GLINK UnaryExpression)
-    $(D cast $(LPAREN)) $(D $(RPAREN)) $(GLINK UnaryExpression)
-
-$(GNAME CastQual):
-    $(D const)
-    $(D const shared)
-    $(D shared const)
-    $(D inout)
-    $(D inout shared)
-    $(D shared inout)
-    $(D immutable)
-    $(D shared)
+    $(D cast $(LPAREN)) $(GLINK2 declaration, TypeCtors)$(OPT) $(D $(RPAREN)) $(GLINK UnaryExpression)
 )
 
         $(P A $(I CastExpression) converts the $(I UnaryExpression)
@@ -937,7 +927,7 @@ $(H3 Pow Expressions)
 $(GRAMMAR
 $(GNAME PowExpression):
     $(GLINK PostfixExpression)
-    $(GLINK PostfixExpression) ^^ $(GLINK UnaryExpression)
+    $(GLINK PostfixExpression) $(D ^^) $(GLINK UnaryExpression)
 )
 
         $(P $(I PowExpression) raises its left operand to the power of its
@@ -956,10 +946,8 @@ $(GNAME PostfixExpression):
     $(I PostfixExpression) $(D .) $(GLINK NewExpression)
     $(I PostfixExpression) $(D ++)
     $(I PostfixExpression) $(D --)
-    $(I PostfixExpression) $(D ( ))
-    $(I PostfixExpression) $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
-    $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(D ( ))
-    $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
+    $(I PostfixExpression) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
+    $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
     $(GLINK IndexExpression)
     $(GLINK SliceExpression)
 )
@@ -1043,38 +1031,33 @@ $(H3 Primary Expressions)
 $(GRAMMAR
 $(GNAME PrimaryExpression):
     $(IDENTIFIER)
-    $(D .)$(IDENTIFIER)
+    $(D .) $(IDENTIFIER)
     $(GLINK2 template, TemplateInstance)
-    $(D .)$(GLINK2 template, TemplateInstance)
+    $(D .) $(GLINK2 template, TemplateInstance)
     $(RELATIVE_LINK2 this, $(D this))
     $(RELATIVE_LINK2 super, $(D super))
     $(RELATIVE_LINK2 null, $(D null))
     $(D true)
     $(D false)
     $(D $)
-    $(D $(XLINK2 traits.html#specialkeywords, __FILE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __MODULE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __LINE__))
-    $(D $(XLINK2 traits.html#specialkeywords, __FUNCTION__))
-    $(D $(XLINK2 traits.html#specialkeywords, __PRETTY_FUNCTION__))
     $(GLINK2 lex, IntegerLiteral)
     $(GLINK2 lex, FloatLiteral)
     $(GLINK CharacterLiteral)
     $(GLINK StringLiterals)
     $(GLINK ArrayLiteral)
     $(GLINK AssocArrayLiteral)
-    $(GLINK Lambda)
     $(GLINK FunctionLiteral)
     $(GLINK AssertExpression)
     $(GLINK MixinExpression)
     $(GLINK ImportExpression)
     $(GLINK NewExpressionWithArgs)
-    $(DDSUBLINK declaration, BasicTypeX, $(I BasicType)) $(D .) $(IDENTIFIER)
+    $(GLINK2 declaration, BasicTypeX) $(D .) $(IDENTIFIER)
     $(GLINK2 declaration, Typeof)
     $(GLINK TypeidExpression)
     $(GLINK IsExpression)
-    $(D $(LPAREN)) $(I Expression) $(D $(RPAREN))
+    $(D $(LPAREN)) $(GLINK Expression) $(D $(RPAREN))
     $(GLINK2 traits, TraitsExpression)
+    $(GLINK2 traits, SpecialKeyword)
 )
 
 $(H4 .Identifier)
@@ -1189,7 +1172,7 @@ $(H4 Array Literals)
 
 $(GRAMMAR
 $(GNAME ArrayLiteral):
-    $(D [) $(GLINK ArgumentList) $(D ])
+    $(D [) $(GLINK ArgumentList)$(OPT) $(D ])
 )
 
         $(P Array literals are a comma-separated list of $(GLINK AssignExpression)s
@@ -1288,48 +1271,6 @@ $(GNAME ValueExpression):
         are inserted as arguments in place of the tuple.
         )
 
-$(H4 Lambdas)
-
-$(GRAMMAR
-$(GNAME Lambda):
-    $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
-    $(D function)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
-    $(D delegate)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
-)
-
-        $(P $(I Lambda)s are a shorthand syntax for $(GLINK FunctionLiteral)s.)
-
-    $(OL
-        $(LI $(P Just one $(IDENTIFIER) is rewritten to
-             $(GLINK2 declaration, Parameters):)
-
-             $(D $(LPAREN)) $(IDENTIFIER) $(D $(RPAREN))
-        )
-        $(LI $(P The following part $(D =>) $(I AssignExpression) is rewritten to
-             $(GLINK2 function, FunctionBody):)
-
-             $(D { return) $(I AssignExpression) $(D ; })
-        )
-    )
-
-        Example usage:
-        ---
-        import std.stdio;
-
-        void main() {
-            auto i = 3;
-            auto twice  = function (int x) => x * 2;
-            auto square = delegate (int x) => x * x;
-
-            auto n = 5;
-            auto mul_n = (int x) => x * n;
-
-            writeln(twice(i));   // prints 6
-            writeln(square(i));  // prints 9
-            writeln(mul_n(i));   // prints 15
-        }
-        ---
-
 
 $(H4 Function Literals)
 
@@ -1339,6 +1280,7 @@ $(GNAME FunctionLiteral):
     $(D delegate) $(GLINK2 declaration, Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK2 function, FunctionBody)
     $(GLINK ParameterAttributes) $(GLINK2 function, FunctionBody)
     $(GLINK2 function, FunctionBody)
+    $(GLINK Lambda)
 
 $(GNAME ParameterAttributes):
     $(GLINK2 declaration, Parameters)
@@ -1424,8 +1366,8 @@ $(GNAME ParameterAttributes):
         }
         -------------
 
-        If the type of a function literal can be uniquely determined from its context,
-        the parameter type inference is possible.
+        $(P If the type of a function literal can be uniquely determined from its context,
+        the parameter type inference is possible.)
 
         -------------
         void foo(int function(int) fp);
@@ -1439,8 +1381,8 @@ $(GNAME ParameterAttributes):
         }
         -------------
 
-        Anonymous delegates can behave like arbitrary statement literals.
-        For example, here an arbitrary statement is executed by a loop:
+        $(P Anonymous delegates can behave like arbitrary statement literals.
+        For example, here an arbitrary statement is executed by a loop:)
 
         -------------
         double test() {
@@ -1460,12 +1402,55 @@ $(GNAME ParameterAttributes):
         }
         -------------
 
-        When comparing with $(DDSUBLINK function, nested, nested functions),
+        $(P When comparing with $(DDSUBLINK function, nested, nested functions),
         the $(D function) form is analogous to static
         or non-nested functions, and the $(D delegate) form is
         analogous to non-static nested functions. In other words,
         a delegate literal can access stack variables in its enclosing
-        function, a function literal cannot.
+        function, a function literal cannot.)
+
+
+$(H4 Lambdas)
+
+$(GRAMMAR
+$(GNAME Lambda):
+    $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
+    $(D function)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
+    $(D delegate)$(OPT) $(GLINK ParameterAttributes) $(D =>) $(GLINK AssignExpression)
+)
+
+        $(P $(I Lambda)s are a shorthand syntax for $(GLINK FunctionLiteral)s.)
+
+    $(OL
+        $(LI $(P Just one $(IDENTIFIER) is rewritten to
+             $(GLINK2 declaration, Parameters):)
+
+             $(D $(LPAREN)) $(IDENTIFIER) $(D $(RPAREN))
+        )
+        $(LI $(P The following part $(D =>) $(I AssignExpression) is rewritten to
+             $(GLINK2 function, FunctionBody):)
+
+             $(D { return) $(I AssignExpression) $(D ; })
+        )
+    )
+
+        Example usage:
+        ---
+        import std.stdio;
+
+        void main() {
+            auto i = 3;
+            auto twice  = function (int x) => x * 2;
+            auto square = delegate (int x) => x * x;
+
+            auto n = 5;
+            auto mul_n = (int x) => x * n;
+
+            writeln(twice(i));   // prints 6
+            writeln(square(i));  // prints 9
+            writeln(mul_n(i));   // prints 15
+        }
+        ---
 
 
 $(H4 Assert Expressions)

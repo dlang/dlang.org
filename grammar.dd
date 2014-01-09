@@ -4,7 +4,7 @@ $(SPEC_S Grammar,
 
 $(H3 lex)
 
-    $(P Refer the page for $(DDLINK, lex, Lexical).)
+    $(P Refer the page for $(XLINK2 lex.html, Lexical).)
 
 $(H3 type)
 
@@ -204,7 +204,7 @@ $(GNAME AddExpression):
 
 $(GRAMMAR
 $(GNAME CatExpression):
-    $(I AddExpression) $(D ~) $(GLINK MulExpression)
+    $(GLINK AddExpression) $(D ~) $(GLINK MulExpression)
 )
 
 $(GRAMMAR
@@ -234,7 +234,7 @@ $(GNAME UnaryExpression):
 
 $(GRAMMAR
 $(GNAME ComplementExpression):
-    $(D ~) $(I UnaryExpression)
+    $(D ~) $(GLINK UnaryExpression)
 )
 
 $(GRAMMAR
@@ -289,10 +289,8 @@ $(GNAME PostfixExpression):
     $(I PostfixExpression) $(D .) $(GLINK NewExpression)
     $(I PostfixExpression) $(D ++)
     $(I PostfixExpression) $(D --)
-    $(I PostfixExpression) $(D ( ))
-    $(I PostfixExpression) $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
-    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType) $(D ( ))
-    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType) $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
+    $(I PostfixExpression) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
+    $(GLINK TypeCtors)$(OPT) $(GLINK BasicType) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
     $(GLINK IndexExpression)
     $(GLINK SliceExpression)
 )
@@ -331,11 +329,11 @@ $(GNAME PrimaryExpression):
     $(GLINK MixinExpression)
     $(GLINK ImportExpression)
     $(GLINK NewExpressionWithArgs)
-    $(DDSUBLINK declaration, BasicTypeX, $(I BasicType)) $(D .) $(IDENTIFIER)
+    $(GLINK BasicTypeX) $(D .) $(IDENTIFIER)
     $(GLINK Typeof)
     $(GLINK TypeidExpression)
     $(GLINK IsExpression)
-    $(D $(LPAREN)) $(I Expression) $(D $(RPAREN))
+    $(D $(LPAREN)) $(GLINK Expression) $(D $(RPAREN))
     $(GLINK TraitsExpression)
     $(GLINK SpecialKeyword)
 )
@@ -348,7 +346,7 @@ $(GNAME StringLiterals):
 
 $(GRAMMAR
 $(GNAME ArrayLiteral):
-    $(D [) $(GLINK ArgumentList) $(D ])
+    $(D [) $(GLINK ArgumentList)$(OPT) $(D ])
 )
 
 $(GRAMMAR
@@ -467,6 +465,7 @@ $(GNAME TraitsKeyword):
     $(TRAITS_LINK2 isLazy)
     $(TRAITS_LINK2 hasMember)
     $(TRAITS_LINK2 identifier)
+    $(TRAITS_LINK2 getAliasThis)
     $(TRAITS_LINK2 getAttributes)
     $(TRAITS_LINK2 getMember)
     $(TRAITS_LINK2 getOverloads)
@@ -558,23 +557,25 @@ $(GNAME NonEmptyStatementNoCaseNoDefault):
 )
 
 $(GRAMMAR
-$(I ScopeStatement):
+$(GNAME ScopeStatement):
     $(GLINK NonEmptyStatement)
     $(GLINK BlockStatement)
 )
 
 $(GRAMMAR
-$(I ScopeBlockStatement):
+$(GNAME ScopeBlockStatement):
     $(GLINK BlockStatement)
 )
 
 $(GRAMMAR
-$(I LabeledStatement):
-    $(I Identifier) : $(PSSEMI)
+$(GNAME LabeledStatement):
+    $(I Identifier) $(D :)
+    $(I Identifier) $(D :) $(PSSEMI)
+    $(I Identifier) $(D :) $(PSSEMI_PSCURLYSCOPE)
 )
 
 $(GRAMMAR
-$(I BlockStatement):
+$(GNAME BlockStatement):
     $(D { })
     $(D {) $(GLINK StatementList) $(D })
 
@@ -584,17 +585,17 @@ $(GNAME StatementList):
 )
 
 $(GRAMMAR
-$(I ExpressionStatement):
+$(GNAME ExpressionStatement):
     $(EXPRESSION) $(D ;)
 )
 
 $(GRAMMAR
-$(I DeclarationStatement):
-    $(I Declaration)
+$(GNAME DeclarationStatement):
+    $(GLINK Declaration)
 )
 
 $(GRAMMAR
-$(I IfStatement):
+$(GNAME IfStatement):
     $(D if $(LPAREN)) $(GLINK IfCondition) $(D $(RPAREN)) $(GLINK ThenStatement)
     $(D if $(LPAREN)) $(GLINK IfCondition) $(D $(RPAREN)) $(GLINK ThenStatement) $(D else) $(GLINK ElseStatement)
 
@@ -612,17 +613,17 @@ $(GNAME ElseStatement):
 )
 
 $(GRAMMAR
-$(I WhileStatement):
+$(GNAME WhileStatement):
     $(D while $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
 )
 
 $(GRAMMAR
-$(I DoStatement):
+$(GNAME DoStatement):
     $(D do) $(PSSCOPE) $(D  while $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(D ;)
 )
 
 $(GRAMMAR
-$(I ForStatement):
+$(GNAME ForStatement):
     $(D for $(LPAREN)) $(GLINK Initialize) $(I Test)$(OPT) $(D ;) $(GLINK Increment)$(OPT) $(D $(RPAREN)) $(PSSCOPE)
 
 $(GNAME Initialize):
@@ -637,7 +638,7 @@ $(GNAME Increment):
 )
 
 $(GRAMMAR
-$(I ForeachStatement):
+$(GNAME ForeachStatement):
     $(I Foreach) $(D $(LPAREN)) $(GLINK ForeachTypeList) $(D ;) $(GLINK ForeachAggregate) $(D $(RPAREN)) $(PS0)
 
 $(GNAME Foreach):
@@ -649,15 +650,15 @@ $(GNAME ForeachTypeList):
     $(GLINK ForeachType) , $(I ForeachTypeList)
 
 $(GNAME ForeachType):
-    $(D ref)$(OPT) $(GLINK BasicType) $(GLINK Declarator)
-    $(D ref)$(OPT) $(I Identifier)
+    $(D ref)$(OPT) $(GLINK TypeCtors)$(OPT) $(GLINK BasicType) $(GLINK Declarator)
+    $(D ref)$(OPT) $(GLINK TypeCtors)$(OPT) $(I Identifier)
 
 $(GNAME ForeachAggregate):
     $(EXPRESSION)
 )
 
 $(GRAMMAR
-$(I ForeachRangeStatement):
+$(GNAME ForeachRangeStatement):
     $(GLINK Foreach) $(D $(LPAREN)) $(GLINK ForeachType) $(D ;) $(GLINK LwrExpression) $(D ..) $(GLINK UprExpression) $(D $(RPAREN)) $(PSSCOPE)
 
 $(GNAME LwrExpression):
@@ -668,7 +669,7 @@ $(GNAME UprExpression):
 )
 
 $(GRAMMAR
-$(I SwitchStatement):
+$(GNAME SwitchStatement):
     $(D switch $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
 
 $(GNAME CaseStatement):
@@ -700,27 +701,27 @@ $(GNAME StatementNoCaseNoDefault):
 )
 
 $(GRAMMAR
-$(I FinalSwitchStatement):
+$(GNAME FinalSwitchStatement):
     $(D final switch $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
 )
 
 $(GRAMMAR
-$(I ContinueStatement):
+$(GNAME ContinueStatement):
     $(D continue) $(I Identifier)$(OPT) $(D ;)
 )
 
 $(GRAMMAR
-$(I BreakStatement):
+$(GNAME BreakStatement):
     $(D break) $(I Identifier)$(OPT) $(D ;)
 )
 
 $(GRAMMAR
-$(I ReturnStatement):
+$(GNAME ReturnStatement):
     $(D return) $(EXPRESSION)$(OPT) $(D ;)
 )
 
 $(GRAMMAR
-$(I GotoStatement):
+$(GNAME GotoStatement):
     $(D goto) $(I Identifier) $(D ;)
     $(D goto) $(D default) $(D ;)
     $(D goto) $(D case) $(D ;)
@@ -728,20 +729,20 @@ $(I GotoStatement):
 )
 
 $(GRAMMAR
-$(I WithStatement):
+$(GNAME WithStatement):
     $(D with) $(D $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
     $(D with) $(D $(LPAREN)) $(GLINK Symbol) $(D $(RPAREN)) $(PSSCOPE)
     $(D with) $(D $(LPAREN)) $(GLINK TemplateInstance) $(D $(RPAREN)) $(PSSCOPE)
 )
 
 $(GRAMMAR
-$(I SynchronizedStatement):
+$(GNAME SynchronizedStatement):
     $(D synchronized) $(PSSCOPE)
     $(D synchronized $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
 )
 
 $(GRAMMAR
-$(I TryStatement):
+$(GNAME TryStatement):
     $(D try) $(PSSCOPE) $(GLINK Catches)
     $(D try) $(PSSCOPE) $(GLINK Catches) $(GLINK FinallyStatement)
     $(D try) $(PSSCOPE) $(GLINK FinallyStatement)
@@ -765,12 +766,12 @@ $(GNAME FinallyStatement):
 )
 
 $(GRAMMAR
-$(I ThrowStatement):
+$(GNAME ThrowStatement):
     $(D throw) $(EXPRESSION) $(D ;)
 )
 
 $(GRAMMAR
-$(I ScopeGuardStatement):
+$(GNAME ScopeGuardStatement):
     $(D scope(exit)) $(PSCURLYSCOPE)
     $(D scope(success)) $(PSCURLYSCOPE)
     $(D scope(failure)) $(PSCURLYSCOPE)
@@ -786,12 +787,12 @@ $(GNAME AsmInstructionList):
 )
 
 $(GRAMMAR
-$(I PragmaStatement):
+$(GNAME PragmaStatement):
     $(GLINK Pragma) $(PSSEMI)
 )
 
 $(GRAMMAR
-$(I MixinStatement):
+$(GNAME MixinStatement):
     $(D mixin) $(D $(LPAREN)) $(ASSIGNEXPRESSION) $(D $(RPAREN)) $(D ;)
 )
 
@@ -1195,7 +1196,7 @@ $(GNAME Destructor):
     $(D ~ this ( )) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
 
 $(GNAME Postblit):
-    $(D this ( this )) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
+    $(D this $(LPAREN) this $(RPAREN)) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK FunctionBody)
 
 $(GNAME Allocator):
     $(D new) $(GLINK Parameters) $(GLINK FunctionBody)
