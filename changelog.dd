@@ -2,6 +2,575 @@ Ddoc
 
 $(D_S D Change Log,
 
+$(VERSION 065, Insert Date Here 1, 1, =================================================,
+
+$(BUGSTITLE Compiler Changes,
+$(LI $(RELATIVE_LINK2 d_scripts, Extensionless D source file names can now be run when
+using the -run switch.))
+)
+
+$(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 get_alias_this, Add a new trait getAliasThis.))
+$(LI $(RELATIVE_LINK2 algorithm_pred, Many functions in std.algorithm can now be used as
+predicates to other functions.))
+)
+
+$(BUGSTITLE Library Changes,
+$(LI $(RELATIVE_LINK2 algorithm_all, Allow std.algorithm.all to be used without a predicate.))
+)
+
+$(BUGSTITLE Linker Changes,
+$(LI $(RELATIVE_LINK2 large_address_aware, Added /LARGEADDRESSAWARE to the Win32 Optlink linker.))
+)
+
+$(BUGSTITLE Compiler Changes,
+
+$(LI $(LNAME2 d_scripts, Extensionless D source file names can now be run when using the -run switch:)
+
+$(P On Posix systems it is frequently useful to have a shebang line at the start of an extensionless file,
+which marks the tool used to compile the script. It's now possible to use this technique with D, e.g.
+the following is a D source file with the file name $(B "my-script"):)
+
+---------
+#!rdmd
+
+void main()
+{
+}
+---------
+
+$(P $(B Note:) This does not allow an arbitrary extension, as D source files need to be proper D identifiers.)
+$(P $(B Note:) This feature is not available on Windows, as Windows does not have extensionless executable files.)
+$(P $(B Note:) When compiling, and in order to avoid the default behavior of generating
+an extensionless executable
+which would overwrite the source file, the compiler will generate $(I "a.out") instead.)
+)
+)
+
+$(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 get_alias_this, Add a new trait getAliasThis:))
+
+$(P The new $(B getAliasThis) trait will return a tuple of field names which are marked as the
+$(LINK2 class.html#AliasThis, subtypes) of an aggregate type. For example:)
+
+---------
+struct S
+{
+    string var;
+    alias var this;
+}
+
+static assert(__traits(getAliasThis, S)[0] == "var");
+---------
+
+$(P $(B Note:) Multiple subtyping is not yet implemented in D, therefore this trait will always
+return a tuple of length 1.)
+
+$(LI $(LNAME2 algorithm_pred, Many functions in std.algorithm can now be used as predicates to
+other functions:))
+
+$(P Functions such as $(XREF algorithm, any), $(XREF algorithm, all), $(XREF algorithm, canFind)
+and $(XREF algorithm, equal) are now templates, which allows them to be used as predicates to
+other templates, as well as allowing the user to alias an instantiation of any such templates.
+For an example of how this allows terser syntax in user-code, in the following example the
+programmer wants to check whether all the strings in a string array have at least one ASCII digit:)
+
+---------
+import std.algorithm : all;
+import std.ascii : isDigit;
+
+void main()
+{
+    string[] inputs = ["foo1", "bar2"];
+
+    bool allContainDigit;
+    foreach (input; inputs)
+    {
+        if (!any!isDigit(input))  // none of the characters are ASCII digits
+        {
+            allContainDigit = false;
+            break;
+        }
+    }
+}
+---------
+
+$(P But it is now simpler to use the $(D any) template itself as a predicate.
+We can make it a predicate to another useful template, the $(D all) template:)
+
+---------
+import std.algorithm : any, all;
+import std.ascii : isDigit;
+
+void main()
+{
+    string[] inputs = ["foo1", "bar2"];
+    bool allContainDigit = all!(any!isDigit)(inputs);
+}
+---------
+
+$(P In addition to allowing these functions to become predicates they can now also be aliased,
+which allow you to make your functions simpler to understand:)
+
+---------
+import std.algorithm : any, all;
+import std.ascii : isDigit;
+
+void main()
+{
+    alias isAnyDigit = any!isDigit;  // less visual noise and a self-describing function
+
+    string[] inputs = ["foo1", "bar2"];
+    bool allContainDigit = all!isAnyDigit(inputs);  // easier to understand
+
+    alias doAllContainDigits = all!isAnyDigit;  // or wrap the entire algorithm into one symbol!
+
+    assert(doAllContainDigits(["1", "a 1", "b 2"]));  // self-describing code
+    assert(!doAllContainDigits(["c", "a 1", "b 2"]));
+}
+---------
+
+$(P You can of course combine $(D all) and $(D any) in a number of combinations. For example,
+if you want to reverse the test and instead check whether $(B any) of the strings in the
+string array contain $(B all) digits, the code might look like the following:)
+
+---------
+import std.algorithm : any, all;
+import std.ascii : isDigit;
+
+void main()
+{
+    alias areAllDigits = all!isDigit;
+
+    alias areAnyIntegrals = any!areAllDigits;
+
+    assert(areAnyIntegrals(["123", "456"]));
+    assert(areAnyIntegrals(["abc", "123"]));  // "123" is a number
+    assert(!areAnyIntegrals(["abc", "def123"])); // "def123" is not really a number
+}
+---------
+
+$(P If on the other hand you want to ensure that $(B all) strings in the string array contain
+$(B all) digits, the could might look like the following:)
+
+---------
+import std.algorithm : any, all;
+import std.ascii : isDigit;
+
+void main()
+{
+    alias areAllDigits = all!isDigit;
+
+    alias allStringsDigits = all!areAllDigits;
+
+    assert(allStringsDigits(["123", "456"]));
+    assert(!allStringsDigits(["abc", "123"]));  // "123" is a number, but "abc" is not
+}
+---------
+
+)
+
+$(BUGSTITLE Library Changes,
+
+$(LI $(LNAME2 algorithm_all, Allow std.algorithm.all to be used without a predicate.))
+
+$(P You no longer need to pass a predicate if you want to match all items in a range which
+implicitly convert to $(D true):)
+
+---------
+import std.algorithm;
+
+void main()
+{
+    auto arr1 = [true, true, true];
+    assert(all(arr1));   // all values are true
+
+    auto arr2 = [false, true, true];
+    assert(!all(arr2));  // all values are not true
+
+    auto arr3 = [1, 2, 3];
+    assert(all(arr3));   // all values convert to true
+
+    auto arr4 = [0, 2, 3];
+    assert(!all(arr4));  // all values do not convert to true
+}
+---------
+)
+
+$(BUGSTITLE Linker Changes,
+
+$(LI $(LNAME2 large_address_aware, Added /LARGEADDRESSAWARE to the Win32 Optlink linker.))
+
+$(P When using the default Optlink linker on win32 (for linking 32-bit object files and executables),
+the $(B /LARGEADDRESSAWARE) option tells the linker that the application can handle addresses
+larger than 2 gigabytes. This is equivalent to Visual C's
+$(LINK2 http://msdn.microsoft.com/en-us/library/wz223b1z.aspx, linker option) of the same name since
+this is an operating-system feature that is enabled by setting a specific flag in the executable.)
+
+)
+
+)
+
+$(BR)$(BIG List of all bug fixes and enhancements:)
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(P
+$(LI $(BUGZILLA 7782): [ICE] With wrong import syntax)
+$(LI $(BUGZILLA 9107): Value Range Analysis with uint and byte)
+$(LI $(BUGZILLA 9639): Recursive template instanciation segfault dmd)
+$(LI $(BUGZILLA 11078): Diagnostic for wrong RHS in property assign of a property group should improve)
+$(LI $(BUGZILLA 11441): DMD halts compilation at semantic3)
+$(LI $(BUGZILLA 11447): Closure provide bogus values)
+$(LI $(BUGZILLA 11472): REGRESSION$(LPAREN)2.064$(RPAREN): dmd segfaults on wrong code instead of giving error)
+$(LI $(BUGZILLA 11487): dmd segfaults on writefln in nested template)
+$(LI $(BUGZILLA 11504): [CTFE] JSONValue cannot make in CTFE)
+$(LI $(BUGZILLA 11505): Bad error message: "opAssign [...] is annotated with @disable")
+$(LI $(BUGZILLA 11508): [REG 2.064] Wrong code with -O on x86_64 for char comparisons)
+$(LI $(BUGZILLA 11513): [REG 2.064] Assertion in module.c)
+$(LI $(BUGZILLA 11525): REG$(LPAREN)2.065$(RPAREN): Error: 'a[] *= a[]' each element is not a scalar, it is a Complex!double)
+$(LI $(BUGZILLA 11553): dmd segfault with recursive template)
+$(LI $(BUGZILLA 11554): `is$(LPAREN)T == enum$(RPAREN);` produces an error if T is an enum defined with no members)
+$(LI $(BUGZILLA 11563): Module dependency cycle causes unrelated template instantiations to fail)
+$(LI $(BUGZILLA 11566): ICE with invalid array op)
+$(LI $(BUGZILLA 11596): Internal error: backend/cgcs.c 351)
+$(LI $(BUGZILLA 11610): Compiler core dumps on FreeBSD, compiles forever on Linux)
+$(LI $(BUGZILLA 11614): Error: this for _expand_field_0 needs to be type Tuple not type Foo)
+$(LI $(BUGZILLA 11626): [ICE] $(LPAREN)mtype.c line 9718$(RPAREN) With missing in ref type)
+$(LI $(BUGZILLA 11659): false positive goto skips initialization of variable error $(LPAREN)skipping enum initialization$(RPAREN))
+$(LI $(BUGZILLA 11718): [REG2.065a] Unintended mangled names conflict of nested template structs)
+$(LI $(BUGZILLA 11723): Too many "integer overflow" errors)
+$(LI $(BUGZILLA 11730): associative array with Nullable!SysTime values: Called `get' on null Nullable!SysTime.)
+$(LI $(BUGZILLA 11751): [REG2.065a] Hex float exponents should be decimal)
+$(LI $(BUGZILLA 11755): Operator <>= and !<>= with arrays make internal error in e2ir)
+$(LI $(BUGZILLA 11767): doubly mixed-in struct "failed semantic analysis")
+$(LI $(BUGZILLA 11776): [ICE] Assertion failure: 'tf->next == NULL' on line 119 in file 'mangle.c')
+$(LI $(BUGZILLA 11777): [ICE] dmd memory corruption as `Scope::pop` `free`s `fieldinit` used also in `enclosing`)
+$(LI $(BUGZILLA 11805): Removal of Bool has critically broken expression evaluation)
+$(LI $(BUGZILLA 11818): Ternary operator not allowed in a value parameter anymore)
+$(LI $(BUGZILLA 11844): ICE$(LPAREN)template.c:6643$(RPAREN) Assertion failed: $(LPAREN)td->semanticRun != PASSinit$(RPAREN))
+$(LI $(BUGZILLA 11849): Recursive enum causes segfault)
+$(LI $(BUGZILLA 11852): RDMD broken on the Github HEAD)
+$(LI $(BUGZILLA 11854): Git-head does not build with Visual Studio)
+$(LI $(BUGZILLA 11863): std.conv.to!string$(LPAREN)int/uint, radix$(RPAREN) returns incorrect string)
+$(LI $(BUGZILLA 11868): ICE$(LPAREN)template.c$(RPAREN) on passing `inout const` argument as TemplateTupleParameter)
+)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(P
+$(LI $(BUGZILLA 235): goto & scope: cannot goto forward into different try block level)
+$(LI $(BUGZILLA 275): Undefined identifier in instances of templates with forward mixins)
+$(LI $(BUGZILLA 602): Compiler allows a goto statement to skip an initalization)
+$(LI $(BUGZILLA 900): changing import order causes type mismatch)
+$(LI $(BUGZILLA 1687): "extern $(LPAREN)C++$(RPAREN) interface" and vtbl)
+$(LI $(BUGZILLA 1748): Wrong stringof for templated classes)
+$(LI $(BUGZILLA 2481): mixing field into anonymous struct inside class generates field overlapping vtable)
+$(LI $(BUGZILLA 2806): enum member cannot be forward referenced)
+$(LI $(BUGZILLA 2885): Silent forward reference bug using ReturnType)
+$(LI $(BUGZILLA 3013): Duplicate error message on calling a function with a type)
+$(LI $(BUGZILLA 3279): $(LPAREN)D1 only$(RPAREN) Confusing error message when comparing types)
+$(LI $(BUGZILLA 3307): Template alias default parameters aren't resolved properly)
+$(LI $(BUGZILLA 3753): ICE$(LPAREN)eh.c$(RPAREN):  Related to exception handling and alloca.)
+$(LI $(BUGZILLA 3817): Array op: wrong error message)
+$(LI $(BUGZILLA 3834): forward reference in templated class)
+$(LI $(BUGZILLA 3903): Traits compiles as true for an array sum with wrong syntax)
+$(LI $(BUGZILLA 3970): Problem with cast -1.0L ==> uint/ulong)
+$(LI $(BUGZILLA 3991): Void initializers in unions considered overlapping)
+$(LI $(BUGZILLA 4162): pass by alias offset problems)
+$(LI $(BUGZILLA 4983): [ICE] Stack overflow while initializing struct member with address of one of its methods)
+$(LI $(BUGZILLA 5569): 64 bit Dwarf symbolic debug info not recognized by gdb)
+$(LI $(BUGZILLA 5878): Forward reference in returning superclass from template using is$(LPAREN)$(RPAREN) expression $(LPAREN)Breaks std.traits.BaseTypeTuple$(RPAREN))
+$(LI $(BUGZILLA 6010): -fPIC is broken on freebsd/64)
+$(LI $(BUGZILLA 6382): edge case with static foreach)
+$(LI $(BUGZILLA 6439): [CTFE] union fields are initialized independently)
+$(LI $(BUGZILLA 6764): IFTI fails on typesafe variadic function over static array with non IntegerLiteral length)
+$(LI $(BUGZILLA 6796): Several __error with wrong enum definition)
+$(LI $(BUGZILLA 7077): $(LPAREN)D1 only$(RPAREN) mixin statements can invade the enclosing scope)
+$(LI $(BUGZILLA 7175): Zero-length static array .ptr is always null)
+$(LI $(BUGZILLA 7472): Cast from class to basic type not rejected during semantic)
+$(LI $(BUGZILLA 7645): ICE$(LPAREN)e2ir.c$(RPAREN) nested classes)
+$(LI $(BUGZILLA 7744): Forward reference in string mixin)
+$(LI $(BUGZILLA 7966): First template instantiation inside `with` results in `Error 42: Symbol Undefined`)
+$(LI $(BUGZILLA 8019): $(LPAREN)D1 only$(RPAREN) can't convert [] to int[])
+$(LI $(BUGZILLA 8117): Cannot initialize struct member without default constructor)
+$(LI $(BUGZILLA 8179): ICE$(LPAREN)e2ir.c$(RPAREN) with failed fixed size array cast)
+$(LI $(BUGZILLA 8200): DMD segfault: template aliasing result of map)
+$(LI $(BUGZILLA 8244): cannot slice a type tuple with '[]' in locations where a type is valid)
+$(LI $(BUGZILLA 8255): [CTFE] ICE when passing 'ref' literal)
+$(LI $(BUGZILLA 8313): stack overflow on recursive ifti evaluation)
+$(LI $(BUGZILLA 8365): Static fixed size array of enums initialization fails)
+$(LI $(BUGZILLA 8396): wrong order of evaluation for tuple expansion in function arguments)
+$(LI $(BUGZILLA 8492): can't infer type in static assert)
+$(LI $(BUGZILLA 8511): Segfault with forward-referenced enum)
+$(LI $(BUGZILLA 8525): optimizer loops infinitely)
+$(LI $(BUGZILLA 8543): simd literals need better CTFE support)
+$(LI $(BUGZILLA 8581): Internal error: backend/cod1.c 1677 on structs with bitfields $(LPAREN)when compile with release or optimize parameter$(RPAREN))
+$(LI $(BUGZILLA 8648): No error line number with incomplete template)
+$(LI $(BUGZILLA 8658): Passing large structs to function b value causes stack corruption)
+$(LI $(BUGZILLA 8664): Compiler causes stack overflow with recursive typedef and option -g)
+$(LI $(BUGZILLA 8711): ICE with initializing function pointer with array)
+$(LI $(BUGZILLA 8722): foreach triggers a floating point exception with multidimensional array of a dimension equal to 0)
+$(LI $(BUGZILLA 8735): ICE: Assertion failure: 't' on line 100 in file 'aliasthis.c')
+$(LI $(BUGZILLA 8739): DDoc outputs wrong parameter name in delegate parameter list)
+$(LI $(BUGZILLA 8825): Wrong line number of error message)
+$(LI $(BUGZILLA 8903): Bad code for enum array members)
+$(LI $(BUGZILLA 9008): Another forward referencing bug)
+$(LI $(BUGZILLA 9050): Too early instantiation of template structs)
+$(LI $(BUGZILLA 9081): Modules shouldn't have a type)
+$(LI $(BUGZILLA 9212): Associative array foreach iteration with immutable key)
+$(LI $(BUGZILLA 9256): A purity-related error message in case of member access)
+$(LI $(BUGZILLA 9271): Forwarding lambda predicate with type inference causes segfault)
+$(LI $(BUGZILLA 9296): LITTLE_ENDIAN and BIG_ENDIAN are always defined on Linux)
+$(LI $(BUGZILLA 9301): using XMM.PSHUFD results in an internal compiler error)
+$(LI $(BUGZILLA 9356): -inline with inout and append generates wrong code)
+$(LI $(BUGZILLA 9459): Front-end does not detect invalid array operations)
+$(LI $(BUGZILLA 9466): Compiler crash with code-coverage generation with large files)
+$(LI $(BUGZILLA 9504): typeof does not look up properties correctly on template argument)
+$(LI $(BUGZILLA 9562): Built-in runtime properties should become error with `Type.prop`)
+$(LI $(BUGZILLA 9572): Missed wrong implicit integral conversion)
+$(LI $(BUGZILLA 9577): Crash on static array of function literals)
+$(LI $(BUGZILLA 9644): Spell checker gives silly suggestions for 1-2 character symbols)
+$(LI $(BUGZILLA 9690): cannot access to @disable'd symbol from inner function of another @disable'd)
+$(LI $(BUGZILLA 9765): Error message with __error with struct literal dotvar expression)
+$(LI $(BUGZILLA 9807): with statement does not work with alias this)
+$(LI $(BUGZILLA 9831): Error message with failed lambda inference)
+$(LI $(BUGZILLA 9861): Spurious 'is used as type' error with failed template instantiation)
+$(LI $(BUGZILLA 9912): Wrong codegen when using tuple over member variable in more than one method)
+$(LI $(BUGZILLA 10207): Alias and @attributes: Assertion failure: '!udas' on line 3132 in file 'parse.c')
+$(LI $(BUGZILLA 10224): core.simd ICE cgcv.c line 2162 when compiling with -g)
+$(LI $(BUGZILLA 10251): CTFE: Allow returning pointers to global static variables of known value)
+$(LI $(BUGZILLA 10259): ICE on invalid compile-time class instantiation)
+$(LI $(BUGZILLA 10312): compiler assert failure with ctfe on simd vector type)
+$(LI $(BUGZILLA 10313): inout constructor + IFTI + has indirections arg doesn't work)
+$(LI $(BUGZILLA 10329): Attributes not inferred for indirectly templated methods)
+$(LI $(BUGZILLA 10391): Segfault compiling on Mac OS 10.8)
+$(LI $(BUGZILLA 10459): align$(LPAREN)16$(RPAREN) does not work on Win64 with seperate compilation)
+$(LI $(BUGZILLA 10483): ICE$(LPAREN)expression.c$(RPAREN) .init of struct with block initialized 2D static array)
+$(LI $(BUGZILLA 10598): Using not-imported type - AssertFail: 'global.errors' line 6040 'template.c')
+$(LI $(BUGZILLA 10632): [ICE]$(LPAREN)glue.c line 1227$(RPAREN) With inlining and tuples)
+$(LI $(BUGZILLA 10635): Error: cannot use array to initialize S)
+$(LI $(BUGZILLA 10643): Refused const array struct field initialized with void)
+$(LI $(BUGZILLA 10747): Win64: warning about non-existing vc100.pdb)
+$(LI $(BUGZILLA 10770): is$(LPAREN)T BASE==enum$(RPAREN) with tag enum T - AssertFail:'type' line 428 declaration.c)
+$(LI $(BUGZILLA 10805): wrong error message for wrong delimited string)
+$(LI $(BUGZILLA 10883): [ICE] Internal error: ../ztc/cod4.c 358 when compiling with -inline)
+$(LI $(BUGZILLA 10905): [ICE]$(LPAREN)ctfeexpr.c line 355$(RPAREN) with ulong2 in structs)
+$(LI $(BUGZILLA 10922): Compiler segfaults when using __traits$(LPAREN)parent, {}$(RPAREN))
+$(LI $(BUGZILLA 10926): Wrong expression printed when ternary operator used as lvalue)
+$(LI $(BUGZILLA 10927): Power of complex number causes an internal error)
+$(LI $(BUGZILLA 10938): ICE on recursive instantiation in opDispatch)
+$(LI $(BUGZILLA 11034): ICE: Assertion failed: $(LPAREN)!scope$(RPAREN), function toObjFile, file toobj.c, line 366.)
+$(LI $(BUGZILLA 11155): Wrong SIMD code generated $(LPAREN)unaligned movaps$(RPAREN))
+$(LI $(BUGZILLA 11193): [ICE] String template argument mixed with variadic template arguments causes ICE)
+$(LI $(BUGZILLA 11198): Error messages for declaring a 'version' inside main$(LPAREN)$(RPAREN) and other functions are unclear)
+$(LI $(BUGZILLA 11215): `inout` lose enclosing `shared` on resolution)
+$(LI $(BUGZILLA 11224): Inlining stops NRVO)
+$(LI $(BUGZILLA 11247): Error: typeof$(LPAREN)i$(RPAREN).sizeof is used as a type)
+$(LI $(BUGZILLA 11286): Impure dtor makes "cannot call impure function" error, although it won't actually be called.)
+$(LI $(BUGZILLA 11288): dmd assertion when assigning to $(LPAREN)static$(RPAREN) opDispatch)
+$(LI $(BUGZILLA 11297): [ICE]$(LPAREN)glue.c line 868$(RPAREN) with a string concat in global enum lambda)
+$(LI $(BUGZILLA 11314): inline ice with tuple assignment and if/else again)
+$(LI $(BUGZILLA 11317): glue.c:1218: virtual unsigned int Type::totym$(LPAREN)$(RPAREN): Assertion `0' failed.)
+$(LI $(BUGZILLA 11322): ICE with -inline cgcs.c 221)
+$(LI $(BUGZILLA 11332): ICE$(LPAREN)dt.c$(RPAREN) and missing error when interpreting an unimplemented builtin)
+$(LI $(BUGZILLA 11371): core.simd and ctfe)
+$(LI $(BUGZILLA 11375): [profile+nothrow] Semantic 'no throw' error with -profile switch)
+$(LI $(BUGZILLA 11376): ICE on __traits$(LPAREN)compiles, ...$(RPAREN) with invalid array-op)
+$(LI $(BUGZILLA 11383): Some array casts incorrectly rejected in safe code)
+$(LI $(BUGZILLA 11385): XXX is a nested function and cannot be accessed from XXX)
+$(LI $(BUGZILLA 11394): NRVO should work for object field initialization in constructor)
+$(LI $(BUGZILLA 11406): ld.gold breaks switch table jumps)
+$(LI $(BUGZILLA 11425): Broken shadowing variable diagnostic)
+$(LI $(BUGZILLA 11427): anonymous unions break structs in @safe code)
+$(LI $(BUGZILLA 11445): adding double[string] causes crash)
+$(LI $(BUGZILLA 11479): template members ignore private attribute in ddoc)
+$(LI $(BUGZILLA 11484): [e2ir] Error in e2ir at cast to/from static array)
+$(LI $(BUGZILLA 11485): [e2ir] Error in e2ir at numeric/bool to class/interface cast)
+$(LI $(BUGZILLA 11489): Improper implicit cast to immutable.)
+$(LI $(BUGZILLA 11497): lambda in "static if"/"assert" prevent inlining of function)
+$(LI $(BUGZILLA 11518): DMD segfault on multiple template match)
+$(LI $(BUGZILLA 11534): [CTFE] inout + returning a pointer into a member array)
+$(LI $(BUGZILLA 11540): [ICE] CTFE segfault with try-catch-finally and goto)
+$(LI $(BUGZILLA 11552): Missing label is not caught during semantic)
+$(LI $(BUGZILLA 11562): Goto into or out of finally block is not caught during semantic)
+$(LI $(BUGZILLA 11565): [Optimizer] Zeroes out the higher 32bits of register in ?: expression)
+$(LI $(BUGZILLA 11587): Cannot compare AAs at compile time)
+$(LI $(BUGZILLA 11618): Internal Compiler Error)
+$(LI $(BUGZILLA 11627): [CTFE] cannot cast dchar to char at compile time on AA assignment)
+$(LI $(BUGZILLA 11629): [CTFE] crash on AA.rehash)
+$(LI $(BUGZILLA 11635): RDMD eats the -op flag when it should just pass through)
+$(LI $(BUGZILLA 11653): No error when forgetting break with range cases.)
+$(LI $(BUGZILLA 11656): property offsetof does not work with __vector fields)
+$(LI $(BUGZILLA 11661): Meaningless error: "a struct is not a valid initializer for a void function$(LPAREN)$(RPAREN)")
+$(LI $(BUGZILLA 11664): A function with a local static variable is unusable in CTFE)
+$(LI $(BUGZILLA 11689): deprecated local function does not work)
+$(LI $(BUGZILLA 11696): C++ incorrect static member mangling)
+$(LI $(BUGZILLA 11722): Qualifier-only casts should not invoke opCast)
+$(LI $(BUGZILLA 11726): ICE with ufcs on undefined identifier and opDispatch)
+$(LI $(BUGZILLA 11727): Repeated error message with using forward referenced enum as variable)
+$(LI $(BUGZILLA 11735): pragma$(LPAREN)msg, ...$(RPAREN) fails to print wstring, dstring)
+$(LI $(BUGZILLA 11745): Unittests retrieved by __traits$(LPAREN)getUnitTests$(RPAREN) can not be invoked if private.)
+$(LI $(BUGZILLA 11748): [ICE] function call as alias parameter of template gives ICE)
+$(LI $(BUGZILLA 11749): switch case fallthrough error is enabled with -w, but cannot be made informational warning)
+$(LI $(BUGZILLA 11750): ICE with debug info and empty #line Filespec)
+$(LI $(BUGZILLA 11756): Irrelevant variable name printing in CTFE error message)
+$(LI $(BUGZILLA 11769): Wrong line number in "matches both" error message)
+$(LI $(BUGZILLA 11785): Order of method/function declarations has an effect on compilation result.)
+$(LI $(BUGZILLA 11790): ICE$(LPAREN)interpret.c$(RPAREN): passing creation of array with type string as size to CTFE)
+$(LI $(BUGZILLA 11793): [ICE] Compiler runs out of memory with trivial program: class with own class member instance)
+$(LI $(BUGZILLA 11800): alias this matching incorrectly changes lvalue-ness)
+$(LI $(BUGZILLA 11802): Wrong vtbl order for extern$(LPAREN)C++$(RPAREN) classes with overloaded functions on win32)
+$(LI $(BUGZILLA 11813): Improve IFTI error diagnostic)
+$(LI $(BUGZILLA 11814): Unnecessary error messages "does not match ..." on IFTI failure)
+$(LI $(BUGZILLA 11843): Template instantiated twice: failed semantic analysis)
+)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(P
+$(LI $(BUGZILLA 6930): combined type of immutable$(LPAREN)T$(RPAREN) and inout$(LPAREN)T$(RPAREN) should be inout$(LPAREN)const$(LPAREN)T$(RPAREN)$(RPAREN))
+$(LI $(BUGZILLA 10199): labels cannot be used without a statement)
+$(LI $(BUGZILLA 11365): Allow D source file names to have no extension $(LPAREN)or an arbitrary extension$(RPAREN) when -run is used)
+$(LI $(BUGZILLA 11417): rotate with immediate not recognized by optimizer)
+$(LI $(BUGZILLA 11510): Relax restriction for overlapped pointer field access in safe code/during CTFE)
+$(LI $(BUGZILLA 11533): Compiler should allow to being nested for static local template functions)
+$(LI $(BUGZILLA 11546): string import dependency failure)
+$(LI $(BUGZILLA 11711): Add __traits$(LPAREN)getAliasThis$(RPAREN))
+$(LI $(BUGZILLA 11759): Poor error message trying to use lowercase L in literal suffix.)
+$(LI $(BUGZILLA 11840): Show all errors of undefined identifier used in a line)
+)
+)
+$(BUGSTITLE Phobos regressions,
+
+$(P
+$(LI $(BUGZILLA 11309): std.concurrency: OwnerTerminated message doesn't work)
+$(LI $(BUGZILLA 11512): Can't build Phobos docs with win32 makefile)
+$(LI $(BUGZILLA 11527): JSONValue cannot set values through named fields)
+$(LI $(BUGZILLA 11528): appender: crash with -inline -O)
+$(LI $(BUGZILLA 11576): std.algorithm.remove!$(LPAREN)SwapStrategy.unstable$(RPAREN) overruns array bounds)
+$(LI $(BUGZILLA 11583): bigint bug)
+$(LI $(BUGZILLA 11591): std.typecons.Tuple -s with classes fails at runtime as associative array keys)
+$(LI $(BUGZILLA 11603): std.algorithm.canFind does not work when needle is 1-byte zero)
+$(LI $(BUGZILLA 11671): ctRegex broken)
+$(LI $(BUGZILLA 11684): SIGSEGV with ld.bfd version 2.22)
+$(LI $(BUGZILLA 11692): can't set file attributes for std.zip.ArchiveMember)
+$(LI $(BUGZILLA 11764): [REG2.065a]std.getopt broken)
+$(LI $(BUGZILLA 11831): std.zip no longer allows setting madeVersion field in zip file)
+$(LI $(BUGZILLA 11838): Missing emplace import for std.range.zip?)
+$(LI $(BUGZILLA 11853): Tuples fail "isAssignable")
+)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(P
+$(LI $(BUGZILLA 2162): Access violation when threads run closures)
+$(LI $(BUGZILLA 4301): BigInt * const$(LPAREN)BigInt$(RPAREN) doesn't work well)
+$(LI $(BUGZILLA 4673): Bug in std.string $(LPAREN)isNumeric$(RPAREN))
+$(LI $(BUGZILLA 4874): std.numeric.dotProduct doesn't work with bigints)
+$(LI $(BUGZILLA 5280): to!FP$(LPAREN)Hex float string$(RPAREN) doesn't work well)
+$(LI $(BUGZILLA 5762): getopt: short option parameter read incorrectly when bundling enabled)
+$(LI $(BUGZILLA 5977): String splitting with empty separator)
+$(LI $(BUGZILLA 6730): std.algorithm.splitter conflicts with std.array.splitter)
+$(LI $(BUGZILLA 7689): splitter$(LPAREN)$(RPAREN) on ivalid UTF-8 sequences)
+$(LI $(BUGZILLA 8013): splitter$(LPAREN)$(RPAREN) and split$(LPAREN)$(RPAREN) give different results)
+$(LI $(BUGZILLA 8203): Use of std.regex.match$(LPAREN)$(RPAREN) generates "not enough preallocated memory" error)
+$(LI $(BUGZILLA 8291): dirEntry cannot handle root directories + unhandled exception causes crash)
+$(LI $(BUGZILLA 8877): std.encoding.transcode is extremely slow)
+$(LI $(BUGZILLA 9528): std.array.appender can't append elements with const members)
+$(LI $(BUGZILLA 9645): std.algorithm.splitter on string with char as separator performs badly in certain situations)
+$(LI $(BUGZILLA 9823): Delegate accepting element not accepted in std.range.put)
+$(LI $(BUGZILLA 10569): std.traits: EnumMembers, isExpressionTuple, isTypeTuple & Largest balks at large input)
+$(LI $(BUGZILLA 10571): formattedWrite error with delegate and string)
+$(LI $(BUGZILLA 10864): [REG 2.064][PERFORMANCE] new Safe appender is slower than "~=")
+$(LI $(BUGZILLA 11005): std.xml does not encode attributes)
+$(LI $(BUGZILLA 11112): Unable to execute shell commands in different threads)
+$(LI $(BUGZILLA 11403): functions in std.algo can't be used as pred)
+$(LI $(BUGZILLA 11459): std.container.Array bool constraint ambiguity)
+$(LI $(BUGZILLA 11568): can't compile std.stdio.rawWrite with -m64 in Windows)
+$(LI $(BUGZILLA 11600): to!BigInt$(LPAREN)string$(RPAREN) accepts non-numeric input)
+$(LI $(BUGZILLA 11606): Cannot instantiate Tuple of non printable)
+$(LI $(BUGZILLA 11617): std.uni.normalize doesn't compile)
+$(LI $(BUGZILLA 11652): Support numerical ^^ complex operations in std.complex)
+$(LI $(BUGZILLA 11681): std.datetime.IntervalRange.opAssign with non-ref parameter is required)
+$(LI $(BUGZILLA 11691): can't join pathSplitter with dirSeparator)
+$(LI $(BUGZILLA 11713): std.string munch$(LPAREN)$(RPAREN) does not properly handle UTF strings.)
+$(LI $(BUGZILLA 11738): partialShuffle actually shuffles the entire input)
+$(LI $(BUGZILLA 11771): Unicode set intersection with char is broken)
+$(LI $(BUGZILLA 11775): std.regex should check for valid repetition range in assert mode)
+$(LI $(BUGZILLA 11780): RangeError in format for incomplete format specifier)
+$(LI $(BUGZILLA 11808): std.uni.CodepointSet$(LPAREN)'А', 'Я'+1, 'а', 'я'+1$(RPAREN) asserts)
+$(LI $(BUGZILLA 11839): std.regex capture group names should allow numbers to be in them)
+)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(P
+$(LI $(BUGZILLA 5611): back$(LPAREN)$(RPAREN) and front$(LPAREN)$(RPAREN) with ref return + opSlice$(LPAREN)$(RPAREN) in sort$(LPAREN)$(RPAREN) constraint)
+$(LI $(BUGZILLA 11770): std.regex.Captures should be convertible to bool)
+$(LI $(BUGZILLA 11789): No setAttributes to complement getAttributes)
+$(LI $(BUGZILLA 11798): std.algorithm.all with no predicate too)
+)
+)
+$(BUGSTITLE Druntime regressions,
+
+$(P
+$(LI $(BUGZILLA 11478): shared library on osx: worked in 2.062, fails in 2.063.2, still fails in 2.064)
+)
+)
+$(BUGSTITLE Druntime bugs,
+
+$(P
+$(LI $(BUGZILLA 3454): Inconsistent flag setting in GC.realloc$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 4809): Stack trace when throwing exception misses location of the throw statement)
+$(LI $(BUGZILLA 7508): float4 values aren't stored on initialisation)
+$(LI $(BUGZILLA 8301): Access violation when a big array is allocated)
+$(LI $(BUGZILLA 10701): [GC] segfault in GC)
+)
+)
+$(BUGSTITLE Optlink regressions,
+
+$(P
+$(LI $(BUGZILLA 11559): Optlink crash with more than 2048 modules generated and debug info)
+)
+)
+$(BUGSTITLE Optlink bugs,
+
+$(P
+$(LI $(BUGZILLA 2837): OPTLINK and LARGEADDRESSAWARE)
+$(LI $(BUGZILLA 3956): linker removes underscore from all exported symbols of a module but the first)
+$(LI $(BUGZILLA 7634): optlink creates bad debug info for a large number of modules)
+)
+)
+$(BUGSTITLE Website regressions,
+
+$(P
+$(LI $(BUGZILLA 11449): Jump lists of phobos are in wrong order)
+)
+)
+$(BUGSTITLE Website bugs,
+
+$(P
+$(LI $(BUGZILLA 5388): SList.insertFront has complexity O$(LPAREN)log$(LPAREN)n$(RPAREN)$(RPAREN))
+$(LI $(BUGZILLA 9734): setIntersection accepts only 2 ranges, but documentation says otherwise)
+$(LI $(BUGZILLA 10205): 'deprecated' '$(LPAREN)' assignExpression '$(RPAREN)' grammar is not documented)
+$(LI $(BUGZILLA 10206): User-defined attributes not documented well in language specification)
+$(LI $(BUGZILLA 11579): dlang.org repo can't be built without git)
+$(LI $(BUGZILLA 11762): std.regex macro is not displayed/expanded properly)
+)
+)
+$(BUGSTITLE Website enhancements,
+
+$(P
+$(LI $(BUGZILLA 11676): Add a link to D Wiki Sidebar to take users back to DLang.org)
+)
+)
+
+
+
+)
+
 $(VERSION 064, November 5, 2013, =================================================,
 
 $(BUGSTITLE Language Enhancements,
@@ -7761,3 +8330,4 @@ Macros:
 	PHOBOSBUGSFIXED2=$(LINK2 https://d.puremagic.com/issues/buglist.cgi?chfieldto=$2&query_format=advanced&chfield=resolution&chfieldfrom=$1&chfieldvalue=FIXED&bug_severity=regression&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial&bug_status=RESOLVED&version=D2&version=D1%20%26%20D2&component=Phobos&resolution=FIXED&product=D, Phobos Bugs Fixed)
 
     STDMODREF = <a href="phobos/std_$1.html">$(D $2)</a>
+    XREF = <a href="phobos/std_$1.html#$2">$(D $2)</a>
