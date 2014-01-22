@@ -9,6 +9,15 @@ $(LI $(RELATIVE_LINK2 d_scripts, Extensionless D source file names can now be ru
 )
 
 $(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 disable_goto_skips_init, Goto jumps now cannot skip variable declarations.))
+$(LI $(RELATIVE_LINK2 attribinference2, All of instantiated functions are now inferred their attributes.))
+$(LI $(RELATIVE_LINK2 inout_const, Add a new type qualifier $(D inout const).))
+$(LI $(RELATIVE_LINK2 slicing_tuple, Entire slicing operation of built-in tuple is now accepted.))
+$(LI $(RELATIVE_LINK2 untyped_packages, Packages and module names now have no type.))
+$(LI $(RELATIVE_LINK2 staticfields2, Const and immutable fields with initializers are now deprecated.))
+$(LI $(RELATIVE_LINK2 deprecate_unorderd_compares, .))
+$(LI $(RELATIVE_LINK2 deprecate_floating_properties, .))
+$(LI $(RELATIVE_LINK2 ctfe_overlapped_field, CTFE can handle overlapped union fields.))
 $(LI $(RELATIVE_LINK2 get_alias_this, Add a new trait getAliasThis.))
 )
 
@@ -49,6 +58,213 @@ $(LI $(LNAME2 d_scripts, Extensionless D source file names can now be run when u
 )
 
 $(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 disable_goto_skips_init, Goto jumps now cannot skip variable declarations:)
+
+    $(P A very long period, the following code had been allowed by mistake, but it is prohibited right now:
+
+        ---------
+        import std.stdio;
+
+        void main()
+        {
+            goto Label; // Error: goto skips declaration of variable v
+
+            int v = 42;
+
+        Label:
+            writeln(v);
+        }
+        ---------
+    )
+)
+
+$(LI $(LNAME2 attribinference2, All of instantiated functions are now inferred their attributes:)
+
+    $(P Regardless directly or indirectly function is instantiated, its attributes will be inferred:
+
+        ---------
+        struct S(T)
+        {
+            T square(T x)
+            {
+                T calc()
+                {
+                    return x * x;
+                }
+                return calc();
+            }
+
+            static double pi() { return 3.141592; }
+        }
+
+        void main() pure @safe nothrow
+        {
+            S!int s;
+
+            // S!int.square and its nested function calc are instantiated functions, so
+            // their attributes are inferred to pure and callable from main()
+            assert(s.square(2) == 4);  // ok
+
+            // static member function is also inferred its attributes right now
+            auto pi = typeof(s).pi();
+        }
+        ---------
+    )
+)
+
+$(LI $(LNAME2 inout_const, Add a new type qualifier $(D inout const):)
+
+    $(P Thus far, common type of $(D immutable$(LPAREN)T$(RPAREN)) and $(D inout$(LPAREN)T$(RPAREN)) had been
+        $(D const$(LPAREN)T$(RPAREN)). But it had been losing $(D inout) information and refused some valid code.
+        Now it becomes $(D inout$(LPAREN)const$(LPAREN)T$(RPAREN)$(RPAREN)) and propagates meaningful type qualifier.
+
+        ---------
+        inout(const(int))[] foo(bool condition, inout(int)[] x, immutable(int)[] y)
+        {
+            static assert(is(typeof(condition ? x : y) == inout(const(int))[]));
+            return condition ? x : y;
+        }
+
+        void main()
+        {
+            int[] marr = [1,2,3];
+            const(int)[] carr = [4,5,6];
+            immutable(int)[] iarr = [7,8,9];
+
+            // inout(const(int))[] can go back to const(int)[] or immutable(int)[].
+            static assert(is(typeof(foo(true, marr, iarr)) == const(int)[]));
+            static assert(is(typeof(foo(true, carr, iarr)) == const(int)[]));
+            static assert(is(typeof(foo(true, iarr, iarr)) == immutable(int)[]));
+        }
+        ---------
+    )
+)
+
+$(LI $(LNAME2 slicing_tuple, Entire slicing operation of built-in tuple is now accepted:)
+
+    $(P $(BUGZILLA 8244): cannot slice a type tuple with '[]' in locations where a type is valid:
+
+        ---------
+        import std.typetuple;
+        alias Types = TypeTuple!(int, double, string);
+
+        // Was error in 2.064, but allowed from 2.065.
+        alias Types2 = Types[];
+        static assert(is(Types == Types2));
+        ---------
+    )
+)
+
+$(LI $(LNAME2 untyped_packages, Packages and module names now have no type:)
+
+    $(P $(BUGZILLA 9081): Modules shouldn't have a type
+
+        ---------
+        import std.stdio;
+
+        // Both had printed 'void' in 2.064.
+        // From 2.065, both will cause "has no type" error.
+        pragma(msg, typeof(std));
+        pragma(msg, typeof(std.stdio));
+        ---------
+    )
+
+    $(P By the change, an idiom that used to work
+        $(D is$(LPAREN)typeof$(LPAREN)package_or_module_name$(RPAREN)$(RPAREN))
+        is changed to not work. Instead use: $(D __traits$(LPAREN)compiles, package_or_module_name$(RPAREN)).
+    )
+)
+
+$(LI $(LNAME2 staticfields2, Const and immutable fields with initializers are now deprecated:)
+
+    $(P Eventually, they will be changed to occupy space in the object. Such fields should now be changed to enum or static.
+        See also $(RELATIVE_LINK2 staticfields, the release note in 2.063).
+    )
+
+    $(P Related to that, void-initialized const or immutable field has been
+        changed to the instance field ahead of schedule:
+
+        ---------
+        struct S
+        {
+            const int[1000] x = void;
+
+            this(int n)
+            {
+                // Was disallowed in 2.064.
+                // From 2.065 x is a field of runtime object.
+                x[] = n;
+            }
+        }
+
+        // S.sizeof had been 1 in 2.064.
+        // From 2.065, field s.x occupies space in the object.
+        static assert(S.sizeof == int.sizeof * 1000);
+
+        void main()
+        {
+            S s = S(3);
+
+            foreach (e; s.x)
+            {
+                assert(e == 3); // OK
+            }
+        }
+        ---------
+    )
+)
+
+$(LI $(LNAME2 deprecate_unorderd_compares, Deprecate unordered floating point comparisons:)
+
+    $(P $(BUGZILLA 10369): Deprecate unordered floating point comparisons
+    )
+)
+
+$(LI $(LNAME2 deprecate_floating_properties, Deprecate $(D .min) property for floating-point types:)
+
+    $(P $(BUGZILLA 10439): Deprecate float.min, double.min, real.min:
+    )
+)
+
+$(LI $(LNAME2 ctfe_overlapped_field, CTFE can handle overlapped union fields:)
+
+    $(P Example code:
+
+        ---------
+        union U
+        {
+            size_t x;
+            int* y;
+        }
+
+        bool test()
+        {
+            U u;
+            assert(u.x == 0);
+            // In here, reading u.y will cause CTFE error.
+
+            u.y = [1,2,3].ptr;
+            // Writing value to overlapped field u.y will make corresponding field u.x invalid.
+
+            assert(u.y[0..3] == [1,2,3]);
+            // u.y holds valid field and reading it is allowed
+            // In here, reading u.x will cause CTFE error.
+
+            u.x = 10;
+            // Set value to u.x again.
+            assert(u.x == 10);  // OK
+            // In here, reading u.y will cause CTFE error.
+
+            return true;
+        }
+        static assert(test());  // run CTFE
+        ---------
+    )
+
+    $(P Bit image reinterpretation by using two overlapped union fields is not allowed during CTFE.
+    )
+)
 
 $(LI $(LNAME2 get_alias_this, Add a new trait getAliasThis:)
 
