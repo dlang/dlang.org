@@ -5,17 +5,24 @@ $(D_S D Change Log,
 $(VERSION 065, Insert Date Here 1, 1, =================================================,
 
 $(BUGSTITLE Compiler Changes,
-$(LI $(RELATIVE_LINK2 d_scripts, Extensionless D source file names can now be run when
-using the -run switch.))
+$(LI $(RELATIVE_LINK2 d_scripts, Extensionless D source file names can now be run when using the -run switch.))
 )
 
 $(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 disable_goto_skips_init, Goto jumps now cannot skip variable declarations.))
+$(LI $(RELATIVE_LINK2 attribinference2, All of instantiated functions are now inferred their attributes.))
+$(LI $(RELATIVE_LINK2 inout_const, Add a new type qualifier $(D inout const).))
+$(LI $(RELATIVE_LINK2 slicing_tuple, Entire slicing operation of built-in tuple is now accepted.))
+$(LI $(RELATIVE_LINK2 untyped_packages, Packages and module names now have no type.))
+$(LI $(RELATIVE_LINK2 staticfields2, Const and immutable fields with initializers are now deprecated.))
+$(LI $(RELATIVE_LINK2 deprecate_unorderd_compares, .))
+$(LI $(RELATIVE_LINK2 deprecate_floating_properties, .))
+$(LI $(RELATIVE_LINK2 ctfe_overlapped_field, CTFE can handle overlapped union fields.))
 $(LI $(RELATIVE_LINK2 get_alias_this, Add a new trait getAliasThis.))
-$(LI $(RELATIVE_LINK2 algorithm_pred, Many functions in std.algorithm can now be used as
-predicates to other functions.))
 )
 
 $(BUGSTITLE Library Changes,
+$(LI $(RELATIVE_LINK2 algorithm_pred, Many functions in std.algorithm can now be used as predicates to other functions.))
 $(LI $(RELATIVE_LINK2 algorithm_all, Allow std.algorithm.all to be used without a predicate.))
 )
 
@@ -27,187 +34,408 @@ $(BUGSTITLE Compiler Changes,
 
 $(LI $(LNAME2 d_scripts, Extensionless D source file names can now be run when using the -run switch:)
 
-$(P On Posix systems it is frequently useful to have a shebang line at the start of an extensionless file,
-which marks the tool used to compile the script. It's now possible to use this technique with D, e.g.
-the following is a D source file with the file name $(B "my-script"):)
+    $(P On Posix systems it is frequently useful to have a shebang line at the start of an extensionless file,
+        which marks the tool used to compile the script. It's now possible to use this technique with D, e.g.
+        the following is a D source file with the file name $(B "my-script"):
 
----------
-#!rdmd
+        ---------
+        #!rdmd
 
-void main()
-{
-}
----------
+        void main()
+        {
+        }
+        ---------
+    )
 
-$(P $(B Note:) This does not allow an arbitrary extension, as D source files need to be proper D identifiers.)
-$(P $(B Note:) This feature is not available on Windows, as Windows does not have extensionless executable files.)
-$(P $(B Note:) When compiling, and in order to avoid the default behavior of generating
-an extensionless executable
-which would overwrite the source file, the compiler will generate $(I "a.out") instead.)
+    $(P $(B Note:) This does not allow an arbitrary extension, as D source files need to be proper D identifiers.)
+    $(P $(B Note:) This feature is not available on Windows, as Windows does not have extensionless executable files.)
+    $(P $(B Note:) When compiling, and in order to avoid the default behavior of generating
+        an extensionless executable
+        which would overwrite the source file, the compiler will generate $(I "a.out") instead.
+    )
 )
+
 )
 
 $(BUGSTITLE Language Changes,
 
-$(LI $(LNAME2 get_alias_this, Add a new trait getAliasThis:))
+$(LI $(LNAME2 disable_goto_skips_init, Goto jumps now cannot skip variable declarations:)
 
-$(P The new $(B getAliasThis) trait will return a tuple of field names which are marked as the
-$(LINK2 class.html#AliasThis, subtypes) of an aggregate type. For example:)
+    $(P A very long period, the following code had been allowed by mistake, but it is prohibited right now:
 
----------
-struct S
-{
-    string var;
-    alias var this;
-}
+        ---------
+        import std.stdio;
 
-static assert(__traits(getAliasThis, S)[0] == "var");
----------
-
-$(P $(B Note:) Multiple subtyping is not yet implemented in D, therefore this trait will always
-return a tuple of length 1.)
-
-$(LI $(LNAME2 algorithm_pred, Many functions in std.algorithm can now be used as predicates to
-other functions:))
-
-$(P Functions such as $(XREF algorithm, any), $(XREF algorithm, all), $(XREF algorithm, canFind)
-and $(XREF algorithm, equal) are now templates, which allows them to be used as predicates to
-other templates, as well as allowing the user to alias an instantiation of any such templates.
-For an example of how this allows terser syntax in user-code, in the following example the
-programmer wants to check whether all the strings in a string array have at least one ASCII digit:)
-
----------
-import std.algorithm : all;
-import std.ascii : isDigit;
-
-void main()
-{
-    string[] inputs = ["foo1", "bar2"];
-
-    bool allContainDigit;
-    foreach (input; inputs)
-    {
-        if (!any!isDigit(input))  // none of the characters are ASCII digits
+        void main()
         {
-            allContainDigit = false;
-            break;
+            goto Label; // Error: goto skips declaration of variable v
+
+            int v = 42;
+
+        Label:
+            writeln(v);
         }
-    }
-}
----------
+        ---------
+    )
+)
 
-$(P But it is now simpler to use the $(D any) template itself as a predicate.
-We can make it a predicate to another useful template, the $(D all) template:)
+$(LI $(LNAME2 attribinference2, All of instantiated functions are now inferred their attributes:)
 
----------
-import std.algorithm : any, all;
-import std.ascii : isDigit;
+    $(P Regardless directly or indirectly function is instantiated, its attributes will be inferred:
 
-void main()
-{
-    string[] inputs = ["foo1", "bar2"];
-    bool allContainDigit = all!(any!isDigit)(inputs);
-}
----------
+        ---------
+        struct S(T)
+        {
+            T square(T x)
+            {
+                T calc()
+                {
+                    return x * x;
+                }
+                return calc();
+            }
 
-$(P In addition to allowing these functions to become predicates they can now also be aliased,
-which allow you to make your functions simpler to understand:)
+            static double pi() { return 3.141592; }
+        }
 
----------
-import std.algorithm : any, all;
-import std.ascii : isDigit;
+        void main() pure @safe nothrow
+        {
+            S!int s;
 
-void main()
-{
-    alias isAnyDigit = any!isDigit;  // less visual noise and a self-describing function
+            // S!int.square and its nested function calc are instantiated functions, so
+            // their attributes are inferred to pure and callable from main()
+            assert(s.square(2) == 4);  // ok
 
-    string[] inputs = ["foo1", "bar2"];
-    bool allContainDigit = all!isAnyDigit(inputs);  // easier to understand
+            // static member function is also inferred its attributes right now
+            auto pi = typeof(s).pi();
+        }
+        ---------
+    )
+)
 
-    alias doAllContainDigits = all!isAnyDigit;  // or wrap the entire algorithm into one symbol!
+$(LI $(LNAME2 inout_const, Add a new type qualifier $(D inout const):)
 
-    assert(doAllContainDigits(["1", "a 1", "b 2"]));  // self-describing code
-    assert(!doAllContainDigits(["c", "a 1", "b 2"]));
-}
----------
+    $(P Thus far, common type of $(D immutable$(LPAREN)T$(RPAREN)) and $(D inout$(LPAREN)T$(RPAREN)) had been
+        $(D const$(LPAREN)T$(RPAREN)). But it had been losing $(D inout) information and refused some valid code.
+        Now it becomes $(D inout$(LPAREN)const$(LPAREN)T$(RPAREN)$(RPAREN)) and propagates meaningful type qualifier.
 
-$(P You can of course combine $(D all) and $(D any) in a number of combinations. For example,
-if you want to reverse the test and instead check whether $(B any) of the strings in the
-string array contain $(B all) digits, the code might look like the following:)
+        ---------
+        inout(const(int))[] foo(bool condition, inout(int)[] x, immutable(int)[] y)
+        {
+            static assert(is(typeof(condition ? x : y) == inout(const(int))[]));
+            return condition ? x : y;
+        }
 
----------
-import std.algorithm : any, all;
-import std.ascii : isDigit;
+        void main()
+        {
+            int[] marr = [1,2,3];
+            const(int)[] carr = [4,5,6];
+            immutable(int)[] iarr = [7,8,9];
 
-void main()
-{
-    alias areAllDigits = all!isDigit;
+            // inout(const(int))[] can go back to const(int)[] or immutable(int)[].
+            static assert(is(typeof(foo(true, marr, iarr)) == const(int)[]));
+            static assert(is(typeof(foo(true, carr, iarr)) == const(int)[]));
+            static assert(is(typeof(foo(true, iarr, iarr)) == immutable(int)[]));
+        }
+        ---------
+    )
+)
 
-    alias areAnyIntegrals = any!areAllDigits;
+$(LI $(LNAME2 slicing_tuple, Entire slicing operation of built-in tuple is now accepted:)
 
-    assert(areAnyIntegrals(["123", "456"]));
-    assert(areAnyIntegrals(["abc", "123"]));  // "123" is a number
-    assert(!areAnyIntegrals(["abc", "def123"])); // "def123" is not really a number
-}
----------
+    $(P $(BUGZILLA 8244): cannot slice a type tuple with '[]' in locations where a type is valid:
 
-$(P If on the other hand you want to ensure that $(B all) strings in the string array contain
-$(B all) digits, the could might look like the following:)
+        ---------
+        import std.typetuple;
+        alias Types = TypeTuple!(int, double, string);
 
----------
-import std.algorithm : any, all;
-import std.ascii : isDigit;
+        // Was error in 2.064, but allowed from 2.065.
+        alias Types2 = Types[];
+        static assert(is(Types == Types2));
+        ---------
+    )
+)
 
-void main()
-{
-    alias areAllDigits = all!isDigit;
+$(LI $(LNAME2 untyped_packages, Packages and module names now have no type:)
 
-    alias allStringsDigits = all!areAllDigits;
+    $(P $(BUGZILLA 9081): Modules shouldn't have a type
 
-    assert(allStringsDigits(["123", "456"]));
-    assert(!allStringsDigits(["abc", "123"]));  // "123" is a number, but "abc" is not
-}
----------
+        ---------
+        import std.stdio;
+
+        // Both had printed 'void' in 2.064.
+        // From 2.065, both will cause "has no type" error.
+        pragma(msg, typeof(std));
+        pragma(msg, typeof(std.stdio));
+        ---------
+    )
+
+    $(P By the change, an idiom that used to work
+        $(D is$(LPAREN)typeof$(LPAREN)package_or_module_name$(RPAREN)$(RPAREN))
+        is changed to not work. Instead use: $(D __traits$(LPAREN)compiles, package_or_module_name$(RPAREN)).
+    )
+)
+
+$(LI $(LNAME2 staticfields2, Const and immutable fields with initializers are now deprecated:)
+
+    $(P Eventually, they will be changed to occupy space in the object. Such fields should now be changed to enum or static.
+        See also $(RELATIVE_LINK2 staticfields, the release note in 2.063).
+    )
+
+    $(P Related to that, void-initialized const or immutable field has been
+        changed to the instance field ahead of schedule:
+
+        ---------
+        struct S
+        {
+            const int[1000] x = void;
+
+            this(int n)
+            {
+                // Was disallowed in 2.064.
+                // From 2.065 x is a field of runtime object.
+                x[] = n;
+            }
+        }
+
+        // S.sizeof had been 1 in 2.064.
+        // From 2.065, field s.x occupies space in the object.
+        static assert(S.sizeof == int.sizeof * 1000);
+
+        void main()
+        {
+            S s = S(3);
+
+            foreach (e; s.x)
+            {
+                assert(e == 3); // OK
+            }
+        }
+        ---------
+    )
+)
+
+$(LI $(LNAME2 deprecate_unorderd_compares, Deprecate unordered floating point comparisons:)
+
+    $(P $(BUGZILLA 10369): Deprecate unordered floating point comparisons
+    )
+)
+
+$(LI $(LNAME2 deprecate_floating_properties, Deprecate $(D .min) property for floating-point types:)
+
+    $(P $(BUGZILLA 10439): Deprecate float.min, double.min, real.min:
+    )
+)
+
+$(LI $(LNAME2 ctfe_overlapped_field, CTFE can handle overlapped union fields:)
+
+    $(P Example code:
+
+        ---------
+        union U
+        {
+            size_t x;
+            int* y;
+        }
+
+        bool test()
+        {
+            U u;
+            assert(u.x == 0);
+            // In here, reading u.y will cause CTFE error.
+
+            u.y = [1,2,3].ptr;
+            // Writing value to overlapped field u.y will make corresponding field u.x invalid.
+
+            assert(u.y[0..3] == [1,2,3]);
+            // u.y holds valid field and reading it is allowed
+            // In here, reading u.x will cause CTFE error.
+
+            u.x = 10;
+            // Set value to u.x again.
+            assert(u.x == 10);  // OK
+            // In here, reading u.y will cause CTFE error.
+
+            return true;
+        }
+        static assert(test());  // run CTFE
+        ---------
+    )
+
+    $(P Bit image reinterpretation by using two overlapped union fields is not allowed during CTFE.
+    )
+)
+
+$(LI $(LNAME2 get_alias_this, Add a new trait getAliasThis:)
+
+    $(P The new $(B getAliasThis) trait will return a tuple of field names which are marked as the
+        $(LINK2 class.html#AliasThis, subtypes) of an aggregate type. For example:
+
+        ---------
+        struct S
+        {
+            string var;
+            alias var this;
+        }
+
+        static assert(__traits(getAliasThis, S)[0] == "var");
+        ---------
+    )
+
+    $(P $(B Note:) Multiple subtyping is not yet implemented in D, therefore this trait will always
+        return a tuple of length 1.
+    )
+)
 
 )
 
 $(BUGSTITLE Library Changes,
 
-$(LI $(LNAME2 algorithm_all, Allow std.algorithm.all to be used without a predicate.))
+$(LI $(LNAME2 algorithm_pred, Many functions in std.algorithm can now be used as predicates to other functions:)
 
-$(P You no longer need to pass a predicate if you want to match all items in a range which
-implicitly convert to $(D true):)
+    $(P Functions such as $(XREF algorithm, any), $(XREF algorithm, all), $(XREF algorithm, canFind)
+        and $(XREF algorithm, equal) are now templates, which allows them to be used as predicates to
+        other templates, as well as allowing the user to alias an instantiation of any such templates.
+        For an example of how this allows terser syntax in user-code, in the following example the
+        programmer wants to check whether all the strings in a string array have at least one ASCII digit:
 
----------
-import std.algorithm;
+        ---------
+        import std.algorithm : all;
+        import std.ascii : isDigit;
 
-void main()
-{
-    auto arr1 = [true, true, true];
-    assert(all(arr1));   // all values are true
+        void main()
+        {
+            string[] inputs = ["foo1", "bar2"];
 
-    auto arr2 = [false, true, true];
-    assert(!all(arr2));  // all values are not true
+            bool allContainDigit;
+            foreach (input; inputs)
+            {
+                if (!any!isDigit(input))  // none of the characters are ASCII digits
+                {
+                    allContainDigit = false;
+                    break;
+                }
+            }
+        }
+        ---------
+    )
 
-    auto arr3 = [1, 2, 3];
-    assert(all(arr3));   // all values convert to true
+    $(P But it is now simpler to use the $(D any) template itself as a predicate.
+        We can make it a predicate to another useful template, the $(D all) template:
 
-    auto arr4 = [0, 2, 3];
-    assert(!all(arr4));  // all values do not convert to true
-}
----------
+        ---------
+        import std.algorithm : any, all;
+        import std.ascii : isDigit;
+
+        void main()
+        {
+            string[] inputs = ["foo1", "bar2"];
+            bool allContainDigit = all!(any!isDigit)(inputs);
+        }
+        ---------
+    )
+
+    $(P In addition to allowing these functions to become predicates they can now also be aliased,
+        which allow you to make your functions simpler to understand:
+
+        ---------
+        import std.algorithm : any, all;
+        import std.ascii : isDigit;
+
+        void main()
+        {
+            alias isAnyDigit = any!isDigit;  // less visual noise and a self-describing function
+
+            string[] inputs = ["foo1", "bar2"];
+            bool allContainDigit = all!isAnyDigit(inputs);  // easier to understand
+
+            alias doAllContainDigits = all!isAnyDigit;  // or wrap the entire algorithm into one symbol!
+
+            assert( doAllContainDigits(["1", "a 1", "b 2"]));  // self-describing code
+            assert(!doAllContainDigits(["c", "a 1", "b 2"]));
+        }
+        ---------
+    )
+
+    $(P You can of course combine $(D all) and $(D any) in a number of combinations. For example,
+        if you want to reverse the test and instead check whether $(B any) of the strings in the
+        string array contain $(B all) digits, the code might look like the following:
+
+        ---------
+        import std.algorithm : any, all;
+        import std.ascii : isDigit;
+
+        void main()
+        {
+            alias areAllDigits = all!isDigit;
+
+            alias areAnyIntegrals = any!areAllDigits;
+
+            assert( areAnyIntegrals(["123", "456"]));
+            assert( areAnyIntegrals(["abc", "123"]));  // "123" is a number
+            assert(!areAnyIntegrals(["abc", "def123"])); // "def123" is not really a number
+        }
+        ---------
+    )
+
+    $(P If on the other hand you want to ensure that $(B all) strings in the string array contain
+        $(B all) digits, the could might look like the following:
+
+        ---------
+        import std.algorithm : any, all;
+        import std.ascii : isDigit;
+
+        void main()
+        {
+            alias areAllDigits = all!isDigit;
+
+            alias allStringsDigits = all!areAllDigits;
+
+            assert( allStringsDigits(["123", "456"]));
+            assert(!allStringsDigits(["abc", "123"]));  // "123" is a number, but "abc" is not
+        }
+        ---------
+    )
+)
+
+$(LI $(LNAME2 algorithm_all, Allow std.algorithm.all to be used without a predicate.)
+
+    $(P You no longer need to pass a predicate if you want to match all items in a range which
+        implicitly convert to $(D true):
+
+        ---------
+        import std.algorithm;
+
+        void main()
+        {
+            auto arr1 = [true, true, true];
+            assert( all(arr1));  // all values are true
+
+            auto arr2 = [false, true, true];
+            assert(!all(arr2));  // all values are not true
+
+            auto arr3 = [1, 2, 3];
+            assert( all(arr3));  // all values convert to true
+
+            auto arr4 = [0, 2, 3];
+            assert(!all(arr4));  // all values do not convert to true
+        }
+        ---------
+    )
+)
+
 )
 
 $(BUGSTITLE Linker Changes,
 
-$(LI $(LNAME2 large_address_aware, Added /LARGEADDRESSAWARE to the Win32 Optlink linker.))
+$(LI $(LNAME2 large_address_aware, Added /LARGEADDRESSAWARE to the Win32 Optlink linker.)
 
-$(P When using the default Optlink linker on win32 (for linking 32-bit object files and executables),
-the $(B /LARGEADDRESSAWARE) option tells the linker that the application can handle addresses
-larger than 2 gigabytes. This is equivalent to Visual C's
-$(LINK2 http://msdn.microsoft.com/en-us/library/wz223b1z.aspx, linker option) of the same name since
-this is an operating-system feature that is enabled by setting a specific flag in the executable.)
-
+    $(P When using the default Optlink linker on win32 (for linking 32-bit object files and executables),
+        the $(B /LARGEADDRESSAWARE) option tells the linker that the application can handle addresses
+        larger than 2 gigabytes. This is equivalent to Visual C's
+        $(LINK2 http://msdn.microsoft.com/en-us/library/wz223b1z.aspx, linker option) of the same name since
+        this is an operating-system feature that is enabled by setting a specific flag in the executable.
+    )
 )
 
 )
@@ -500,7 +728,7 @@ $(LI $(BUGZILLA 11738): partialShuffle actually shuffles the entire input)
 $(LI $(BUGZILLA 11771): Unicode set intersection with char is broken)
 $(LI $(BUGZILLA 11775): std.regex should check for valid repetition range in assert mode)
 $(LI $(BUGZILLA 11780): RangeError in format for incomplete format specifier)
-$(LI $(BUGZILLA 11808): std.uni.CodepointSet$(LPAREN)'–ê', '–Ø'+1, '–∞', '—è'+1$(RPAREN) asserts)
+$(LI $(BUGZILLA 11808): std.uni.CodepointSet$(LPAREN)'°¶', '–Ø'+1, '–∞', '°¶'+1$(RPAREN) asserts)
 $(LI $(BUGZILLA 11839): std.regex capture group names should allow numbers to be in them)
 )
 )
@@ -1761,7 +1989,7 @@ $(LI $(BUGZILLA 10813): ICE$(LPAREN)DMD2.063$(RPAREN) template.c:6040: Identifie
 $(LI $(BUGZILLA 10834): cannot use cast$(LPAREN)void$(RPAREN)expr if the type of expr is a struct)
 $(LI $(BUGZILLA 10840): [CTFE] *this._data.arr is not yet implemented at compile time)
 $(LI $(BUGZILLA 10842): Some integer casts wrongly remove side-effect of the operand.)
-$(LI $(BUGZILLA 10857): ICE$(LPAREN)glue.c,„ÄÄbugzilla 2962?$(RPAREN) or compiles, depending on the files order)
+$(LI $(BUGZILLA 10857): ICE$(LPAREN)glue.c,°¶Äbugzilla 2962?$(RPAREN) or compiles, depending on the files order)
 $(LI $(BUGZILLA 10858): CTFE wrong code for comparison of array of pointers)
 $(LI $(BUGZILLA 10862): Assignment inside if condition still sometimes accepted)
 $(LI $(BUGZILLA 10869): Ddoc mark methods with "const" twice)
@@ -3756,7 +3984,7 @@ $(LI $(BUGZILLA 9420): [2.062alpha] Weird "$(LPAREN)null$(RPAREN)" output in err
 $(LI $(BUGZILLA 9435): regression$(LPAREN)head$(RPAREN): forward reference error)
 $(LI $(BUGZILLA 9436): enum cannot be forward referenced with cyclic imports and mixin)
 $(LI $(BUGZILLA 9496): [REG 2.061 -> 2.062 alpha] "this[1 .. $]" passes wrong "this" to "opDollar")
-$(LI $(BUGZILLA 9514): "template instance ‚Ä¶ is not an alias")
+$(LI $(BUGZILLA 9514): "template instance ·ﬂ°¶is not an alias")
 $(LI $(BUGZILLA 9525): [CTFE] Cannot convert &S to const$(LPAREN)S*$(RPAREN) at compile time)
 )
 
