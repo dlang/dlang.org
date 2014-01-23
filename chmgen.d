@@ -73,8 +73,6 @@ string movePath(string s)
 {
 	if (s.startsWith(ROOT ~ `\`))
 		s = "chm" ~ s[ROOT.length..$];
-	if (s == `chm\phobos\phobos.html`)
-		s = `chm\phobos\index.html`;
 	return s;
 }
 
@@ -170,7 +168,7 @@ void main()
 		rmdirRecurse("chm");
 	mkdir("chm");
 
-	enforce(exists(ROOT ~ `\phobos\phobos.html`), "Phobos documentation not present. Please place Phobos documentation HTML files into the \"phobos\" subdirectory.");
+	enforce(exists(ROOT ~ `\phobos\index.html`), "Phobos documentation not present. Please place Phobos documentation HTML files into the \"phobos\" subdirectory.");
 
 	string[] files;
 	foreach (de; dirEntries(ROOT ~ `\`, "*.{html,css,gif,jpg,png,ico,js}", SpanMode.breadth))
