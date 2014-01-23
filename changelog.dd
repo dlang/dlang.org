@@ -24,6 +24,8 @@ $(LI $(RELATIVE_LINK2 get_alias_this, Add a new trait getAliasThis.))
 $(BUGSTITLE Library Changes,
 $(LI $(RELATIVE_LINK2 algorithm_pred, Many functions in std.algorithm can now be used as predicates to other functions.))
 $(LI $(RELATIVE_LINK2 algorithm_all, Allow std.algorithm.all to be used without a predicate.))
+$(LI $(RELATIVE_LINK2 uni_bygrapheme, Add std.uni.byGrapheme and std.uni.byCodePoint.))
+$(LI $(RELATIVE_LINK2 range_only, Add support for any number of arguments to std.range.only.))
 )
 
 $(BUGSTITLE Linker Changes,
@@ -422,6 +424,51 @@ $(LI $(LNAME2 algorithm_all, Allow std.algorithm.all to be used without a predic
         }
         ---------
     )
+)
+
+$(LI $(LNAME2 uni_bygrapheme, Add std.uni.byGrapheme and std.uni.byCodePoint.)
+
+    $(P Complementary higher-order ranges which enable range operations on graphemes:
+        ---------
+        import std.array : array;
+        import std.range : retro;
+        import std.string : text;
+        import std.uni : byCodePoint, byGrapheme;
+
+        void main()
+        {
+            string s = "noe\u0308l"; // noël
+
+            // reverse it and convert the result back to UTF-8
+            string reverse = s.byGrapheme()
+                .array() // Note: byGrapheme will support bidirectionality in the future
+                .retro()
+                .byCodePoint()
+                .text();
+
+            assert(reverse == "le\u0308on"); // lëon
+        }
+        ---------
+        Note that $(D byGrapheme) will support bidirectionality in the future,
+        obviating the need for $(D array) in the above example.
+    )
+)
+
+$(LI $(LNAME2 range_only, Add support for any number of arguments to std.range.only.)
+
+    $(P $(XREF range, only) can now be used with more than one argument:
+        ---------
+        import std.algorithm : joiner;
+        import std.range : equal, only;
+
+        void main()
+        {
+            assert(only("one", "two", "three").joiner(" ").equal("one two three"));
+        }
+        ---------
+    )
+
+    $(P Additionally, $(D only()) is now a way to get an empty range.)
 )
 
 )
