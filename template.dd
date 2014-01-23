@@ -1101,6 +1101,201 @@ $(H3 $(LNAME2 auto-ref-parameters, Function Templates with Auto Ref Parameters))
         ---
     )
 
+$(H2 $(LNAME2 nested-templates, Nested Templates))
+
+    $(P If a template is declared in aggregate or function local scope, the
+        instantiated functions will implicitly capture the context of the
+        enclosing scope.
+
+        ----
+        class C
+        {
+            int num;
+
+            this(int n) { num = n; }
+
+            template Foo()
+            {
+                // 'foo' can access 'this' reference of class C object.
+                void foo(int n) { this.num = n; }
+            }
+        }
+
+        void main()
+        {
+            auto c = new C(1);
+            assert(c.num == 1);
+
+            c.Foo!().foo(5);
+            assert(c.num == 5);
+
+            template Bar()
+            {
+                // 'bar' can access local variable of 'main' function.
+                void bar(int n) { c.num = n; }
+            }
+            Bar!().bar(10);
+            assert(c.num == 10);
+        }
+        ----
+    )
+
+    $(P Above, $(D Foo!().foo) will work just the same as a member function
+        of class $(D C), and $(D Bar!().bar) will work just the same as a nested
+        function within function $(D main$(LPAREN)$(RPAREN)).)
+
+    $(P If a template has a $(RELATIVE_LINK2 aliasparameters, template alias parameter),
+        and is instantiated with a local symbol, the instantiated function will
+        implicitly become nested in order to access runtime data of the given
+        local symbol.
+
+        ----
+        template Foo(alias sym)
+        {
+            void foo() { sym = 10; }
+        }
+
+        class C
+        {
+            int num;
+
+            this(int n) { num = n; }
+
+            void main()
+            {
+                assert(this.num == 1);
+
+                alias fooX = Foo!(C.num).foo;
+
+                // fooX will become member function implicitly, so &fooX returns delegate object.
+                static assert(is(typeof(&fooX) == delegate));
+
+                fooX(); // called by using valid 'this' reference.
+                assert(this.num == 10);  // OK
+            }
+        }
+
+        void main()
+        {
+            new C(1).main();
+
+            int num;
+            alias fooX = Foo!num.foo;
+
+            // fooX will become nested function implicitly, so &fooX returns delegate object.
+            static assert(is(typeof(&fooX) == delegate));
+
+            fooX();
+            assert(num == 10);  // OK
+        }
+        ----
+    )
+
+    $(P Not only functions, but also instantiated class and struct types can
+        become nested via implicitly captured context.
+
+        ----
+        class C
+        {
+            int num;
+            this(int n) { num = n; }
+
+            class N(T)
+            {
+                // instantiated class N!T can become nested in C
+                T foo() { return num * 2; }
+            }
+        }
+
+        void main()
+        {
+            auto c = new C(10);
+            auto n = c.new N!int();
+            assert(n.foo() == 20);
+        }
+        ----
+
+        ----
+        void main()
+        {
+            int num = 10;
+            struct S(T)
+            {
+                // instantiated struct S!T can become nested in main()
+                T foo() { return num * 2; }
+            }
+            S!int s;
+            assert(s.foo() == 20);
+        }
+        ----
+    )
+
+    $(P A templated $(D struct) can become a nested $(D struct) if it
+        is instantiated with a local symbol passed as an aliased argument:
+
+        ---
+        struct A(alias F)
+        {
+            int fun(int i) { return F(i); }
+        }
+
+        A!F makeA(alias F)() { return A!F(); }
+
+        void main()
+        {
+            int x = 40;
+            int fun(int i) { return x + i; }
+            A!fun a = makeA!fun();
+            assert(a.fun(2) == 42);
+        }
+        ---
+    )
+
+    $(H3 Limitation:)
+
+    $(P Currently nested templates can capture at most one context. As a typical
+        example, non-static template member functions cannot take local symbol
+        by using template alias parameter.
+
+        ----
+        class C
+        {
+            int num;
+            void foo(alias sym)() { num = sym * 2; }
+        }
+
+        void main()
+        {
+            auto c = new C();
+            int var = 10;
+            c.foo!var();    // NG, foo!var requires two contexts, 'this' and 'main()'
+        }
+        ----
+    )
+
+    $(P But, if one context is indirectly accessible from other context, it is allowed.
+
+        ----
+        int sum(alias x, alias y)() { return x + y; }
+
+        void main()
+        {
+            int a = 10;
+            void nested()
+            {
+                int b = 20;
+                assert(sum!(a, b)() == 30);
+            }
+            nested();
+        }
+        ----
+
+        Two local variables $(D a) and $(D b) are in different contexts, but
+        outer context is indirectly accessible from innter context, so nested
+        template instance $(D sum!$(LPAREN)a, b$(RPAREN)) will capture only
+        inner context.
+    )
+
 $(H2 Recursive Templates)
 
     $(P Template features can be combined to produce some interesting
