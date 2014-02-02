@@ -350,7 +350,7 @@ $(H3 $(LNAME2 alias, Type Aliasing))
         )
 
 --------------------
-alias abc.Foo.bar myint;
+alias myint = abc.Foo.bar;
 --------------------
 
         $(P
@@ -360,7 +360,7 @@ alias abc.Foo.bar myint;
         )
 
 --------------------
-alias int myint;
+alias myint = int;
 
 void foo(int x) { . }
 void foo(myint m) { . } // error, multiply defined function foo
@@ -378,7 +378,7 @@ $(H3 Alias Declarations)
 --------------------
 import string;
 
-alias string.strlen mylen;
+alias mylen = string.strlen;
  ...
 int len = mylen("hello"); // actually calls string.strlen()
 --------------------
@@ -388,11 +388,11 @@ int len = mylen("hello"); // actually calls string.strlen()
         )
 
 --------------------
-template Foo2(T) { alias T t; }
-alias Foo2!(int) t1;
-alias Foo2!(int).t t2;
-alias t1.t t3;
-alias t2 t4;
+template Foo2(T) { alias t = T; }
+alias t1 = Foo2!(int);
+alias t2 = Foo2!(int).t;
+alias t3 = t1.t;
+alias t4 = t2;
 
 t1.t v1;  // v1 is type int
 t2 v2;    // v2 is type int
@@ -409,11 +409,11 @@ t4 v4;    // v4 is type int
 --------------------
 version (Win32)
 {
-    alias win32.foo myfoo;
+    alias myfoo = win32.foo;
 }
 version (linux)
 {
-    alias linux.bar myfoo;
+    alias myfoo = linux.bar;
 }
 --------------------
 
@@ -423,7 +423,7 @@ version (linux)
         )
 
 --------------------
-alias string.strlen strlen;
+alias strlen = string.strlen;
 --------------------
 
         $(P
@@ -442,7 +442,7 @@ class B : A {
 
 class C : B {
     int foo( int a ) { return 3; }
-    alias B.foo foo;
+    alias foo = B.foo;
 }
 
 class D : C  {
@@ -465,7 +465,7 @@ void test()
         )
 
 --------------------
-alias foo.bar abc; // is it a type or a symbol?
+alias abc = foo.bar; // is it a type or a symbol?
 --------------------
 
         $(P
@@ -478,9 +478,9 @@ alias foo.bar abc; // is it a type or a symbol?
 struct S { static int i; }
 S s;
 
-alias s.i a; // illegal, s.i is an expression
-alias S.i b; // ok
-b = 4;       // sets S.i to 4
+alias a = s.i; // illegal, s.i is an expression
+alias b = S.i; // ok
+b = 4;         // sets S.i to 4
 -----------
 
 $(H3 $(LNAME2 extern, Extern Declarations))
