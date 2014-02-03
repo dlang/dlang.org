@@ -12,16 +12,6 @@ $(GNAME Declaration):
 )
 
 $(GRAMMAR
-$(GNAME AliasDeclaration):
-    $(D alias) $(GLINK BasicType) $(GLINK Declarator)
-    $(D alias) $(I AliasDeclarationX)
-
-$(GNAME AliasDeclarationX):
-    $(I Identifier) $(D =) $(GLINK Type)
-    $(I AliasDeclarationX) $(D ,) $(I Identifier) $(D =) $(GLINK Type)
-)
-
-$(GRAMMAR
 $(GNAME Decl):
     $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarators) $(D ;)
     $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarator) $(GLINK2 function, FunctionBody)
@@ -97,7 +87,8 @@ $(GNAME DeclaratorSuffix):
     $(D [ ])
     $(D [) $(VEXPRESSION) $(D ])
     $(D [) $(GLINK Type) $(D ])
-    $(GLINK2 template, TemplateParameters)$(OPT) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
+    $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
+    $(GLINK2 template, TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
 
 $(GNAME IdentifierList):
     $(I Identifier)
@@ -110,21 +101,27 @@ $(GNAME StorageClasses):
     $(GLINK StorageClass) $(I StorageClasses)
 
 $(GNAME StorageClass):
-$(MULTICOLS 5,     $(D abstract)
-    $(D auto)
-    $(GLINK TypeCtor)
+$(MULTICOLS 5,     $(GLINK2 attribute, LinkageAttribute)
+    $(GLINK2 attribute, AlignAttribute)
     $(D deprecated)
     $(D enum)
+    $(D static)
     $(RELATIVE_LINK2 extern, $(D extern))
+    $(D abstract)
     $(D final)
-    $(D nothrow)
     $(D override)
-    $(D pure)
+    $(D synchronized)
+    $(D auto)
+    $(D scope)
+    $(D const)
+    $(D immutable)
+    $(D inout)
+    $(D shared)
     $(D __gshared)
     $(GLINK2 attribute, Property)
-    $(D scope)
-    $(D static)
-    $(D synchronized))
+    $(D nothrow)
+    $(D pure)
+    $(D ref))
 
 $(GNAME TypeCtors):
     $(GLINK TypeCtor)
@@ -342,12 +339,21 @@ auto v = ["hello", "world"]; // type is string[], not string[2]
 
 
 
-$(H3 $(LNAME2 alias, Type Aliasing))
+$(H3 $(LNAME2 alias, Alias Declarations))
 
-        $(P
-	$(GLINK AliasDeclaration)s create a symbol that is an alias for another type,
-	and can be used anywhere that other type may appear.
-        )
+$(GRAMMAR
+$(GNAME AliasDeclaration):
+    $(D alias) $(GLINK BasicType) $(GLINK Declarator)
+    $(D alias) $(I AliasDeclarationX) $(D ;)
+
+$(GNAME AliasDeclarationX):
+    $(I Identifier) $(D =) $(GLINK Type)
+    $(I AliasDeclarationX) $(D ,) $(I Identifier) $(D =) $(GLINK Type)
+)
+
+    $(P $(I AliasDeclaration)s create a symbol that is an alias for another type,
+        and can be used anywhere that other type may appear.
+    )
 
 --------------------
 alias myint = abc.Foo.bar;
@@ -366,14 +372,9 @@ void foo(int x) { . }
 void foo(myint m) { . } // error, multiply defined function foo
 --------------------
 
-
-
-$(H3 Alias Declarations)
-
-        $(P
-        A symbol can be declared as an $(I alias) of another symbol.
+    $(P A symbol can be declared as an $(I alias) of another symbol.
         For example:
-        )
+    )
 
 --------------------
 import string;
