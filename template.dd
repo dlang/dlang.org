@@ -924,6 +924,51 @@ auto $(CODE_HIGHLIGHT Square)(T)(T t) {
         function template is $(CODE void).
         )
 
+$(H2 $(LNAME2 variable-template, Variable Templates))
+
+    $(P Same as aggregates and functions, variable declarations with
+        $(GLINK2 declaration, Initializer) can have optional template parameters:
+
+        ------
+        enum string constant(TL...) = TL.stringof;
+        ubyte[T.sizeof] storage(T) = 0;
+        auto array(alias a) = a;
+        ------
+    )
+
+    $(P These declarations are transformed into templates:
+
+        ------
+        template constant(TL...) {
+          enum string constant = TL.stringof;
+        }
+        template storage(T) {
+          ubyte[T.sizeof] storage = 0;
+        }
+        template array(alias a) {
+          auto array = a;
+        }
+        ------
+    )
+
+$(H2 $(LNAME2 alias-template, Alias Templates))
+
+    $(P $(GLINK2 declaration, AliasDeclaration) can also have optional template
+        parameters:
+
+        ------
+        alias Sequence(TL...) = TL;
+        ------
+    )
+
+    $(P It is lowered to:
+
+        ------
+        template Sequence(TL...) {
+          alias Sequence = TL;
+        }
+        ------
+    )
 
 $(H3 $(LNAME2 auto-ref-parameters, Function Templates with Auto Ref Parameters))
 
