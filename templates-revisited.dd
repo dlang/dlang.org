@@ -153,7 +153,7 @@ for a particular instantiation:
 )
 
 ---
-alias Foo!(int,char) f;
+alias f = Foo!(int,char);
 f.Bar b;
 f.foo(1,2);
 f.abc = 3;
@@ -228,7 +228,7 @@ As usual, an alias can be used to simplify access:
 module B;
 
 import A;
-alias A.Foo!(int).bar bar;
+alias bar = A.Foo!(int).bar;
 
 void test()
 {
@@ -356,11 +356,11 @@ Scoped lookup rules in D match the rules for the rest of the language:
 ---
 int g(double d) { return 1; }
 
-alias double A;
+alias A = double;
 
 class B(T)
 {
-    alias int A;
+    alias A = int;
 }
 
 class X(T) : B!(T)
@@ -885,7 +885,7 @@ template parseUntil(string pattern,char terminator,bool fuzzy=false)
       static if (pattern.length > 1)
       {
         const string nextSlice = pattern[2 .. $];
-        alias parseUntil!(nextSlice,terminator,fuzzy) next;
+        alias next = parseUntil!(nextSlice,terminator,fuzzy);
         const string token = pattern[0 .. 2] ~ next.token;
         const uint consumed = next.consumed+2;
       }
@@ -903,7 +903,7 @@ template parseUntil(string pattern,char terminator,bool fuzzy=false)
     else
     {
       const string nextSlice = pattern[1 .. $];
-      alias parseUntil!(nextSlice,terminator,fuzzy) next;
+      alias next = parseUntil!(nextSlice,terminator,fuzzy);
       const string token = pattern[0..1] ~ next.token;
       const uint consumed = next.consumed+1;
     }
@@ -941,7 +941,7 @@ template regexCompileCharClass2(string pattern)
       {
         static if (pattern.length > 2)
         {
-          alias testRange!(pattern[0..1], pattern[2..3]) termFn;
+          alias termFn = testRange!(pattern[0..1], pattern[2..3]);
           const uint thisConsumed = 3;
           const string remaining = pattern[3 .. $];
         }
@@ -954,24 +954,24 @@ template regexCompileCharClass2(string pattern)
       }
       else // not '-'
       {
-        alias testChar!(pattern[0..1]) termFn;
+        alias termFn = testChar!(pattern[0..1]);
         const uint thisConsumed = 1;
         const string remaining = pattern[1 .. $];
       }
     }
     else
     {
-      alias testChar!(pattern[0..1]) termFn;
+      alias termFn = testChar!(pattern[0..1]);
       const uint thisConsumed = 1;
       const string remaining = pattern[1 .. $];
     }
-    alias regexCompileCharClassRecurse!(termFn,remaining) recurse;
-    alias recurse.fn fn;
+    alias recurse = regexCompileCharClassRecurse!(termFn,remaining);
+    alias fn = recurse.fn;
     const uint consumed = recurse.consumed + thisConsumed;
   }
   else
   {
-    alias testEmpty!() fn;
+    alias fn = testEmpty!();
     const uint consumed = 0;
   }
 }
@@ -991,13 +991,13 @@ template regexCompileCharClassRecurse(alias termFn,string pattern)
 {
   static if (pattern.length > 0 && pattern[0] != ']')
   {
-    alias regexCompileCharClass2!(pattern) next;
-    alias testOr!(termFn,next.fn,pattern) fn;
+    alias next = regexCompileCharClass2!(pattern);
+    alias fn = testOr!(termFn,next.fn,pattern);
     const uint consumed = next.consumed;
   }
   else
   {
-    alias termFn fn;
+    alias fn = termFn;
     const uint consumed = 0;
   }
 }
@@ -1017,13 +1017,13 @@ template regexCompileCharClass(string pattern)
   {
     static if (pattern[0] == ']')
     {
-      alias testEmpty!() fn;
+      alias fn = testEmpty!();
       const uint consumed = 0;
     }
     else
     {
-      alias regexCompileCharClass2!(pattern) charClass;
-      alias charClass.fn fn;
+      alias charClass = regexCompileCharClass2!(pattern);
+      alias fn = charClass.fn;
       const uint consumed = charClass.consumed;
     }
   }
@@ -1048,12 +1048,12 @@ template regexCompilePredicate(alias test, string pattern)
 {
   static if (pattern.length > 0 && pattern[0] == '*')
   {
-    alias testZeroOrMore!(test) fn;
+    alias fn = testZeroOrMore!(test);
     const uint consumed = 1;
   }
   else
   {
-    alias test fn;
+    alias fn = test;
     const uint consumed = 0;
   }
 }
@@ -1074,16 +1074,16 @@ template regexCompileEscape(string pattern)
     static if (pattern[0] == 's')
     {
       // whitespace char
-      alias testRange!("\x00","\x20") fn;
+      alias fn = testRange!("\x00","\x20");
     }
     else static if (pattern[0] == 'w')
     {
       //word char
-      alias testWordChar!() fn;
+      alias fn = testWordChar!();
     }
     else
     {
-      alias testChar!(pattern[0 .. 1]) fn;
+      alias fn = testChar!(pattern[0 .. 1]);
     }
     const uint consumed = 1;
   }
@@ -1110,45 +1110,45 @@ template regexCompile(string pattern)
     {
       const string charClassToken =
           parseUntil!(pattern[1 .. $],']').token;
-      alias regexCompileCharClass!(charClassToken) charClass;
+      alias charClass = regexCompileCharClass!(charClassToken);
       const string token = pattern[0 .. charClass.consumed+2];
       const string next = pattern[charClass.consumed+2 .. $];
-      alias charClass.fn test;
+      alias test = charClass.fn;
     }
     else static if (pattern[0] == '\\')
     {
-      alias regexCompileEscape!(pattern[1..pattern.length]) escapeSequence;
+      alias escapeSequence = regexCompileEscape!(pattern[1..pattern.length]);
       const string token = pattern[0 .. escapeSequence.consumed+1];
       const string next =
           pattern[escapeSequence.consumed+1 .. $];
-      alias escapeSequence.fn test;
+      alias test = escapeSequence.fn;
     }
     else
     {
       const string token = parseTextToken!(pattern);
       static assert(token.length > 0);
       const string next = pattern[token.length .. $];
-      alias testText!(token) test;
+      alias test = testText!(token);
     }
 
-    alias regexCompilePredicate!(test, next) term;
+    alias term = regexCompilePredicate!(test, next);
     const string remaining = next[term.consumed .. next.length];
 
-    alias regexCompileRecurse!(term,remaining).fn fn;
+    alias fn = regexCompileRecurse!(term,remaining).fn;
   }
   else
-    alias testEmpty!() fn;
+    alias fn = testEmpty!();
 }
 
 template regexCompileRecurse(alias term,string pattern)
 {
   static if (pattern.length > 0)
   {
-    alias regexCompile!(pattern) next;
-    alias testUnion!(term.fn, next.fn) fn;
+    alias next = regexCompile!(pattern);
+    alias fn = testUnion!(term.fn, next.fn);
   }
   else
-    alias term.fn fn;
+    alias fn = term.fn;
 }
 
 /// Utility function for parsing
