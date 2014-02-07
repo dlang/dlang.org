@@ -172,7 +172,7 @@ auto ref foo(ref int x) { return x; return 3; }  // error, ref return, 3 is not 
 ---
 
 
-$(H4 $(LNAME2 inout-functions, Inout Functions))
+$(H4 $(LNAME2 inout, Inout Functions))
 
         $(P Functions that deal with mutable, const, or immutable types with
         equanimity often need to transmit their type to the return value:
@@ -390,8 +390,8 @@ class A {
 }
 
 class B : A {
-  int def() { ... }  // ok, overrides A.def
-  int foo() { ... }  // error, A.foo is final
+  override int def() { ... }  // ok, overrides A.def
+  override int foo() { ... }  // error, A.foo is final
   int bar() { ... }  // ok, A.bar is final private, but not virtual
   int abc() { ... }  // ok, A.abc is not virtual, B.abc is virtual
 }
@@ -424,7 +424,7 @@ class Foo {
 }
 
 class Bar : Foo {
-  B test() { return null; } // overrides and is covariant with Foo.test()
+  override B test() { return null; } // overrides and is covariant with Foo.test()
 }
 ------
 
@@ -521,7 +521,7 @@ class A {
 }
 
 class B : A {
-  $(CODE_HIGHLIGHT alias A.foo foo;)
+  $(CODE_HIGHLIGHT alias foo = A.foo;)
   override int foo(long x) { ... }
 }
 
@@ -571,6 +571,11 @@ void main() {
   foo(new B);
 }
 ---
+        $(P Note that the this current runtime behavior is deprecated.
+        The compiler will currently emit a compile-time error for the
+        above test-case unless the ($(B -d)) deprecation switch is enabled.
+        In the future this deprecated runtime-only checking feature will be removed.)
+
         $(P If an $(CODE HiddenFuncError) exception is thrown in your program,
         the use of overloads and overrides needs to be reexamined in the
         relevant classes.)
@@ -761,8 +766,8 @@ void bar(C c) {
 import A;
 import B;
 
-alias A.foo foo;
-alias B.foo foo;
+alias foo = A.foo;
+alias foo = B.foo;
 
 void bar(C c) {
   foo();    // calls A.foo()
@@ -1861,8 +1866,8 @@ $(H3 $(LNAME2 pseudo-member, Uniform Function Call Syntax (UFCS)))
         // it's automatically rewritten to 'func(obj)'
         ---
 
-	$(P This provides a way to add functions to a class 
-	externally as if they were public final member functions. 
+	$(P This provides a way to add functions to a class
+	externally as if they were public final member functions.
 	)
 
         $(P It also works with $(D @property) functions:)

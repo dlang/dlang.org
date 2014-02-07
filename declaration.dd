@@ -12,16 +12,6 @@ $(GNAME Declaration):
 )
 
 $(GRAMMAR
-$(GNAME AliasDeclaration):
-    $(D alias) $(GLINK BasicType) $(GLINK Declarator)
-    $(D alias) $(I AliasDeclarationX)
-
-$(GNAME AliasDeclarationX):
-    $(I Identifier) $(D =) $(GLINK Type)
-    $(I AliasDeclarationX) $(D ,) $(I Identifier) $(D =) $(GLINK Type)
-)
-
-$(GRAMMAR
 $(GNAME Decl):
     $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarators) $(D ;)
     $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarator) $(GLINK2 function, FunctionBody)
@@ -33,7 +23,7 @@ $(GNAME Declarators):
 
 $(GNAME DeclaratorInitializer):
     $(GLINK Declarator)
-    $(GLINK Declarator) $(D =) $(GLINK Initializer)
+    $(GLINK Declarator) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
 
 $(GNAME DeclaratorIdentifierList):
     $(GLINK DeclaratorIdentifier)
@@ -41,7 +31,7 @@ $(GNAME DeclaratorIdentifierList):
 
 $(GNAME DeclaratorIdentifier):
     $(I Identifier)
-    $(I Identifier) $(D =) $(GLINK Initializer)
+    $(I Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
 
 $(GNAME BasicType):
     $(GLINK BasicTypeX)
@@ -97,7 +87,8 @@ $(GNAME DeclaratorSuffix):
     $(D [ ])
     $(D [) $(VEXPRESSION) $(D ])
     $(D [) $(GLINK Type) $(D ])
-    $(GLINK2 template, TemplateParameters)$(OPT) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
+    $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
+    $(GLINK2 template, TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
 
 $(GNAME IdentifierList):
     $(I Identifier)
@@ -110,21 +101,27 @@ $(GNAME StorageClasses):
     $(GLINK StorageClass) $(I StorageClasses)
 
 $(GNAME StorageClass):
-$(MULTICOLS 5,     $(D abstract)
-    $(D auto)
-    $(GLINK TypeCtor)
+$(MULTICOLS 5,     $(GLINK2 attribute, LinkageAttribute)
+    $(GLINK2 attribute, AlignAttribute)
     $(D deprecated)
     $(D enum)
+    $(D static)
     $(RELATIVE_LINK2 extern, $(D extern))
+    $(D abstract)
     $(D final)
-    $(D nothrow)
     $(D override)
-    $(D pure)
+    $(D synchronized)
+    $(D auto)
+    $(D scope)
+    $(D const)
+    $(D immutable)
+    $(D inout)
+    $(D shared)
     $(D __gshared)
     $(GLINK2 attribute, Property)
-    $(D scope)
-    $(D static)
-    $(D synchronized))
+    $(D nothrow)
+    $(D pure)
+    $(D ref))
 
 $(GNAME TypeCtors):
     $(GLINK TypeCtor)
@@ -305,8 +302,8 @@ $(GNAME AutoDeclaration):
     $(GLINK StorageClasses) $(I AutoDeclarationX) $(D ;)
 
 $(GNAME AutoDeclarationX):
-    $(I Identifier) $(D =) $(GLINK Initializer)
-    $(I AutoDeclarationX) $(D ,) $(I Identifier) $(D =) $(GLINK Initializer)
+    $(I Identifier) $(D =) $(GLINK2 template, TemplateParameters)$(OPT) $(GLINK Initializer)
+    $(I AutoDeclarationX) $(D ,) $(I Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
 )
 
         $(P If a declaration starts with a $(I StorageClass) and has
@@ -342,15 +339,24 @@ auto v = ["hello", "world"]; // type is string[], not string[2]
 
 
 
-$(H3 $(LNAME2 alias, Type Aliasing))
+$(H3 $(LNAME2 alias, Alias Declarations))
 
-        $(P
-	$(GLINK AliasDeclaration)s create a symbol that is an alias for another type,
-	and can be used anywhere that other type may appear.
-        )
+$(GRAMMAR
+$(GNAME AliasDeclaration):
+    $(D alias) $(GLINK BasicType) $(GLINK Declarator)
+    $(D alias) $(I AliasDeclarationX) $(D ;)
+
+$(GNAME AliasDeclarationX):
+    $(I Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Type)
+    $(I AliasDeclarationX) $(D ,) $(I Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Type)
+)
+
+    $(P $(I AliasDeclaration)s create a symbol that is an alias for another type,
+        and can be used anywhere that other type may appear.
+    )
 
 --------------------
-alias abc.Foo.bar myint;
+alias myint = abc.Foo.bar;
 --------------------
 
         $(P
@@ -360,25 +366,20 @@ alias abc.Foo.bar myint;
         )
 
 --------------------
-alias int myint;
+alias myint = int;
 
 void foo(int x) { . }
 void foo(myint m) { . } // error, multiply defined function foo
 --------------------
 
-
-
-$(H3 Alias Declarations)
-
-        $(P
-        A symbol can be declared as an $(I alias) of another symbol.
+    $(P A symbol can be declared as an $(I alias) of another symbol.
         For example:
-        )
+    )
 
 --------------------
 import string;
 
-alias string.strlen mylen;
+alias mylen = string.strlen;
  ...
 int len = mylen("hello"); // actually calls string.strlen()
 --------------------
@@ -388,11 +389,11 @@ int len = mylen("hello"); // actually calls string.strlen()
         )
 
 --------------------
-template Foo2(T) { alias T t; }
-alias Foo2!(int) t1;
-alias Foo2!(int).t t2;
-alias t1.t t3;
-alias t2 t4;
+template Foo2(T) { alias t = T; }
+alias t1 = Foo2!(int);
+alias t2 = Foo2!(int).t;
+alias t3 = t1.t;
+alias t4 = t2;
 
 t1.t v1;  // v1 is type int
 t2 v2;    // v2 is type int
@@ -409,11 +410,11 @@ t4 v4;    // v4 is type int
 --------------------
 version (Win32)
 {
-    alias win32.foo myfoo;
+    alias myfoo = win32.foo;
 }
 version (linux)
 {
-    alias linux.bar myfoo;
+    alias myfoo = linux.bar;
 }
 --------------------
 
@@ -423,7 +424,7 @@ version (linux)
         )
 
 --------------------
-alias string.strlen strlen;
+alias strlen = string.strlen;
 --------------------
 
         $(P
@@ -442,7 +443,7 @@ class B : A {
 
 class C : B {
     int foo( int a ) { return 3; }
-    alias B.foo foo;
+    alias foo = B.foo;
 }
 
 class D : C  {
@@ -465,7 +466,7 @@ void test()
         )
 
 --------------------
-alias foo.bar abc; // is it a type or a symbol?
+alias abc = foo.bar; // is it a type or a symbol?
 --------------------
 
         $(P
@@ -478,9 +479,9 @@ alias foo.bar abc; // is it a type or a symbol?
 struct S { static int i; }
 S s;
 
-alias s.i a; // illegal, s.i is an expression
-alias S.i b; // ok
-b = 4;       // sets S.i to 4
+alias a = s.i; // illegal, s.i is an expression
+alias b = S.i; // ok
+b = 4;         // sets S.i to 4
 -----------
 
 $(H3 $(LNAME2 extern, Extern Declarations))

@@ -82,33 +82,31 @@ $(SPEC_S Structs and Unions,
 
 $(GRAMMAR
 $(GNAME AggregateDeclaration):
-    $(D struct) $(I Identifier) $(GLINK StructBody)
-    $(D union) $(I Identifier) $(GLINK StructBody)
+    $(GLINK2 class, ClassDeclaration)
+    $(GLINK2 interface, InterfaceDeclaration)
+    $(GLINK StructDeclaration)
+    $(GLINK UnionDeclaration)
+
+$(GNAME StructDeclaration):
     $(D struct) $(I Identifier) $(D ;)
-    $(D union) $(I Identifier) $(D ;)
+    $(D struct) $(I Identifier) $(GLINK AggregateBody)
     $(GLINK2 template, StructTemplateDeclaration)
+    $(GLINK AnonStructDeclaration)
+
+$(GNAME AnonStructDeclaration):
+    $(D struct) $(GLINK AggregateBody)
+
+$(GNAME UnionDeclaration):
+    $(D union) $(I Identifier) $(D ;)
+    $(D union) $(I Identifier) $(GLINK AggregateBody)
     $(GLINK2 template, UnionTemplateDeclaration)
+    $(GLINK AnonUnionDeclaration)
 
-$(GNAME StructBody):
-    $(D {) $(D })
-    $(D {) $(GLINK StructBodyDeclarations) $(D })
+$(GNAME AnonUnionDeclaration):
+    $(D union) $(GLINK AggregateBody)
 
-$(GNAME StructBodyDeclarations):
-    $(GLINK StructBodyDeclaration)
-    $(GLINK StructBodyDeclaration) $(I StructBodyDeclarations)
-
-$(GNAME StructBodyDeclaration):
-    $(GLINK2 module, DeclDef)
-    $(GLINK StructAllocator)
-    $(GLINK StructDeallocator)
-    $(GLINK Postblit)
-    $(GLINK2 class, AliasThis)
-
-$(GNAME StructAllocator):
-    $(GLINK2 class, ClassAllocator)
-
-$(GNAME StructDeallocator):
-    $(GLINK2 class, ClassDeallocator)
+$(GNAME AggregateBody):
+    $(D {) $(GLINK2 module, DeclDefs)$(OPT) $(D })
 )
 
 $(P They work like they do in C, with the following exceptions:)
@@ -136,7 +134,7 @@ ABC x;
 
 $(H3 Opaque Structs and Unions)
 
-	$(P Opaque struct and union declarations do not have a $(GLINK StructBody):)
+    $(P Opaque struct and union declarations do not have a $(GLINK AggregateBody):)
 
 ---
 struct S;

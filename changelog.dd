@@ -10,13 +10,13 @@ $(LI $(RELATIVE_LINK2 d_scripts, Extensionless D source file names can now be ru
 
 $(BUGSTITLE Language Changes,
 $(LI $(RELATIVE_LINK2 disable_goto_skips_init, Goto jumps now cannot skip variable declarations.))
-$(LI $(RELATIVE_LINK2 attribinference2, All of instantiated functions are now inferred their attributes.))
+$(LI $(RELATIVE_LINK2 attribinference2, All instantiated functions now infer their attributes.))
 $(LI $(RELATIVE_LINK2 inout_const, Add a new type qualifier $(D inout const).))
 $(LI $(RELATIVE_LINK2 slicing_tuple, Entire slicing operation of built-in tuple is now accepted.))
 $(LI $(RELATIVE_LINK2 untyped_packages, Packages and module names now have no type.))
 $(LI $(RELATIVE_LINK2 staticfields2, Const and immutable fields with initializers are now deprecated.))
-$(LI $(RELATIVE_LINK2 deprecate_unorderd_compares, .))
-$(LI $(RELATIVE_LINK2 deprecate_floating_properties, .))
+$(LI $(RELATIVE_LINK2 deprecate_unorderd_compares, Deprecate unordered floating point comparisons.))
+$(LI $(RELATIVE_LINK2 deprecate_floating_properties, Deprecate $(D .min) property for floating-point types.))
 $(LI $(RELATIVE_LINK2 ctfe_overlapped_field, CTFE can handle overlapped union fields.))
 $(LI $(RELATIVE_LINK2 get_alias_this, Add a new trait getAliasThis.))
 )
@@ -63,7 +63,7 @@ $(BUGSTITLE Language Changes,
 
 $(LI $(LNAME2 disable_goto_skips_init, Goto jumps now cannot skip variable declarations:)
 
-    $(P A very long period, the following code had been allowed by mistake, but it is prohibited right now:
+    $(P For a very long period, the following code had been allowed by mistake, but it is prohibited now:
 
         ---------
         import std.stdio;
@@ -81,9 +81,9 @@ $(LI $(LNAME2 disable_goto_skips_init, Goto jumps now cannot skip variable decla
     )
 )
 
-$(LI $(LNAME2 attribinference2, All of instantiated functions are now inferred their attributes:)
+$(LI $(LNAME2 attribinference2, All instantiated functions now infer their attributes:)
 
-    $(P Regardless directly or indirectly function is instantiated, its attributes will be inferred:
+    $(P Regardless of how directly or indirectly a function is instantiated, its attributes will still be inferred:
 
         ---------
         struct S(T)
@@ -105,10 +105,10 @@ $(LI $(LNAME2 attribinference2, All of instantiated functions are now inferred t
             S!int s;
 
             // S!int.square and its nested function calc are instantiated functions, so
-            // their attributes are inferred to pure and callable from main()
+            // their attributes are inferred as pure and callable from main()
             assert(s.square(2) == 4);  // ok
 
-            // static member function is also inferred its attributes right now
+            // static member function attributes are also inferred now
             auto pi = typeof(s).pi();
         }
         ---------
@@ -117,9 +117,9 @@ $(LI $(LNAME2 attribinference2, All of instantiated functions are now inferred t
 
 $(LI $(LNAME2 inout_const, Add a new type qualifier $(D inout const):)
 
-    $(P Thus far, common type of $(D immutable$(LPAREN)T$(RPAREN)) and $(D inout$(LPAREN)T$(RPAREN)) had been
-        $(D const$(LPAREN)T$(RPAREN)). But it had been losing $(D inout) information and refused some valid code.
-        Now it becomes $(D inout$(LPAREN)const$(LPAREN)T$(RPAREN)$(RPAREN)) and propagates meaningful type qualifier.
+    $(P Until now, the common type of $(D immutable$(LPAREN)T$(RPAREN)) and $(D inout$(LPAREN)T$(RPAREN)) had been
+        $(D const$(LPAREN)T$(RPAREN)). But that loses the $(D inout) information, which might then refuse some valid code.
+        Now the type becomes $(D inout$(LPAREN)const$(LPAREN)T$(RPAREN)$(RPAREN)), which meaningfully propagates the appropriate type qualifier.
 
         ---------
         inout(const(int))[] foo(bool condition, inout(int)[] x, immutable(int)[] y)
@@ -184,8 +184,8 @@ $(LI $(LNAME2 staticfields2, Const and immutable fields with initializers are no
         See also $(RELATIVE_LINK2 staticfields, the release note in 2.063).
     )
 
-    $(P Related to that, void-initialized const or immutable field has been
-        changed to the instance field ahead of schedule:
+    $(P Related to that, void-initialized const or immutable fields will now
+        occupy space in the object instance ahead of schedule:
 
         ---------
         struct S
@@ -225,7 +225,7 @@ $(LI $(LNAME2 deprecate_unorderd_compares, Deprecate unordered floating point co
 
 $(LI $(LNAME2 deprecate_floating_properties, Deprecate $(D .min) property for floating-point types:)
 
-    $(P $(BUGZILLA 10439): Deprecate float.min, double.min, real.min:
+    $(P $(BUGZILLA 10439): Deprecate float.min, double.min, real.min
     )
 )
 
@@ -437,8 +437,7 @@ $(LI $(LNAME2 uni_bygrapheme, Add std.uni.byGrapheme and std.uni.byCodePoint.)
 
         void main()
         {
-            string s = "noe\u0308l"; // noÎl
-
+            string s = "noe\u0308l"; // no√´l
             // reverse it and convert the result back to UTF-8
             string reverse = s.byGrapheme()
                 .array() // Note: byGrapheme will support bidirectionality in the future
@@ -446,7 +445,7 @@ $(LI $(LNAME2 uni_bygrapheme, Add std.uni.byGrapheme and std.uni.byCodePoint.)
                 .byCodePoint()
                 .text();
 
-            assert(reverse == "le\u0308on"); // lÎon
+            assert(reverse == "le\u0308on"); // l√´on
         }
         ---------
         Note that $(D byGrapheme) will support bidirectionality in the future,
@@ -775,7 +774,7 @@ $(LI $(BUGZILLA 11738): partialShuffle actually shuffles the entire input)
 $(LI $(BUGZILLA 11771): Unicode set intersection with char is broken)
 $(LI $(BUGZILLA 11775): std.regex should check for valid repetition range in assert mode)
 $(LI $(BUGZILLA 11780): RangeError in format for incomplete format specifier)
-$(LI $(BUGZILLA 11808): std.uni.CodepointSet$(LPAREN)'°¶', '–Ø'+1, '–∞', '°¶'+1$(RPAREN) asserts)
+$(LI $(BUGZILLA 11808): std.uni.CodepointSet$(LPAREN)'–ê', '–Ø'+1, '–∞', '—è'+1$(RPAREN) asserts)
 $(LI $(BUGZILLA 11839): std.regex capture group names should allow numbers to be in them)
 )
 )
@@ -2036,7 +2035,7 @@ $(LI $(BUGZILLA 10813): ICE$(LPAREN)DMD2.063$(RPAREN) template.c:6040: Identifie
 $(LI $(BUGZILLA 10834): cannot use cast$(LPAREN)void$(RPAREN)expr if the type of expr is a struct)
 $(LI $(BUGZILLA 10840): [CTFE] *this._data.arr is not yet implemented at compile time)
 $(LI $(BUGZILLA 10842): Some integer casts wrongly remove side-effect of the operand.)
-$(LI $(BUGZILLA 10857): ICE$(LPAREN)glue.c,°¶Äbugzilla 2962?$(RPAREN) or compiles, depending on the files order)
+$(LI $(BUGZILLA 10857): ICE$(LPAREN)glue.c,„ÄÄbugzilla 2962?$(RPAREN) or compiles, depending on the files order)
 $(LI $(BUGZILLA 10858): CTFE wrong code for comparison of array of pointers)
 $(LI $(BUGZILLA 10862): Assignment inside if condition still sometimes accepted)
 $(LI $(BUGZILLA 10869): Ddoc mark methods with "const" twice)
@@ -4031,7 +4030,7 @@ $(LI $(BUGZILLA 9420): [2.062alpha] Weird "$(LPAREN)null$(RPAREN)" output in err
 $(LI $(BUGZILLA 9435): regression$(LPAREN)head$(RPAREN): forward reference error)
 $(LI $(BUGZILLA 9436): enum cannot be forward referenced with cyclic imports and mixin)
 $(LI $(BUGZILLA 9496): [REG 2.061 -> 2.062 alpha] "this[1 .. $]" passes wrong "this" to "opDollar")
-$(LI $(BUGZILLA 9514): "template instance ·ﬂ°¶is not an alias")
+$(LI $(BUGZILLA 9514): "template instance ‚Ä¶ is not an alias")
 $(LI $(BUGZILLA 9525): [CTFE] Cannot convert &S to const$(LPAREN)S*$(RPAREN) at compile time)
 )
 
