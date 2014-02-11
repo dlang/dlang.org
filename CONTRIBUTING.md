@@ -17,11 +17,11 @@ Welcome to the D community and thanks for your interest in contributing!
 Tips for Development
 --------------------
 
-Use the makefiles (either posix.mak or win32.mak based on your platform) to
+Use the makefiles (either `posix.mak` or `win32.mak` based on your platform) to
 build the HTML files. Example invocations:
 
-# Rebuild only the expression.html page
-$ make -f win32.mak expression.html
+    # Rebuild only the expression.html page
+    $ make -f win32.mak expression.html
 
-# Build all the documentation
-$ make -f win32.mak
+    # Build all the documentation
+    $ make -f win32.mak
