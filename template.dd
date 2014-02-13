@@ -635,6 +635,35 @@ $(GNAME TemplateAliasParameterDefault):
         )
     )
 
+$(H3 Specialization)
+
+    $(P Alias parameters can accept both literals and user-defined type symbols,
+        but they are less specialized than the matches to type parameters and
+        value parameters:
+
+        ------
+        template Foo(T)         { ... }  // #1
+        template Foo(int n)     { ... }  // #2
+        template Foo(alias sym) { ... }  // #3
+
+        struct S {}
+        int var;
+
+        alias foo1  = Foo!(S);      // instantiates #1
+        alias foo2  = Foo!(1);      // instantiates #2
+        alias foo3a = Foo!([1,2]);  // instantiates #3
+        alias foo3b = Foo!(var);    // instantiates #3
+        ------
+
+        ------
+        template Bar(alias A) { ... }                 // #4
+        template Bar(T : U!V, alias U, V...) { ... }  // #5
+
+        class C(T) {}
+        alias bar = Bar!(C!int);    // instantiates #5
+        ------
+    )
+
 $(H2 $(LNAME2 variadic-templates, Template Tuple Parameters))
 
 $(GRAMMAR
@@ -762,9 +791,27 @@ a
         to dynamically change, add, or remove elements.
     )
 
+$(H3 Specialization)
+
     $(P If both a template with a tuple parameter and a template
         without a tuple parameter exactly match a template instantiation,
         the template without a $(I TemplateTupleParameter) is selected.
+
+        ----
+        template Foo(T)         { pragma(msg, "1"); }   // #1
+        template Foo(int n)     { pragma(msg, "2"); }   // #2
+        template Foo(alias sym) { pragma(msg, "3"); }   // #3
+        template Foo(A ...)     { pragma(msg, "4"); }   // #4
+
+        import std.stdio;
+
+        // Any sole template argument will never match to #4
+        alias foo1 = Foo!(int);          // instantiates #1
+        alias foo2 = Foo!(3);            // instantiates #2
+        alias foo3 = Foo!(std);          // instantiates #3
+
+        alias foo4 = Foo!(int, 3, std);  // instantiates #4
+        ----
     )
 
 $(H2 Template Parameter Default Values)
