@@ -53,11 +53,11 @@ $(UL
         $(LI dynamic fields)
         $(LI static fields)
         $(LI types)
+        $(LI $(RELATIVE_LINK2 synchronized-classes, an optional synchronized attribute))
         $(LI $(RELATIVE_LINK2 member-functions, member functions)
         $(UL
             $(LI static member functions)
             $(LI $(DDSUBLINK function, virtual-functions, Virtual Functions))
-            $(LI $(RELATIVE_LINK2 synchronized-functions, Synchronized Functions))
             $(LI $(RELATIVE_LINK2 constructors, Constructors))
             $(LI $(RELATIVE_LINK2 destructors, Destructors))
             $(LI $(RELATIVE_LINK2 StaticConstructor, Static Constructors))
@@ -209,35 +209,62 @@ class C {
 ---
 
 
-$(H3 $(LNAME2 synchronized-functions, Synchronized Functions))
+$(H3 $(LNAME2 synchronized-classes, Synchronized Classes))
 
-        $(P Synchronized class member functions have the storage class
-        $(CODE synchronized).
+        $(P All member functions of synchronized classes are synchronized.
         A static member function is synchronized on the $(I classinfo)
         object for the class, which means that one monitor is used
-        for all static synchronized member functions for that class.
-        For non-static synchronized functions, the monitor used is
-        part of the class object. For example:
+        for all static member functions for that synchronized class.
+        For non-static functions of a synchronized class, the monitor
+        used is part of the class object. For example:
         )
 
----
-class Foo {
-  synchronized void bar() { ...statements... }
-}
----
+        ---
+        synchronized class Foo {
+           void bar() { ...statements... }
+        }
+        ---
 
         $(P is equivalent to (as far as the monitors go):
         )
 
----
-class Foo {
-  void bar() {
-    synchronized (this) { ...statements... }
-  }
-}
----
+        ---
+        synchronized class Foo {
+          void bar() {
+            synchronized (this) { ...statements... }
+          }
+        }
+        ---
 
-        $(P Structs do not have synchronized member functions.)
+        $(P Member functions of non-synchronized classes cannot be individually marked as synchronized.
+        The synchronized attribute must be applied to the class declaration itself:
+        )
+
+        ---
+        class Foo {
+          synchronized void foo() { }  // disallowed!
+        }
+
+        synchronized class Bar {
+          void bar() { }  // bar is synchronized
+        }
+        ---
+
+        $(P Member fields of a synchronized class cannot be public:
+        )
+
+        ---
+        synchronized class Foo {
+          int foo;  // disallowed: public field
+        }
+
+        synchronized class Bar {
+          private int bar;  // ok
+        }
+        ---
+
+        $(P The $(D synchronized) attribute can only be applied to classes,
+        structs cannot be marked to be synchronized.)
 
 $(H3 $(LNAME2 constructors, Constructors))
 
