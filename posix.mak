@@ -176,10 +176,10 @@ clean:
 	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST}
 
 rsync : all
-	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
+	rsync -avz --delete $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
 
 rsync-only :
-	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
+	rsync -avz --delete $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
 
 pdf : $(PDFTARGETS)
 
