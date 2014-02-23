@@ -111,7 +111,7 @@ $(P
 )
 
 ------
-template TFoo(T) { alias T* t; }
+template TFoo(T) { alias t = T*; }
 ...
 TFoo!(int).t x; // declare x to be of type int*
 ------
@@ -128,8 +128,8 @@ $(P
 )
 
 ------
-template TFoo(T) { alias T* t; }
-alias TFoo!(int) abc;
+template TFoo(T) { alias t = T*; }
+alias abc = TFoo!(int);
 abc.t x;        // declare x to be of type int*
 ------
 
@@ -142,8 +142,8 @@ $(P
 
 ------
 template TFoo(T) { T f; }
-alias TFoo!(int) a;
-alias TFoo!(int) b;
+alias a = TFoo!(int);
+alias b = TFoo!(int);
 ...
 a.f = 3;
 assert(b.f == 3);  // a and b refer to the same instance of TFoo
@@ -213,7 +213,7 @@ $(U module b)
 import a;
 
 void func() { }
-alias TFoo!(int) f; // error: func not defined in module a
+alias f = TFoo!(int); // error: func not defined in module a
 ------
 
 $(P
@@ -232,7 +232,7 @@ $(U module b)
 import a;
 
 void func(int i) { }
-alias TFoo!(int) f;
+alias f = TFoo!(int);
 ...
 f.bar();  // will call a.func(double)
 ------
@@ -274,18 +274,18 @@ $(H2 Argument Deduction)
 
 ------
 template TFoo(T) { }
-alias TFoo!(int) Foo1;     // (1) T is deduced to be int
-alias TFoo!(char*) Foo2;   // (1) T is deduced to be char*
+alias Foo1 = TFoo!(int);     // (1) T is deduced to be int
+alias Foo2 = TFoo!(char*);   // (1) T is deduced to be char*
 
 template TBar(T : T*) { }
-alias TBar!(char*) Foo3;   // (2) T is deduced to be char
+alias Foo3 = TBar!(char*);   // (2) T is deduced to be char
 
 template TAbc(D, U : D[]) { }
-alias TAbc!(int, int[]) Bar1;  // (2) D is deduced to be int, U is int[]
-alias TAbc!(char, int[]) Bar2; // (4) error, D is both char and int
+alias Bar1 = TAbc!(int, int[]);  // (2) D is deduced to be int, U is int[]
+alias Bar2 = TAbc!(char, int[]); // (4) error, D is both char and int
 
 template TDef(D : E*, E) { }
-alias TDef!(int*, int) Bar3; // (1) E is int
+alias Bar3 = TDef!(int*, int); // (1) E is int
                              // (3) D is int*
 ------
 
@@ -310,11 +310,11 @@ class A { }
 class B : A { }
 
 template TFoo(T : A) { }
-alias TFoo!(B) Foo4;    // (3) T is B
+alias Foo4 = TFoo!(B);    // (3) T is B
 
 template TBar(T : U*, U : A) { }
-alias TBar!(B*, B) Foo5; // (2) T is B*
-                         // (3) U is B
+alias Foo5 = TBar!(B*, B); // (2) T is B*
+                           // (3) U is B
 ------
 
 $(H2 Template Type Parameters)
@@ -347,11 +347,11 @@ template TFoo(T : T[])  { ... } // #2
 template TFoo(T : char) { ... } // #3
 template TFoo(T,U,V)    { ... } // #4
 
-alias TFoo!(int) foo1;         // instantiates #1
-alias TFoo!(double[]) foo2;    // instantiates #2 with T being double
-alias TFoo!(char) foo3;        // instantiates #3
-alias TFoo!(char, int) fooe;   // error, number of arguments mismatch
-alias TFoo!(char, int, int) foo4; // instantiates #4
+alias foo1 = TFoo!(int) ;           // instantiates #1
+alias foo2 = TFoo!(double[]);       // instantiates #2 with T being double
+alias foo3 = TFoo!(char);           // instantiates #3
+alias fooe = TFoo!(char, int);      // error, number of arguments mismatch
+alias foo4 = TFoo!(char, int, int); // instantiates #4
 ------
 
         $(P The template picked to instantiate is the one that is most specialized
@@ -537,10 +537,10 @@ template Foo(alias X) {
 }
 
 void test() {
-  alias Foo!(x) bar;
+  alias bar = Foo!(x);
   *bar.p = 3;       // set x to 3
   static int y;
-  alias Foo!(y) abc;
+  alias abc = Foo!(y);
   *abc.p = 3;       // set y to 3
 }
 ------
@@ -550,15 +550,15 @@ void test() {
 
 ------
 class Foo {
-  static int p;
+  static p = int;
 }
 
 template Bar(alias T) {
-  alias T.p q;
+  alias q = T.p;
 }
 
 void test() {
-  alias Bar!(Foo) bar;
+  alias bar = Bar!(Foo);
   bar.q = 3;  // sets Foo.p to 3
 }
 ------
@@ -570,11 +570,11 @@ void test() {
 import std.string;
 
 template Foo(alias X) {
-  alias X.toString y;
+  alias y = X.toString;
 }
 
 void test() {
-  alias Foo!(std.string) bar;
+  alias bar = Foo!(std.string);
   bar.y(3);   // calls std.string.toString(3)
 }
 ------
@@ -590,11 +590,11 @@ template Foo(alias X) {
 }
 
 template Bar(alias T) {
-  alias T!(x) abc;
+  alias abc = T!(x);
 }
 
 void test() {
-  alias Bar!(Foo) bar;
+  alias bar = Bar!(Foo);
   *bar.abc.p = 3;  // sets x to 3
 }
 ------
@@ -610,12 +610,12 @@ template Foo(alias X) {
 }
 
 template Bar(alias T) {
-  alias T.p q;
+  alias q = T.p;
 }
 
 void test() {
-  alias Foo!(x) foo;
-  alias Bar!(foo) bar;
+  alias foo = Foo!(x);
+  alias bar = Bar!(foo);
   *bar.q = 3;  // sets x to 3
 }
 ------
@@ -630,7 +630,7 @@ template Foo(alias X, alias Y) {
 }
 
 void test() {
-  alias Foo!(3, "bar") foo;
+  alias foo = Foo!(3, "bar");
   writeln(foo.i, foo.s);  // prints 3bar
 }
 ------
@@ -796,59 +796,56 @@ void test() {
 $(H2 Template Constructors)
 
 $(GRAMMAR
-$(GNAME TemplatedConstructor):
-    $(D this) $(GLINK2 template, TemplateParameters) $(GLINK2 declaration, Parameters) $(GLINK Constraint)$(OPT) $(GLINK2 function, FunctionBody)
+$(GNAME ConstructorTemplate):
+    $(D this) $(GLINK2 template, TemplateParameters) $(GLINK2 declaration, Parameters) $(GLINK2 declaration, MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT) $(D :)
+    $(D this) $(GLINK2 template, TemplateParameters) $(GLINK2 declaration, Parameters) $(GLINK2 declaration, MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK2 function, FunctionBody)
 )
 
-        $(P Templates can be used to form constructors for classes  and structs.
-        )
+    $(P Templates can be used to form constructors for classes  and structs.
+    )
 
-$(H2 Class Templates)
+$(H2 Aggregate Templates)
 
 $(GRAMMAR
 $(GNAME ClassTemplateDeclaration):
-    $(D class) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK2 class, BaseClassList)$(OPT) $(GLINK2 class, ClassBody)
-    $(D class) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK2 class, BaseClassList)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK2 class, ClassBody)
-)
-
-        $(P If a template declares exactly one member, and that member is a class
-        with the same name as the template:
-        )
-
-------
-template $(CODE_HIGHLIGHT Bar)(T) {
-  class $(CODE_HIGHLIGHT Bar) {
-    T member;
-  }
-}
-------
-
-        $(P then the semantic equivalent, called a $(I ClassTemplateDeclaration)
-        can be written as:
-        )
-
-------
-class Bar(T) {
-  T member;
-}
-------
-
-$(H2 Struct, Union, and Interface Templates)
-
-$(GRAMMAR
-$(GNAME StructTemplateDeclaration):
-    $(D struct) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK2 struct, StructBody)
-
-$(GNAME UnionTemplateDeclaration):
-    $(D union) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK2 struct, StructBody)
+    $(D class) $(I Identifier) $(GLINK TemplateParameters) $(GLINK Constraint)$(OPT) $(GLINK2 class, BaseClassList)$(OPT) $(GLINK2 struct, AggregateBody)
+    $(D class) $(I Identifier) $(GLINK TemplateParameters) $(GLINK2 class, BaseClassList)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK2 struct, AggregateBody)
 
 $(GNAME InterfaceTemplateDeclaration):
-    $(D interface) $(I Identifier) $(D $(LPAREN)) $(GLINK TemplateParameterList) $(D $(RPAREN)) $(GLINK Constraint)$(OPT) $(GLINK2 interface, BaseInterfaceList)$(OPT) $(GLINK2 interface, InterfaceBody)
+    $(D interface) $(I Identifier) $(GLINK TemplateParameters) $(GLINK Constraint)$(OPT) $(GLINK2 interface, BaseInterfaceList)$(OPT) $(GLINK2 struct, AggregateBody)
+    $(D interface) $(I Identifier) $(GLINK TemplateParameters) $(GLINK2 interface, BaseInterfaceList) $(GLINK Constraint) $(GLINK2 struct, AggregateBody)
+
+$(GNAME StructTemplateDeclaration):
+    $(D struct) $(I Identifier) $(GLINK TemplateParameters) $(GLINK Constraint)$(OPT) $(GLINK2 struct, AggregateBody)
+
+$(GNAME UnionTemplateDeclaration):
+    $(D union) $(I Identifier) $(GLINK TemplateParameters) $(GLINK Constraint)$(OPT) $(GLINK2 struct, AggregateBody)
 )
 
-        $(P Analogously to class templates, struct, union and interfaces
+    $(P If a template declares exactly one member, and that member is a class
+        with the same name as the template:
+
+        ------
+        template $(CODE_HIGHLIGHT Bar)(T) {
+          class $(CODE_HIGHLIGHT Bar) {
+            T member;
+          }
+        }
+        ------
+
+        then the semantic equivalent, called a $(I ClassTemplateDeclaration)
+        can be written as:
+
+        ------
+        class Bar(T) {
+          T member;
+        }
+        ------
+    )
+
+    $(P Analogously to class templates, struct, union and interfaces
         can be transformed into templates by supplying a template parameter list.
-        )
+    )
 
 $(H2 $(LNAME2 function-templates, Function Templates))
 
@@ -928,6 +925,51 @@ auto $(CODE_HIGHLIGHT Square)(T)(T t) {
         function template is $(CODE void).
         )
 
+$(H2 $(LNAME2 variable-template, Variable Templates))
+
+    $(P Same as aggregates and functions, variable declarations with
+        $(GLINK2 declaration, Initializer) can have optional template parameters:
+
+        ------
+        enum string constant(TL...) = TL.stringof;
+        ubyte[T.sizeof] storage(T) = 0;
+        auto array(alias a) = a;
+        ------
+    )
+
+    $(P These declarations are transformed into templates:
+
+        ------
+        template constant(TL...) {
+          enum string constant = TL.stringof;
+        }
+        template storage(T) {
+          ubyte[T.sizeof] storage = 0;
+        }
+        template array(alias a) {
+          auto array = a;
+        }
+        ------
+    )
+
+$(H2 $(LNAME2 alias-template, Alias Templates))
+
+    $(P $(GLINK2 declaration, AliasDeclaration) can also have optional template
+        parameters:
+
+        ------
+        alias Sequence(TL...) = TL;
+        ------
+    )
+
+    $(P It is lowered to:
+
+        ------
+        template Sequence(TL...) {
+          alias Sequence = TL;
+        }
+        ------
+    )
 
 $(H3 $(LNAME2 auto-ref-parameters, Function Templates with Auto Ref Parameters))
 

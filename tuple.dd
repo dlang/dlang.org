@@ -22,7 +22,7 @@ $(D_S Tuples,
 ---
 template Tuple(E...)
 {
-    alias E Tuple;
+    alias Tuple = E;
 }
 ---
 
@@ -37,7 +37,7 @@ Tuple!(int, 8)			// create a tuple of a type and an expression
 	$(P In order to symbolically refer to a tuple, use an alias:)
 
 ---
-alias Tuple!(float, float, 3) TP; // TP is now a tuple of two floats and 3
+alias TP = Tuple!(float, float, 3); // TP is now a tuple of two floats and 3
 ---
 
 	$(P Tuples can be used as arguments to templates, and if so
@@ -46,8 +46,8 @@ alias Tuple!(float, float, 3) TP; // TP is now a tuple of two floats and 3
 	an existing tuple or concatenate tuples:)
 
 ---
-alias Tuple!(TP, 8) TR;  // TR is now float,float,3,8
-alias Tuple!(TP, TP) TS; // TS is float,float,3,float,float,3
+alias TR = Tuple!(TP, 8);  // TR is now float,float,3,8
+alias TS = Tuple!(TP, TP); // TS is float,float,3,float,float,3
 ---
 
 	$(P Tuples share many characteristics with arrays.
@@ -67,7 +67,7 @@ TP[1] f = TP[2];	// f is declared as a float and initialized to 3
 	$(P and even sliced:)
 
 ---
-alias TP[0..$-1] TQ; // TQ is now the same as Tuple!(float, float)
+alias TQ = TP[0..$-1]; // TQ is now the same as Tuple!(float, float)
 ---
 
 	$(P There is one restriction: the indices for indexing and slicing
@@ -98,13 +98,13 @@ template Erase(T, TL...)
 {
     static if (TL.length == 0)
 	// 0 length tuple, return self
-        alias TL Erase;
+        alias Erase = TL;
     else static if (is(T == TL[0]))
 	// match with first in tuple, return tail
-        alias TL[1 .. $] Erase;
+        alias Erase = TL[1 .. $];
     else
 	// no match, return head concatenated with recursive tail operation
-        alias Tuple!(TL[0], Erase!(T, TL[1 .. $])) Erase;
+        alias Erase = Tuple!(TL[0], Erase!(T, TL[1 .. $]));
 }
 ---
 
@@ -123,7 +123,7 @@ int foo(int x, long y);
 
 ...
 static if (is(typeof(foo) P == function))
-    alias P TP;
+    alias TP = P;
 // TP is now the same as Tuple!(int, long)
 ---
 
@@ -135,7 +135,7 @@ static if (is(typeof(foo) P == function))
 import std.traits;
 
 ...
-alias ParameterTypeTuple!(foo) TP;	// TP is the tuple (int, long)
+alias TP = ParameterTypeTuple!(foo);	// TP is the tuple (int, long)
 ---
 
 	$(P $(I TypeTuple)s can be used to declare a function:)
@@ -198,7 +198,7 @@ $(H3 Expression Tuples)
 	)
 
 ---
-alias Tuple!(3, 7L, 6.8) ET;
+alias ET = Tuple!(3, 7L, 6.8);
 
 ...
 writeln(ET);            // prints 376.8
@@ -209,7 +209,7 @@ writeln(ET[1..$]); // prints 76.8
 	$(P It can be used to create an array literal:)
 
 ---
-alias Tuple!(3, 7, 6) AT;
+alias AT = Tuple!(3, 7, 6);
 
 ...
 int[] a = [AT];		// same as [3,7,6]
@@ -259,11 +259,11 @@ $(H3 Looping)
 	)
 
 ---
-alias Tuple!(int, long, float) TL;
+alias TL = Tuple!(int, long, float);
 foreach (i, T; TL)
     writefln("TL[%d] = %s", i, typeid(T));
 
-alias Tuple!(3, 7L, 6.8) ET;
+alias ET = Tuple!(3, 7L, 6.8);
 foreach (i, E; ET)
     writefln("ET[%d] = %s", i, E);
 ---
@@ -285,7 +285,7 @@ $(H3 Tuple Declarations)
 	$(I ExpressionTuple):)
 
 ---
-alias Tuple!(int, long) TL;
+alias TL = Tuple!(int, long);
 
 void foo(TL tl)
 {

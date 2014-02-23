@@ -1545,6 +1545,10 @@ $(GNAME ImportExpression):
         in the file name.
         )
 
+        $(P Note that by default an import expression will not compile unless
+            you pass one or more paths via the $(B -J) switch. This tells the compiler
+            where it should look for the files to import. This is a security feature.
+        )
 ---
 void foo() {
   // Prints contents of file foo.txt
@@ -1675,7 +1679,7 @@ void foo() {
         $(I TypeSpecialization) is only allowed to be a $(I Type).
 
 -------------
-alias short bar;
+alias bar = short;
 void foo(bar x) {
   if ( is(bar : int) )   // satisfied because short can be
                               // implicitly converted to int
@@ -1705,7 +1709,7 @@ void foo(bar x) {
         then the condition is satisfied if $(I Type) is one of those.
 
 -------------
-alias short bar;
+alias bar = short;
 
 void test(bar x) {
   if ( is(bar == int) ) // not satisfied because short is not
@@ -1723,12 +1727,12 @@ void test(bar x) {
         is declared to be an alias of $(I Type).
 
 -------------
-alias short bar;
+alias bar = short;
 void foo(bar x) {
   static if ( is(bar T) )
-    alias T S;
+    alias S = T;
   else
-    alias long S;
+    alias S = long;
 
   writeln(typeid(S));  // prints "short"
   if ( is(bar T) )  // error, Identifier T form can
@@ -1751,13 +1755,13 @@ void foo(bar x) {
         )
 
 -------------
-alias int bar;
-alias long* abc;
+alias bar = int;
+alias abc = long*;
 void foo(bar x, abc a) {
   static if ( is(bar T : int) )
-    alias T S;
+    alias S = T;
   else
-    alias long S;
+    alias S = long;
 
   writeln(typeid(S));  // prints "int"
 
@@ -1831,12 +1835,12 @@ void foo(bar x, abc a) {
         )
 
 -------------
-alias short bar;
+alias bar = short;
 enum E : byte { Emember }
 void foo(bar x) {
   static if ( is(bar T == int) ) // not satisfied, short is not int
-    alias T S;
-  alias T U;       // error, T is not defined
+    alias S = T;
+  alias U = T;       // error, T is not defined
 
   static if ( is(E V == enum) )  // satisified, E is an enum
     V v;           // v is declared to be a byte
@@ -1861,8 +1865,8 @@ void foo(bar x) {
 import std.stdio, std.typecons;
 
 void main() {
-  alias Tuple!(int, string) Tup;
-  alias long[char[]] AA;
+  alias Tup = Tuple!(int, string);
+  alias AA = long[char[]];
 
   static if (is(Tup : TX!TL, alias TX, TL...))
   {
