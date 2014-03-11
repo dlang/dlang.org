@@ -315,7 +315,8 @@ docs.json : ${DPL_DOCS} ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 	  sed -e /unittest.d/d -e /format/d -e /windows/d >> .release-files.txt
 	${DMD_REL} -c -o- -version=StdDdoc -Df.release-dummy.html \
 	  -Xfdocs.json -I${PHOBOS_DIR}-${LATEST} @.release-files.txt
-	${DPL_DOCS} filter docs.json --min-protection=Protected --only-documented
+	${DPL_DOCS} filter docs.json --min-protection=Protected --only-documented \
+	  --ex=gc. --ex=rt. --ex=std.internal.
 	rm .release-files.txt .release-dummy.html
 
 docs-prerelease.json : ${DPL_DOCS} ${DMD} ${DRUNTIME_DIR}/.cloned \
