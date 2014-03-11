@@ -10,15 +10,20 @@
 #
 
 # Externals
-DMD=dmd
 DMD_DIR=../dmd
 PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
-DOC_OUTPUT_DIR=$(ROOT_DIR)/web
+DMD=$(DMD_DIR)/src/dmd
+DMD_REL=$(DMD_DIR)-${LATEST}/src/dmd
+DOC_OUTPUT_DIR:=$(shell pwd)/web
 GIT_HOME=https://github.com/D-Programming-Language
 DPL_DOCS_PATH=../tools/dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 DPL_DOCS_FLAGS=--std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --
+
+# rdmd must fetch the model, imports, and libs from the specified version
+DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)
+RDMD=rdmd --compiler=$(DMD) $(DFLAGS)
 
 # Latest released version
 ifeq (,${LATEST})
@@ -30,7 +35,44 @@ ifeq (,${LATEST})
   $(error Could not fetch latest version)
 endif
 $(info Current release: ${LATEST})
-ROOT_DIR=$(shell pwd)
+
+# OS and MODEL
+OS:=
+uname_S:=$(shell uname -s)
+ifeq (Darwin,$(uname_S))
+    OS:=osx
+endif
+ifeq (Linux,$(uname_S))
+    OS:=linux
+endif
+ifeq (FreeBSD,$(uname_S))
+    OS:=freebsd
+endif
+ifeq (OpenBSD,$(uname_S))
+    OS:=openbsd
+endif
+ifeq (Solaris,$(uname_S))
+    OS:=solaris
+endif
+ifeq (SunOS,$(uname_S))
+    OS:=solaris
+endif
+ifeq (,$(OS))
+    $(error Unrecognized or unsupported OS for uname: $(uname_S))
+endif
+
+ifeq (,$(MODEL))
+    uname_M:=$(shell uname -m)
+    ifneq (,$(findstring $(uname_M),x86_64 amd64))
+        MODEL:=64
+    endif
+    ifneq (,$(findstring $(uname_M),i386 i586 i686))
+        MODEL:=32
+    endif
+    ifeq (,$(MODEL))
+        $(error Cannot figure 32/64 model from uname -m: $(uname_M))
+    endif
+endif
 
 # Documents
 
@@ -209,7 +251,7 @@ d-tools.pdf:
 ################################################################################
 
 dlangspec.d : $(addsuffix .dd,$(SPEC_ROOT))
-	rdmd ../tools/catdoc.d -o=$@ $^
+	$(RDMD) ../tools/catdoc.d -o$@ $^
 
 dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d
 	$(DMD) $(DDOC) ebook.ddoc dlangspec.d
@@ -230,7 +272,7 @@ $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
 ################################################################################
 
 dlangspec-tex.d : $(addsuffix .dd,$(SPEC_ROOT))
-	rdmd --force ../tools/catdoc.d -o=$@ $^
+	$(RDMD) --force ../tools/catdoc.d -o$@ $^
 
 dlangspec.tex : $(DDOC) latex.ddoc dlangspec-tex.d
 	$(DMD) -Df$@ $^
@@ -306,7 +348,6 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : std.ddoc ${LATEST}.ddoc \
 	${MAKE} --directory=${PHOBOS_DIR}-${LATEST} -f posix.mak -j 4 \
 	  release html \
 	  DMD=${DMD_DIR}-${LATEST}/src/dmd \
-	  DDOC=${DMD_DIR}-${LATEST}/src/dmd \
 	  DRUNTIME_PATH=${DRUNTIME_DIR}-${LATEST} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
 	  STDDOC="`pwd`/$(LATEST).ddoc `pwd`/std.ddoc"
@@ -332,27 +373,27 @@ ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
 	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
 
-docs.json : ${DPL_DOCS} ${DMD_DIR}.${LATEST}/src/dmd phobos-release \
-	druntime-release | dpl-docs
-	mkdir .tmp || true
-	find ${DRUNTIME_DIR}.${LATEST}/src -name '*.d' | \
-	  sed -e /unittest.d/d -e /gcstub/d > .tmp/files.txt
-	find ${PHOBOS_DIR}.${LATEST} -name '*.d' | \
+docs.json : ${DPL_DOCS} ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
+		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
+	mkdir -p .tmp
+	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
+	  sed -e /unittest.d/d -e /gcstub/d -e /image\.d/d > .tmp/files.txt
+	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
 	  sed -e /unittest.d/d -e /format/d -e /windows/d >> .tmp/files.txt
-	${DMD_DIR}.${LATEST}/src/dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html \
-	  -Xfdocs.json @.tmp/files.txt
+	${DMD_REL} -c -o- -version=StdDdoc \
+	  -Df.tmp/dummy.html -Xfdocs.json -I${PHOBOS_DIR}-${LATEST} @.tmp/files.txt
 	${DPL_DOCS} filter docs.json --min-protection=Protected --only-documented
 	rm -r .tmp
 
-docs-prerelease.json : ${DPL_DOCS} ${DMD_DIR}/src/dmd phobos-prerelease \
-	druntime-prerelease | dpl-docs
-	mkdir .tmp || true
+docs-prerelease.json : ${DPL_DOCS} ${DMD} ${DRUNTIME_DIR}/.cloned \
+		${PHOBOS_DIR}/.cloned | dpl-docs
+	mkdir -p .tmp
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
-	  -e /unittest/d > .tmp/files.txt
+	  -e /unittest/d -e /image\.d/d > .tmp/files.txt
 	find ${PHOBOS_DIR} -name '*.d' | sed -e /unittest.d/d -e /format/d \
 	  -e /windows/d >> .tmp/files.txt
-	${DMD_DIR}/src/dmd -c -o- -version=StdDdoc -Df.tmp/dummy.html \
-	  -Xfdocs-prerelease.json @.tmp/files.txt
+	${DMD} -c -o- -version=StdDdoc -Df.tmp/dummy.html \
+	  -Xfdocs-prerelease.json -I${PHOBOS_DIR} @.tmp/files.txt
 	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
 	  --only-documented --ex=gc. --ex=rt. --ex=std.internal.
 	rm -r .tmp
