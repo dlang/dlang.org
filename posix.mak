@@ -309,28 +309,26 @@ ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 
 docs.json : ${DPL_DOCS} ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
-	mkdir -p .tmp
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
-	  sed -e /unittest.d/d -e /gcstub/d -e /image\.d/d > .tmp/files.txt
+	  sed -e /unittest.d/d -e /gcstub/d -e /image\.d/d > .release-files.txt
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
-	  sed -e /unittest.d/d -e /format/d -e /windows/d >> .tmp/files.txt
-	${DMD_REL} -c -o- -version=StdDdoc \
-	  -Df.tmp/dummy.html -Xfdocs.json -I${PHOBOS_DIR}-${LATEST} @.tmp/files.txt
+	  sed -e /unittest.d/d -e /format/d -e /windows/d >> .release-files.txt
+	${DMD_REL} -c -o- -version=StdDdoc -Df.release-dummy.html \
+	  -Xfdocs.json -I${PHOBOS_DIR}-${LATEST} @.release-files.txt
 	${DPL_DOCS} filter docs.json --min-protection=Protected --only-documented
-	rm -r .tmp
+	rm .release-files.txt .release-dummy.html
 
 docs-prerelease.json : ${DPL_DOCS} ${DMD} ${DRUNTIME_DIR}/.cloned \
 		${PHOBOS_DIR}/.cloned | dpl-docs
-	mkdir -p .tmp
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
-	  -e /unittest/d -e /image\.d/d > .tmp/files.txt
+	  -e /unittest/d -e /image\.d/d > .prerelease-files.txt
 	find ${PHOBOS_DIR} -name '*.d' | sed -e /unittest.d/d -e /format/d \
-	  -e /windows/d >> .tmp/files.txt
-	${DMD} -c -o- -version=StdDdoc -Df.tmp/dummy.html \
-	  -Xfdocs-prerelease.json -I${PHOBOS_DIR} @.tmp/files.txt
+	  -e /windows/d >> .prerelease-files.txt
+	${DMD} -c -o- -version=StdDdoc -Df.prerelease-dummy.html \
+	  -Xfdocs-prerelease.json -I${PHOBOS_DIR} @.prerelease-files.txt
 	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
 	  --only-documented --ex=gc. --ex=rt. --ex=std.internal.
-	rm -r .tmp
+	rm .prerelease-files.txt .prerelease-dummy.html
 
 dpl-docs:
 	dub build --root=$(DPL_DOCS_PATH)
