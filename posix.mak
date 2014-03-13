@@ -113,59 +113,18 @@ SPEC_ROOT=spec lex grammar module declaration type property attribute pragma	\
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements				\
-	ascii-table bugstats.php builtin changelog code_coverage concepts	\
-	const-faq COM comparison cpptod ctod D1toD2 d-array-article			\
-	d-floating-point deprecate dll dll-linux dmd-freebsd dmd-linux dmd-osx		\
-	dmd-windows download dstyle exception-safe faq features2 glossary	\
-	gsoc2011 gsoc2012 gsoc2012-template \
-	hijack howto-promote htod htomodule index intro intro-to-datetime	\
-	lazy-evaluation memory migrate-to-shared mixin overview				\
-	pdf-intro-cover pdf-spec-cover pdf-tools-cover pretod rationale		\
-	rdmd regular-expression safed std_consolidated_header				\
-	template-comparison templates-revisited tuple						\
+PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements ascii-table		\
+	bugstats.php builtin changelog code_coverage concepts const-faq COM	\
+	comparison cpptod ctod D1toD2 d-array-article d-floating-point		\
+	deprecate dll dll-linux dmd-freebsd dmd-linux dmd-osx dmd-windows	\
+	download dstyle exception-safe faq features2 glossary gsoc2011 gsoc2012	\
+	gsoc2012-template hijack howto-promote htod htomodule index intro	\
+	intro-to-datetime lazy-evaluation memory migrate-to-shared mixin	\
+	overview pretod rationale rdmd regular-expression safed			\
+	std_consolidated_header template-comparison templates-revisited tuple	\
 	variadic-function-templates warnings wc windbg windows
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
-
-PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
-	ctod.html cpptod.html pretod.html template-comparison.html
-
-PDFFEATURES=comparison.html features2.html
-
-PDFFAQ=faq.html const-faq.html rationale.html
-
-PDFSPEC=spec.html intro.html lex.html module.html declaration.html		\
-	type.html property.html attribute.html pragma.html					\
-	expression.html statement.html arrays.html hash-map.html			\
-	struct.html class.html interface.html enum.html const3.html			\
-	function.html operatoroverloading.html template.html				\
-	template-mixin.html dbc.html version.html traits.html errors.html	\
-	unittest.html garbage.html float.html iasm.html ddoc.html			\
-	interfaceToC.html cpp_interface.html portability.html entity.html	\
-	memory-safe-d.html abi.html simd.html
-
-PDFHOWTOS=windows.html dll.html dll-linux.html COM.html htomodule.html
-
-PDFARTICLES=d-floating-point.html migrate-to-shared.html hijack.html	\
-	const3.html memory.html exception-safe.html							\
-	templates-revisited.html regular-expression.html					\
-	lazy-evaluation.html variadic-function-templates.html tuple.html	\
-	mixin.html safed.html intro-to-datetime.html d-array-article.html
-
-PDFTOOLS=dmd-linux.html dmd-freebsd.html dmd-osx.html dmd-windows.html	\
-	http://digitalmars.com/ctg/optlink.html								\
-	http://digitalmars.com/ctg/trace.html code_coverage.html rdmd.html	\
-	windbg.html htod.html
-
-PDFAPPENDICES=dstyle.html glossary.html ascii-table.html	\
-acknowledgements.html
-
-PDFOPTIONS=--header-left [section] --header-right [page]			\
---header-spacing 3 --header-font-name Georgia --print-media-type	\
---outline
-
-PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
 $(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT) $(PRETTIFY))
@@ -195,8 +154,6 @@ all : phobos-prerelease druntime-prerelease druntime-release phobos-release \
 	html ${DOC_OUTPUT_DIR}/dlangspec.mobi ${DOC_OUTPUT_DIR}/dlangspec.pdf \
 	dpl-docs apidocs-release apidocs-prerelease
 
-all+pdf : $(ALL_FILES) $(PDFTARGETS)
-
 html : $(ALL_FILES)
 
 $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
@@ -222,29 +179,6 @@ rsync : all
 
 rsync-only :
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
-
-pdf : $(PDFTARGETS)
-
-d-intro.pdf:
-	wkhtmltopdf $(PDFOPTIONS) cover pdf-intro-cover.html toc			\
-	  $(addprefix $(DOC_OUTPUT_DIR)/, $(PDFINTRO)) $(addprefix			\
-	  $(DOC_OUTPUT_DIR)/, $(PDFFEATURES)) $(addprefix					\
-	  $(DOC_OUTPUT_DIR)/, $(PDFFAQ)) $(addprefix $(DOC_OUTPUT_DIR)/,	\
-	  $(PDFAPPENDICES)) $(DOC_OUTPUT_DIR)/d-intro.pdf
-
-d-spec.pdf:
-	wkhtmltopdf $(PDFOPTIONS) cover pdf-spec-cover.html toc		\
-	  $(addprefix $(DOC_OUTPUT_DIR)/, $(PDFSPEC)) $(addprefix	\
-	  $(DOC_OUTPUT_DIR)/, $(PDFAPPENDICES))						\
-	  $(DOC_OUTPUT_DIR)/d-spec.pdf
-
-d-tools.pdf:
-	wkhtmltopdf $(PDFOPTIONS) cover pdf-tools-cover.html toc	\
-	  $(addprefix $(DOC_OUTPUT_DIR)/, $(PDFTOOLS)) $(addprefix	\
-	  $(DOC_OUTPUT_DIR)/, $(PDFHOWTOS)) $(addprefix				\
-	  $(DOC_OUTPUT_DIR)/, $(PDFARTICLES)) $(addprefix			\
-	  $(DOC_OUTPUT_DIR)/, $(PDFAPPENDICES))						\
-	  $(DOC_OUTPUT_DIR)/d-tools.pdf
 
 ################################################################################
 # Ebook
