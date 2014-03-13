@@ -4,18 +4,16 @@ DMD=dmd
 DPL_DOCS_PATH=..\tools\dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)\dpl-docs.exe
 
-SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd			\
-	overview.dd mixin.dd memory.dd interface.dd windows.dd				\
-	dll.dd htomodule.dd faq.dd dstyle.dd wc.dd changelog.dd				\
-	glossary.dd acknowledgements.dd dcompiler.dd builtin.dd				\
-	comparison.dd rationale.dd code_coverage.dd exception-safe.dd		\
-	rdmd.dd templates-revisited.dd warnings.dd ascii-table.dd			\
-	windbg.dd htod.dd regular-expression.dd lazy-evaluation.dd			\
-	variadic-function-templates.dd howto-promote.dd tuple.dd			\
-	template-comparison.dd COM.dd hijack.dd features2.dd safed.dd		\
+SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd overview.dd	\
+	mixin.dd memory.dd interface.dd windows.dd dll.dd htomodule.dd faq.dd	\
+	dstyle.dd wc.dd changelog.dd glossary.dd acknowledgements.dd		\
+	dcompiler.dd builtin.dd comparison.dd rationale.dd code_coverage.dd	\
+	exception-safe.dd rdmd.dd templates-revisited.dd warnings.dd		\
+	ascii-table.dd windbg.dd htod.dd regular-expression.dd			\
+	lazy-evaluation.dd variadic-function-templates.dd howto-promote.dd	\
+	tuple.dd template-comparison.dd COM.dd hijack.dd features2.dd safed.dd	\
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
-	D1toD2.dd pdf-intro-cover.dd pdf-spec-cover.dd pdf-tools-cover.dd	\
-	intro-to-datetime.dd simd.dd deprecate.dd download.dd				\
+	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
 	32-64-portability.dd dll-linux.dd
 
 SPECSRC=spec.dd lex.dd grammar.dd module.dd declaration.dd type.dd property.dd	\
@@ -33,65 +31,28 @@ IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 
 PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
-TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html		\
-	overview.html lex.html grammar.html module.html declaration.html	\
-	type.html property.html attribute.html pragma.html					\
-	expression.html statement.html arrays.html struct.html class.html	\
-	enum.html function.html operatoroverloading.html template.html		\
-	mixin.html dbc.html version.html errors.html garbage.html			\
-	memory.html float.html iasm.html interface.html portability.html	\
-	entity.html abi.html windows.html dll.html htomodule.html			\
-	faq.html dstyle.html wc.html changelog.html glossary.html			\
-	acknowledgements.html builtin.html interfaceToC.html				\
-	comparison.html rationale.html ddoc.html code_coverage.html			\
-	exception-safe.html rdmd.html templates-revisited.html				\
-	warnings.html ascii-table.html windbg.html htod.html				\
-	regular-expression.html lazy-evaluation.html						\
-	variadic-function-templates.html howto-promote.html tuple.html		\
-	template-comparison.html template-mixin.html traits.html COM.html	\
-	cpp_interface.html hijack.html const3.html features2.html			\
-	safed.html const-faq.html dmd-windows.html dmd-linux.html			\
-	dmd-osx.html dmd-freebsd.html concepts.html memory-safe-d.html		\
-	d-floating-point.html migrate-to-shared.html D1toD2.html			\
-	unittest.html hash-map.html pdf-intro-cover.html					\
-	pdf-spec-cover.html pdf-tools-cover.html intro-to-datetime.html		\
-	simd.html deprecate.html download.html 32-64-portability.html \
-        d-array-article.html dll-linux.html
+TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html overview.html	\
+	lex.html grammar.html module.html declaration.html type.html		\
+	property.html attribute.html pragma.html expression.html statement.html	\
+	arrays.html struct.html class.html enum.html function.html		\
+	operatoroverloading.html template.html mixin.html dbc.html version.html	\
+	errors.html garbage.html memory.html float.html iasm.html		\
+	interface.html portability.html entity.html abi.html windows.html	\
+	dll.html htomodule.html faq.html dstyle.html wc.html changelog.html	\
+	glossary.html acknowledgements.html builtin.html interfaceToC.html	\
+	comparison.html rationale.html ddoc.html code_coverage.html		\
+	exception-safe.html rdmd.html templates-revisited.html warnings.html	\
+	ascii-table.html windbg.html htod.html regular-expression.html		\
+	lazy-evaluation.html variadic-function-templates.html			\
+	howto-promote.html tuple.html template-comparison.html			\
+	template-mixin.html traits.html COM.html cpp_interface.html hijack.html	\
+	const3.html features2.html safed.html const-faq.html dmd-windows.html	\
+	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html		\
+	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
+	D1toD2.html unittest.html hash-map.html intro-to-datetime.html		\
+	simd.html deprecate.html download.html 32-64-portability.html		\
+	d-array-article.html dll-linux.html
 
-
-PDFINTRO=index.html overview.html wc.html warnings.html builtin.html	\
-	ctod.html cpptod.html pretod.html template-comparison.html			\
-	cppdbc.html
-
-PDFFEATURES=comparison.html features2.html
-
-PDFFAQ=faq.html const-faq.html rationale.html
-
-PDFSPEC=lex.html module.html declaration.html type.html property.html	\
-	attribute.html pragma.html expression.html statement.html			\
-	arrays.html hash-map.html struct.html class.html interface.html		\
-	enum.html const3.html function.html operatoroverloading.html		\
-	template.html template-mixin.html dbc.html version.html				\
-	traits.html errors.html unittest.html garbage.html float.html		\
-	iasm.html ddoc.html interfaceToC.html cpp_interface.html			\
-	portability.html entity.html memory-safe-d.html abi.html simd.html
-
-PDFHOWTOS=windows.html dll.html COM.html htomodule.html dll-linux.html
-
-PDFARTICLES=d-floating-point.html migrate-to-shared.html hijack.html const3.html \
-	memory.html exception-safe.html templates-revisited.html regular-expression.html \
-	lazy-evaluation.html variadic-function-templates.html tuple.html mixin.html \
-	safed.html intro-to-datetime.html d-array-article.html
-
-PDFTOOLS=dmd-linux.html dmd-freebsd.html dmd-osx.html dmd-windows.html \
-	http://www.digitalmars.com/ctg/optlink.html http://www.digitalmars.com/ctg/trace.html \
-	code_coverage.html rdmd.html windbg.html htod.html
-
-PDFAPPENDICES=dstyle.html glossary.html ascii-table.html acknowledgements.html
-
-PDFOPTIONS=--header-left [section] --header-right [page] --header-spacing 3 --header-font-name Georgia --print-media-type --outline
-
-PDFTARGETS=d-intro.pdf d-spec.pdf d-tools.pdf
 
 CHMTARGETS=d.hhp d.hhc d.hhk d.chm
 
@@ -237,12 +198,6 @@ operatoroverloading.html : $(DDOC) operatoroverloading.dd
 
 overview.html : $(DDOC) overview.dd
 
-pdf-intro-cover.html : $(DDOC) pdf-intro-cover.dd
-
-pdf-spec-cover.html : $(DDOC) pdf-spec-cover.dd
-
-pdf-tools-cover.html : $(DDOC) pdf-tools-cover.dd
-
 portability.html : $(DDOC) portability.dd
 
 pragma.html : $(DDOC) pragma.dd
@@ -309,19 +264,6 @@ dlangspec.mobi : dlangspec.opf dlangspec.html dlangspec.png dlangspec.ncx ebook.
 	del dlangspec.mobi
 	kindlegen dlangspec.opf
 
-################# Pdf #########################
-
-pdf : $(PDFTARGETS)
-
-d-intro.pdf:
-	wkhtmltopdf $(PDFOPTIONS) cover pdf-intro-cover.html toc $(PDFINTRO) $(PDFFEATURES) $(PDFFAQ) $(PDFAPPENDICES) d-intro.pdf
-
-d-spec.pdf:
-	wkhtmltopdf $(PDFOPTIONS) cover pdf-spec-cover.html toc $(PDFSPEC) $(PDFAPPENDICES) d-spec.pdf
-
-d-tools.pdf:
-	wkhtmltopdf $(PDFOPTIONS) cover pdf-tools-cover.html toc $(PDFTOOLS) $(PDFHOWTOS) $(PDFARTICLES) $(PDFAPPENDICES) d-tools.pdf
-
 ################# CHM #########################
 
 chm : d.chm
@@ -346,7 +288,6 @@ zip:
 
 clean:
 	del $(TARGETS)
-	del $(PDFTARGETS)
 	del $(CHMTARGETS)
 	del chmgen.obj chmgen.exe
 	del docs.json
