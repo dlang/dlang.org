@@ -310,7 +310,7 @@ ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 docs.json : ${DPL_DOCS} ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
-	  sed -e /unittest.d/d -e /gcstub/d -e /image\.d/d > .release-files.txt
+	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
 	  sed -e /unittest.d/d -e /format/d -e /windows/d >> .release-files.txt
 	${DMD_REL} -c -o- -version=StdDdoc -Df.release-dummy.html \
@@ -321,7 +321,7 @@ docs.json : ${DPL_DOCS} ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 docs-prerelease.json : ${DPL_DOCS} ${DMD} ${DRUNTIME_DIR}/.cloned \
 		${PHOBOS_DIR}/.cloned | dpl-docs
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
-	  -e /unittest/d -e /image\.d/d > .prerelease-files.txt
+	  -e /unittest/d > .prerelease-files.txt
 	find ${PHOBOS_DIR} -name '*.d' | sed -e /unittest.d/d -e /format/d \
 	  -e /windows/d >> .prerelease-files.txt
 	${DMD} -c -o- -version=StdDdoc -Df.prerelease-dummy.html \
