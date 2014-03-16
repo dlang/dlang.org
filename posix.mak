@@ -311,7 +311,6 @@ docs.json : ${DPL_DOCS} ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
-Language/druntime/pull/737
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
 	  sed -e /unittest.d/d -e /format/d -e /windows/d >> .release-files.txt
 	${DMD_REL} -c -o- -version=StdDdoc -Df.release-dummy.html \
