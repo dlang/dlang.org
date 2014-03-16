@@ -544,63 +544,44 @@ $(SECTION3 $(LNAME2 AssignOverload, Assignment Overload),
 
 $(H2 $(LNAME2 nested, Nested Structs))
 
-        $(P A $(I nested struct) is a struct that is declared inside the scope
+    $(P A $(I nested struct) is a struct that is declared inside the scope
         of a function or a templated struct that has aliases to local
         functions as a template argument.
         Nested structs have member functions.
         It has access to the context of its enclosing scope
         (via an added hidden field).
-        )
 
----
-void foo() {
-  int i = 7;
-  struct SS {
-    int x,y;
-    int bar() { return x + i + 1; }
-  }
-  SS s;
-  s.x = 3;
-  s.bar(); // returns 11
-}
----
+        ---
+        void foo() {
+          int i = 7;
+          struct SS {
+            int x,y;
+            int bar() { return x + i + 1; }
+          }
+          SS s;
+          s.x = 3;
+          s.bar(); // returns 11
+        }
+        ---
+    )
 
-        $(P A struct can be prevented from being nested by
+    $(P A struct can be prevented from being nested by
         using the static attribute, but then of course it
         will not be able to access variables from its enclosing
-        scope.)
+        scope.
 
----
-void foo() {
-  int i = 7;
-  static struct SS {
-    int x,y;
-    int bar() {
-      return i; // error, SS is not a nested struct
-    }
-  }
-}
----
-
-        $(P A templated struct can become a nested struct if it
-        has a local function passed as an aliased argument:
-        )
-
----
-struct A(alias F) {
-  int fun(int i) { return F(i); }
-}
-
-A!(F) makeA(alias F)() {return A!(F)(); }
-
-void main() {
-  int x = 40;
-  int fun(int i) { return x + i; }
-  A!(fun) a = makeA!(fun)();
-  a.fun(2);
-}
----
-
+        ---
+        void foo() {
+          int i = 7;
+          static struct SS {
+            int x,y;
+            int bar() {
+              return i; // error, SS is not a nested struct
+            }
+          }
+        }
+        ---
+    )
 
 )
 
