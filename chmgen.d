@@ -595,7 +595,7 @@ A D 1.0 version of this page is available at LanguageSpecification/KeywordIndex.
 ----
 
 <tt>body</tt>
-* in function contract:  [http://www.digitalmars.com/d/2.0/dbc.html Contracts]
+* in function contract:  [http://www.digitalmars.com/d/2.0/contracts.html Contracts]
 
 <tt>bool</tt>
 * [http://www.digitalmars.com/d/2.0/type.html Types]
@@ -749,7 +749,7 @@ A D 1.0 version of this page is available at LanguageSpecification/KeywordIndex.
 * import expression:  [http://digitalmars.com/d/2.0/expression.html#ImportExpression Expressions]
 
 <tt>in</tt>
-* in pre contract:  [http://www.digitalmars.com/d/2.0/dbc.html Contracts]
+* in pre contract:  [http://www.digitalmars.com/d/2.0/contracts.html Contracts]
 * containment test:  [http://www.digitalmars.com/d/2.0/expression.html#InExpression Expressions]
 * function parameter:  [http://www.digitalmars.com/d/2.0/function.html#parameters Functions]
 
@@ -819,7 +819,7 @@ A D 1.0 version of this page is available at LanguageSpecification/KeywordIndex.
 
 
 <tt>out</tt>
-* in post contract:  [http://www.digitalmars.com/d/2.0/dbc.html Contracts]
+* in post contract:  [http://www.digitalmars.com/d/2.0/contracts.html Contracts]
 * function parameter:  [http://www.digitalmars.com/d/2.0/function.html#parameters Functions]
 
 <tt>override</tt>

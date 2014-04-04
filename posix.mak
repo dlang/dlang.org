@@ -105,7 +105,7 @@ howtos.html language-reference.html robots.txt process.php
 # book generation, for which reason the list is sorted by chapter.
 SPEC_ROOT=spec lex grammar module declaration type property attribute pragma	\
 	expression statement arrays hash-map struct class interface enum	\
-	const3 function operatoroverloading template template-mixin dbc		\
+	const3 function operatoroverloading template template-mixin contracts		\
 	version traits errors unittest garbage float iasm ddoc				\
 	interfaceToC cpp_interface portability entity memory-safe-d abi		\
 	simd
