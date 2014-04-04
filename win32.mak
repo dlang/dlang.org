@@ -4,7 +4,7 @@ DMD=dmd
 DPL_DOCS_PATH=..\tools\dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)\dpl-docs.exe
 
-SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppdbc.dd index.dd overview.dd	\
+SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd	\
 	mixin.dd memory.dd interface.dd windows.dd dll.dd htomodule.dd faq.dd	\
 	dstyle.dd wc.dd changelog.dd glossary.dd acknowledgements.dd		\
 	dcompiler.dd builtin.dd comparison.dd rationale.dd code_coverage.dd	\
@@ -20,7 +20,7 @@ SPECSRC=spec.dd lex.dd grammar.dd module.dd declaration.dd type.dd property.dd	\
 	attribute.dd pragma.dd expression.dd statement.dd arrays.dd			\
 	hash-map.dd struct.dd class.dd interface.dd enum.dd const3.dd		\
 	function.dd operatoroverloading.dd template.dd template-mixin.dd	\
-	dbc.dd version.dd traits.dd errors.dd unittest.dd garbage.dd		\
+	contracts.dd version.dd traits.dd errors.dd unittest.dd garbage.dd		\
 	float.dd iasm.dd ddoc.dd interfaceToC.dd cpp_interface.dd			\
 	portability.dd entity.dd memory-safe-d.dd abi.dd simd.dd
 
@@ -31,11 +31,11 @@ IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 
 PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
-TARGETS=cpptod.html ctod.html pretod.html cppdbc.html index.html overview.html	\
+TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.html	\
 	lex.html grammar.html module.html declaration.html type.html		\
 	property.html attribute.html pragma.html expression.html statement.html	\
 	arrays.html struct.html class.html enum.html function.html		\
-	operatoroverloading.html template.html mixin.html dbc.html version.html	\
+	operatoroverloading.html template.html mixin.html contracts.html version.html	\
 	errors.html garbage.html memory.html float.html iasm.html		\
 	interface.html portability.html entity.html abi.html windows.html	\
 	dll.html htomodule.html faq.html dstyle.html wc.html changelog.html	\
@@ -110,7 +110,7 @@ const-faq.html : $(DDOC) const-faq.dd
 
 cpp_interface.html : $(DDOC) cpp_interface.dd
 
-cppdbc.html : $(DDOC) cppdbc.dd
+cppcontracts.html : $(DDOC) cppcontracts.dd
 
 cpptod.html : $(DDOC) cpptod.dd
 
@@ -120,7 +120,7 @@ D1toD2.html : $(DDOC) D1toD2.dd
 
 d-floating-point.html : $(DDOC) d-floating-point.dd
 
-dbc.html : $(DDOC) dbc.dd
+contracts.html : $(DDOC) contracts.dd
 
 ddoc.html : $(DDOC) ddoc.dd
 
