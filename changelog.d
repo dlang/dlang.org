@@ -2341,7 +2341,7 @@ Macros:
 	$5
 	</div>
 
-	BUGZILLA = <a href="https://d.puremagic.com/issues/show_bug.cgi?id=$0">Bugzilla $0</a>
+	BUGZILLA = <a href="https://issues.dlang.org/show_bug.cgi?id=$0">Bugzilla $0</a>
 	CPPBUGZILLA = <a href="http://bugzilla.digitalmars.com/issues/show_bug.cgi?id=$0">Bugzilla $0</a>
 	DSTRESS = dstress $0
 	BUGSFIXED = <h4>Bugs Fixed</h4> $(UL $0 )
