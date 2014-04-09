@@ -8,7 +8,7 @@ Welcome to the D community and thanks for your interest in contributing!
 # More Links
 
 * Fork [on Github](https://github.com/D-Programming-Language/dlang.org)
-* Use our [Bugzilla bug tracker](http://d.puremagic.com/issues/)
+* Use our [Bugzilla bug tracker](https://issues.dlang.org/)
 * Follow the [Styleguide](http://dlang.org/dstyle.html)
 * Participate in [our forum](http://forum.dlang.org/)
 * [Review Queue](http://wiki.dlang.org/Review_Queue).
