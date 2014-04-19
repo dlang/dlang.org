@@ -138,23 +138,24 @@ $(H4 The D Look Ma No Templates Solution)
 	)
 
 ------
-import std.stdio;
+import core.vararg;
+import std.c.stdio;
+import std.format;
 
 void print(...)
 {
-    foreach (arg; _arguments)
+    void putc(dchar c)
     {
-	writefx(stdout, (&arg)[0 .. 1], _argptr, 1);
-	auto size = arg.tsize();
-	_argptr += ((size + size_t.sizeof - 1) & ~(size_t.sizeof - 1));
+        fputc(c, stdout);
     }
+
+    std.format.doFormat(&putc, _arguments, _argptr);
 }
 ------
 
 	$(P It isn't elegant or the most efficient,
-	but it does work, and it is neatly
-	encapsulated into a single function.
-	(It relies on the predefined parameters _argptr and _arguments
+	but it does work. However it is not the recommended way to write variadic functions.
+	(It relies on the parameters _argptr and _arguments imported from core.vararg
 	which give a pointer to the values and their types, respectively.)
 	)
 
