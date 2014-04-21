@@ -233,7 +233,32 @@ $(SECTION2 $(LNAME2 COM-Interfaces, COM Interfaces),
     for that interface in standard COM fashion.)
     $(LI Classes derived from COM interfaces are COM classes.)
     $(LI The default linkage for member functions of COM classes
-    is $(D extern(System)).)
+    is $(D extern(System)).
+
+    Note that if you want to override the $(D Object) base class methods
+    such as the $(D toString) method, you have to explicitly mark them as
+    having the $(D extern(D)) linkage:
+
+    ---
+    import core.sys.windows.windows;
+    import std.c.windows.com;
+
+    class C : IUnknown
+    {
+        // Must be marked with extern(D) since IUnknown-derived classes have
+        // their methods set to the extern(System) calling convention by default.
+        extern(D) override string toString() { return "Class C"; }
+
+        // These all have the extern(System) calling convention.
+        HRESULT QueryInterface(const(IID)*, void**);
+        uint AddRef();
+        uint Release();
+    }
+    ---
+
+    The same applies to other $(D Object) methods such as $(D opCmp), $(D toHash), etc.
+
+    )
     $(LI The first member of the $(D vtbl[]) is not the pointer
     to the InterfaceInfo, but the first virtual function pointer.)
     )
