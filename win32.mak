@@ -16,7 +16,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
 	32-64-portability.dd dll-linux.dd
 
-SPECSRC=spec.dd lex.dd grammar.dd module.dd declaration.dd type.dd property.dd	\
+SPECSRC=spec.dd intro.dd lex.dd grammar.dd module.dd declaration.dd type.dd property.dd	\
 	attribute.dd pragma.dd expression.dd statement.dd arrays.dd			\
 	hash-map.dd struct.dd class.dd interface.dd enum.dd const3.dd		\
 	function.dd operatoroverloading.dd template.dd template-mixin.dd	\
@@ -32,7 +32,7 @@ IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
 TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.html	\
-	lex.html grammar.html module.html declaration.html type.html		\
+	intro.html lex.html grammar.html module.html declaration.html type.html		\
 	property.html attribute.html pragma.html expression.html statement.html	\
 	arrays.html struct.html class.html enum.html function.html		\
 	operatoroverloading.html template.html mixin.html contracts.html version.html	\
@@ -175,6 +175,8 @@ interface.html : $(DDOC) interface.dd
 interfaceToC.html : $(DDOC) interfaceToC.dd
 
 index.html : $(DDOC) index.dd
+
+intro.html : $(DDOC) intro.dd
 
 intro-to-datetime.html : $(DDOC) intro-to-datetime.dd
 

@@ -103,7 +103,7 @@ howtos.html language-reference.html robots.txt process.php
 # Language spec root filenames. They have extension .dd in the source
 # and .html in the generated HTML. These are also used for the mobi
 # book generation, for which reason the list is sorted by chapter.
-SPEC_ROOT=spec lex grammar module declaration type property attribute pragma	\
+SPEC_ROOT=spec intro lex grammar module declaration type property attribute pragma	\
 	expression statement arrays hash-map struct class interface enum	\
 	const3 function operatoroverloading template template-mixin contracts		\
 	version traits errors unittest garbage float iasm ddoc				\
