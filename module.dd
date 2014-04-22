@@ -516,6 +516,83 @@ $(GNAME MixinDeclaration):
 	$(GLINK DeclDefs), and is compiled as such.
 	)
 
+$(H3 $(LNAME2 PackageModule, Package Module))
+
+    $(P A package module can be used to publicly import other modules,
+    while enabling a simpler import syntax. It enables converting a
+    module into a package of modules, without breaking existing code
+    which uses that module. Example of a set of library modules:
+    )
+
+    $(P $(B libweb/client.d:))
+
+    ---------
+    module libweb.client;
+
+    void runClient() { }
+    ---------
+
+    $(P $(B libweb/server.d:))
+
+    ---------
+    module libweb.server;
+
+    void runServer() { }
+    ---------
+
+    $(P $(B libweb/package.d:))
+
+    ---------
+    module libweb;
+
+    public import libweb.client;
+    public import libweb.server;
+    ---------
+
+    $(P The package module must have the file name $(D package.d). The module name
+    is declared to be the fully qualified name of the package. Package modules can be
+    imported just like any other modules:)
+
+    $(P $(B test.d:))
+
+    ---------
+    module test;
+
+    // import the package module
+    import libweb;
+
+    void main()
+    {
+        startServer();
+        startClient();
+    }
+    ---------
+
+    $(P A package module can be nested inside of a sub-package:)
+
+    $(P $(B libweb/utils/package.d:))
+
+    ---------
+    // must be declared as the fully qualified name of the package, not just 'utils'
+    module libweb.utils;
+
+    // publicly import modules from within the 'libweb.utils' package.
+    public import libweb.utils.conv;
+    public import libweb.utils.text;
+    ---------
+
+    $(P The package module can then be imported with the standard module import declaration:)
+
+    $(P $(B test.d:))
+
+    ---------
+    module test;
+
+    // import the package module
+    import libweb.utils;
+
+    void main() { }
+    ---------
 )
 
 Macros:
