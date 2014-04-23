@@ -298,80 +298,43 @@ foo(1, 6L);	// prints 166
 $(H3 Putting It All Together)
 
     $(P These capabilities can be put together to implement
-    a template that will encapsulate all the arguments to
-    a function, and return a delegate that will call the function
-    with those arguments.)
+    a template that will partially encapsulate arguments to
+    a function, and allow calling the function with the
+    rest of the arguments. This is called a
+    $(I partial function application):)
 
 ---
-import std.stdio;
+import std.traits;
 
-R delegate() CurryAll(Dummy=void, R, U...)(R function(U) dg, U args)
+/**
+    An implementation of a partial function application.
+    See also std.functional.partial for a more complete implementation.
+*/
+template partial(alias fun, args1...)
+    if (isSomeFunction!(typeof(fun)))  // constraint
 {
-    struct Foo
+    auto partial(T...)(T args2)
     {
-    typeof(dg) dg_m;
-    U args_m;
-
-    R bar()
-    {
-        return dg_m(args_m);
+        return fun(args1, args2);
     }
-    }
-
-    Foo* f = new Foo;
-    f.dg_m = dg;
-    foreach (i, arg; args)
-    f.args_m[i] = arg;
-    return &f.bar;
 }
-
-R delegate() CurryAll(R, U...)(R delegate(U) dg, U args)
-{
-    struct Foo
-    {
-    typeof(dg) dg_m;
-    U args_m;
-
-    R bar()
-    {
-        return dg_m(args_m);
-    }
-    }
-
-    Foo* f = new Foo;
-    f.dg_m = dg;
-    foreach (i, arg; args)
-    f.args_m[i] = arg;
-    return &f.bar;
-}
-
 
 void main()
 {
     static int plus(int x, int y, int z)
     {
-    return x + y + z;
+        return x + y + z;
     }
 
-    auto plus_two = CurryAll(&plus, 2, 3, 4);
-    writefln("%d", plus_two());
-    assert(plus_two() == 9);
+    // encapsulates two arguments, creates a function that takes only one argument.
+    alias takes_one = partial!(plus, 1, 2);
+    assert(takes_one(3) == 6);
 
-    int minus(int x, int y, int z)
-    {
-    return x + y + z;
-    }
-
-    auto minus_two = CurryAll(&minus, 7, 8, 9);
-    writefln("%d", minus_two());
-    assert(minus_two() == 24);
+    // encapsulates one arguments, creates a function that takes two arguments.
+    alias takes_two = partial!(plus, 1);
+    assert(takes_two(2, 3) == 6);
 }
 ---
-
-    $(P The reason for the $(I Dummy) parameter is that one
-    cannot overload two templates with the same parameter list.
-    So we make them different by giving one a dummy parameter.
-    )
 
 $(H3 Future Directions)
 
