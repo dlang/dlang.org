@@ -1490,8 +1490,47 @@ void test() {
 }
 ------
 
-        $(P One solution is declare both functions as members of a nested struct.
-        Another solution is to use a delegate:)
+        $(P There are several workarounds for this limitation:
+
+        $(LI You can declare the functions to be static members of a nested struct:)
+
+------
+void test() {
+  static struct S {
+      static void foo() { bar(); } // ok
+      static void bar() { foo(); } // ok
+  }
+
+  S.foo();  // compiles (but note the infinite runtime loop)
+}
+------
+
+        $(LI You can declare one or more of the functions to be function templates
+        even if they take no specific template arguments:)
+
+------
+void test() {
+  void foo()() { bar(); } // ok (foo is a function template)
+  void bar()   { foo(); } // ok
+}
+------
+
+        $(LI You can declare the functions inside of a mixin template:)
+
+------
+mixin template T()
+{
+  void foo() { bar(); } // ok
+  void bar() { foo(); } // ok
+}
+
+void test()
+{
+  mixin T!();
+}
+------
+
+        $(LI Or you can use a delegate:)
 
 ------
 void test() {
@@ -1501,6 +1540,8 @@ void test() {
   fp = &bar;
 }
 ------
+
+    )
 
 	$(P Nested functions cannot be overloaded.)
 
