@@ -214,23 +214,25 @@ mixin template Foo() {
 
 mixin template Bar() {
   int x = 4;
-  void func() { }
+  void func(long x) { }
 }
 
 $(CODE_HIGHLIGHT mixin Foo;)
 $(CODE_HIGHLIGHT mixin Bar;)
 
 void test() {
+  import std.stdio : writefln;
   writefln("x = %d", x); // error, x is ambiguous
-  func();             // error, func is ambiguous
+  func(1);               // error, func is ambiguous
 }
+
 ------
         $(P The call to $(D func()) is ambiguous because
         Foo.func and Bar.func are in different scopes.
         )
 
         $(P If a mixin has an $(I Identifier), it can be used to
-        disambiguate:
+        disambiguate between conflicting symbols:
         )
 ------
 int x = 6;
@@ -267,18 +269,18 @@ mixin template Foo() {
 }
 
 mixin template Bar() {
-  void func() {  }
+  void func(long x) {  }
 }
 
 mixin Foo!() F;
 mixin Bar!() B;
 
-$(CODE_HIGHLIGHT alias F.func func;)
-$(CODE_HIGHLIGHT alias B.func func;)
+$(CODE_HIGHLIGHT alias func = F.func;)
+$(CODE_HIGHLIGHT alias func = B.func;)
 
 void main() {
-  func();  // calls B.func
-  func(1); // calls F.func
+  func(1);  // calls B.func
+  func(1L); // calls F.func
 }
 -----
 
