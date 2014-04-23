@@ -235,21 +235,37 @@ $(SECTION2 $(LNAME2 COM-Interfaces, COM Interfaces),
     $(LI The default linkage for member functions of COM classes
     is $(D extern(System)).
 
-    Note that if you want to override the $(D Object) base class methods
-    such as the $(D toString) method, you have to explicitly mark them as
-    having the $(D extern(D)) linkage:
+    Note that if you want to implement or override any base-class methods of
+    D interfaces or classes (ones which do not inherit from $(D IUnknown)),
+    you have to explicitly mark them as having the $(D extern(D)) linkage:
 
     ---
     import core.sys.windows.windows;
     import std.c.windows.com;
 
-    class C : IUnknown
+    interface IText
     {
-        // Must be marked with extern(D) since IUnknown-derived classes have
-        // their methods set to the extern(System) calling convention by default.
+        void write();
+    }
+
+    abstract class Printer : IText
+    {
+        void print() { }
+    }
+
+    class C : Printer, IUnknown
+    {
+        // Implements the IText $(D write) class method.
+        extern(D) void write() { }
+
+        // Overrides the Printer $(D print) class method.
+        extern(D) override void print() { }
+
+        // Overrides the Object base class $(D toString) method.
         extern(D) override string toString() { return "Class C"; }
 
-        // These all have the extern(System) calling convention.
+        // Methods of class implementing the IUnknown interface have
+        // the extern(System) calling convention by default.
         HRESULT QueryInterface(const(IID)*, void**);
         uint AddRef();
         uint Release();
