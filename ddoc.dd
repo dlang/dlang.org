@@ -559,8 +559,40 @@ $(P
     text preprocessor.
     When a $(DOLLAR)($(I NAME)) appears
     in section text it is replaced with $(I NAME)'s corresponding
-    replacement text.
-    The replacement text is then recursively scanned for more macros.
+    replacement text.)
+
+    For example:
+    ---------
+    /**
+    Macros:
+     PARAM = <u>$1</u>
+     MATH_DOCS = <a href="http://dlang.org/phobos/std_math.html">Math Docs</a>
+    */
+    module math;
+
+    /**
+     * This function returns the sum of $(PARAM a) and $(PARAM b).
+     * See also the $(MATH_DOCS).
+     */
+    int sum(int a, int b) { return a + b; }
+    ---------
+
+$(P
+    The above would generate the following output:
+
+    ------------------------------------
+    <h1>test</h1>
+    <dl><dt><big><a name="sum"></a>int <u>sum</u>(int <i>a</i>, int <i>b</i>);
+    </big></dt>
+    <dd>This function returns the <u>sum</u> of <u><i>a</i></u> and <u><i>b</i></u>.
+     See also the <a href="http://dlang.org/phobos/std_math.html">Math Docs</a>.
+    </dd>
+    </dl>
+    ------------------------------------
+)
+
+$(P
+    The replacement text is recursively scanned for more macros.
     If a macro is recursively encountered, with no argument or with
     the same argument text as the enclosing macro, it is replaced
     with no text.
