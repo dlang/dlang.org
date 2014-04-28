@@ -32,7 +32,7 @@ IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
 
 TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.html	\
-	intro.html lex.html grammar.html module.html declaration.html type.html		\
+	intro.html spec.html lex.html grammar.html module.html declaration.html type.html	\
 	property.html attribute.html pragma.html expression.html statement.html	\
 	arrays.html struct.html class.html enum.html function.html		\
 	operatoroverloading.html template.html mixin.html contracts.html version.html	\
@@ -181,6 +181,8 @@ intro.html : $(DDOC) intro.dd
 intro-to-datetime.html : $(DDOC) intro-to-datetime.dd
 
 lazy-evaluation.html : $(DDOC) lazy-evaluation.dd
+
+spec.html : $(DDOC) spec.dd
 
 lex.html : $(DDOC) lex.dd
 
