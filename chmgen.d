@@ -182,9 +182,9 @@ void main()
 	auto re_heading      = regex(`<h2>(.*)</h2>`);
 	auto re_heading_link = regex(`<h2><a href="([^"]*)"( title="([^"]*)")?>(.*)</a></h2>`);
 	auto re_nav_link     = regex(`<li><a href="([^"]*)"( title="(.*)")?>(.*)</a>`);
-	auto re_anchor_1     = regex(`<a name="([^"]*)">(<\w{1,2}>)*([^<]+)<`);
+	auto re_anchor_1     = regex(`<a name="\.?([^"]*)">(<\w{1,2}>)*([^<]+)<`);
 	auto re_anchor_2     = regex(`<a name=([^">]*)>(<\w{1,2}>)*([^<]+)<`);
-	auto re_anchor_1h    = regex(`<a name="([^"]*)"`);
+	auto re_anchor_1h    = regex(`<a name="\.?([^"]*)"`);
 	auto re_anchor_2h    = regex(`<a name=([^">]*)>`);
 	auto re_link         = regex(`<a href="([^"]*)">(<\w{1,2}>)*([^<]+)<`);
 	auto re_link_pl      = regex(`<li><a href="(http://www.digitalmars.com/d)?/?(\d\.\d)?/index.html" title="D Programming Language \d\.\d">`);
