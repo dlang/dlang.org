@@ -73,6 +73,7 @@ $(H3 $(LNAME2 linkage, Linkage Attribute))
 $(GRAMMAR
 $(GNAME LinkageAttribute):
     $(D extern) $(D $(LPAREN)) $(GLINK LinkageType) $(D $(RPAREN))
+    $(D extern) $(D $(LPAREN)) $(D C++), $(GLINK2 declaration, IdentifierList) $(D $(RPAREN))
 
 $(GNAME LinkageType):
     $(D C)
@@ -125,6 +126,55 @@ extern (Windows):
 
         $(P Note that a lone $(D extern) declaration is used as a
         $(XLINK2 declaration.html#extern, storage class).)
+
+$(H4 C++ $(LNAME2 namespace, Namespaces))
+
+        $(P The linkage form $(D extern $(LPAREN) C++, $(I IdentifierList) $(RPAREN))
+        creates C++ declarations that reside in C++ namespaces. The $(I IdentifierList)
+        specifies the namespaces.
+        )
+
+        ---
+        extern (C++, N) { void foo(); }
+        ---
+
+        $(P refers to the C++ declaration:)
+
+        $(CPPCODE
+namespace N { void foo(); }
+        )
+
+        $(P and can be referred to with or without qualification:)
+
+        ---
+        foo();
+        N.foo();
+        ---
+
+        $(P Namespaces create a new named scope that is imported into its enclosing scope.)
+
+        ---
+        extern (C++, N) { void foo(); void bar(); }
+        extern (C++, M) { void foo(); }
+
+        bar();   // ok
+        foo();   // error - N.foo() or M.foo() ?
+        M.foo(); // ok
+        ---
+
+        $(P Multiple identifiers in the $(I IdentifierList) create nested namespaces:)
+
+        ---
+        extern (C++, N.M) { extern (C++) { extern (C++, R) { void foo(); } } }
+        N.M.R.foo();
+        ---
+
+        $(P refers to the C++ declaration:)
+
+        $(CPPCODE
+namespace N { namespace M { namespace R { void foo(); } } }
+        )
+
 
 $(H3 $(LNAME2 align, $(D align) Attribute))
 
