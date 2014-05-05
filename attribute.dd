@@ -41,6 +41,7 @@ $(GNAME PropertyIdentifier):
     $(D trusted)
     $(D system)
     $(RELATIVE_LINK2 disable, $(D disable))
+    $(RELATIVE_LINK2 nogc, $(D nogc))
 
 $(GNAME DeclarationBlock):
     $(GLINK2 module, DeclDef)
@@ -136,15 +137,15 @@ $(GNAME AlignAttribute):
 
         $(P Specifies the alignment of:)
 
-	$(OL
-	$(LI variables)
-	$(LI struct fields)
-	$(LI union fields)
-	$(LI class fields)
-	$(LI struct, union, and class types)
-	)
+        $(OL
+        $(LI variables)
+        $(LI struct fields)
+        $(LI union fields)
+        $(LI class fields)
+        $(LI struct, union, and class types)
+        )
 
-	$(P $(D align) by itself
+        $(P $(D align) by itself
         sets it to the default, which matches the default member alignment
         of the companion C compiler.)
 
@@ -159,7 +160,7 @@ struct S {
 auto sz = S.sizeof;  // 16
 --------
 
-	$(P $(I IntegerLiteral) specifies the alignment
+        $(P $(I IntegerLiteral) specifies the alignment
         which matches the behavior of the companion C compiler when non-default
         alignments are used. It must be a positive power of 2.
         )
@@ -179,9 +180,9 @@ struct S {
 auto sz = S.sizeof;  // 16
 --------
 
-	$(P The alignment for the fields of an aggregate does not affect the alignment
-	of the aggregate itself - that is affected by the alignment setting outside
-	of the aggregate.)
+        $(P The alignment for the fields of an aggregate does not affect the alignment
+        of the aggregate itself - that is affected by the alignment setting outside
+        of the aggregate.)
 
 --------
 align (2) struct S {
@@ -194,8 +195,8 @@ align (2) struct S {
 auto sz = S.sizeof;  // 14
 --------
 
-	$(P Setting the alignment of a field aligns it to that power of 2, regardless
-	of the size of the field.)
+        $(P Setting the alignment of a field aligns it to that power of 2, regardless
+        of the size of the field.)
 
 --------
 struct S {
@@ -210,7 +211,7 @@ auto sz = S.sizeof;  // 12
 
 
         $(P Do not align references or pointers that were allocated
-        using $(I NewExpression) on boundaries that are not
+        using $(GLINK2 expression, NewExpression) on boundaries that are not
         a multiple of $(D size_t). The garbage collector assumes that pointers
         and references to gc allocated objects will be on $(D size_t)
         byte boundaries. If they are not, undefined behavior will
@@ -441,6 +442,44 @@ $(H3 $(LNAME2 disable, $(D @disable) Attribute))
         $(P $(XLINK2 struct.html#StructPostblit, Disabling struct postblit)
         makes the struct not copyable.
         )
+
+$(H3 $(LNAME2 nogc, $(D @nogc) Attribute))
+
+        $(P $(D @nogc) applies to functions, and means that that function does not
+        allocate memory on the GC heap, either directly such as with
+        $(GLINK2 expression, NewExpression) or
+        indirectly through functions it may call, or through language features
+        such as array concatenation and dynamic closures.
+        )
+
+        ---
+        @nogc void foo(char[] a) {
+          auto p = new int;  // error, operator new allocates
+          a ~= 'c';          // error, appending to arrays allocates
+          bar();             // error, bar() may allocate
+        }
+
+        void bar() { }
+        ---
+
+        $(P $(D @nogc) affects the type of the function. An $(D @nogc) function is covariant
+        with a non-$(D @nogc) function.
+        )
+
+        ---
+        void function() fp;
+        void function() @nogc gp;  // pointer to @nogc function
+
+        void foo();
+        @nogc void bar();
+
+        void test() {
+          fp = &foo; // ok
+          fp = &bar; // ok, it's covariant
+          gp = &foo; // error, not contravariant
+          gp = &bar; // ok
+        }
+        ---
 
 $(H3 $(LNAME2 property, $(D @property) Attribute))
 
