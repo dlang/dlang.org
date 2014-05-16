@@ -107,8 +107,10 @@ html(lang='en-US')
               | View or edit the community-maintained wiki page associated with this page.
 
       - auto hidx = std.string.indexOf(title, ' ');
-      - if( hidx > 0 && title[0 .. hidx] != "Module" )
-        h1!= title[0 .. hidx+1] ~ "<code><a href=\"" ~ info.linkTo(info.node.parent) ~ "\">" ~ info.node.moduleName ~ "</a>" ~ (cast(Module)info.node ? "" : "." ~ title[hidx+1 .. $]) ~ "</code>"
+      - if (title.endsWith(" - multiple declarations"))
+        h1 <code><a href="#{info.linkTo(info.mod)}">#{info.mod.qualifiedName}</a>.#{title[0 .. $-24]}</code> #{title[$-24 ..$]}
+      - else if (hidx > 0 && title[0 .. hidx] != "Module" && info.mod)
+        h1 #{title[0 .. hidx]} <code><a href="#{info.linkTo(info.mod)}">#{info.mod.qualifiedName}</a>.#{title[hidx+1 .. $]}</code>
       - else
         h1= title
       block body
