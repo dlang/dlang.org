@@ -993,22 +993,28 @@ extern (C) int def(...); // error, must have at least one parameter
 ------
 import core.stdc.stdarg;
 
-void test() {
-  foo(3, 4, 5);   // first variadic argument is 5
+void test()
+{
+    foo(3, 4, 5);   // first variadic argument is 5
 }
 
-int foo(int x, int y, ...) {
+int foo(int x, int y, ...)
+{
+    va_list ap;
 
-  va_list ap;
-  version (X86_64)
-    va_start(ap, __va_argsave);
-  else version (X86)
-    va_start(ap, y);  // y is the last named parameter
+    version (X86)
+        va_start(args, y);  // y is the last named parameter
+    else
+    version (Win64)
+        va_start(args, y);  // ditto
+    else
+    version (X86_64)
+        va_start(args, __va_argsave);
+    else
+    static assert(0, "Platform not supported.");
 
-  int z;
-  va_arg(ap, z);  // z is set to 5
-
-  va_end(ap);
+    int z;
+    va_arg(ap, z);  // z is set to 5
 }
 ------
 
