@@ -595,6 +595,147 @@ $(H2 Exception Handling)
 	and C++ code will likely not work.
 	)
 
+$(SECTION2 Comparing D Immutable and Const with C++ Const,
+
+$(TABLE_SPECIAL $(ARGS Const, Immutable Comparison),
+	$(THEAD Feature, D, C++98)
+	$(TROW $(D const) keyword, Yes, Yes)
+	$(TROW $(D immutable) keyword, Yes, No)
+	$(TROW const notation,
+---
+// Functional:
+//ptr to const ptr to const int
+const(int*)* p;
+---
+,
+$(CPPLISTING
+// Postfix:
+//ptr to const ptr to const int
+const int *const *p;
+)
+	)
+
+	$(TROW transitive const,
+---
+// Yes:
+//const ptr to const ptr to const int
+const int** p;
+**p = 3; // error
+---
+,
+$(CPPLISTING
+// No:
+// const ptr to ptr to int
+int** const p;
+**p = 3;    // ok
+)
+	)
+
+	$(TROW cast away const,
+---
+// Yes:
+// ptr to const int
+const(int)* p;
+int* q = cast(int*)p; // ok
+---
+,
+$(CPPLISTING
+// Yes:
+// ptr to const int
+const int* p;
+int* q = const_cast&lt;int*&gt;p; //ok
+)
+	)
+
+	$(TROW cast+mutate,
+---
+// No:
+// ptr to const int
+const(int)* p;
+int* q = cast(int*)p;
+*q = 3;   // undefined behavior
+---
+,
+$(CPPLISTING
+// Yes:
+// ptr to const int
+const int* p;
+int* q = const_cast&lt;int*&gt;p;
+*q = 3;   // ok
+)
+	)
+
+	$(TROW overloading,
+---
+// Yes:
+void foo(int x);
+void foo(const int x);  //ok
+---
+,
+$(CPPLISTING
+// No:
+void foo(int x);
+void foo(const int x);  //error
+)
+	)
+
+	$(TROW const/mutable aliasing,
+---
+// Yes:
+void foo(const int* x, int* y)
+{
+   bar(*x); // bar(3)
+   *y = 4;
+   bar(*x); // bar(4)
+}
+...
+int i = 3;
+foo(&i, &i);
+---
+,
+$(CPPLISTING
+// Yes:
+void foo(const int* x, int* y)
+{
+   bar(*x); // bar(3)
+   *y = 4;
+   bar(*x); // bar(4)
+}
+...
+int i = 3;
+foo(&i, &i);
+)
+	)
+
+	$(TROW immutable/mutable aliasing,
+---
+// No:
+void foo(immutable int* x, int* y) {
+ bar(*x); // bar(3)
+ *y = 4;  // undefined behavior
+ bar(*x); // bar(??)
+}
+...
+int i = 3;
+foo(cast(immutable)&i, &i);
+---
+,
+	No immutables
+	)
+
+	$(TROW type of string literal,
+	$(D immutable(char)[]),
+	$(D const char*)
+	)
+
+
+	$(TROW string literal to non-const,
+	not allowed,
+	$(ARGS allowed, but deprecated)
+	)
+)
+)
+
 $(H2 Future Developments)
 
 	$(P How the upcoming C++1y standard will affect this is not

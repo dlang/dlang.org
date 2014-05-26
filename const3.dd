@@ -1,6 +1,13 @@
 Ddoc
 
-$(D_S Const and Immutable,
+$(D_S Type Constructors,
+
+	$(P Type constructors modify a type by applying a $(GLINK2 declaration, TypeCtor).
+	$(I TypeCtor)s are: $(D const), $(D immutable),	$(D shared), and $(D inout).
+	Each applies transitively to all subtypes.
+	)
+
+$(SECTION2 Const and Immutable,
 
 	$(P When examining a data structure or interface, it is very
 	helpful to be able to easily tell which data can be expected to not
@@ -32,6 +39,7 @@ $(D_S Const and Immutable,
 	that any data reachable through an immutable reference is also
 	immutable, and likewise for const.
 	)
+)
 
 $(SECTION2 Immutable Storage Class,
 
@@ -377,154 +385,69 @@ $(SECTION2 Const Member Functions,
 
 $(SECTION2 Implicit Conversions,
 
-	$(P
-	Mutable and immutable types can be implicitly converted to const.
-	Mutable types cannot be implicitly converted to immutable,
-	and vice versa.
-	)
-)
-
-
-$(SECTION2 Comparing D Immutable and Const with C++ Const,
-
-$(TABLE_SPECIAL $(ARGS Const, Immutable Comparison),
-	$(THEAD Feature, D, C++98)
-	$(TROW $(D const) keyword, Yes, Yes)
-	$(TROW $(D immutable) keyword, Yes, No)
-	$(TROW const notation,
----
-// Functional:
-//ptr to const ptr to const int
-const(int*)* p;
----
-,
-$(CPPLISTING
-// Postfix:
-//ptr to const ptr to const int
-const int *const *p;
-)
+	$(P Values can be implicitly converted between $(I mutable), $(D const), $(D immutable),
+	$(D shared const), $(D inout) and $(D inout shared).
 	)
 
-	$(TROW transitive const,
----
-// Yes:
-//const ptr to const ptr to const int
-const int** p;
-**p = 3; // error
----
-,
-$(CPPLISTING
-// No:
-// const ptr to ptr to int
-int** const p;
-**p = 3;    // ok
-)
+	$(P References can be converted according to the following rules:
 	)
 
-	$(TROW cast away const,
----
-// Yes:
-// ptr to const int
-const(int)* p;
-int* q = cast(int*)p; // ok
----
-,
-$(CPPLISTING
-// Yes:
-// ptr to const int
-const int* p;
-int* q = const_cast&lt;int*&gt;p; //ok
-)
+	$(TABLE_SPECIAL $(ARGS Implicit Conversion of Reference Types)
+	$(TROW from/to, $(I mutable), $(D const), $(D immutable), $(D shared), $(D shared const), $(D inout), $(D inout shared))
+	$(TROW $(I mutable)      $(YES) $(YES) $(NO)  $(NO)  $(NO)  $(YES) $(NO))
+	$(TROW $(D const)        $(NO)  $(YES) $(NO)  $(NO)  $(NO)  $(YES) $(NO))
+	$(TROW $(D immutable)    $(NO)  $(YES) $(YES) $(NO)  $(NO)  $(YES) $(YES))
+	$(TROW $(D shared)       $(NO)  $(NO)  $(NO)  $(YES) $(YES) $(NO)  $(YES))
+	$(TROW $(D shared const) $(NO)  $(NO)  $(NO)  $(NO)  $(YES) $(NO)  $(YES))
+	$(TROW $(D inout)        $(NO)  $(YES) $(NO)  $(NO)  $(NO)  $(YES) $(NO))
+	$(TROW $(D inout shared) $(NO)  $(YES) $(NO)  $(NO)  $(NO)  $(NO)  $(YES))
 	)
 
-	$(TROW cast+mutate,
----
-// No:
-// ptr to const int
-const(int)* p;
-int* q = cast(int*)p;
-*q = 3;   // undefined behavior
----
-,
-$(CPPLISTING
-// Yes:
-// ptr to const int
-const int* p;
-int* q = const_cast&lt;int*&gt;p;
-*q = 3;   // ok
-)
+	$(P If an implicit conversion is disallowed by the table, an $(GLINK2 expression, Expression)
+	may be converted if:
 	)
 
-	$(TROW overloading,
----
-// Yes:
-void foo(int x);
-void foo(const int x);  //ok
----
-,
-$(CPPLISTING
-// No:
-void foo(int x);
-void foo(const int x);  //error
-)
+	$(P An expression may be converted from mutable or shared to immutable if the expression
+	is unique and all expressions it transitively refers to are either unique or immutable.
 	)
 
-	$(TROW const/mutable aliasing,
+	$(P An expression may be converted from mutable to shared if the expression
+	is unique and all expressions it transitively refers to are either unique, immutable,
+	or shared.
+	)
+
+	$(P An expression may be converted from immutable to mutable if the expression
+	is unique.
+	)
+
+	$(P An expression may be converted from shared to mutable if the expression
+	is unique.
+	)
+
+	$(P A $(I Unique Expression) is one for which there are no other references to the
+	value of the expression and all expressions it transitively refers to are either
+	also unique or are immutable. For example:
 ---
-// Yes:
-void foo(const int* x, int* y)
+void main()
 {
-   bar(*x); // bar(3)
-   *y = 4;
-   bar(*x); // bar(4)
+  immutable int** p = new int*(null); // ok, unique
+
+  int x;
+  immutable int** q = new int*(&x); // error, there may be other references to x
+
+  immutable int y;
+  immutable int** r = new immutable(int)*(&y); // ok, y is immutable
 }
-...
-int i = 3;
-foo(&i, &i);
 ---
-,
-$(CPPLISTING
-// Yes:
-void foo(const int* x, int* y)
-{
-   bar(*x); // bar(3)
-   *y = 4;
-   bar(*x); // bar(4)
-}
-...
-int i = 3;
-foo(&i, &i);
-)
 	)
 
-	$(TROW immutable/mutable aliasing,
----
-// No:
-void foo(immutable int* x, int* y) {
- bar(*x); // bar(3)
- *y = 4;  // undefined behavior
- bar(*x); // bar(??)
-}
-...
-int i = 3;
-foo(cast(immutable)&i, &i);
----
-,
-	No immutables
-	)
-
-	$(TROW type of string literal,
-	$(D immutable(char)[]),
-	$(D const char*)
-	)
-
-
-	$(TROW string literal to non-const,
-	not allowed,
-	$(ARGS allowed, but deprecated)
+	$(P Otherwise, a $(GLINK2 expression, CastExpression) can be used to force a conversion
+	when an implicit version is disallowed, but this cannot be done in $(D @safe) code,
+	and the correctness of it must be verified by the user.
 	)
 )
-)
+
+
 )
 
 Macros:
@@ -535,7 +458,7 @@ Macros:
 	NM=$(TD $(RED no match))
 	Y=$(TD $(GREEN Yes))
 	N=$(TD $(RED No))
-	TITLE=Const and Immutable
+	TITLE=Type Constructors
 	WIKI=ConstInvariant
 	CATEGORY_SPEC=$0
 	NO=<td class="compNo">No</td>
