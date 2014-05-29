@@ -614,14 +614,28 @@ dmd -cov -unittest myprog.d
 		generate a .map file
 	  )
 
+	  $(SWITCH $(B -boundscheck=[on|safeonly|off]),
+		controls if bounds checking is enabled.
+		$(UL
+			$(LI $(B on): Bounds checks are enabled for all code. This is the default.)
+			$(LI $(B safeonly): Bounds checks are enabled only in $(D @safe) code.
+								This is the default for $(B -release) builds.)
+			$(LI $(B off): Bounds checks are disabled completely (even in $(D @safe)
+						   code). This option should be used with caution and as a
+						   last resort to improve performance. Confirm turning off
+						   $(D @safe) bounds checks is worthwhile by benchmarking.)
+		)
+	  )
+
 	  $(SWITCH $(B -noboundscheck),
-		turns off all array bounds checking, even for safe functions
+		turns off all array bounds checking, even for safe functions. $(RED Deprecated
+		(use $(B -boundscheck=off) instead).)
 	  )
 
 
 	  $(SWITCH $(B -O),
 		Optimize generated code. For fastest executables, compile
-		with the $(B -O -release -inline -noboundscheck) switches together.
+		with the $(B -O -release -inline -boundscheck=off) switches together.
 	  )
 
 	  $(SWITCH $(B -o-),
