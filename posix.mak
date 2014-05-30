@@ -150,11 +150,16 @@ $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC)
 # Rulez
 ################################################################################
 
-all : phobos-prerelease druntime-prerelease druntime-release phobos-release \
-	html ${DOC_OUTPUT_DIR}/dlangspec.mobi ${DOC_OUTPUT_DIR}/dlangspec.pdf \
+all : docs html
+
+docs : phobos-prerelease druntime-prerelease druntime-release phobos-release	\
 	dpl-docs apidocs-release apidocs-prerelease
 
 html : $(ALL_FILES)
+
+kindle : ${DOC_OUTPUT_DIR}/dlangspec.mobi
+
+pdf : ${DOC_OUTPUT_DIR}/dlangspec.pdf
 
 $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
 	cp -f sitemap-template.dd sitemap.dd
@@ -174,7 +179,7 @@ clean:
 	rm -f docs.json docs-prerelease.json
 	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST}
 
-rsync : all
+rsync : docs html kindle pdf
 	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
 
 rsync-only :
