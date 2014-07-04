@@ -4,48 +4,39 @@ $(SPEC_S Memory Safety,
 
 	$(P $(I Memory Safety) for a program is defined as it being
 	impossible for the program to corrupt memory.
-	Therefore, the Safe D consists only of programming language
-	features that are guaranteed to never result in memory
-	corruption.
+	Therefore, the safe subset of D consists only of programming 
+	language features that are guaranteed to never result in memory
+	corruption. See $(LINK2 safed.html, this article) for a rationale.
 	)
 
-	$(P Safe D is enabled on a per-module basis by compiling with
-	the $(B -safe) compiler switch.
+	$(P Memory-safe code $(DDSUBLINK function, function-safety, cannot 
+	use certain language features), such as:
+		$(UL
+			$(LI Casts that break the type system.)
+			$(LI Modification of pointer values.)
+			$(LI Taking the address of a local variable or function parameter.)
+		)
 	)
 
-$(H3 Proscribed Forms)
+$(H3 Usage)
 
-$(UL
-	$(LI $(DDLINK iasm, Inline Assembler, Inline assembler).
+	$(P Memory safety can be enabled on a per-function basis using 
+	the $(DDSUBLINK function, safe-functions, $(D @safe) attribute). 
+	This can be inferred when the compiler has the function body 
+	available. The $(DDSUBLINK function, trusted-functions, $(D 
+	@trusted) attribute) can be used when a function has a safe 
+	interface, but uses unsafe code internally. These functions can 
+	be called from $(D @safe) code.
 	)
-
-	$(LI Casting away const or immutable attributes.
-	)
-
-	$(LI Casting away shared attributes.
-	)
-
-	$(LI Casting from one pointer type to another pointer type,
-	except for:
-	$(UL
-		$(LI casting to $(CODE void*) is allowed)
-		$(LI casting from a pointer to an arithmetic type to
-		a pointer to another arithmetic type of the same or
-		smaller size is allowed)
-	)
-	)
-
-	$(LI Casting from a non-pointer type to a pointer type.
-	)
-)
-
-	$(P A safe module can import and use the public interface of
-	a system module.
+	
+	$(P Array bounds checks are necessary to enforce memory safety, so 
+	these are enabled (by default) for $(D @safe) code even in $(B 
+	-release) mode.
 	)
 
 $(H3 Limitations)
 
-	$(P Safe D does not imply that code is portable, uses only
+	$(P Memory safety does not imply that code is portable, uses only
 	sound programming practices, is free of byte order dependencies,
 	or other bugs. It is focussed only on eliminating memory corruption
 	possibilities.
