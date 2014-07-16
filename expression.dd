@@ -1327,11 +1327,11 @@ $(GNAME ParameterAttributes):
         And:
 
         -------------
-        int abc(int delegate(long i));
+        int abc(int delegate(int i));
 
         void test() {
           int b = 3;
-          int foo(long c) { return 6 + b; }
+          int foo(int c) { return 6 + b; }
 
           abc(&foo);
         }
@@ -1340,12 +1340,12 @@ $(GNAME ParameterAttributes):
         is exactly equivalent to:
 
         -------------
-        int abc(int delegate(long i));
+        int abc(int delegate(int i));
 
         void test() {
           int b = 3;
 
-          abc( delegate int(long c) { return 6 + b; } );
+          abc( delegate int(int c) { return 6 + b; } );
         }
         -------------
 
@@ -1353,15 +1353,15 @@ $(GNAME ParameterAttributes):
         $(D function)/$(D delegate) are inferred:)
 
         -------------
-        int abc(int delegate(long i));
-        int def(int function(long s));
+        int abc(int delegate(int i));
+        int def(int function(int s));
 
         void test() {
           int b = 3;
 
-          abc( (long c) { return 6 + b; } );  // inferred to delegate
-          def( (long c) { return c * 2; } );  // inferred to function
-        //def( (long c) { return c * b; } );  // error!
+          abc( (int c) { return 6 + b; } );  // inferred to delegate
+          def( (int c) { return c * 2; } );  // inferred to function
+        //def( (int c) { return c * b; } );  // error!
           // Because the FunctionBody accesses b, then the function literal type
           // is inferred to delegate. But def cannot receive delegate.
         }
