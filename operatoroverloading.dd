@@ -56,7 +56,7 @@ $(H2 $(LNAME2 Unary, Unary Operator Overloading))
 	)
 	)
 
-	$(P For example, in order to overload the - (negation) operator for struct S, and
+	$(P For example, in order to overload the $(D -) (negation) operator for struct S, and
 	no other operator:)
 
 ---
@@ -364,7 +364,7 @@ struct S {
 
 $(H2 $(LNAME2 FunctionCall, Function Call Operator Overloading $(D f())))
 
-	$(P The function call operator, (), can be overloaded by
+	$(P The function call operator, $(D ()), can be overloaded by
 	declaring a function named $(CODE opCall):
 	)
 
@@ -387,23 +387,9 @@ $(H2 $(LNAME2 FunctionCall, Function Call Operator Overloading $(D f())))
 	were a function.
 	)
 
-	$(P $(CODE static opCall) also works as expected for function call operator with
-	type names.
-	)
-
-	-------
-	struct Double {
-	  $(CODE_HIGHLIGHT static) int $(CODE_HIGHLIGHT opCall)(int x) { return x * 2; }
-	}
-	void test() {
-	  int i = Double(2);
-	  assert(i == 4);
-	}
-	-------
-
 	$(P Note that merely declaring $(D opCall) automatically disables
 	$(XLINK2 struct.html#StructLiteral, struct literal) syntax.
-	To avoid the limitation, you need to also declare $(XLINK2 Struct-Constructor,
+	To avoid the limitation, you need to also declare a $(XLINK2 struct.html#Struct-Constructor,
 	constructor) so that it takes priority over $(D opCall) in $(D Type(...)) syntax.
 	)
 
@@ -419,6 +405,41 @@ $(H2 $(LNAME2 FunctionCall, Function Call Operator Overloading $(D f())))
 	  assert(result == 50);
 	}
 	-------
+    
+$(H3 $(LNAME2 static-opcall, Static opCall))
+
+	$(P $(CODE static opCall) also works as expected for a function call operator with
+	type names.
+	)
+
+	-------
+	struct Double {
+	  $(CODE_HIGHLIGHT static) int $(CODE_HIGHLIGHT opCall)(int x) { return x * 2; }
+	}
+	void test() {
+	  int i = Double(2);
+	  assert(i == 4);
+	}
+	-------
+
+	$(P Mixing struct constructors and $(D static opCall) is not allowed.)
+
+	---
+	struct S
+	{
+	  this(int i) {}
+	  static S opCall()  // disallowed due to constructor
+	  {
+	    return S();
+	  }
+	}
+	---
+
+	$(P Note: $(D static opCall) can be used to simulate struct 
+	constructors with no arguments, but this is not recommended 
+	practice. Instead, the preferred solution is to use a factory 
+	function to create struct instances.
+	)
 
 $(H2 $(LNAME2 Assignment, Assignment Operator Overloading))
 
