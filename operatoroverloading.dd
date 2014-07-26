@@ -324,24 +324,25 @@ $(OL
 	---
 	)
 	$(LI Otherwise the expressions $(CODE a.opEquals(b)) and
-	$(CODE b.opEquals(a)) are tried. If both resolve to the same opEquals
-	function, then the expression is rewritten to be $(CODE a.opEquals(b)).
+	$(CODE b.opEquals(a)) are tried. If both resolve to the same $(D
+	opEquals) function, then the expression is rewritten to be $(CODE
+	a.opEquals(b)).
 	)
 	$(LI If one is a better match than the other, or one compiles and the other
 	does not, the first is selected.)
 	$(LI Otherwise, an error results.)
 )
 
-	$(P If overridding Object.opEquals() for classes, the class member function
-	signature should look like:)
+	$(P If overridding $(D Object.opEquals()) for classes, the class member
+	function signature should look like:)
 	---
 	class C {
 	  override bool opEquals(Object o) { ... }
 	}
 	---
 
-	$(P If structs declare an opEquals member function for the identity comparison,
-	it could have several forms, such as:)
+	$(P If structs declare an $(D opEquals) member function for the
+	identity comparison, it could have several forms, such as:)
 	---
 	struct S {
 	  // lhs should be mutable object
@@ -353,7 +354,7 @@ $(OL
 	}
 	---
 
-	$(P Alternatively, you can declare a single templated opEquals
+	$(P Alternatively, you can declare a single templated $(D opEquals)
 	function with an $(XLINK2 template.html#auto-ref-parameters, auto ref)
 	parameter:)
 	---
@@ -382,27 +383,34 @@ $(H3 $(LNAME2 compare, Overloading $(D <), $(D <)$(D =), $(D >), and $(D >)$(D =
 	)
 
 	$(P Both rewrites are tried. If only one compiles, that one is taken.
-	If they both resolve to the same function, the first
-	rewrite is done. If they resolve to different functions, the best matching one
-	is used. If they both match the same, but are different functions, an ambiguity
-	error results.
-	)
+	If they both resolve to the same function, the first rewrite is done.
+	If they resolve to different functions, the best matching one is used.
+	If they both match the same, but are different functions, an ambiguity
+	error results.)
 
-	$(P If overriding Object.opCmp() for classes, the class member function
-	signature should look like:)
+	$(P If overriding $(D Object.opCmp()) for classes, the class member
+	function signature should look like:)
 ---
 class C {
   override int opCmp(Object o) { ... }
 }
 ---
 
-	$(P If structs declare an opCmp member function, it should follow the following
-	form:)
+	$(P If structs declare an $(D opCmp) member function, it should have
+	the following form:)
 ---
 struct S {
   int opCmp(ref const S s) const { ... }
 }
 ---
+	$(P Note that $(D opCmp) is only used for the inequality operators;
+	expressions like $(D a == b) always uses $(D opEquals). If $(D opCmp)
+	is defined but $(D opEquals) isn't, the compiler will supply a default
+	version of $(D opEquals) that performs member-wise comparison. If this
+	member-wise comparison is not consistent with the user-defined $(D
+	opCmp), then it is up to the programmer to supply an appropriate
+	version of $(D opEquals).  Otherwise, inequalities like $(D a <= b)
+	will behave inconsistently with equalities like $(D a == b).)
 
 $(H2 $(LNAME2 FunctionCall, Function Call Operator Overloading $(D f())))
 
