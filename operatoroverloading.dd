@@ -11,9 +11,13 @@ $(SPEC_S Operator Overloading,
 	$(LI $(RELATIVE_LINK2 Unary, Unary Operator Overloading))
 	$(LI $(RELATIVE_LINK2 Cast, Cast Operator Overloading))
 	$(LI $(RELATIVE_LINK2 Binary, Binary Operator Overloading))
-	$(LI $(RELATIVE_LINK2 equals, Overloading $(D ==) and $(D !=)))
-	$(LI $(RELATIVE_LINK2 compare, Overloading $(D <), $(D <)$(D =),
-	$(D <), and $(D <)$(D =)))
+	$(LI $(RELATIVE_LINK2 eqcmp, Overloading the Comparison Operators)
+		$(UL
+		$(LI $(RELATIVE_LINK2 equals, Overloading $(D ==) and $(D !=)))
+		$(LI $(RELATIVE_LINK2 compare, Overloading $(D <), $(D <)$(D =),
+		$(D <), and $(D <)$(D =)))
+		)
+	)
 	$(LI $(RELATIVE_LINK2 FunctionCall, Function Call Operator Overloading))
 	$(LI $(RELATIVE_LINK2 Assignment, Assignment Operator Overloading))
 	$(LI $(RELATIVE_LINK2 OpAssign, Op Assignment Operator Overloading))
@@ -260,7 +264,45 @@ T opBinary(string op)(T rhs) {
 ---
 
 
-$(H2 $(LNAME2 equals, Overloading $(D ==) and $(D !=)))
+$(H2 $(LNAME2 eqcmp, Overloading the Comparison Operators))
+
+	$(P D allows overloading of the comparison operators $(D ==), $(D !=),
+	$(D <), $(D <=), $(D >=), $(D >) via two functions, $(D opEquals) and
+	$(D opCmp).)
+
+	$(P The equality and inequality operators are treated separately
+	because while practically all user-defined types can be compared for
+	equality, only a subset of types have a meaningful ordering. For
+	example, while it makes sense to determine if two RGB color vectors are
+	equal, it is not meaningful to say that one color is greater than
+	another, because colors do not have an ordering. Thus, one would define
+	$(D opEquals) for a $(D Color) type, but not $(D opCmp).)
+
+	$(P Furthermore, even with orderable types, the order relation may not
+	be linear. For example, one may define an ordering on sets via the
+	subset relation, such that $(D x < y) is true if $(D x) is a (strict)
+	subset of $(D y). If $(D x) and $(D y) are disjoint sets, then neither
+	$(D x < y) nor $(D y < x) holds, but that does not imply that $(D x ==
+	y). Thus, it is insufficient to determine equality purely based on $(D
+	opCmp) alone. For this reason, $(D opCmp) is only used for the
+	inequality operators $(D <), $(D <=), $(D >=), and $(D >). The equality
+	operators $(D ==) and $(D !=) always employ $(D opEquals) instead.)
+
+	$(P Therefore, it is the programmer's responsibility to ensure that $(D
+	opCmp) and $(D opEquals) are consistent with each other. If $(D
+	opEquals) is not specified, the compiler provides a default version
+	that does member-wise comparison. If this suffices, one may define only
+	$(D opCmp) to customize the behaviour of the inequality operators.  But
+	if not, then a custom version of $(D opEquals) should be defined as
+	well, in order to preserve consistent semantics between the two kinds
+	of comparison operators.)
+
+	$(P Finally, if the user-defined type is to be used as a key in the
+	built-in associative arrays, then the programmer must ensure that the
+	semantics of $(D opEquals) and $(D toHash) are consistent. If not, the
+	associative array may not work in the expected manner.)
+
+$(H3 $(LNAME2 equals, Overloading $(D ==) and $(D !=)))
 
 	$(P Expressions of the form $(CODE a != b) are rewritten as $(CODE !(a == b)).)
 
@@ -282,24 +324,25 @@ $(OL
 	---
 	)
 	$(LI Otherwise the expressions $(CODE a.opEquals(b)) and
-	$(CODE b.opEquals(a)) are tried. If both resolve to the same opEquals
-	function, then the expression is rewritten to be $(CODE a.opEquals(b)).
+	$(CODE b.opEquals(a)) are tried. If both resolve to the same $(D
+	opEquals) function, then the expression is rewritten to be $(CODE
+	a.opEquals(b)).
 	)
 	$(LI If one is a better match than the other, or one compiles and the other
 	does not, the first is selected.)
 	$(LI Otherwise, an error results.)
 )
 
-	$(P If overridding Object.opEquals() for classes, the class member function
-	signature should look like:)
+	$(P If overridding $(D Object.opEquals()) for classes, the class member
+	function signature should look like:)
 	---
 	class C {
 	  override bool opEquals(Object o) { ... }
 	}
 	---
 
-	$(P If structs declare an opEquals member function for the identity comparison,
-	it could have several forms, such as:)
+	$(P If structs declare an $(D opEquals) member function for the
+	identity comparison, it could have several forms, such as:)
 	---
 	struct S {
 	  // lhs should be mutable object
@@ -311,7 +354,7 @@ $(OL
 	}
 	---
 
-	$(P Alternatively, you can declare a single templated opEquals
+	$(P Alternatively, you can declare a single templated $(D opEquals)
 	function with an $(XLINK2 template.html#auto-ref-parameters, auto ref)
 	parameter:)
 	---
@@ -323,7 +366,7 @@ $(OL
 	---
 
 
-$(H2 $(LNAME2 compare, Overloading $(D <), $(D <)$(D =), $(D >), and $(D >)$(D =)))
+$(H3 $(LNAME2 compare, Overloading $(D <), $(D <)$(D =), $(D >), and $(D >)$(D =)))
 
 	$(P Comparison operations are rewritten as follows:)
 
@@ -340,27 +383,34 @@ $(H2 $(LNAME2 compare, Overloading $(D <), $(D <)$(D =), $(D >), and $(D >)$(D =
 	)
 
 	$(P Both rewrites are tried. If only one compiles, that one is taken.
-	If they both resolve to the same function, the first
-	rewrite is done. If they resolve to different functions, the best matching one
-	is used. If they both match the same, but are different functions, an ambiguity
-	error results.
-	)
+	If they both resolve to the same function, the first rewrite is done.
+	If they resolve to different functions, the best matching one is used.
+	If they both match the same, but are different functions, an ambiguity
+	error results.)
 
-	$(P If overriding Object.opCmp() for classes, the class member function
-	signature should look like:)
+	$(P If overriding $(D Object.opCmp()) for classes, the class member
+	function signature should look like:)
 ---
 class C {
   override int opCmp(Object o) { ... }
 }
 ---
 
-	$(P If structs declare an opCmp member function, it should follow the following
-	form:)
+	$(P If structs declare an $(D opCmp) member function, it should have
+	the following form:)
 ---
 struct S {
   int opCmp(ref const S s) const { ... }
 }
 ---
+	$(P Note that $(D opCmp) is only used for the inequality operators;
+	expressions like $(D a == b) always uses $(D opEquals). If $(D opCmp)
+	is defined but $(D opEquals) isn't, the compiler will supply a default
+	version of $(D opEquals) that performs member-wise comparison. If this
+	member-wise comparison is not consistent with the user-defined $(D
+	opCmp), then it is up to the programmer to supply an appropriate
+	version of $(D opEquals).  Otherwise, inequalities like $(D a <= b)
+	will behave inconsistently with equalities like $(D a == b).)
 
 $(H2 $(LNAME2 FunctionCall, Function Call Operator Overloading $(D f())))
 
