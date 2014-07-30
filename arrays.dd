@@ -8,11 +8,11 @@ $(SPEC_S Arrays,
         $(THEAD Syntax, Description)
         $(TROW $(ARGS $(I type)*), $(ARGS $(RELATIVE_LINK2 pointers, Pointers to data)))
         $(TROW $(ARGS $(I type)[$(I integer)]), $(ARGS $(RELATIVE_LINK2 static-arrays, Static arrays)))
-        $(TROW $(ARGS $(I type)[]),  $(ARGS $(RELATIVE_LINK2 dynamic-arrays, Dynamic arrays)))
+        $(TROW $(ARGS $(I type)[]),  $(ARGS $(RELATIVE_LINK2 slices, 'Slices' to dynamic arrays)))
         $(TROW $(ARGS $(I type)[$(I type)]), $(ARGS $(DDLINK hash-map, Associative Arrays, Associative arrays)))
     )
 
-$(H4 $(LNAME2 pointers, Pointers))
+$(H3 $(LNAME2 pointers, Pointers))
 
 ---------
 int* p;
@@ -25,11 +25,11 @@ int* p;
         is no length associated with it, and so there is no way for the
         compiler or runtime to do bounds checking, etc., on it.
         Most conventional uses for pointers can be replaced with
-        dynamic arrays, $(D out) and $(D ref) parameters,
+        slices, $(D out) and $(D ref) parameters,
         and reference types.
         )
 
-$(H4 $(LNAME2 static-arrays, Static Arrays))
+$(H3 $(LNAME2 static-arrays, Static Arrays))
 
 ---------
 int[3] s;
@@ -56,116 +56,61 @@ int[3] s;
         )
 
 
-$(H4 $(LNAME2 dynamic-arrays, Dynamic Arrays))
+$(H3 $(LNAME2 slices, Slices))
 
+        $(P A $(I slice) is a safe reference to an array:
+	) 
 ---------
-int[] a;
----------
+int[3] a;
+int[] s = a;  // s is a 'slice to a'.
+s[1] = 12;    // Sets a[1] to 12.
 
-        $(P Dynamic arrays consist of a length and a pointer to the array data.
-        Multiple dynamic arrays can share all or parts of the array data.
-        )
-
-$(H3 Array Declarations)
-
-        $(P There are two ways to declare arrays, prefix and postfix.
-        The prefix form is the preferred method, especially for
-        non-trivial types.
-        )
-
-$(H5 Prefix Array Declarations)
-
-        $(P Prefix declarations appear before the identifier being
-        declared and read right to left, so:
-        )
-
----------
-int[] a;      // dynamic array of ints
-int[4][3] b;  // array of 3 arrays of 4 ints each
-int[][5] c;   // array of 5 dynamic arrays of ints.
-int*[]*[3] d; // array of 3 pointers to dynamic arrays of pointers to ints
-int[]* e;     // pointer to dynamic array of ints
+int[5] b;
+s = b;        // Now s refers to b, and no longer refers to a.
 ---------
 
-
-$(H5 Postfix Array Declarations)
-
-        $(P Postfix declarations appear after the identifier being
-        declared and read left to right.
-        Each group lists equivalent declarations:
-        )
+	$(P A slice includes a pointer and a length, enabling bounds checking when the slice is used.
+	Multiple slices can refer to the same array:
+	)
 
 ---------
-// dynamic array of ints
-int[] a;
-int a[];
+int[3] a;
+int[] s1 = a;
+int[] s2 = a;
+s1[2] = 12;
+// Now s2[2] is 12, since they both refer to the same array.
+---------
+	 
+	$(P The term 'slice' comes from $(RELATIVE_LINK2 slicing, slicing),
+	covered later. But slices also form the basis of dynamic arrays: 
+        )
 
-// array of 3 arrays of 4 ints each
-int[4][3] b;
-int[4] b[3];
-int b[3][4];
+$(H3 $(LNAME2 dynamic-arrays, Dynamic Arrays))
 
-// array of 5 dynamic arrays of ints.
-int[][5] c;
-int[] c[5];
-int c[5][];
-
-// array of 3 pointers to dynamic arrays of pointers to ints
-int*[]*[3] d;
-int*[]* d[3];
-int* (*d[3])[];
-
-// pointer to dynamic array of ints
-int[]* e;
-int (*e)[];
+---------
+int[] a = new int[5];
+a ~= 3; // Concatenate the value '3' onto a. Now a has 6 elements.
 ---------
 
-        $(P $(B Rationale:) The postfix form matches the way arrays are
-        declared in C and C++, and supporting this form provides an
-        easy migration path for programmers used to it.
-        )
-
-$(H3 $(LNAME2 usage, Usage))
-
-        $(P There are two broad kinds of operations to do on an array -
-        affecting
-        the handle to the array,
-        and affecting the contents of the array.
-        C only has
-        operators to affect the handle. In D, both are accessible.
-        )
-
-        $(P The handle to an array is specified by naming the array, as
-        in p, s or a:
+        $(P This slice points to an array on the GC heap. When appended to,
+	the array may be grown, or it a new array may be allocated
+	(and the contents copied). This requires some care when multiple
+	slices are involved:
         )
 
 ---------
-int* p;
-int[3] s;
-int[] a;
-
-int* q;
-int[3] t;
-int[] b;
-
-p = q;     // p points to the same thing q does.
-p = s.ptr; // p points to the first element of the array s.
-p = a.ptr; // p points to the first element of the array a.
-
-s = ...;   // error, since s is a compiled in static
-           // reference to an array.
-
-a = p;     // error, since the length of the array pointed
-           // to by p is unknown
-a = s;     // a is initialized to point to the s array
-a = b;     // a points to the same array as b does
+int[] a = new int[5];
+int[] b = a;
+a ~= 3;
+// b still has 5 elements.
+b[0] = 2;
+// At this point, a[0] may be 0 or 2 - depending on whether a reallocation happened. 
 ---------
+
 
 $(H3 $(LNAME2 slicing, Slicing))
-
-        $(P $(I Slicing) an array means to specify a subarray of it.
-        An array slice does not copy the data, it is only another
-        reference to it.
+        $(P $(I Slicing) an array means to create a slice, which can
+	refer to either the whole array, or to a subarray of it.
         For example:
         )
 
@@ -206,28 +151,54 @@ int* p;
 int[] b = p[0..8];
 ---------
 
+
+$(H3 $(LNAME2 array-values-versus-references, Value vs. Reference Semantics in Arrays))
+
+        $(P Slices 'hide' reference semantics in much the same way as classes do.
+	For example:
+        )
+
+---------
+int[3] a;
+int[] b = new int[3];
+a = b; // Copies the contents of b to a; see next section.
+b = a; // b now refers to a.
+---------
+
+        $(P In other words, $(D a) refers to the array itself, while $(D b) refers
+	to a slice (which internally refers to an array). If you want to 'dereference'
+	a slice, the syntax is $(D b[]).
+        )
+
+
 $(H3 $(LNAME2 array-copying, Array Copying))
 
-        $(P When the slice operator appears as the lvalue of an assignment
-        expression, it means that the contents of the array are the
-        target of the assignment rather than a reference to the array.
-        Array copying happens when the lvalue is a slice, and the rvalue
-        is an array of or pointer to the same type.
+        $(P Array copying happens when you assign to an array, 
+	from an array/slice/pointer of the same type.
         )
 
 ---------
 int[3] s;
 int[3] t;
 
-s[] = t;           // the 3 elements of t[3] are copied into s[3]
-s[] = t[];         // the 3 elements of t[3] are copied into s[3]
+s = t;             // the 3 elements of t are copied into s
+s = t[];           // the 3 elements of t are copied into s
 s[1..2] = t[0..1]; // same as s[1] = t[0]
 s[0..2] = t[1..3]; // same as s[0] = t[1], s[1] = t[2]
 s[0..4] = t[0..4]; // error, only 3 elements in s
 s[0..2] = t;       // error, different lengths for lvalue and rvalue
+
+s[] = t[];         // equivalent to 's = t'. This syntax may be preferred
+
+int[] u = new int[3];
+u[] = t;           // the 3 elements of t[3] are copied into the array u refers to
+
+int *p = &(s[0]);
+p[0..3] = t;
 ---------
 
-        $(P Overlapping copies are an error:)
+        $(P Overlapping copies are an error:
+	)
 
 ---------
 s[0..2] = s[1..3]; // error, overlapping copy
@@ -241,7 +212,7 @@ s[1..3] = s[0..2]; // error, overlapping copy
 
 $(H3 $(LNAME2 array-setting, Array Setting))
 
-        $(P If a slice operator appears as the lvalue of an assignment
+        $(P If an array or pointer appears as the lvalue of an assignment
         expression, and the type of the rvalue is the same as the element
         type of the lvalue, then the lvalue's array contents
         are set to the rvalue.
@@ -249,11 +220,53 @@ $(H3 $(LNAME2 array-setting, Array Setting))
 
 ---------
 int[3] s;
-int* p;
+int[] t = new int[3];
+int* p = (new int[3]).ptr;
 
-s[] = 3;     // same as s[0] = 3, s[1] = 3, s[2] = 3
+s = 3;       // same as s[0] = 3, s[1] = 3, s[2] = 3
+t[] = 3;     // equivalent syntax for a slice
+s[] = 3;     // this works too
 p[0..2] = 3; // same as p[0] = 3, p[1] = 3
 ---------
+
+$(H3 $(LNAME2 usage, Usage))
+
+        $(P There are two broad kinds of operations to do on an array -
+        affecting
+        the handle to the array,
+        and affecting the contents of the array.
+        C only has
+        operators to affect the handle. In D, both are accessible.
+        )
+
+        $(P The handle to an array is specified by naming the array, as
+        in p, s or a:
+        )
+
+---------
+int* p;
+int[3] s;
+int[] a;
+
+int* q;
+int[3] t;
+int[] b;
+
+p = q;     // p points to the same thing q does.
+p = s.ptr; // p points to the first element of the array s.
+p = a.ptr; // p points to the first element of the array a refers to.
+
+s = p;     // error, since the length of the array pointed
+           // to by p is unknown
+a = p;     // error, likewise
+
+s = a;     // attempts to copy from the array a refers to; runtime error if that array's
+           // length is not 3.
+
+a = s;     // a now refers to the s array
+a = b;     // a points to the same array as b does
+---------
+
 
 $(H3 $(LNAME2 array-concatenation, Array Concatenation))
 
@@ -356,6 +369,65 @@ a[] = b[] + 4;
         $(P Implementation note: many of the more common vector
         operations are expected to take advantage of any vector
         math instructions available on the target computer.
+        )
+
+$(H3 Array Declarations)
+
+        $(P There are two ways to declare arrays, prefix and postfix.
+        The prefix form is the preferred method, especially for
+        non-trivial types.
+        )
+
+$(H4 Prefix Array Declarations)
+
+        $(P Prefix declarations appear before the identifier being
+        declared and read right to left, so:
+        )
+
+---------
+int[] a;      // dynamic array of ints
+int[4][3] b;  // array of 3 arrays of 4 ints each
+int[][5] c;   // array of 5 dynamic arrays of ints.
+int*[]*[3] d; // array of 3 pointers to dynamic arrays of pointers to ints
+int[]* e;     // pointer to dynamic array of ints
+---------
+
+
+$(H4 Postfix Array Declarations)
+
+        $(P Postfix declarations appear after the identifier being
+        declared and read left to right.
+        Each group lists equivalent declarations:
+        )
+
+---------
+// dynamic array of ints
+int[] a;
+int a[];
+
+// array of 3 arrays of 4 ints each
+int[4][3] b;
+int[4] b[3];
+int b[3][4];
+
+// array of 5 dynamic arrays of ints.
+int[][5] c;
+int[] c[5];
+int c[5][];
+
+// array of 3 pointers to dynamic arrays of pointers to ints
+int*[]*[3] d;
+int*[]* d[3];
+int* (*d[3])[];
+
+// pointer to dynamic array of ints
+int[]* e;
+int (*e)[];
+---------
+
+        $(P $(B Rationale:) The postfix form matches the way arrays are
+        declared in C and C++, and supporting this form provides an
+        easy migration path for programmers used to it.
         )
 
 $(H3 $(LNAME2 pointer-arithmetic, Pointer Arithmetic))
