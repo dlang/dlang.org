@@ -31,24 +31,27 @@ $(COMMENT <img src="images/d4.gif" alt="Contracts make D bug resistant" border=0
 
 $(H2 Assert Contract)
 
-	The most basic contract is the
+	$(P The most basic contract is the
 	$(GLINK2 expression, AssertExpression).
-	An $(B assert) inserts a checkable expression into
-	the code, and that expression must evaluate to true:
+	An $(B assert) declares an expression that must evaluate to true:)
 ------
 assert(expression);
 ------
-	C programmers will find it familiar. Unlike C, however, an <code>assert</code>
-	in function bodies
-	works by throwing an <code>AssertError</code>,
-	which can be caught and handled. Catching the contract violation is useful
-	when the code must deal with errant uses by other code, when it must be
-	failure proof, and as a useful tool for debugging.
+	$(P As a contract, an $(D assert) represents a guarantee that the code
+	$(I must) uphold. Any failure of this expression represents a logic
+	error in the code that must be fixed.  A program for which the assert
+	contract is false is, by definition, invalid, and therefore has
+	undefined behaviour past that point.)
 
-    $(P When compiling for release, the assert code is not generated.
-        The special $(D assert(0)) expression, however, is generated even in
-        release mode. See the $(GLINK2 expression, AssertExpression) documentation
-        for more information.)
+	$(P As a debugging aid, the compiler may insert a runtime check to
+	verify that the expression is indeed true.  If it is false, an $(D
+	AssertError) is thrown.  When compiling for release, this check is not
+	generated.  The special $(D assert(0)) expression, however, is
+	generated even in release mode. See the $(GLINK2 expression,
+	AssertExpression) documentation for more information.)
+
+	$(P The compiler is free to take the assert expression as fact and
+	optimize subsequent code accordingly.)
 
 $(H2 Pre and Post Contracts)
 
