@@ -274,6 +274,7 @@ $(LI $(RELATIVE_LINK2 deprecate_unorderd_compares, Deprecate unordered floating 
 $(LI $(RELATIVE_LINK2 deprecate_floating_properties, Deprecate $(D .min) property for floating-point types.))
 $(LI $(RELATIVE_LINK2 ctfe_overlapped_field, CTFE can handle overlapped union fields.))
 $(LI $(RELATIVE_LINK2 get_alias_this, Add a new trait getAliasThis.))
+$(LI $(RELATIVE_LINK2 mixing-struct-opcall, Mixing struct constructors and static opCall is no longer allowed.))
 )
 
 $(BUGSTITLE Library Changes,
@@ -545,6 +546,29 @@ $(LI $(LNAME2 get_alias_this, Add a new trait getAliasThis:)
 
     $(P $(B Note:) Multiple subtyping is not yet implemented in D, therefore this trait will always
         return a tuple of length 1.
+    )
+)
+
+$(LI $(LNAME2 mixing-struct-opcall, Mixing struct constructors and static opCall is no longer allowed):
+    $(P This was not implemented correctly and caused ambiguities.)
+    $(P
+        Example:
+        ---
+        struct S
+        {
+            this(int i) {}
+            
+            static S opCall()   // disallowed due to constructor
+            {
+                return S.init;
+            }
+        }
+        ---
+    )
+    $(P Note: $(D static opCall) can be used to simulate struct 
+    constructors with no arguments, but this is not recommended 
+    practice. Instead, the preferred solution is to use a factory 
+    function to create struct instances.
     )
 )
 
