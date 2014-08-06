@@ -21,9 +21,13 @@ $(SPEC_S Operator Overloading,
 	$(LI $(RELATIVE_LINK2 FunctionCall, Function Call Operator Overloading))
 	$(LI $(RELATIVE_LINK2 Assignment, Assignment Operator Overloading))
 	$(LI $(RELATIVE_LINK2 OpAssign, Op Assignment Operator Overloading))
-	$(LI $(RELATIVE_LINK2 Array, Index Operator Overloading))
-	$(LI $(RELATIVE_LINK2 Slice, Slice Operator Overloading))
-	$(LI $(RELATIVE_LINK2 Dollar, Dollar Operator Overloading))
+	$(LI $(RELATIVE_LINK2 ArrayOps, Array Indexing and Slicing Operators Overloading)
+		$(UL
+		$(LI $(RELATIVE_LINK2 Array, Index Operator Overloading))
+		$(LI $(RELATIVE_LINK2 Slice, Slice Operator Overloading))
+		$(LI $(RELATIVE_LINK2 Dollar, Dollar Operator Overloading))
+		)
+	)
 	$(LI $(RELATIVE_LINK2 Dispatch, Forwarding))
 	)
 
@@ -644,7 +648,70 @@ a[] $(METACODE op)= c
 a.opSliceOpAssign!("$(METACODE op)")(c)
 ---
 
-$(H2 $(LNAME2 Array, Index Operator Overloading))
+$(H2 $(LNAME2 ArrayOps, Array Indexing and Slicing Operators Overloading))
+
+$(P The array indexing and slicing operators can be overloaded by implementing
+the $(D opIndex), $(D opSlice), and $(D opDollar) methods.)
+
+$(P Expressions of the form $(D arr[)$(ARGUMENTS)$(D ]) are translated into $(D
+arr.opIndex$(LPAREN))$(ARGUMENTS2)$(D $(RPAREN)). Each argument $(I
+b)$(SUBSCRIPT i) can be either a single expression, in which case it is passed
+directly as the corresponding argument $(I c)$(SUBSCRIPT i) to $(D opIndex); or
+it can be a slice expression of the form $(I x)$(SUBSCRIPT i)$(D ..)$(I
+y)$(SUBSCRIPT i), in which case the corresponding argument $(I c)$(SUBSCRIPT i)
+to $(D opIndex) is $(D arr.opSlice!i$(LPAREN))$(I x)$(SUBSCRIPT i)$(D , )$(I
+y)$(SUBSCRIPT i)$(D $(RPAREN)). It is possible to mix single expressions with
+slice expressions in the same indexing operation. For example:)
+
+$(TABLE2
+	$(TROW
+		This:, Translates to:
+	)
+	$(TROW
+		$(D arr[1, 2, 3]),
+		$(D arr.opIndex(1, 2, 3))
+	)
+	$(TROW
+		$(D arr[1..2, 3..4, 5..6]),
+		$(D arr.opIndex(arr.opSlice!0(1,2), arr.opSlice!1(3,4),
+			arr.opSlice!2(5,6)))
+	)
+	$(TROW
+		$(D arr[1, 2..3, 4]),
+		$(D arr.opIndex(1, arr.opSlice!1(2,3), 4))
+	)
+)
+
+$(P The special end-of-array token $(D $(DOLLAR)) may be used inside an
+indexing expression. It gets translated to $(D arr.opDollar!i) where $(D i) is
+the position of the expression it appears in. For example:)
+
+$(TABLE2
+	$(TROW
+		This:, Translates to:
+	)
+	$(TROW
+		$(D arr[$-1, $-2, 3]),
+		$(D arr.opIndex(arr.opDollar!0 - 1, arr.opDollar!1 - 2, 3))
+	)
+	$(TROW
+		$(D arr[1, 2, 3..$]),
+		$(D arr.opIndex(1, 2, arr.opSlice!2(3, arr.opDollar!2)))
+	)
+)
+
+$(P The intention is that $(D opDollar!i) should return the length of the array
+along its $(D i)'th dimension, or a user-defined object representing the end of
+the array along that dimension. If a user-defined object is returned, $(D
+opSlice) and $(D opIndex) should be able to receive an argument of that type in
+the $(D i)'th position.)
+
+$(P Similarly, the intention is that $(D opSlice!i) should return a
+user-defined object that represents an interval of indices along the $(D i)'th
+dimension of the array. This object is then passed to $(D opIndex) to perform
+the actual slicing operation.)
+
+$(H3 $(LNAME2 Array, Index Operator Overloading))
 
 	$(P The array index operator, $(D a[)$(ARGUMENTS)$(D ]), can be overloaded by
 	declaring a function named $(D opIndex) with one
@@ -671,7 +738,7 @@ void test() {
 	those are preferred over opIndex.
 	)
 
-$(H2 $(LNAME2 Slice, Slice Operator Overloading))
+$(H3 $(LNAME2 Slice, Slice Operator Overloading))
 
 	$(P Overloading the slicing operator means overloading expressions
 	like $(CODE a[]) and $(D a[)$(SLICE)$(D ]).
@@ -698,7 +765,7 @@ void test() {
 	those are preferred over $(D opSlice).
 	)
 
-$(H2 $(LNAME2 Dollar, Dollar Operator Overloading))
+$(H3 $(LNAME2 Dollar, Dollar Operator Overloading))
 
 	$(P Within the arguments to array index and slicing operators, $(D $)
 	gets translated to $(D opDollar), which can be overloaded by a struct
@@ -802,6 +869,7 @@ Macros:
 	WIKI=OperatorOverloading
 	CATEGORY_SPEC=$0
 	ARGUMENTS=$(I b)$(SUBSCRIPT 1), $(I b)$(SUBSCRIPT 2), ... $(I b)$(SUBSCRIPT n)
+	ARGUMENTS2=$(I c)$(SUBSCRIPT 1), $(I c)$(SUBSCRIPT 2), ... $(I c)$(SUBSCRIPT n)
 	SLICE=$(I i)..$(I j)
 	SLICE2=$(I i), $(I j)
 	FOO=
