@@ -132,64 +132,69 @@ $(H3 Overloading Slice Unary Operators)
 	$(THEAD $(I op), $(I rewrite))
 	$(TROW
 	$(D -)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("-")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+	$(I a)$(D .opIndexUnary!("-")$(LPAREN))$(I a)$(D .opSlice$(LPAREN))$(SLICE2)$(D $(RPAREN)$(RPAREN))
 	)
 
 	$(TROW
 	$(D +)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("+")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+	$(I a)$(D .opIndexUnary!("+")$(LPAREN))$(I a)$(D .opSlice$(LPAREN))$(SLICE2)$(D $(RPAREN)$(RPAREN))
 	)
 
 	$(TROW
 	$(D ~)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("~")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+	$(I a)$(D .opIndexUnary!("~")$(LPAREN))$(I a)$(D .opSlice$(LPAREN))$(SLICE2)$(D $(RPAREN)$(RPAREN))
 	)
 
 	$(TROW
 	$(D *)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("*")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+	$(I a)$(D .opIndexUnary!("*")$(LPAREN))$(I a)$(D .opSlice$(LPAREN))$(SLICE2)$(D $(RPAREN)$(RPAREN))
 	)
 
 	$(TROW
 	$(D ++)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("++")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+	$(I a)$(D .opIndexUnary!("++")$(LPAREN))$(I a)$(D .opSlice$(LPAREN))$(SLICE2)$(D $(RPAREN)$(RPAREN))
 	)
 
 	$(TROW
 	$(D --)$(I a)$(D [)$(SLICE)$(D ]),
-	$(I a)$(D .opSliceUnary!("--")$(LPAREN))$(SLICE2)$(D $(RPAREN))
+	$(I a)$(D .opIndexUnary!("--")$(LPAREN))$(I a)$(D .opSlice$(LPAREN))$(SLICE2)$(D $(RPAREN)$(RPAREN))
 	)
 
 	$(TROW
 	$(D -)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("-")())
+	$(I a)$(D .opIndexUnary!("-")())
 	)
 
 	$(TROW
 	$(D +)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("+")())
+	$(I a)$(D .opIndexUnary!("+")())
 	)
 
 	$(TROW
 	$(D ~)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("~")())
+	$(I a)$(D .opIndexUnary!("~")())
 	)
 
 	$(TROW
 	$(D *)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("*")())
+	$(I a)$(D .opIndexUnary!("*")())
 	)
 
 	$(TROW
 	$(D ++)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("++")())
+	$(I a)$(D .opIndexUnary!("++")())
 	)
 
 	$(TROW
 	$(D --)$(I a)$(D [ ]),
-	$(I a)$(D .opSliceUnary!("--")())
+	$(I a)$(D .opIndexUnary!("--")())
 	)
 	)
+
+	$(P For backward compatibility, if the above rewrites fail and
+	$(D opSliceUnary) is defined, then the rewrites
+	$(D a.opSliceUnary!(op)(a, i, j)) and
+	$(D a.opSliceUnary!(op)) are tried instead, respectively.)
 
 $(H2 $(LNAME2 Cast, Cast Operator Overloading))
 
@@ -544,7 +549,7 @@ $(H3 Index Assignment Operator Overloading)
 
 	$(P If the left hand side of an assignment is an index operation
 	on a struct or class instance,
-	it can be overloaded by providing an opIndexAssign member function.
+	it can be overloaded by providing an $(D opIndexAssign) member function.
 	Expressions of the form $(D a[$(ARGUMENTS)] = c) are rewritten
 	as $(D a.opIndexAssign$(LPAREN)c,$(ARGUMENTS)$(RPAREN)).
 	)
@@ -562,28 +567,40 @@ void test() {
 
 $(H3 Slice Assignment Operator Overloading)
 
-	$(P If the left hand side of an assignment is a slice operation
-	on a struct or class instance,
-	it can be overloaded by providing an opSliceAssign member function.
-	Expressions of the form $(CODE a[)$(SLICE)$(D ] = c) are rewritten
-	as $(CODE a.opSliceAssign$(LPAREN)c,) $(SLICE2)$(D $(RPAREN)), and
-	$(CODE a[] = c) as $(CODE a.opSliceAssign(c)).
+	$(P If the left hand side of an assignment is a slice operation on a
+	struct or class instance, it can be overloaded by implementing an $(D
+	opIndexAssign) member function that takes the return value of the $(D
+	opSlice) function as parameter(s).
+	Expressions of the form $(CODE a[)$(SLICE)$(D ] = c) are rewritten as
+	$(CODE a.opIndexAssign$(LPAREN)c,) $(D a.opSlice$(LPAREN))$(SLICE2)$(D $(RPAREN)$(RPAREN)),
+	and $(CODE a[] = c) as $(CODE a.opIndexAssign(c)).
+	)
+
+	$(P See $(RELATIVE_LINK2 ArrayOps, Array
+	Indexing and Slicing Operators Overloading) for more details.
 	)
 
 -------
 struct A {
-  int $(CODE_HIGHLIGHT opSliceAssign)(int v);  // overloads a[] = v
-  int $(CODE_HIGHLIGHT opSliceAssign)(int v, size_t x, size_t y);  // overloads a[i .. j] = v
+  int $(CODE_HIGHLIGHT opIndexAssign)(int v);  // overloads a[] = v
+  int $(CODE_HIGHLIGHT opIndexAssign)(int v, size_t[2] x);  // overloads a[i .. j] = v
+  int[2] $(CODE_HIGHLIGHT opSlice)(size_t x, size_t y);     // overloads i .. j
 }
 
 void test() {
   A a;
   int v;
 
-  a$(CODE_HIGHLIGHT []) = v;  // same as a.opSliceAssign(v);
-  a$(CODE_HIGHLIGHT [)3..4$(CODE_HIGHLIGHT ]) = v;  // same as a.opSliceAssign(v,3,4);
+  a$(CODE_HIGHLIGHT []) = v;  // same as a.opIndexAssign(v);
+  a$(CODE_HIGHLIGHT [)3..4$(CODE_HIGHLIGHT ]) = v;  // same as a.opIndexAssign(v, a.opSlice(3,4));
 }
 -------
+
+	$(P For backward compatibility, if rewriting $(D a[)$(SLICE)$(D ]) as
+	$(D a.opIndexAssign$(LPAREN)a.opSlice$(LPAREN))$(SLICE2)$(D $(RPAREN)$(RPAREN))
+	fails to compile, the legacy rewrite
+	$(D opSliceAssign$(LPAREN)c,) $(SLICE2)$(D $(RPAREN)) is used instead.
+	)
 
 $(H2 $(LNAME2 OpAssign, Op Assignment Operator Overloading))
 
@@ -609,7 +626,7 @@ a.opOpAssign!("$(METACODE op)")(b)
 $(H3 Index Op Assignment Operator Overloading)
 
 	$(P If the left hand side of an $(I op)= is an index expression on
-	a struct or class instance and opIndexOpAssign is a member:)
+	a struct or class instance and $(D opIndexOpAssign) is a member:)
 
 ---
 a[$(METACODE $(ARGUMENTS))] $(METACODE op)= c
@@ -624,7 +641,7 @@ a.opIndexOpAssign!("$(METACODE op)")(c, $(METACODE $(ARGUMENTS)))
 $(H3 Slice Op Assignment Operator Overloading)
 
 	$(P If the left hand side of an $(I op)= is a slice expression on
-	a struct or class instance and opSliceOpAssign is a member:)
+	a struct or class instance and $(D opIndexOpAssign) is a member:)
 
 ---
 a[$(METACODE $(SLICE))] $(METACODE op)= c
@@ -633,7 +650,7 @@ a[$(METACODE $(SLICE))] $(METACODE op)= c
 	$(P it is rewritten as:)
 
 ---
-a.opSliceOpAssign!("$(METACODE op)")(c, $(METACODE $(SLICE2)))
+a.opIndexOpAssign!("$(METACODE op)")(c, a.opSlice($(METACODE $(SLICE2))))
 ---
 
 	$(P and)
@@ -645,8 +662,15 @@ a[] $(METACODE op)= c
 	$(P it is rewritten as:)
 
 ---
-a.opSliceOpAssign!("$(METACODE op)")(c)
+a.opIndexOpAssign!("$(METACODE op)")(c)
 ---
+
+	$(P For backward compatibility, if the above rewrites fail and $(D
+	opSliceOpAssign) is defined, then the rewrites
+	$(D a.opSliceOpAssign(c, i, j)) and $(D a.opSliceOpAssign(c)) are
+	tried, respectively.
+	)
+
 
 $(H2 $(LNAME2 ArrayOps, Array Indexing and Slicing Operators Overloading))
 
@@ -727,9 +751,7 @@ void test() {
 	)
 
 	$(TABLE2
-		$(TROW
-			This:, Translates to:
-		)
+		$(THEAD $(I op), $(I rewrite))
 		$(TROW
 			$(D arr[1, 2, 3]),
 			$(D arr.opIndex(1, 2, 3))
@@ -750,9 +772,7 @@ void test() {
 	)
 
 	$(TABLE2
-		$(TROW
-			This:, Translates to:
-		)
+		$(THEAD $(I op), $(I rewrite))
 		$(TROW
 			$(D arr[1, 2..3, 4] = c),
 			$(D arr.opIndexAssign(c, 1, arr.opSlice!1(2, 3), 4))
@@ -787,9 +807,7 @@ $(H3 $(LNAME2 Dollar, Dollar Operator Overloading))
 	)
 
 	$(TABLE2
-		$(TROW
-			This:, Translates to:
-		)
+		$(THEAD $(I op), $(I rewrite))
 		$(TROW
 			$(D arr[$-1, $-2, 3]),
 			$(D arr.opIndex(arr.opDollar!0 - 1,
