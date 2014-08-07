@@ -873,6 +873,17 @@ void test() {
 	can be returned to implement multidimensional arrays.
 	)
 
+	$(P Note that $(D opDollar!i) is only evaluated once for each $(D i)
+	where $(D $) occurs in the corresponding position in the indexing
+	operation.  Thus, an expression like $(D arr[$-sqrt($), 0, $-1]) has
+	the effect of:
+	)
+------
+auto __tmp1 = arr.opDollar!0;
+auto __tmp2 = arr.opDollar!2;
+arr.opIndex(__tmp1 - sqrt(__tmp1), 0, __tmp2 - 1);
+------
+
 	$(P If $(D opIndex) is declared with only one argument, the
 	compile-time argument to $(D opDollar) may be omitted. In this case, it
 	is illegal to use $(D $) inside an array indexing expression with more
