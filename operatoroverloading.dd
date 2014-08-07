@@ -791,6 +791,17 @@ void test() {
 	parameter $(D i).
 	)
 
+	$(P Note that in all cases, $(D arr) is only evaluated once. Thus, an
+	expression like $(D getArray()[1, 2..3, $-1]=c) has the effect of:)
+
+------
+auto __tmp = getArray();
+__tmp.opIndexAssign(c, 1, __tmp.opSlice!1(2,3), __tmp.opDollar!2 - 1);
+------
+	$(P where the initial function call to $(D getArray) is only executed
+	once.
+	)
+
 	$(P For backward compatibility, $(D a[]) and $(D a[)$(SLICE)$(D ]) can
 	also be overloaded by implementing $(D opSlice()) with no arguments and
 	$(D opSlice$(LPAREN))$(SLICE2)$(D $(RPAREN)) with two arguments,
