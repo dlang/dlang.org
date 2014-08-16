@@ -12,7 +12,7 @@ $(SPEC_S Arrays,
         $(TROW $(ARGS $(I type)[$(I type)]), $(ARGS $(DDLINK hash-map, Associative Arrays, Associative arrays)))
     )
 
-$(H4 $(LNAME2 pointers, Pointers))
+$(H3 $(LNAME2 pointers, Pointers))
 
 ---------
 int* p;
@@ -29,7 +29,7 @@ int* p;
         and reference types.
         )
 
-$(H4 $(LNAME2 static-arrays, Static Arrays))
+$(H3 $(LNAME2 static-arrays, Static Arrays))
 
 ---------
 int[3] s;
@@ -56,7 +56,7 @@ int[3] s;
         )
 
 
-$(H4 $(LNAME2 dynamic-arrays, Dynamic Arrays))
+$(H3 $(LNAME2 dynamic-arrays, Dynamic Arrays))
 
 ---------
 int[] a;
@@ -73,7 +73,7 @@ $(H3 Array Declarations)
         non-trivial types.
         )
 
-$(H5 Prefix Array Declarations)
+$(H4 Prefix Array Declarations)
 
         $(P Prefix declarations appear before the identifier being
         declared and read right to left, so:
@@ -88,7 +88,7 @@ int[]* e;     // pointer to dynamic array of ints
 ---------
 
 
-$(H5 Postfix Array Declarations)
+$(H4 Postfix Array Declarations)
 
         $(P Postfix declarations appear after the identifier being
         declared and read left to right.
@@ -152,8 +152,8 @@ p = q;     // p points to the same thing q does.
 p = s.ptr; // p points to the first element of the array s.
 p = a.ptr; // p points to the first element of the array a.
 
-s = ...;   // error, since s is a compiled in static
-           // reference to an array.
+s = t;     // Copies the elements of t to the elements of s.
+s = a;     // If a.length == 3, copies its elements to s. Otherwise, runtime error.
 
 a = p;     // error, since the length of the array pointed
            // to by p is unknown
@@ -218,9 +218,12 @@ $(H3 $(LNAME2 array-copying, Array Copying))
 ---------
 int[3] s;
 int[3] t;
+int[] d = new int[3];
 
-s[] = t;           // the 3 elements of t[3] are copied into s[3]
-s[] = t[];         // the 3 elements of t[3] are copied into s[3]
+d[] = t;           // the 3 elements of t are copied into d (unlike "d = t")
+s[] = t;           // the 3 elements of t are copied into s
+s[] = t[];         // the 3 elements of t are copied into s
+s = t;             // also works (because s is a static array)
 s[1..2] = t[0..1]; // same as s[1] = t[0]
 s[0..2] = t[1..3]; // same as s[0] = t[1], s[1] = t[2]
 s[0..4] = t[0..4]; // error, only 3 elements in s
@@ -241,7 +244,7 @@ s[1..3] = s[0..2]; // error, overlapping copy
 
 $(H3 $(LNAME2 array-setting, Array Setting))
 
-        $(P If a slice operator appears as the lvalue of an assignment
+        $(P If a slice operator or static array appears as the lvalue of an assignment
         expression, and the type of the rvalue is the same as the element
         type of the lvalue, then the lvalue's array contents
         are set to the rvalue.
@@ -249,9 +252,12 @@ $(H3 $(LNAME2 array-setting, Array Setting))
 
 ---------
 int[3] s;
+int[] d = new int[3];
 int* p;
 
+d[] = 3;     // same as d[0] = 3, d[1] = 3, d[2] = 3
 s[] = 3;     // same as s[0] = 3, s[1] = 3, s[2] = 3
+s = 3;       // also works (because s is a static array)
 p[0..2] = 3; // same as p[0] = 3, p[1] = 3
 ---------
 
@@ -514,8 +520,7 @@ a.dup;    // creates an array of a.length elements, copies
 
 $(H4 $(LNAME2 resize, Setting Dynamic Array Length))
 
-        $(P The $(D .length) property of a dynamic array can be set
-        as the lvalue of an = operator:
+        $(P The $(D .length) property of a dynamic array can be set:
         )
 
 ---------
@@ -541,11 +546,11 @@ array = array[0..7];
         It will always do a copy if the new size is larger and the array
         was not allocated via the new operator or resizing in place would
         overwrite valid data in the array.
+        For example:
         )
 
 
 
-        For example:
 
 ---------
 char[] a = new char[20];
@@ -579,6 +584,17 @@ a[15] = 'z';   // does not affect c, because either a or c has reallocated.
         $(D .capacity) property to determine how many elements can be appended
         to the array without reallocating.
         )
+
+        $(P Growing after shrinking typically guarantees copying:)
+
+---------
+char[] a = new char[20];
+
+a.length = 1;
+a.length = 20; // reallocates, because the runtime can't prove reallocation to be safe.
+---------
+
+        $(P This can be avoided through careful use of $(OBJREF assumeSafeAppend, assumeSafeAppend()).)
 
         $(P These issues also apply to appending arrays with the ~= operator.
         Concatenation using the ~ operator is not affected since it always
@@ -823,7 +839,7 @@ cast(immutable(wchar) [])"abc" // this is an array of wchar characters
 
         $(P String literals that do not have a postfix character and that
         have not been cast can be implicitly converted between
-	string, wstring, and dstring as necessary.
+        string, wstring, and dstring as necessary.
         )
 
 ---------
@@ -952,3 +968,5 @@ Macros:
         WIKI=Arrays
         CATEGORY_SPEC=$0
         FOO=
+        OBJREF = <a href="library/object.html#$1">$(D $2)</a>
+
