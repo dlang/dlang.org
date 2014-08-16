@@ -13,7 +13,7 @@ $(SPEC_S Associative Arrays,
         ---------
         int[string] b;    // associative array b of ints that are
                           // indexed by an array of characters.
-                          // The $(CODE_HIGHLIGHT KeyType) is string
+                          // The KeyType is string
         b["hello"] = 3;   // set value associated with key "hello" to 3
         func(b["hello"]); // pass 3 as parameter to func()
         ---------
@@ -58,14 +58,12 @@ $(H3 Using Classes as the KeyType)
 
         $(UL
         $(LI $(D hash_t toHash()))
-
-   $(LI $(D bool opEquals(Object)))
-        $(LI $(D int opCmp(Object)))
+        $(LI $(D bool opEquals(Object)))
         )
 
         $(P $(D hash_t) is an alias to an integral type.)
 
-        $(P Note that the parameter to $(D opCmp) and $(D opEquals) is
+        $(P Note that the parameter to $(D opEquals) is
         of type
         $(D Object), not the type of the class in which it is defined.)
 
@@ -81,22 +79,20 @@ $(H3 Using Classes as the KeyType)
           { Foo foo = cast(Foo) o;
             return foo && a == foo.a && b == foo.b;
           }
-
-          int $(CODE_HIGHLIGHT opCmp)(Object o)
-          { Foo foo = cast(Foo) o;
-            if (!foo)
-              return -1;
-            if (a == foo.a)
-              return b - foo.b;
-            return a - foo.a;
-          }
         }
         ---
 
-        $(P The implementation may use either $(D opEquals) or $(D opCmp) or
-        both. Care should be taken so that the results of
-        $(D opEquals) and $(D opCmp) are consistent with each other when
-        the class objects are the same or not.)
+        $(P Care should be taken that $(D toHash) should consistently be the
+        same value when $(D opEquals) returns true. In other words, two objects
+        that are considered equal should always have the same hash value. If
+        this is not the case, the associative array will not function properly.
+        Also note that $(D opCmp) is not used to check for equality by the
+        associative array. However, since the actual $(D opEquals) or $(D
+        opCmp) called is not decided until runtime, the compiler cannot always
+        detect mismatched functions. Because of legacy issues, the compiler may
+        reject an associative array key type that overrides $(D opCmp) but not
+        $(D opEquals). This restriction may be removed in future versions of
+        D.)
 
 $(H3 Using Structs or Unions as the KeyType)
 
@@ -110,7 +106,6 @@ $(H3 Using Structs or Unions as the KeyType)
         ---------
         const hash_t $(CODE_HIGHLIGHT toHash)();
         const bool $(CODE_HIGHLIGHT opEquals)(ref const KeyType s);
-        const int $(CODE_HIGHLIGHT opCmp)(ref const KeyType s);
         ---------
 
         $(P For example:)
@@ -133,17 +128,18 @@ $(H3 Using Structs or Unions as the KeyType)
             return std.string.cmp(this.str, s.str) == 0;
           }
 
-          const int $(CODE_HIGHLIGHT opCmp)(ref const MyString s)
-          {
-            return std.string.cmp(this.str, s.str);
-          }
         }
         ---------
 
-        $(P The implementation may use either $(D opEquals) or $(D opCmp) or
-        both. Care should be taken so that the results of
-        $(D opEquals) and $(D opCmp) are consistent with each other when
-        the struct/union objects are the same or not.)
+        $(P Care should be taken that $(D toHash) should consistently be the
+        same value when $(D opEquals) returns true. In other words, two structs
+        that are considered equal should always have the same hash value. If
+        this is not the case, the associative array will not function properly.
+        Also note that $(D opCmp) is not used to check for equality by the
+        associative array.  For this reason, and for legacy reasons, an
+        associative array key is not allowed to define a specialized $(D
+        opCmp), but omit a specialized $(D opEquals). This restriction may be
+        removed in future versions of D.)
 
 $(H3 Construction or assignment on setting AA entries)
 

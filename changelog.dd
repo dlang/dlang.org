@@ -5,14 +5,27 @@ $(D_S D Change Log,
 $(VERSION 066, ??? ??, 2014, =================================================,
 
 $(BUGSTITLE Compiler Changes,
-$(LI $(RELATIVE_LINK2 boundscheck, $(D -noboundscheck) has been deprecated in favor of
-$(D boundscheck=[on|safeonly|off]).))
+$(LI $(RELATIVE_LINK2 warn_unused_retval, $(D -w) now warns about an unused return value of a strongly pure nothrow function call.))
+$(LI $(RELATIVE_LINK2 boundscheck, $(D -noboundscheck) has been deprecated in favor of $(D boundscheck=[on|safeonly|off]).))
+$(LI $(RELATIVE_LINK2 vgc_switch, $(D -vgc) was added to list GC allocation code positions in the code.))
+$(LI $(RELATIVE_LINK2 vcolumns_switch, $(D -vcolumns) was added to display column numbers in error messages.))
+$(LI $(RELATIVE_LINK2 color_switch, $(D -color) was added to make console output colored.))
 )
 
 $(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 nogc_attribute, $(D @nogc) attribute was added.))
+$(LI $(RELATIVE_LINK2 extern_cpp_nspace, $(D extern $(LPAREN)C++,) $(I namespace)$(D $(RPAREN)) was added.))
+$(LI $(RELATIVE_LINK2 opover_multidim_slicing, Operator overloading for multi-dimensional slicing was added.))
+$(LI $(RELATIVE_LINK2 traits_getfunctionattributes, $(D __traits$(LPAREN)getFunctionAttributes$(RPAREN)) was added.))
+$(LI $(RELATIVE_LINK2 narrowing_conversion_in_ifti, Support template parameter deduction for arguments with a narrowing conversion.))
+$(LI $(RELATIVE_LINK2 deprecate_rmw, Read-Modify-Write operations on shared variables are now deprecated.))
+$(LI $(RELATIVE_LINK2 uniform_scalar_construction, Support uniform construction syntax for built-in scalar types.))
 )
 
 $(BUGSTITLE Library Changes,
+$(LI $(RELATIVE_LINK2 duration_split, Duration.get and its wrappers have been deprecated in favor of the new Duration.split.))
+$(LI $(RELATIVE_LINK2 array_and_aa_changes, Some built-in type properties have been replaced with library functions.))
+$(LI $(RELATIVE_LINK2 aa_key_requirement, Associative array keys now require equality instead of order comparison.))
 )
 
 $(BUGSTITLE Linker Changes,
@@ -23,6 +36,24 @@ $(BR)$(BIG $(RELATIVE_LINK2 list2066, List of all bug fixes and enhancements in 
 $(HR)
 
 $(BUGSTITLE Compiler Changes,
+
+$(LI $(LNAME2 warn_unused_retval, $(D -w) now warns about an unused return value of a strongly pure nothrow function call:)
+
+    $(P A discarded return value from a strongly pure nothrow function call now generates a warning.
+
+        ---------
+        int foo() pure nothrow { return 1; }
+        void main()
+        {
+            foo();  // the result of foo() is unused
+        }
+        ---------
+
+        With the $(D -w) switch, the compiler will complain:
+
+        $(CONSOLE Warning: calling foo without side effects discards return value of type int, prepend a cast(void) if intentional)
+    )
+)
 
 $(LI $(LNAME2 boundscheck, $(D -noboundscheck) has been deprecated in favor of $(D boundscheck=[on|safeonly|off]):)
 
@@ -50,13 +81,399 @@ $(LI $(LNAME2 boundscheck, $(D -noboundscheck) has been deprecated in favor of $
     -release) does.)
 )
 
+$(LI $(LNAME2 vgc_switch, $(D -vgc) was added to list GC allocation code positions in the code):
+
+    $(P Prints all GC-allocation points. Analysis will follow the semantics of
+        the new $(D @nogc) attribute.
+    )
+)
+
+$(LI $(LNAME2 vcolumns_switch, $(D -vcolumns) was added to display column numbers in error messages):
+
+    $(P Diagnostic messages will print the character number from each line head.
+
+        ---------
+        int x = missing_name;
+        ---------
+
+        Without $(D -vcolumns):
+
+        ---------
+        test.d(1): Error: undefined identifier missing_name
+        ---------
+
+        With $(D -vcolumns):
+
+        ---------
+        test.d(1,9): Error: undefined identifier missing_name
+        ---------
+    )
+)
+
+$(LI $(LNAME2 color_switch, $(D -color) was added to make console output colored:)
+
+    $(P Errors, deprecation, and warning messages will be colored.
+    )
+)
+
 )
 
 $(BUGSTITLE Language Changes,
 
+$(LI $(LNAME2 nogc_attribute, $(D @nogc) attribute was added:)
+
+    $(P @nogc attribute disallows GC-heap allocation.
+
+        ---------
+        class C {}
+        void foo() @nogc
+        {
+            auto c = new C();   // GC-allocation is disallowed
+        }
+        ---------
+    )
+)
+
+$(LI $(LNAME2 extern_cpp_nspace, $(D extern $(LPAREN)C++,) $(I namespace)$(D $(RPAREN)) was added):
+
+    $(P To represent a C++ namespace, $(D extern $(LPAREN)C++$(RPAREN)) now takes optional dot-chained identifiers.
+
+        ---------
+        extern (C++, a.b.c) int foo();
+        ---------
+
+        is equivalent with:
+
+$(CPPCODE
+namespace a {
+  namespace b {
+    namespace c {
+      int foo();
+    }
+  }
+}
+)
+    )
+)
+
+$(LI $(LNAME2 opover_multidim_slicing, Operator overloading for multi-dimensional slicing was added:)
+
+    $(P Documentation is $(LINK2 operatoroverloading.html#ArrayOps, here).)
+
+    $(P Example code:
+
+        ---------
+        struct MyContainer(E)
+        {
+            E[][] payload;
+
+            this(size_t w, size_t h)
+            {
+                payload = new E[][](h, w);
+            }
+
+            size_t opDollar(size_t dim)()
+            {
+                return payload[dim].length;
+            }
+
+            auto opSlice(size_t dim)(size_t lwr, size_t upr)
+            {
+                import std.typecons;
+                return tuple(lwr, upr);
+            }
+
+            void opIndexAssign(A...)(E val, A indices)
+            {
+                assert(A.length == payload.length);
+
+                foreach (dim, x; indices)
+                {
+                    static if (is(typeof(x) : size_t))
+                    {
+                        // this[..., x, ...]
+                        payload[dim][x] = val;
+                    }
+                    else
+                    {
+                        // this[..., x[0] .. x[1], ...]
+                        payload[dim][x[0] .. x[1]] = val;
+                    }
+                }
+            }
+        }
+        void main()
+        {
+            import std.stdio;
+
+            auto c = MyContainer!int(4, 3);
+            writefln("[%([%(%d%| %)]%|\n %)]", c.payload);
+            // [[0 0 0 0]
+            //  [0 0 0 0]
+            //  [0 0 0 0]]
+
+            c[1 .. 3,
+              2,
+              0 .. $] = 1;
+            /*
+            Rewritten as:
+            c.opIndexAssign(c.opSlice!0(1, 3),
+                            2,
+                            c.opSlice!2(0, c.opDollar!2()));
+            */
+
+            writefln("[%([%(%d%| %)]%|\n %)]", c.payload);
+            // [[0 1 1 0]
+            //  [0 0 1 0]
+            //  [1 1 1 1]]
+        }
+        ---------
+    )
+)
+
+$(LI $(LNAME2 traits_getfunctionattributes, $(D __traits$(LPAREN)getFunctionAttributes$(RPAREN)) was added):
+
+    $(P This can take one argument, either a function symbol, function type, function
+        pointer type, or delegate type.
+
+        Examples:
+
+        ---------
+        void foo() pure nothrow @safe;
+        static assert([__traits(getFunctionAttributes, foo)] == ["pure", "nothrow", "@safe"]);
+
+        ref int bar(int) @property @trusted;
+        static assert([__traits(getFunctionAttributes, typeof(&bar))] == ["@property", "ref", "@trusted"]);
+        ---------
+    )
+)
+
+$(LI $(LNAME2 narrowing_conversion_in_ifti, Support template parameter deduction for arguments with a narrowing conversion):
+
+    $(P Implicit Function Template Instantiation will now consider a narrowing conversion
+        of function arguments when deducing the template instance parameter types.
+
+        ---------
+        void foo(T)(T[] arr, T elem) { ... }
+        void main()
+        {
+            short[] a;
+            foo(a, 1);
+        }
+        ---------
+
+        In 2.065 and earlier, calling $(D foo(a, 1)) was not allowed. From 2.066,
+        $(D T) is deduced as $(D short) by considering a narrowing conversion
+        of the second function argument `1` from $(D int) to $(D short).
+    )
+)
+
+$(LI $(LNAME2 deprecate_rmw, Read-Modify-Write operations on shared variables are now deprecated):
+
+    $(P Examples:
+
+        ---------
+        shared int global;
+        void main()
+        {
+            global++;       // deprecated
+            global *= 2;    // deprecated
+        }
+        ---------
+
+        Instead you should use $(D atomicOp) from $(D core.atomic):
+
+        ---------
+        shared int global;
+        void main()
+        {
+            import core.atomic;
+            atomicOp!"+="(global, 1);
+            atomicOp!"*="(global, 2);
+        }
+        ---------
+    )
+)
+
+$(LI $(LNAME2 uniform_scalar_construction, Support uniform construction syntax for built-in scalar types):
+
+    $(P Examples:
+
+        ---------
+        short n1 = 1;
+        auto n2 = short(1); // equivalent with n1, typeof(n2) is short
+
+        auto p1 = new long(1);                  // typeof(p1) is long*
+        auto p2 = new immutable double(3.14);   // typeof(p2) is immutable(double)*
+        ---------
+    )
+
+    $(P The constructor argument should be implicitly convertible to the constructed type.
+
+        ---------
+        auto n1 = short(32767); // OK
+        auto n2 = short(32768); // Not allowed, out of bounds of signed short -32768 to 32767
+        ---------
+    )
+)
+
 )
 
 $(BUGSTITLE Library Changes,
+
+$(LI $(LNAME2 duration_split, Duration.get and its wrappers have been deprecated in favor of the new Duration.split:)
+
+    $(P $(CXREF time, Duration.get) and its wrappers, $(CXREF time, Duration.weeks),
+        $(CXREF time, Duration.days), $(CXREF time, Duration.hours), and
+        $(CXREF time, Duration.seconds), as well as $(CXREF time, Duration.fracSec) (which
+        served a similar purpose as $(CXREF time, Duration.get) for the fractional second units)
+        have proven to be too easily confused with $(CXREF time, Duration.total), causing
+        subtle bugs. So, they have been deprecated. In their place, $(CXREF time, Duration.split)
+        has been added - and it's not only very useful, but it does a great job of showing off
+        what D can do.
+
+        Whereas $(CXREF time, Duration.get) split out all of the units of a
+        $(CXREF time, Duration) and then returned only one of them,
+        $(CXREF time, Duration.split) splits out a $(CXREF time, Duration) into the units
+        that it's told to (which could be one unit or all of them) and returns all of
+        them. It has two overloads, both which take template arguments that indicate which
+        of the units are to be split out. The difference is in how the result is returned.
+
+        As with most of the templates in core.time and std.datetime which take strings
+        to represent units, $(CXREF time, Duration.split) accepts $(D "weeks"), $(D "days"),
+        $(D "hours"), $(D "minutes"), $(D "seconds"), $(D "msecs"), $(D "usecs"),
+        $(D "hnsecs"), and $(D "nsecs").
+
+        The first overload returns the split out units as $(D out) parameters.
+
+        ---------
+        auto d = weeks(5) + days(4) + hours(17) + seconds(2) + hnsecs(12_007);
+        short days;
+        long seconds;
+        int msecs;
+        d.split!("days", "seconds", "msecs")(days, seconds, msecs);
+        assert(days == 39);
+        assert(seconds == 61_202);
+        assert(msecs == 1);
+        ---------
+
+        The arguments can be any integral type (though no protection is given against integer
+        overflow, so unless it's known that the values are going to be small, it's unwise to
+        use a small integral type for any of the arguments).
+
+        The second overload returns a struct with the unit names as its fields. Only the
+        requested units are present as fields. All of the struct's fields are $(D long)s.
+
+        ---------
+        auto d = weeks(5) + days(4) + hours(17) + seconds(2) + hnsecs(12_007);
+        auto result = d.split!("days", "seconds", "msecs")();
+        assert(result.days == 39);
+        assert(result.seconds == 61_202);
+        assert(result.msecs == 1);
+        ---------
+
+        Or if no units are given to the second overload, then it will return a struct with
+        all of the units save for $(D nsecs) (since $(D nsecs) would always be $(D 0) when
+        $(D hnsecs) is one of the units as $(CXREF time, Duration) has hnsec precision).
+
+        ---------
+        auto d = weeks(5) + days(4) + hours(17) + seconds(2) + hnsecs(12_007);
+        auto result = d.split();
+        assert(result.weeks == 5);
+        assert(result.days == 4);
+        assert(result.hours == 17);
+        assert(result.minutes == 0);
+        assert(result.seconds == 2);
+        assert(result.msecs == 1);
+        assert(result.usecs == 200);
+        assert(result.hnsecs == 7);
+        ---------
+
+        Calling $(CXREF time, Duration.get) or its wrappers for each of the units would be
+        equivalent to that example, only less efficient when more than one unit is
+        requested, as the calculations would have to be done more than once. The exception
+        is $(CXREF time, Duration.fracSec) which would have given the total of the
+        fractional seconds as the requested units rather than splitting them out.
+
+        ---------
+        // Equivalent to previous example
+        auto d = weeks(5) + days(4) + hours(17) + seconds(2) + hnsecs(12_007);
+        assert(d.weeks == 5);
+        assert(d.days == 4);
+        assert(d.hours == 17);
+        assert(d.minutes == 0);
+        assert(d.seconds == 2);
+        assert(d.fracSec.msecs == 1);
+        assert(d.fracSec.usecs == 1200);
+        assert(d.fracSec.hnsecs == 12_007);
+        ---------
+
+        It is hoped that $(CXREF time, Duration.split) will be less confusing and thus
+        result in fewer bugs, but it's definitely the case that it's more powerful. It's
+        also a great example of D's metaprogramming capabilities given how it splits out
+        only the requested units and even is able to return a struct with fields with the
+        same names as the requested units. This on top of being able to handle a variety
+        of integral types as arguments. And its implemenation isn't even very complicated.
+    )
+
+)
+
+$(LI $(LNAME2 array_and_aa_changes, Some built-in type properties have been replaced with library functions:)
+
+    $(P Built-in array properties $(D dup) and $(D idup) were replaced with
+        (module-scoped) free functions in the $(D object) module, thanks to D's support of
+        $(LINK2 function.html#pseudo-member, Uniform Function Call Syntax).
+    )
+
+    $(P Built-in associative array properties $(D rehash), $(D dup), $(D byKey),
+        $(D byValue), $(D keys), $(D values), and $(D get) were also replaced with free
+        functions in the $(D object) module.
+    )
+)
+
+$(LI $(LNAME2 aa_key_requirement, Associative array keys now require equality rather than ordering:)
+
+    $(P Until 2.065, opCmp was used to customize the comparison of AA struct keys.
+
+        ---------
+        void main()
+        {
+            int[MyKey] aa;
+        }
+
+        struct MyKey
+        {
+            int x;
+            int y;  // want to be ignored for AA key comparison
+
+            int opCmp(ref const MyKey rhs) const
+            {
+                if (this.x == rhs.x)
+                    return 0;
+
+                // defined order was merely unused for AA keys.
+                return this.x > rhs.x ? 1 : -1;
+            }
+        }
+        ---------
+
+        From 2.066, the AA implementation has been changed to use the equality operator ($(D ==))
+        for the key comparison. So the $(D MyKey) struct should be modified to:
+
+        ---------
+        struct MyKey
+        {
+            int x;
+            int y;  // want to be ignored for AA key comparison
+
+            int opEquals(ref const MyKey rhs) const
+            {
+                return this.x == rhs.x;
+            }
+        }
+        ---------
+    )
+)
 
 )
 
@@ -176,6 +593,7 @@ $(LI $(RELATIVE_LINK2 deprecate_unorderd_compares, Deprecate unordered floating 
 $(LI $(RELATIVE_LINK2 deprecate_floating_properties, Deprecate $(D .min) property for floating-point types.))
 $(LI $(RELATIVE_LINK2 ctfe_overlapped_field, CTFE can handle overlapped union fields.))
 $(LI $(RELATIVE_LINK2 get_alias_this, Add a new trait getAliasThis.))
+$(LI $(RELATIVE_LINK2 mixing-struct-opcall, Mixing struct constructors and static opCall is no longer allowed.))
 )
 
 $(BUGSTITLE Library Changes,
@@ -447,6 +865,29 @@ $(LI $(LNAME2 get_alias_this, Add a new trait getAliasThis:)
 
     $(P $(B Note:) Multiple subtyping is not yet implemented in D, therefore this trait will always
         return a tuple of length 1.
+    )
+)
+
+$(LI $(LNAME2 mixing-struct-opcall, Mixing struct constructors and static opCall is no longer allowed):
+    $(P This was not implemented correctly and caused ambiguities.)
+    $(P
+        Example:
+        ---
+        struct S
+        {
+            this(int i) {}
+            
+            static S opCall()   // disallowed due to constructor
+            {
+                return S.init;
+            }
+        }
+        ---
+    )
+    $(P Note: $(D static opCall) can be used to simulate struct 
+    constructors with no arguments, but this is not recommended 
+    practice. Instead, the preferred solution is to use a factory 
+    function to create struct instances.
     )
 )
 
@@ -8867,3 +9308,4 @@ Macros:
 
     STDMODREF = <a href="phobos/std_$1.html">$(D $2)</a>
     XREF = <a href="phobos/std_$1.html#$2">$(D $2)</a>
+    CXREF = <a href="phobos/core_$1.html#$2">$(D $2)</a>
