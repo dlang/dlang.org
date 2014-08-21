@@ -431,12 +431,13 @@ $(H4 The D Way)
 	and locks, handled automatically with D's $(D synchronized)
 	declarations and statements.)
 
-	$(P The few RAII issues left are handled by $(I scope) classes.
-	Scope classes get their destructors run when they go out of scope.)
+	$(P The few RAII issues left are handled by $(D struct)s.
+	A $(D struct) gets its destructor run when it goes out of scope.)
 
 ------
-scope class File
-{   Handle h;
+struct File
+{
+    Handle h;
 
     ~this()
     {
@@ -447,7 +448,8 @@ scope class File
 void test()
 {
     if (...)
-    {   scope f = new File();
+    {
+        auto f = File();
 	...
     } // f.~this() gets run at closing brace, even if
       // scope was exited via a thrown exception
