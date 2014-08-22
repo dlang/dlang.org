@@ -559,21 +559,21 @@ foreach (string s, double d; a)
 
 $(H4 $(LNAME2 foreach_with_ranges, Foreach over Structs and Classes with Ranges))
 
-        $(P Iteration over struct and class objects can be done with
-        ranges, which means the following properties and methods must be defined:
+        $(P Iteration over struct and class objects can be done with ranges.
+        For $(D foreach), this means the following properties and methods must
+        be defined:
         )
 
         $(TABLE2 Foreach Range Properties,
         $(THEAD Property, Purpose)
         $(TROW $(ARGS $(D .empty)), $(ARGS returns true if no more elements))
         $(TROW $(ARGS $(D .front)), $(ARGS return the leftmost element of the range))
-        $(TROW $(ARGS $(D .back)), $(ARGS return the rightmost element of the range))
         )
 
         $(TABLE2 Foreach Range Methods,
         $(THEAD Method, Purpose)
-        $(TROW $(ARGS $(D .popFront())), $(ARGS move the left edge of the range right one))
-        $(TROW $(ARGS $(D .popBack())), $(ARGS move the right edge of the range left one))
+        $(TROW $(ARGS $(D .popFront())), $(ARGS move the left edge of the range
+        right by one))
         )
 
         $(P Meaning:)
@@ -592,7 +592,23 @@ for (auto __r = range; !__r.empty; __r.popFront())
 }
 ---
 
-        $(P Similarly:)
+        $(P Similarly, for $(D foreach_reverse), the following properties and
+        methods must be defined:
+        )
+
+        $(TABLE2 Foreach_reverse Range Properties,
+        $(THEAD Property, Purpose)
+        $(TROW $(ARGS $(D .empty)), $(ARGS returns true if no more elements))
+        $(TROW $(ARGS $(D .back)), $(ARGS return the rightmost element of the range))
+        )
+
+        $(TABLE2 Foreach_reverse Range Methods,
+        $(THEAD Method, Purpose)
+        $(TROW $(ARGS $(D .popBack())), $(ARGS move the right edge of the range
+        left by one))
+        )
+
+        $(P Meaning:)
 
 ---
 foreach_reverse (e; range) { ... }
@@ -608,21 +624,20 @@ for (auto __r = range; !__r.empty; __r.popBack())
 }
 ---
 
-        $(P If the foreach range properties do not exist, the $(D opApply)
-        method will be used instead.
+        $(P If the $(D foreach) or $(D foreach_reverse) range properties do not
+        exist, the $(D opApply) or $(D opApplyReverse) method, respectively,
+        will be used instead.
         )
 
 
 $(H4 Foreach over Structs and Classes with opApply)
 
-        $(P
-        If it is a struct or class object, the $(D foreach) is defined by
-        the special $(LNAME2 opApply, $(I opApply)) member function.
-        The $(D foreach_reverse) behavior is defined by the special
-        $(LNAME2 opApplyReverse, $(I opApplyReverse)) member function.
-        These special functions must be defined by the type in order
-        to use the corresponding foreach statement.
-        The functions have the type:
+        $(P If the aggregate expression is a struct or class object, and the
+        range properties do not exist, then the $(D foreach) is defined by the
+        special $(LNAME2 opApply, $(D opApply)) member function, and the $(D
+        foreach_reverse) behavior is defined by the special
+        $(LNAME2 opApplyReverse, $(D opApplyReverse)) member function.
+        These functions have the type:
         )
 
 --------------
