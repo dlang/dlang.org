@@ -764,32 +764,33 @@ a
 )
     )
 
-    $(P The tuple can also be deduced from the type of a delegate
+    $(P Template tuples can also be deduced from the type of a delegate
         or function parameter list passed as a function argument:
 
         ----
         import std.stdio;
 
-        /* R is return type
-         * A is first argument type
-         * U is TypeTuple of rest of argument types
+        /* Partially applies a delegate by tying its first argument to a particular value.
+         * R = return type
+         * T = first argument type
+         * Args = TypeTuple of remaining argument types
          */
-        R delegate(U) Curry(R, A, U...)(R delegate(A, U) dg, A arg)
+        R delegate(Args) partial(R, T, Args...)(R delegate(T, Args) dg, T first)
         {
           struct Foo
           {
             typeof(dg) dg_m;
-            typeof(arg) arg_m;
+            typeof(first) first_m;
 
-            R bar(U u)
+            R bar(Args args)
             {
-              return dg_m(arg_m, u);
+              return dg_m(first_m, args);
             }
           }
 
           Foo* f = new Foo;
           f.dg_m = dg;
-          f.arg_m = arg;
+          f.first_m = first;
           return &f.bar;
         }
 
@@ -800,10 +801,11 @@ a
             return x + y + z;
           }
 
-          auto plus_two = Curry(&plus, 2);
+          auto plus_two = partial(&plus, 2);
           writefln("%d", plus_two(6, 8)); // prints 16
         }
         ----
+        See also: $(FULL_XREF functional, partial)
     )
 
 $(H3 Specialization)
