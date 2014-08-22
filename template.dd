@@ -729,20 +729,20 @@ $(GNAME TemplateTupleParameter):
         another template, or as the list of parameters for a function.
 
         ---
-        template Print(A ...)
+        template Print(args...)
         {
             void print()
             {
-                writefln("args are ", A);
+                writeln("args are ", args); // args is an ExpressionTuple
             }
         }
 
-        template Write(A ...)
+        template Write(Args...)
         {
-            void write(A a) // A is a TypeTuple
-                            // a is an ExpressionTuple
+            void write(Args args) // Args is a TypeTuple
+                                  // args is an ExpressionTuple
             {
-                writefln("args are ", a);
+                writeln("args are ", args);
             }
         }
 
@@ -752,79 +752,6 @@ $(GNAME TemplateTupleParameter):
             Write!(int, char, double).write(1, 'a', 6.8); // prints: args are 1a6.8
         }
         ---
-    )
-
-    $(P Template tuples can be deduced from the types of
-        the trailing parameters
-        of an implicitly instantiated function template:
-
-        ---
-        template Foo(T, R...)
-        {
-            void Foo(T t, R r)
-            {
-                writeln(t);
-                static if (r.length) // if more arguments
-                    Foo(r);          // do the rest of the arguments
-            }
-        }
-
-        void main()
-        {
-            Foo(1, 'a', 6.8);
-        }
-        ---
-    )
-
-    $(P prints:
-
-$(CONSOLE
-1
-a
-6.8
-)
-    )
-
-    $(P The tuple can also be deduced from the type of a delegate
-        or function parameter list passed as a function argument:
-
-        ----
-        import std.stdio;
-
-        /* R is return type
-         * A is first argument type
-         * U is TypeTuple of rest of argument types
-         */
-        R delegate(U) Curry(R, A, U...)(R delegate(A, U) dg, A arg)
-        {
-            struct Foo
-            {
-                typeof(dg) dg_m;
-                typeof(arg) arg_m;
-
-                R bar(U u)
-                {
-                    return dg_m(arg_m, u);
-                }
-            }
-
-            Foo* f = new Foo;
-            f.dg_m = dg;
-            f.arg_m = arg;
-            return &f.bar;
-        }
-
-        void main()
-        {
-            int plus(int x, int y, int z)
-            {
-                return x + y + z;
-            }
-
-            auto plus_two = Curry(&plus, 2);
-            writefln("%d", plus_two(6, 8)); // prints 16
-        }
-        ----
     )
 
     $(P The number of elements in a $(I Tuple) can be retrieved with
@@ -838,6 +765,68 @@ a
         to dynamically change, add, or remove elements.
     )
 
+    $(P Template tuples can be deduced from the types of
+        the trailing parameters
+        of an implicitly instantiated function template:
+
+        ---
+        template print(T, Args...)
+        {
+            void print(T first, Args args)
+            {
+                writeln(first);
+                static if (args.length) // if more arguments
+                    print(args);        // recurse for remaining arguments
+            }
+        }
+
+        void main()
+        {
+            print(1, 'a', 6.8);
+        }
+        ---
+    )
+
+    $(P prints:
+
+$(CONSOLE
+1
+a
+6.8
+)
+    )
+
+    $(P Template tuples can also be deduced from the type of a delegate
+        or function parameter list passed as a function argument:
+
+        ----
+        import std.stdio;
+
+        /* Partially applies a delegate by tying its first argument to a particular value.
+         * R = return type
+         * T = first argument type
+         * Args = TypeTuple of remaining argument types
+         */
+        R delegate(Args) partial(R, T, Args...)(R delegate(T, Args) dg, T first)
+        {
+            // return a closure
+            return (Args args) => dg(first, args);
+        }
+
+        void main()
+        {
+            int plus(int x, int y, int z)
+            {
+                return x + y + z;
+            }
+
+            auto plus_two = partial(&plus, 2);
+            writefln("%d", plus_two(6, 8)); // prints 16
+        }
+        ----
+        See also: $(FULL_XREF functional, partial)
+    )
+
 $(H3 Specialization)
 
     $(P If both a template with a tuple parameter and a template
@@ -848,7 +837,7 @@ $(H3 Specialization)
         template Foo(T)         { pragma(msg, "1"); }   // #1
         template Foo(int n)     { pragma(msg, "2"); }   // #2
         template Foo(alias sym) { pragma(msg, "3"); }   // #3
-        template Foo(A ...)     { pragma(msg, "4"); }   // #4
+        template Foo(Args...)   { pragma(msg, "4"); }   // #4
 
         import std.stdio;
 
@@ -1110,16 +1099,16 @@ $(H3 $(LNAME2 auto-ref-parameters, Function Templates with Auto Ref Parameters))
         a value parameter:
 
         ---
-        int foo(T...)(auto ref T x)
+        int foo(Args...)(auto ref Args args)
         {
             int result;
 
-            foreach (i, v; x)
+            foreach (i, v; args)
             {
                 if (v == 10)
-                    assert(__traits(isRef, x[i]));
+                    assert(__traits(isRef, args[i]));
                 else
-                    assert(!__traits(isRef, x[i]));
+                    assert(!__traits(isRef, args[i]));
                 result += v;
             }
             return result;
