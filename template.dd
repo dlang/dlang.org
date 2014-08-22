@@ -704,17 +704,17 @@ $(GNAME TemplateTupleParameter):
         another template, or as the list of parameters for a function.
 
         ---
-        template Print(A ...) {
+        template Print(args...) {
           void print() {
-            writefln("args are ", A);
+            writeln("args are ", args); // args is an ExpressionTuple
           }
         }
 
-        template Write(A ...) {
-          void write(A a) // A is a TypeTuple
-                          // a is an ExpressionTuple
+        template Write(Args...) {
+          void write(Args args) // Args is a TypeTuple
+                                // args is an ExpressionTuple
           {
-            writefln("args are ", a);
+            writeln("args are ", args);
           }
         }
 
@@ -730,16 +730,16 @@ $(GNAME TemplateTupleParameter):
         of an implicitly instantiated function template:
 
         ---
-        template Foo(T, R...) {
-          void Foo(T t, R r) {
-            writeln(t);
-            static if (r.length) // if more arguments
-              Foo(r);            // do the rest of the arguments
+        template print(T, Args...) {
+          void print(T first, Args args) {
+            writeln(first);
+            static if (args.length) // if more arguments
+              print(args);          // recurse for remaining arguments
           }
         }
 
         void main() {
-          Foo(1, 'a', 6.8);
+          print(1, 'a', 6.8);
         }
         ---
     )
@@ -816,7 +816,7 @@ $(H3 Specialization)
         template Foo(T)         { pragma(msg, "1"); }   // #1
         template Foo(int n)     { pragma(msg, "2"); }   // #2
         template Foo(alias sym) { pragma(msg, "3"); }   // #3
-        template Foo(A ...)     { pragma(msg, "4"); }   // #4
+        template Foo(Args...)   { pragma(msg, "4"); }   // #4
 
         import std.stdio;
 
