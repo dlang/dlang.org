@@ -22,10 +22,12 @@ $(BR)
 // Computes average line length for standard input.
 import std.stdio;
 
-void main() {
+void main()
+{
     ulong lines = 0;
     double sumLength = 0;
-    foreach (line; stdin.byLine()) {
+    foreach (line; stdin.byLine())
+    {
         ++lines;
         sumLength += line.length;
     }
@@ -46,7 +48,8 @@ like dynamic languages do. On the other hand, static inference deduces types and
 code properties, giving the best of both the static and the
 dynamic worlds. $(EXAMPLE 1,
 ----
-void main() {
+void main()
+{
     // Define an array of numbers, double[]. Compiler recognizes the common
     // type of all initializers.
     auto arr = [ 1, 2, 3.14, 5.1, 6 ];
@@ -58,7 +61,8 @@ void main() {
 // Type deduction works for function results. This is important for generic
 // functions, such as min below, which works correctly for all comparable
 // types.
-auto min(T1, T2)(T1 lhs, T2 rhs) {
+auto min(T1, T2)(T1 lhs, T2 rhs)
+{
     return rhs < lhs ? rhs : lhs;
 }
 ----
@@ -76,13 +80,15 @@ import std.stdio;
 
 class Widget { }
 
-void main() {
+void main()
+{
     // Automatically managed.
     auto w = new Widget;
     // Code is executed in any case upon scope exit.
     scope(exit) { writeln("Exiting main."); }
     // File is closed deterministically at scope's end.
-    foreach (line; File("text.txt").byLine()) {
+    foreach (line; File("text.txt").byLine())
+    {
         writeln(line);
     }
     writeln();
@@ -98,9 +104,11 @@ programming simple and pleasant for tasks, both small and large. $(EXAMPLE 3,
 import std.range, std.stdio;
 
 // Compute average line length for stdin
-void main() {
+void main()
+{
     ulong lines = 0, sumLength = 0;
-    foreach (line; stdin.byLine()) {
+    foreach (line; stdin.byLine())
+    {
         ++lines;
         sumLength += line.length;
     }
@@ -122,23 +130,27 @@ style, generics, generative programming, contract programming,
 and more&mdash;all harmoniously integrated. $(EXAMPLE 4,
 ----
 // Interfaces and classes
-interface Printable {
+interface Printable
+{
    void print(uint level)
    in { assert(level > 0); } // contract is part of the interface
 }
 
 // Interface implementation
-class Widget : Printable {
+class Widget : Printable
+{
    void print(uint level)
    in{ }
    body{ }
 }
 
 // Single inheritance of state
-class ExtendedWidget : Widget {
+class ExtendedWidget : Widget
+{
    override void print(uint level)
    in { /* weakening precondition is okay */  }
-   body {
+   body
+   {
        //... level may be 0 here ...
    }
 }
@@ -151,7 +163,8 @@ int perThread = 42;
 shared int perApp = 5;
 
 // Structs have value semantics
-struct BigNum {
+struct BigNum
+{
     // intercept copying
     this(this) { }
     // intercept destructor
@@ -192,7 +205,8 @@ intervening translation, and even inline assembly code. $(EXAMPLE 5,
 ----
 import core.stdc.stdlib;
 
-void livingDangerously() {
+void livingDangerously()
+{
     // Access to C's malloc and free primitives
     auto buf = malloc(1024 * 1024);
     scope(exit) free(buf); // free automatically upon scope exit
@@ -204,18 +218,23 @@ void livingDangerously() {
 }
 
 // Using inline asm for extra speed on x86
-uint checked_multiply(uint x, uint y) {
+uint checked_multiply(uint x, uint y)
+{
     uint result;
-    version (D_InlineAsm_X86) {
+    version (D_InlineAsm_X86)
+    {
         // Inline assembler "sees" D variables.
-        asm {
+        asm
+        {
             mov     EAX,x        ;
             mul     EAX,y        ;
             mov     result,EAX   ;
             jc      Loverflow    ;
         }
         return result;
-    } else {
+    }
+    else
+    {
         result = x * y;
         if (!y || x <= uint.max / y)
            return result;
