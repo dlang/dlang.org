@@ -103,7 +103,7 @@ $(GNAME LinkageType):
 
 ---------------
 extern (C):
-  int foo(); // call foo() with C conventions
+    int foo(); // call foo() with C conventions
 ---------------
 
         $(P D conventions are:)
@@ -116,11 +116,11 @@ extern (D):
 
 ---------------
 extern (Windows):
-  void *VirtualAlloc(
-    void *lpAddress,
-    uint dwSize,
-    uint flAllocationType,
-    uint flProtect
+    void *VirtualAlloc(
+        void *lpAddress,
+        uint dwSize,
+        uint flAllocationType,
+        uint flProtect
     );
 ---------------
 
@@ -204,11 +204,12 @@ $(GNAME AlignAttribute):
         of the companion C compiler.)
 
 --------
-struct S {
+struct S
+{
   align:
-     byte a;   // placed at offset 0
-     int b;    // placed at offset 4
-     long c;   // placed at offset 8
+    byte a;   // placed at offset 0
+    int b;    // placed at offset 4
+    long c;   // placed at offset 8
 }
 
 auto sz = S.sizeof;  // 16
@@ -224,11 +225,12 @@ auto sz = S.sizeof;  // 16
         )
 
 --------
-struct S {
+struct S
+{
   align (1):
-     byte a;   // placed at offset 0
-     int b;    // placed at offset 1
-     long c;   // placed at offset 5
+    byte a;   // placed at offset 0
+    int b;    // placed at offset 1
+    long c;   // placed at offset 5
 }
 
 auto sz = S.sizeof;  // 16
@@ -239,11 +241,12 @@ auto sz = S.sizeof;  // 16
         of the aggregate.)
 
 --------
-align (2) struct S {
+align (2) struct S
+{
   align (1):
-     byte a;   // placed at offset 0
-     int b;    // placed at offset 1
-     long c;   // placed at offset 5
+    byte a;   // placed at offset 0
+    int b;    // placed at offset 1
+    long c;   // placed at offset 5
 }
 
 auto sz = S.sizeof;  // 14
@@ -253,11 +256,12 @@ auto sz = S.sizeof;  // 14
         of the size of the field.)
 
 --------
-struct S {
+struct S
+{
   align (4):
-     byte a;   // placed at offset 0
-     byte b;   // placed at offset 4
-     short c;  // placed at offset 8
+    byte a;   // placed at offset 0
+    byte b;   // placed at offset 4
+    short c;  // placed at offset 8
 }
 
 auto sz = S.sizeof;  // 12
@@ -402,14 +406,17 @@ $(H3 $(LNAME2 const, $(D const) Attribute))
         const int foo = 7;
         static assert(is(typeof(foo) == const(int)));
 
-        const {
+        const
+        {
           double bar = foo + 6;
         }
         static assert(is(typeof(bar) == const(double)));
 
-        class C {
+        class C
+        {
           const void foo();
-          const {
+          const
+          {
             void bar();
           }
           void baz() const;
@@ -456,11 +463,13 @@ $(H3 $(LNAME2 gshared, $(D __gshared) Attribute))
         thread local.)
 
         ---
-        class Foo {
+        class Foo
+        {
           __gshared int bar;
         }
 
-        int foo() {
+        int foo()
+        {
           __gshared int bar = 0;
           return bar++; // Not thread safe.
         }
@@ -484,7 +493,8 @@ $(H3 $(LNAME2 disable, $(D @disable) Attribute))
         ---
         @disable void foo() { }
 
-        void main() {
+        void main()
+        {
           foo();   // error, foo is disabled
         }
         ---
@@ -507,10 +517,11 @@ $(H3 $(LNAME2 nogc, $(D @nogc) Attribute))
         )
 
         ---
-        @nogc void foo(char[] a) {
-          auto p = new int;  // error, operator new allocates
-          a ~= 'c';          // error, appending to arrays allocates
-          bar();             // error, bar() may allocate
+        @nogc void foo(char[] a)
+        {
+            auto p = new int;  // error, operator new allocates
+            a ~= 'c';          // error, appending to arrays allocates
+            bar();             // error, bar() may allocate
         }
 
         void bar() { }
@@ -527,11 +538,12 @@ $(H3 $(LNAME2 nogc, $(D @nogc) Attribute))
         void foo();
         @nogc void bar();
 
-        void test() {
-          fp = &foo; // ok
-          fp = &bar; // ok, it's covariant
-          gp = &foo; // error, not contravariant
-          gp = &bar; // ok
+        void test()
+        {
+            fp = &foo; // ok
+            fp = &bar; // ok, it's covariant
+            gp = &foo; // error, not contravariant
+            gp = &bar; // ok
         }
         ---
 
@@ -562,16 +574,19 @@ $(H3 $(LNAME2 override, $(D override) Attribute))
         )
 
 ---------------
-class Foo {
-  int bar();
-  int abc(int x);
+class Foo
+{
+    int bar();
+    int abc(int x);
 }
 
-class Foo2 : Foo {
-  override {
-    int bar(char c); // error, no bar(char) in Foo
-    int abc(int x);  // ok
-  }
+class Foo2 : Foo
+{
+    override
+    {
+        int bar(char c); // error, no bar(char) in Foo
+        int abc(int x);  // ok
+    }
 }
 ---------------
 
@@ -585,9 +600,10 @@ $(H3 $(LNAME2 static, $(D static) Attribute))
         )
 
 ---------------
-class Foo {
-  static int bar() { return 6; }
-  int foobar() { return 7; }
+class Foo
+{
+    static int bar() { return 6; }
+    int foobar() { return 7; }
 }
 
 ...
@@ -718,7 +734,8 @@ struct Bar
         )
 
 ---
-@(1) {
+@(1)
+{
     @(2) int a;         // has UDA's (1, 2)
     @("string") int b;  // has UDA's (1, "string")
 }
