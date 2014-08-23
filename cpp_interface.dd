@@ -70,12 +70,13 @@ $(CPPLISTING
 
 using namespace std;
 
-int foo(int i, int j, int k) {
-  cout << "i = " << i << endl;
-  cout << "j = " << j << endl;
-  cout << "k = " << k << endl;
-
-  return 7;
+int foo(int i, int j, int k)
+{
+    cout << "i = " << i << endl;
+    cout << "j = " << j << endl;
+    cout << "k = " << k << endl;
+  
+    return 7;
 }
 )
 
@@ -92,8 +93,9 @@ extern (C++) int foo(int i, int j, int k);
 ------
 extern (C++) int foo(int i, int j, int k);
 
-void main() {
-  foo(1,2,3);
+void main()
+{
+    foo(1,2,3);
 }
 ------
 
@@ -137,8 +139,9 @@ $(H3 C++ Namespaces)
 ------
 extern (C++, N) int foo(int i, int j, int k);
 
-void main() {
-  N.foo(1,2,3);   // foo is in C++ namespace 'N'
+void main()
+{
+    N.foo(1,2,3);   // foo is in C++ namespace 'N'
 }
 ------
 
@@ -152,17 +155,19 @@ $(H2 Calling Global D Functions From C++)
 ---
 import std.stdio;
 
-extern (C++) int foo(int i, int j, int k) {
-  writefln("i = %s", i);
-  writefln("j = %s", j);
-  writefln("k = %s", k);
-  return 1;
+extern (C++) int foo(int i, int j, int k)
+{
+    writefln("i = %s", i);
+    writefln("j = %s", j);
+    writefln("k = %s", k);
+    return 1;
 }
 
 extern (C++) void bar();
 
-void main() {
-  bar();
+void main()
+{
+    bar();
 }
 ---
 
@@ -171,8 +176,9 @@ void main() {
 $(CPPLISTING
 int foo(int i, int j, int k);
 
-void bar() {
-  foo(6, 7, 8);
+void bar()
+{
+    foo(6, 7, 8);
 }
 )
 
@@ -209,37 +215,42 @@ $(CPPLISTING
 
 using namespace std;
 
-class D {
- public:
-  virtual int bar(int i, int j, int k)
-  {
-    cout << "i = " << i << endl;
-    cout << "j = " << j << endl;
-    cout << "k = " << k << endl;
-    return 8;
-  }
+class D
+{
+  public:
+    virtual int bar(int i, int j, int k)
+    {
+        cout << "i = " << i << endl;
+        cout << "j = " << j << endl;
+        cout << "k = " << k << endl;
+        return 8;
+    }
 };
 
-D *getD() {
-  D *d = new D();
-  return d;
+D *getD()
+{
+    D *d = new D();
+    return d;
 }
 )
 
 	$(P We can get at it from D code like:)
 
 ---
-extern (C++) {
-  interface D {
-    int bar(int i, int j, int k);
-  }
-
-  D getD();
+extern (C++)
+{
+    interface D
+    {
+        int bar(int i, int j, int k);
+    }
+  
+    D getD();
 }
 
-void main() {
-  D d = getD();
-  d.bar(9,10,11);
+void main()
+{
+    D d = getD();
+    d.bar(9,10,11);
 }
 ---
 
@@ -250,37 +261,42 @@ $(H2 Calling D Virtual Functions From C++)
 ---
 extern (C++) int callE(E);
 
-extern (C++) interface E {
-  int bar(int i, int j, int k);
+extern (C++) interface E
+{
+    int bar(int i, int j, int k);
 }
 
-class F : E {
-  extern (C++) int bar(int i, int j, int k)
-  {
-    writefln("i = %s", i);
-    writefln("j = %s", j);
-    writefln("k = %s", k);
-    return 8;
-  }
+class F : E
+{
+    extern (C++) int bar(int i, int j, int k)
+    {
+        writefln("i = %s", i);
+        writefln("j = %s", j);
+        writefln("k = %s", k);
+        return 8;
+    }
 }
 
-void main() {
-  F f = new F();
-  callE(f);
+void main()
+{
+    F f = new F();
+    callE(f);
 }
 ---
 
 	$(P The C++ code to access it looks like:)
 
 $(CPPLISTING
-class E {
- public:
-  virtual int bar(int i, int j, int k);
+class E
+{
+  public:
+    virtual int bar(int i, int j, int k);
 };
 
 
-int callE(E *e) {
-  return e->bar(11,12,13);
+int callE(E *e)
+{
+    return e->bar(11,12,13);
 }
 )
 
@@ -684,9 +700,9 @@ void foo(const int x);  //error
 // Yes:
 void foo(const int* x, int* y)
 {
-   bar(*x); // bar(3)
-   *y = 4;
-   bar(*x); // bar(4)
+    bar(*x); // bar(3)
+    *y = 4;
+    bar(*x); // bar(4)
 }
 ...
 int i = 3;
@@ -697,9 +713,9 @@ $(CPPLISTING
 // Yes:
 void foo(const int* x, int* y)
 {
-   bar(*x); // bar(3)
-   *y = 4;
-   bar(*x); // bar(4)
+    bar(*x); // bar(3)
+    *y = 4;
+    bar(*x); // bar(4)
 }
 ...
 int i = 3;
@@ -710,10 +726,11 @@ foo(&i, &i);
 	$(TROW immutable/mutable aliasing,
 ---
 // No:
-void foo(immutable int* x, int* y) {
- bar(*x); // bar(3)
- *y = 4;  // undefined behavior
- bar(*x); // bar(??)
+void foo(immutable int* x, int* y)
+{
+    bar(*x); // bar(3)
+    *y = 4;  // undefined behavior
+    bar(*x); // bar(??)
 }
 ...
 int i = 3;
