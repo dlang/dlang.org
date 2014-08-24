@@ -58,10 +58,10 @@ $(H2 Labels)
 void *pc;
 asm
 {
-  call L1          ;
- L1:               ;
-  pop  EBX         ;
-  mov  pc[EBP],EBX ; // pc now points to code at L1
+    call L1          ;
+  L1:                ;
+    pop  EBX         ;
+    mov  pc[EBP],EBX ; // pc now points to code at L1
 }
 --------------
 
@@ -117,15 +117,15 @@ $(H2 db, ds, di, dl, df, dd, de)
 --------------
 asm
 {
-  db 5,6,0x83;   // insert bytes 0x05, 0x06, and 0x83 into code
-  ds 0x1234;     // insert bytes 0x34, 0x12
-  di 0x1234;     // insert bytes 0x34, 0x12, 0x00, 0x00
-  dl 0x1234;     // insert bytes 0x34, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  df 1.234;      // insert float 1.234
-  dd 1.234;      // insert double 1.234
-  de 1.234;      // insert real 1.234
-  db "abc";      // insert bytes 0x61, 0x62, and 0x63
-  ds "abc";      // insert bytes 0x61, 0x00, 0x62, 0x00, 0x63, 0x00
+    db 5,6,0x83;   // insert bytes 0x05, 0x06, and 0x83 into code
+    ds 0x1234;     // insert bytes 0x34, 0x12
+    di 0x1234;     // insert bytes 0x34, 0x12, 0x00, 0x00
+    dl 0x1234;     // insert bytes 0x34, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    df 1.234;      // insert float 1.234
+    dd 1.234;      // insert double 1.234
+    de 1.234;      // insert real 1.234
+    db "abc";      // insert bytes 0x61, 0x62, and 0x63
+    ds "abc";      // insert bytes 0x61, 0x00, 0x62, 0x00, 0x63, 0x00
 }
 --------------
 
@@ -189,9 +189,10 @@ $(DL
 	For example:
 
 --------------
-asm {
-  rep   ;
-  movsb ;
+asm
+{
+    rep   ;
+    movsb ;
 }
 --------------
 	)
@@ -200,9 +201,10 @@ asm {
 	$(DD This opcode is not supported by the assembler, instead use
 
 --------------
-asm {
-  rep  ;
-  nop  ;
+asm
+{
+    rep  ;
+    nop  ;
 }
 --------------
 
@@ -364,13 +366,16 @@ $(H3 Struct/Union/Class Member Offsets)
 
 --------------
 struct Foo { int a,b,c; }
-int bar(Foo *f) {
-  asm {
-    mov EBX,f                   ;
-    mov EAX,Foo.b.offsetof[EBX] ;
-  }
+int bar(Foo *f)
+{
+    asm
+    {
+        mov EBX,f                   ;
+        mov EAX,Foo.b.offsetof[EBX] ;
+    }
 }
-void main() {
+void main()
+{
     Foo f = Foo(0, 2, 0);
     assert(bar(&f) == 2);
 }
@@ -379,16 +384,20 @@ void main() {
     $(P Alternatively, inside the scope of an aggregate, only the member name is needed:)
 
 --------------
-struct Foo { // or class
-  int a,b,c;
-  int bar() {
-    asm {
-      mov EBX, this   ;
-      mov EAX, b[EBX] ;
+struct Foo   // or class
+{
+    int a,b,c;
+    int bar()
+    {
+        asm
+        {
+            mov EBX, this   ;
+            mov EAX, b[EBX] ;
+        }
     }
-  }
 }
-void main() {
+void main()
+{
     Foo f = Foo(0, 2, 0);
     assert(f.bar() == 2);
 }
@@ -402,11 +411,13 @@ $(H3 Stack Variables)
 	)
 
 ---
-int foo(int x) {
-  asm {
-    mov EAX,x[EBP] ; // loads value of parameter x into EAX
-    mov EAX,x      ; // does the same thing
-  }
+int foo(int x)
+{
+    asm
+    {
+        mov EAX,x[EBP] ; // loads value of parameter x into EAX
+        mov EAX,x      ; // does the same thing
+    }
 }
 ---
 
