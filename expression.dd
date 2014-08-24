@@ -315,9 +315,9 @@ x.re != y.re || x.im != y.im
 class C;
 C c;
 if (c == null)  // error
-  ...
+    ...
 if (c is null)  // ok
-  ...
+    ...
 ---
 
         $(P For static and dynamic arrays, equality is defined as the
@@ -476,7 +476,7 @@ $(H4 $(LNAME2 class_comparisons, Class comparisons))
 class C;
 C c;
 if (c < null)  // error
-  ...
+    ...
 ---
 
 $(H3 In Expressions)
@@ -725,11 +725,11 @@ bar = new int[][][](5,20,30);
 bar = new int[][][5];
 foreach (ref a; bar)
 {
-  a = new int[][20];
-  foreach (ref b; a)
-  {
-    b = new int[30];
-  }
+    a = new int[][20];
+    foreach (ref b; a)
+    {
+        b = new int[30];
+    }
 }
 -----------
 
@@ -816,11 +816,12 @@ $(GNAME CastExpression):
         class A { ... }
         class B : A { ... }
 
-        void test(A a, B b) {
-          B bx = a;         // error, need cast
-          B bx = cast(B) a; // bx is null if a is not a B
-          A ax = b;         // no cast needed
-          A ax = cast(A) b; // no runtime check needed for upcast
+        void test(A a, B b)
+        {
+            B bx = a;         // error, need cast
+            B bx = cast(B) a; // bx is null if a is not a B
+            A ax = b;         // no cast needed
+            A ax = cast(A) b; // no runtime check needed for upcast
         }
         -------------
 
@@ -831,11 +832,11 @@ $(GNAME CastExpression):
         -------------
         if (cast(B) o)
         {
-          // o is an instance of B
+            // o is an instance of B
         }
         else
         {
-          // o is not an instance of B
+            // o is not an instance of B
         }
         -------------
 
@@ -850,16 +851,17 @@ $(GNAME CastExpression):
         ---
         import std.stdio;
 
-        int main() {
-          byte[] a = [1,2,3];
-          auto b = cast(int[])a; // runtime array cast misalignment
-
-          int[] c = [1, 2, 3];
-          auto d = cast(byte[])c; // ok
-          // prints:
-          // [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]
-          writeln(d);
-          return 0;
+        int main()
+        {
+            byte[] a = [1,2,3];
+            auto b = cast(int[])a; // runtime array cast misalignment
+  
+            int[] c = [1, 2, 3];
+            auto d = cast(byte[])c; // ok
+            // prints:
+            // [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]
+            writeln(d);
+            return 0;
         }
         ---
 
@@ -869,18 +871,19 @@ $(GNAME CastExpression):
         )
 
         ---
-        void test() {
-          real a = 3.40483L;
-          real b;
-          b = 3.40483;     // literal is not truncated to double precision
-          assert(a == b);
-          assert(a == 3.40483);
-          assert(a == 3.40483L);
-          assert(a == 3.40483F);
-          double d = 3.40483; // truncate literal when assigned to variable
-          assert(d != a);     // so it is no longer the same
-          const double x = 3.40483; // assignment to const is not
-          assert(x == a);     // truncated if the initializer is visible
+        void test()
+        {
+            real a = 3.40483L;
+            real b;
+            b = 3.40483;     // literal is not truncated to double precision
+            assert(a == b);
+            assert(a == 3.40483);
+            assert(a == 3.40483L);
+            assert(a == 3.40483F);
+            double d = 3.40483; // truncate literal when assigned to variable
+            assert(d != a);     // so it is no longer the same
+            const double x = 3.40483; // assignment to const is not
+            assert(x == a);     // truncated if the initializer is visible
         }
         ---
 
@@ -1077,22 +1080,25 @@ $(H4 $(LNAME2 this, this))
         )
 
 -------------
-class A {
-  char get() { return 'A'; }
-
-  char foo() { return typeof(this).get(); }
-  char bar() { return this.get(); }
+class A
+{
+    char get() { return 'A'; }
+  
+    char foo() { return typeof(this).get(); }
+    char bar() { return this.get(); }
 }
 
-class B : A {
-  char get() { return 'B'; }
+class B : A
+{
+    char get() { return 'B'; }
 }
 
-void main() {
-  B b = new B();
-
-  b.foo();  // returns 'A'
-  b.bar();  // returns 'B'
+void main()
+{
+    B b = new B();
+  
+    b.foo();  // returns 'A'
+    b.bar();  // returns 'B'
 }
 -------------
 
@@ -1201,8 +1207,9 @@ $(GNAME ArrayLiteral):
         Thus, they can be returned safely from functions:)
 
 ---
-int[] foo() {
-  return [1, 2, 3];
+int[] foo()
+{
+    return [1, 2, 3];
 }
 ---
 
@@ -1215,14 +1222,15 @@ int[] foo() {
 ---
 import std.stdio;
 
-void main() {
-  // cast array literal
-  const short[] ct = cast(short[]) [cast(byte)1, 1];
-  writeln(ct);  // writes [1, 1]
-
-  // cast other array expression
-  short[] rt = cast(short[]) [cast(byte)1, cast(byte)1].dup;
-  writeln(rt);  // writes [257]
+void main()
+{
+    // cast array literal
+    const short[] ct = cast(short[]) [cast(byte)1, 1];
+    writeln(ct);  // writes [1, 1]
+  
+    // cast other array expression
+    short[] rt = cast(short[]) [cast(byte)1, cast(byte)1].dup;
+    writeln(rt);  // writes [257]
 }
 ---
 
@@ -1307,10 +1315,11 @@ $(GNAME ParameterAttributes):
         -------------
         int function(char c) fp; // declare pointer to a function
 
-        void test() {
-          static int foo(char c) { return 6; }
+        void test()
+        {
+            static int foo(char c) { return 6; }
 
-          fp = &foo;
+            fp = &foo;
         }
         -------------
 
@@ -1319,8 +1328,9 @@ $(GNAME ParameterAttributes):
         -------------
         int function(char c) fp;
 
-        void test() {
-          fp = function int(char c) { return 6;} ;
+        void test()
+        {
+            fp = function int(char c) { return 6;} ;
         }
         -------------
 
@@ -1329,11 +1339,12 @@ $(GNAME ParameterAttributes):
         -------------
         int abc(int delegate(int i));
 
-        void test() {
-          int b = 3;
-          int foo(int c) { return 6 + b; }
+        void test()
+        {
+            int b = 3;
+            int foo(int c) { return 6 + b; }
 
-          abc(&foo);
+            abc(&foo);
         }
         -------------
 
@@ -1342,10 +1353,11 @@ $(GNAME ParameterAttributes):
         -------------
         int abc(int delegate(int i));
 
-        void test() {
-          int b = 3;
+        void test()
+        {
+            int b = 3;
 
-          abc( delegate int(int c) { return 6 + b; } );
+            abc( delegate int(int c) { return 6 + b; } );
         }
         -------------
 
@@ -1356,14 +1368,15 @@ $(GNAME ParameterAttributes):
         int abc(int delegate(int i));
         int def(int function(int s));
 
-        void test() {
-          int b = 3;
+        void test()
+        {
+            int b = 3;
 
-          abc( (int c) { return 6 + b; } );  // inferred to delegate
-          def( (int c) { return c * 2; } );  // inferred to function
-        //def( (int c) { return c * b; } );  // error!
-          // Because the FunctionBody accesses b, then the function literal type
-          // is inferred to delegate. But def cannot receive delegate.
+            abc( (int c) { return 6 + b; } );  // inferred to delegate
+            def( (int c) { return c * 2; } );  // inferred to function
+          //def( (int c) { return c * b; } );  // error!
+            // Because the FunctionBody accesses b, then the function literal type
+            // is inferred to delegate. But def cannot receive delegate.
         }
         -------------
 
@@ -1373,12 +1386,13 @@ $(GNAME ParameterAttributes):
         -------------
         void foo(int function(int) fp);
 
-        void test() {
-          int function(int) fp = (n) { return n * 2; };
-          // The type of parameter n is inferred to int.
+        void test()
+        {
+            int function(int) fp = (n) { return n * 2; };
+            // The type of parameter n is inferred to int.
 
-          foo((n) { return n * 2; });
-          // The type of parameter n is inferred to int.
+            foo((n) { return n * 2; });
+            // The type of parameter n is inferred to int.
         }
         -------------
 
@@ -1386,20 +1400,23 @@ $(GNAME ParameterAttributes):
         For example, here an arbitrary statement is executed by a loop:)
 
         -------------
-        double test() {
-          double d = 7.6;
-          float f = 2.3;
+        double test()
+        {
+            double d = 7.6;
+            float f = 2.3;
 
-          void loop(int k, int j, void delegate() statement) {
-            for (int i = k; i < j; i++) {
-              statement();
+            void loop(int k, int j, void delegate() statement)
+            {
+                for (int i = k; i < j; i++)
+                {
+                    statement();
+                }
             }
-          }
 
-          loop(5, 100, { d += 1; } );
-          loop(3, 10,  { f += 3; } );
+            loop(5, 100, { d += 1; } );
+            loop(3, 10,  { f += 3; } );
 
-          return d + f;
+            return d + f;
         }
         -------------
 
@@ -1439,7 +1456,8 @@ $(GNAME Lambda):
         ---
         import std.stdio;
 
-        void main() {
+        void main()
+        {
             auto i = 3;
             auto twice  = function (int x) => x * 2;
             auto square = delegate (int x) => x * x;
@@ -1518,8 +1536,9 @@ $(GNAME AssertExpression):
         )
 
 ----
-void main() {
-  assert(0, "an" ~ " error message");
+void main()
+{
+    assert(0, "an" ~ " error message");
 }
 ----
 
@@ -1544,8 +1563,9 @@ $(GNAME MixinExpression):
         )
 
 ---
-int foo(int x) {
-  return mixin("x + 1") * 7;  // same as ((x + 1) * 7)
+int foo(int x)
+{
+    return mixin("x + 1") * 7;  // same as ((x + 1) * 7)
 }
 ---
 
@@ -1574,9 +1594,10 @@ $(GNAME ImportExpression):
             where it should look for the files to import. This is a security feature.
         )
 ---
-void foo() {
-  // Prints contents of file foo.txt
-  writeln( import("foo.txt") );
+void foo()
+{
+    // Prints contents of file foo.txt
+    writeln( import("foo.txt") );
 }
 ---
 
@@ -1608,14 +1629,15 @@ $(GNAME TypeidExpression):
 class A { }
 class B : A { }
 
-void main() {
-  writeln(typeid(int));  // int
-  uint i;
-  writeln(typeid(i++));  // uint
-  writeln(i);            // 1
-  A a = new B();
-  writeln(typeid(a));    // B
-  writeln(typeid(typeof(a)));  // A
+void main()
+{
+    writeln(typeid(int));  // int
+    uint i;
+    writeln(typeid(i++));  // uint
+    writeln(i);            // 1
+    A a = new B();
+    writeln(typeid(a));    // B
+    writeln(typeid(typeof(a)));  // A
 }
 ---
 
@@ -1683,15 +1705,16 @@ $(GNAME TypeSpecialization):
 
 -------------
 alias int func(int);    // func is a alias to a function type
-void foo() {
-  if (is(func[]) ) // not satisfied because arrays of
+void foo()
+{
+    if (is(func[]) )    // not satisfied because arrays of
                         // functions are not allowed
-    writeln("satisfied");
-  else
-    writeln("not satisfied");
-
-  if (is([][]))  // error, [][] is not a syntactically valid type
-    ...
+        writeln("satisfied");
+    else
+        writeln("not satisfied");
+  
+    if (is([][]))       // error, [][] is not a syntactically valid type
+        ...
 }
 -------------
         )
@@ -1704,12 +1727,13 @@ void foo() {
 
 -------------
 alias bar = short;
-void foo(bar x) {
-  if ( is(bar : int) )   // satisfied because short can be
-                              // implicitly converted to int
-    writeln("satisfied");
-  else
-    writeln("not satisfied");
+void foo(bar x)
+{
+    if ( is(bar : int) )   // satisfied because short can be
+                           // implicitly converted to int
+        writeln("satisfied");
+    else
+        writeln("not satisfied");
 }
 -------------
         )
@@ -1735,12 +1759,13 @@ void foo(bar x) {
 -------------
 alias bar = short;
 
-void test(bar x) {
-  if ( is(bar == int) ) // not satisfied because short is not
-                        // the same type as int
-    writeln("satisfied");
-  else
-    writeln("not satisfied");
+void test(bar x)
+{
+    if ( is(bar == int) ) // not satisfied because short is not
+                          // the same type as int
+        writeln("satisfied");
+    else
+        writeln("not satisfied");
 }
 -------------
         )
@@ -1752,16 +1777,17 @@ void test(bar x) {
 
 -------------
 alias bar = short;
-void foo(bar x) {
-  static if ( is(bar T) )
-    alias S = T;
-  else
-    alias S = long;
+void foo(bar x)
+{
+    static if ( is(bar T) )
+        alias S = T;
+    else
+        alias S = long;
 
-  writeln(typeid(S));  // prints "short"
-  if ( is(bar T) )  // error, Identifier T form can
-                      // only be in StaticIfConditions
-    ...
+    writeln(typeid(S)); // prints "short"
+    if ( is(bar T) )    // error, Identifier T form can
+                        // only be in StaticIfConditions
+        ...
 }
 -------------
         )
@@ -1781,19 +1807,20 @@ void foo(bar x) {
 -------------
 alias bar = int;
 alias abc = long*;
-void foo(bar x, abc a) {
-  static if ( is(bar T : int) )
-    alias S = T;
-  else
-    alias S = long;
+void foo(bar x, abc a)
+{
+    static if ( is(bar T : int) )
+        alias S = T;
+    else
+        alias S = long;
 
-  writeln(typeid(S));  // prints "int"
+    writeln(typeid(S));  // prints "int"
 
-  static if ( is(abc U : U*) )
-  {
-    U u;
-    writeln(typeid(typeof(u)));  // prints "long"
-  }
+    static if ( is(abc U : U*) )
+    {
+        U u;
+        writeln(typeid(typeof(u)));  // prints "long"
+    }
 }
 -------------
 
@@ -1861,13 +1888,14 @@ void foo(bar x, abc a) {
 -------------
 alias bar = short;
 enum E : byte { Emember }
-void foo(bar x) {
-  static if ( is(bar T == int) ) // not satisfied, short is not int
-    alias S = T;
-  alias U = T;       // error, T is not defined
+void foo(bar x)
+{
+    static if ( is(bar T == int) ) // not satisfied, short is not int
+        alias S = T;
+    alias U = T;                   // error, T is not defined
 
-  static if ( is(E V == enum) )  // satisified, E is an enum
-    V v;           // v is declared to be a byte
+    static if ( is(E V == enum) )  // satisified, E is an enum
+        V v;                       // v is declared to be a byte
 }
 -------------
 
@@ -1888,38 +1916,39 @@ void foo(bar x) {
 ---
 import std.stdio, std.typecons;
 
-void main() {
-  alias Tup = Tuple!(int, string);
-  alias AA = long[char[]];
+void main()
+{
+    alias Tup = Tuple!(int, string);
+    alias AA = long[char[]];
 
-  static if (is(Tup : TX!TL, alias TX, TL...))
-  {
-    writeln(is(TX!(int, long) == Tuple!(int, long)));  // true
-    writeln(typeid(TL[0]));  // int
-    writeln(typeid(TL[1]));  // immutable(char)[]
-  }
+    static if (is(Tup : TX!TL, alias TX, TL...))
+    {
+        writeln(is(TX!(int, long) == Tuple!(int, long)));  // true
+        writeln(typeid(TL[0]));  // int
+        writeln(typeid(TL[1]));  // immutable(char)[]
+    }
 
-  static if (is(AA T : T[U], U : const char[]))
-  {
-    writeln(typeid(T));  // long
-    writeln(typeid(U));  // const char[]
-  }
+    static if (is(AA T : T[U], U : const char[]))
+    {
+        writeln(typeid(T));  // long
+        writeln(typeid(U));  // const char[]
+    }
 
-  static if (is(AA A : A[B], B : int))
-  {
-    assert(0);  // should not match, as B is not an int
-  }
+    static if (is(AA A : A[B], B : int))
+    {
+        assert(0);  // should not match, as B is not an int
+    }
 
-  static if (is(int[10] W : W[V], int V))
-  {
-    writeln(typeid(W));  // int
-    writeln(V);          // 10
-  }
+    static if (is(int[10] W : W[V], int V))
+    {
+        writeln(typeid(W));  // int
+        writeln(V);          // 10
+    }
 
-  static if (is(int[10] X : X[Y], int Y : 5))
-  {
-    assert(0);  // should not match, Y should be 10
-  }
+    static if (is(int[10] X : X[Y], int Y : 5))
+    {
+        assert(0);  // should not match, Y should be 10
+    }
 }
 ---
 
