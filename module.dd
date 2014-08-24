@@ -225,8 +225,8 @@ import A;
 void foo();
 void test()
 {
-  foo(); // C.foo() is called, it is found before imports are searched
-  bar(); // A.bar() is called, since imports are searched
+    foo(); // C.foo() is called, it is found before imports are searched
+    bar(); // A.bar() is called, since imports are searched
 }
 ---
 
@@ -236,9 +236,9 @@ import A;
 import B;
 void test()
 {
-  foo();   // error, A.foo() or B.foo() ?
-  A.foo(); // ok, call A.foo()
-  B.foo(); // ok, call B.foo()
+    foo();   // error, A.foo() or B.foo() ?
+    A.foo(); // ok, call A.foo()
+    B.foo(); // ok, call B.foo()
 }
 ---
 
@@ -249,9 +249,9 @@ import B;
 alias foo = B.foo;
 void test()
 {
-  foo();   // call B.foo()
-  A.foo(); // call A.foo()
-  B.foo(); // call B.foo()
+    foo();   // call B.foo()
+    A.foo(); // call A.foo()
+    B.foo(); // call B.foo()
 }
 ---
 
@@ -313,8 +313,8 @@ static import std.stdio;
 
 void main()
 {
-  writeln("hello!");           // error, writeln is undefined
-  std.stdio.writeln("hello!"); // ok, writeln is fully qualified
+    writeln("hello!");           // error, writeln is undefined
+    std.stdio.writeln("hello!"); // ok, writeln is fully qualified
 }
 ---
 
@@ -330,9 +330,9 @@ import io = std.stdio;
 
 void main()
 {
-  io.writeln("hello!");        // ok, calls std.stdio.writeln
-  std.stdio.writeln("hello!"); // error, std is undefined
-  writeln("hello!");           // error, writeln is undefined
+    io.writeln("hello!");        // ok, calls std.stdio.writeln
+    std.stdio.writeln("hello!"); // error, std is undefined
+    writeln("hello!");           // error, writeln is undefined
 }
 ---
 
@@ -349,11 +349,11 @@ import std.stdio : writeln, foo = write;
 
 void main()
 {
-  std.stdio.writeln("hello!"); // error, std is undefined
-  writeln("hello!");           // ok, writeln bound into current namespace
-  write("world");              // error, write is undefined
-  foo("world");                // ok, calls std.stdio.write()
-  fwritefln(stdout, "abc");    // error, fwritefln undefined
+    std.stdio.writeln("hello!"); // error, std is undefined
+    writeln("hello!");           // ok, writeln bound into current namespace
+    write("world");              // error, write is undefined
+    foo("world");                // ok, calls std.stdio.write()
+    fwritefln(stdout, "abc");    // error, fwritefln undefined
 }
 ---
 
@@ -368,15 +368,16 @@ import io = std.stdio : foo = writeln;
 
 void main()
 {
-  writeln("bar");           // error, writeln is undefined
-  std.stdio.foo("bar");     // error, foo is bound into current namespace
-  std.stdio.writeln("bar"); // error, std is undefined
-  foo("bar");               // ok, foo is bound into current namespace,
-                            // FQN not required
-  io.writeln("bar");        // ok, io=std.stdio bound the name io in
-                            // the current namespace to refer to the entire module
-  io.foo("bar");            // error, foo is bound into current namespace,
-                            // foo is not a member of io
+    writeln("bar");           // error, writeln is undefined
+    std.stdio.foo("bar");     // error, foo is bound into current namespace
+    std.stdio.writeln("bar"); // error, std is undefined
+    foo("bar");               // ok, foo is bound into current namespace,
+                              // FQN not required
+    io.writeln("bar");        // ok, io=std.stdio bound the name io in
+                              // the current namespace to refer to the entire module
+    io.foo("bar");            // error, foo is bound into current namespace,
+                              // foo is not a member of io
+}
 --------------
 
 
@@ -385,9 +386,10 @@ $(H3 Scoped Imports)
     $(P Import declarations may be used at any scope. For example:)
 
 --------------
-void main() {
-  import std.stdio;
-  writeln("bar");
+void main()
+{
+    import std.stdio;
+    writeln("bar");
 }
 --------------
 
@@ -402,17 +404,19 @@ void main() {
 	)
 
 --------------
-void main() {
-  void writeln(string) {}
-  void foo() {
-    writeln("bar"); // calls main.writeln
-    import std.stdio;
-    writeln("bar"); // calls std.stdio.writeln
+void main()
+{
     void writeln(string) {}
-    writeln("bar"); // calls main.foo.writeln
-  }
-  writeln("bar"); // calls main.writeln
-  std.stdio.writeln("bar");  // error, std is undefined
+    void foo()
+    {
+        writeln("bar"); // calls main.writeln
+        import std.stdio;
+        writeln("bar"); // calls std.stdio.writeln
+        void writeln(string) {}
+        writeln("bar"); // calls main.foo.writeln
+    }
+    writeln("bar"); // calls main.writeln
+    std.stdio.writeln("bar");  // error, std is undefined
 }
 --------------
 
@@ -429,10 +433,10 @@ int x;
 
 int foo(int x)
 {
-  if (y)
-    return x;  // returns foo.x, not global x
-  else
-    return .x; // returns global x
+    if (y)
+        return x;  // returns foo.x, not global x
+    else
+        return .x; // returns global x
 }
 ---------
 
