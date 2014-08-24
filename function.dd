@@ -89,12 +89,12 @@ pure int foo(int i,
              const char* q,
              immutable int* s)
 {
-  debug writeln("in foo()"); // ok, impure code allowed in debug statement
-  x = i;   // error, modifying global state
-  i = x;   // error, reading mutable global state
-  i = y;   // ok, reading immutable global state
-  i = *pz; // error, reading const global state
-  return i;
+    debug writeln("in foo()"); // ok, impure code allowed in debug statement
+    x = i;   // error, modifying global state
+    i = x;   // error, reading mutable global state
+    i = y;   // ok, reading immutable global state
+    i = *pz; // error, reading const global state
+    return i;
 }
 ---
 
@@ -114,9 +114,10 @@ $(H4 $(LNAME2 ref-functions, Ref Functions))
         )
 
 ---
-ref int foo() {
-  auto p = new int;
-  return *p;
+ref int foo()
+{
+    auto p = new int;
+    return *p;
 }
 ...
 foo() = 3;  // reference returns can be lvalues
@@ -140,8 +141,9 @@ $(H4 $(LNAME2 auto-functions, Auto Functions))
         )
 
 ---
-auto foo(int i) {
-  return i + 3;  // return type is inferred to be int
+auto foo(int i)
+{
+    return i + 3;  // return type is inferred to be int
 }
 ---
 
@@ -289,28 +291,32 @@ $(H4 $(LNAME2 property-functions, Property Functions))
         )
 
         ---
-        struct S {
-          int m_x;
-          @property {
-            int x() { return m_x; }
-            int x(int newx) { return m_x = newx; }
+        struct S
+        {
+            int m_x;
+            @property
+            {
+                int x() { return m_x; }
+                int x(int newx) { return m_x = newx; }
 
-            int function(int, int) adder() {
-              return function int(int a, int b) { return a + b; }
+                int function(int, int) adder()
+                {
+                    return function int(int a, int b) { return a + b; }
+                }
             }
-          }
         }
-        void main() {
-          S s;
-          s.x;        // lowered to s.x()
-          s.x = 3;    // lowered to s.x(3)
+        void main()
+        {
+            S s;
+            s.x;        // lowered to s.x()
+            s.x = 3;    // lowered to s.x(3)
 
-          //s.x();    // NG: lowered to s.x()(), but the int value
-                      //     returned by s.x() is not callable
-          //s.x(3);   // NG: lowered to s.x()(3), but the int value
-                      //     returned by s.x() is not callable
-          assert(s.adder(1, 2) == 3);
-                      // OK lowered to s.adder()(1, 2)
+            //s.x();    // NG: lowered to s.x()(), but the int value
+                        //     returned by s.x() is not callable
+            //s.x(3);   // NG: lowered to s.x()(3), but the int value
+                        //     returned by s.x() is not callable
+            assert(s.adder(1, 2) == 3);
+                        // OK lowered to s.adder()(1, 2)
         }
         ---
 
@@ -319,16 +325,18 @@ $(H4 $(LNAME2 property-functions, Property Functions))
         )
 
         ---
-        struct S {
-          int m_x;
-          @property ref int x() { return m_x; }
+        struct S
+        {
+            int m_x;
+            @property ref int x() { return m_x; }
         }
-        void main() {
-          S s;
-          int n = s.x;  // s.x()
-          assert(s.m_x == n);
-          s.x = 2;      // s.x() = 2;
-          assert(s.m_x == 2);
+        void main()
+        {
+            S s;
+            int n = s.x;  // s.x()
+            assert(s.m_x == n);
+            s.x = 2;      // s.x() = 2;
+            assert(s.m_x == 2);
         }
         ---
 
@@ -337,23 +345,25 @@ $(H4 $(LNAME2 property-functions, Property Functions))
         )
 
         ---
-        struct S {
-          int m_x;
-          @property     int x1() { return m_x; }
-          @property ref int x2() { return m_x; }
+        struct S
+        {
+            int m_x;
+            @property     int x1() { return m_x; }
+            @property ref int x2() { return m_x; }
         }
-        void main() {
-          S s;
-          auto x1 = &s.x1;
-          auto x2 = &s.x2;
-          static assert(is(typeof(x1) == delegate));
-          static assert(is(typeof(x2) == delegate));
-          // Both x1 and x2 are delegate, not int pointer.
+        void main()
+        {
+            S s;
+            auto x1 = &s.x1;
+            auto x2 = &s.x2;
+            static assert(is(typeof(x1) == delegate));
+            static assert(is(typeof(x2) == delegate));
+            // Both x1 and x2 are delegate, not int pointer.
 
-          int n = x1();
-          assert(s.m_x == n);
-          x2() = 1;
-          assert(s.m_x == 1);
+            int n = x1();
+            assert(s.m_x == n);
+            x2() = 1;
+            assert(s.m_x == 1);
         }
         ---
 
@@ -374,13 +384,14 @@ $(H4 $(LNAME2 optional-parenthesis, Optional parenthesis))
         void foo() {}   // no arguments
         void bar(int[] arr) {}  // for UFCS
 
-        void main() {
-          foo();        // OK
-          foo;          // also OK
+        void main()
+        {
+            foo();      // OK
+            foo;        // also OK
 
-          int[] arr;
-          arr.bar();    // OK
-          arr.bar;      // also OK
+            int[] arr;
+            arr.bar();  // OK
+            arr.bar;    // also OK
         }
         ---
 
@@ -388,13 +399,15 @@ $(H4 $(LNAME2 optional-parenthesis, Optional parenthesis))
         )
 
         ---
-        struct S {
-          void foo(int) {}  // one argument
+        struct S
+        {
+            void foo(int) {}  // one argument
         }
-        void main() {
-          S s;
-          s.foo(1);     // OK
-          //s.foo = 1;  // disallowed
+        void main()
+        {
+            S s;
+            s.foo(1);     // OK
+            //s.foo = 1;  // disallowed
         }
         ---
 
@@ -428,30 +441,34 @@ $(H4 $(LNAME2 virtual-functions, Virtual Functions))
         )
 
 ------
-class A {
-  int def() { ... }
-  final int foo() { ... }
-  final private int bar() { ... }
-  private int abc() { ... }
+class A
+{
+    int def() { ... }
+    final int foo() { ... }
+    final private int bar() { ... }
+    private int abc() { ... }
 }
 
-class B : A {
-  override int def() { ... }  // ok, overrides A.def
-  override int foo() { ... }  // error, A.foo is final
-  int bar() { ... }  // ok, A.bar is final private, but not virtual
-  int abc() { ... }  // ok, A.abc is not virtual, B.abc is virtual
+class B : A
+{
+    override int def() { ... }  // ok, overrides A.def
+    override int foo() { ... }  // error, A.foo is final
+    int bar() { ... }  // ok, A.bar is final private, but not virtual
+    int abc() { ... }  // ok, A.abc is not virtual, B.abc is virtual
 }
 
-void test(A a) {
-  a.def();    // calls B.def
-  a.foo();    // calls A.foo
-  a.bar();    // calls A.bar
-  a.abc();    // calls A.abc
+void test(A a)
+{
+    a.def();    // calls B.def
+    a.foo();    // calls A.foo
+    a.bar();    // calls A.bar
+    a.abc();    // calls A.abc
 }
 
-void func() {
-  B b = new B();
-  test(b);
+void func()
+{
+    B b = new B();
+    test(b);
 }
 ------
 
@@ -465,12 +482,14 @@ void func() {
 class A { }
 class B : A { }
 
-class Foo {
-  A test() { return null; }
+class Foo
+{
+    A test() { return null; }
 }
 
-class Bar : Foo {
-  override B test() { return null; } // overrides and is covariant with Foo.test()
+class Bar : Foo
+{
+    override B test() { return null; } // overrides and is covariant with Foo.test()
 }
 ------
 
@@ -484,28 +503,33 @@ class Bar : Foo {
         )
 
 ------
-class B {
-  int foo() { return 1; }
+class B
+{
+    int foo() { return 1; }
 }
-class C : B {
-  override int foo() { return 2; }
+class C : B
+{
+    override int foo() { return 2; }
 
-  void test() {
-    assert(B.foo() == 1);  // translated to this.B.foo(), and
-                           // calls B.foo statically.
-    assert(C.foo() == 2);  // calls C.foo statically, even if
-                           // the actual instance of 'this' is D.
-  }
+    void test()
+    {
+        assert(B.foo() == 1);  // translated to this.B.foo(), and
+                               // calls B.foo statically.
+        assert(C.foo() == 2);  // calls C.foo statically, even if
+                               // the actual instance of 'this' is D.
+    }
 }
-class D : C {
-  override int foo() { return 3; }
+class D : C
+{
+    override int foo() { return 3; }
 }
-void main() {
-  auto d = new D();
-  assert(d.foo() == 3);    // calls D.foo
-  assert(d.B.foo() == 1);  // calls B.foo
-  assert(d.C.foo() == 2);  // calls C.foo
-  d.test();
+void main()
+{
+    auto d = new D();
+    assert(d.foo() == 3);    // calls D.foo
+    assert(d.B.foo() == 1);  // calls B.foo
+    assert(d.C.foo() == 2);  // calls C.foo
+    d.test();
 }
 ------
 
@@ -515,21 +539,25 @@ $(H4 $(LNAME2 function-inheritance, Function Inheritance and Overriding))
         types as a function in a base class overrides that function:
 
 ------
-class A {
-  int foo(int x) { ... }
+class A
+{
+    int foo(int x) { ... }
 }
 
-class B : A {
-  override int foo(int x) { ... }
+class B : A
+{
+    override int foo(int x) { ... }
 }
 
-void test() {
-  B b = new B();
-  bar(b);
+void test()
+{
+    B b = new B();
+    bar(b);
 }
 
-void bar(A a) {
-  a.foo(1);   // calls B.foo(int)
+void bar(A a)
+{
+    a.foo(1);   // calls B.foo(int)
 }
 ------
 
@@ -538,21 +566,24 @@ void bar(A a) {
         )
 
 ------
-class A {
-  int foo(int x) { ... }
-  int foo(long y) { ... }
+class A
+{
+    int foo(int x) { ... }
+    int foo(long y) { ... }
 }
 
-class B : A {
-  override int foo(long x) { ... }
+class B : A
+{
+    override int foo(long x) { ... }
 }
 
-void test() {
-  B b = new B();
-  b.foo(1);  // calls B.foo(long), since A.foo(int) not considered
-  A a = b;
+void test()
+{
+    B b = new B();
+    b.foo(1);  // calls B.foo(long), since A.foo(int) not considered
+    A a = b;
 
-   a.foo(1);    // issues runtime error (instead of calling A.foo(int))
+    a.foo(1);  // issues runtime error (instead of calling A.foo(int))
 }
 ------
 
@@ -561,25 +592,29 @@ void test() {
         )
 
 ------
-class A {
-  int foo(int x) { ... }
-  int foo(long y) { ... }
+class A
+{
+    int foo(int x) { ... }
+    int foo(long y) { ... }
 }
 
-class B : A {
-  $(CODE_HIGHLIGHT alias foo = A.foo;)
-  override int foo(long x) { ... }
+class B : A
+{
+    $(CODE_HIGHLIGHT alias foo = A.foo;)
+    override int foo(long x) { ... }
 }
 
-void test() {
-  B b = new B();
-  bar(b);
+void test()
+{
+    B b = new B();
+    bar(b);
 }
 
-void bar(A a) {
-  a.foo(1);      // calls A.foo(int)
-  B b = new B();
-  b.foo(1);      // calls A.foo(int)
+void bar(A a)
+{
+    a.foo(1);      // calls A.foo(int)
+    B b = new B();
+    b.foo(1);      // calls A.foo(int)
 }
 ------
 
@@ -593,28 +628,34 @@ void bar(A a) {
 ---
 import core.exception;
 
-class A {
-   void $(CODE_HIGHLIGHT set)(long i) { }
-   void set(int i)  { }
+class A
+{
+    void $(CODE_HIGHLIGHT set)(long i) { }
+    void set(int i)  { }
 }
-class B : A {
-   void set(long i) { }
-}
-
-void foo(A a) {
-  int i;
-  try {
-    a.set(3);   // error, throws runtime exception since
-                // A.set(int) should not be available from B
-  }
-  catch ($(CODE_HIGHLIGHT HiddenFuncError) o) {
-     i = 1;
-  }
-  assert(i == 1);
+class B : A
+{
+    void set(long i) { }
 }
 
-void main() {
-  foo(new B);
+void foo(A a)
+{
+    int i;
+    try
+    {
+        a.set(3);   // error, throws runtime exception since
+                    // A.set(int) should not be available from B
+    }
+    catch ($(CODE_HIGHLIGHT HiddenFuncError) o)
+    {
+        i = 1;
+    }
+    assert(i == 1);
+}
+
+void main()
+{
+    foo(new B);
 }
 ---
         $(P Note that the this current runtime behavior is deprecated.
@@ -634,28 +675,31 @@ void main() {
         $(P A function parameter's default value is not inherited:)
 
 ------
-class A {
-  void $(CODE_HIGHLIGHT foo)(int x = 5) { ... }
+class A
+{
+    void $(CODE_HIGHLIGHT foo)(int x = 5) { ... }
 }
 
-class B : A {
-  void foo(int $(CODE_HIGHLIGHT x = 7)) { ... }
+class B : A
+{
+    void foo(int $(CODE_HIGHLIGHT x = 7)) { ... }
 }
 
-class C : B {
-  void foo(int $(CODE_HIGHLIGHT x)) { ... }
+class C : B
+{
+    void foo(int $(CODE_HIGHLIGHT x)) { ... }
 }
 
+void test()
+{
+    A a = new A();
+    a.foo();       // calls A.foo(5)
 
-void test() {
-  A a = new A();
-  a.foo();       // calls A.foo(5)
+    B b = new B();
+    b.foo();       // calls B.foo(7)
 
-  B b = new B();
-  b.foo();       // calls B.foo(7)
-
-  C c = new C();
-  c.foo();       // error, need an argument for C.foo
+    C c = new C();
+    c.foo();       // error, need an argument for C.foo
 }
 ------
 
@@ -664,16 +708,19 @@ void test() {
         automatically compensated by the compiler.)
 
 ------
-class B {
-  void foo() pure nothrow @safe {}
+class B
+{
+    void foo() pure nothrow @safe {}
 }
-class D : B {
-  override void foo() {}
+class D : B
+{
+    override void foo() {}
 }
-void main() {
-  auto d = new D();
-  pragma(msg, typeof(&d.foo));
-  // prints "void delegate() pure nothrow @safe" in compile time
+void main()
+{
+    auto d = new D();
+    pragma(msg, typeof(&d.foo));
+    // prints "void delegate() pure nothrow @safe" in compile time
 }
 ------
 
@@ -735,14 +782,15 @@ class C : B { }
 void foo(A);
 void foo(B);
 
-void test() {
-  C c;
-  /* Both foo(A) and foo(B) match with implicit conversion rules.
-   * Applying partial ordering rules,
-   * foo(B) cannot be called with an A, and foo(A) can be called
-   * with a B. Therefore, foo(B) is more specialized, and is selected.
-   */
-  foo(c); // calls foo(B)
+void test()
+{
+    C c;
+    /* Both foo(A) and foo(B) match with implicit conversion rules.
+     * Applying partial ordering rules,
+     * foo(B) cannot be called with an A, and foo(A) can be called
+     * with a B. Therefore, foo(B) is more specialized, and is selected.
+     */
+    foo(c); // calls foo(B)
 }
 ---
         $(P A function with a variadic argument is considered less
@@ -790,13 +838,14 @@ void foo(int i) { }
 import A;
 import B;
 
-void bar(C c) {
-  foo();    // calls A.foo()
-  foo(1L);  // calls A.foo(long)
-  foo(c);   // calls B.foo(C)
-  foo(1,2); // error, does not match any foo
-  foo(1);   // error, matches A.foo(long) and B.foo(int)
-  A.foo(1); // calls A.foo(long)
+void bar(C c)
+{
+    foo();    // calls A.foo()
+    foo(1L);  // calls A.foo(long)
+    foo(c);   // calls B.foo(C)
+    foo(1,2); // error, does not match any foo
+    foo(1);   // error, matches A.foo(long) and B.foo(int)
+    A.foo(1); // calls A.foo(long)
 }
 ---
 
@@ -815,13 +864,14 @@ import B;
 alias foo = A.foo;
 alias foo = B.foo;
 
-void bar(C c) {
-  foo();    // calls A.foo()
-  foo(1L);  // calls A.foo(long)
-  foo(c);   // calls B.foo(C)
-  foo(1,2); // error, does not match any foo
-  foo(1);   // calls B.foo(int)
-  A.foo(1); // calls A.foo(long)
+void bar(C c)
+{
+    foo();    // calls A.foo()
+    foo(1L);  // calls A.foo(long)
+    foo(c);   // calls B.foo(C)
+    foo(1,2); // error, does not match any foo
+    foo(1);   // calls B.foo(int)
+    A.foo(1); // calls A.foo(long)
 }
 ---
 
@@ -868,27 +918,28 @@ int foo(in int x, out int y, ref int z, int q);
 	)
 
 ------
-void foo(out int x) {
-  // x is set to int.init,
-  // which is 0, at start of foo()
+void foo(out int x)
+{
+    // x is set to int.init,
+    // which is 0, at start of foo()
 }
 
 int a = 3;
 foo(a);
 // a is now 0
 
-
-void abc(out int x) {
-  x = 2;
+void abc(out int x)
+{
+    x = 2;
 }
 
 int y = 3;
 abc(y);
 // y is now 2
 
-
-void def(ref int x) {
-  x += 1;
+void def(ref int x)
+{
+    x += 1;
 }
 
 int z = 3;
@@ -907,14 +958,16 @@ def(z);
         cannot be an lvalue.)
 
 ---
-void dotimes(int n, lazy void exp) {
-  while (n--)
-    exp();
+void dotimes(int n, lazy void exp)
+{
+    while (n--)
+        exp();
 }
 
-void test() {
-  int x;
-  dotimes(3, writeln(x++));
+void test()
+{
+    int x;
+    dotimes(3, writeln(x++));
 }
 ---
 
@@ -934,8 +987,9 @@ $(H4 Function Default Arguments)
         $(P Function parameter declarations can have default values:)
 
 ---
-void foo(int x, int y = 3) {
-  ...
+void foo(int x, int y = 3)
+{
+    ...
 }
 ...
 foo(4);   // same as foo(4, 3);
@@ -1047,15 +1101,16 @@ import core.vararg;
 ------
 import core.vararg;
 
-void test() {
-  foo(3, 4, 5);   // first variadic argument is 5
+void test()
+{
+    foo(3, 4, 5);   // first variadic argument is 5
 }
 
-int foo(int x, int y, ...) {
+int foo(int x, int y, ...)
+{
+    int z;
 
-  int z;
-
-  z = va_arg!int(_argptr); // z is set to 5
+    z = va_arg!int(_argptr); // z is set to 5
 }
 ------
 
@@ -1072,48 +1127,50 @@ import core.vararg;
 class Foo { int x = 3; }
 class Bar { long y = 4; }
 
-void printargs(int x, ...) {
-  writefln("%d arguments", _arguments.length);
-  for (int i = 0; i < _arguments.length; i++)
-  {
-    writeln(_arguments[i]);
-
-    if (_arguments[i] == typeid(int))
+void printargs(int x, ...)
+{
+    writefln("%d arguments", _arguments.length);
+    for (int i = 0; i < _arguments.length; i++)
     {
-      int j = va_arg!(int)(_argptr);
-      writefln("\t%d", j);
+        writeln(_arguments[i]);
+    
+        if (_arguments[i] == typeid(int))
+        {
+            int j = va_arg!(int)(_argptr);
+            writefln("\t%d", j);
+        }
+        else if (_arguments[i] == typeid(long))
+        {
+            long j = va_arg!(long)(_argptr);
+            writefln("\t%d", j);
+        }
+        else if (_arguments[i] == typeid(double))
+        {
+            double d = va_arg!(double)(_argptr);
+            writefln("\t%g", d);
+        }
+        else if (_arguments[i] == typeid(Foo))
+        {
+            Foo f = va_arg!(Foo)(_argptr);
+            writefln("\t%s", f);
+        }
+        else if (_arguments[i] == typeid(Bar))
+        {
+            Bar b = va_arg!(Bar)(_argptr);
+            writefln("\t%s", b);
+        }
+        else
+            assert(0);
     }
-    else if (_arguments[i] == typeid(long))
-    {
-      long j = va_arg!(long)(_argptr);
-      writefln("\t%d", j);
-    }
-    else if (_arguments[i] == typeid(double))
-    {
-      double d = va_arg!(double)(_argptr);
-      writefln("\t%g", d);
-    }
-    else if (_arguments[i] == typeid(Foo))
-    {
-      Foo f = va_arg!(Foo)(_argptr);
-      writefln("\t%s", f);
-    }
-    else if (_arguments[i] == typeid(Bar))
-    {
-      Bar b = va_arg!(Bar)(_argptr);
-      writefln("\t%s", b);
-    }
-    else
-      assert(0);
-  }
 }
 
-void main() {
-  Foo f = new Foo();
-  Bar b = new Bar();
+void main()
+{
+    Foo f = new Foo();
+    Bar b = new Bar();
 
-  writefln("%s", f);
-  printargs(1, 2, 3L, 4.5, f, b);
+    writefln("%s", f);
+    printargs(1, 2, 3L, 4.5, f, b);
 }
 ------
 
@@ -1144,57 +1201,65 @@ $(H4 Typesafe Variadic Functions)
         $(P For arrays:)
 
 ------
-int test() {
-  return sum(1, 2, 3) + sum(); // returns 6+0
+int test()
+{
+    return sum(1, 2, 3) + sum(); // returns 6+0
 }
 
-int func() {
-  int[3] ii = [4, 5, 6];
-  return sum(ii);             // returns 15
+int func()
+{
+    int[3] ii = [4, 5, 6];
+    return sum(ii);             // returns 15
 }
 
-int sum(int[] ar ...) {
-  int s;
-  foreach (int x; ar)
-    s += x;
-  return s;
+int sum(int[] ar ...)
+{
+    int s;
+    foreach (int x; ar)
+        s += x;
+    return s;
 }
 ------
 
         For static arrays:
 
 ------
-int test() {
-  return sum(2, 3);   // error, need 3 values for array
-  return sum(1, 2, 3); // returns 6
+int test()
+{
+    return sum(2, 3);   // error, need 3 values for array
+    return sum(1, 2, 3); // returns 6
 }
 
-int func() {
-  int[3] ii = [4, 5, 6];
-  int[] jj = ii;
-  return sum(ii); // returns 15
-  return sum(jj); // error, type mismatch
+int func()
+{
+    int[3] ii = [4, 5, 6];
+    int[] jj = ii;
+    return sum(ii); // returns 15
+    return sum(jj); // error, type mismatch
 }
 
-int sum(int[3] ar ...) {
-  int s;
-  foreach (int x; ar)
-    s += x;
-  return s;
+int sum(int[3] ar ...)
+{
+    int s;
+    foreach (int x; ar)
+        s += x;
+    return s;
 }
 ------
 
         For class objects:
 
 ------
-class Foo {
-  int x;
-  string s;
+class Foo
+{
+    int x;
+    string s;
 
-  this(int x, string s) {
-    this.x = x;
-    this.s = s;
-  }
+    this(int x, string s)
+    {
+        this.x = x;
+        this.s = s;
+    }
 }
 
 void test(int x, Foo f ...);
@@ -1212,22 +1277,25 @@ test(1, 5);         // error, no matching constructor for Foo
         instance after the variadic function has returned:
 
 ------
-Foo test(Foo f ...) {
-  return f;   // error, f instance contents invalid after return
+Foo test(Foo f ...)
+{
+    return f;   // error, f instance contents invalid after return
 }
 
-int[] test(int[] a ...) {
-  return a;       // error, array contents invalid after return
-  return a[0..1]; // error, array contents invalid after return
-  return a.dup;   // ok, since copy is made
+int[] test(int[] a ...)
+{
+    return a;       // error, array contents invalid after return
+    return a[0..1]; // error, array contents invalid after return
+    return a.dup;   // ok, since copy is made
 }
 ------
 
         For other types, the argument is built with itself, as in:
 
 ------
-int test(int i ...) {
-  return i;
+int test(int i ...)
+{
+    return i;
 }
 
 ...
@@ -1280,15 +1348,18 @@ $(H3 $(LNAME2 Local Variables, Local Variables))
         )
 
 ------
-void func(int x) {
-   int x;     // error, hides previous definition of x
-   double y;
-   ...
-   { char y;  // error, hides previous definition of y
-     int z;
-   }
-   { wchar z; // legal, previous z is out of scope
-   }
+void func(int x)
+{
+    int x;       // error, hides previous definition of x
+    double y;
+    ...
+    {
+        char y;  // error, hides previous definition of y
+        int z;
+    }
+    {
+        wchar z; // legal, previous z is out of scope
+    }
 }
 ------
 
@@ -1314,10 +1385,11 @@ $(H3 $(LNAME2 Local Static Variables, Local Static Variables))
 	)
 
 ---
-void foo() {
-  static int n;
-  if (++n == 100)
-    writeln("called 100 times");
+void foo()
+{
+    static int n;
+    if (++n == 100)
+        writeln("called 100 times");
 }
 ---
 
@@ -1333,11 +1405,12 @@ void foo() {
 	)
 
 ---
-void main() {
-  { static int x; }
-  { static int x; } // error
-  { int i; }
-  { int i; } // ok
+void main()
+{
+    { static int x; }
+    { static int x; } // error
+    { int i; }
+    { int i; } // ok
 }
 ---
 
@@ -1346,17 +1419,20 @@ $(H3 $(LNAME2 variadicnested, Nested Functions))
         $(P Functions may be nested within other functions:)
 
 ------
-int bar(int a) {
-  int foo(int b) {
-    int abc() { return 1; }
-
-    return b + abc();
-  }
-  return foo(a);
+int bar(int a)
+{
+    int foo(int b)
+    {
+        int abc() { return 1; }
+  
+        return b + abc();
+    }
+    return foo(a);
 }
 
-void test() {
-  int i = bar(3); // i is assigned 4
+void test()
+{
+    int i = bar(3); // i is assigned 4
 }
 ------
 
@@ -1365,43 +1441,45 @@ void test() {
 ------
 void foo()
 {
-  void A()
-  {
-    B(); // error, B() is forward referenced
-    C(); // error, C undefined
-  }
-  void B()
-  {
-    A(); // ok, in scope
-    void C()
+    void A()
     {
-      void D()
-      {
-        A();      // ok
-        B();      // ok
-        C();      // ok
-        D();      // ok
-      }
+        B(); // error, B() is forward referenced
+        C(); // error, C undefined
     }
-  }
-  A(); // ok
-  B(); // ok
-  C(); // error, C undefined
+    void B()
+    {
+        A(); // ok, in scope
+        void C()
+        {
+            void D()
+            {
+                A();      // ok
+                B();      // ok
+                C();      // ok
+                D();      // ok
+            }
+        }
+    }
+    A(); // ok
+    B(); // ok
+    C(); // error, C undefined
 }
 ------
 
         $(P and:)
 
 ------
-int bar(int a) {
-  int foo(int b) { return b + 1; }
-  int abc(int b) { return foo(b); }   // ok
-  return foo(a);
+int bar(int a)
+{
+    int foo(int b) { return b + 1; }
+    int abc(int b) { return foo(b); }   // ok
+    return foo(a);
 }
 
-void test() {
-  int i = bar(3);     // ok
-  int j = bar.foo(3); // error, bar.foo not visible
+void test()
+{
+    int i = bar(3);     // ok
+    int j = bar.foo(3); // error, bar.foo not visible
 }
 ------
 
@@ -1411,37 +1489,43 @@ void test() {
         )
 
 ------
-int bar(int a) {
-  int c = 3;
-
-  int foo(int b) {
-    b += c;       // 4 is added to b
-    c++;          // bar.c is now 5
-    return b + c; // 12 is returned
-  }
-  c = 4;
-  int i = foo(a); // i is set to 12
-  return i + c;   // returns 17
+int bar(int a)
+{
+    int c = 3;
+  
+    int foo(int b)
+    {
+        b += c;       // 4 is added to b
+        c++;          // bar.c is now 5
+        return b + c; // 12 is returned
+    }
+    c = 4;
+    int i = foo(a); // i is set to 12
+    return i + c;   // returns 17
 }
 
-void test() {
-  int i = bar(3); // i is assigned 17
+void test()
+{
+    int i = bar(3); // i is assigned 17
 }
 ------
 
         $(P This access can span multiple nesting levels:)
 
 ------
-int bar(int a) {
-  int c = 3;
+int bar(int a)
+{
+    int c = 3;
 
-  int foo(int b) {
-      int abc() {
-          return c;   // access bar.c
-      }
-      return b + c + abc();
-  }
-  return foo(3);
+    int foo(int b)
+    {
+        int abc()
+        {
+            return c;   // access bar.c
+        }
+        return b + c + abc();
+    }
+    return foo(3);
 }
 ------
 
@@ -1451,33 +1535,38 @@ int bar(int a) {
         )
 
 ------
-int bar(int a) {
-  int c;
-  static int d;
-
-  static int foo(int b) {
-    b = d;          // ok
-    b = c;          // error, foo() cannot access frame of bar()
-    return b + 1;
-  }
-  return foo(a);
+int bar(int a)
+{
+    int c;
+    static int d;
+  
+    static int foo(int b)
+    {
+        b = d;          // ok
+        b = c;          // error, foo() cannot access frame of bar()
+        return b + 1;
+    }
+    return foo(a);
 }
 ------
 
         $(P Functions can be nested within member functions:)
 
 ------
-struct Foo {
-  int a;
-
-  int bar() {
-    int c;
-
-    int foo() {
-      return c + a;
+struct Foo
+{
+    int a;
+  
+    int bar()
+    {
+        int c;
+    
+        int foo()
+        {
+            return c + a;
+        }
+        return 0;
     }
-    return 0;
-  }
 }
 ------
 
@@ -1490,9 +1579,10 @@ struct Foo {
         )
 
 ------
-void test() {
-  void foo() { bar(); } // error, bar not defined
-  void bar() { foo(); } // ok
+void test()
+{
+    void foo() { bar(); } // error, bar not defined
+    void bar() { foo(); } // ok
 }
 ------
 
@@ -1501,13 +1591,15 @@ void test() {
         $(LI You can declare the functions to be static members of a nested struct:)
 
 ------
-void test() {
-  static struct S {
-      static void foo() { bar(); } // ok
-      static void bar() { foo(); } // ok
-  }
-
-  S.foo();  // compiles (but note the infinite runtime loop)
+void test()
+{
+    static struct S
+    {
+        static void foo() { bar(); } // ok
+        static void bar() { foo(); } // ok
+    }
+ 
+    S.foo();  // compiles (but note the infinite runtime loop)
 }
 ------
 
@@ -1515,9 +1607,10 @@ void test() {
         even if they take no specific template arguments:)
 
 ------
-void test() {
-  void foo()() { bar(); } // ok (foo is a function template)
-  void bar()   { foo(); } // ok
+void test()
+{
+    void foo()() { bar(); } // ok (foo is a function template)
+    void bar()   { foo(); } // ok
 }
 ------
 
@@ -1526,24 +1619,25 @@ void test() {
 ------
 mixin template T()
 {
-  void foo() { bar(); } // ok
-  void bar() { foo(); } // ok
+    void foo() { bar(); } // ok
+    void bar() { foo(); } // ok
 }
 
 void test()
 {
-  mixin T!();
+    mixin T!();
 }
 ------
 
         $(LI Or you can use a delegate:)
 
 ------
-void test() {
-  void delegate() fp;
-  void foo() { fp(); }
-  void bar() { foo(); }
-  fp = &bar;
+void test()
+{
+    void delegate() fp;
+    void foo() { fp(); }
+    void bar() { foo(); }
+    fp = &bar;
 }
 ------
 
@@ -1558,16 +1652,18 @@ $(H4 $(LNAME2 closures, Delegates, Function Pointers, and  Closures))
 ------
 int function() fp;
 
-void test() {
-  static int a = 7;
-  static int foo() { return a + 3; }
+void test()
+{
+    static int a = 7;
+    static int foo() { return a + 3; }
 
-  fp = &foo;
+    fp = &foo;
 }
 
-void bar() {
-  test();
-  int i = fp();       // i is set to 10
+void bar()
+{
+    test();
+    int i = fp();       // i is set to 10
 }
 ------
 
@@ -1576,12 +1672,13 @@ void bar() {
 ------
 int delegate() dg;
 
-void test() {
-  int a = 7;
-  int foo() { return a + 3; }
+void test()
+{
+    int a = 7;
+    int foo() { return a + 3; }
 
-  dg = &foo;
-  int i = dg(); // i is set to 10
+    dg = &foo;
+    int i = dg(); // i is set to 10
 }
 ------
 
@@ -1594,11 +1691,12 @@ void test() {
         )
 
 ------
-int* bar() {
-  int b;
-  test();
-  int i = dg(); // ok, test.a is in a closure and still exists
-  return &b;    // error, bar.b not valid after bar() exits
+int* bar()
+{
+    int b;
+    test();
+    int i = dg(); // ok, test.a is in a closure and still exists
+    return &b;    // error, bar.b not valid after bar() exits
 }
 ------
 
@@ -1614,23 +1712,26 @@ int* bar() {
         )
 
 ------
-struct Foo {
-  int a = 7;
-  int bar() { return a; }
+struct Foo
+{
+    int a = 7;
+    int bar() { return a; }
 }
 
-int foo(int delegate() dg) {
-  return dg() + 1;
+int foo(int delegate() dg)
+{
+    return dg() + 1;
 }
 
-void test() {
-  int x = 27;
-  int abc() { return x; }
-  Foo f;
-  int i;
+void test()
+{
+    int x = 27;
+    int abc() { return x; }
+    Foo f;
+    int i;
 
-  i = foo(&abc);   // i is set to 28
-  i = foo(&f.bar); // i is set to 8
+    i = foo(&abc);   // i is set to 28
+    i = foo(&f.bar); // i is set to 8
 }
 ------
 
@@ -1752,10 +1853,11 @@ $(H3 $(LNAME2 interpretation, Compile Time Function Execution (CTFE)))
 ---
 static int y = 0;
 
-int countTen(int x) {
-  if (x > 10)
-    ++y;
-  return x;
+int countTen(int x)
+{
+    if (x > 10)
+        ++y;
+    return x;
 }
 
 static assert(countTen(6) == 6); // OK
@@ -1781,19 +1883,22 @@ static assert(countTen(12) == 12);  // invalid, modifies y.
 	)
 
 ---
-template eval( A... ) {
-  const typeof(A[0]) eval = A[0];
+template eval( A... )
+{
+    const typeof(A[0]) eval = A[0];
 }
 
-int square(int i) {
-  return i * i;
+int square(int i)
+{
+    return i * i;
 }
 
-void foo() {
-  static j = square(3);     // compile time
-  writeln(j);
-  writeln(square(4));      // run time
-  writeln(eval!(square(5))); // compile time
+void foo()
+{
+    static j = square(3);     // compile time
+    writeln(j);
+    writeln(square(4));      // run time
+    writeln(eval!(square(5))); // compile time
 }
 ---
 
@@ -1832,8 +1937,9 @@ $(H4 String Mixins and Compile Time Function Execution)
         depend on compile time values of the function. For example:)
 
 ---
-int foo(char[] s) {
-  return mixin(s);
+int foo(char[] s)
+{
+    return mixin(s);
 }
 
 const int x = foo("1");
@@ -1984,32 +2090,35 @@ $(H3 $(LNAME2 pseudo-member, Uniform Function Call Syntax (UFCS)))
         module a;
         void foo(X);
         alias boo = foo;
-        void main() {
-          void bar(X);
-          import b : baz;  // void baz(X);
+        void main()
+        {
+            void bar(X);
+            import b : baz;  // void baz(X);
 
-          X obj;
-          obj.foo();    // OK, calls a.foo;
-          //obj.bar();  // NG, UFCS does not see nested functions
-          obj.baz();    // OK, calls b.baz, because it is declared at the
-                        // top level scope of module b
-
-          import b : boo = baz;
-          obj.boo();    // OK, calls aliased b.baz instead of a.boo (== a.foo),
-                        // because the declared alias name 'boo' in local scope
-                        // overrides module scope name
-        }
-        class C {
-          void mfoo(X);
-          static void sbar(X);
-          import b : ibaz = baz;  // void baz(X);
-          void test() {
             X obj;
-            //obj.mfoo();  // NG, UFCS does not see member functions
-            //obj.sbar();  // NG, UFCS does not see static member functions
-            obj.ibaz();    // OK, ibaz is an alias of baz which declared at
-                           //     the top level scope of module b
-          }
+            obj.foo();    // OK, calls a.foo;
+            //obj.bar();  // NG, UFCS does not see nested functions
+            obj.baz();    // OK, calls b.baz, because it is declared at the
+                          // top level scope of module b
+  
+            import b : boo = baz;
+            obj.boo();    // OK, calls aliased b.baz instead of a.boo (== a.foo),
+                          // because the declared alias name 'boo' in local scope
+                          // overrides module scope name
+        }
+        class C
+        {
+            void mfoo(X);
+            static void sbar(X);
+            import b : ibaz = baz;  // void baz(X);
+            void test()
+            {
+                X obj;
+                //obj.mfoo();  // NG, UFCS does not see member functions
+                //obj.sbar();  // NG, UFCS does not see static member functions
+                obj.ibaz();    // OK, ibaz is an alias of baz which declared at
+                               //     the top level scope of module b
+            }
         }
         ---
 
@@ -2019,23 +2128,25 @@ $(H3 $(LNAME2 pseudo-member, Uniform Function Call Syntax (UFCS)))
         ---
         int front(int[] arr) { return arr[0]; }
 
-        void main() {
-          int[] a = [1,2,3];
-          auto x = a.front();   // call .front by UFCS
+        void main()
+        {
+            int[] a = [1,2,3];
+            auto x = a.front();   // call .front by UFCS
 
-          auto front = x;       // front is now a variable
-          auto y = a.front();   // Error, front is not a function
+            auto front = x;       // front is now a variable
+            auto y = a.front();   // Error, front is not a function
         }
 
-        class C {
-          int[] arr;
-          int front() {
-            return arr.front(); // Error, C.front is not callable
-                                // using argument types (int[])
-          }
+        class C
+        {
+            int[] arr;
+            int front()
+            {
+                return arr.front(); // Error, C.front is not callable
+                                    // using argument types (int[])
+            }
         }
         ---
-
 
 )
 
