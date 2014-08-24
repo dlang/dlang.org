@@ -162,8 +162,8 @@ class FooX
 
     ~this()
     {
-	if (!commit)
-	    dofoo_undo(f);
+        if (!commit)
+            dofoo_undo(f);
     }
 }
 
@@ -187,13 +187,13 @@ Transaction abc()
     f = dofoo();
     try
     {
-	b = dobar();
-	return Transaction(f, b);
+        b = dobar();
+        return Transaction(f, b);
     }
     catch (Object o)
     {
-	dofoo_undo(f);
-	throw o;
+        dofoo_undo(f);
+        throw o;
     }
 }
 ---
@@ -259,14 +259,14 @@ there's a loop that would otherwise cause a blizzard of messages to be output:
 ---
 class Foo
 {
-    bool verbose;	// true means print messages, false means silence
+    bool verbose;   // true means print messages, false means silence
     ...
     bar()
     {
-	auto verbose_save = verbose;
-	verbose = false;
-	... lots of code ...
-	verbose = verbose_save;
+        auto verbose_save = verbose;
+        verbose = false;
+        ... lots of code ...
+        verbose = verbose_save;
     }
 }
 ---
@@ -278,15 +278,15 @@ That's easily fixed with $(D_KEYWORD scope)(exit):
 ---
 class Foo
 {
-    bool verbose;	// true means print messages, false means silence
+    bool verbose;   // true means print messages, false means silence
     ...
     bar()
     {
-	auto verbose_save = verbose;
-	verbose = false;
-	scope(exit) verbose = verbose_save;
+        auto verbose_save = verbose;
+        verbose = false;
+        scope(exit) verbose = verbose_save;
 
-	...lots of code...
+        ...lots of code...
     }
 }
 ---
@@ -352,15 +352,15 @@ class Mailer
 {
     void Send(Message msg)
     {
-	{
-	    char[] origTitle = msg.Title();
-	    scope(exit) msg.SetTitle(origTitle);
-	    msg.SetTitle("[Sending] " ~ origTitle);
-	    Copy(msg, "Sent");
-	}
-	scope(success) SetTitle(msg.ID(), "Sent", msg.Title);
-	scope(failure) Remove(msg.ID(), "Sent");
-	SmtpSend(msg);	// do the least reliable part last
+        {
+            char[] origTitle = msg.Title();
+            scope(exit) msg.SetTitle(origTitle);
+            msg.SetTitle("[Sending] " ~ origTitle);
+            Copy(msg, "Sent");
+        }
+        scope(success) SetTitle(msg.ID(), "Sent", msg.Title);
+        scope(failure) Remove(msg.ID(), "Sent");
+        SmtpSend(msg);	// do the least reliable part last
     }
 }
 ---
