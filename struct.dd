@@ -192,8 +192,9 @@ static S q = S( 1, 2+3 ); // q.a = 1, q.b = 5, q.c = 0, q.d = 7
         The initializer need not be evaluatable at compile time.)
 
 ----
-void test(int i) {
-  S q = { 1, i }; // q.a = 1, q.b = i, q.c = 0, q.d = 7
+void test(int i)
+{
+    S q = { 1, i }; // q.a = 1, q.b = i, q.c = 0, q.d = 7
 }
 ----
 
@@ -228,20 +229,23 @@ S s = t;  // s.a is set to 3
         then the $(D opCall) operator is called:)
 
 ----
-struct S {
-  int a;
+struct S
+{
+    int a;
 
-  static S $(CODE_HIGHLIGHT opCall)(int v)
-  { S s;
-    s.a = v;
-    return s;
-  }
+    static S $(CODE_HIGHLIGHT opCall)(int v)
+    {
+        S s;
+        s.a = v;
+        return s;
+    }
 
-  static S $(CODE_HIGHLIGHT opCall)(S v)
-  { S s;
-    s.a = v.a + 1;
-    return s;
-  }
+    static S $(CODE_HIGHLIGHT opCall)(S v)
+    {
+        S s;
+        s.a = v.a + 1;
+        return s;
+    }
 }
 
 S s = 3; // sets s.a to 3
@@ -302,11 +306,12 @@ $(SECTION3 $(LNAME2 ConstStruct, Const, Immutable and Shared Structs),
         ----
         const struct S { int a; int b = 2; }
 
-        void main() {
-          S s = S(3); // initializes s.a to 3
-          S t;        // initializes t.a to 0
-          t = s;      // error, t.a and t.b are const, so cannot modify them.
-          t.a = 4;    // error, t.a is const
+        void main()
+        {
+            S s = S(3); // initializes s.a to 3
+            S t;        // initializes t.a to 0
+            t = s;      // error, t.a and t.b are const, so cannot modify them.
+            t.a = 4;    // error, t.a is const
         }
         ----
 )
@@ -321,24 +326,25 @@ $(SECTION3 $(LNAME2 Struct-Constructor, Struct Constructors),
         )
 
         ------
-        struct S {
-          int x, y;
+        struct S
+        {
+            int x, y;
 
-          this()  // error, cannot implement default ctor for structs
-          {
-          }
+            this()  // error, cannot implement default ctor for structs
+            {
+            }
 
-          this(int a, int b)
-          {
-            x = a;
-            y = b;
-          }
+            this(int a, int b)
+            {
+                x = a;
+                y = b;
+            }
         }
 
         void main()
         {
-          S a = S(4, 5);
-          auto b = S();  // same as auto b = S.init;
+            S a = S(4, 5);
+            auto b = S();  // same as auto b = S.init;
         }
         ------
 
@@ -347,39 +353,41 @@ $(SECTION3 $(LNAME2 Struct-Constructor, Struct Constructors),
         )
 
         ------
-        struct S1 {
-          int[] a;
-          this(int n) { a = new int[](n); }
+        struct S1
+        {
+            int[] a;
+            this(int n) { a = new int[](n); }
         }
-        struct S2 {
-          int[] a;
-          this(int n) immutable { a = new int[](n); }
+        struct S2
+        {
+            int[] a;
+            this(int n) immutable { a = new int[](n); }
         }
         void main()
         {
-          // Mutable constructor creates mutable object.
-          S1 m1 = S1(1);
+            // Mutable constructor creates mutable object.
+            S1 m1 = S1(1);
 
-          // Constructed mutable object is implicitly convertible to const.
-          const S1 c1 = S1(1);
+            // Constructed mutable object is implicitly convertible to const.
+            const S1 c1 = S1(1);
 
-          // Constructed mutable object is not implicitly convertible to immutable.
-          // immutable i1 = S1(1);
+            // Constructed mutable object is not implicitly convertible to immutable.
+            // immutable i1 = S1(1);
 
-          // Mutable constructor cannot construct immutable object.
-          // auto x1 = immutable S1(1);
+            // Mutable constructor cannot construct immutable object.
+            // auto x1 = immutable S1(1);
 
-          // Immutable constructor cannot construct mutable object.
-          // auto x2 = S2(1);
+            // Immutable constructor cannot construct mutable object.
+            // auto x2 = S2(1);
 
-          // Constructed immutable object is not implicitly convertible to mutable.
-          // S2 m2 = immutable S2(1);
+            // Constructed immutable object is not implicitly convertible to mutable.
+            // S2 m2 = immutable S2(1);
 
-          // Constructed immutable object is implicitly convertible to const.
-          const S2 c2 = immutable S2(1);
+            // Constructed immutable object is implicitly convertible to const.
+            const S2 c2 = immutable S2(1);
 
-          // Immutable constructor creates immutable object.
-          immutable i2 = immutable S2(1);
+            // Immutable constructor creates immutable object.
+            immutable i2 = immutable S2(1);
         }
         ------
 
@@ -388,19 +396,20 @@ $(SECTION3 $(LNAME2 Struct-Constructor, Struct Constructors),
         other constructor.
         )
         ------
-        struct S {
-          int x;
+        struct S
+        {
+            int x;
 
-          // Disables default construction, function body can be empty.
-          @disable this();
+            // Disables default construction, function body can be empty.
+            @disable this();
 
-          this(int v) { x = v; }
+            this(int v) { x = v; }
         }
         void main()
         {
-          //S s;        // default construction is disabled
-          //S s = S();  // also disabled
-          S s = S(1);   // construction with calling constructor
+            //S s;        // default construction is disabled
+            //S s = S();  // also disabled
+            S s = S(1);   // construction with calling constructor
         }
         ------
 )
@@ -433,11 +442,13 @@ $(GNAME Postblit):
         )
 
         ---
-        struct S {
-          int[] a;    // array is privately owned by this instance
-          this(this) {
-            a = a.dup;
-          }
+        struct S
+        {
+            int[] a;    // array is privately owned by this instance
+            this(this)
+            {
+                a = a.dup;
+            }
         }
         ---
 
@@ -445,16 +456,19 @@ $(GNAME Postblit):
         )
 
         ---
-        struct T {
-          @disable this(this);  // disabling makes T not copyable
+        struct T
+        {
+            @disable this(this);  // disabling makes T not copyable
         }
-        struct S {
-          T t;   // uncopyable member makes S also not copyable
+        struct S
+        {
+            T t;   // uncopyable member makes S also not copyable
         }
 
-        void main() {
-          S s;
-          S t = s; // error, S is not copyable
+        void main()
+        {
+            S s;
+            S t = s; // error, S is not copyable
         }
         ---
 
@@ -500,10 +514,10 @@ $(SECTION3 $(LNAME2 AssignOverload, Identity Assignment Overload),
         ---
         ref S opAssign(S s)
         {
-          S tmp = this;   // bitcopy this into tmp
-          this = s;       // bitcopy s into this
-          tmp.__dtor();   // call destructor on tmp
-          return this;
+            S tmp = this;   // bitcopy this into tmp
+            this = s;       // bitcopy s into this
+            tmp.__dtor();   // call destructor on tmp
+            return this;
         }
         ---
 
@@ -518,18 +532,21 @@ $(SECTION3 $(LNAME2 AssignOverload, Identity Assignment Overload),
         )
 
         ---
-        struct S {
-          int[] buf;
-          int a;
+        struct S
+        {
+            int[] buf;
+            int a;
 
-          ref S opAssign(ref const S s) {
-            a = s.a;
-            return this;
-          }
+            ref S opAssign(ref const S s)
+            {
+                a = s.a;
+                return this;
+            }
 
-          this(this) {
-            buf = buf.dup;
-          }
+            this(this)
+            {
+                buf = buf.dup;
+            }
         }
         ---
 
@@ -552,15 +569,17 @@ $(H2 $(LNAME2 nested, Nested Structs))
         (via an added hidden field).
 
         ---
-        void foo() {
-          int i = 7;
-          struct SS {
-            int x,y;
-            int bar() { return x + i + 1; }
-          }
-          SS s;
-          s.x = 3;
-          s.bar(); // returns 11
+        void foo()
+        {
+            int i = 7;
+            struct SS
+            {
+                int x,y;
+                int bar() { return x + i + 1; }
+            }
+            SS s;
+            s.x = 3;
+            s.bar(); // returns 11
         }
         ---
     )
@@ -571,14 +590,17 @@ $(H2 $(LNAME2 nested, Nested Structs))
         scope.
 
         ---
-        void foo() {
-          int i = 7;
-          static struct SS {
-            int x,y;
-            int bar() {
-              return i; // error, SS is not a nested struct
+        void foo()
+        {
+            int i = 7;
+            static struct SS
+            {
+                int x, y;
+                int bar()
+                {
+                    return i; // error, SS is not a nested struct
+                }
             }
-          }
         }
         ---
     )
