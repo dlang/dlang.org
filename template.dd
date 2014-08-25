@@ -777,21 +777,8 @@ a
          */
         R delegate(Args) partial(R, T, Args...)(R delegate(T, Args) dg, T first)
         {
-          struct Foo
-          {
-            typeof(dg) dg_m;
-            typeof(first) first_m;
-
-            R bar(Args args)
-            {
-              return dg_m(first_m, args);
-            }
-          }
-
-          Foo* f = new Foo;
-          f.dg_m = dg;
-          f.first_m = first;
-          return &f.bar;
+          // return a closure
+          return (Args args) => dg(first, args);
         }
 
         void main()
