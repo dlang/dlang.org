@@ -126,13 +126,13 @@ In D, we can write:
 ----
 template Foo(T, U)
 {
-  class Bar { ... }
+    class Bar { ... }
 
-  T foo(T t, U u) { ... }
+    T foo(T t, U u) { ... }
 
-  T abc;
+    T abc;
 
-  typedef T* Footype;	// any declarations can be templated
+    typedef T* Footype;	// any declarations can be templated
 }
 ----
 
@@ -269,22 +269,22 @@ class B { ... }
 interface I { ... }
 
 class Foo(
-  R,            // R can be any type
-  P:P*,         // P must be a pointer type
-  T:int,        // T must be int type
-  S:T*,         // S must be pointer to T
-  C:B,          // C must be of class B or derived
-                // from B
-  U:I,          // U must be interface I, or any interface
-                // or class which has interface I in its
-                // inheritance tree
-  string str = "hello",
-                // string literal,
-                // default is "hello"
-  alias A = B   // A is any symbol
-                // (including template symbols),
-                // defaulting to B
-  )
+    R,            // R can be any type
+    P:P*,         // P must be a pointer type
+    T:int,        // T must be int type
+    S:T*,         // S must be pointer to T
+    C:B,          // C must be of class B or derived
+                  // from B
+    U:I,          // U must be interface I, or any interface
+                  // or class which has interface I in its
+                  // inheritance tree
+    string str = "hello",
+                  // string literal,
+                  // default is "hello"
+    alias A = B   // A is any symbol
+                  // (including template symbols),
+                  // defaulting to B
+    )
 {
     ...
 }
@@ -333,17 +333,18 @@ typedef double A;
 
 template&lt;class T&gt; struct B
 {
-  typedef int A;
+    typedef int A;
 };
 
 template&lt;class T&gt; struct X : B&lt;T&gt;
 {
-  A a;              // a has type double
-  int T;            // error, T redeclared
-  int foo()
-  {  char T;        // error, T redeclared
-     return g(1);   // always returns 1
-  }
+    A a;              // a has type double
+    int T;            // error, T redeclared
+    int foo()
+    {
+        char T;       // error, T redeclared
+        return g(1);  // always returns 1
+    }
 };
 
 int g(int i) { return 2; }	// this definition not seen by X
@@ -365,12 +366,13 @@ class B(T)
 
 class X(T) : B!(T)
 {
-  A a;             // a has type int
-  int T;           // ok, T redeclared as int
-  int foo()
-  {   char T;      // ok, T redeclared as char
-      return g(1);  // always returns 2
-  }
+    A a;             // a has type int
+    int T;           // ok, T redeclared as int
+    int foo()
+    {
+        char T;      // ok, T redeclared as char
+        return g(1); // always returns 2
+    }
 };
 
 int g(int i) { return 2; }	// functions can be forward referenced
@@ -391,23 +393,23 @@ of template metaprogramming:
 $(CCODE
 template&lt;int n&gt; class factorial
 {
-  public:
-    enum
-    {
-      result = n * factorial&lt;n - 1&gt;::result
-    };
+    public:
+        enum
+        {
+            result = n * factorial&lt;n - 1&gt;::result
+        };
 };
 
 template&lt;&gt; class factorial&lt;1&gt;
 {
-  public:
-    enum { result = 1 };
+    public:
+        enum { result = 1 };
 };
 
 void test()
 {
-  // prints 24
-  printf("%d\n", factorial&lt;4&gt;::result);
+    // prints 24
+    printf("%d\n", factorial&lt;4&gt;::result);
 }
 )
 
@@ -418,17 +420,17 @@ Recursion works as well in D, though with significantly less typing:
 ---
 template factorial(int n)
 {
-  const factorial = n * factorial!(n-1);
+    const factorial = n * factorial!(n-1);
 }
 
 template factorial(int n : 1)
 {
-  const factorial = 1;
+    const factorial = 1;
 }
 
 void test()
 {
-  writeln(factorial!(4));  // prints 24
+    writeln(factorial!(4));  // prints 24
 }
 ---
 
@@ -440,10 +442,10 @@ template:
 ---
 template factorial(int n)
 {
-  static if (n == 1)
-    const factorial = 1;
-  else
-    const factorial = n * factorial!(n-1);
+    static if (n == 1)
+        const factorial = 1;
+    else
+        const factorial = n * factorial!(n-1);
 }
 ---
 
@@ -464,10 +466,10 @@ a function that can be computed at compile time:)
 ---
 int factorial(int n)
 {
-  if (n == 1)
-    return 1;
-  else
-    return n * factorial(n - 1);
+    if (n == 1)
+        return 1;
+    else
+        return n * factorial(n - 1);
 }
 
 static int x = factorial(5);  // x is statically initialized to 120
@@ -484,22 +486,23 @@ Vandevoorde &amp; Josuttis pg. 353:
 $(CCODE
 template&lt;U&gt; class IsFunctionT
 {
-  private:
-    typedef char One;
-    typedef struct { char a[2]; } Two;
-    template static One test(...);
-    template static Two test(U (*)[1]);
-  public:
-    enum {
-      Yes = sizeof(IsFunctionT::test(0)) == 1
-    };
+    private:
+        typedef char One;
+        typedef struct { char a[2]; } Two;
+        template static One test(...);
+        template static Two test(U (*)[1]);
+    public:
+        enum
+        {
+            Yes = sizeof(IsFunctionT::test(0)) == 1
+        };
 };
 
 void test()
 {
-  typedef int (fp)(int);
+    typedef int (fp)(int);
 
-  assert(IsFunctionT&lt;fp&gt;::Yes == 1);
+    assert(IsFunctionT&lt;fp&gt;::Yes == 1);
 }
 )
 
@@ -523,17 +526,17 @@ In D this can be written:
 ---
 template IsFunctionT(T)
 {
-  static if ( is(T[]) )
-    const int IsFunctionT = 0;
-  else
-    const int IsFunctionT = 1;
+    static if ( is(T[]) )
+        const int IsFunctionT = 0;
+    else
+        const int IsFunctionT = 1;
 }
 
 void test()
 {
-  alias int fp(int);
+    alias int fp(int);
 
-  assert(IsFunctionT!(fp) == 1);
+    assert(IsFunctionT!(fp) == 1);
 }
 ---
 
@@ -552,9 +555,9 @@ so it isn't even necessary to use a template to ask questions about a type:
 ---
 void test()
 {
-  alias int fp(int);
+    alias int fp(int);
 
-  assert( is(fp == function) );
+    assert( is(fp == function) );
 }
 ---
 
@@ -571,15 +574,15 @@ import std.stdio;
 
 template sqrt(real x, real root = x/2, int ntries = 0)
 {
-  static if (ntries == 5)
-    // precision doubles with each iteration,
-    // 5 should be enough
-    const sqrt = root;
-  else static if (root * root - x == 0)
-    const sqrt = root;  // exact match
-  else
-    // iterate again
-    const sqrt = sqrt!(x, (root+x/root)/2, ntries+1);
+    static if (ntries == 5)
+        // precision doubles with each iteration,
+        // 5 should be enough
+        const sqrt = root;
+    else static if (root * root - x == 0)
+        const sqrt = root;  // exact match
+    else
+        // iterate again
+        const sqrt = sqrt!(x, (root+x/root)/2, ntries+1);
 }
 
 void main()
@@ -629,22 +632,22 @@ converts an integer to a string at compile time:
 ---
 template decimalDigit(int n)	// [3]
 {
-  const string decimalDigit = "0123456789"[n..n+1];
+    const string decimalDigit = "0123456789"[n..n+1];
 }
 
 template itoa(long n)
 {
-  static if (n < 0)
-     const string itoa = "-" ~ itoa!(-n);
-  else static if (n < 10)
-     const string itoa = decimalDigit!(n);
-  else
-     const string itoa = itoa!(n/10L) ~ decimalDigit!(n%10L);
+    static if (n < 0)
+        const string itoa = "-" ~ itoa!(-n);
+    else static if (n < 10)
+        const string itoa = decimalDigit!(n);
+    else
+        const string itoa = itoa!(n/10L) ~ decimalDigit!(n%10L);
 }
 
 string foo()
 {
-  return itoa!(264);   // returns "264"
+    return itoa!(264);   // returns "264"
 }
 ---
 
@@ -655,10 +658,10 @@ This template will compute the hash of a string literal:
 ---
 template hash(char [] s, uint sofar=0)
 {
-   static if (s.length == 0)
-      const hash = sofar;
-   else
-      const hash = hash!(s[1 .. length], sofar * 11 + s[0]);
+    static if (s.length == 0)
+        const hash = sofar;
+    else
+        const hash = hash!(s[1 .. length], sofar * 11 + s[0]);
 }
 
 uint foo()
@@ -729,14 +732,14 @@ const int testFail = -1;
 
 template regexMatch(string pattern)
 {
-  string[] regexMatch(string str)
-  {
-    string[] results;
-    int n = regexCompile!(pattern).fn(str);
-    if (n != testFail && n > 0)
-      results ~= str[0..n];
-    return results;
-  }
+    string[] regexMatch(string str)
+    {
+        string[] results;
+        int n = regexCompile!(pattern).fn(str);
+        if (n != testFail && n > 0)
+            results ~= str[0..n];
+        return results;
+    }
 }
 
 /******************************
@@ -754,99 +757,100 @@ template regexMatch(string pattern)
 /// Always match
 template testEmpty()
 {
-  int testEmpty(string str) { return 0; }
+    int testEmpty(string str) { return 0; }
 }
 
 /// Match if testFirst(str) and testSecond(str) match
 template testUnion(alias testFirst, alias testSecond)
 {
-  int testUnion(string str)
-  {
-    int n1 = testFirst(str);
-    if (n1 != testFail)
+    int testUnion(string str)
     {
-      int n2 = testSecond(str[n1 .. $]);
-      if (n2 != testFail)
-        return n1 + n2;
+        int n1 = testFirst(str);
+        if (n1 != testFail)
+        {
+            int n2 = testSecond(str[n1 .. $]);
+            if (n2 != testFail)
+                return n1 + n2;
+        }
+        return testFail;
     }
-    return testFail;
-  }
 }
 
 /// Match if first part of str[] matches text[]
 template testText(string text)
 {
-  int testText(string str)
-  {
-    if (str.length &&
-        text.length <= str.length &&
-        str[0..text.length] == text
-       )
-      return text.length;
-    return testFail;
-  }
+    int testText(string str)
+    {
+        if (str.length &&
+            text.length <= str.length &&
+            str[0..text.length] == text)
+        {
+            return text.length;
+        }
+        return testFail;
+    }
 }
 
 /// Match if testPredicate(str) matches 0 or more times
 template testZeroOrMore(alias testPredicate)
 {
-  int testZeroOrMore(string str)
-  {
-    if (str.length == 0)
-      return 0;
-    int n = testPredicate(str);
-    if (n != testFail)
+    int testZeroOrMore(string str)
     {
-      int n2 = testZeroOrMore!(testPredicate)(str[n .. $]);
-      if (n2 != testFail)
-        return n + n2;
-      return n;
+        if (str.length == 0)
+            return 0;
+        int n = testPredicate(str);
+        if (n != testFail)
+        {
+            int n2 = testZeroOrMore!(testPredicate)(str[n .. $]);
+            if (n2 != testFail)
+                return n + n2;
+            return n;
+        }
+        return 0;
     }
-    return 0;
-  }
 }
 
 /// Match if term1[0] <= str[0] <= term2[0]
 template testRange(string term1, string term2)
 {
-  int testRange(string str)
-  {
-    if (str.length && str[0] >= term1[0]
-                   && str[0] <= term2[0])
-      return 1;
-    return testFail;
-  }
+    int testRange(string str)
+    {
+        if (str.length && str[0] >= term1[0]
+                       && str[0] <= term2[0])
+            return 1;
+        return testFail;
+    }
 }
 
 /// Match if ch[0]==str[0]
 template testChar(string ch)
 {
-  int testChar(string str)
-  {
-    if (str.length && str[0] == ch[0])
-      return 1;
-    return testFail;
-  }
+    int testChar(string str)
+    {
+        if (str.length && str[0] == ch[0])
+            return 1;
+        return testFail;
+    }
 }
 
 /// Match if str[0] is a word character
 template testWordChar()
 {
-  int testWordChar(string str)
-  {
-    if (str.length &&
-        (
-         (str[0] >= 'a' && str[0] <= 'z') ||
-         (str[0] >= 'A' && str[0] <= 'Z') ||
-         (str[0] >= '0' && str[0] <= '9') ||
-         str[0] == '_'
-        )
-       )
+    int testWordChar(string str)
     {
-      return 1;
+        if (str.length &&
+            (
+             (str[0] >= 'a' && str[0] <= 'z') ||
+             (str[0] >= 'A' && str[0] <= 'Z') ||
+             (str[0] >= '0' && str[0] <= '9') ||
+             str[0] == '_'
+            )
+           )
+        {
+            return 1;
+        }
+        return testFail;
     }
-    return testFail;
-  }
 }
 
 /*****************************************************/
@@ -858,16 +862,16 @@ template testWordChar()
 
 template parseTextToken(string pattern)
 {
-  static if (pattern.length > 0)
-  {
-    static if (isSpecial!(pattern))
-      const string parseTextToken = "";
+    static if (pattern.length > 0)
+    {
+        static if (isSpecial!(pattern))
+            const string parseTextToken = "";
+        else
+            const string parseTextToken =
+                pattern[0..1] ~ parseTextToken!(pattern[1..$]);
+    }
     else
-      const string parseTextToken =
-           pattern[0..1] ~ parseTextToken!(pattern[1..$]);
-  }
-  else
-    const string parseTextToken="";
+        const string parseTextToken="";
 }
 
 /**
@@ -878,48 +882,48 @@ template parseTextToken(string pattern)
  */
 template parseUntil(string pattern,char terminator,bool fuzzy=false)
 {
-  static if (pattern.length > 0)
-  {
-    static if (pattern[0] == '\\')
+    static if (pattern.length > 0)
     {
-      static if (pattern.length > 1)
-      {
-        const string nextSlice = pattern[2 .. $];
-        alias next = parseUntil!(nextSlice,terminator,fuzzy);
-        const string token = pattern[0 .. 2] ~ next.token;
-        const uint consumed = next.consumed+2;
-      }
-      else
-      {
-        pragma(msg,"Error: expected character to follow \\");
-        static assert(false);
-      }
+        static if (pattern[0] == '\\')
+        {
+            static if (pattern.length > 1)
+            {
+                const string nextSlice = pattern[2 .. $];
+                alias next = parseUntil!(nextSlice,terminator,fuzzy);
+                const string token = pattern[0 .. 2] ~ next.token;
+                const uint consumed = next.consumed+2;
+            }
+            else
+            {
+                pragma(msg,"Error: expected character to follow \\");
+                static assert(false);
+            }
+        }
+        else static if (pattern[0] == terminator)
+        {
+            const string token="";
+            const uint consumed = 1;
+        }
+        else
+        {
+            const string nextSlice = pattern[1 .. $];
+            alias next = parseUntil!(nextSlice,terminator,fuzzy);
+            const string token = pattern[0..1] ~ next.token;
+            const uint consumed = next.consumed+1;
+        }
     }
-    else static if (pattern[0] == terminator)
+    else static if (fuzzy)
     {
-      const string token="";
-      const uint consumed = 1;
+        const string token = "";
+        const uint consumed = 0;
     }
     else
     {
-      const string nextSlice = pattern[1 .. $];
-      alias next = parseUntil!(nextSlice,terminator,fuzzy);
-      const string token = pattern[0..1] ~ next.token;
-      const uint consumed = next.consumed+1;
+        pragma(msg, "Error: expected " ~
+                    terminator ~
+                    " to terminate group expression");
+        static assert(false);
     }
-  }
-  else static if (fuzzy)
-  {
-    const string token = "";
-    const uint consumed = 0;
-  }
-  else
-  {
-    pragma(msg,"Error: expected " ~
-               terminator ~
-               " to terminate group expression");
-    static assert(false);
-  }
 }
 
 /**
@@ -933,47 +937,47 @@ template parseUntil(string pattern,char terminator,bool fuzzy=false)
 
 template regexCompileCharClass2(string pattern)
 {
-  static if (pattern.length > 0)
-  {
-    static if (pattern.length > 1)
+    static if (pattern.length > 0)
     {
-      static if (pattern[1] == '-')
-      {
-        static if (pattern.length > 2)
+        static if (pattern.length > 1)
         {
-          alias termFn = testRange!(pattern[0..1], pattern[2..3]);
-          const uint thisConsumed = 3;
-          const string remaining = pattern[3 .. $];
+            static if (pattern[1] == '-')
+            {
+                static if (pattern.length > 2)
+                {
+                    alias termFn = testRange!(pattern[0..1], pattern[2..3]);
+                    const uint thisConsumed = 3;
+                    const string remaining = pattern[3 .. $];
+                }
+                else // length is 2
+                {
+                    pragma(msg,
+                      "Error: expected char following '-' in char class");
+                    static assert(false);
+                }
+            }
+            else // not '-'
+            {
+                alias termFn = testChar!(pattern[0..1]);
+                const uint thisConsumed = 1;
+                const string remaining = pattern[1 .. $];
+            }
         }
-        else // length is 2
+        else
         {
-          pragma(msg,
-            "Error: expected char following '-' in char class");
-          static assert(false);
+            alias termFn = testChar!(pattern[0..1]);
+            const uint thisConsumed = 1;
+            const string remaining = pattern[1 .. $];
         }
-      }
-      else // not '-'
-      {
-        alias termFn = testChar!(pattern[0..1]);
-        const uint thisConsumed = 1;
-        const string remaining = pattern[1 .. $];
-      }
+        alias recurse = regexCompileCharClassRecurse!(termFn,remaining);
+        alias fn = recurse.fn;
+        const uint consumed = recurse.consumed + thisConsumed;
     }
     else
     {
-      alias termFn = testChar!(pattern[0..1]);
-      const uint thisConsumed = 1;
-      const string remaining = pattern[1 .. $];
+        alias fn = testEmpty!();
+        const uint consumed = 0;
     }
-    alias recurse = regexCompileCharClassRecurse!(termFn,remaining);
-    alias fn = recurse.fn;
-    const uint consumed = recurse.consumed + thisConsumed;
-  }
-  else
-  {
-    alias fn = testEmpty!();
-    const uint consumed = 0;
-  }
 }
 
 /**
@@ -989,17 +993,17 @@ template regexCompileCharClass2(string pattern)
 
 template regexCompileCharClassRecurse(alias termFn,string pattern)
 {
-  static if (pattern.length > 0 && pattern[0] != ']')
-  {
-    alias next = regexCompileCharClass2!(pattern);
-    alias fn = testOr!(termFn,next.fn,pattern);
-    const uint consumed = next.consumed;
-  }
-  else
-  {
-    alias fn = termFn;
-    const uint consumed = 0;
-  }
+    static if (pattern.length > 0 && pattern[0] != ']')
+    {
+        alias next = regexCompileCharClass2!(pattern);
+        alias fn = testOr!(termFn,next.fn,pattern);
+        const uint consumed = next.consumed;
+    }
+    else
+    {
+        alias fn = termFn;
+        const uint consumed = 0;
+    }
 }
 
 /**
@@ -1013,25 +1017,25 @@ template regexCompileCharClassRecurse(alias termFn,string pattern)
 
 template regexCompileCharClass(string pattern)
 {
-  static if (pattern.length > 0)
-  {
-    static if (pattern[0] == ']')
+    static if (pattern.length > 0)
     {
-      alias fn = testEmpty!();
-      const uint consumed = 0;
+        static if (pattern[0] == ']')
+        {
+            alias fn = testEmpty!();
+            const uint consumed = 0;
+        }
+        else
+        {
+            alias charClass = regexCompileCharClass2!(pattern);
+            alias fn = charClass.fn;
+            const uint consumed = charClass.consumed;
+        }
     }
     else
     {
-      alias charClass = regexCompileCharClass2!(pattern);
-      alias fn = charClass.fn;
-      const uint consumed = charClass.consumed;
+        pragma(msg,"Error: expected closing ']' for character class");
+        static assert(false);
     }
-  }
-  else
-  {
-    pragma(msg,"Error: expected closing ']' for character class");
-    static assert(false);
-  }
 }
 
 /**
@@ -1046,16 +1050,16 @@ template regexCompileCharClass(string pattern)
 
 template regexCompilePredicate(alias test, string pattern)
 {
-  static if (pattern.length > 0 && pattern[0] == '*')
-  {
-    alias fn = testZeroOrMore!(test);
-    const uint consumed = 1;
-  }
-  else
-  {
-    alias fn = test;
-    const uint consumed = 0;
-  }
+    static if (pattern.length > 0 && pattern[0] == '*')
+    {
+        alias fn = testZeroOrMore!(test);
+        const uint consumed = 1;
+    }
+    else
+    {
+        alias fn = test;
+        const uint consumed = 0;
+    }
 }
 
 /**
@@ -1069,29 +1073,29 @@ template regexCompilePredicate(alias test, string pattern)
 
 template regexCompileEscape(string pattern)
 {
-  static if (pattern.length > 0)
-  {
-    static if (pattern[0] == 's')
+    static if (pattern.length > 0)
     {
-      // whitespace char
-      alias fn = testRange!("\x00","\x20");
-    }
-    else static if (pattern[0] == 'w')
-    {
-      //word char
-      alias fn = testWordChar!();
+        static if (pattern[0] == 's')
+        {
+            // whitespace char
+            alias fn = testRange!("\x00","\x20");
+        }
+        else static if (pattern[0] == 'w')
+        {
+            // word char
+            alias fn = testWordChar!();
+        }
+        else
+        {
+            alias fn = testChar!(pattern[0 .. 1]);
+        }
+        const uint consumed = 1;
     }
     else
     {
-      alias fn = testChar!(pattern[0 .. 1]);
+        pragma(msg,"Error: expected char following '\\'");
+        static assert(false);
     }
-    const uint consumed = 1;
-  }
-  else
-  {
-    pragma(msg,"Error: expected char following '\\'");
-    static assert(false);
-  }
 }
 
 /**
@@ -1104,72 +1108,73 @@ template regexCompileEscape(string pattern)
 
 template regexCompile(string pattern)
 {
-  static if (pattern.length > 0)
-  {
-    static if (pattern[0] == '[')
+    static if (pattern.length > 0)
     {
-      const string charClassToken =
-          parseUntil!(pattern[1 .. $],']').token;
-      alias charClass = regexCompileCharClass!(charClassToken);
-      const string token = pattern[0 .. charClass.consumed+2];
-      const string next = pattern[charClass.consumed+2 .. $];
-      alias test = charClass.fn;
-    }
-    else static if (pattern[0] == '\\')
-    {
-      alias escapeSequence = regexCompileEscape!(pattern[1..pattern.length]);
-      const string token = pattern[0 .. escapeSequence.consumed+1];
-      const string next =
-          pattern[escapeSequence.consumed+1 .. $];
-      alias test = escapeSequence.fn;
+        static if (pattern[0] == '[')
+        {
+            const string charClassToken =
+                parseUntil!(pattern[1 .. $],']').token;
+            alias charClass = regexCompileCharClass!(charClassToken);
+            const string token = pattern[0 .. charClass.consumed+2];
+            const string next = pattern[charClass.consumed+2 .. $];
+            alias test = charClass.fn;
+        }
+        else static if (pattern[0] == '\\')
+        {
+            alias escapeSequence =
+                regexCompileEscape!(pattern[1 .. pattern.length]);
+            const string token = pattern[0 .. escapeSequence.consumed+1];
+            const string next =
+                pattern[escapeSequence.consumed+1 .. $];
+            alias test = escapeSequence.fn;
+        }
+        else
+        {
+            const string token = parseTextToken!(pattern);
+            static assert(token.length > 0);
+            const string next = pattern[token.length .. $];
+            alias test = testText!(token);
+        }
+    
+        alias term = regexCompilePredicate!(test, next);
+        const string remaining = next[term.consumed .. next.length];
+    
+        alias fn = regexCompileRecurse!(term,remaining).fn;
     }
     else
-    {
-      const string token = parseTextToken!(pattern);
-      static assert(token.length > 0);
-      const string next = pattern[token.length .. $];
-      alias test = testText!(token);
-    }
-
-    alias term = regexCompilePredicate!(test, next);
-    const string remaining = next[term.consumed .. next.length];
-
-    alias fn = regexCompileRecurse!(term,remaining).fn;
-  }
-  else
-    alias fn = testEmpty!();
+        alias fn = testEmpty!();
 }
 
 template regexCompileRecurse(alias term,string pattern)
 {
-  static if (pattern.length > 0)
-  {
-    alias next = regexCompile!(pattern);
-    alias fn = testUnion!(term.fn, next.fn);
-  }
-  else
-    alias fn = term.fn;
+    static if (pattern.length > 0)
+    {
+        alias next = regexCompile!(pattern);
+        alias fn = testUnion!(term.fn, next.fn);
+    }
+    else
+        alias fn = term.fn;
 }
 
 /// Utility function for parsing
 template isSpecial(string pattern)
 {
-  static if (
-    pattern[0] == '*' ||
-    pattern[0] == '+' ||
-    pattern[0] == '?' ||
-    pattern[0] == '.' ||
-    pattern[0] == '[' ||
-    pattern[0] == '{' ||
-    pattern[0] == '(' ||
-    pattern[0] == ')' ||
-    pattern[0] == '$' ||
-    pattern[0] == '^' ||
-    pattern[0] == '\\'
-  )
-    const isSpecial = true;
-  else
-    const isSpecial = false;
+    static if (
+        pattern[0] == '*' ||
+        pattern[0] == '+' ||
+        pattern[0] == '?' ||
+        pattern[0] == '.' ||
+        pattern[0] == '[' ||
+        pattern[0] == '{' ||
+        pattern[0] == '(' ||
+        pattern[0] == ')' ||
+        pattern[0] == '$' ||
+        pattern[0] == '^' ||
+        pattern[0] == '\\'
+    )
+        const isSpecial = true;
+    else
+        const isSpecial = false;
 }
 ---
 
