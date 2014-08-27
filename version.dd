@@ -88,10 +88,11 @@ $(GNAME VersionCondition):
 ------
 int k;
 version (Demo) // compile in this code block for the demo version
-{ int i;
-  int k;    // error, k already defined
+{
+    int i;
+    int k;    // error, k already defined
 
-  i = 3;
+    i = 3;
 }
 x = i;      // uses the i declared above
 ------
@@ -99,11 +100,11 @@ x = i;      // uses the i declared above
 ------
 version (X86)
 {
-  ... // implement custom inline assembler version
+    ... // implement custom inline assembler version
 }
 else
 {
-  ... // use default, but slow, version
+    ... // use default, but slow, version
 }
 ------
 
@@ -127,18 +128,18 @@ $(GNAME VersionSpecification):
 ------
 version (ProfessionalEdition)
 {
-  version = FeatureA;
-  version = FeatureB;
-  version = FeatureC;
+    version = FeatureA;
+    version = FeatureB;
+    version = FeatureC;
 }
 version (HomeEdition)
 {
-  version = FeatureA;
+    version = FeatureA;
 }
 ...
 version (FeatureB)
 {
-  ... implement Feature B ...
+    ... implement Feature B ...
 }
 ------
 
@@ -148,7 +149,7 @@ version (FeatureB)
 ------
 version (Foo)
 {
-  int x;
+    int x;
 }
 version = Foo;	// error, Foo already used
 ------
@@ -166,24 +167,25 @@ version = Foo;	// error, Foo already used
 	a $(I demo) version:)
 
 ------
-class Foo {
-  int a, b;
+class Foo
+{
+    int a, b;
 
-  version(full)
-  {
-    int extrafunctionality()
+    version(full)
     {
-      ...
-      return 1;  // extra functionality is supported
+        int extrafunctionality()
+        {
+            ...
+            return 1;  // extra functionality is supported
+        }
     }
-  }
-  else // demo
-  {
-    int extrafunctionality()
+    else // demo
     {
-      return 0;  // extra functionality is not supported
+        int extrafunctionality()
+        {
+            return 0;  // extra functionality is not supported
+        }
     }
-  }
 }
 ------
 
@@ -382,10 +384,11 @@ $(GNAME DebugCondition):
 	)
 
 ------
-class Foo {
-  int a, b;
- debug:
-  int flag;
+class Foo
+{
+    int a, b;
+debug:
+    int flag;
 }
 ------
 
@@ -412,7 +415,7 @@ $(GNAME DebugSpecification):
 	)
 
 ------
-debug (foo) writeln("Foo");
+debug(foo) writeln("Foo");
 debug = foo;	// error, foo used before set
 ------
 
@@ -462,28 +465,30 @@ int j = 4;
 $(CODE_HIGHLIGHT static if) (i == 3)	// ok, at module scope
     int x;
 
-class C {
-  const int k = 5;
+class C
+{
+    const int k = 5;
 
-  $(CODE_HIGHLIGHT static if) (i == 3) // ok
-    int x;
-  $(ARGS else)
-    long x;
+    $(CODE_HIGHLIGHT static if) (i == 3) // ok
+        int x;
+    $(ARGS else)
+        long x;
 
-  $(CODE_HIGHLIGHT static if) (j == 3) // error, j is not a constant
-    int y;
+    $(CODE_HIGHLIGHT static if) (j == 3) // error, j is not a constant
+        int y;
 
-  $(CODE_HIGHLIGHT static if) (k == 5) // ok, k is in current scope
-    int z;
+    $(CODE_HIGHLIGHT static if) (k == 5) // ok, k is in current scope
+        int z;
 }
 
-template INT(int i) {
-  $(ARGS static if) (i == 32)
-    alias INT = int;
-  $(ARGS else static if) (i == 16)
-    alias INT = short;
-  $(ARGS else)
-    static assert(0); // not supported
+template INT(int i)
+{
+    $(ARGS static if) (i == 32)
+        alias INT = int;
+    $(ARGS else static if) (i == 16)
+        alias INT = short;
+    $(ARGS else)
+        static assert(0); // not supported
 }
 
 INT!(32) a;  // a is an int
@@ -531,19 +536,20 @@ $(GNAME StaticAssert):
 	)
 
 ------
-void foo() {
-  if (0)
-  {
-    assert(0);  // never trips
-    static assert(0); // always trips
-  }
-  version (BAR)
-  {
-  }
-  else
-  {
-    static assert(0); // trips when version BAR is not defined
-  }
+void foo()
+{
+    if (0)
+    {
+        assert(0);  // never trips
+        static assert(0); // always trips
+    }
+    version (BAR)
+    {
+    }
+    else
+    {
+        static assert(0); // trips when version BAR is not defined
+    }
 }
 ------
 

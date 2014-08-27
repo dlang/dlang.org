@@ -70,15 +70,17 @@ $(H3 Using Classes as the KeyType)
         $(P For example:)
 
         ---
-        class Foo {
-          int a, b;
+        class Foo
+        {
+            int a, b;
 
-          hash_t $(CODE_HIGHLIGHT toHash)() { return a + b; }
-
-          bool $(CODE_HIGHLIGHT opEquals)(Object o)
-          { Foo foo = cast(Foo) o;
-            return foo && a == foo.a && b == foo.b;
-          }
+            hash_t $(CODE_HIGHLIGHT toHash)() { return a + b; }
+  
+            bool $(CODE_HIGHLIGHT opEquals)(Object o)
+            {
+                Foo foo = cast(Foo) o;
+                return foo && a == foo.a && b == foo.b;
+            }
         }
         ---
 
@@ -113,21 +115,22 @@ $(H3 Using Structs or Unions as the KeyType)
         ---------
         import std.string;
 
-        struct MyString {
-          string str;
+        struct MyString
+        {
+            string str;
 
-          const hash_t $(CODE_HIGHLIGHT toHash)()
-          { hash_t hash;
-            foreach (char c; str)
-              hash = (hash * 9) + c;
-            return hash;
-          }
-
-          const bool $(CODE_HIGHLIGHT opEquals)(ref const MyString s)
-          {
-            return std.string.cmp(this.str, s.str) == 0;
-          }
-
+            const hash_t $(CODE_HIGHLIGHT toHash)()
+            {
+                hash_t hash;
+                foreach (char c; str)
+                    hash = (hash * 9) + c;
+                return hash;
+            }
+  
+            const bool $(CODE_HIGHLIGHT opEquals)(ref const MyString s)
+            {
+                return std.string.cmp(this.str, s.str) == 0;
+            }
         }
         ---------
 
@@ -166,9 +169,10 @@ $(H3 Construction or assignment on setting AA entries)
       )
 
         ---------
-        struct S {
-          int val;
-          void opAssign(S rhs) { this.val = rhs.val * 2; }
+        struct S
+        {
+            int val;
+            void opAssign(S rhs) { this.val = rhs.val * 2; }
         }
         S[int] aa;
         aa[1] = S(10);  // first setting initializes the entry aa[1]
@@ -183,9 +187,10 @@ $(H3 Construction or assignment on setting AA entries)
         it could invoke operator overloading with normal indexing access.
 
         ---------
-        struct S {
-          int val;
-          void opAssign(int v) { this.val = v * 2; }
+        struct S
+        {
+            int val;
+            void opAssign(int v) { this.val = v * 2; }
         }
         S[int] aa;
         aa[1] = 10;     // is rewritten to: aa[1].opAssign(10), and
@@ -197,10 +202,11 @@ $(H3 Construction or assignment on setting AA entries)
         AA entry.
 
         ---------
-        struct S {
-          int val;
-          this(int v) { this.val = v; }
-          void opAssign(int v) { this.val = v * 2; }
+        struct S
+        {
+            int val;
+            this(int v) { this.val = v; }
+            void opAssign(int v) { this.val = v * 2; }
         }
         S s = 1;    // OK, rewritten to: S s = S(1);
           s = 1;    // OK, rewritten to: s.opAssign(1);
@@ -301,69 +307,72 @@ $(H3 Associative Array Example: word count)
         import std.stdio;
         import std.ascii;
 
-        void main (string[] args) {
-          ulong totalWords, totalLines, totalChars;
-          ulong[string] dictionary;
+        void main (string[] args)
+        {
+            ulong totalWords, totalLines, totalChars;
+            ulong[string] dictionary;
 
-          writeln("   lines   words   bytes file");
-          foreach (arg; args[1 .. $]) // for each argument except the first one
-          {
-            ulong wordCount, lineCount, charCount;
-
-            foreach(line; File(arg).byLine())
+            writeln("   lines   words   bytes file");
+            foreach (arg; args[1 .. $]) // for each argument except the first one
             {
-              bool inWord;
-              size_t wordStart;
+                ulong wordCount, lineCount, charCount;
 
-              void tryFinishWord(size_t wordEnd)
-              {
-                if (inWord)
+                foreach(line; File(arg).byLine())
                 {
-                  auto word = line[wordStart .. wordEnd];
-                  ++dictionary[word.idup];   // increment count for word
-                  inWord = false;
-                }
-              }
+                    bool inWord;
+                    size_t wordStart;
 
-              foreach (i, char c; line)
-              {
-                if (std.ascii.isDigit(c))
-                { // c is a digit (0..9)
+                    void tryFinishWord(size_t wordEnd)
+                    {
+                        if (inWord)
+                        {
+                            auto word = line[wordStart .. wordEnd];
+                            ++dictionary[word.idup];   // increment count for word
+                            inWord = false;
+                        }
+                    }
+      
+                    foreach (i, char c; line)
+                    {
+                        if (std.ascii.isDigit(c))
+                        {
+                            // c is a digit (0..9)
+                        }
+                        else if (std.ascii.isAlpha(c))
+                        {
+                            // c is an ASCII letter (A..Z, a..z)
+                            if (!inWord)
+                            {
+                                wordStart = i;
+                                inWord = true;
+                                ++wordCount;
+                            }
+                        }
+                        else
+                            tryFinishWord(i);
+                        ++charCount;
+                    }
+                    tryFinishWord(line.length);
+                    ++lineCount;
                 }
-                else if (std.ascii.isAlpha(c))
-                { // c is an ASCII letter (A..Z, a..z)
-                  if (!inWord)
-                  {
-                    wordStart = i;
-                    inWord = true;
-                    ++wordCount;
-                  }
-                }
-                else
-                  tryFinishWord(i);
-                ++charCount;
-              }
-              tryFinishWord(line.length);
-              ++lineCount;
+    
+                writefln("%8s%8s%8s %s", lineCount, wordCount, charCount, arg);
+                totalWords += wordCount;
+                totalLines += lineCount;
+                totalChars += charCount;
             }
-
-            writefln("%8s%8s%8s %s", lineCount, wordCount, charCount, arg);
-            totalWords += wordCount;
-            totalLines += lineCount;
-            totalChars += charCount;
-          }
-
-          if (args.length > 2)
-          {
-            writefln("-------------------------------------\n%8s%8s%8s total",
-                    totalLines, totalWords, totalChars);
-          }
-
-          writeln("-------------------------------------");
-          foreach (word; dictionary.keys.sort)
-          {
-            writefln("%3s %s", dictionary[word], word);
-          }
+  
+            if (args.length > 2)
+            {
+                writefln("-------------------------------------\n%8s%8s%8s total",
+                         totalLines, totalWords, totalChars);
+            }
+  
+            writeln("-------------------------------------");
+            foreach (word; dictionary.keys.sort)
+            {
+                writefln("%3s %s", dictionary[word], word);
+            }
         }
         ---------
 

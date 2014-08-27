@@ -87,25 +87,27 @@ $(GNAME ScopeStatement):
         )
 
 --------------
-void func1(int x) {
-  int x;    // illegal, x shadows parameter x
+void func1(int x)
+{
+    int x;    // illegal, x shadows parameter x
 
-  int y;
+    int y;
 
-  { int y; } // illegal, y shadows enclosing scope's y
+    { int y; } // illegal, y shadows enclosing scope's y
 
-  void delegate() dg;
-  dg = { int y; }; // ok, this y is not in the same function
+    void delegate() dg;
+    dg = { int y; }; // ok, this y is not in the same function
 
-  struct S {
-    int y;    // ok, this y is a member, not a local
-  }
+    struct S
+    {
+        int y;    // ok, this y is a member, not a local
+    }
 
-  { int z; }
-  { int z; }  // ok, this z is not shadowing the other z
+    { int z; }
+    { int z; }  // ok, this z is not shadowing the other z
 
-  { int t; }
-  { t++;   }  // illegal, t is undefined
+    { int t; }
+    { t++;   }  // illegal, t is undefined
 }
 --------------
 
@@ -262,15 +264,15 @@ import std.regexp;
 ...
 if (auto m = std.regexp.search("abcdef", "b(c)d"))
 {
-  writefln("[%s]", m.pre);      // prints [a]
-  writefln("[%s]", m.post);     // prints [ef]
-  writefln("[%s]", m.match(0)); // prints [bcd]
-  writefln("[%s]", m.match(1)); // prints [c]
-  writefln("[%s]", m.match(2)); // prints []
+    writefln("[%s]", m.pre);      // prints [a]
+    writefln("[%s]", m.post);     // prints [ef]
+    writefln("[%s]", m.match(0)); // prints [bcd]
+    writefln("[%s]", m.match(1)); // prints [c]
+    writefln("[%s]", m.match(2)); // prints []
 }
 else
 {
-  writeln(m.post);    // error, m undefined
+    writeln(m.post);    // error, m undefined
 }
 writeln(m.pre);         // error, m undefined
 ---
@@ -293,9 +295,10 @@ $(GNAME WhileStatement):
 
 ---
 int i = 0;
-while (i < 10) {
-  foo(i);
-  i++;
+while (i < 10)
+{
+    foo(i);
+    i++;
 }
 ---
 
@@ -323,8 +326,9 @@ $(GNAME DoStatement):
 
 ---
 int i = 0;
-do {
-  foo(i);
+do
+{
+    foo(i);
 } while (++i < 10);
 ---
 
@@ -374,16 +378,16 @@ $(GNAME Increment):
 
 --------------
 for (int i = 0; i < 10; i++)
-  foo(i);
+    foo(i);
 --------------
 
         is equivalent to:
 
 --------------
 {
-  int i;
-  for (i = 0; i < 10; i++)
-    foo(i);
+    int i;
+    for (i = 0; i < 10; i++)
+        foo(i);
 }
 --------------
 
@@ -391,7 +395,7 @@ for (int i = 0; i < 10; i++)
 
 --------------
 for (int i = 0; i < 10; i++)
-  ;       // illegal
+    ;       // illegal
 --------------
 
         Use instead:
@@ -468,7 +472,7 @@ char[] a;
 ...
 foreach (int i, char c; a)
 {
-  writefln("a[%d] = '%c'", i, c);
+    writefln("a[%d] = '%c'", i, c);
 }
 --------------
 
@@ -494,14 +498,14 @@ char[] a = "\xE2\x89\xA0".dup;  // \u2260 encoded as 3 UTF-8 bytes
 
 foreach (dchar c; a)
 {
-  writefln("a[] = %x", c); // prints 'a[] = 2260'
+    writefln("a[] = %x", c); // prints 'a[] = 2260'
 }
 
 dchar[] b = "\u2260"d.dup;
 
 foreach (char c; b)
 {
-  writef("%x, ", c);  // prints 'e2, 89, a0, '
+    writef("%x, ", c);  // prints 'e2, 89, a0, '
 }
 --------------
 
@@ -511,13 +515,16 @@ foreach (char c; b)
         )
 
 --------------
-void test() {
-  foreach (char c; "ab") {
-    writefln("'%s'", c);
-  }
-  foreach (wchar w; "xy") {
-    writefln("'%s'", w);
-  }
+void test()
+{
+    foreach (char c; "ab")
+    {
+        writefln("'%s'", c);
+    }
+    foreach (wchar w; "xy")
+    {
+        writefln("'%s'", w);
+    }
 }
 --------------
 
@@ -553,7 +560,7 @@ double[string] a; // index type is string, value type is double
 ...
 foreach (string s, double d; a)
 {
-  writefln("a['%s'] = %g", s, d);
+    writefln("a['%s'] = %g", s, d);
 }
 --------------
 
@@ -587,8 +594,8 @@ foreach (e; range) { ... }
 ---
 for (auto __r = range; !__r.empty; __r.popFront())
 {
-  auto e = __r.front;
-  ...
+    auto e = __r.front;
+    ...
 }
 ---
 
@@ -619,8 +626,8 @@ foreach_reverse (e; range) { ... }
 ---
 for (auto __r = range; !__r.empty; __r.popBack())
 {
-  auto e = __r.back;
-  ...
+    auto e = __r.back;
+    ...
 }
 ---
 
@@ -667,37 +674,39 @@ int opApplyReverse(int delegate(ref Type [, ...]) dg);
         )
 
 --------------
-class Foo {
-  uint[2] array;
+class Foo
+{
+    uint[2] array;
 
-  int opApply(int delegate(ref uint) dg)
-  {
-    int result = 0;
-
-    for (int i = 0; i < array.length; i++)
+    int opApply(int delegate(ref uint) dg)
     {
-      result = dg(array[i]);
-      if (result)
-        break;
+        int result = 0;
+  
+        for (int i = 0; i < array.length; i++)
+        {
+            result = dg(array[i]);
+            if (result)
+                break;
+        }
+        return result;
     }
-    return result;
-  }
 }
 --------------
 
         An example using this might be:
 
 --------------
-void test() {
-  Foo a = new Foo();
+void test()
+{
+    Foo a = new Foo();
 
-  a.array[0] = 73;
-  a.array[1] = 82;
+    a.array[0] = 73;
+    a.array[1] = 82;
 
-  foreach (uint u; a)
-  {
-    writefln("%d", u);
-  }
+    foreach (uint u; a)
+    {
+        writefln("%d", u);
+    }
 }
 --------------
 
@@ -772,13 +781,14 @@ $(P
 import std.stdio;
 import std.typetuple; // for TypeTuple
 
-void main() {
-  alias TL = TypeTuple!(int, long, double);
+void main()
+{
+    alias TL = TypeTuple!(int, long, double);
 
-  foreach (T; TL)
-  {
-    writeln(typeid(T));
-  }
+    foreach (T; TL)
+    {
+        writeln(typeid(T));
+    }
 }
 -----
 
@@ -796,17 +806,18 @@ $(H4 Foreach Ref Parameters)
         )
 
 --------------
-void test() {
-  static uint[2] a = [7, 8];
+void test()
+{
+    static uint[2] a = [7, 8];
 
-  foreach (ref uint u; a)
-  {
-    u++;
-  }
-  foreach (uint u; a)
-  {
-    writefln("%d", u);
-  }
+    foreach (ref uint u; a)
+    {
+        u++;
+    }
+    foreach (uint u; a)
+    {
+        writefln("%d", u);
+    }
 }
 --------------
 
@@ -835,9 +846,9 @@ int[] a;
 int[] b;
 foreach (int i; a)
 {
-  a = null;       // error
-  a.length += 10; // error
-  a = b;          // error
+    a = null;       // error
+    a.length += 10; // error
+    a = b;          // error
 }
 a = null;         // ok
 --------------
@@ -876,16 +887,18 @@ $(GNAME UprExpression):
 ---
 import std.stdio;
 
-int foo() {
-  write("foo");
-  return 10;
+int foo()
+{
+    write("foo");
+    return 10;
 }
 
-void main() {
-  foreach (i; 0 .. foo())
-  {
-    write(i);
-  }
+void main()
+{
+    foreach (i; 0 .. foo())
+    {
+        write(i);
+    }
 }
 ---
 
@@ -994,11 +1007,12 @@ $(GNAME StatementNoCaseNoDefault):
         )
 
 --------------
-switch (i) {
-  case 1:
-  {
-    case 2:
-  }
+switch (i)
+{
+    case 1:
+    {
+        case 2:
+    }
     break;
 }
 --------------
@@ -1018,27 +1032,27 @@ int number;
 string message;
 switch (number)
 {
-  default:    // valid: ends with 'throw'
-    throw new Exception("unknown number");
+    default:    // valid: ends with 'throw'
+        throw new Exception("unknown number");
 
-  case 3:     // valid: ends with 'break' (break out of the 'switch' only)
-    message ~= "three ";
-    break;
+    case 3:     // valid: ends with 'break' (break out of the 'switch' only)
+        message ~= "three ";
+        break;
 
-  case 4:     // valid: ends with 'continue' (continue the enclosing loop)
-    message ~= "four ";
-    continue;
+    case 4:     // valid: ends with 'continue' (continue the enclosing loop)
+        message ~= "four ";
+        continue;
 
-  case 5:     // valid: ends with 'goto' (explicit fall-through to next case.)
-    message ~= "five ";
-    goto case;
+    case 5:     // valid: ends with 'goto' (explicit fall-through to next case.)
+        message ~= "five ";
+        goto case;
 
-  case 6:     // ERROR: implicit fall-through
-    message ~= "six ";
+    case 6:     // ERROR: implicit fall-through
+        message ~= "six ";
 
-  case 1:     // valid: the body is empty
-  case 2:     // valid: this is the last case in the switch statement.
-    message = "one or two";
+    case 1:     // valid: the body is empty
+    case 2:     // valid: this is the last case in the switch statement.
+        message = "one or two";
 }
 --------------
 
@@ -1052,10 +1066,11 @@ switch (number)
 --------------
 char[] name;
 ...
-switch (name) {
-  case "fred":
-  case "sally":
-    ...
+switch (name)
+{
+    case "fred":
+    case "sally":
+        ...
 }
 --------------
 
@@ -1122,9 +1137,9 @@ $(GNAME ContinueStatement):
 ---
 for (i = 0; i < 10; i++)
 {
-  if (foo(i))
-    continue;
-  bar();
+    if (foo(i))
+        continue;
+    bar();
 }
 ---
 
@@ -1155,8 +1170,8 @@ $(GNAME BreakStatement):
 ---
 for (i = 0; i < 10; i++)
 {
-  if (foo(i))
-    break;
+    if (foo(i))
+        break;
 }
 ---
 
@@ -1224,11 +1239,11 @@ $(GNAME GotoStatement):
         $(I Identifier).
 
 ---
-  if (foo)
-    goto L1;
-  x = 3;
+    if (foo)
+        goto L1;
+    x = 3;
 L1:
-  x++;
+    x++;
 ---
 
         The second form, $(CODE goto default;), transfers to the
@@ -1247,15 +1262,15 @@ L1:
 ---
 switch (x)
 {
-  case 3:
-    goto case;
-  case 4:
-    goto default;
-  case 5:
-    goto case 4;
-  default:
-    x = 4;
-    break;
+    case 3:
+        goto case;
+    case 4:
+        goto default;
+    case 5:
+        goto case 4;
+    default:
+        x = 4;
+        break;
 }
 ---
         Any intervening finally clauses are executed, along with
@@ -1284,8 +1299,8 @@ $(GNAME WithStatement):
 --------------
 with (expression)
 {
-  ...
-  ident;
+    ...
+    ident;
 }
 --------------
 
@@ -1293,10 +1308,10 @@ with (expression)
 
 --------------
 {
-  Object tmp;
-  tmp = expression;
-  ...
-  tmp.ident;
+    Object tmp;
+    tmp = expression;
+    ...
+    tmp.ident;
 }
 --------------
 
@@ -1311,13 +1326,15 @@ with (expression)
         )
 
 --------------
-struct Foo {
-  alias Y = int;
+struct Foo
+{
+    alias Y = int;
 }
 ...
 Y y;        // error, Y undefined
-with (Foo) {
-  Y y;      // same as Foo.Y y;
+with (Foo)
+{
+    Y y;    // same as Foo.Y y;
 }
 --------------
 
@@ -1327,16 +1344,19 @@ with (Foo) {
         statements when new members are added to the object declaration.
         )
 ---
-struct S {
-  float x;
+struct S
+{
+    float x;
 }
 
-void main() {
-  int x;
-  S s;
-  with (s) {
-    x++;  // error, shadows the int x declaration
-  }
+void main()
+{
+    int x;
+    S s;
+    with (s)
+    {
+        x++;  // error, shadows the int x declaration
+    }
 }
 ---
 
@@ -1464,21 +1484,26 @@ $(GNAME FinallyStatement):
 --------------
 import std.stdio;
 
-int main() {
-  try {
-    try {
-      throw new Exception("first");
+int main()
+{
+    try
+    {
+        try
+        {
+            throw new Exception("first");
+        }
+        finally
+        {
+            writeln("finally");
+            throw new Exception("second");
+        }
     }
-    finally {
-      writeln("finally");
-      throw new Exception("second");
+    catch(Exception e)
+    {
+        writeln("catch %s", e.msg);
     }
-  }
-  catch(Exception e) {
-    writeln("catch %s", e.msg);
-  }
-  writeln("done");
-  return 0;
+    writeln("done");
+    return 0;
 }
 --------------
 
@@ -1542,11 +1567,12 @@ $(GNAME ScopeGuardStatement):
 
 
 ----
-write("1"); {
-  write("2");
-  scope(exit) write("3");
-  scope(exit) write("4");
-  write("5");
+write("1");
+{
+    write("2");
+    scope(exit) write("3");
+    scope(exit) write("4");
+    write("5");
 }
 writeln();
 ----
@@ -1560,10 +1586,10 @@ $(CONSOLE
 
 ----
 {
-  scope(exit) write("1");
-  scope(success) write("2");
-  scope(exit) write("3");
-  scope(success) write("4");
+    scope(exit) write("1");
+    scope(success) write("2");
+    scope(exit) write("3");
+    scope(success) write("4");
 }
 writeln();
 ----
@@ -1576,22 +1602,25 @@ $(CONSOLE
 
 
 ----
-class Foo {
-  this() { write("0"); }
-  ~this() { write("1"); }
+class Foo
+{
+    this() { write("0"); }
+    ~this() { write("1"); }
 }
 
-try {
-  scope(exit) write("2");
-  scope(success) write("3");
-  scope Foo f = new Foo();
-  scope(failure) write("4");
-  throw new Exception("msg");
-  scope(exit) write("5");
-  scope(success) write("6");
-  scope(failure) write("7");
+try
+{
+    scope(exit) write("2");
+    scope(success) write("3");
+    scope Foo f = new Foo();
+    scope(failure) write("4");
+    throw new Exception("msg");
+    scope(exit) write("5");
+    scope(success) write("6");
+    scope(failure) write("7");
 }
-catch (Exception e) {
+catch (Exception e)
+{
 }
 writeln();
 ----
@@ -1647,18 +1676,21 @@ $(GNAME AsmInstructionList):
 
 --------------
 int x = 3;
-asm {
-  mov EAX,x; // load x and put it in register EAX
+asm
+{
+    mov EAX,x; // load x and put it in register EAX
 }
 --------------
 
         Inline assembler can be used to access hardware directly:
 
 --------------
-int gethardware() {
-  asm {
-    mov EAX, dword ptr 0x1234;
-  }
+int gethardware()
+{
+    asm
+    {
+        mov EAX, dword ptr 0x1234;
+    }
 }
 --------------
 
@@ -1669,13 +1701,14 @@ int gethardware() {
 --------------
 version (D_InlineAsm_X86)
 {
-  asm {
-    ...
-  }
+    asm
+    {
+        ...
+    }
 }
 else
 {
-  /* ... some workaround ... */
+    /* ... some workaround ... */
 }
 --------------
 
@@ -1707,24 +1740,25 @@ $(GNAME MixinStatement):
 ---
 import std.stdio;
 
-void main() {
-  int j;
-  mixin("
-    int x = 3;
-    for (int i = 0; i < 3; i++)
-      writeln(x + i, ++j);
-    ");    // ok
+void main()
+{
+    int j;
+    mixin("
+        int x = 3;
+        for (int i = 0; i < 3; i++)
+            writeln(x + i, ++j);
+        ");    // ok
 
-  const char[] s = "int y;";
-  mixin(s);  // ok
-  y = 4;     // ok, mixin declared y
+    const char[] s = "int y;";
+    mixin(s);  // ok
+    y = 4;     // ok, mixin declared y
 
-  char[] t = "y = 3;";
-  mixin(t);  // error, t is not evaluatable at compile time
+    char[] t = "y = 3;";
+    mixin(t);  // error, t is not evaluatable at compile time
 
-  mixin("y =") 4; // error, string must be complete statement
+    mixin("y =") 4; // error, string must be complete statement
 
-  mixin("y =" ~ "4;");  // ok
+    mixin("y =" ~ "4;");  // ok
 }
 ---
 

@@ -68,16 +68,19 @@ $(H2 $(LNAME2 Unary, Unary Operator Overloading))
 	no other operator:)
 
 ---
-struct S {
-  int m;
+struct S
+{
+    int m;
 
-  int opUnary(string s)() if (s == "-") {
-    return -m;
-  }
+    int opUnary(string s)() if (s == "-")
+    {
+        return -m;
+    }
 }
 
-int foo(S s) {
-  return -s;
+int foo(S s)
+{
+    return -s;
 }
 ---
 
@@ -257,18 +260,20 @@ b.opBinaryRight!("$(METACODE op)")(a)
 	For example, if only the + or - operators are supported:)
 
 ---
-T opBinary(string op)(T rhs) {
-   static if (op == "+") return data + rhs.data;
-   else static if (op == "-") return data - rhs.data;
-   else static assert(0, "Operator "~op~" not implemented");
+T opBinary(string op)(T rhs)
+{
+    static if (op == "+") return data + rhs.data;
+    else static if (op == "-") return data - rhs.data;
+    else static assert(0, "Operator "~op~" not implemented");
 }
 ---
 
 	$(P To do them all en masse:)
 
 ---
-T opBinary(string op)(T rhs) {
-     return mixin("data "~op~" rhs.data");
+T opBinary(string op)(T rhs)
+{
+    return mixin("data "~op~" rhs.data");
 }
 ---
 
@@ -319,18 +324,19 @@ $(H3 $(LNAME2 equals, Overloading $(D ==) and $(D !=)))
 
 $(OL
 	$(LI If a and b are both class objects, then the expression is rewritten as:
-	---
-	.object.opEquals(a, b)
-	---
+    ---
+    .object.opEquals(a, b)
+    ---
 	$(P and that function is implemented as:)
-	---
-	bool opEquals(Object a, Object b) {
-	  if (a is b) return true;
-	  if (a is null || b is null) return false;
-	  if (typeid(a) == typeid(b)) return a.opEquals(b);
-	  return a.opEquals(b) && b.opEquals(a);
-	}
-	---
+    ---
+    bool opEquals(Object a, Object b)
+    {
+        if (a is b) return true;
+        if (a is null || b is null) return false;
+        if (typeid(a) == typeid(b)) return a.opEquals(b);
+        return a.opEquals(b) && b.opEquals(a);
+    }
+    ---
 	)
 	$(LI Otherwise the expressions $(CODE a.opEquals(b)) and
 	$(CODE b.opEquals(a)) are tried. If both resolve to the same $(D
@@ -344,35 +350,38 @@ $(OL
 
 	$(P If overridding $(D Object.opEquals()) for classes, the class member
 	function signature should look like:)
-	---
-	class C {
-	  override bool opEquals(Object o) { ... }
-	}
-	---
+    ---
+    class C
+    {
+        override bool opEquals(Object o) { ... }
+    }
+    ---
 
 	$(P If structs declare an $(D opEquals) member function for the
 	identity comparison, it could have several forms, such as:)
-	---
-	struct S {
-	  // lhs should be mutable object
-	  bool opEquals(const S s) { ... }        // for r-values (e.g. temporaries)
-	  bool opEquals(ref const S s) { ... }    // for l-values (e.g. variables)
+    ---
+    struct S
+    {
+        // lhs should be mutable object
+        bool opEquals(const S s) { ... }        // for r-values (e.g. temporaries)
+        bool opEquals(ref const S s) { ... }    // for l-values (e.g. variables)
 
-	  // both hand side can be const object
-	  bool opEquals(const S s) const { ... }  // for r-values (e.g. temporaries)
-	}
-	---
+        // both hand side can be const object
+        bool opEquals(const S s) const { ... }  // for r-values (e.g. temporaries)
+    }
+    ---
 
 	$(P Alternatively, you can declare a single templated $(D opEquals)
 	function with an $(XLINK2 template.html#auto-ref-parameters, auto ref)
 	parameter:)
-	---
-	struct S {
-	  // for l-values and r-values,
-	  // with converting both hand side implicitly to const
-	  bool opEquals()(auto ref const S s) const { ... }
-	}
-	---
+    ---
+    struct S
+    {
+        // for l-values and r-values,
+        // with converting both hand side implicitly to const
+        bool opEquals()(auto ref const S s) const { ... }
+    }
+    ---
 
 
 $(H3 $(LNAME2 compare, Overloading $(D <), $(D <)$(D =), $(D >), and $(D >)$(D =)))
@@ -400,16 +409,18 @@ $(H3 $(LNAME2 compare, Overloading $(D <), $(D <)$(D =), $(D >), and $(D >)$(D =
 	$(P If overriding $(D Object.opCmp()) for classes, the class member
 	function signature should look like:)
 ---
-class C {
-  override int opCmp(Object o) { ... }
+class C
+{
+    override int opCmp(Object o) { ... }
 }
 ---
 
 	$(P If structs declare an $(D opCmp) member function, it should have
 	the following form:)
 ---
-struct S {
-  int opCmp(ref const S s) const { ... }
+struct S
+{
+    int opCmp(ref const S s) const { ... }
 }
 ---
 	$(P Note that $(D opCmp) is only used for the inequality operators;
@@ -427,20 +438,22 @@ $(H2 $(LNAME2 FunctionCall, Function Call Operator Overloading $(D f())))
 	declaring a function named $(CODE opCall):
 	)
 
-	-------
-	struct F {
-	  int $(CODE_HIGHLIGHT opCall)();
-	  int $(CODE_HIGHLIGHT opCall)(int x, int y, int z);
-	}
+    -------
+    struct F
+    {
+        int $(CODE_HIGHLIGHT opCall)();
+        int $(CODE_HIGHLIGHT opCall)(int x, int y, int z);
+    }
 
-	void test() {
-	  F f;
-	  int i;
+    void test()
+    {
+        F f;
+        int i;
 
-	  i = f();      // same as i = f.opCall();
-	  i = f(3,4,5); // same as i = f.opCall(3,4,5);
-	}
-	-------
+        i = f();      // same as i = f.opCall();
+        i = f(3,4,5); // same as i = f.opCall(3,4,5);
+    }
+    -------
 
 	$(P In this way a struct or class object can behave as if it
 	were a function.
@@ -452,18 +465,20 @@ $(H2 $(LNAME2 FunctionCall, Function Call Operator Overloading $(D f())))
 	constructor) so that it takes priority over $(D opCall) in $(D Type(...)) syntax.
 	)
 
-	-------
-	struct Multiplier {
-	  int factor;
-	  this(int num) { factor = num; }
-	  int opCall(int value) { return value * factor; }
-	}
-	void test() {
-	  Multiplier m = Multiplier(10);  // invoke constructor
-	  int result = m(5);              // invoke opCall
-	  assert(result == 50);
-	}
-	-------
+    -------
+    struct Multiplier
+    {
+        int factor;
+        this(int num) { factor = num; }
+        int opCall(int value) { return value * factor; }
+    }
+    void test()
+    {
+        Multiplier m = Multiplier(10);  // invoke constructor
+        int result = m(5);              // invoke opCall
+        assert(result == 50);
+    }
+    -------
     
 $(H3 $(LNAME2 static-opcall, Static opCall))
 
@@ -471,28 +486,30 @@ $(H3 $(LNAME2 static-opcall, Static opCall))
 	type names.
 	)
 
-	-------
-	struct Double {
-	  $(CODE_HIGHLIGHT static) int $(CODE_HIGHLIGHT opCall)(int x) { return x * 2; }
-	}
-	void test() {
-	  int i = Double(2);
-	  assert(i == 4);
-	}
-	-------
+    -------
+    struct Double
+    {
+        $(CODE_HIGHLIGHT static) int $(CODE_HIGHLIGHT opCall)(int x) { return x * 2; }
+    }
+    void test()
+    {
+        int i = Double(2);
+        assert(i == 4);
+    }
+    -------
 
 	$(P Mixing struct constructors and $(D static opCall) is not allowed.)
 
-	---
-	struct S
-	{
-	  this(int i) {}
-	  static S opCall()  // disallowed due to constructor
-	  {
-	    return S.init;
-	  }
-	}
-	---
+    ---
+    struct S
+    {
+        this(int i) {}
+        static S opCall()  // disallowed due to constructor
+        {
+            return S.init;
+        }
+    }
+    ---
 
 	$(P Note: $(D static opCall) can be used to simulate struct 
 	constructors with no arguments, but this is not recommended 
@@ -509,41 +526,43 @@ $(H2 $(LNAME2 Assignment, Assignment Operator Overloading))
 	For struct types, operator overloading for the identity assignment
 	is allowed.
 
-	---
-	struct S {
-	  // identiy assignment, allowed.
-	  void $(CODE_HIGHLIGHT opAssign)(S rhs);
-
-	  // not identity assignment, also allowed.
-	  void $(CODE_HIGHLIGHT opAssign)(int);
-	}
-	S s;
-	s = S();      // Rewritten to s.opAssign(S());
-	s = 1;        // Rewritten to s.opAssign(1);
-	---
+    ---
+    struct S
+    {
+        // identiy assignment, allowed.
+        void $(CODE_HIGHLIGHT opAssign)(S rhs);
+  
+        // not identity assignment, also allowed.
+        void $(CODE_HIGHLIGHT opAssign)(int);
+    }
+    S s;
+    s = S();      // Rewritten to s.opAssign(S());
+    s = 1;        // Rewritten to s.opAssign(1);
+    ---
 
 	However for class types, identity assignment is not allowed. All class
 	types have reference semantics, so identity assignment by default rebinds
 	the left-hand-side to the argument at the right, and this is not overridable.
 
-	---
-	class C {
-	  // If X is the same type as C or the type which is
-	  // implicitly convertible to C, then opAssign would
-	  // accept identity assignment, which is disallowed.
-	  // C opAssign(...);
-	  // C opAssign(X);
-	  // C opAssign(X, ...);
-	  // C opAssign(X ...);
-	  // C opAssign(X, U = defaultValue, etc.);
+    ---
+    class C
+    {
+        // If X is the same type as C or the type which is
+        // implicitly convertible to C, then opAssign would
+        // accept identity assignment, which is disallowed.
+        // C opAssign(...);
+        // C opAssign(X);
+        // C opAssign(X, ...);
+        // C opAssign(X ...);
+        // C opAssign(X, U = defaultValue, etc.);
 
-	  // not an identity assignment - allowed
-	  void $(CODE_HIGHLIGHT opAssign)(int);
-	}
-	C c = new C();
-	c = new C();  // Rebinding referencee
-	c = 1;        // Rewritten to c.opAssign(1);
-	---
+        // not an identity assignment - allowed
+        void $(CODE_HIGHLIGHT opAssign)(int);
+    }
+    C c = new C();
+    c = new C();  // Rebinding referencee
+    c = 1;        // Rewritten to c.opAssign(1);
+    ---
 
 $(H3 Index Assignment Operator Overloading)
 
@@ -555,13 +574,15 @@ $(H3 Index Assignment Operator Overloading)
 	)
 
 -------
-struct A {
-  int $(CODE_HIGHLIGHT opIndexAssign)(int value, size_t i1, size_t i2);
+struct A
+{
+    int $(CODE_HIGHLIGHT opIndexAssign)(int value, size_t i1, size_t i2);
 }
 
-void test() {
-  A a;
-  a$(CODE_HIGHLIGHT [)i,3$(CODE_HIGHLIGHT ]) = 7;  // same as a.opIndexAssign(7,i,3);
+void test()
+{
+    A a;
+    a$(CODE_HIGHLIGHT [)i,3$(CODE_HIGHLIGHT ]) = 7;  // same as a.opIndexAssign(7,i,3);
 }
 -------
 
@@ -581,18 +602,20 @@ $(H3 Slice Assignment Operator Overloading)
 	)
 
 -------
-struct A {
-  int $(CODE_HIGHLIGHT opIndexAssign)(int v);  // overloads a[] = v
-  int $(CODE_HIGHLIGHT opIndexAssign)(int v, size_t[2] x);  // overloads a[i .. j] = v
-  int[2] $(CODE_HIGHLIGHT opSlice)(size_t x, size_t y);     // overloads i .. j
+struct A
+{
+    int $(CODE_HIGHLIGHT opIndexAssign)(int v);  // overloads a[] = v
+    int $(CODE_HIGHLIGHT opIndexAssign)(int v, size_t[2] x);  // overloads a[i .. j] = v
+    int[2] $(CODE_HIGHLIGHT opSlice)(size_t x, size_t y);     // overloads i .. j
 }
 
-void test() {
-  A a;
-  int v;
+void test()
+{
+    A a;
+    int v;
 
-  a$(CODE_HIGHLIGHT []) = v;  // same as a.opIndexAssign(v);
-  a$(CODE_HIGHLIGHT [)3..4$(CODE_HIGHLIGHT ]) = v;  // same as a.opIndexAssign(v, a.opSlice(3,4));
+    a$(CODE_HIGHLIGHT []) = v;  // same as a.opIndexAssign(v);
+    a$(CODE_HIGHLIGHT [)3..4$(CODE_HIGHLIGHT ]) = v;  // same as a.opIndexAssign(v, a.opSlice(3,4));
 }
 -------
 
@@ -686,14 +709,16 @@ $(H3 $(LNAME2 Array, Index Operator Overloading))
 	)
 
 -------
-struct A {
-  int $(CODE_HIGHLIGHT opIndex)(size_t i1, size_t i2, size_t i3);
+struct A
+{
+    int $(CODE_HIGHLIGHT opIndex)(size_t i1, size_t i2, size_t i3);
 }
 
-void test() {
-  A a;
-  int i;
-  i = a[5,6,7];  // same as i = a.opIndex(5,6,7);
+void test()
+{
+    A a;
+    int i;
+    i = a[5,6,7];  // same as i = a.opIndex(5,6,7);
 }
 -------
 
@@ -716,16 +741,19 @@ $(H3 $(LNAME2 Slice, Slice Operator Overloading))
 	)
 
 -----
-struct S {
-  int[] impl;
-  int[] opIndex() {
-    return impl[];
-  }
+struct S
+{
+    int[] impl;
+    int[] opIndex()
+    {
+        return impl[];
+    }
 }
-void test() {
-  auto s = S([1,2,3]);
-  auto t = s[]; // calls s.opIndex()
-  assert(t == [1,2,3]);
+void test()
+{
+    auto s = S([1,2,3]);
+    auto t = s[]; // calls s.opIndex()
+    assert(t == [1,2,3]);
 }
 -----
 
@@ -837,31 +865,36 @@ $(H3 $(LNAME2 Dollar, Dollar Operator Overloading))
 	)
 
 ------
-struct Rectangle {
-  int width, height;
-  int[][] impl;
-  this(int w, int h) {
-    width = w;
-    height = h;
-    impl = new int[w][h];
-  }
-  int opIndex(size_t i1, size_t i2) {
-    return impl[i1][i2];
-  }
-  int opDollar(size_t pos)() {
-    static if (pos==0)
-      return width;
-    else
-      return height;
-  }
+struct Rectangle
+{
+    int width, height;
+    int[][] impl;
+    this(int w, int h)
+    {
+        width = w;
+        height = h;
+        impl = new int[w][h];
+    }
+    int opIndex(size_t i1, size_t i2)
+    {
+        return impl[i1][i2];
+    }
+    int opDollar(size_t pos)()
+    {
+        static if (pos==0)
+            return width;
+        else
+            return height;
+    }
 }
 
-void test() {
-  auto r = Rectangle(10,20);
-  int i = r[$-1, 0];    // same as: r.opIndex(r.opDollar!0, 0),
-                        // which is r.opIndex(r.width-1, 0)
-  int j = r[0, $-1];    // same as: r.opIndex(0, r.opDollar!1)
-                        // which is r.opIndex(0, r.height-1)
+void test()
+{
+    auto r = Rectangle(10,20);
+    int i = r[$-1, 0];    // same as: r.opIndex(r.opDollar!0, 0),
+                          // which is r.opIndex(r.width-1, 0)
+    int j = r[0, $-1];    // same as: r.opIndex(0, r.opDollar!1)
+                          // which is r.opIndex(0, r.height-1)
 }
 ------
 
@@ -900,36 +933,42 @@ $(H2 $(LNAME2 Dispatch, Forwarding))
 ---
 import std.stdio;
 
-struct S {
-  void opDispatch(string s, T)(T i)
-  {
-    writefln("S.opDispatch('%s', %s)", s, i);
-  }
+struct S
+{
+    void opDispatch(string s, T)(T i)
+    {
+        writefln("S.opDispatch('%s', %s)", s, i);
+    }
 }
 
-class C {
-  void opDispatch(string s)(int i) {
-    writefln("C.opDispatch('%s', %s)", s, i);
-  }
+class C
+{
+    void opDispatch(string s)(int i)
+    {
+        writefln("C.opDispatch('%s', %s)", s, i);
+    }
 }
 
-struct D {
-  template opDispatch(string s) {
-    enum int opDispatch = 8;
-  }
+struct D
+{
+    template opDispatch(string s)
+    {
+        enum int opDispatch = 8;
+    }
 }
 
-void main() {
-  S s;
-  s.opDispatch!("hello")(7);
-  s.foo(7);
+void main()
+{
+    S s;
+    s.opDispatch!("hello")(7);
+    s.foo(7);
 
-  auto c = new C();
-  c.foo(8);
+    auto c = new C();
+    c.foo(8);
 
-  D d;
-  writefln("d.foo = %s", d.foo);
-  assert(d.foo == 8);
+    D d;
+    writefln("d.foo = %s", d.foo);
+    assert(d.foo == 8);
 }
 ---
 )

@@ -42,41 +42,45 @@ $(GNAME QualifiedIdentifierList):
         )
 
 ------
-mixin template Foo() {
-  int x = 5;
+mixin template Foo()
+{
+    int x = 5;
 }
 
 $(CODE_HIGHLIGHT mixin Foo;)
 
-struct Bar {
-  $(CODE_HIGHLIGHT mixin Foo;)
+struct Bar
+{
+    $(CODE_HIGHLIGHT mixin Foo;)
 }
 
-void test() {
-  writefln("x = %d", x);  // prints 5
-  {
-    Bar b;
-    int x = 3;
-
-    writefln("b.x = %d", b.x); // prints 5
-    writefln("x = %d", x);     // prints 3
+void test()
+{
+    writefln("x = %d", x);         // prints 5
     {
-      $(CODE_HIGHLIGHT mixin Foo;)
-      writefln("x = %d", x);   // prints 5
-      x = 4;
-      writefln("x = %d", x);   // prints 4
+        Bar b;
+        int x = 3;
+
+        writefln("b.x = %d", b.x); // prints 5
+        writefln("x = %d", x);     // prints 3
+        {
+            $(CODE_HIGHLIGHT mixin Foo;)
+            writefln("x = %d", x); // prints 5
+            x = 4;
+            writefln("x = %d", x); // prints 4
+        }
+        writefln("x = %d", x);     // prints 3
     }
-    writefln("x = %d", x);     // prints 3
-  }
-  writefln("x = %d", x);       // prints 5
+    writefln("x = %d", x);         // prints 5
 }
 ------
 
         Mixins can be parameterized:
 
 ------
-mixin template Foo(T) {
-  T x = 5;
+mixin template Foo(T)
+{
+    T x = 5;
 }
 
 $(CODE_HIGHLIGHT mixin Foo!(int);)           // create x of type int
@@ -85,24 +89,28 @@ $(CODE_HIGHLIGHT mixin Foo!(int);)           // create x of type int
         Mixins can add virtual functions to a class:
 
 ------
-mixin template Foo() {
-  void func() { writeln("Foo.func()"); }
+mixin template Foo()
+{
+    void func() { writeln("Foo.func()"); }
 }
 
-class Bar {
-  $(CODE_HIGHLIGHT mixin Foo;)
+class Bar
+{
+    $(CODE_HIGHLIGHT mixin Foo;)
 }
 
-class Code : Bar {
-  override void func() { writeln("Code.func()"); }
+class Code : Bar
+{
+    override void func() { writeln("Code.func()"); }
 }
 
-void test() {
-  Bar b = new Bar();
-  b.func();      // calls Foo.func()
+void test()
+{
+    Bar b = new Bar();
+    b.func();      // calls Foo.func()
 
-  b = new Code();
-  b.func();      // calls Code.func()
+    b = new Code();
+    b.func();      // calls Code.func()
 }
 ------
 
@@ -112,28 +120,32 @@ void test() {
 ------
 int y = 3;
 
-mixin template Foo() {
-  int abc() { return y; }
+mixin template Foo()
+{
+    int abc() { return y; }
 }
 
-void test() {
-  int y = 8;
-  $(CODE_HIGHLIGHT mixin Foo;) // local y is picked up, not global y
-  assert(abc() == 8);
+void test()
+{
+    int y = 8;
+    $(CODE_HIGHLIGHT mixin Foo;) // local y is picked up, not global y
+    assert(abc() == 8);
 }
 ------
 
         Mixins can parameterize symbols using alias parameters:
 
 ------
-mixin template Foo(alias b) {
-  int abc() { return b; }
+mixin template Foo(alias b)
+{
+    int abc() { return b; }
 }
 
-void test() {
-  int y = 8;
-  $(CODE_HIGHLIGHT mixin Foo!(y);)
-  assert(abc() == 8);
+void test()
+{
+    int y = 8;
+    $(CODE_HIGHLIGHT mixin Foo!(y);)
+    assert(abc() == 8);
 }
 ------
 
@@ -145,36 +157,37 @@ void test() {
 ------
 mixin template duffs_device(alias id1, alias id2, alias s)
 {
-  void duff_loop()
-  {
-    if (id1 < id2)
+    void duff_loop()
     {
-      typeof(id1) n = (id2 - id1 + 7) / 8;
-      switch ((id2 - id1) % 8)
-      {
-        case 0: do { s(); goto case;
-        case 7:      s(); goto case;
-        case 6:      s(); goto case;
-        case 5:      s(); goto case;
-        case 4:      s(); goto case;
-        case 3:      s(); goto case;
-        case 2:      s(); goto case;
-        case 1:      s(); continue;
-        default:     assert(0, "Impossible");
-                } while (--n > 0);
-      }
+        if (id1 < id2)
+        {
+            typeof(id1) n = (id2 - id1 + 7) / 8;
+            switch ((id2 - id1) % 8)
+            {
+                case 0: do { s(); goto case;
+                case 7:      s(); goto case;
+                case 6:      s(); goto case;
+                case 5:      s(); goto case;
+                case 4:      s(); goto case;
+                case 3:      s(); goto case;
+                case 2:      s(); goto case;
+                case 1:      s(); continue;
+                default:     assert(0, "Impossible");
+                        } while (--n > 0);
+            }
+        }
     }
-  }
 }
 
 void foo() { writeln("foo"); }
 
-void test() {
-  int i = 1;
-  int j = 11;
+void test()
+{
+    int i = 1;
+    int j = 11;
 
-  mixin duffs_device!(i, j, $(CODE_HIGHLIGHT delegate { foo(); }));
-  duff_loop();  // executes foo() 10 times
+    mixin duffs_device!(i, j, $(CODE_HIGHLIGHT delegate { foo(); }));
+    duff_loop();  // executes foo() 10 times
 }
 ------
 
@@ -188,17 +201,19 @@ $(H2 Mixin Scope)
 ------
 int x = 3;
 
-mixin template Foo() {
-  int x = 5;
-  int y = 5;
+mixin template Foo()
+{
+    int x = 5;
+    int y = 5;
 }
 
 $(CODE_HIGHLIGHT mixin Foo;)
 int y = 3;
 
-void test() {
-  writefln("x = %d", x);  // prints 3
-  writefln("y = %d", y);  // prints 3
+void test()
+{
+    writefln("x = %d", x);  // prints 3
+    writefln("y = %d", y);  // prints 3
 }
 ------
 
@@ -207,23 +222,26 @@ void test() {
         error when the declaration is referenced:
 
 ------
-mixin template Foo() {
-  int x = 5;
-  void func(int x) { }
+mixin template Foo()
+{
+    int x = 5;
+    void func(int x) { }
 }
 
-mixin template Bar() {
-  int x = 4;
-  void func(long x) { }
+mixin template Bar()
+{
+    int x = 4;
+    void func(long x) { }
 }
 
 $(CODE_HIGHLIGHT mixin Foo;)
 $(CODE_HIGHLIGHT mixin Bar;)
 
-void test() {
-  import std.stdio : writefln;
-  writefln("x = %d", x); // error, x is ambiguous
-  func(1);               // error, func is ambiguous
+void test()
+{
+    import std.stdio : writefln;
+    writefln("x = %d", x); // error, x is ambiguous
+    func(1);               // error, func is ambiguous
 }
 
 ------
@@ -237,39 +255,44 @@ void test() {
 ------
 int x = 6;
 
-mixin template Foo() {
-  int x = 5;
-  int y = 7;
-  void func() { }
+mixin template Foo()
+{
+    int x = 5;
+    int y = 7;
+    void func() { }
 }
 
-mixin template Bar() {
-  int x = 4;
-  void func() { }
+mixin template Bar()
+{
+    int x = 4;
+    void func() { }
 }
 
 $(CODE_HIGHLIGHT mixin Foo F;)
 $(CODE_HIGHLIGHT mixin Bar B;)
 
-void test() {
-  writefln("y = %d", y);     // prints 7
-  writefln("x = %d", x);     // prints 6
-  writefln("F.x = %d", F.x); // prints 5
-  writefln("B.x = %d", B.x); // prints 4
-  F.func();                  // calls Foo.func
-  B.func();                  // calls Bar.func
+void test()
+{
+    writefln("y = %d", y);     // prints 7
+    writefln("x = %d", x);     // prints 6
+    writefln("F.x = %d", F.x); // prints 5
+    writefln("B.x = %d", B.x); // prints 4
+    F.func();                  // calls Foo.func
+    B.func();                  // calls Bar.func
 }
 ------
         $(P Alias declarations can be used to overload together
         functions declared in different mixins:)
 
 -----
-mixin template Foo() {
-  void func(int x) {  }
+mixin template Foo()
+{
+    void func(int x) {  }
 }
 
-mixin template Bar() {
-  void func(long x) {  }
+mixin template Bar()
+{
+    void func(long x) {  }
 }
 
 mixin Foo!() F;
@@ -278,9 +301,10 @@ mixin Bar!() B;
 $(CODE_HIGHLIGHT alias func = F.func;)
 $(CODE_HIGHLIGHT alias func = B.func;)
 
-void main() {
-  func(1);  // calls B.func
-  func(1L); // calls F.func
+void main()
+{
+    func(1);  // calls B.func
+    func(1L); // calls F.func
 }
 -----
 
@@ -291,16 +315,18 @@ void main() {
 ------
 int x = 4;
 
-mixin template Foo() {
-  int x = 5;
-  int bar() { return x; }
+mixin template Foo()
+{
+    int x = 5;
+    int bar() { return x; }
 }
 
 $(CODE_HIGHLIGHT mixin Foo;)
 
-void test() {
-  writefln("x = %d", x);         // prints 4
-  writefln("bar() = %d", bar()); // prints 5
+void test()
+{
+    writefln("x = %d", x);         // prints 4
+    writefln("bar() = %d", bar()); // prints 5
 }
 ------
 

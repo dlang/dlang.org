@@ -88,9 +88,10 @@ t.init   // is 2
 c.init   // is 2
 d.init   // is 2
 
-struct Foo {
-  int a;
-  int b = 7;
+struct Foo
+{
+    int a;
+    int b = 7;
 }
 
 Foo.init.a  // is 0
@@ -105,15 +106,17 @@ Foo.init.b  // is 7
 	is $(D null).)
 
 ----------------
-void main() {
-  int a;
-  struct S {
-    void foo() { a = 1; }  // access a variable in enclosing scope
-  }
-  S s1;           // OK. S() correctly initialize its frame pointer.
-  S s2 = S();     // OK. same as s1
-  S s3 = S.init;  // Bad. the frame pointer in s3 is null
-  s3.foo();       // Access violation
+void main()
+{
+    int a;
+    struct S
+    {
+        void foo() { a = 1; }  // access a variable in enclosing scope
+    }
+    S s1;           // OK. S() correctly initialize its frame pointer.
+    S s2 = S();     // OK. same as s1
+    S s3 = S.init;  // Bad. the frame pointer in s3 is null
+    s3.foo();       // Access violation
 }
 ----------------
 
@@ -121,19 +124,21 @@ void main() {
 	might return a logically incorrect object.)
 
 ----------------
-struct S {
-  int a;
-  @disable this();
-  this(int n) { a = n; }
-  invariant() { assert(a > 0); }
-  void check() {}
+struct S
+{
+    int a;
+    @disable this();
+    this(int n) { a = n; }
+    invariant() { assert(a > 0); }
+    void check() {}
 }
-void main() {
-//S s1;           // Error: variable s1 initializer required for type S
-//S s2 = S();     // Error: constructor S.this is not callable
-                  // because it is annotated with @disable
-  S s3 = S.init;  // Bad. s3.a == 0, and it violates the invariant of S.
-  s3.check();     // Assertion failure.
+void main()
+{
+  //S s1;           // Error: variable s1 initializer required for type S
+  //S s2 = S();     // Error: constructor S.this is not callable
+                    // because it is annotated with @disable
+    S s3 = S.init;  // Bad. s3.a == 0, and it violates the invariant of S.
+    s3.check();     // Assertion failure.
 }
 ----------------
     )
@@ -160,15 +165,16 @@ enum Enum { RED }
 
 typedef int myint;
 
-void main() {
-  writeln((1+2).stringof);       // "1 + 2"
-  writeln(Foo.stringof);         // "Foo"
-  writeln(test.Foo.stringof);    // "Foo"
-  writeln(int.stringof);         // "int"
-  writeln((int*[5][]).stringof); // "int*[5u][]"
-  writeln(Enum.RED.stringof);    // "cast(enum)0"
-  writeln(test.myint.stringof);  // "myint"
-  writeln((5).stringof);         // "5"
+void main()
+{
+    writeln((1+2).stringof);       // "1 + 2"
+    writeln(Foo.stringof);         // "Foo"
+    writeln(test.Foo.stringof);    // "Foo"
+    writeln(int.stringof);         // "int"
+    writeln((int*[5][]).stringof); // "int*[5u][]"
+    writeln(Enum.RED.stringof);    // "cast(enum)0"
+    writeln(test.myint.stringof);  // "myint"
+    writeln((5).stringof);         // "5"
 }
 ----------------
 
@@ -191,15 +197,18 @@ $(SECTION3 $(LNAME2 sizeof, .sizeof Property),
 	)
 
 ---
-struct S {
-  int a;
-  static int foo() {
-    return a.sizeof; // returns 4
-  }
+struct S
+{
+    int a;
+    static int foo()
+    {
+        return a.sizeof; // returns 4
+    }
 }
 
-void test() {
-  int x = S.a.sizeof; // sets x to 4
+void test()
+{
+    int x = S.a.sizeof; // sets x to 4
 }
 ---
 
@@ -243,13 +252,14 @@ $(SECTION3 $(LNAME2 classproperties, User Defined Properties),
 
 
 ----------------
-struct Foo {
-  @property int data() { return m_data; } // read property
+struct Foo
+{
+    @property int data() { return m_data; } // read property
 
-  @property int data(int value) { return m_data = value; } // write property
+    @property int data(int value) { return m_data = value; } // write property
 
-private:
-  int m_data;
+  private:
+    int m_data;
 }
 ----------------
 
@@ -261,11 +271,12 @@ private:
 	$(P To use it:)
 
 ----------------
-int test() {
-  Foo f;
+int test()
+{
+    Foo f;
 
-  f.data = 3;        // same as f.data(3);
-  return f.data + 3; // same as return f.data() + 3;
+    f.data = 3;        // same as f.data(3);
+    return f.data + 3; // same as return f.data() + 3;
 }
 ----------------
 
@@ -293,13 +304,14 @@ int test() {
 	)
 
 ---
-void main() {
-  @property int[] delegate() bar1 = { return [1, 2]; };
-  auto x1 = bar1.ptr; // points to array data
+void main()
+{
+    @property int[] delegate() bar1 = { return [1, 2]; };
+    auto x1 = bar1.ptr; // points to array data
 
-  struct Foo { int* ptr; }
-  @property Foo delegate() bar2 = { return Foo(); };
-  auto x2 = bar2.ptr; // gets value of Foo.ptr
+    struct Foo { int* ptr; }
+    @property Foo delegate() bar2 = { return Foo(); };
+    auto x2 = bar2.ptr; // gets value of Foo.ptr
 }
 ---
 
