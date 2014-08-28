@@ -91,7 +91,7 @@ $(H3 Module Declaration)
 
 $(GRAMMAR
 $(GNAME ModuleDeclaration):
-    $(D module) $(I ModuleFullyQualifiedName) $(D ;)
+    $(GLINK2 attribute, DeprecatedAttribute)$(OPT) $(D module) $(I ModuleFullyQualifiedName) $(D ;)
 
 $(GNAME ModuleFullyQualifiedName):
     $(I ModuleName)
@@ -137,6 +137,32 @@ module c.stdio; // module stdio in the c package
 ---------
 module foo_bar;
 ---------
+
+    $(P $(I ModuleDeclaration) can have an optional $(GLINK2 attribute, DeprecatedAttribute).
+        The compiler will produce a message when the deprecated module is imported.
+
+        ---------
+        deprecated module foo;
+        ---------
+
+        ---------
+        module bar;
+        import foo;  // Deprecated: module foo is deprecated
+        ---------
+
+        $(I DeprecatedAttribute) can have an optional string argument to provide
+        a more expressive message.
+
+        ---------
+        deprecated("Please use foo2 instead.")
+        module foo;
+        ---------
+
+        ---------
+        module bar;
+        import foo;  // Deprecated: module foo is deprecated - Please use foo2 instead.
+        ---------
+    )
 
 $(H3 $(LNAME2 ImportDeclaration, Import Declaration))
 
