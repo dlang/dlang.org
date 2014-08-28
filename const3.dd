@@ -67,12 +67,14 @@ y = 5;           // error, y is immutable
 
 ---
 immutable int z;
-void test() {
-  z = 3; // error, z is immutable
+void test()
+{
+    z = 3; // error, z is immutable
 }
-static this() {
-  z = 3; // ok, can set immutable that doesn't
-         // have static initializer
+static this()
+{
+    z = 3; // ok, can set immutable that doesn't
+           // have static initializer
 }
 ---
 	$(P
@@ -95,8 +97,8 @@ immutable z = foo(2) + 1; // ok, foo(2) can be evaluated at compile time, 7
 ---
 int foo(int f)
 {
-  immutable x = f + 1;  // evaluated at run time
-  x = 3;                // error, x is immutable
+    immutable x = f + 1;  // evaluated at run time
+    x = 3;                // error, x is immutable
 }
 ---
 
@@ -257,7 +259,7 @@ $(SECTION2 Creating Immutable Data,
 ---
 auto s = "hello";   // s is immutable(char)[5]
 char[] p = "world"; // error, cannot implicitly convert immutable
-		    // to mutable
+                    // to mutable
 ---
 
 	$(P
@@ -322,42 +324,47 @@ $(SECTION2 Immutable Member Functions,
 	)
 
 ---
-struct S {
-  int x;
+struct S
+{
+    int x;
 
-  void foo() immutable {
-    x = 4;      // error, x is immutable
-    this.x = 4; // error, x is immutable
-  }
+    void foo() immutable
+    {
+        x = 4;      // error, x is immutable
+        this.x = 4; // error, x is immutable
+    }
 }
 ---
     $(P Note that using $(D_KEYWORD immutable) on the left hand side of a method does not apply to the return type:
     )
 
 ---
-struct S {
-  immutable int[] bar()  // bar is still immutable, return type is not!
-  {
-  }
+struct S
+{
+    immutable int[] bar()  // bar is still immutable, return type is not!
+    {
+    }
 }
 ---
     $(P To make the return type $(D_KEYWORD immutable), you need to surround the return type with parentheses:
     )
 
 ---
-struct S {
-  immutable(int[]) bar()  // bar is now mutable, return type is immutable.
-  {
-  }
+struct S
+{
+    immutable(int[]) bar()  // bar is now mutable, return type is immutable.
+    {
+    }
 }
 ---
     $(P To make both the return type and the method $(D_KEYWORD immutable), you can write:
     )
 ---
-struct S {
-  immutable(int[]) bar() immutable
-  {
-  }
+struct S
+{
+    immutable(int[]) bar() immutable
+    {
+    }
 }
 ---
 )
@@ -432,13 +439,13 @@ $(SECTION2 Implicit Conversions,
 ---
 void main()
 {
-  immutable int** p = new int*(null); // ok, unique
+    immutable int** p = new int*(null); // ok, unique
 
-  int x;
-  immutable int** q = new int*(&x); // error, there may be other references to x
+    int x;
+    immutable int** q = new int*(&x); // error, there may be other references to x
 
-  immutable int y;
-  immutable int** r = new immutable(int)*(&y); // ok, y is immutable
+    immutable int y;
+    immutable int** r = new immutable(int)*(&y); // ok, y is immutable
 }
 ---
 	)

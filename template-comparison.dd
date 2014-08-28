@@ -36,16 +36,16 @@ are subject to change.)
 ---
 class Foo(T)
 {
-  T x;
+    T x;
 }
 ---
 )
 	$(TD Yes:
 $(CPPCODE2
 template&lt;class T&gt;
-  class Foo
+class Foo
 {
-  T x;
+    T x;
 };
 )
 )
@@ -58,16 +58,16 @@ template&lt;class T&gt;
 ---
 T foo(T)(T i)
 {
-  ...
+    ...
 }
 ---
 )
 	$(TD Yes:
 $(CPPCODE2
 template&lt;class T&gt;
-  T foo(T i)
+T foo(T i)
 {
-  ...
+    ...
 }
 )
 )
@@ -96,7 +96,7 @@ template&lt;class T&gt;
 ---
 template Foo(T)
 {
-  static T* p;
+    static T* p;
 }
 ---
 )
@@ -112,7 +112,7 @@ template Foo(T)
 class Foo(T, U) { }
 template MyFoo(T)
 {
-  alias MyFoo = Foo!(T, int);
+    alias MyFoo = Foo!(T, int);
 }
 MyFoo!(uint) f;
 ---
@@ -155,12 +155,11 @@ Foo&lt;double&gt; f = { 1.2, 3, 6.8 };
 ---
 template factorial(int n)
 {
-  const factorial =
-     n * factorial!(n-1);
+    const factorial = n * factorial!(n-1);
 }
 template factorial(int n : 1)
 {
-  const factorial = 1;
+    const factorial = 1;
 }
 ---
 )
@@ -169,11 +168,7 @@ $(CPPCODE2
 template&lt;int n&gt; class factorial
 {
   public:
-    enum
-    {
-      result =
-         n * factorial&lt;n-1&gt;::result
-    };
+    enum { result = n * factorial&lt;n-1&gt;::result };
 };
 template&lt;&gt; class factorial&lt;1&gt;
 {
@@ -195,8 +190,7 @@ template factorial(int n)
   static if (n == 1)
     const factorial = 1;
   else
-    const factorial =
-       n * factorial!(n-1);
+    const factorial = n * factorial!(n-1);
 }
 ---
 )
@@ -210,8 +204,7 @@ template&lt;int n&gt; class factorial
 #if (n == 1) // $(ERROR)
       result = 1;
 #else
-      result =
-         n * factorial&lt;n-1&gt;::result
+      result = n * factorial&lt;n-1&gt;::result
 #endif
     };
 };
@@ -226,7 +219,7 @@ template&lt;int n&gt; class factorial
 	$(TD Yes:
 $(CPPCODE2
 template&lt;class T&gt;
-  class Foo;
+class Foo;
 )
 )
 	$(TD No change)
@@ -238,8 +231,8 @@ template&lt;class T&gt;
 ---
 template Foo(T, U)
 {
-  class Bar { ... }
-  T foo(T t, U u) { ... }
+    class Bar { ... }
+    T foo(T t, U u) { ... }
 }
 Foo!(int,long).Bar b;
 return Foo!(char,int).foo('c',3);
@@ -248,9 +241,11 @@ return Foo!(char,int).foo('c',3);
 	$(TD No, each must be separate:
 $(CPPCODE2
 template&lt;class T, class U&gt;
-  class Foo_Bar { ... };
+class Foo_Bar { ... };
+
 template&lt;class T, class U&gt;
-  T Foo_foo(T t, U u) { ... };
+T Foo_foo(T t, U u) { ... };
+
 Foo_Bar&lt;int,long&gt; b;
 return Foo_foo&lt;char,int&gt('c',3);
 )
@@ -263,10 +258,11 @@ return Foo_foo&lt;char,int&gt('c',3);
 	$(TD $(DDSUBLINK function, interpretation, Yes):
 ---
 int factorial(int i)
-{ if (i == 0)
-    return 1;
-  else
-    return i * factorial(i - 1);
+{
+    if (i == 0)
+        return 1;
+    else
+        return i * factorial(i - 1);
 }
 static f = factorial(6);
 ---
@@ -289,7 +285,7 @@ static f = factorial(6);
 ---
 class Foo(T)
 {
-  T x;
+    T x;
 }
 Foo!(int) f;
 ---
@@ -297,9 +293,9 @@ Foo!(int) f;
 	$(TD Yes:
 $(CPPCODE2
 template&lt;class T&gt;
-  class Foo
+class Foo
 {
-  T x;
+    T x;
 };
 Foo&lt;int&gt; f;
 )
@@ -313,16 +309,16 @@ Foo&lt;int&gt; f;
 ---
 void foo(int i)()
 {
-  int v = i;
+    int v = i;
 }
 ---
 )
 	$(TD Yes:
 $(CPPCODE2
 template&lt;int i&gt;
-    void foo()
+void foo()
 {
-  int v = i;
+    int v = i;
 }
 )
 )
@@ -342,9 +338,9 @@ template&lt;int i&gt;
 	$(TD Yes:
 $(CPPCODE2
 template&lt;double& D&gt;
-    void foo()
+void foo()
 {
-  double y = D;
+    double y = D;
 }
 )
 )
@@ -366,7 +362,7 @@ template&lt;double& D&gt;
 ---
 class Foo(T, alias C)
 {
-  C!(T) x;
+    C!(T) x;
 }
 ---
 )
@@ -374,9 +370,9 @@ class Foo(T, alias C)
 $(CPPCODE2
 template&lt;class T,
          template&lt;class U&gt; class C&gt;
-    class Foo
+class Foo
 {
-  C&lt;T&gt; x;
+    C&lt;T&gt; x;
 };
 )
 )
@@ -391,7 +387,7 @@ void bar(int);
 void bar(double);
 void foo(T, alias S)(T t)
 {
-  S(t);
+    S(t);
 }
 // calls bar(double)
 foo!(double, bar)(1);
@@ -407,7 +403,7 @@ foo!(double, bar)(1);
 ---
 class Foo(double D)
 {
-  double x = D;
+    double x = D;
 }
 ...
 Foo!(1.6) F;
@@ -423,7 +419,7 @@ Foo!(1.6) F;
 ---
 void foo(char[] format)(int i)
 {
-  writefln(format, i);
+    writefln(format, i);
 }
 ...
 foo!("i = %s")(3);
@@ -453,16 +449,16 @@ foo!("i = %s")(3);
 ---
 class Foo(T = int)
 {
-  T x;
+    T x;
 }
 ---
 )
 	$(TD Yes:
 $(CPPCODE2
 template&lt;class T = int&gt;
-  class Foo
+class Foo
 {
-  T x;
+    T x;
 };
 )
 )
@@ -476,7 +472,7 @@ template&lt;class T = int&gt;
 void print(A...)(A a)
 {
     foreach(t; a)
-	writeln(t);
+        writeln(t);
 }
 ---
 )
@@ -497,16 +493,16 @@ void print(A...)(A a)
 ---
 class Foo(T : int)
 {
-  T x;
+    T x;
 }
 ---
 )
 	$(TD Yes:
 $(CPPCODE2
 template&lt;&gt;
-  class Foo&lt;int&gt;
+class Foo&lt;int&gt;
 {
-  int x;
+    int x;
 };
 )
 )
@@ -519,16 +515,16 @@ template&lt;&gt;
 ---
 class Foo(T : T*, U)
 {
-  T x;
+    T x;
 }
 ---
 )
 	$(TD Yes:
 $(CPPCODE2
 template&lt;class T, class U&gt;
-  class Foo&lt;T*, U&gt;
+class Foo&lt;T*, U&gt;
 {
-  T x;
+    T x;
 };
 )
 )
@@ -541,16 +537,16 @@ template&lt;class T, class U&gt;
 ---
 class Foo(T : Bar!(T, U), U)
 {
-  ...
+    ...
 }
 ---
 )
 	$(TD Yes:
 $(CPPCODE2
 template&lt;class T, class U&gt;
-    class Foo&lt; Bar&lt;T,U&gt; &gt;
+class Foo&lt; Bar&lt;T,U&gt; &gt;
 {
-  ...
+    ...
 };
 )
 )
@@ -604,7 +600,8 @@ void foo(T:int)(int t) { }
 	$(TD Yes:
 $(CPPCODE2
 template&lt;class T&gt;
-  void foo(T i) { }
+void foo(T i) { }
+
 void foo(int t) { }
 )
 )
@@ -633,10 +630,10 @@ void foo(int t) { }
 ---
 class Foo(T)
 {
-  static if (is(T x : T!A, A...))
-  {
-    pragma(msg, A);  // (int, float)
-  }
+    static if (is(T x : T!A, A...))
+    {
+        pragma(msg, A);  // (int, float)
+    }
 }
 
 struct Bar(T1, T2) { }
@@ -664,7 +661,7 @@ Foo!(BarInst) f;
 ---
 class Foo(int i)
 {
-   ...
+    ...
 }
 Foo!(3 $(B >) 4) f;
 ---
@@ -673,7 +670,7 @@ Foo!(3 $(B >) 4) f;
 $(CPPCODE2
 template&lt;int i&gt; class Foo
 {
-   ...
+    ...
 };
 Foo&lt;3 $(B &gt;) 4&gt; f; // $(ERROR)
 )
@@ -688,11 +685,11 @@ Foo&lt;3 $(B &gt;) 4&gt; f; // $(ERROR)
 ---
 class Foo(T)
 {
-   ...
+    ...
 }
 class Bar(int i)
 {
-   ...
+    ...
 }
 Foo!(Bar!(1)) x1;
 ---
@@ -701,11 +698,11 @@ Foo!(Bar!(1)) x1;
 $(CPPCODE2
 template&lt;class T&gt; class Foo
 {
-   ...
+    ...
 };
 template&lt;int i&gt; class Bar
 {
-   ...
+    ...
 };
 Foo&lt;Bar&lt;1&gt;&gt; x1; // $(ERROR)
 Foo&lt;Bar&lt;1&gt; &gt; x2;
@@ -724,24 +721,24 @@ Foo&lt;Bar&lt;1&gt; &gt; x2;
 ---
 class Foo(T)
 {
-  int T;
-  void foo()
-  {
     int T;
-  }
+    void foo()
+    {
+        int T;
+    }
 }
 ---
 )
 	$(TD No:
 $(CPPCODE2
 template&lt;class T&gt;
-  class Foo
+class Foo
 {
-  int T; // $(ERROR)
-  void foo()
-  {
     int T; // $(ERROR)
-  }
+    void foo()
+    {
+        int T; // $(ERROR)
+    }
 };
 )
 )
@@ -754,24 +751,24 @@ template&lt;class T&gt;
 ---
 class Foo(T)
 {
-  typedef int $(B A);
+    alias $(B A) = int;
 }
 class Bar(T) : Foo(T)
 {
-  $(B A) x;
+    $(B A) x;
 }
 ---
 )
 	$(TD No:
 $(CPPCODE2
 template&lt;class T&gt;
-  class Foo
+class Foo
 {
   public:
     typedef int $(B A);
 };
 template&lt;class T&gt;
-  class Bar : Foo&lt;T&gt;
+class Bar : Foo&lt;T&gt;
 {
   public:
     $(B A) x; // $(ERROR)
@@ -792,10 +789,10 @@ int $(B g)(void *);
 
 class Foo(T)
 {
-  int foo()
-  {
-    return $(B g)(1);
-  }
+    int foo()
+    {
+        return $(B g)(1);
+    }
 }
 
 int $(B g)(int i);
@@ -806,12 +803,12 @@ $(CPPCODE2
 int $(B g)(void *);
 
 template&lt;class T&gt;
-  class Foo
+class Foo
 {
-  int foo()
-  {
-    return $(B g)(1); // $(ERROR)
-  }
+    int foo()
+    {
+        return $(B g)(1); // $(ERROR)
+    }
 };
 
 int $(B g)(int i);
@@ -831,7 +828,7 @@ class Foo
 }
 void abd(T)(T f)
 {
-  T f1 = f.bar!(3)();
+    T f1 = f.bar!(3)();
 }
 ---
 )
@@ -844,8 +841,8 @@ class Foo
 };
 template&lt;class T&gt; void abc(T *f)
 {
-  T *f1 = f-&gt;bar&lt;3&gt;(); // $(ERROR)
-  T *f2 = f-&gt;$(B template) bar&lt;3&gt;();
+    T *f1 = f-&gt;bar&lt;3&gt;(); // $(ERROR)
+    T *f2 = f-&gt;$(B template) bar&lt;3&gt;();
 }
 )
 )
@@ -859,7 +856,7 @@ template&lt;class T&gt; void abc(T *f)
 ---
 class Foo(T)
 {
-  T.A* a1;
+    T.A* a1;
 }
 ---
 )

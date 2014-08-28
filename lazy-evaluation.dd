@@ -37,7 +37,7 @@ value:
 void log(char[] message)
 {
     if (logging)
-    fwritefln(logfile, message);
+        fwritefln(logfile, message);
 }
 ---
 
@@ -63,7 +63,8 @@ $(P One way to fix it is by using lazy evaluation:
 ---
 void foo(int i)
 {
-    if (logging) log("Entering foo() with i set to " ~ toString(i));
+    if (logging)
+        log("Entering foo() with i set to " ~ toString(i));
 }
 ---
 
@@ -97,7 +98,7 @@ is possible in the D programming language using a delegate parameter:
 void log(char[] delegate() dg)
 {
     if (logging)
-    fwritefln(logfile, dg());
+        fwritefln(logfile, dg());
 }
 
 void foo(int i)
@@ -125,7 +126,7 @@ The functions then become:
 void log(lazy char[] dg)
 {
     if (logging)
-    fwritefln(logfile, dg());
+        fwritefln(logfile, dg());
 }
 
 void foo(int i)
@@ -152,7 +153,7 @@ times. The pattern is:
 
 ---
 for (int i = 0; i < count; i++)
-   exp;
+    exp;
 ---
 
 $(P This pattern can be encapsulated in a function using lazy evaluation:
@@ -162,7 +163,7 @@ $(P This pattern can be encapsulated in a function using lazy evaluation:
 void dotimes(int count, lazy void exp)
 {
     for (int i = 0; i < count; i++)
-       exp();
+        exp();
 }
 ---
 
@@ -192,7 +193,7 @@ Here's a method to create a switch like structure:
 bool scase(bool b, lazy void dg)
 {
     if (b)
-    dg();
+        dg();
     return b;
 }
 
@@ -202,8 +203,9 @@ bool scase(bool b, lazy void dg)
 void cond(bool delegate()[] cases ...)
 {
     foreach (c; cases)
-    {	if (c())
-        break;
+    {
+        if (c())
+            break;
     }
 }
 ---
@@ -244,7 +246,7 @@ Abc p;
 p = foo();
 if (!p)
     throw new Exception("foo() failed");
-p.bar();	// now use p
+p.bar();    // now use p
 ---
 
 $(P Because throw is a statement, not an expression, expressions that
@@ -261,7 +263,7 @@ function:
 Abc Enforce(Abc p, lazy char[] msg)
 {
     if (!p)
-    throw new Exception(msg());
+        throw new Exception(msg());
     return p;
 }
 ---

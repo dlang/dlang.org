@@ -89,10 +89,10 @@ class A
 {
     $(CODE_HIGHLIGHT invariant)() { ...contracts... }
 
-    this() { ... }	// constructor
-    ~this() { ... }	// destructor
+    this() { ... }      // constructor
+    ~this() { ... }     // destructor
 
-    void foo() { ... }	// public member function
+    void foo() { ... }  // public member function
 }
 
 class B : A
@@ -221,12 +221,12 @@ $(H2 Preconditions and Postconditions)
 
 ----------
 void foo()
-    in { ...preconditions... }
-    out { ...postconditions... }
-    body
-    {
-	...implementation...
-    }
+in { ...preconditions... }
+out { ...postconditions... }
+body
+{
+    ...implementation...
+}
 ----------
 
 	This is nicely handled in C++ with the nested Sentry struct:
@@ -235,8 +235,9 @@ $(CCODE
 void foo()
 {
     struct Sentry
-    {   Sentry() { ...preconditions... }
-	~Sentry() { ...postconditions... }
+    {
+        Sentry() { ...preconditions... }
+        ~Sentry() { ...postconditions... }
     } sentry;
     ...implementation...
 }
@@ -256,8 +257,9 @@ void foo()
 {
 #ifdef DBC
     struct Sentry
-    {   Sentry() { ...preconditions... }
-	~Sentry() { ...postconditions... }
+    {
+        Sentry() { ...preconditions... }
+        ~Sentry() { ...postconditions... }
     } sentry;
 #endif
     ...implementation...
@@ -274,15 +276,15 @@ void foo()
 
 ----------
 int foo()
-    in { ...preconditions... }
-    out (result) { ...postconditions... }
-    body
-    {
-	...implementation...
-	if (...)
-	    return bar();
-	return 3;
-    }
+in { ...preconditions... }
+out (result) { ...postconditions... }
+body
+{
+    ...implementation...
+    if (...)
+        return bar();
+    return 3;
+}
 ----------
 
 	In C++:
@@ -292,18 +294,20 @@ int foo()
 {
 #ifdef DBC
     struct Sentry
-    {   int result;
-	Sentry() { ...preconditions... }
-	~Sentry() { ...postconditions... }
+    {
+        int result;
+        Sentry() { ...preconditions... }
+        ~Sentry() { ...postconditions... }
     } sentry;
 #endif
     ...implementation...
     if (...)
-    {   int i = bar();
+    {
+        int i = bar();
 #ifdef DBC
-	sentry.result = i;
+        sentry.result = i;
 #endif
-	return i;
+        return i;
     }
 #ifdef DBC
     sentry.result = 3;
@@ -316,15 +320,15 @@ int foo()
 
 ----------
 int foo(int a, int b)
-    in { ...preconditions... }
-    out (result) { ...postconditions... }
-    body
-    {
-	...implementation...
-	if (...)
-	    return bar();
-	return 3;
-    }
+in { ...preconditions... }
+out (result) { ...postconditions... }
+body
+{
+    ...implementation...
+    if (...)
+        return bar();
+    return 3;
+}
 ----------
 
 	In C++:
@@ -334,28 +338,31 @@ int foo(int a, int b)
 {
 #ifdef DBC
     struct Sentry
-    {   int a, b;
-	int result;
-	Sentry(int a, int b)
-	{   this->a = a;
-	    this->b = b;
-	    ...preconditions...
-	}
-	~Sentry() { ...postconditions... }
-    } sentry(a,b);
+    {
+        int a, b;
+        int result;
+        Sentry(int a, int b)
+        {
+            this->a = a;
+            this->b = b;
+            ...preconditions...
+        }
+        ~Sentry() { ...postconditions... }
+    } sentry(a, b);
 #endif
     ...implementation...
-	if (...)
-	{   int i = bar();
+    if (...)
+    {
+        int i = bar();
 #ifdef DBC
-	    sentry.result = i;
+        sentry.result = i;
 #endif
-	    return i;
-	}
+        return i;
+    }
 #ifdef DBC
-	sentry.result = 3;
+    sentry.result = 3;
 #endif
-	return 3;
+    return 3;
 }
 )
 
@@ -368,23 +375,23 @@ $(H2 Preconditions and Postconditions for Member Functions)
 class A
 {
     void foo()
-	in { ...Apreconditions... }
-	out { ...Apostconditions... }
-	body
-	{
-	    ...implementation...
-	}
+    in { ...Apreconditions... }
+    out { ...Apostconditions... }
+    body
+    {
+        ...implementation...
+    }
 }
 
 class B : A
 {
     void foo()
-	in { ...Bpreconditions... }
-	out { ...Bpostconditions... }
-	body
-	{
-	    ...implementation...
-	}
+    in { ...Bpreconditions... }
+    out { ...Bpostconditions... }
+    body
+    {
+        ...implementation...
+    }
 }
 ----------
 
@@ -411,22 +418,22 @@ protected:
 
     void foo_internal()
     {
-	...implementation...
+        ...implementation...
     }
 
 public:
     virtual void foo()
     {
-	foo_preconditions();
-	foo_internal();
-	foo_postconditions();
+        foo_preconditions();
+        foo_internal();
+        foo_postconditions();
     }
 };
 
 class B : A
 {
 protected:
-    #if DBC
+   #if DBC
     int foo_preconditions() { ...Bpreconditions... }
     void foo_postconditions() { ...Bpostconditions... }
     #else
@@ -436,16 +443,16 @@ protected:
 
     void foo_internal()
     {
-	...implementation...
+        ...implementation...
     }
 
 public:
     virtual void foo()
     {
-	assert(foo_preconditions() || A::foo_preconditions());
-	foo_internal();
-	A::foo_postconditions();
-	foo_postconditions();
+        assert(foo_preconditions() || A::foo_preconditions());
+        foo_internal();
+        A::foo_postconditions();
+        foo_postconditions();
     }
 };
 )

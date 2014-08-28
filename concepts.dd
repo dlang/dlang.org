@@ -37,7 +37,7 @@ $(D_S Template Constraints,
 
 ---
 template Foo(int N)
-        if (N & 1)
+    if (N & 1)
 {
     ...
 }
@@ -51,25 +51,25 @@ template Foo(int N)
 	)
 
 ---
-bool isPrime(int n) 
+bool isPrime(int n)
 {
-	if (n == 2)
-		return true;
-	if (n < 1 || (n & 1) == 0)
-		return false;
-	if (n > 3) 
-	{
-		for (auto i = 3; i * i <= n; i += 2) 
-		{ 
-			if ((n % i) == 0)
-				return false;
-		} 
-	} 
-	return true; 
+    if (n == 2)
+        return true;
+    if (n < 1 || (n & 1) == 0)
+        return false;
+    if (n > 3)
+    {
+        for (auto i = 3; i * i <= n; i += 2)
+        {
+            if ((n % i) == 0)
+                return false;
+        }
+    }
+    return true;
 }
 
 template Foo(int N)
-	if (isPrime(N))
+    if (isPrime(N))
 {
     ...
 }
@@ -85,15 +85,15 @@ Foo!(6)    // no match for Foo
 ---
 template Bar(T:float)
 {
-   ...
+    ...
 }
 template Bar(T:double)
 {
-   ...
+    ...
 }
 template Bar(T:real)
 {
-   ...
+    ...
 }
 ---
 	$(P and the template implementation body must be duplicated
@@ -102,9 +102,9 @@ template Bar(T:real)
 	)
 ---
 template Bar(T)
-	if (is(T == float) || is(T == double) || is(T == real))
+    if (is(T == float) || is(T == double) || is(T == real))
 {
-   ...
+    ...
 }
 ---
 	$(P This can be simplified by using the $(CODE isFloatingPoint)
@@ -115,7 +115,7 @@ import std.traits;
 template Bar(T)
     if (isFloatingPoint!(T))
 {
-   ...
+    ...
 }
 ---
 
@@ -126,7 +126,8 @@ template Bar(T)
 ---
 // Returns true if instances of type T can be added
 template isAddable(T)
-{   // Works by attempting to add two instances of type T
+{
+    // Works by attempting to add two instances of type T
     const isAddable = __traits(compiles, (T t) { return t + t; });
 }
 
@@ -171,12 +172,13 @@ template isStack(T)
 {
     const isStack =
         __traits(compiles,
-          (T t)
-          {   T.value_type v = top(t);
-              push(t, v);
-              pop(t);
-              if (empty(t)) { }
-          });
+            (T t)
+            {
+                T.value_type v = top(t);
+                push(t, v);
+                pop(t);
+                if (empty(t)) { }
+            });
 }
 
 template Foo(T)

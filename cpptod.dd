@@ -198,21 +198,21 @@ $(H4 The C++ Way)
 	and its underlying type.
 
 $(CPPCODE
-#define HANDLE_INIT	((Handle)(-1))
+#define HANDLE_INIT     ((Handle)(-1))
 typedef void *Handle;
 void foo(void *);
 void bar(Handle);
 
 Handle h = HANDLE_INIT;
-foo(h);			// coding bug not caught
-bar(h);			// ok
+foo(h);         // coding bug not caught
+bar(h);         // ok
 )
 
 	The C++ solution is to create a dummy struct whose sole
 	purpose is to get type checking and overloading on the new type.
 
 $(CPPCODE
-#define HANDLE_INIT	((void *)(-1))
+#define HANDLE_INIT     ((void *)(-1))
 struct Handle
 {
     void *ptr;
@@ -264,23 +264,23 @@ $(H4 The C++ Way)
 $(CPPCODE
 class A
 {
-    private:
-	int a;
+  private:
+    int a;
 
-    public:
-	int foo(B *j);
-	friend class B;
-	friend int abc(A *);
+  public:
+    int foo(B *j);
+    friend class B;
+    friend int abc(A *);
 };
 
 class B
 {
-    private:
-	int b;
+  private:
+    int b;
 
-    public:
-	int bar(A *j);
-	friend class A;
+  public:
+    int bar(A *j);
+    friend class A;
 };
 
 int A::foo(B *j) { return j->b; }
@@ -301,20 +301,20 @@ module X;
 
 class A
 {
-    private:
-	static int a;
+  private:
+    static int a;
 
-    public:
-	int foo(B j) { return j.b; }
+  public:
+    int foo(B j) { return j.b; }
 }
 
 class B
 {
-    private:
-	static int b;
+  private:
+    static int b;
 
-    public:
-	int bar(A j) { return j.a; }
+  public:
+    int bar(A j) { return j.a; }
 }
 
 int abc(A p) { return p.a; }
@@ -447,7 +447,7 @@ struct File
 
     ~this()
     {
-	h.release();
+        h.release();
     }
 }
 
@@ -456,7 +456,7 @@ void test()
     if (...)
     {
         auto f = File();
-	...
+        ...
     } // f.~this() gets run at closing brace, even if
       // scope was exited via a thrown exception
 }
@@ -551,14 +551,14 @@ $(H4 The C++ Way)
 $(CPPCODE
 template&lt;int n&gt; class factorial
 {
-    public:
-	enum { result = n * factorial&lt;n - 1&gt;::result };
+  public:
+    enum { result = n * factorial&lt;n - 1&gt;::result };
 };
 
 template&lt;&gt; class factorial&lt;1&gt;
 {
-    public:
-	enum { result = 1 };
+  public:
+    enum { result = 1 };
 };
 
 void test()
@@ -586,7 +586,7 @@ template factorial(int n : 1)
 
 void test()
 {
-    writefln("%d", factorial!(4));	// prints 24
+    writefln("%d", factorial!(4));  // prints 24
 }
 ------
 
@@ -700,8 +700,7 @@ int main()
     Integer&lt; 16 &gt; j ;
     Integer&lt; 29 &gt; k ;
     Integer&lt; 64 &gt; l ;
-    printf("%d %d %d %d\n",
-	sizeof(i), sizeof(j), sizeof(k), sizeof(l));
+    printf("%d %d %d %d\n", sizeof(i), sizeof(j), sizeof(k), sizeof(l));
     return 0 ;
 }
 )
@@ -721,15 +720,15 @@ import std.stdio;
 template Integer(int nbits)
 {
     static if (nbits <= 8)
-	alias Integer = byte;
+        alias Integer = byte;
     else static if (nbits <= 16)
-	alias Integer = short;
+        alias Integer = short;
     else static if (nbits <= 32)
-	alias Integer = int;
+        alias Integer = int;
     else static if (nbits <= 64)
-	alias Integer = long;
+        alias Integer = long;
     else
-	static assert(0);
+        static assert(0);
 }
 
 int main()
@@ -738,8 +737,7 @@ int main()
     Integer!(16) j ;
     Integer!(29) k ;
     Integer!(64) l ;
-    writefln("%d %d %d %d",
-	i.sizeof, j.sizeof, k.sizeof, l.sizeof);
+    writefln("%d %d %d %d", i.sizeof, j.sizeof, k.sizeof, l.sizeof);
     return 0;
 }
 ------
@@ -762,13 +760,13 @@ $(H4 The C++ Way)
 $(CPPCODE
 template&lt;typename T&gt; class IsFunctionT
 {
-    private:
-	typedef char One;
-	typedef struct { char a[2]; } Two;
-	template&lt;typename U&gt; static One test(...);
-	template&lt;typename U&gt; static Two test(U (*)[1]);
-    public:
-	enum { Yes = sizeof(IsFunctionT&lt;T&gt;::test&lt;T&gt;(0)) == 1 };
+  private:
+    typedef char One;
+    typedef struct { char a[2]; } Two;
+    template&lt;typename U&gt; static One test(...);
+    template&lt;typename U&gt; static Two test(U (*)[1]);
+  public:
+    enum { Yes = sizeof(IsFunctionT&lt;T&gt;::test&lt;T&gt;(0)) == 1 };
 };
 
 void test()
@@ -792,9 +790,9 @@ $(H4 The D Way)
 template IsFunctionT(T)
 {
     static if ( is(T[]) )
-	const int IsFunctionT = 0;
+        const int IsFunctionT = 0;
     else
-	const int IsFunctionT = 1;
+        const int IsFunctionT = 1;
 }
 
 void test()

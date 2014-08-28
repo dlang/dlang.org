@@ -32,11 +32,12 @@ $(CCODE
 
 extern int dll();
 
-int main() {
-  printf("+main()\n");
-  dll();
-  printf("-main()\n");
-  return 0;
+int main()
+{
+    printf("+main()\n");
+    dll();
+    printf("-main()\n");
+    return 0;
 }
 )
 
@@ -45,9 +46,10 @@ dll.c:
 $(CCODE
 #include &lt;stdio.h&gt;
 
-int dll() {
-  printf("dll()\n");
-  return 0;
+int dll()
+{
+    printf("dll()\n");
+    return 0;
 }
 )
 
@@ -105,31 +107,34 @@ $(CCODE
 #include &lt;stdlib.h&gt;
 #include &lt;dlfcn.h&gt;
 
-int main() {
-  printf("+main()\n");
+int main()
+{
+    printf("+main()\n");
 
-  void *lh = dlopen("/home/walter/tmp/libdll.so", RTLD_LAZY);
-  if (!lh) {
-    fprintf(stderr, "dlopen error: %s\n", dlerror());
-    exit(1);
-  }
-  printf("libdll.so is loaded\n");
+    void *lh = dlopen("/home/walter/tmp/libdll.so", RTLD_LAZY);
+    if (!lh)
+    {
+        fprintf(stderr, "dlopen error: %s\n", dlerror());
+        exit(1);
+    }
+    printf("libdll.so is loaded\n");
 
-  int (*fn)() = dlsym(lh, "dll");
-  char *error = dlerror();
-  if (error) {
-    fprintf(stderr, "dlsym error: %s\n", error);
-    exit(1);
-  }
-  printf("dll() function is found\n");
+    int (*fn)() = dlsym(lh, "dll");
+    char *error = dlerror();
+    if (error)
+    {
+        fprintf(stderr, "dlsym error: %s\n", error);
+        exit(1);
+    }
+    printf("dll() function is found\n");
 
-  (*fn)();
+    (*fn)();
 
-  printf("unloading libdll.so\n");
-  dlclose(lh);
+    printf("unloading libdll.so\n");
+    dlclose(lh);
 
-  printf("-main()\n");
-  return 0;
+    printf("-main()\n");
+    return 0;
 }
 )
 
@@ -167,14 +172,16 @@ dll.c:
 $(CCODE
 #include &lt;stdio.h&gt;
 
-extern "C" int dll() {
-  printf("dll()\n");
-  return 0;
+extern "C" int dll()
+{
+    printf("dll()\n");
+    return 0;
 }
 
-struct S {
-  S() { printf("libdll.so construction\n"); }
-  ~S() { printf("~libdll.so destruction\n"); }
+struct S
+{
+    S() { printf("libdll.so construction\n"); }
+    ~S() { printf("~libdll.so destruction\n"); }
 };
 
 S ss;
@@ -212,11 +219,12 @@ main.d:
 import core.stdc.stdio;
 import dll;
 
-int main() {
-  printf("+main()\n");
-  dll.dll();
-  printf("-main()\n");
-  return 0;
+int main()
+{
+    printf("+main()\n");
+    dll.dll();
+    printf("-main()\n");
+    return 0;
 }
 ---
 
@@ -225,9 +233,10 @@ dll.d:
 ---
 import core.stdc.stdio;
 
-extern (C) int dll() {
-  printf("dll()\n");
-  return 0;
+extern (C) int dll()
+{
+    printf("dll()\n");
+    return 0;
 }
 ---
 
@@ -290,31 +299,34 @@ import core.sys.posix.dlfcn;
 
 extern (C) int dll();
 
-int main() {
-  printf("+main()\n");
+int main()
+{
+    printf("+main()\n");
 
-  void *lh = dlopen("libdll.so", RTLD_LAZY);
-  if (!lh) {
-    fprintf(stderr, "dlopen error: %s\n", dlerror());
-    exit(1);
-  }
-  printf("libdll.so is loaded\n");
+    void* lh = dlopen("libdll.so", RTLD_LAZY);
+    if (!lh)
+    {
+        fprintf(stderr, "dlopen error: %s\n", dlerror());
+        exit(1);
+    }
+    printf("libdll.so is loaded\n");
 
-  int function() fn = cast(int function())dlsym(lh, "dll");
-  char *error = dlerror();
-  if (error) {
-    fprintf(stderr, "dlsym error: %s\n", error);
-    exit(1);
-  }
-  printf("dll() function is found\n");
+    int function() fn = cast(int function())dlsym(lh, "dll");
+    char* error = dlerror();
+    if (error)
+    {
+        fprintf(stderr, "dlsym error: %s\n", error);
+        exit(1);
+    }
+    printf("dll() function is found\n");
 
-  fn();
+    fn();
 
-  printf("unloading libdll.so\n");
-  dlclose(lh);
+    printf("unloading libdll.so\n");
+    dlclose(lh);
 
-  printf("-main()\n");
-  return 0;
+    printf("-main()\n");
+    return 0;
 }
 ---
 
@@ -323,14 +335,16 @@ dll.c:
 $(CCODE
 #include &lt;stdio.h&gt;
 
-extern "C" int dll() {
-  printf("dll()\n");
-  return 0;
+extern "C" int dll()
+{
+    printf("dll()\n");
+    return 0;
 }
 
-struct S {
-  S() { printf("libdll.so construction\n"); }
-  ~S() { printf("libdll.so destruction\n"); }
+struct S
+{
+    S() { printf("libdll.so construction\n"); }
+    ~S() { printf("libdll.so destruction\n"); }
 };
 
 S ss;
@@ -369,31 +383,34 @@ $(CCODE
 #include &lt;stdlib.h&gt;
 #include &lt;dlfcn.h&gt;
 
-int main() {
-  printf("+main()\n");
+int main()
+{
+    printf("+main()\n");
 
-  void *lh = dlopen("/home/walter/tmp/libdll.so", RTLD_LAZY);
-  if (!lh) {
-    fprintf(stderr, "dlopen error: %s\n", dlerror());
-    exit(1);
-  }
-  printf("libdll.so is loaded\n");
+    void *lh = dlopen("/home/walter/tmp/libdll.so", RTLD_LAZY);
+    if (!lh)
+    {
+        fprintf(stderr, "dlopen error: %s\n", dlerror());
+        exit(1);
+    }
+    printf("libdll.so is loaded\n");
 
-  int (*fn)() = dlsym(lh, "dll");
-  char *error = dlerror();
-  if (error) {
-    fprintf(stderr, "dlsym error: %s\n", error);
-    exit(1);
-  }
-  printf("dll() function is found\n");
+    int (*fn)() = dlsym(lh, "dll");
+    char *error = dlerror();
+    if (error)
+    {
+        fprintf(stderr, "dlsym error: %s\n", error);
+        exit(1);
+    }
+    printf("dll() function is found\n");
 
-  (*fn)();
+    (*fn)();
 
-  printf("unloading libdll.so\n");
-  dlclose(lh);
+    printf("unloading libdll.so\n");
+    dlclose(lh);
 
-  printf("-main()\n");
-  return 0;
+    printf("-main()\n");
+    return 0;
 }
 )
 
@@ -402,17 +419,20 @@ dll.d:
 ---
 import core.stdc.stdio;
 
-extern (C) int dll() {
-  printf("dll()\n");
-  return 0;
+extern (C) int dll()
+{
+    printf("dll()\n");
+    return 0;
 }
 
-shared static this() {
-  printf("libdll.so shared static this\n");
+shared static this()
+{
+    printf("libdll.so shared static this\n");
 }
 
-shared static ~this() {
-  printf("libdll.so shared static ~this\n");
+shared static ~this()
+{
+    printf("libdll.so shared static ~this\n");
 }
 ---
 
@@ -451,6 +471,7 @@ the result will be multiple instances of the D runtime conflicting with each oth
 )
 
 main.d:
+
 ---
 import core.stdc.stdio;
 import core.stdc.stdlib;
@@ -458,37 +479,41 @@ import core.sys.posix.dlfcn;
 
 extern (C) int dll();
 
-int main() {
-  printf("+main()\n");
+int main()
+{
+    printf("+main()\n");
 
-  void *lh = dlopen("libdll.so", RTLD_LAZY);
-  if (!lh) {
-    fprintf(stderr, "dlopen error: %s\n", dlerror());
-    exit(1);
-  }
-  printf("libdll.so is loaded\n");
+    void* lh = dlopen("libdll.so", RTLD_LAZY);
+    if (!lh)
+    {
+        fprintf(stderr, "dlopen error: %s\n", dlerror());
+        exit(1);
+    }
+    printf("libdll.so is loaded\n");
 
-  int function() fn = cast(int function())dlsym(lh, "dll");
-  char *error = dlerror();
-  if (error) {
-    fprintf(stderr, "dlsym error: %s\n", error);
-    exit(1);
-  }
-  printf("dll() function is found\n");
+    int function() fn = cast(int function())dlsym(lh, "dll");
+    char* error = dlerror();
+    if (error)
+    {
+        fprintf(stderr, "dlsym error: %s\n", error);
+        exit(1);
+    }
+    printf("dll() function is found\n");
 
-  fn();
+    fn();
 
-  printf("unloading libdll.so\n");
-  dlclose(lh);
+    printf("unloading libdll.so\n");
+    dlclose(lh);
 
-  printf("-main()\n");
-  return 0;
+    printf("-main()\n");
+    return 0;
 }
 
 shared static this() { printf("main shared static this\n"); }
 
 shared static ~this() { printf("main shared static ~this\n"); }
 ---
+
 Build:
 
 $(CONSOLE

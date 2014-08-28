@@ -38,9 +38,10 @@ $(D_S Regular Expressions,
     put together a full program:
     ---
     import std.stdio, std.regex;
-    void main(string argv[]){
-        string phone = argv[1]; //assuming phone is passed as first argument on the command line
-        if(match(phone, r"^\+[1-9][0-9]* [0-9 ]*$"))
+    void main(string argv[])
+    {
+        string phone = argv[1];  // assuming phone is passed as first argument on the command line
+        if (match(phone, r"^\+[1-9][0-9]* [0-9 ]*$"))
             writeln("It looks like a phone number.");
         else
             writeln("Nope, it's not a phone number.");
@@ -64,17 +65,17 @@ $(D_S Regular Expressions,
     compiled regex pattern via $(D regex) to see how it works.
     )
     ---
-    string phone = "+31 650 903 7158"; //fictional, any coincidence is just that
+    string phone = "+31 650 903 7158";  // fictional, any coincidence is just that
     auto phoneReg = regex(r"^\+([1-9][0-9]*) [0-9 ]*$");
     auto m = match(phone, phoneReg);
     assert(m);
     assert(m.captures[0] == "+31 650 903 7158");
     assert(m.captures[1] == "31");
-    //you shouldn't really care about the type of regex object,
-    //but here it is
+    // you shouldn't really care about the type of regex object,
+    // but here it is
     static assert(is(typeof(phoneReg) : Regex!char));
     ---
-   
+
     $(H3 To search and replace)
     $(P There is a frequent need to find all matches in piece of text.
     Picking an easy task, let's see how to filter out all white space-only lines.
@@ -83,8 +84,9 @@ $(D_S Regular Expressions,
     )
     ---
     auto buffer = std.file.readText("regex.d");
-    foreach(m; match(buffer, regex(r"^.*[^\p{WhiteSpace}]+.*$","gm"))){
-        writeln(m.hit); //hit is a shorthand for m.captures[0]
+    foreach (m; match(buffer, regex(r"^.*[^\p{WhiteSpace}]+.*$","gm")))
+    {
+        writeln(m.hit);  // hit is a shorthand for m.captures[0]
     }
     ---
     $(P It just works as the result of match is an input range. 
@@ -93,14 +95,14 @@ $(D_S Regular Expressions,
     Random access here implies one can peek at any element with direct indexing. To have a feeling of how this affects the API:
     )
     ---
-    auto m = match("Ranges are hot!", r"(\w)\w*(\w)"); //at least 3 "word" symbols
+    auto m = match("Ranges are hot!", r"(\w)\w*(\w)");  // at least 3 "word" symbols
     assert(m.front[0] == "Ranges");
-    //m.captures is a historical alias for the first element of match range (.front).
+    // m.captures is a historical alias for the first element of match range (.front).
     assert(m.captures[1] == m.front[1]);
     auto captures = m.front;
     assert(captures[2] == "s");
-    foreach(c; captures)
-        writeln(c); //will show lines: Ranges, R, s
+    foreach (c; captures)
+        writeln(c);  // will show lines: Ranges, R, s
     ---
     $(P By playing by the rules $(STD regex) gets some nice benefits in interaction with other modules e.g.
     this is how one could count non-empty lines in text buffer
@@ -151,11 +153,13 @@ $(D_S Regular Expressions,
     import std.conv, std.regex, std.range, std.file, std.stdio;
     import std.string : format;
 
-    void main(string[] argv){
-        immutable ratio = 1.5824; //UK pounds to US dollar as of this writing
-        auto to_dollars(Captures!string price){
+    void main(string[] argv)
+    {
+        immutable ratio = 1.5824;  // UK pounds to US dollar as of this writing
+        auto to_dollars(Captures!string price)
+        {
             real value = to!real(price["integer"]);
-            if(!price["fraction"].empty)
+            if (!price["fraction"].empty)
                 value += 0.01*to!real(price["fraction"]);
             return format("$%.2f",value * ratio);
         }
@@ -170,13 +174,13 @@ $(D_S Regular Expressions,
     The magic is simple: whenever replace finds a match it calls a user supplied callback on the captured piece,
     then it uses the return value as replacement. And so on for other matches, given the "g" flag of regex.
     )
-   
+
     $(P I couldn't resist to spice this example up with yet another feature - named groups.
     Names work just like opaque aliases for numbers of captured subexpressions.
     Meaning that with the same exact regular expression one could as well change these lines to:
     ---
     real value = to!real(price[1]);
-    if(!price[3].empty)
+    if (!price[3].empty)
         value += 0.01*to!real(price[3]);
     ---
     Though that lacks readability and is not future proof. Also note that optional captures are still represented,
@@ -184,13 +188,13 @@ $(D_S Regular Expressions,
     )
 
     $(H3 More features, more options)
-   
+
     $(P As core functionallity was already presented, let's move on to extras.
     Sometimes it's useful to do almost the opposite of searching - split up input using regex as separator.
     Like the following sample, that outputs text by sentences:
     )
     ---
-    foreach(sentence; splitter(argv[1], regex(r"(?<=[.?!]+(?![?!]))\s*")))
+    foreach (sentence; splitter(argv[1], regex(r"(?<=[.?!]+(?![?!]))\s*")))
         writeln(sentence);
     ---
     $(P Again the type of splitter is range, thus allowing foreach iteration.
@@ -203,7 +207,7 @@ $(D_S Regular Expressions,
     one can go for lookahead inside lookbehind and so on. 
     However in general it's recommended to use them sparingly, keeping them as weapon of last resort.
     )
-   
+
     $(P Now for something completely different yet exactly the same. For one, there is an ability
     to precompile constant regex at compile-time:
     )
@@ -238,7 +242,7 @@ $(D_S Regular Expressions,
     So start with run-time version, then go compile-time if willing to experiment or
     when need to squeeze out some more performance.
     )
-   
+
     $(H3 Conclusion)
     $(P The article represents a walkthrough of $(D std.regex) focused on showcasing the API.
     By following a series of easy yet meaningful tasks, its features are exposed in combinations,
