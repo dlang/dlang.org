@@ -337,5 +337,6 @@ docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
 	rm .prerelease-files.txt .prerelease-dummy.html
 
 .PHONY: dpl-docs
-dpl-docs:
-	dub build --root=$(DPL_DOCS_PATH)
+dpl-docs: ${DMD}
+	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak -j 4
+	dub build --root=$(DPL_DOCS_PATH) --compiler=${DMD}
