@@ -153,7 +153,7 @@ $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC)
 all : docs html
 
 docs : phobos-prerelease druntime-prerelease druntime-release phobos-release	\
-	dpl-docs apidocs-release apidocs-prerelease
+	apidocs-release apidocs-prerelease
 
 html : $(ALL_FILES)
 
@@ -285,7 +285,7 @@ phobos-release : ${PHOBOS_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/index.
 ${DOC_OUTPUT_DIR}/phobos/index.html : std.ddoc ${LATEST}.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos/object.html
 	${MAKE} --directory=${PHOBOS_DIR}-${LATEST} -f posix.mak -j 4 \
-	  release html \
+	  all html \
 	  DMD=${DMD_DIR}-${LATEST}/src/dmd \
 	  DRUNTIME_PATH=${DRUNTIME_DIR}-${LATEST} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
@@ -312,7 +312,7 @@ ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
 	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
 
-docs.json : ${DPL_DOCS} ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
+docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
@@ -324,7 +324,7 @@ docs.json : ${DPL_DOCS} ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 	  --ex=gc. --ex=rt. --ex=std.internal.
 	rm .release-files.txt .release-dummy.html
 
-docs-prerelease.json : ${DPL_DOCS} ${DMD} ${DRUNTIME_DIR}/.cloned \
+docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
 		${PHOBOS_DIR}/.cloned | dpl-docs
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 	  -e /unittest/d > .prerelease-files.txt
@@ -336,5 +336,7 @@ docs-prerelease.json : ${DPL_DOCS} ${DMD} ${DRUNTIME_DIR}/.cloned \
 	  --only-documented --ex=gc. --ex=rt. --ex=std.internal.
 	rm .prerelease-files.txt .prerelease-dummy.html
 
-dpl-docs:
-	dub build --root=$(DPL_DOCS_PATH)
+.PHONY: dpl-docs
+dpl-docs: ${DMD}
+	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak -j 4
+	dub build --root=$(DPL_DOCS_PATH) --compiler=${DMD}
