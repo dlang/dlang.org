@@ -754,6 +754,36 @@ $(H4 Foreach over Delegates)
         many different named looping strategies to coexist in the same
         class or struct.)
 
+	$(P For example:)
+
+--------------
+void main()
+{
+    // Custom loop implementation, that iterates over powers of 2 with
+    // alternating sign. The loop body is passed in dg.
+    int myLoop(int delegate(ref int) dg)
+    {
+        for (int z = 1; z < 128; z *= -2)
+        {
+            auto ret = dg(z);
+
+            // If the loop body contains a break, ret will be non-zero.
+            if (ret != 0)
+                return ret;
+        }
+        return 0;
+    }
+
+    // This example loop simply collects the loop index values into an array.
+    int[] result;
+    foreach (ref x; &myLoop)
+    {
+        result ~= x;
+    }
+    assert(result == [1, -2, 4, -8, 16, -32, 64, -128]);
+}
+--------------
+
 	$(P $(B Note:) When $(I ForeachAggregate) is a delegate, the compiler
 	does not try to implement reverse traversal of the results returned by
 	the delegate when $(D foreach_reverse) is used. This may result in code
