@@ -1288,29 +1288,33 @@ $(H4 Function Literals)
 
 $(GRAMMAR
 $(GNAME FunctionLiteral):
-    $(D function) $(GLINK2 declaration, Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK2 function, FunctionBody)
-    $(D delegate) $(GLINK2 declaration, Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK2 function, FunctionBody)
-    $(GLINK ParameterAttributes) $(GLINK2 function, FunctionBody)
-    $(GLINK2 function, FunctionBody)
+    $(D function) $(GLINK2 declaration, Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK FunctionLiteralBody)
+    $(D delegate) $(GLINK2 declaration, Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK FunctionLiteralBody)
+    $(GLINK ParameterAttributes) $(GLINK FunctionLiteralBody)
+    $(GLINK FunctionLiteralBody)
     $(GLINK Lambda)
 
 $(GNAME ParameterAttributes):
     $(GLINK2 declaration, Parameters)
     $(GLINK2 declaration, Parameters) $(GLINK2 declaration, FunctionAttributes)
+
+$(GNAME FunctionLiteralBody):
+    $(GLINK2 statement, BlockStatement)
+    $(GLINK2 function, FunctionContracts)$(OPT) $(GLINK2 function, BodyStatement)
 )
 
         $(P $(I FunctionLiteral)s enable embedding anonymous functions
         and anonymous delegates directly into expressions.
         $(I Type) is the return type of the function or delegate,
         if omitted it is inferred from any $(I ReturnStatement)s
-        in the $(I FunctionBody).
+        in the $(I FunctionLiteralBody).
         $(D $(LPAREN)) $(GLINK ArgumentList) $(D $(RPAREN))
         forms the arguments to the function.
         If omitted it defaults to the empty argument list $(D ( )).
         The type of a function literal is pointer to function or
         pointer to delegate.
         If the keywords $(D function) or $(D delegate) are omitted,
-        it is inferred from whether $(I FunctionBody) is actually
+        it is inferred from whether $(I FunctionLiteralBody) is actually
         accessing to the outer context.)
 
         $(P For example:)
@@ -1378,7 +1382,7 @@ $(GNAME ParameterAttributes):
             abc( (int c) { return 6 + b; } );  // inferred to delegate
             def( (int c) { return c * 2; } );  // inferred to function
           //def( (int c) { return c * b; } );  // error!
-            // Because the FunctionBody accesses b, then the function literal type
+            // Because the FunctionLiteralBody accesses b, then the function literal type
             // is inferred to delegate. But def cannot receive delegate.
         }
         -------------
@@ -1449,7 +1453,7 @@ $(GNAME Lambda):
              $(D $(LPAREN)) $(IDENTIFIER) $(D $(RPAREN))
         )
         $(LI $(P The following part $(D =>) $(I AssignExpression) is rewritten to
-             $(GLINK2 function, FunctionBody):)
+             $(GLINK FunctionLiteralBody):)
 
              $(D { return) $(I AssignExpression) $(D ; })
         )
