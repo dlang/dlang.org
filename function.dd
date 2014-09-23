@@ -3,6 +3,73 @@ Ddoc
 $(SPEC_S Functions,
 
 $(GRAMMAR
+$(GNAME FuncDeclaration):
+    $(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK FuncDeclarator) $(GLINK FunctionBody)
+
+$(GNAME FuncDeclarator):
+    $(GLINK2 declaration, BasicType2)$(OPT) $(I Identifier) $(GLINK FuncDeclaratorSuffix)
+
+$(GNAME FuncDeclaratorSuffix):
+    $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
+    $(GLINK2 template, TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
+)
+
+$(GRAMMAR
+$(GNAME Parameters):
+    $(D $(LPAREN)) $(GLINK ParameterList)$(OPT) $(D $(RPAREN))
+
+$(GNAME ParameterList):
+    $(GLINK Parameter)
+    $(GLINK Parameter) $(D ,) $(I ParameterList)
+    $(D ...)
+
+$(GNAME Parameter):
+    $(I InOut)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
+    $(I InOut)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(D ...)
+    $(I InOut)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) = $(GLINK DefaultInitializerExpression)
+    $(I InOut)$(OPT) $(GLINK2 declaration, Type)
+    $(I InOut)$(OPT) $(GLINK2 declaration, Type) $(D ...)
+
+$(GNAME InOut):
+    $(I InOutX)
+    $(I InOut InOutX)
+
+$(GNAME InOutX):
+    $(D auto)
+    $(GLINK2 declaration, TypeCtor)
+    $(D final)
+    $(D in)
+    $(D lazy)
+    $(D out)
+    $(D ref)
+    $(D scope)
+
+$(GNAME FunctionAttributes):
+    $(GLINK FunctionAttribute)
+    $(GLINK FunctionAttribute) $(I FunctionAttributes)
+
+$(GNAME FunctionAttribute):
+    $(D nothrow)
+    $(D pure)
+    $(GLINK2 attribute, Property)
+
+$(GNAME MemberFunctionAttributes):
+    $(GLINK MemberFunctionAttribute)
+    $(GLINK MemberFunctionAttribute) $(I MemberFunctionAttributes)
+
+$(GNAME MemberFunctionAttribute):
+    $(D const)
+    $(D immutable)
+    $(D inout)
+    $(D shared)
+    $(GLINK FunctionAttribute)
+
+$(GNAME DefaultInitializerExpression):
+    $(ASSIGNEXPRESSION)
+    $(GLINK2 traits, SpecialKeyword)
+)
+
+$(GRAMMAR
 $(GNAME FunctionBody):
     $(GLINK2 statement, BlockStatement)
     $(GLINK FunctionContracts)$(OPT) $(GLINK BodyStatement)
@@ -712,7 +779,7 @@ void test()
 ------
 
         $(P If a derived class overrides a base class member function with diferrent
-        $(GLINK2 declaration, FunctionAttributes), the missing attributes will be
+        $(GLINK FunctionAttributes), the missing attributes will be
         automatically compensated by the compiler.)
 
 ------
@@ -2162,3 +2229,4 @@ Macros:
         TITLE=Functions
         WIKI=Function
         CATEGORY_SPEC=$0
+        ASSIGNEXPRESSION=$(GLINK2 expression, AssignExpression)

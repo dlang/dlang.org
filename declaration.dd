@@ -4,7 +4,7 @@ $(SPEC_S Declarations,
 
 $(GRAMMAR
 $(GNAME Declaration):
-    $(GLINK FuncDeclaration)
+    $(GLINK2 function, FuncDeclaration)
     $(GLINK VarDeclarations)
     $(GLINK AliasDeclaration)
     $(GLINK2 struct, AggregateDeclaration)
@@ -13,16 +13,6 @@ $(GNAME Declaration):
 )
 
 $(GRAMMAR
-$(GNAME FuncDeclaration):
-    $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK FuncDeclarator) $(GLINK2 function, FunctionBody)
-
-$(GNAME FuncDeclarator):
-    $(GLINK BasicType2)$(OPT) $(I Identifier) $(GLINK FuncDeclaratorSuffix)
-
-$(GNAME FuncDeclaratorSuffix):
-    $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
-    $(GLINK2 template, TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
-
 $(GNAME VarDeclarations):
     $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarators) $(D ;)
     $(GLINK AutoDeclaration)
@@ -82,8 +72,8 @@ $(GNAME BasicType2):
     $(D [) $(VEXPRESSION) $(D ])
     $(D [) $(VEXPRESSION) .. $(VEXPRESSION) $(D ])
     $(D [) $(GLINK Type) $(D ])
-    $(D delegate) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
-    $(D function) $(GLINK Parameters) $(GLINK FunctionAttributes)$(OPT)
+    $(D delegate) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT)
+    $(D function) $(GLINK2 function, Parameters) $(GLINK2 function, FunctionAttributes)$(OPT)
 
 $(GNAME Declarator):
     $(GLINK BasicType2)$(OPT) $(D $(LPAREN)) $(I Declarator) $(D $(RPAREN)) $(GLINK DeclaratorSuffixes)$(OPT)
@@ -97,8 +87,8 @@ $(GNAME DeclaratorSuffix):
     $(D [ ])
     $(D [) $(VEXPRESSION) $(D ])
     $(D [) $(GLINK Type) $(D ])
-    $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
-    $(GLINK2 template, TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
+    $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT)
+    $(GLINK2 template, TemplateParameters) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
 
 $(GNAME IdentifierList):
     $(I Identifier)
@@ -150,59 +140,6 @@ $(GNAME Type):
 $(GNAME Declarator2):
     $(GLINK BasicType2)$(OPT) $(GLINK DeclaratorSuffixes)$(OPT)
     $(GLINK BasicType2)$(OPT) $(D $(LPAREN)) $(I Declarator2) $(D $(RPAREN)) $(GLINK DeclaratorSuffixes)$(OPT)
-
-$(GNAME Parameters):
-    $(D $(LPAREN)) $(GLINK ParameterList)$(OPT) $(D $(RPAREN))
-
-$(GNAME ParameterList):
-    $(GLINK Parameter)
-    $(GLINK Parameter) $(D ,) $(I ParameterList)
-    $(D ...)
-
-$(GNAME Parameter):
-    $(I InOut)$(OPT) $(GLINK BasicType) $(GLINK Declarator)
-    $(I InOut)$(OPT) $(GLINK BasicType) $(GLINK Declarator) $(D ...)
-    $(I InOut)$(OPT) $(GLINK BasicType) $(GLINK Declarator) = $(GLINK DefaultInitializerExpression)
-    $(I InOut)$(OPT) $(GLINK Type)
-    $(I InOut)$(OPT) $(GLINK Type) $(D ...)
-
-$(GNAME InOut):
-    $(I InOutX)
-    $(I InOut InOutX)
-
-$(GNAME InOutX):
-    $(D auto)
-    $(GLINK TypeCtor)
-    $(D final)
-    $(D in)
-    $(D lazy)
-    $(D out)
-    $(D ref)
-    $(D scope)
-
-$(GNAME FunctionAttributes):
-    $(GLINK FunctionAttribute)
-    $(GLINK FunctionAttribute) $(I FunctionAttributes)
-
-$(GNAME FunctionAttribute):
-    $(D nothrow)
-    $(D pure)
-    $(GLINK2 attribute, Property)
-
-$(GNAME MemberFunctionAttributes):
-    $(GLINK MemberFunctionAttribute)
-    $(GLINK MemberFunctionAttribute) $(I MemberFunctionAttributes)
-
-$(GNAME MemberFunctionAttribute):
-    $(D const)
-    $(D immutable)
-    $(D inout)
-    $(D shared)
-    $(GLINK FunctionAttribute)
-
-$(GNAME DefaultInitializerExpression):
-    $(ASSIGNEXPRESSION)
-    $(GLINK2 traits, SpecialKeyword)
 )
 
 $(GRAMMAR
