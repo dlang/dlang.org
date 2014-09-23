@@ -369,10 +369,10 @@ $(GNAME ValueExpression):
 
 $(GRAMMAR
 $(GNAME FunctionLiteral):
-    $(D function) $(GLINK Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK FunctionBody)
-    $(D delegate) $(GLINK Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK FunctionBody)
-    $(GLINK ParameterAttributes) $(GLINK FunctionBody)
-    $(GLINK FunctionBody)
+    $(D function) $(GLINK Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK FunctionLiteralBody)
+    $(D delegate) $(GLINK Type)$(OPT) $(GLINK ParameterAttributes) $(OPT) $(GLINK FunctionLiteralBody)
+    $(GLINK ParameterAttributes) $(GLINK FunctionLiteralBody)
+    $(GLINK FunctionLiteralBody)
     $(GLINK Lambda)
 )
 
@@ -380,6 +380,10 @@ $(GRAMMAR
 $(GNAME ParameterAttributes):
     $(GLINK Parameters)
     $(GLINK Parameters) $(GLINK FunctionAttributes)
+
+$(GNAME FunctionLiteralBody):
+    $(GLINK BlockStatement)
+    $(GLINK FunctionContracts)$(OPT) $(GLINK BodyStatement)
 
 $(GNAME Lambda):
     $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
@@ -1172,11 +1176,12 @@ $(GNAME DefaultInitializerExpression):
 $(GRAMMAR
 $(GNAME FunctionBody):
     $(GLINK BlockStatement)
-    $(GLINK BodyStatement)
-    $(GLINK InStatement) $(GLINK BodyStatement)
-    $(GLINK OutStatement) $(GLINK BodyStatement)
-    $(GLINK InStatement) $(GLINK OutStatement) $(GLINK BodyStatement)
-    $(GLINK OutStatement) $(GLINK InStatement) $(GLINK BodyStatement)
+    $(GLINK FunctionContracts)$(OPT) $(GLINK BodyStatement)
+    $(GLINK FunctionContracts)
+
+$(GNAME FunctionContracts):
+    $(GLINK InStatement) $(GLINK OutStatement)$(OPT)
+    $(GLINK OutStatement) $(GLINK InStatement)$(OPT)
 
 $(GNAME InStatement):
     $(D in) $(GLINK BlockStatement)
@@ -1219,7 +1224,7 @@ $(GNAME Invariant):
     $(D invariant ( )) $(GLINK BlockStatement)
 
 $(GNAME UnitTest):
-    $(D unittest) $(GLINK FunctionBody)
+    $(D unittest) $(GLINK BlockStatement)
 )
 
 $(GRAMMAR
