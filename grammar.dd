@@ -13,6 +13,16 @@ $(GNAME Type):
     $(GLINK TypeCtors)$(OPT) $(GLINK BasicType)
     $(GLINK TypeCtors)$(OPT) $(GLINK BasicType) $(GLINK Declarator2)
 
+$(GNAME TypeCtors):
+    $(GLINK TypeCtor)
+    $(GLINK TypeCtor) $(I TypeCtors)
+
+$(GNAME TypeCtor):
+    $(D const)
+    $(D immutable)
+    $(D inout)
+    $(D shared)
+
 $(GNAME BasicType):
     $(GLINK BasicTypeX)
     $(D .) $(GLINK IdentifierList)
@@ -59,16 +69,6 @@ $(GNAME IdentifierList):
     $(I Identifier) $(D .) $(I IdentifierList)
     $(GLINK TemplateInstance)
     $(GLINK TemplateInstance) $(D .) $(I IdentifierList)
-
-$(GNAME TypeCtors):
-    $(GLINK TypeCtor)
-    $(GLINK TypeCtor) $(I TypeCtors)
-
-$(GNAME TypeCtor):
-    $(D const)
-    $(D immutable)
-    $(D inout)
-    $(D shared)
 
 $(GNAME Typeof):
     $(D typeof $(LPAREN)) $(EXPRESSION) $(D $(RPAREN))
@@ -976,16 +976,18 @@ $(H3 $(LNAME2 declaration, Declaration))
 
 $(GRAMMAR
 $(GNAME Declaration):
+    $(GLINK FuncDeclaration)
+    $(GLINK VarDeclarations)
     $(GLINK AliasDeclaration)
     $(GLINK AggregateDeclaration)
     $(GLINK EnumDeclaration)
     $(GLINK ImportDeclaration)
-    $(GLINK Decl)
 )
 
 $(GRAMMAR
 $(GNAME AliasDeclaration):
     $(D alias) $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarator)
+    $(D alias) $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK FuncDeclarator)
     $(D alias) $(I AliasDeclarationX) $(D ;)
 
 $(GNAME AliasDeclarationX):
@@ -1003,9 +1005,8 @@ $(GNAME AutoDeclarationX):
 )
 
 $(GRAMMAR
-$(GNAME Decl):
+$(GNAME VarDeclarations):
     $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarators) $(D ;)
-    $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK Declarator) $(GLINK FunctionBody)
     $(GLINK AutoDeclaration)
 
 $(GNAME Declarators):
@@ -1073,7 +1074,6 @@ $(GNAME StorageClass):
     $(D ref)
 )
 
-
 $(GRAMMAR
 $(GNAME Initializer):
     $(GLINK VoidInitializer)
@@ -1116,6 +1116,22 @@ $(GNAME StructMemberInitializer):
 )
 
 $(H3 $(LNAME2 function, Function))
+
+$(GRAMMAR
+$(GNAME FuncDeclaration):
+    $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK FuncDeclarator) $(GLINK FunctionBody)
+    $(GLINK AutoFuncDeclaration)
+
+$(GNAME AutoFuncDeclaration):
+    $(GLINK StorageClasses) $(I Identifier) $(GLINK FuncDeclaratorSuffix) $(GLINK FunctionBody)
+
+$(GNAME FuncDeclarator):
+    $(GLINK BasicType2)$(OPT) $(I Identifier) $(GLINK FuncDeclaratorSuffix)
+
+$(GNAME FuncDeclaratorSuffix):
+    $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
+    $(GLINK TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT)
+)
 
 $(GRAMMAR
 $(GNAME Parameters):
@@ -1166,9 +1182,7 @@ $(GNAME MemberFunctionAttribute):
     $(D inout)
     $(D shared)
     $(GLINK FunctionAttribute)
-)
 
-$(GRAMMAR
 $(GNAME DefaultInitializerExpression):
     $(ASSIGNEXPRESSION)
     $(GLINK SpecialKeyword)
