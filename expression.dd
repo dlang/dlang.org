@@ -1509,19 +1509,33 @@ $(GNAME AssertExpression):
     $(D assert $(LPAREN)) $(GLINK AssignExpression) $(D ,) $(GLINK AssignExpression) $(D $(RPAREN))
 )
 
-        $(P Asserts evaluate the $(I AssignExpression).
-        If it evaluates to a non-null class reference, the class invariant is run.
-        Otherwise, if it evaluates to a non-null pointer to a struct, the struct invariant is run.
-        Otherwise, if the result is false,
-        an $(D AssertError) is thrown. If the result is true, then no
-        exception is thrown.
-        It is an error if the $(I expression) contains any side effects
-        that the program depends on. The compiler may optionally not
-        evaluate assert expressions at all.
-        The result type of an assert expression is $(D void).
-        Asserts are a fundamental part of the
-        $(DDLINK contracts, Contract Programming, Contract Programming)
-        support in D.
+	$(P The assert expression is used to declare conditions that the
+	programmer asserts must hold at that point in the program if the
+	program logic has been correctly implemented. It can be used both as a
+	debugging tool and as a way of communicating to the compiler facts
+	about the code that it may employ to produce more efficient code.)
+
+	$(P Programs for which $(I AssignExpression) is false are invalid.
+	Subsequent to such a false result, the program is in an invalid,
+	non-recoverable state.)
+
+	$(P As a debugging tool, the compiler may insert checks to verify that
+	the condition indeed holds by evaluating $(I AssignExpression) at
+	runtime.  If it evaluates to a non-null class reference, the class
+	invariant is run.  Otherwise, if it evaluates to a non-null pointer to
+	a struct, the struct invariant is run.  Otherwise, if the result is
+	false, an $(D AssertError) is thrown.  If the result is true, then no
+	exception is thrown. In this way, if a bug in the code causes the
+	assertion to fail, execution is aborted, prompting the programmer to
+	fix the problem.)
+
+	$(P It is implementation defined whether the $(I AssignExpression) is
+	evaluated at run time or not. Programs that rely on side effects of $(I
+	AssignExpression) are invalid.)
+
+	$(P The result type of an assert expression is $(D void).  Asserts are
+	a fundamental part of the $(DDLINK contracts, Contract Programming,
+	Contract Programming) support in D.
         )
 
         $(P The expression $(D assert(0)) is a special case; it
