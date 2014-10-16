@@ -62,7 +62,11 @@ function listanchors()
     if (typeof inhibitQuickIndex !== 'undefined') return;
     var a = document.getElementById("quickindex");
     if (!a) return;
-    var newText = "";
+
+    var lastName = function(a){
+        var li = a.lastIndexOf('.');
+        return a.slice(li + 1);
+    }
     var hash = new Array;
     var n = 0;
     var values = new Array;
@@ -73,22 +77,22 @@ function listanchors()
         var text = a.name;
         // ignore anchors from DDOC_PSYMBOL
         if (text[0] != '.') continue;
+        // ignore name.2 anchors
+        if (!isNaN(lastName(text))) continue;
+        // ignore any remaining duplicates
         if (hash[text] > 0) continue;
         hash[text] = 1;
         values[n++] = a.name
     }
 
     // we won't display the qualifying names to save space, so sort by last name
-    var lastName = function(a){
-        var li = a.lastIndexOf('.');
-        return a.slice(li + 1);
-    }
     values.sort(function(a,b){
         return function(aa, bb){
             return aa == bb ? 0 : (aa < bb ? -1 : 1);
         }(lastName(a).toLowerCase(), lastName(b).toLowerCase());
     });
 
+    var newText = "";
     for(var i = 0; i < values.length; i++) {
         var a = values[i];
         var text = lastName(a);
