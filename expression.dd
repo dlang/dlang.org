@@ -318,7 +318,7 @@ if (c is null)  // ok
     ...
 ---
 
-        $(P For static and dynamic arrays, equality is defined as the
+        $(P For static arrays and array references, equality is defined as the
         lengths of the arrays
         matching, and all the elements are equal.
         )
@@ -347,8 +347,12 @@ $(GNAME IdentityExpression):
         struct being identical.
         )
 
-        $(P For static and dynamic arrays, identity is defined as referring
+        $(P For static arrays, identity is defined as referring
         to the same array elements and the same number of elements.
+        )
+
+        $(P For array references, identity is defined as referring
+        to the same array allocation, and having the same length.
         )
 
         $(P For other operand types, identity is defined as being the same
@@ -389,7 +393,7 @@ $(GNAME RelExpression):
 
         $(P It is an error to compare objects if one is $(D null).)
 
-        $(P For static and dynamic arrays, the result of the relational
+        $(P For static arrays and array references, the result of the relational
         op is the result of the operator applied to the first non-equal
         element of the array. If two arrays compare equal, but are of
         different lengths, the shorter array compares as "less" than the
@@ -698,7 +702,7 @@ $(GNAME ArgumentList):
         )
 
 -------------
-char[][] foo;   // dynamic array of strings
+char[][] foo;   // reference to array of strings
 ...
 foo = new char[][30]; // allocate array of 30 strings
 -------------
@@ -767,14 +771,14 @@ $(GNAME DeleteExpression):
         the instance, undefined behavior will result.
         )
 
-        $(P If the $(I UnaryExpression) is a pointer or a dynamic array,
+        $(P If the $(I UnaryExpression) is a pointer or an array reference,
         the garbage collector is called to immediately release the
         memory.
         If the garbage collector was not used to allocate the memory for
         the instance, undefined behavior will result.
         )
 
-        $(P The pointer, dynamic array, or reference is set to $(D null)
+        $(P The pointer, array reference, or reference is set to $(D null)
         after the delete is performed.
         Any attempt to reference the data after the deletion via another
         reference to it will result in undefined behavior.
@@ -841,7 +845,7 @@ $(GNAME CastExpression):
         $(P Casting a pointer type to and from a class type is done as a type paint
         (i.e. a reinterpret cast).)
 
-        $(P Casting a dynamic array to another dynamic array is done only if the
+        $(P Casting an array reference to another array reference is done only if the
         array lengths multiplied by the element sizes match. The cast is done
         as a type paint, with the array length adjusted to match any change in
         element size. If there's not a match, a runtime error is generated.)
@@ -964,7 +968,7 @@ $(GNAME IndexExpression):
         $(P $(I PostfixExpression) is evaluated.
 
         If $(I PostfixExpression) is an expression of type
-        static array or dynamic array, the symbol $(DOLLAR) is
+        static array or array reference, the symbol $(DOLLAR) is
         set to be the the number of elements in the array.
 
         If $(I PostfixExpression) is an $(I ExpressionTuple),
@@ -994,7 +998,7 @@ $(GNAME SliceExpression):
 
         $(P $(I PostfixExpression) is evaluated.
         if $(I PostfixExpression) is an expression of type
-        static array or dynamic array, the variable $(D length)
+        static array or array reference, the variable $(D length)
         (and the special variable $(DOLLAR))
         is declared and set to be the length of the array.
         A new declaration scope is created for the evaluation of the
@@ -1014,7 +1018,7 @@ $(GNAME SliceExpression):
         array.
         )
 
-        $(P The type of the slice is a dynamic array of the element
+        $(P The type of the slice is an array reference of the element
         type of the $(I PostfixExpression).
         )
 
@@ -1122,7 +1126,7 @@ $(H4 $(LNAME2 null, null))
 
         $(P $(D null) represents the null value for
         pointers, pointers to functions, delegates,
-        dynamic arrays, associative arrays,
+        array references, associative arrays,
         and class objects.
         If it has not already been cast to a type,
         it is given the type (void *) and it is an exact conversion
