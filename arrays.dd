@@ -227,6 +227,8 @@ s[0..4] = t[0..4]; // error, only 3 elements in s
 s[0..2] = t;       // error, different lengths for lvalue and rvalue
 ---------
 
+$(H4 $(LNAME2 overlapping-copying, Overlapping Copying))
+
         $(P Overlapping copies are an error:)
 
 ---------
@@ -238,6 +240,18 @@ s[1..3] = s[0..2]; // error, overlapping copy
         parallel code optimizations than possible with the serial
         semantics of C.
         )
+        
+        $(P If overlapping is required, use $(FULL_XREF algorithm, copy):
+        )
+
+---------
+import std.algorithm;
+int[] s = [1, 2, 3, 4];
+
+copy(s[1..3], s[0..2]);
+assert(s == [2, 3, 3, 4]);
+---------
+
 
 $(H3 $(LNAME2 array-setting, Array Setting))
 
