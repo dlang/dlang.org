@@ -7,47 +7,56 @@ $(SPEC_S Associative Arrays,
         is called the $(I key), and its type is called the $(I KeyType).)
 
         $(P Associative arrays are declared by placing the $(I KeyType)
-        within the [ ] of an array declaration:
+        within the $(D [ ]) of an array declaration:
         )
 
         ---------
-        int[string] b;    // associative array b of ints that are
-                          // indexed by an array of characters.
-                          // The KeyType is string
-        b["hello"] = 3;   // set value associated with key "hello" to 3
-        func(b["hello"]); // pass 3 as parameter to func()
+        int[string] aa;   // Associative array of ints that are
+                          // indexed by string keys.
+                          // The KeyType is string.
+        aa["hello"] = 3;  // set value associated with key "hello" to 3
+        int value = aa["hello"];  // lookup value from a key
+        assert(value == 3);
         ---------
 
         $(P $(BLUE $(B Note:)) The built-in associative arrays do not preserve the order
         of the keys inserted into the array. In particular, in a $(D foreach) loop the
         order in which the elements are iterated is unspecified.)
+        
+$(H3 Removing Keys)
 
         $(P Particular keys in an associative array can be removed with the
-        remove function:
+        $(D remove) function:
         )
 
         ---------
-        b.$(CODE_HIGHLIGHT remove)("hello");
+        aa.$(CODE_HIGHLIGHT remove)("hello");
         ---------
 
-        $(P remove(key) does nothing if the given $(I key) does not exist and
+        $(P $(D remove(key)) does nothing if the given $(I key) does not exist and
         returns $(D false).  If the given $(I key) does exist, it removes it
         from the AA and returns $(D true).
         )
 
-        $(P The $(I InExpression) yields a pointer to the value
+$(H3 Testing Membership)
+
+        $(P The $(GLINK2 expression, InExpression) yields a pointer to the value
         if the key is in the associative array, or $(D null) if not:
         )
 
         ---------
         int* p;
-        p = ("hello" $(CODE_HIGHLIGHT in) b);
-        if (p !is $(D null))
-            ...
+        
+        p = ("hello" $(CODE_HIGHLIGHT in) aa);
+        if (p !is null)
+        {
+            *p = 4;  // update value associated with key
+            assert(aa["hello"] == 4);
+        }
         ---------
 
         $(P Neither the $(I KeyType)s nor the element types of an associative
-        array can be functions or voids.
+        array can be function types or $(D void).
         )
 
 $(H3 Using Classes as the KeyType)
@@ -61,10 +70,7 @@ $(H3 Using Classes as the KeyType)
         $(LI $(D bool opEquals(Object)))
         )
 
-        $(P $(D hash_t) is an alias to an integral type.)
-
-        $(P Note that the parameter to $(D opEquals) is
-        of type
+        $(P Note that the parameter to $(D opEquals) is of type
         $(D Object), not the type of the class in which it is defined.)
 
         $(P For example:)
@@ -74,7 +80,7 @@ $(H3 Using Classes as the KeyType)
         {
             int a, b;
 
-            hash_t $(CODE_HIGHLIGHT toHash)() { return a + b; }
+            size_t $(CODE_HIGHLIGHT toHash)() { return a + b; }
 
             bool $(CODE_HIGHLIGHT opEquals)(Object o)
             {
@@ -121,7 +127,7 @@ $(H3 Using Structs or Unions as the KeyType)
 
             size_t $(CODE_HIGHLIGHT toHash)() const @safe pure nothrow
             {
-                hash_t hash;
+                size_t hash;
                 foreach (char c; str)
                     hash = (hash * 9) + c;
                 return hash;
@@ -145,10 +151,10 @@ $(H3 Using Structs or Unions as the KeyType)
         opCmp), but omit a specialized $(D opEquals). This restriction may be
         removed in future versions of D.)
 
-$(H3 Construction or assignment on setting AA entries)
+$(H3 Construction or Assignment on Setting AA Entries)
 
     $(P When an AA indexing access appears on the left side of an assignment operator,
-        it is specially handled for setting AA entry associated with the key.
+        it is specially handled for setting an AA entry associated with the key.
 
         ---------
         string[int] aa;
@@ -184,8 +190,8 @@ $(H3 Construction or assignment on setting AA entries)
         ---------
     )
 
-    $(P Even if the assigned value type is not equivalent with the AA element type,
-        it could invoke operator overloading with normal indexing access.
+    $(P If the assigned value type is $(B not) equivalent with the AA element type,
+        the expression could invoke operator overloading with normal indexing access:
 
         ---------
         struct S
@@ -198,9 +204,9 @@ $(H3 Construction or assignment on setting AA entries)
                         // throws RangeError before opAssign is called
         ---------
 
-        However, if the AA element type is struct and it supports implicit constructor
-        call from the assigned value, the construction is used for the setting
-        AA entry.
+        However, if the AA element type is a struct which supports an implicit constructor
+        call from the assigned value, implicit construction is used for setting the
+        AA entry:
 
         ---------
         struct S
