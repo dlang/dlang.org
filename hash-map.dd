@@ -19,7 +19,7 @@ $(SPEC_S Associative Arrays,
         ---------
 
         $(P $(BLUE $(B Note:)) The built-in associative arrays do not preserve the order
-        of the keys inserted into the array. In particular, in a $(D foreach) loop the 
+        of the keys inserted into the array. In particular, in a $(D foreach) loop the
         order in which the elements are iterated is unspecified.)
 
         $(P Particular keys in an associative array can be removed with the
@@ -46,7 +46,7 @@ $(SPEC_S Associative Arrays,
             ...
         ---------
 
-        $(P Neither the $(I KeyType)s nor the element types of an associative 
+        $(P Neither the $(I KeyType)s nor the element types of an associative
         array can be functions or voids.
         )
 
@@ -57,7 +57,7 @@ $(H3 Using Classes as the KeyType)
         of class $(D Object):)
 
         $(UL
-        $(LI $(D hash_t toHash()))
+        $(LI $(D size_t toHash() @trusted nothrow))
         $(LI $(D bool opEquals(Object)))
         )
 
@@ -106,8 +106,8 @@ $(H3 Using Structs or Unions as the KeyType)
         )
 
         ---------
-        const hash_t $(CODE_HIGHLIGHT toHash)();
-        const bool $(CODE_HIGHLIGHT opEquals)(ref const KeyType s);
+        size_t $(CODE_HIGHLIGHT toHash)() const @safe pure nothrow;
+        bool $(CODE_HIGHLIGHT opEquals)(ref const typeof(this) s) @safe pure nothrow;
         ---------
 
         $(P For example:)
@@ -119,7 +119,7 @@ $(H3 Using Structs or Unions as the KeyType)
         {
             string str;
 
-            const hash_t $(CODE_HIGHLIGHT toHash)()
+            size_t $(CODE_HIGHLIGHT toHash)() const @safe pure nothrow
             {
                 hash_t hash;
                 foreach (char c; str)
@@ -127,7 +127,7 @@ $(H3 Using Structs or Unions as the KeyType)
                 return hash;
             }
 
-            const bool $(CODE_HIGHLIGHT opEquals)(ref const MyString s)
+            bool $(CODE_HIGHLIGHT opEquals)(ref const MyString s) const @safe pure nothrow
             {
                 return std.string.cmp(this.str, s.str) == 0;
             }
@@ -137,8 +137,9 @@ $(H3 Using Structs or Unions as the KeyType)
         $(P Care should be taken that $(D toHash) should consistently be the
         same value when $(D opEquals) returns true. In other words, two structs
         that are considered equal should always have the same hash value. If
-        this is not the case, the associative array will not function properly.
-        Also note that $(D opCmp) is not used to check for equality by the
+        this is not the case, the associative array will not function properly.)
+        $(P If necessary the functions can use $(D @trusted) instead of $(D @safe).)
+        $(P Also note that $(D opCmp) is not used to check for equality by the
         associative array.  For this reason, and for legacy reasons, an
         associative array key is not allowed to define a specialized $(D
         opCmp), but omit a specialized $(D opEquals). This restriction may be
