@@ -153,7 +153,7 @@ $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC)
 all : docs html
 
 docs : phobos-prerelease druntime-prerelease druntime-release phobos-release	\
-	apidocs-release apidocs-prerelease
+#	apidocs-release apidocs-prerelease
 
 html : $(ALL_FILES)
 
@@ -313,7 +313,7 @@ ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
 
 docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
-		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
+		${PHOBOS_DIR}-${LATEST}/.cloned #| dpl-docs
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
