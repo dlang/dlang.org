@@ -20,6 +20,7 @@ GIT_HOME=https://github.com/D-Programming-Language
 DPL_DOCS_PATH=../tools/dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 DPL_DOCS_FLAGS=--std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --
+REMOTE_DIR=d-programming@digitalmars.com:data
 
 # rdmd must fetch the model, imports, and libs from the specified version
 DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)
@@ -153,7 +154,7 @@ $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC)
 all : docs html
 
 docs : phobos-prerelease druntime-prerelease druntime-release phobos-release	\
-	apidocs-release apidocs-prerelease
+#	apidocs-release apidocs-prerelease
 
 html : $(ALL_FILES)
 
@@ -180,10 +181,10 @@ clean:
 	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST}
 
 rsync : docs html kindle pdf
-	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
+	rsync -avz $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
 
 rsync-only :
-	rsync -avz $(DOC_OUTPUT_DIR)/ d-programming@digitalmars.com:data/
+	rsync -avz $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
 
 ################################################################################
 # Ebook
@@ -313,7 +314,7 @@ ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
 
 docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
-		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
+		${PHOBOS_DIR}-${LATEST}/.cloned #| dpl-docs
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
