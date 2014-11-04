@@ -954,7 +954,7 @@ $(H4 $(LNAME2 parameters, Function Parameters))
 
         $(P Parameter storage classes are $(D in), $(D out),
         $(D ref), $(D lazy), $(D const), $(D immutable), $(D shared),
-        $(D inout) or
+        $(D template), $(D inout) or
         $(D scope).
         For example:
         )
@@ -988,6 +988,7 @@ int foo(in int x, out int y, ref int z, int q);
 	$(TROW $(D lazy), argument is evaluated by the called function and not by the caller)
 		$(TROW $(D const), argument is implicitly converted to a const type)
 	$(TROW $(D immutable), argument is implicitly converted to an immutable type)
+	$(TROW $(D template), argument is deduced from the given argument type)
 	$(TROW $(D shared), argument is implicitly converted to a shared type)
 	$(TROW $(D inout), argument is implicitly converted to an inout type)
 	)
@@ -1020,6 +1021,27 @@ void def(ref int x)
 int z = 3;
 def(z);
 // z is now 4
+
+//T is a placeholder identifier that can be any accepted type. 
+//A template function is usefull for generic code, instead of writing
+//15 copies of the function, one for each different MongoCursor type, you
+//write only a single function that takes a generic parameter, for example:
+
+// Note: only one copy of func needs to be written
+void func(T)(T x) {
+	writeln("%s", x);
+}
+
+void main() {
+	func(1); // you can pass an int
+	func("x"); // or a string
+	func(1.0); // or a float
+
+	struct S {}
+	S s;
+	func(s); // or a struct
+}
+
 ------------
 
         $(P For dynamic array and object parameters, which are passed
