@@ -13,11 +13,11 @@ the sake of expediency.
 
 $(H3 Example)
 
-For example, if there's a Mutex m that must be acquired and held
+Here there's a mutex $(D m) that must be acquired and held
 for a few statements, then released:
 
 ---
-void abc()
+void locked_foo()
 {
     Mutex m = new Mutex;
     lock(m);    // lock the mutex
@@ -26,8 +26,8 @@ void abc()
 }
 ---
 
-$(P If foo() throws an exception, then abc() exits via exception unwinding,
-unlock(m) is never called and the Mutex is not released. This is a fatal
+$(P If $(D foo()) throws an exception, then $(D locked_foo()) exits via exception unwinding,
+$(D unlock(m)) is never called and the mutex is not released. This is a fatal
 problem with this code.
 )
 
@@ -37,11 +37,11 @@ the traditional approaches to writing exception safe programming.
 )
 
 $(P RAII is scoped destruction, and the example can be fixed by providing
-a Lock class with a destructor that gets called upon the exit of the scope:
+a $(D Lock) struct with a destructor that gets called upon the exit of the scope:
 )
 
 ---
-class Lock
+struct Lock
 {
     Mutex m;
 
@@ -57,20 +57,20 @@ class Lock
     }
 }
 
-void abc()
+void locked_foo()
 {
     Mutex m = new Mutex;
-    scope L = new Lock(m);
+    auto l = Lock(m);
     foo();  // do processing
 }
 ---
 
-If abc() is exited normally or via an exception thrown from foo(), L gets
+If $(D locked_foo()) is exited normally or via an exception thrown from $(D foo()), $(D l) gets
 its destructor called and the mutex is unlocked.
 The try-finally solution to the same problem looks like:
 
 ---
-void abc()
+void locked_foo()
 {
     Mutex m = new Mutex;
     lock(m);        // lock the mutex
@@ -87,7 +87,7 @@ void abc()
 
 $(P Both solutions work, but both have drawbacks.
 The RAII solution often requires
-the creation of an extra dummy class, which is both a lot of lines of code to
+the creation of an extra dummy struct, which is both a lot of lines of code to
 write and a lot of clutter obscuring the control flow logic.
 This is worthwhile to manage resources that must be cleaned up and that appear
 more than once in a program, but it is clutter when it only needs to be
@@ -97,12 +97,12 @@ solution separates the unwinding code from the setup, and it can often be
 a visually large separation. Closely related code should be grouped together.
 )
 
-$(P The $(LINK2 statement.html#ScopeGuardStatement, scope exit) statement is an easier
-approach:
+$(P The $(LINK2 statement.html#ScopeGuardStatement, scope guard statement) is a
+better approach:
 )
 
 ---
-void abc()
+void locked_foo()
 {
     Mutex m = new Mutex;
 
@@ -113,51 +113,52 @@ void abc()
 }
 ---
 
-The $(D_KEYWORD scope)(exit) statement is executed at the closing curly
+The $(D $(D_KEYWORD scope)(exit)) statement is executed at the closing curly
 brace upon
 normal execution, or when the scope is left due to an exception having
 been thrown.
 It places the unwinding code where it aesthetically belongs, next to the
 creation of the state that needs unwinding. It's far less code to write
 than either the RAII or try-finally solutions, and doesn't require the
-creation of dummy classes.
+creation of dummy structs.
 
 $(H3 Example)
 
 The next example is in a class of problems known as transaction processing:
 
 ---
-Transaction abc()
+Transaction transaction()
 {
-    Foo f;
-    Bar b;
-
-    f = dofoo();
-    b = dobar();
+    Foo f = dofoo();
+    Bar b = dobar();
 
     return Transaction(f, b);
 }
 ---
 
-$(P Both dofoo() and dobar() must succeed, or the transaction has failed.
+$(P Both $(D dofoo()) and $(D dobar()) must succeed, or the transaction has failed.
 If the transaction failed, the data must be restored to the state
-where neither dofoo() nor dobar() have happened. To support that,
-dofoo() has an unwind operation, dofoo_undo(Foo f) which will roll back
-the creation of a Foo.
+where neither $(D dofoo()) nor $(D dobar()) have happened. To support that,
+$(D dofoo()) has an unwind operation, $(D dofoo_undo(Foo f)) which will roll back
+the creation of a $(D Foo).
 )
 
 $(P With the RAII approach:
 )
 
 ---
-class FooX
+struct FooX
 {
     Foo f;
     bool commit;
 
-    this()
+    @disable this();
+    
+    static FooX create()
     {
-        f = dofoo();
+        auto fx = FooX.init;
+        fx.f = dofoo();
+        return fx;
     }
 
     ~this()
@@ -167,27 +168,24 @@ class FooX
     }
 }
 
-Transaction abc()
+Transaction transaction()
 {
-    scope f = new FooX();
+    auto fx = FooX.create();
     Bar b = dobar();
-    f.commit = true;
-    return Transaction(f.f, b);
+    fx.commit = true;
+    return Transaction(fx.f, b);
 }
 ---
 
 With the try-finally approach:
 
 ---
-Transaction abc()
+Transaction transaction()
 {
-    Foo f;
-    Bar b;
-
-    f = dofoo();
+    Foo f = dofoo();
     try
     {
-        b = dobar();
+        Bar b = dobar();
         return Transaction(f, b);
     }
     catch (Object o)
@@ -199,51 +197,42 @@ Transaction abc()
 ---
 
 $(P These work too, but have the same problems.
-The RAII approach involves the creation of dummy classes, and the obtuseness
-of moving some of the logic out of the abc() function.
+The RAII approach involves the creation of dummy structs, and the obtuseness
+of moving some of the logic out of the $(D transaction()) function.
 The try-finally approach is wordy even with this simple example; try
 writing it if there are more than two components of the transaction that
 must succeed. It scales poorly.
 )
 
-$(P The $(D_KEYWORD scope)(failure) statement solution looks like:
+$(P The $(D $(D_KEYWORD scope)(failure)) solution looks like:
 )
 
 ---
-Transaction abc()
+Transaction transaction()
 {
-    Foo f;
-    Bar b;
-
-    f = dofoo();
+    Foo f = dofoo();
     scope(failure) dofoo_undo(f);
 
-    b = dobar();
-
+    Bar b = dobar();
     return Transaction(f, b);
 }
 ---
 
-The dofoo_undo(f) only is executed if the scope is exited via an
+$(D dofoo_undo(f)) is only executed if the scope is exited via an
 exception. The unwinding code is minimal and kept aesthetically where
 it belongs. It scales up in a natural way to more complex transactions:
 
 
 ---
-Transaction abc()
+Transaction transaction()
 {
-    Foo f;
-    Bar b;
-    Def d;
-
-    f = dofoo();
+    Foo f = dofoo();
     scope(failure) dofoo_undo(f);
 
-    b = dobar();
+    Bar b = dobar();
     scope(failure) dobar_unwind(b);
 
-    d = dodef();
-
+    Def d = dodef();
     return Transaction(f, b, d);
 }
 ---
@@ -273,7 +262,7 @@ class Foo
 
 There's a problem if $(D Foo.bar()) exits via an exception - the verbose
 flag state is not restored.
-That's easily fixed with $(D_KEYWORD scope)(exit):
+That's easily fixed with $(D $(D_KEYWORD scope)(exit)):
 
 ---
 class Foo
@@ -376,7 +365,7 @@ $(H3 Example)
 Consider giving feedback to the user about a lengthy
 operation (mouse changes to an hourglass, window title is
 red/italicized, ...).
-With $(D_KEYWORD scope)(exit) that can be easily done without
+With $(D $(D_KEYWORD scope)(exit)) that can be easily done without
 needing to make an artificial resource out of whatever UI state element
 used for the cues:
 
@@ -389,7 +378,7 @@ void LongFunction()
 }
 --------------
 
-Even more so, $(D_KEYWORD scope)(success) and $(D_KEYWORD scope)(failure)
+Even more so, $(D $(D_KEYWORD scope)(success)) and $(D $(D_KEYWORD scope)(failure))
 can be used to give an indication if the operation succeeded or if
 an error occurred:
 
