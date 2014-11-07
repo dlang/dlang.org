@@ -1,7 +1,7 @@
 # makefile to build html files for DMD
 
 DMD=dmd
-DPL_DOCS_PATH=..\tools\dpl-docs
+DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)\dpl-docs.exe
 
 SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd	\

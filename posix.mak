@@ -17,7 +17,7 @@ DMD=$(DMD_DIR)/src/dmd
 DMD_REL=$(DMD_DIR)-${LATEST}/src/dmd
 DOC_OUTPUT_DIR:=$(shell pwd)/web
 GIT_HOME=https://github.com/D-Programming-Language
-DPL_DOCS_PATH=../tools/dpl-docs
+DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 DPL_DOCS_FLAGS=--std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --
 REMOTE_DIR=d-programming@digitalmars.com:data
