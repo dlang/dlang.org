@@ -1596,9 +1596,9 @@ $(GNAME ScopeGuardStatement):
         exits normally.
 
         $(P If there are multiple $(I ScopeGuardStatement)s in a scope, they
-        are executed in the reverse lexical order in which they appear.
-        If any scope instances are to be destructed upon the close of the
-        scope, they also are interleaved with the $(I ScopeGuardStatement)s
+        will be executed in the reverse lexical order in which they appear.
+        If any scope instances are to be destroyed upon the close of the
+        scope, their destructions will be interleaved with the $(I ScopeGuardStatement)s
         in the reverse lexical order in which they appear.)
 
 
@@ -1638,9 +1638,9 @@ $(CONSOLE
 
 
 ----
-class Foo
+struct Foo
 {
-    this() { write("0"); }
+    this(string s) { write(s); }
     ~this() { write("1"); }
 }
 
@@ -1648,7 +1648,7 @@ try
 {
     scope(exit) write("2");
     scope(success) write("3");
-    scope Foo f = new Foo();
+    Foo f = Foo("0");
     scope(failure) write("4");
     throw new Exception("msg");
     scope(exit) write("5");
