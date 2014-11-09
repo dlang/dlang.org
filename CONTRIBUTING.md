@@ -25,3 +25,8 @@ build the HTML files. Example invocations:
 
     # Build all the documentation
     $ make -f win32.mak
+
+The above instructions assume you have cloned DMD, druntime, and other repositories along with dlang.org.  As an alternative, the following command will compile a single ddoc file to html
+
+    # Rebuild only the expression.html page
+    dmd -c -o- macros.ddoc doc.ddoc -Dfexpression.html expression.dd
