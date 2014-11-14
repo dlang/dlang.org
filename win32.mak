@@ -303,10 +303,10 @@ clean:
 ################# DDOX based API docs #########################
 
 apidocs: docs.json
-	$(DPL_DOCS) generate-html --file-name-style=lowerUnderscored --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master docs.json library
+	$(DPL_DOCS) generate-html --file-name-style=lowerUnderscored --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master docs.json library
 
 apidocs-serve: docs.json
-	$(DPL_DOCS) serve-html --std-macros=std.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. docs.json
+	$(DPL_DOCS) serve-html --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. docs.json
 
 docs.json: $(DPL_DOCS)
 	mkdir .tmp
