@@ -326,10 +326,10 @@ docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
 	  sed -e /unittest.d/d -e /format/d -e /windows/d >> .release-files.txt
-	${DMD_REL} -c -o- -version=StdDdoc -Df.release-dummy.html \
+	${DMD_REL} -c -o- -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
 	  -Xfdocs.json -I${PHOBOS_DIR}-${LATEST} @.release-files.txt
 	${DPL_DOCS} filter docs.json --min-protection=Protected --only-documented \
-	  --ex=gc. --ex=rt. --ex=std.internal.
+	  --ex=gc. --ex=rt. --ex=core.internal. --ex=std.internal.
 	rm .release-files.txt .release-dummy.html
 
 docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
@@ -338,10 +338,10 @@ docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
 	  -e /unittest/d > .prerelease-files.txt
 	find ${PHOBOS_DIR} -name '*.d' | sed -e /unittest.d/d -e /format/d \
 	  -e /windows/d >> .prerelease-files.txt
-	${DMD} -c -o- -version=StdDdoc -Df.prerelease-dummy.html \
+	${DMD} -c -o- -version=CoreDdoc -version=StdDdoc -Df.prerelease-dummy.html \
 	  -Xfdocs-prerelease.json -I${PHOBOS_DIR} @.prerelease-files.txt
 	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
-	  --only-documented --ex=gc. --ex=rt. --ex=std.internal.
+	  --only-documented --ex=gc. --ex=rt. --ex=core.internal. --ex=std.internal.
 	rm .prerelease-files.txt .prerelease-dummy.html
 
 .PHONY: dpl-docs
