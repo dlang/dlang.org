@@ -21,6 +21,11 @@ DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 DPL_DOCS_FLAGS=--std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --
 REMOTE_DIR=d-programming@digitalmars.com:data
+# stable dmd version used to build dpl-docs
+STABLE_DMD_VER=2.066.1
+STABLE_DMD_ROOT=.stable_dmd-$(STABLE_DMD_VER)
+STABLE_DMD_URL=http://downloads.dlang.org/releases/2014/dmd.$(STABLE_DMD_VER).$(OS).zip
+STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
 
 # rdmd must fetch the model, imports, and libs from the specified version
 DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)
@@ -154,7 +159,7 @@ $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC)
 all : docs html
 
 docs : phobos-prerelease druntime-prerelease druntime-release phobos-release	\
-#	apidocs-release apidocs-prerelease
+	apidocs-release apidocs-prerelease
 
 html : $(ALL_FILES)
 
@@ -178,7 +183,7 @@ clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
 	rm -rf auto dlangspec-tex.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex)
 	rm -f docs.json docs-prerelease.json
-	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST}
+	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} ${STABLE_DMD_ROOT}
 
 rsync : docs html kindle pdf
 	rsync -avz $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
@@ -314,7 +319,7 @@ ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
 
 docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
-		${PHOBOS_DIR}-${LATEST}/.cloned #| dpl-docs
+		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
@@ -338,6 +343,10 @@ docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
 	rm .prerelease-files.txt .prerelease-dummy.html
 
 .PHONY: dpl-docs
-dpl-docs: ${DMD}
-	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak -j 4
-	dub build --root=$(DPL_DOCS_PATH) --compiler=${DMD}
+dpl-docs: ${STABLE_DMD}
+	dub build --root=${DPL_DOCS_PATH} --compiler=${STABLE_DMD}
+
+${STABLE_DMD}:
+	mkdir -p ${STABLE_DMD_ROOT}
+	TMPFILE=$$(mktemp --suffix=.zip) && curl -fsSL ${STABLE_DMD_URL} > $${TMPFILE} && \
+		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE} && rm $${TMPFILE}
