@@ -309,11 +309,13 @@ apidocs-serve : docs-prerelease.json
 	  --git-target=master --web-file-dir=. docs-prerelease.json
 
 ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml : docs-prerelease.json
+	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
 	  --git-target=master docs-prerelease.json ${DOC_OUTPUT_DIR}/library-prerelease
 
 ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
+	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
 	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
