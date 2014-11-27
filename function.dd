@@ -201,53 +201,65 @@ foo() = 3;  // reference returns can be lvalues
 
 $(H4 $(LNAME2 auto-functions, Auto Functions))
 
-        $(P Auto functions have their return type inferred from any
-        $(GLINK2 statement, ReturnStatement)s
-        in the function body.
-        )
+    $(P Auto functions have their return type inferred from any
+        $(GLINK2 statement, ReturnStatement)s in the function body.
+    )
 
-        $(P An auto function is declared without a return type.
+    $(P An auto function is declared without a return type.
         If it does not already have a storage class, use the
         $(D_KEYWORD auto) storage class.
-        )
+    )
 
-        $(P If there are multiple $(I ReturnStatement)s, the types
-        of them must match exactly. If there are no $(I ReturnStatement)s,
-        the return type is inferred to be $(D_KEYWORD void).
-        )
+    $(P If there are multiple $(I ReturnStatement)s, the types
+        of them must be implicitly convertible to a common type.
+        If there are no $(I ReturnStatement)s, the return type is inferred
+        to be $(D_KEYWORD void).
 
----
-auto foo(int i)
-{
-    return i + 3;  // return type is inferred to be int
-}
----
+        ---
+        auto foo(int x) { return x + 3; }          // inferred to be int
+        auto foo(int x) { return x; return 2.5; }  // inferred to be double
+        ---
+    )
 
 $(H4 $(LNAME2 auto-ref-functions, Auto Ref Functions))
 
-        $(P Auto ref functions infer their return type just as
+    $(P Auto ref functions infer their return type just as
         $(RELATIVE_LINK2 auto-functions, auto functions) do.
         In addition, they become $(RELATIVE_LINK2 ref-functions, ref functions)
-        if the return expression is an lvalue,
+        if all return expressions are lvalues,
         and it would not be a reference to a local or a parameter.
-        )
 
----
-auto ref foo(int x)     { return x; }  // value return
-auto ref foo()          { return 3; }  // value return
-auto ref foo(ref int x) { return x; }  // ref return
-auto ref foo(out int x) { return x; }  // ref return
-auto ref foo() { static int x; return x; }  // ref return
----
+        ---
+        auto ref foo(int x)     { return x; }  // value return
+        auto ref foo()          { return 3; }  // value return
+        auto ref foo(ref int x) { return x; }  // ref return
+        auto ref foo(out int x) { return x; }  // ref return
+        auto ref foo() { static int x; return x; }  // ref return
+        ---
+    )
 
-        $(P The lexically first $(GLINK2 statement, ReturnStatement)
-        determines the ref-ness of a function:
-        )
+    $(P The ref-ness of a function is determined from all
+        $(GLINK2 statement, ReturnStatement)s in the function body:
 
----
-auto ref foo(ref int x) { return 3; return x; }  // ok, value return
-auto ref foo(ref int x) { return x; return 3; }  // error, ref return, 3 is not an lvalue
----
+        ---
+        auto ref foo(ref int x) { return 3; return x; }  // ok, value return
+        auto ref foo(ref int x) { return x; return 3; }  // ok, value return
+        auto ref foo(ref int x, ref double y)
+        {
+            return x; return y;
+            // The return type is deduced to double, but cast(double)x is not an lvalue,
+            // then become a value return.
+        }
+        ---
+    )
+
+    $(P Auto ref function can have explicit return type.
+
+        ---
+        auto ref int foo(ref int x) { return x; }  // ok, ref return
+        auto ref int foo(double x) { return x; }   // error, cannot convert double to int
+        ---
+    )
 
 
 $(H4 $(LNAME2 inout-functions, Inout Functions))
