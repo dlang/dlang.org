@@ -261,7 +261,7 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd
 	rm -f $@
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
-		DOCFMT="`pwd`/std.ddoc `pwd`/macros.ddoc"
+		DOCFMT="`pwd`/std_navbar-2.067.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
 
 druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/object.html
 ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}-${LATEST}/src/dmd
@@ -270,7 +270,7 @@ ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}-${LATEST}/src/dmd
 	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak \
 	  DMD=${DMD_DIR}-${LATEST}/src/dmd \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
-	  DOCFMT="`pwd`/std.ddoc `pwd`/macros.ddoc" -j 4
+	  DOCFMT="`pwd`/std_navbar-2.066.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" -j 4
 
 ################################################################################
 # phobos, latest released build and current build
@@ -290,7 +290,7 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : std.ddoc macros.ddoc ${LATEST}.ddoc \
 	  DMD=${DMD_DIR}-${LATEST}/src/dmd \
 	  DRUNTIME_PATH=${DRUNTIME_DIR}-${LATEST} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
-	  STDDOC="`pwd`/$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
+	  STDDOC="`pwd`/$(LATEST).ddoc `pwd`/std_navbar-2.066.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
 
 ################################################################################
 # phobos and druntime, latest released build and current build (DDOX version)
