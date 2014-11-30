@@ -79,17 +79,17 @@ endif
 
 DDOC=macros.ddoc doc.ddoc ${LATEST}.ddoc $(NODATETIME)
 
-IMAGES=favicon.ico $(addprefix images/, c1.gif cpp1.gif d002.ico		\
-d3.png d4.gif d5.gif debian_logo.png dlogo.png dmlogo.gif				\
-dmlogo-smaller.gif download.png fedora_logo.png freebsd_logo.png		\
-gentoo_logo.png github-ribbon.png gradient-green.jpg gradient-red.jpg	\
-globe.gif linux_logo.png mac_logo.png opensuse_logo.png pen.gif			\
-search-left.gif search-bg.gif search-button.gif tdpl.jpg				\
-ubuntu_logo.png win32_logo.png) $(addprefix images/ddox/, alias.png \
-class.png enum.png enummember.png function.png inherited.png \
-interface.png module.png package.png private.png property.png \
-protected.png struct.png template.png tree-item-closed.png \
-tree-item-open.png variable.png)
+IMAGES=favicon.ico $(addprefix images/, apple_logo.png c1.gif		\
+centos_logo.png cpp1.gif d002.ico d3.png d4.gif d5.gif			\
+debian_logo.png dlogo.png dmlogo.gif dmlogo-smaller.gif download.png	\
+fedora_logo.png freebsd_logo.png github-ribbon.png gradient-green.jpg	\
+gradient-red.jpg globe.gif opensuse_logo.png pen.gif search-left.gif	\
+search-bg.gif search-button.gif tdpl.jpg ubuntu_logo.png		\
+windows_logo.png) $(addprefix images/ddox/, alias.png class.png		\
+enum.png enummember.png function.png inherited.png interface.png	\
+module.png package.png private.png property.png protected.png		\
+struct.png template.png tree-item-closed.png tree-item-open.png		\
+variable.png)
 
 JAVASCRIPT=$(addprefix js/, codemirror-compressed.js run.js	\
 run-main-website.js ddox.js)
