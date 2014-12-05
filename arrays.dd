@@ -942,13 +942,12 @@ $(H3 Void Arrays)
     elements in its original type. Array indices in indexing and slicing
     operations are interpreted as byte indices.)
 
-	$(P Arrays of any type can be implicitly converted to a void array; the
-	compiler inserts the appropriate calculations so that the $(D .length)
-	of the resulting array's size is in bytes rather than number of
-	elements. Void arrays cannot be converted back to the original type
-	without using a cast, and it is an error to convert to an array type
-	whose element size does not evenly divide the length of the void
-	array.)
+    $(P Arrays of any type can be implicitly converted to a void array; the
+    compiler inserts the appropriate calculations so that the $(D .length) of
+    the resulting array's size is in bytes rather than number of elements. Void
+    arrays cannot be converted back to the original type without using a cast,
+    and it is an error to convert to an array type whose element size does not
+    evenly divide the length of the void array.)
 
 ---------
 void main()
@@ -966,6 +965,20 @@ void main()
     data2 = cast(long[]) arr;      // Runtime error: long.sizeof == 8, which
                                    // does not divide arr.length, which is 12
                                    // bytes.
+}
+---------
+
+    $(P Void arrays can also be static if their length is known at
+    compile-time. The length is specified in bytes:)
+
+---------
+void main()
+{
+    byte[2] x;
+    int[2] y;
+
+    void[2] a = x; // OK, lengths match
+    void[2] b = y; // Error: int[2] is 8 bytes long, doesn't fit in 2 bytes.
 }
 ---------
 
