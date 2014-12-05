@@ -932,7 +932,54 @@ import std.stdio;
 writefln("the string is '%s'", str);
 ---------
 
-$(H3 $(LNAME2 implicit-conversions, Implicit Conversions))
+$(H3 Void Arrays)
+
+    $(P There is a special type of array which acts as a wildcard that can hold
+    arrays of any kind, declared as $(D void[]). Void arrays are used for
+    low-level operations where some kind of array data is being handled, but
+    the exact type of the array elements are unimportant. The $(D .length) of a
+    void array is the length of the data in bytes, rather than the number of
+    elements in its original type. Array indices in indexing and slicing
+    operations are interpreted as byte indices.)
+
+	$(P Arrays of any type can be implicitly converted to a void array; the
+	compiler inserts the appropriate calculations so that the $(D .length)
+	of the resulting array's size is in bytes rather than number of
+	elements. Void arrays cannot be converted back to the original type
+	without using a cast, and it is an error to convert to an array type
+	whose element size does not evenly divide the length of the void
+	array.)
+
+---------
+void main()
+{
+    int[] data1 = [1,2,3];
+    long[] data2;
+
+    void[] arr = data1;            // OK, int[] implicit converts to void[].
+    assert(data1.length == 3);
+    assert(arr.length == 12);      // length is implicitly converted to bytes.
+
+    //data1 = arr;                 // Illegal: void[] does not implicitly
+                                   // convert to int[].
+    int[] data3 = cast(int[]) arr; // OK, can convert with explicit cast.
+    data2 = cast(long[]) arr;      // Runtime error: long.sizeof == 8, which
+                                   // does not divide arr.length, which is 12
+                                   // bytes.
+}
+---------
+
+    $(P While it may seem that void arrays are just fancy syntax for
+    $(D ubyte[]), there is a subtle distinction. The garbage collector
+    generally will not scan $(D ubyte[]) arrays for pointers, $(D ubyte[])
+    being presumed to contain only pure byte data, not pointers. However, it
+    $(I will) scan $(D void[]) arrays for pointers, since such an array may
+    have been implicitly converted from an array of pointers or an array of
+    elements that contain pointers.  Casting an array that contains pointers to
+    $(D ubyte[]) may run the risk of the GC collecting live memory if it
+    becomes the only remaining references to the pointers' targets.)
+
+$(H2 $(LNAME2 implicit-conversions, Implicit Conversions))
 
         $(P A pointer $(D T*) can be implicitly converted to
         one of the following:)
