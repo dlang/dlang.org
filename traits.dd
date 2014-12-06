@@ -43,6 +43,7 @@ $(GNAME TraitsKeyword):
     $(GBLINK getFunctionAttributes)
     $(GBLINK getMember)
     $(GBLINK getOverloads)
+    $(GBLINK getPointerBitmap)
     $(GBLINK getProtection)
     $(GBLINK getVirtualFunctions)
     $(GBLINK getVirtualMethods)
@@ -549,6 +550,43 @@ void()
 int()
 2
 )
+
+$(H2 $(GNAME getPointerBitmap))
+
+    $(P The argument is a type.
+    The result is an array of size_t describing the memory used by an instance of the given type.
+    )
+    $(P The first element of the array is the size of the type (for classes it is
+    the $(GBLINK classInstanceSize).)
+    $(P The following elements describe the locations of GC managed pointers within the
+    memory occupied by an instance of the type.
+    For type T, there are $(D T.sizeof / size_t.sizeof) possible pointers represented
+    by the bits of the array values.)
+    $(P This array can be used by a precise GC to avoid false pointers.)
+---
+class C
+{
+    // implicit virtual function table pointer not marked
+    // implicit monitor field not marked, usually managed manually
+    C next;
+    size_t sz;
+    void* p;
+    void function () fn; // not a GC managed pointer
+}
+
+struct S
+{
+    size_t val1;
+    void* p;
+    C c;
+    byte[] arr;          // { length, ptr }
+    void delegate () dg; // { context, func }
+}
+
+static assert (__traits(getPointerBitmap, C) == [6*size_t.sizeof, 0b010100]);
+static assert (__traits(getPointerBitmap, S) == [7*size_t.sizeof, 0b0110110]);
+---
+
 
 $(H2 $(GNAME getProtection))
 
