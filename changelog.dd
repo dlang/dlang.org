@@ -8,6 +8,12 @@ $(BUGSTITLE Language Changes,
 $(LI $(RELATIVE_LINK2 asm-attributes, Asm statements can now be used in pure nothrow @nogc @trusted code.))
 )
 
+$(BUGSTITLE Library Changes,
+$(LI $(RELATIVE_LINK2 volatile-load-store, $(D volatileLoad) and $(D volatileStore) intrinsics were added. 
+  *Warning* These are currently in core.bitop, but plan to be moved to core.volatile in a future release 
+  when $(D volatile) is removed.))
+)
+
 $(BUGSTITLE Language Changes,
 
 $(LI $(LEGACY_LNAME2 asm_attributes, asm-attributes, Asm statements can now be used in pure nothrow @nogc @trusted code.:)
@@ -27,6 +33,30 @@ $(LI $(LEGACY_LNAME2 asm_attributes, asm-attributes, Asm statements can now be u
 )
 
 )
+
+$(BUGSTITLE Library Changes,
+
+$(LI $(LEGACY_LNAME2 volatile_load_store, volatile-load-store, $(D volatileLoad) and $(D volatileStore) intrinsics 
+  were added.  *Warning* These are currently in core.bitop, but plan to be moved to core.volatile in a future release 
+  when $(D volatile) is removed:)
+
+    $(P $(D volatileLoad) and $(D volatileStore) are recognized by the compiler, and calls to them are guaranteed to 
+      not be removed (as dead assignment elimination or presumed to have no effect) or reordered in the same thread.
+
+        ---------
+        void example(uint* address, uint value)
+        {
+            // store value
+            volatileStore(address, value);
+            
+            // wait until value takes affect
+            while (volatileLoad(address) != value)
+            { }
+        }
+        ---------
+    )
+)
+
 )
 
 $(VERSION 066.1, October 15, 2014, =================================================,
