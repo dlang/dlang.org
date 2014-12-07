@@ -8,6 +8,9 @@ $(BUGSTITLE Language Changes,
 $(LI $(RELATIVE_LINK2 asm-attributes, Asm statements can now be used in pure nothrow @nogc @trusted code.))
 )
 
+$(BUGSTITLE Library Changes,
+$(LI $(RELATIVE_LINK2 volatile-load-store, $(D volatileLoad) and $(D volatileStore) intrinsics were added.))
+
 $(BUGSTITLE Language Changes,
 
 $(LI $(LEGACY_LNAME2 asm_attributes, asm-attributes, Asm statements can now be used in pure nothrow @nogc @trusted code.:)
@@ -27,6 +30,35 @@ $(LI $(LEGACY_LNAME2 asm_attributes, asm-attributes, Asm statements can now be u
 )
 
 )
+
+$(BUGSTITLE Library Changes,
+
+$(LI $(LNAME2 volatile-load-store, $(D volatileLoad) and $(D volatileStore) intrinsics were added.))
+
+    $(P Calls to $(D volatileLoad) and $(D volatileStore) are recognized by
+        the compiler and guaranteed to not be removed or reordered in the same
+        thread.
+
+        ---------
+        void example(uint* address, uint value)
+        {
+            import core.bitop;
+
+            // store value
+            volatileStore(address, value);
+
+            // wait until value takes affect
+            while (volatileLoad(address) != value)
+            { }
+        }
+        ---------
+    )
+
+    $(B Note:) These intrinsics are currently in core.bitop$(COMMA) but will
+        be moved to core.volatile when $(D volatile) is no longer a keyword.
+)
+)
+
 )
 
 $(VERSION 066.1, October 15, 2014, =================================================,
