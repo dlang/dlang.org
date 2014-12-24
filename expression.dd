@@ -292,12 +292,6 @@ $(GNAME EqualExpression):
         is defined as the bit pattern of the type matches exactly.
     )
 
-    $(P Equality for struct objects means the bit patterns of the objects
-        match exactly (the existence of alignment holes in the objects
-        is accounted for, usually by setting them all to 0 upon
-        initialization
-    ).
-
     $(P Equality for floating point types is more complicated. $(D -0) and
         $(D +0) compare as equal. If either or both operands are NAN, then
         both the $(D ==) returns false and $(D !=) returns $(D true). Otherwise, the bit
@@ -315,6 +309,14 @@ $(GNAME EqualExpression):
         ---
         x.re != y.re || x.im != y.im
         ---
+    )
+
+    $(P Equality for struct objects means the logical product of all equality
+        results of the corresponding object fields.
+        If all struct fields use bitwise equality, the whole struct equality
+        could be optimized to one memory comparison operation (the existence of
+        alignment holes in the objects is accounted for, usually by setting them
+        all to 0 upon initialization).
     )
 
     $(P For class and struct objects, the expression $(D (a == b))
