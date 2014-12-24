@@ -1223,17 +1223,15 @@ $(GNAME ArrayLiteral):
 
     $(P Array literals are a comma-separated list of $(GLINK AssignExpression)s
         between square brackets $(D [) and $(D ]).
-        The $(I AssignExpression)s form the elements of a static array,
+        The $(I AssignExpression)s form the elements of a dynamic array,
         the length of the array is the number of elements.
-        The type of the first element is taken to be the type of
-        all the elements, and all elements are implicitly converted
+        The common type of the all elements is taken to be the type of
+        the array element, and all elements are implicitly converted
         to that type.
-        If that type is a static array, it is converted to a dynamic
-        array.
 
         ---
-        [1,2,3];  // type is int[3], with elements 1, 2 and 3
-        [1u,2,3]; // type is uint[3], with elements 1u, 2u, and 3u
+        auto a1 = [1,2,3];  // type is int[], with elements 1, 2 and 3
+        auto a2 = [1u,2,3]; // type is uint[], with elements 1u, 2u, and 3u
         ---
     )
 
@@ -1265,13 +1263,19 @@ $(GNAME ArrayLiteral):
         {
             // cast array literal
             const short[] ct = cast(short[]) [cast(byte)1, 1];
+            // this is equivalent with:
+            // const short[] ct = [cast(short)1, cast(short)1];
             writeln(ct);  // writes [1, 1]
 
             // cast other array expression
-            short[] rt = cast(short[]) [cast(byte)1, cast(byte)1].dup;
+            // --> normal behavior of CastExpression
+            byte[] arr = [cast(byte)1, cast(byte)1];
+            short[] rt = cast(short[]) arr;
             writeln(rt);  // writes [257]
         }
         ---
+
+        In other words, casting literal expression will change the literal type.
     )
 
 $(H4 Associative Array Literals)
@@ -1298,17 +1302,17 @@ $(GNAME ValueExpression):
         $(I key)$(D :)$(I value) pairs
         between square brackets $(D [) and $(D ]).
         The list cannot be empty.
-        The type of the first key is taken to be the type of
-        all the keys, and all subsequent keys are implicitly converted
+        The common type of the all keys is taken to be the key type of
+        the associative array, and all keys are implicitly converted
         to that type.
-        The type of the first value is taken to be the type of
-        all the values, and all subsequent values are implicitly converted
+        The common type of the all values is taken to be the value type of
+        the associative array, and all values are implicitly converted
         to that type.
         An $(I AssocArrayLiteral) cannot be used to statically initialize
         anything.
 
         ---
-        [21u:"he", 38:"ho", 2:"hi"];  // type is char[2][uint],
+        [21u:"he", 38:"ho", 2:"hi"];  // type is string[uint],
                                       // with keys 21u, 38u and 2u
                                       // and values "he", "ho", and "hi"
         ---
