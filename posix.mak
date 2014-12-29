@@ -82,7 +82,7 @@ endif
 
 # Documents
 
-DDOC=macros.ddoc html.ddoc doc.ddoc ${LATEST}.ddoc $(NODATETIME)
+DDOC=macros.ddoc html.ddoc dlang.org.ddoc doc.ddoc ${LATEST}.ddoc $(NODATETIME)
 
 IMAGES=favicon.ico $(addprefix images/, apple_logo.png c1.gif		\
 centos_logo.png cpp1.gif d002.ico d3.png d4.gif d5.gif			\
@@ -266,7 +266,7 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd
 	rm -f $@
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
-		DOCFMT="`pwd`/html.ddoc `pwd`/std_navbar-prerelease.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
+		DOCFMT="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-prerelease.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
 
 druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/object.html
 ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}-${LATEST}/src/dmd
@@ -275,28 +275,28 @@ ${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}-${LATEST}/src/dmd
 	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak \
 	  DMD=${DMD_DIR}-${LATEST}/src/dmd \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
-	  DOCFMT="`pwd`/html.ddoc `pwd`/std_navbar-$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" -j 4
+	  DOCFMT="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" -j 4
 
 ################################################################################
 # phobos, latest released build and current build
 ################################################################################
 
 phobos-prerelease : ${PHOBOS_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html
-${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : html.ddoc std.ddoc macros.ddoc \
+${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : html.ddoc dlang.org.ddoc std.ddoc macros.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
-	STDDOC="`pwd`/html.ddoc `pwd`/std_navbar-prerelease.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" \
+	STDDOC="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-prerelease.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" \
 	DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-release : ${PHOBOS_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/index.html
-${DOC_OUTPUT_DIR}/phobos/index.html : html.ddoc std.ddoc macros.ddoc ${LATEST}.ddoc \
+${DOC_OUTPUT_DIR}/phobos/index.html : html.ddoc dlang.org.ddoc std.ddoc macros.ddoc ${LATEST}.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos/object.html
 	${MAKE} --directory=${PHOBOS_DIR}-${LATEST} -f posix.mak -j 4 \
 	  all html \
 	  DMD=${DMD_DIR}-${LATEST}/src/dmd \
 	  DRUNTIME_PATH=${DRUNTIME_DIR}-${LATEST} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
-	  STDDOC="`pwd`/html.ddoc `pwd`/$(LATEST).ddoc `pwd`/std_navbar-$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
+	  STDDOC="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/$(LATEST).ddoc `pwd`/std_navbar-$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
 
 ################################################################################
 # phobos and druntime, latest released build and current build (DDOX version)
@@ -305,19 +305,19 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : html.ddoc std.ddoc macros.ddoc ${LATEST}.d
 apidocs-prerelease : ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml
 apidocs-release : ${DOC_OUTPUT_DIR}/library/sitemap.xml
 apidocs-serve : docs-prerelease.json
-	${DPL_DOCS} serve-html --std-macros=html.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
+	${DPL_DOCS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
 	  --git-target=master --web-file-dir=. docs-prerelease.json
 
 ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml : docs-prerelease.json
 	@mkdir -p $(dir $@)
-	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
+	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
 	  --git-target=master docs-prerelease.json ${DOC_OUTPUT_DIR}/library-prerelease
 
 ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	@mkdir -p $(dir $@)
-	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
+	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
 	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
 
