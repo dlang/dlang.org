@@ -24,7 +24,7 @@ SPECSRC=spec.dd intro.dd lex.dd grammar.dd module.dd declaration.dd type.dd prop
 	float.dd iasm.dd ddoc.dd interfaceToC.dd cpp_interface.dd			\
 	portability.dd entity.dd memory-safe-d.dd abi.dd simd.dd
 
-DDOC=macros.ddoc windows.ddoc doc.ddoc $(NODATETIME)
+DDOC=macros.ddoc html.ddoc windows.ddoc doc.ddoc $(NODATETIME)
 
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
