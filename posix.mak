@@ -82,7 +82,7 @@ endif
 
 # Documents
 
-DDOC=macros.ddoc doc.ddoc ${LATEST}.ddoc $(NODATETIME)
+DDOC=macros.ddoc html.ddoc doc.ddoc ${LATEST}.ddoc $(NODATETIME)
 
 IMAGES=favicon.ico $(addprefix images/, apple_logo.png c1.gif		\
 centos_logo.png cpp1.gif d002.ico d3.png d4.gif d5.gif			\
@@ -350,5 +350,5 @@ dpl-docs: ${STABLE_DMD}
 
 ${STABLE_DMD}:
 	mkdir -p ${STABLE_DMD_ROOT}
-	TMPFILE=$$(mktemp --suffix=.zip) && curl -fsSL ${STABLE_DMD_URL} > $${TMPFILE} && \
-		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE} && rm $${TMPFILE}
+	TMPFILE=$$(mktemp deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > $${TMPFILE}.zip && \
+		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
