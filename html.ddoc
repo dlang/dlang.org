@@ -20,6 +20,7 @@ DL = <dl>$0</dl>
 DOUBLEQUOTE = $(LDQUO)$0$(RDQUO)
 DT = <dt>$0</dt>
 ENUMERATE = $(OL $(ITEMS_HELPER $1, $+))
+GREATER = &gt;
 ITEMIZE = $(UL $(ITEMS_HELPER $1, $+))
 ITEMS_HELPER = $(LI $1)$(ITEMS_HELPER $+)
 FONT = <font $1>$+</font>
@@ -31,9 +32,11 @@ H5 = <h5>$0</h5>
 HR = <hr>
 I = <i>$0</i>
 LI = <li>$0</li>
+LESS = &lt;
 OL = <ol>$0</ol>
 P = <p>$0</p>
 PRE = <pre>$0</pre>
+SCRIPT = <script type="text/javascript">$0</script>
 SINGLEQUOTE = $(LSQUO)$0$(RSQUO)
 SMALL = <small>$0</small>
 SPAN = <span $1>$+</span>
@@ -54,16 +57,21 @@ _=Defining anchors and linking
 
 LINK = $(A $0, $0)
 LINK2 = $(A $1, $+)
+HTTP = $(LINK2 http://$1,$2)
+HTTPS = $(LINK2 https://$1,$2)
+WEB = $(HTTP $1,$2)
+LUCKY = $(HTTP
+google.com/search?btnI=I%27m+Feeling+Lucky&amp;ie=UTF-8&amp;oe=UTF-8&amp;q=$0,$0)
 
 _=Colors
 
 COLOR = $(FONT color=$1, $+)
-RED = $(COLOR red, $0)
-BLUE = $(COLOR blue, $0)
-GREEN = $(COLOR green, $0)
-YELLOW = $(COLOR yellow, $0)
-BLACK = $(COLOR black, $0)
-WHITE = $(COLOR white, $0)
+RED    = <span style="color:red">$0</span>
+GREEN  = <span style="color:green">$0</span>
+BLUE   = <span style="color:blue">$0</span>
+YELLOW = <span style="color:yellow">$0</span>
+BLACK  = <span style="color:black">$0</span>
+WHITE  = <span style="color:white">$0</span>
 
 _=Explanatory stuff of the kind "Throws: blah" or "Returns:
 blah". Note that if you want to make a SPAN-like (brief) explanation,
@@ -74,7 +82,7 @@ DDOC_EXPLANATORY=$(DIVC explanatory, $(SPANC explanation_item, $1:) $(DIVC $1, $
 
 _=Predefined D-related stuff
 
-D_CODE = $(DIVC d_code, $0)
+D_CODE = <pre class="d_code">$0</pre>
 D_COMMENT = $(SPANC d_comment, $0)
 D_STRING  = $(SPANC d_string, $0)
 D_KEYWORD = $(SPANC d_keyword, $0)
@@ -94,44 +102,58 @@ $(BODY)
 
 _=DDoc-related stuff
 
-DDOC_COMMENT   = <!--$0-->
-DDOC_DECL      = $(SPANC d_decl, $0)
-DDOC_DECL_DD   = $(DIVC d_decl_dd, $0)
+DDOC_COMMENT   = <!-- $0 -->
+DDOC_DECL      = $(DT $(BIG $0))
+DDOC_DECL_DD   = $(DD $0)
 DDOC_DITTO     = $(BR)$0
-DDOC_SECTIONS  = $(DIVC sections, $0)
-DDOC_SUMMARY   = $(DIVC summary, $0)
-DDOC_DESCRIPTION = $(DIVC description, $0)
-DDOC_AUTHORS   = $(DDOC_EXPLANATORY Authors, $0)
-DDOC_BUGS      = $(DDOC_EXPLANATORY Bugs, $0)
-DDOC_COPYRIGHT = $(DDOC_EXPLANATORY Copyright, $0)
-DDOC_DATE      = $(DDOC_EXPLANATORY Date, $0)
-DDOC_DEPRECATED = $(DDOC_EXPLANATORY Deprecated, $0)
-DDOC_EXAMPLES  = $(DDOC_EXPLANATORY Examples, $0)
-DDOC_HISTORY   = $(DDOC_EXPLANATORY History, $0)
-DDOC_LICENSE   = $(DDOC_EXPLANATORY License, $0)
-DDOC_RETURNS   = $(DDOC_EXPLANATORY Returns, $0)
-DDOC_SEE_ALSO  = $(DDOC_EXPLANATORY See_Also, $0)
-DDOC_STANDARDS = $(DDOC_EXPLANATORY Standards, $0)
-DDOC_THROWS    = $(DDOC_EXPLANATORY Throws, $0)
-DDOC_VERSION   = $(DDOC_EXPLANATORY Version, $0)
-DDOC_SECTION_H = $(SPANC section_h, $0)
-DDOC_SECTION   = $(DIVC section, $0)
-DDOC_MEMBERS   = $(DIVC members, $0)
-DDOC_MODULE_MEMBERS   = $(DDOC_MEMBERS $(DIVC module_members, $0))
-DDOC_CLASS_MEMBERS    = $(DDOC_MEMBERS $(DIVC class_members, $0))
-DDOC_STRUCT_MEMBERS   = $(DDOC_MEMBERS $(DIVC struct_members, $0))
-DDOC_ENUM_MEMBERS     = $(DDOC_MEMBERS $(DIVC enum_members, $0))
-DDOC_TEMPLATE_MEMBERS = $(DDOC_MEMBERS $(DIVC template_members, $0))
-DDOC_PARAMS    = $(DDOC_EXPLANATORY Params, $(TABLEC params, $0))
+DDOC_SECTIONS  = $0
+DDOC_SUMMARY   = $0$(BR)$(BR)
+DDOC_DESCRIPTION = $0$(BR)$(BR)
+DDOC_AUTHORS   = $(B Authors:)$(BR)
+        $0$(BR)$(BR)
+DDOC_BUGS      = $(RED BUGS:)$(BR)
+        $0$(BR)$(BR)
+DDOC_COPYRIGHT = $(B Copyright:)$(BR)
+        $0$(BR)$(BR)
+DDOC_DATE      = $(B Date:)$(BR)
+        $0$(BR)$(BR)
+DDOC_DEPRECATED = $(RED Deprecated:)$(BR)
+        $0$(BR)$(BR)
+DDOC_EXAMPLES  = $(B Examples:)$(BR)
+        $0$(BR)$(BR)
+DDOC_HISTORY   = $(B History:)$(BR)
+        $0$(BR)$(BR)
+DDOC_LICENSE   = $(B License:)$(BR)
+        $0$(BR)$(BR)
+DDOC_RETURNS   = $(B Returns:)$(BR)
+        $0$(BR)$(BR)
+DDOC_SEE_ALSO  = $(B See Also:)$(BR)
+        $0$(BR)$(BR)
+DDOC_STANDARDS = $(B Standards:)$(BR)
+        $0$(BR)$(BR)
+DDOC_THROWS    = $(B Throws:)$(BR)
+        $0$(BR)$(BR)
+DDOC_VERSION   = $(B Version:)$(BR)
+        $0$(BR)$(BR)
+DDOC_SECTION_H = $(B $0)$(BR)$(BR)
+DDOC_SECTION   = $0$(BR)$(BR)
+DDOC_MEMBERS   = $(DL $0)
+DDOC_MODULE_MEMBERS   = $(DDOC_MEMBERS $0)
+DDOC_CLASS_MEMBERS    = $(DDOC_MEMBERS $0)
+DDOC_STRUCT_MEMBERS   = $(DDOC_MEMBERS $0)
+DDOC_ENUM_MEMBERS     = $(DDOC_MEMBERS $0)
+DDOC_TEMPLATE_MEMBERS = $(DDOC_MEMBERS $0)
+DDOC_PARAMS    = $(B Params:)$(BR)
+$(TABLE $0)$(BR)
 DDOC_PARAM_ROW = $(TR $0)
-DDOC_PARAM_ID  = $(TD $(SPANC param_id, $0))
-DDOC_PARAM_DESC  = $(TD $(SPANC param_desc, $0))
-DDOC_BLANKLINE = $(BR)
+DDOC_PARAM_ID  = $(TD $0)
+DDOC_PARAM_DESC  = $(TD $0)
+DDOC_BLANKLINE = $(BR)$(BR)
 
-DDOC_ANCHOR  = $(ADEF $1)
-DDOC_PSYMBOL = $(SPANC psymbol, $0)
-DDOC_KEYWORD = $(SPANC ddoc_keyword, $0)
-DDOC_PARAM   = $(SPANC param, $0)
+DDOC_ANCHOR  = <a name="$1"></a>
+DDOC_PSYMBOL = $(U $0)
+DDOC_KEYWORD = $(B $0)
+DDOC_PARAM   = $(I $0)
 
 _=HTML named entities, ordered approximately as in http://dlang.org/entity.html
 
