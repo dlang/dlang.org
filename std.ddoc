@@ -15,47 +15,34 @@ DDOC = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 <script src="/js/codemirror-compressed.js"></script>
 <script src="/js/run.js" type="text/javascript"></script>
 <script type="text/javascript">
+/* Declaration nesting level */
+var nestingLevel = 0;
+/* Symbol definition */
+var lastSymbolDefined = '';
+var values = new Array;
+//
+function defineSymbol(sym) {
+  if (nestingLevel > 0) return;
+  if (sym == lastSymbolDefined) return;
+  if (true) lastSymbolDefined = sym;
+  values.push(sym);
+}
+//
 function listanchors()
 {
     if (typeof inhibitQuickIndex !== 'undefined') return;
     var a = document.getElementById("quickindex");
     if (!a) return;
 
-    var lastName = function(a){
-        var li = a.lastIndexOf('.');
-        return a.slice(li + 1);
-    }
-    var hash = new Array;
-    var n = 0;
-    var values = new Array;
-    // List all anchors.
-    for (var i = 0; i < document.anchors.length; i++)
-    {
-        var a = document.anchors[i];
-        var text = a.name;
-        // ignore anchors from DDOC_PSYMBOL
-        if (text[0] != '.') continue;
-        // ignore name.2 anchors
-        if (!isNaN(lastName(text))) continue;
-        // ignore any remaining duplicates
-        if (hash[text] > 0) continue;
-        hash[text] = 1;
-        values[n++] = a.name
-    }
-
-    // we won't display the qualifying names to save space, so sort by last name
-    values.sort(function(a,b){
-        return function(aa, bb){
-            return aa == bb ? 0 : (aa < bb ? -1 : 1);
-        }(lastName(a).toLowerCase(), lastName(b).toLowerCase());
-    });
+    values.sort();
 
     var newText = "";
     for(var i = 0; i < values.length; i++) {
         var a = values[i];
-        var text = lastName(a);
-        newText += ' \x3Ca href="\x23' + a +
-            '"\x3E\x3Cspan class="d_psymbol"\x3E' + text + '\x3C/span\x3E\x3C/a\x3E';
+        var text = a;
+        if (i != 0) newText += " $(MIDDOT)"; 
+        newText += ' \x3Ca class="jumpto" href="\x23.' + a +
+            '"\x3E\x3Cspan class="notranslate donthyphenate"\x3E' + text + '\x3C/span\x3E\x3C/a\x3E';
     }
     if (newText != "") newText = "\x3Cp\x3E\x3Cb\x3EJump to:\x3C/b\x3E" + newText + "\x3C/p\x3E";
     var a = document.getElementById("quickindex");
@@ -65,7 +52,7 @@ jQuery(document).ready(listanchors);
 </script>
 </head>
 <body class='hyphenate'>
-<div id="top">
+$(DIVID top,
 	<div id="search-box">
 		<form method="get" action="http://google.com/search">
 			<img src="/images/search-left.gif" width="11" height="22" alt=""><input id="q" name="q"><input type="image" id="search-submit" name="submit" src="/images/search-button.gif">
@@ -84,17 +71,14 @@ jQuery(document).ready(listanchors);
 		<a href="/"><img id="logo" width="125" height="95" border="0" alt="D Logo" src="/images/dlogo.png"></a>
 		<a id="d-language" href="/">D Programming Language</a>
 	</div>
-</div>
-<div id="navigation">
-    $(TOP)
-    $(NAVIGATION_PHOBOS)
-</div><!--/navigation-->
-<div id="content">
-    $(PAGE_TOOLS)
-    <h1>$(TITLE)</h1>
-    <div id=quickindex class=quickindex></div>
+)
+$(DIVID navigation, $(TOP) $(NAVIGATION_PHOBOS))
+$(DIVID content, 
+	$(PAGE_TOOLS)
+    $(H1 $(TITLE))
+    $(DIVCID quickindex, quickindex)
     $(BODY)
-</div><!--/content-->
+)
 $(FOOTER)
 </body>
 </html>
