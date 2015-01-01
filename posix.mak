@@ -181,7 +181,7 @@ ${LATEST}.ddoc :
 
 clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
-	rm -rf auto dlangspec-tex.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex)
+	rm -rf auto dlangspec-consolidated.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex .txt .verbatim.txt)
 	rm -f docs.json docs-prerelease.json
 	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} ${STABLE_DMD_ROOT}
 
@@ -216,10 +216,10 @@ $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
 # LaTeX
 ################################################################################
 
-dlangspec-tex.d : $(addsuffix .dd,$(SPEC_ROOT))
+dlangspec-consolidated.d : $(addsuffix .dd,$(SPEC_ROOT))
 	$(RDMD) --force ../tools/catdoc.d -o$@ $^
 
-dlangspec.tex : $(DDOC) latex.ddoc dlangspec-tex.d
+dlangspec.tex : $(DDOC) latex.ddoc dlangspec-consolidated.d
 	$(DMD) -Df$@ $^
 
 # Run twice to fix multipage tables and \ref uses
@@ -229,6 +229,16 @@ dlangspec.dvi : dlangspec.tex
 
 $(DOC_OUTPUT_DIR)/dlangspec.pdf : dlangspec.dvi
 	dvipdf $^ $@
+
+################################################################################
+# Plaintext/verbatim generation - not part of the build, demo purposes only
+################################################################################
+
+dlangspec.txt : macros.ddoc plaintext.ddoc dlangspec-consolidated.d
+	$(DMD) -Df$@ $^
+
+dlangspec.verbatim.txt : macros.ddoc verbatim.ddoc dlangspec-consolidated.d
+	$(DMD) -Df$@ $^
 
 ################################################################################
 # Git clone rules
