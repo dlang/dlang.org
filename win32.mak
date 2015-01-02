@@ -24,7 +24,7 @@ SPECSRC=spec.dd intro.dd lex.dd grammar.dd module.dd declaration.dd type.dd prop
 	float.dd iasm.dd ddoc.dd interfaceToC.dd cpp_interface.dd			\
 	portability.dd entity.dd memory-safe-d.dd abi.dd simd.dd
 
-DDOC=macros.ddoc html.ddoc windows.ddoc doc.ddoc $(NODATETIME)
+DDOC=macros.ddoc html.ddoc dlang.org.ddoc windows.ddoc doc.ddoc $(NODATETIME)
 
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
@@ -303,10 +303,10 @@ clean:
 ################# DDOX based API docs #########################
 
 apidocs: docs.json
-	$(DPL_DOCS) generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master docs.json library
+	$(DPL_DOCS) generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master docs.json library
 
 apidocs-serve: docs.json
-	$(DPL_DOCS) serve-html --std-macros=html.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. docs.json
+	$(DPL_DOCS) serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. docs.json
 
 docs.json: $(DPL_DOCS)
 	mkdir .tmp
