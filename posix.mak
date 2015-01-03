@@ -13,15 +13,18 @@
 DMD_DIR=../dmd
 PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
+DUB_DIR=../dub-${DUB_VER}
 DMD=$(DMD_DIR)/src/dmd
 DMD_REL=$(DMD_DIR)-${LATEST}/src/dmd
+DUB=${DUB_DIR}/bin/dub
 DOC_OUTPUT_DIR:=$(shell pwd)/web
 GIT_HOME=https://github.com/D-Programming-Language
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 DPL_DOCS_FLAGS=--std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --
 REMOTE_DIR=d-programming@digitalmars.com:data
-# stable dmd version used to build dpl-docs
+# stable dub and dmd versions used to build dpl-docs
+DUB_VER=0.9.22
 STABLE_DMD_VER=2.066.1
 STABLE_DMD_ROOT=.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2014/dmd.$(STABLE_DMD_VER).$(OS).zip
@@ -183,7 +186,7 @@ clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
 	rm -rf auto dlangspec-consolidated.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex .txt .verbatim.txt)
 	rm -f docs.json docs-prerelease.json
-	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} ${STABLE_DMD_ROOT}
+	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} ${STABLE_DMD_ROOT} ${DUB_DIR}
 
 rsync : docs html kindle pdf
 	rsync -avz $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
@@ -244,15 +247,16 @@ dlangspec.verbatim.txt : macros.ddoc verbatim.ddoc dlangspec-consolidated.d
 # Git clone rules
 ################################################################################
 
-# LATEST
-../%-${LATEST}/.cloned :
-	[ -d $(@D) ] || git clone ${GIT_HOME}/$* $(@D)/
-	if [ -d $(@D)/.git ]; then cd $(@D) && git checkout v${LATEST}; fi
+../%/.cloned :
+	[ -d $(@D) ] || git clone --depth=1 ${GIT_HOME}/$* $(@D)/
 	touch $@
 
-# HEAD
-../%/.cloned :
-	[ -d $(@D) ] || git clone ${GIT_HOME}/$* $(@D)/
+../%-${LATEST}/.cloned :
+	[ -d $(@D) ] || git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$* $(@D)/
+	touch $@
+
+../%-${DUB_VER}/.cloned :
+	[ -d $(@D) ] || git clone -b v${DUB_VER} --depth=1 ${GIT_HOME}/$* $(@D)/
 	touch $@
 
 ################################################################################
@@ -355,11 +359,18 @@ docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
 	  --only-documented --ex=gc. --ex=rt. --ex=core.internal. --ex=std.internal.
 	rm .prerelease-files.txt .prerelease-dummy.html
 
+################################################################################
+# binary targets for DDOX
+################################################################################
+
 .PHONY: dpl-docs
-dpl-docs: ${STABLE_DMD}
-	dub build --root=${DPL_DOCS_PATH} --compiler=${STABLE_DMD}
+dpl-docs: ${DUB} ${STABLE_DMD}
+	${DUB} build --root=${DPL_DOCS_PATH} --compiler=${STABLE_DMD}
 
 ${STABLE_DMD}:
 	mkdir -p ${STABLE_DMD_ROOT}
 	TMPFILE=$$(mktemp deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > $${TMPFILE}.zip && \
 		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
+
+${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
+	cd ${DUB_DIR}; DC=$(abspath ${STABLE_DMD}) ./build.sh
