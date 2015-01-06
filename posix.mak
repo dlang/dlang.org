@@ -247,16 +247,16 @@ dlangspec.verbatim.txt : macros.ddoc verbatim.ddoc dlangspec-consolidated.d
 # Git clone rules
 ################################################################################
 
-../%/.cloned :
-	[ -d $(@D) ] || git clone --depth=1 ${GIT_HOME}/$* $(@D)/
-	touch $@
-
 ../%-${LATEST}/.cloned :
 	[ -d $(@D) ] || git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$* $(@D)/
 	touch $@
 
 ../%-${DUB_VER}/.cloned :
 	[ -d $(@D) ] || git clone -b v${DUB_VER} --depth=1 ${GIT_HOME}/$* $(@D)/
+	touch $@
+
+../%/.cloned :
+	[ -d $(@D) ] || git clone --depth=1 ${GIT_HOME}/$* $(@D)/
 	touch $@
 
 ################################################################################
