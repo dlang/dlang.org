@@ -59,10 +59,14 @@ function listanchors()
             var a = arr[i];
             var text = lastName(a);
             if (i != 0) newText += " &middot;"; 
-            newText += ' <a class="jumpto" href="#' + a +
-                '"><span class="notranslate donthyphenate">' + text + '</span></a>';
+            newText += ' <a href="#' + a +
+                '">' + text + '</a>';
         }
-        if (newText != "") newText = "<p><b>Jump to:</b>" + newText + "</p>";
+        if (newText != "")
+        {
+            newText = '<p><b>Jump to:</b><span class="jumpto notranslate donthyphenate">' +
+                newText + '</span></p>';
+        }
         var id = 'quickindex';
         id += key;
         var e = document.getElementById(id);
