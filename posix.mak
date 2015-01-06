@@ -26,7 +26,7 @@ REMOTE_DIR=d-programming@digitalmars.com:data
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=0.9.22
 STABLE_DMD_VER=2.066.1
-STABLE_DMD_ROOT=.stable_dmd-$(STABLE_DMD_VER)
+STABLE_DMD_ROOT=/tmp/.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2014/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
 
@@ -142,17 +142,17 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
 # Pattern rulez
 
-$(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC)
+$(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(DDOC) $<
 
-$(DOC_OUTPUT_DIR)/%.php : %.php.dd $(DDOC)
+$(DOC_OUTPUT_DIR)/%.php : %.php.dd $(DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(DDOC) $<
 
 $(DOC_OUTPUT_DIR)/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-$(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC)
+$(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(DDOC) dcompiler.dd $<
 
 ################################################################################
@@ -170,7 +170,7 @@ kindle : ${DOC_OUTPUT_DIR}/dlangspec.mobi
 
 pdf : ${DOC_OUTPUT_DIR}/dlangspec.pdf
 
-$(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP)
+$(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	cp -f sitemap-template.dd sitemap.dd
 	(true $(foreach F, $(TARGETS), \
 	  && echo \
@@ -183,12 +183,12 @@ ${LATEST}.ddoc :
 	echo "LATEST=${LATEST}" >$@
 
 clean:
-	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc
+	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc dpl-docs/.dub
 	rm -rf auto dlangspec-consolidated.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex .txt .verbatim.txt)
-	rm -f docs.json docs-prerelease.json
+	rm -f docs.json docs-prerelease.json dpl-docs/dpl-docs 
 	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} ${STABLE_DMD_ROOT} ${DUB_DIR}
 
-rsync : docs html kindle pdf
+rsync : all kindle pdf
 	rsync -avz $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
 
 rsync-only :
@@ -201,7 +201,7 @@ rsync-only :
 dlangspec.d : $(addsuffix .dd,$(SPEC_ROOT))
 	$(RDMD) ../tools/catdoc.d -o$@ $^
 
-dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d
+dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d $(DMD)
 	$(DMD) $(DDOC) ebook.ddoc dlangspec.d
 
 dlangspec.zip : dlangspec.html ebook.css
@@ -222,8 +222,8 @@ $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
 dlangspec-consolidated.d : $(addsuffix .dd,$(SPEC_ROOT))
 	$(RDMD) --force ../tools/catdoc.d -o$@ $^
 
-dlangspec.tex : $(DDOC) latex.ddoc dlangspec-consolidated.d
-	$(DMD) -Df$@ $^
+dlangspec.tex : $(DMD) $(DDOC) latex.ddoc dlangspec-consolidated.d
+	$(DMD) -Df$@ $(DDOC) latex.ddoc dlangspec-consolidated.d
 
 # Run twice to fix multipage tables and \ref uses
 dlangspec.dvi : dlangspec.tex
@@ -237,11 +237,11 @@ $(DOC_OUTPUT_DIR)/dlangspec.pdf : dlangspec.dvi
 # Plaintext/verbatim generation - not part of the build, demo purposes only
 ################################################################################
 
-dlangspec.txt : macros.ddoc plaintext.ddoc dlangspec-consolidated.d
-	$(DMD) -Df$@ $^
+dlangspec.txt : $(DMD) macros.ddoc plaintext.ddoc dlangspec-consolidated.d
+	$(DMD) -Df$@ macros.ddoc plaintext.ddoc dlangspec-consolidated.d
 
-dlangspec.verbatim.txt : macros.ddoc verbatim.ddoc dlangspec-consolidated.d
-	$(DMD) -Df$@ $^
+dlangspec.verbatim.txt : $(DMD) macros.ddoc verbatim.ddoc dlangspec-consolidated.d
+	$(DMD) -Df$@ macros.ddoc verbatim.ddoc dlangspec-consolidated.d
 
 ################################################################################
 # Git clone rules
@@ -263,12 +263,10 @@ dlangspec.verbatim.txt : macros.ddoc verbatim.ddoc dlangspec-consolidated.d
 # dmd compiler, latest released build and current build
 ################################################################################
 
-${DMD_DIR}/src/dmd : ${DMD_DIR}/.cloned
-	${MAKE} --directory=${DMD_DIR}/src -f posix.mak clean
+$(DMD) : ${DMD_DIR}/.cloned
 	${MAKE} --directory=${DMD_DIR}/src -f posix.mak -j 4
 
-${DMD_DIR}-${LATEST}/src/dmd : ${DMD_DIR}-${LATEST}/.cloned
-	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak clean
+$(DMD_REL) : ${DMD_DIR}-${LATEST}/.cloned
 	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak -j 4
 
 ################################################################################
@@ -276,18 +274,15 @@ ${DMD_DIR}-${LATEST}/src/dmd : ${DMD_DIR}-${LATEST}/.cloned
 ################################################################################
 
 druntime-prerelease : ${DRUNTIME_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
-${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : ${DMD_DIR}/src/dmd
-	rm -f $@
+${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : $(DMD)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-prerelease.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
 
 druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/object.html
-${DOC_OUTPUT_DIR}/phobos/object.html : ${DMD_DIR}-${LATEST}/src/dmd
-	rm -f $@
-	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak clean
+${DOC_OUTPUT_DIR}/phobos/object.html : $(DMD_REL)
 	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak \
-	  DMD=${DMD_DIR}-${LATEST}/src/dmd \
+	  DMD=$(DMD_REL) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
 	  DOCFMT="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" -j 4
 
@@ -299,15 +294,15 @@ phobos-prerelease : ${PHOBOS_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/in
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : html.ddoc dlang.org.ddoc std.ddoc macros.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
-	STDDOC="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-prerelease.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" \
-	DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
+	  STDDOC="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-prerelease.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" \
+	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-release : ${PHOBOS_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/index.html
-${DOC_OUTPUT_DIR}/phobos/index.html : html.ddoc dlang.org.ddoc std.ddoc macros.ddoc ${LATEST}.ddoc \
+${DOC_OUTPUT_DIR}/phobos/index.html : $(DMD_REL) html.ddoc dlang.org.ddoc std.ddoc macros.ddoc ${LATEST}.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos/object.html
 	${MAKE} --directory=${PHOBOS_DIR}-${LATEST} -f posix.mak -j 4 \
-	  all html \
-	  DMD=${DMD_DIR}-${LATEST}/src/dmd \
+	  html \
+	  DMD=$(DMD_REL) \
 	  DRUNTIME_PATH=${DRUNTIME_DIR}-${LATEST} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
 	  STDDOC="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/$(LATEST).ddoc `pwd`/std_navbar-$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
