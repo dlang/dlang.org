@@ -55,8 +55,58 @@ $(LI $(LNAME2 volatile-load-store, $(D volatileLoad) and $(D volatileStore) intr
         ---------
     )
 
-    $(B Note:) These intrinsics are currently in core.bitop$(COMMA) but will
+    $(P $(B Note:) These intrinsics are currently in core.bitop$(COMMA) but will
         be moved to core.volatile when $(D volatile) is no longer a keyword.
+    )
+)
+
+$(LI Experimental: The garbage collector can now be configured through the command line, 
+    the environment or by options embedded into the executable.
+
+    $(P By default, GC options can only be passed on the command line of the program
+        to run, e.g.
+     
+        ---------
+        app "--DRT-gcopt=profile:1 minPoolSize:16" arguments to app
+        ---------
+     )
+     $(P Available GC options are:
+        $(UL
+        $(LI disable:0|1    - start disabled)
+        $(LI profile:0|1    - enable profiling with summary when terminating program)
+        $(LI initReserve:N  - initial memory to reserve in MB)
+        $(LI minPoolSize:N  - initial and minimum pool size in MB)
+        $(LI maxPoolSize:N  - maximum pool size in MB)
+        $(LI incPoolSize:N  - pool size increment MB)
+        )
+     )
+     $(P In addition, --DRT-gcopt=help will show the list of options and their current settings.
+     )
+     $(P Command line options starting with "--DRT-" are filtered out before calling main,
+         so the program will not see them. They are still available via rt_args().
+     )
+     $(P Configuration via the command line can be disabled by declaring a variable for the
+         linker to pick up before using it's default from the runtime:
+         ---------
+         extern(C) __gshared bool rt_cmdline_enabled = false;
+         ---------
+     )
+     $(P Likewise, declare a boolean rt_envvars_enabled to enable configuration via the
+         environment variable "DRT_GCOPT:
+         ---------
+         extern(C) __gshared bool rt_envvars_enabled = true;
+         ---------
+     )
+     $(P Setting default configuration properties in the executable can be done by specifying an
+         array of options named rt_options:
+         ---------
+         extern(C) __gshared string[] rt_options = [ "gcopt=initReserve:100 profile:1" ];
+         ---------
+     )
+     $(P Evaluation order of options is rt_options, then environment variables, then command
+         line arguments, i.e. if command line arguments are not disabled, they can override
+         options specified through the environment or embedded in the executable.
+     )
 )
 
 $(LI $(LNAME2 aa-keyvalue, $(D byKeyValue) was added.)
