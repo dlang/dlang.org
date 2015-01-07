@@ -14,48 +14,8 @@ DDOC = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
 <script src="/js/codemirror-compressed.js"></script>
 <script src="/js/run.js" type="text/javascript"></script>
+<script src="../js/listanchors.js" type="text/javascript"></script>
 <script type="text/javascript">
-/* Symbol definition */
-var lastSymbolDefined = '';
-var values = [];
-//
-var lastName = function(a){
-    var pos = a.lastIndexOf('.');
-    return a.slice(pos + 1);
-}
-//
-function defineSymbol(sym) {
-  // ignore ditto overloads
-  if (sym == lastSymbolDefined) return;
-  // ignore scoped symbols, but show module-level overloads
-  var pos = sym.indexOf('.');
-  if (pos >= 0 && (sym.lastIndexOf('.') != pos || isNaN(lastName(sym)))) return;
-  // Note: empty comment avoids macro def
-  /**/ lastSymbolDefined = sym;
-  values.push(sym);
-}
-//
-function listanchors()
-{
-    if (typeof inhibitQuickIndex !== 'undefined') return;
-    var a = document.getElementById("quickindex");
-    if (!a) return;
-
-    values.sort();
-
-    var newText = "";
-    for (var i in values) {
-        var a = values[i];
-        var text = a;
-        if (i != 0) newText += " $(MIDDOT)"; 
-        newText += ' \x3Ca class="jumpto" href="\x23.' + a +
-            '"\x3E\x3Cspan class="notranslate donthyphenate"\x3E' + text + '\x3C/span\x3E\x3C/a\x3E';
-    }
-    /**/ values = null; // unreference memory
-    if (newText != "") newText = "\x3Cp\x3E\x3Cb\x3EJump to:\x3C/b\x3E" + newText + "\x3C/p\x3E";
-    var a = document.getElementById("quickindex");
-    a.innerHTML = newText;
-}
 jQuery(document).ready(listanchors);
 </script>
 </head>

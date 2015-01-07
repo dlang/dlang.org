@@ -99,7 +99,7 @@ module.png package.png private.png property.png protected.png		\
 struct.png template.png tree-item-closed.png tree-item-open.png		\
 variable.png)
 
-JAVASCRIPT=$(addprefix js/, codemirror-compressed.js run.js	\
+JAVASCRIPT=$(addprefix js/, codemirror-compressed.js listanchors.js run.js	\
 run-main-website.js ddox.js)
 
 STYLES=css/style.css css/print.css css/codemirror.css css/ddox.css
