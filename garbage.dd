@@ -2,10 +2,14 @@ Ddoc
 
 $(SPEC_S Garbage Collection,
 
-	$(P D is a fully garbage collected language. That means that it is never
-	necessary
-	to free memory. Just allocate as needed, and the garbage collector will
+	$(P D is a systems programming language with support for garbage collection.
+	Usually it is not necessary
+	to free memory explicitly. Just allocate as needed, and the garbage collector will
 	periodically return all unused memory to the pool of available memory.
+	)
+	
+	$(P D also provides the mechanisms to write code where the garbage collector
+	is $(B not involved). More information is provided below.
 	)
 
 	$(P C and C++ programmers accustomed to explicitly managing memory
@@ -78,16 +82,16 @@ $(SPEC_S Garbage Collection,
 
 	$(UL
 
-	$(LI It is not easily predictable when a collection gets run, so the
-	program can arbitrarily pause.
+	$(LI It is not always obvious when the GC allocates memory, which in
+	turn can trigger a collection, so the program can pause unexpectedly.
 	)
 
-	$(LI The time it takes for a collection to run is not bounded. While in
-	practice it is very quick, this cannot be guaranteed.
+	$(LI The time it takes for a collection to complete is not bounded.
+	While in practice it is very quick, this cannot normally be guaranteed.
 	)
 
-	$(LI All threads other than the collector thread must be halted while
-	the collection is in progress.
+	$(LI Normally, all threads other than the collector thread must be
+	halted while the collection is in progress.
 	)
 
 	$(LI Garbage collectors can keep around some memory that an explicit
@@ -103,7 +107,12 @@ $(SPEC_S Garbage Collection,
 	)
 
 	$(P These constraints are addressed by techniques outlined
-	in $(DPLLINK memory.html, Memory Management).
+	in $(DPLLINK memory.html, Memory Management), including the mechanisms provided by
+	D to control allocations outside the GC heap.
+	)
+    
+	$(P There is currently work in progress to make the runtime library free of GC heap allocations,
+	to allow its use in scenarios where the use of GC infrastructure is not possible.
 	)
 
 $(H2 How Garbage Collection Works)
