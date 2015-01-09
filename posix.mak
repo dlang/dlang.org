@@ -21,7 +21,6 @@ DOC_OUTPUT_DIR:=$(shell pwd)/web
 GIT_HOME=https://github.com/D-Programming-Language
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
-DPL_DOCS_FLAGS=--std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --
 REMOTE_DIR=d-programming@digitalmars.com:data
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=0.9.22
