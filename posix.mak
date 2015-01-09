@@ -34,6 +34,13 @@ STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL
 DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)
 RDMD=rdmd --compiler=$(DMD) $(DFLAGS)
 
+# Tools
+REBASE = MYBRANCH=`git rev-parse --abbrev-ref HEAD` &&\
+ git co master &&\
+ git pull --ff-only upstream master &&\
+ git co $$MYBRANCH &&\
+ git rebase master
+
 # Latest released version
 ifeq (,${LATEST})
 LATEST:=$(shell cd ${DMD_DIR} && \
@@ -182,6 +189,13 @@ $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 ${LATEST}.ddoc :
 	echo "LATEST=${LATEST}" >$@
 
+# Run "make -j rebase" for rebasing all dox in parallel!
+rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
+rebase-dlang: ; $(REBASE)
+rebase-dmd: ; cd $(DMD_DIR) && $(REBASE)
+rebase-druntime: ; cd $(DRUNTIME_DIR) && $(REBASE)
+rebase-phobos: ; cd $(PHOBOS_DIR) && $(REBASE)
+
 clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc dpl-docs/.dub
 	rm -rf auto dlangspec-consolidated.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex .txt .verbatim.txt)
@@ -244,7 +258,7 @@ dlangspec.verbatim.txt : $(DMD) macros.ddoc verbatim.ddoc dlangspec-consolidated
 	$(DMD) -Df$@ macros.ddoc verbatim.ddoc dlangspec-consolidated.d
 
 ################################################################################
-# Git clone rules
+# Git rules
 ################################################################################
 
 ../%-${LATEST}/.cloned :
