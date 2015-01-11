@@ -160,13 +160,13 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 # Pattern rulez
 
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
-	$(DMD) -c -o- -Df$@ $(DDOC) $<
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
 $(DOC_OUTPUT_DIR)/%.verbatim : %.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
 
 $(DOC_OUTPUT_DIR)/%.php : %.php.dd $(DDOC) $(DMD)
-	$(DMD) -c -o- -Df$@ $(DDOC) $<
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
 $(DOC_OUTPUT_DIR)/css/% : css/%
 	@mkdir -p $(dir $@)
@@ -184,7 +184,7 @@ $(DOC_OUTPUT_DIR)/% : %
 	cp $< $@
 
 $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
-	$(DMD) -c -o- -Df$@ $(DDOC) dcompiler.dd $<
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) dcompiler.dd $<
 
 $(DOC_OUTPUT_DIR)/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
@@ -212,7 +212,7 @@ $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	  && echo \
 	    "$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`")) \
 	  | sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\(.*\)/<a href="\1">\2<\/a><p>/' >> sitemap.dd
-	$(DMD) -c -o- -Df$@ $(DDOC) sitemap.dd
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) sitemap.dd
 	rm sitemap.dd
 
 ${LATEST}.ddoc :
@@ -245,7 +245,7 @@ dlangspec.d : $(addsuffix .dd,$(SPEC_ROOT))
 	$(RDMD) ../tools/catdoc.d -o$@ $^
 
 dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d $(DMD)
-	$(DMD) $(DDOC) ebook.ddoc dlangspec.d
+	$(DMD) -conf= $(DDOC) ebook.ddoc dlangspec.d
 
 dlangspec.zip : dlangspec.html ebook.css
 	rm -f $@
@@ -266,7 +266,7 @@ dlangspec-consolidated.d : $(addsuffix .dd,$(SPEC_ROOT))
 	$(RDMD) --force ../tools/catdoc.d -o$@ $^
 
 dlangspec.tex : $(DMD) $(DDOC) latex.ddoc dlangspec-consolidated.d
-	$(DMD) -Df$@ $(DDOC) latex.ddoc dlangspec-consolidated.d
+	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc dlangspec-consolidated.d
 
 # Run twice to fix multipage tables and \ref uses
 $(DOC_OUTPUT_DIR)/dlangspec.pdf : dlangspec.tex
@@ -281,10 +281,10 @@ $(DOC_OUTPUT_DIR)/dlangspec.pdf : dlangspec.tex
 ################################################################################
 
 dlangspec.txt : $(DMD) macros.ddoc plaintext.ddoc dlangspec-consolidated.d
-	$(DMD) -Df$@ macros.ddoc plaintext.ddoc dlangspec-consolidated.d
+	$(DMD) -conf= -Df$@ macros.ddoc plaintext.ddoc dlangspec-consolidated.d
 
 dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
-	$(DMD) -Df$@ verbatim.ddoc dlangspec-consolidated.d
+	$(DMD) -conf= -Df$@ verbatim.ddoc dlangspec-consolidated.d
 
 ################################################################################
 # Git rules
@@ -433,4 +433,4 @@ ${STABLE_DMD}:
 		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
 
 ${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
-	cd ${DUB_DIR}; DC=$(abspath ${STABLE_DMD}) ./build.sh
+	cd ${DUB_DIR} && DC=$(abspath ${STABLE_DMD}) ./build.sh
