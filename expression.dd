@@ -1094,6 +1094,24 @@ $(GNAME SliceExpression):
           //baz(arr[1 .. 3]); // cannot match length
         }
         -------------
+
+        Following forms of slice expression can be convertible to a static array type:
+
+        $(DL
+        $(DT $(D $(I e)))$(DD An expression that contains no side effects.)
+        $(DT $(D a), $(D b))$(DD Integers (that may be constant-folded).)
+        )
+
+        $(TABLE1
+        $(THEAD Form, The length calculated at compile time)
+        $(TROW $(D arr[]), The compile time length of $(D arr) if it's known.)
+        $(TROW $(D arr[a .. b]),               $(D b - a))
+        $(TROW $(D arr[$(I e)-a .. $(I e)]),   $(D a))
+        $(TROW $(D arr[$(I e) .. $(I e)+b]),   $(D b))
+        $(TROW $(D arr[$(I e)-a .. $(I e)+b]), $(D a + b))
+        $(TROW $(D arr[$(I e)+a .. $(I e)+b]), $(D b - a) $(I if) $(D a <= b))
+        $(TROW $(D arr[$(I e)-a .. $(I e)-b]), $(D a - b) $(I if) $(D a >= b))
+        )
     )
 
     $(P If $(I PostfixExpression) is an $(I ExpressionTuple), then
