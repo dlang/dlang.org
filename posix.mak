@@ -40,6 +40,10 @@ REBASE = MYBRANCH=`git rev-parse --abbrev-ref HEAD` &&\
  git co $$MYBRANCH &&\
  git rebase master
 
+CHANGE_SUFFIX = \
+ for f in `find "$3" -iname '*.$1'`; do\
+  mv $$f `dirname $$f`/`basename $$f .$1`.$2; done
+
 # Latest released version
 ifeq (,${LATEST})
 LATEST:=$(shell cd ${DMD_DIR} && \
@@ -151,6 +155,9 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(DDOC) $<
 
+$(DOC_OUTPUT_DIR)/%.verbatim : %.dd verbatim.ddoc $(DMD)
+	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
+
 $(DOC_OUTPUT_DIR)/%.php : %.php.dd $(DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(DDOC) $<
 
@@ -160,6 +167,9 @@ $(DOC_OUTPUT_DIR)/% : %
 
 $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(DDOC) dcompiler.dd $<
+
+$(DOC_OUTPUT_DIR)/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
+	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
 
 ################################################################################
 # Rulez
@@ -171,6 +181,8 @@ docs : phobos-prerelease druntime-prerelease druntime-release phobos-release	\
 	apidocs-release apidocs-prerelease
 
 html : $(ALL_FILES)
+
+verbatim : $(addprefix $(DOC_OUTPUT_DIR)/, $(addsuffix .verbatim,$(PAGES_ROOT))) phobos-prerelease-verbatim
 
 kindle : ${DOC_OUTPUT_DIR}/dlangspec.mobi
 
@@ -253,8 +265,8 @@ $(DOC_OUTPUT_DIR)/dlangspec.pdf : dlangspec.dvi
 dlangspec.txt : $(DMD) macros.ddoc plaintext.ddoc dlangspec-consolidated.d
 	$(DMD) -Df$@ macros.ddoc plaintext.ddoc dlangspec-consolidated.d
 
-dlangspec.verbatim.txt : $(DMD) macros.ddoc verbatim.ddoc dlangspec-consolidated.d
-	$(DMD) -Df$@ macros.ddoc verbatim.ddoc dlangspec-consolidated.d
+dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
+	$(DMD) -Df$@ verbatim.ddoc dlangspec-consolidated.d
 
 ################################################################################
 # Git rules
@@ -288,16 +300,27 @@ $(DMD_REL) : ${DMD_DIR}-${LATEST}/.cloned
 
 druntime-prerelease : ${DRUNTIME_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
 ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : $(DMD)
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 \
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-prerelease.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
 
 druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/object.html
 ${DOC_OUTPUT_DIR}/phobos/object.html : $(DMD_REL)
-	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak \
+	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak target doc \
 	  DMD=$(DMD_REL) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
 	  DOCFMT="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" -j 4
+
+druntime-prerelease-verbatim : ${DRUNTIME_DIR}/.cloned \
+		${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
+${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
+		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim \
+		DOCFMT="`pwd`/verbatim.ddoc"
+	mkdir -p $(dir $@)
+	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
+	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
+	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
 
 ################################################################################
 # phobos, latest released build and current build
@@ -319,6 +342,16 @@ ${DOC_OUTPUT_DIR}/phobos/index.html : $(DMD_REL) html.ddoc dlang.org.ddoc std.dd
 	  DRUNTIME_PATH=${DRUNTIME_DIR}-${LATEST} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
 	  STDDOC="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/$(LATEST).ddoc `pwd`/std_navbar-$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
+
+phobos-prerelease-verbatim : ${PHOBOS_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
+${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
+	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
+	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
+	    STDDOC="`pwd`/verbatim.ddoc" \
+	    DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim html -j 4
+	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
+	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
+	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
 
 ################################################################################
 # phobos and druntime, latest released build and current build (DDOX version)
