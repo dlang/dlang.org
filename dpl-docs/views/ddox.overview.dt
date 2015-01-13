@@ -1,0 +1,85 @@
+extends ddox.layout
+
+block ddox.defs
+	- import ddox.api;
+
+block ddox.title
+	- auto title = "API documentation";
+
+block ddox.members
+
+	- void moduleInfoRec(Package pack)
+		- foreach( p; pack.packages )
+			- moduleInfoRec(p);
+		- foreach( m; pack.modules )
+			- if (!m.qualifiedName.startsWith("std.c.") && !m.qualifiedName.startsWith("core.stdc.") && !m.qualifiedName.startsWith("core.sys."))
+				tr
+					td
+						a(href="#{info.linkTo(m)}")= m.qualifiedName
+					td
+						- if( m.docGroup )
+							|!= info.formatDoc(m.docGroup, 0, sec => sec == "$Short")
+
+	- void moduleInfoRecShort(Package pack, string prefix)
+		- foreach( p; pack.packages )
+			- moduleInfoRecShort(p, prefix);
+		- foreach( m; pack.modules )
+			- if (m.qualifiedName.startsWith(prefix))
+				a(href="#{info.linkTo(m)}")= m.qualifiedName
+
+	table
+		col.caption
+		tr
+			th Module
+			th Description
+		- moduleInfoRec(info.rootPackage);
+
+	br
+	p Access to plattform libraries is supported by specific D header files.
+
+	table
+		col.caption
+		tr
+			th
+			th D header files
+		tr
+			td C99
+			td
+				- moduleInfoRecShort(info.rootPackage, "core.stdc.");
+		tr
+			td Posix
+			td
+				- moduleInfoRecShort(info.rootPackage, "core.sys.posix.");
+		tr
+			td Windows
+			td
+				- moduleInfoRecShort(info.rootPackage, "core.sys.windows.");
+		tr
+			td GNU/Linux
+			td
+				- moduleInfoRecShort(info.rootPackage, "core.sys.linux.");
+		tr
+			td FreeBSD
+			td
+				- moduleInfoRecShort(info.rootPackage, "core.sys.freebsd.");
+		tr
+			td OSX
+			td
+				- moduleInfoRecShort(info.rootPackage, "core.sys.osx.");
+		tr
+			td Solaris
+			td
+				- moduleInfoRecShort(info.rootPackage, "core.sys.solaris.");
+
+	br
+	p Deprecated D header files.
+
+	table
+		col.caption
+		tr
+			th
+			th D header files
+		tr
+			td C
+			td
+				- moduleInfoRecShort(info.rootPackage, "std.c.");
