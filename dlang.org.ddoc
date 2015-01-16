@@ -4,14 +4,16 @@ ACRONYM=<acronym title="$+">$1</acronym> ($+)
 ASSIGNEXPRESSION=$(GLINK2 expression, AssignExpression)
 _=
 
-BIGOH = <b><i>&Omicron;</i>(</b>$(D $0)<b><i>)</i></b>
-BLOCKQUOTE = <blockquote><p>$+</p><cite>$1</cite></blockquote>
-BLOCKQUOTE_PLAIN = <blockquote><p>$0</p></blockquote>
-BOOKTABLE = <table cellspacing=0 cellpadding=5 class=book><caption>$1</caption>$2</table>
+BIGOH = $(SPANC bigoh, &Omicron;($(D $0)))
+BLOCKQUOTE = <blockquote>$(P $+)<cite>$1</cite></blockquote>
+BLOCKQUOTE_PLAIN = <blockquote>$(P $0)</blockquote>
+BLACK=$(SPANC black, $0)
+BLUE=$(SPANC blue, $0)
+BOOKTABLE = <table class=book><caption>$1</caption>$2</table>
 BUGZILLA = $(LINK2 https://issues.dlang.org/show_bug.cgi?id=$0, Bugzilla $0)
 _=
 
-CCODE=<pre class="ccode">$(NOTRANSLATE $0)</pre>
+CCODE=<pre class="ccode notranslate">$0</pre>
 CODE=$(D $0)
 CODE_AMP=$(D &amp;)
 CODE_DOLLAR=$(D $)
@@ -21,14 +23,14 @@ CODE_PERCENT=$(D %)
 CODE_PIPE=$(D |)
 CODE_RCURL=$(D })
 CONSOLE=<pre class="console notranslate">$0</pre>
-COPYRIGHT = Copyright &copy; 1999-$(YEAR) by Digital Mars $(REG), All Rights Reserved
+COPYRIGHT=Copyright &copy; 1999-$(YEAR) by Digital Mars $(REG), All Rights Reserved
 CPPCODE=<pre class="cppcode notranslate">$0</pre>
 CPPLISTING=$(CPPCODE $0)
 CROSS=&#x2718;
 _=
 
-D = $(SPANC d_inlinecode donthyphenate notranslate, $0)
-D_CODE = <pre class="d_code notranslate">$0</pre>
+D=$(SPANC d_inlinecode donthyphenate notranslate, $0)
+D_CODE=<pre class="d_code notranslate">$0</pre>
 _=
 
 D_RUN_CODE =
@@ -36,9 +38,9 @@ $(DIV ,
 	$(DIVC d_code, $1)
 	$(DIVC d_run_code,
 		<textarea class="d_code">$4</textarea>
-		$(DIVC d_code_stdin"><span class="d_code_title">Standard input</span><br /><textarea class="d_code_stdin">$2</textarea>)
-		$(DIVC d_code_args, <span class="d_code_title">Command line arguments</span><br /><textarea class="d_code_args">$3</textarea>)
-		$(DIVC d_code_output, <span class="d_code_title">Application output</span><br /><textarea class="d_code_output" readonly>Running...</textarea>)
+		$(DIVC d_code_stdin">$(SPANC d_code_title, Standard input)<br /><textarea class="d_code_stdin">$2</textarea>)
+		$(DIVC d_code_args, $(SPANC d_code_title, Command line arguments)<br /><textarea class="d_code_args">$3</textarea>)
+		$(DIVC d_code_output, $(SPANC d_code_title, Application output)<br /><textarea class="d_code_output" readonly>Running...</textarea>)
 		<input type="button" class="editButton" value="Edit">
 		<input type="button" class="argsButton" value="Args">
 		<input type="button" class="inputButton" value="Input">
@@ -50,30 +52,31 @@ _=
 
 DDLINK=$(LINK2 $1.html, $3)
 DDOC_BACKQUOTED = $(D $0)
-DDOC_SUMMARY   = $0$(P)
-DDOC_DESCRIPTION = $0$(P)
-DDOC_AUTHORS   = $(B Authors:)$(BR)$0$(P)
-DDOC_BUGS      = $(RED BUGS:)$(BR)$0$(P)
-DDOC_COPYRIGHT = $(B Copyright:)$(BR)$0$(P)
-DDOC_DATE      = $(B Date:)$(BR)$0$(P)
-DDOC_DEPRECATED = $(RED Deprecated:)$(BR)$0$(P)
-DDOC_EXAMPLES  = $(B Examples:)$(BR)$0$(P)
-DDOC_HISTORY   = $(B History:)$(BR)$0$(P)
-DDOC_LICENSE   = $(B License:)$(BR)$0$(P)
-DDOC_RETURNS   = $(B Returns:)$(BR)$0$(P)
-DDOC_SEE_ALSO  = $(B See Also:)$(BR)$0$(P)
-DDOC_STANDARDS = $(B Standards:)$(BR)$0$(P)
-DDOC_THROWS    = $(B Throws:)$(BR)$0$(P)
-DDOC_VERSION   = $(B Version:)$(BR)$0$(P)
-DDOC_SECTION_H = $(B $0)$(BR)
-DDOC_SECTION   = $0$(P)
-DDOC_PARAMS    = $(B Parameters:)<table class=parms>$0</table>$(P)
+DDOC_SUMMARY   = $(PC summary, $0)
+DDOC_DESCRIPTION = $(PC description, $0)
+DDOC_AUTHORS   = $(DDOCKEYVAL Authors, $0)
+DDOC_BUGS      = $(DDOCKEYVAL Bugs, $0)
+DDOC_COPYRIGHT = $(DDOCKEYVAL Copyright, $0)
+DDOC_DATE      = $(DDOCKEYVAL Date, $0)
+DDOC_DEPRECATED = $(DDOCKEYVAL Deprecated, $0)
+DDOC_EXAMPLES  = $(DDOCKEYVAL Examples, $0)
+DDOC_HISTORY   = $(DDOCKEYVAL History, $0)
+DDOC_LICENSE   = $(DDOCKEYVAL License, $0)
+DDOC_RETURNS   = $(DDOCKEYVAL Returns, $0)
+DDOC_SEE_ALSO  = $(DDOCKEYVAL SeeAlso, $0)
+DDOC_STANDARDS = $(DDOCKEYVAL Standards, $0)
+DDOC_THROWS    = $(DDOCKEYVAL Throws, $0)
+DDOC_VERSION   = $(DDOCKEYVAL Version, $0)
+DDOC_SECTION_H = <p class="keyval Section">$(SPANC key keySection, $0)
+DDOC_SECTION   = $(SPANC val, $0)</p>
+DDOC_PARAMS    = $(DDOCKEYVAL Parameters, <table class=parms>$0</table>)
 DDOC_BLANKLINE	= $(P)
-DDOC_PSYMBOL = <a name="$0"></a><span class="ddoc_psymbol">$0</span>
+DDOC_PSYMBOL = <a name="$0"></a>$(SPANC ddoc_psymbol, $0)
 DDOC_ANCHOR = $(ADEF .$1)$(DIVCID quickindex, quickindex.$1, )
 DDOC_DECL  = <dt class="d_decl">$0</dt>
 DDOC_UNDEFINED_MACRO = $(DDOC_COMMENT UNDEFINED MACRO: "$1")
 DDOCCODE=<pre class="ddoccode notranslate">$0</pre>
+DDOCKEYVAL=$(PC keyval $1, $(SPANC key key$1, $1:) $(SPANC val val$1, $+))
 DDSUBLINK=$(XLINK2 $1.html#$2, $3)
 DRUNTIMESRC=$(HTTPS github.com/D-Programming-Language/druntime/blob/master/src/$0, $0)
 DPLLINK=$(LINK2 $1,$+)
@@ -83,16 +86,17 @@ ELABORATE_HEADER=$(TR <th rowspan=2>D</th><th colspan=2>C</th></tr><tr><th scope
 _=
 
 FOOTER = $(DIV id="copyright", $(COPYRIGHT) | Page generated by $(WEB dlang.org/ddoc.html, Ddoc) on $(GEN_DATETIME))
-FOOTNOTE=$(I &nbsp;($0))
+FOOTNOTE=$(SPANC footnote, $0)
 FULL_XREF=$(XREF $1, $2)
 _=
 
 GEN_DATETIME=$(DATETIME)
 GLINK=$(RELATIVE_LINK2 $0, $(I $0))
 GLINK2=$(DDSUBLINK $1,$2,$(I $2))
-GLOSSARY = $(LINK2 http://dlang.org/glossary.html#$0, $0)
-GNAME=<a id="$0">$(I $0)</a>
+GLOSSARY = $(WEB dlang.org/glossary.html#$0, $0)
+GNAME=<a id="$0">$(SPANC gname, $0)</a>
 GRAMMAR=<pre class="bnf notranslate">$0</pre>
+GREEN=$(SPANC green, $0)
 GT=&gt;
 _=
 
@@ -105,7 +109,7 @@ _=
 
 LEGACY_LNAME2=<span id="$1">$(LNAME2 $+)</span>
 LIST=$(UL $(LIX $1, $+))
-LIX=<li>$1</li>$(LIX $+)
+LIX=$(LI $1)$(LIX $+)
 LNAME2=<a class="anchor" title="Permalink to this section" id="$1" href="#$1">$+</a>
 LONGTABLE_2COLS=$(TABLE2 $2,$3 $4)
 LONGTABLE_3COLS=$(TABLE2 $2,$3 $4)
@@ -116,55 +120,48 @@ LUCKY2 = $(HTTP google.com/search?btnI=I%27m+Feeling+Lucky&q=$+,$1)
 _=
 
 MDASH=<nobr>&#x200A;&mdash;&#x200A;</nobr>
-METACODE=$(I $0)
+METACODE=$(SPANC metacode, $0)
 META_KEYWORDS=D programming language
 META_DESCRIPTION=D Programming Language
 MODDEFFILE=<pre class="moddeffile notranslate">$0</pre>
-MULTICOL_CELL=<td colspan=$1>$+</th>
+MULTICOL_CELL=<td colspan=$1>$+</td>
 MULTICOL_HEADER=<th colspan=$1>$+</th>
 MULTICOLS=$+
 MULTIROW_HEADER=<th rowspan=$1>$+</th>
 _=
 
 NEWS=http://digitalmars.com/webnews/newsgroups.php?search_txt=&group=$1&article_id=$+
-NEWSGROUP=http://digitalmars.com/webnews/newsgroups.php?search_txt=&group=$0
-NG_cpp = <a href="$(NEWS c%2B%2B,$0)">c++/$0</a>
-NG_cpp_beta = <a href="$(NEWS c%2B%2B.beta,$0)">c++.beta/$0</a>
-NG_cpp_command_line = <a href="$(NEWS c%2B%2B.command-line,$0)">c++.command-line/$0</a>
-NG_D = <a href="$(NEWS D.gnu,$0)">D/$0</a>
-NG_D_gnu = <a href="$(NEWS D.gnu,$0)">D.gnu/$0</a>
 NG_digitalmars_D = <a href="$(NEWS digitalmars.D,$0)">D/$0</a>
-NG_digitalmars_D_bugs = <a href="$(NEWS digitalmars.D.bugs,$0)">D.bugs/$0</a>
-NG_digitalmars_D_learn = <a href="$(NEWS digitalmars.D.learn,$0)">D.learn/$0</a>
 NG_digitalmars_D_announce = <a href="$(NEWS digitalmars.D.announce,$0)">D.announce/$0</a>
-NG_DMDScript = <a href="$(NEWS DMDScript,$0)">DMDScript/$0</a>
-NOTRANSLATE=<span class="notranslate">$0</span>
+NOTRANSLATE=$(SPANC notranslate, $0)
 NO=
 NOT_EBOOK=$0
 _=
 
-OPT=<sub>opt</sub>
+OPT=$(SUBSCRIPT opt)
 _=
 
 PAGE_TOOLS=
 $(DIVID tools,
-	<!--span id="lastupdate">Last update $(GEN_DATETIME)</span-->
-	<span class="tip">
+	$(SPANC tip,
 		<a href="https://github.com/D-Programming-Language/$(PROJECT)/edit/master/$(SRCFILENAME)" class="button">Improve this page</a>
-		<span>
+		$(SPAN
 			Quickly fork, edit online, and submit a pull request for this page.
 			Requires a signed-in GitHub account. This works well for small changes.
 			If you'd like to make larger changes you may want to consider using
 			local clone.
-		</span>
-	</span>
-	<span class="tip">
+		)
+	)
+	$(SPANC tip,
 		<a href="http://wiki.dlang.org/DocComments/$(WIKI)" class="button">Page wiki</a>
-		<span>
+		$(SPAN
 			View or edit the community-maintained wiki page associated with this page.
-		</span>
-	</span>
+		)
+	)
 )
+_=
+
+PC=<p class="$1">$+</p>
 _=
 
 PHOBOS=<a href="http://dlang.org/phobos/std_$1.html#$2">$3</a>
@@ -172,24 +169,24 @@ PHOBOSSRC=$(LINK2 https://github.com/D-Programming-Language/phobos/blob/master/$
 _=
 
 RAW_DOLLAR=$
+RED=$(SPANC red, $0)
 RELATIVE_LINK2=$(ALOCAL $1, $+)
 _=
 
 SAMPLESRC=$(LINK2 https://github.com/D-Programming-Language/dmd/blob/master/samples/$0, /dmd/samples/d/$0)
 SCINI=<pre class="scini notranslate">$0</pre>
-SECTION1=<h1>$1</h1>$+
+SECTION1=$(H1 $1)$+
 SECTION2=$(H2 $1)$+
-SECTION3=<h3>$1</h3>$+
-SECTION4=<h4>$1</h4>$+
-SECTION5=<h5>$1</h5>$+
+SECTION3=$(H3 $1)$+
+SECTION4=$(H4 $1)$+
+SECTION5=$(H5 $1)$+
 _=
 
 TABLE_10=$(TABLE2 $1,$+)
 TABLE_2COLS=$(TABLE2 $1, $+)
 TABLE_3COLS=$(TABLE2 $1, $+)
 TABLE_SPECIAL=$(TABLE2 $1,$+)
-TABLE1 = <table border=1 cellpadding=4 cellspacing=0>$0</table>
-TABLE2 = <center><table border=1 cellpadding=4 cellspacing=0><caption>$1</caption>$+</table></center>
+TABLE2=<center><table><caption>$1</caption>$+</table></center>
 TAIL=$+
 TDX=<td>$1</td>$(TDX $+)
 TH=<th scope="col">$0</th>
@@ -200,8 +197,8 @@ TOCENTRY = $(LI $(LINK2 $1, $2))
 TOCENTRYH = $(LI $(LINK2 $1, $2)$3)
 TOCENTRYT = $(LI <a href="$1" title="$2">$3</a>)
 TOCENTRYTH = $(LI <a href="$1" title="$2">$3</a>$4)
-TOCHEADER = $(H2 $0)
-TOCHEADERL = $(H2 <a href="$1" title="$2">$3</a>)
+TOCHEADER = <h2 class="tocheader">$0</h2>
+TOCHEADERL = $(TOCHEADER <a href="$1" title="$2">$3</a>)
 TR2=$(TR $1 $2)
 TR3=$(TR $1 $2 $3)
 TROW=$(TR $(TDX $1, $+))
@@ -214,11 +211,14 @@ _=
 VERTROW=$(TR $(TDX $1, $+))
 _=
 
-XLINK2=$(LINK2 $1,$+)
-XREF = $(XREF2 $1, $2, $(D std.$1.$2))
-XREF2 = <a href="http://dlang.org/phobos/std_$1.html#$2">$3</a>
+WHITE=$(SPANC white, $0)
 _=
 
+XLINK2=$(LINK2 $1,$+)
+XREF=$(XREF2 $1, $2, $(D std.$1.$2))
+XREF2=<a href="http://dlang.org/phobos/std_$1.html#$2">$3</a>
+_=
+
+YELLOW=$(SPANC yellow, $0)
 YES=$(CHECKMARK)
 _=
-
