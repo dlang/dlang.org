@@ -1363,35 +1363,36 @@ $(H3 $(LNAME2 enum, Enum))
 
 $(GRAMMAR
 $(GNAME EnumDeclaration):
-    $(D enum) $(GLINK EnumTag) $(GLINK EnumBody)
-    $(D enum) $(GLINK EnumBody)
-    $(D enum) $(GLINK EnumTag) $(D :) $(GLINK EnumBaseType) $(GLINK EnumBody)
-    $(D enum) $(D :) $(GLINK EnumBaseType) $(GLINK EnumBody)
-
-$(GNAME EnumTag):
-    $(I Identifier)
+    $(D enum) $(I Identifier) $(GLINK EnumBody)
+    $(D enum) $(I Identifier) $(D :) $(GLINK EnumBaseType) $(GLINK EnumBody)
+    $(AnonymousEnumDeclaration)
 
 $(GNAME EnumBaseType):
     $(GLINK Type)
 
 $(GNAME EnumBody):
-    $(GLINK EmptyEnumBody)
-    $(GLINK EnumMembersBody)
-
-$(GNAME EmptyEnumBody):
-    $(D ;)
-
-$(GNAME EnumMembersBody):
     $(D {) $(GLINK EnumMembers) $(D })
+    $(D ;)
 
 $(GNAME EnumMembers):
     $(GLINK EnumMember)
     $(GLINK EnumMember) $(D ,)
-    $(GLINK EnumMember) $(D ,) $(I EnumMembers)
 
 $(GNAME EnumMember):
     $(I Identifier)
     $(I Identifier) $(D =) $(ASSIGNEXPRESSION)
+
+$(GNAME AnonymousEnumDeclaration):
+    $(D enum) $(D :) $(GLINK EnumBaseType) $(D {) $(GLINK EnumMembers) $(D })
+    $(D enum) $(D {) $(GLINK EnumMembers) $(D })
+    $(D enum) $(D {) $(GLINK AnonymousEnumMembers) $(D })
+
+$(GNAME AnonymousEnumMembers):
+    $(GLINK AnonymousEnumMember)
+    $(GLINK AnonymousEnumMembers) $(D ,) $(GLINK AnonymousEnumMember)
+
+$(GNAME AnonymousEnumMember):
+    $(GLINK EnumMember)
     $(GLINK Type) $(I Identifier) $(D =) $(ASSIGNEXPRESSION)
 )
 
