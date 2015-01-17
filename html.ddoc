@@ -6,53 +6,55 @@ _=Simple tags, ordered alphabetically
 A = <a href="$1">$+</a>
 ADEF = <a name="$0"></a>
 AHTTP = <a href="http://$1">$+</a>
-AHTTPS = <a href="https://$1">$+</a>
-ALOCAL = <a href="#$1">$+</a>
-BIG = <big>$0</big>
+AHTTPS = <a class="https" href="https://$1">$+</a>
+ALOCAL = <a class="anchor" title="Permalink" href="#$1">$+</a>
+BIG = $(T big, $0)
 BR = <br>
-CAPTION = <caption>$0</caption>
+CAPTION = $(T caption, $0)
 CHECKMARK = &#10004;
-DD = <dd>$0</dd>
+DD = $(T dd, $0)
 DIV = <div $1>$+</div>
-DIVC = $(DIV class="$1", $+)
+DIVC = $(TC div, $1, $+)
 DIVCID = $(DIV class="$1" id="$2", $3)
 DIVID = $(DIV id="$1", $+)
-DL = <dl>$0</dl>
+DL = $(T dl, $0)
 DOUBLEQUOTE = $(LDQUO)$0$(RDQUO)
-DT = <dt>$0</dt>
+DT = $(T dt, $0)
 ENUMERATE = $(OL $(ITEMS_HELPER $1, $+))
 GREATER = &gt;
 ITEMIZE = $(UL $(ITEMS_HELPER $1, $+))
 ITEMS_HELPER = $(LI $1)$(ITEMS_HELPER $+)
-H1 = <h1>$0</h1>
-H2 = <h2>$0</h2>
-H3 = <h3>$0</h3>
-H4 = <h4>$0</h4>
-H5 = <h5>$0</h5>
+H1 = $(T h1, $0)
+H2 = $(T $0)
+H3 = $(T h3, $0)
+H4 = $(T h4, $0)
+H5 = $(T h5, $0)
 HR = <hr>
-I = <i>$0</i>
-LI = <li>$0</li>
+I = $(T i, $0)
+LI = $(T li, $0)
 LESS = &lt;
-OL = <ol>$0</ol>
-P = <p>$0</p>
-PRE = <pre>$0</pre>
+OL = $(T ol, $0)
+P = $(T p, $0)
+PRE = $(T pre, $0)
 SCRIPT = <script type="text/javascript">$0</script>
 SINGLEQUOTE = $(LSQUO)$0$(RSQUO)
-SMALL = <small>$0</small>
+SMALL = $(T small, $0)
 SPAN = <span $1>$+</span>
-SPANC = $(SPAN class="$1", $+)
-SUBSCRIPT = <sub>$0</sub>
-SUPERSCRIPT = <sup>$0</sup>
-TABLE = <table>$0</table>
-TABLEC = <table class="$1">$+</table>
-TD = <td>$0</td>
+SPANC = $(TC span, $1, $+)
+SUBSCRIPT = $(T sub, $0)
+SUPERSCRIPT = $(T sup, $0)
+TABLE = $(T table, $0)
+TABLEC = $(T table, $1, $+)
+T=<$1>$+</$1>
+TC=<$1 class="$2">$(TAIL $+)</$1>
+TD = $(T td, $0)
 TD_HELPER = $(TD $1)$(TD_HELPER $+)
 TH_HELPER = $(TH $1)$(TH_HELPER $+)
 THEAD = $(TR $(TH_HELPER $1, $+))
-TR = <tr>$0</tr>
-TT = <tt>$0</tt>
-U = <u>$0</u>
-UL = <ul>$0</ul>
+TR = $(T tr, $0)
+TT = $(T tt, $0)
+U = $(T u, $0)
+UL = $(T ul, $0)
 _=
 
 _=Defining anchors and linking
@@ -66,12 +68,12 @@ _=
 
 _=Colors
 
-RED    = <span style="color:red">$0</span>
-GREEN  = <span style="color:green">$0</span>
-BLUE   = <span style="color:blue">$0</span>
-YELLOW = <span style="color:yellow">$0</span>
-BLACK  = <span style="color:black">$0</span>
-WHITE  = <span style="color:white">$0</span>
+RED    = $(SPAN style="color:red", $0)
+GREEN  = $(SPAN style="color:green", $0)
+BLUE   = $(SPAN style="color:blue", $0)
+YELLOW = $(SPAN style="color:yellow", $0)
+BLACK  = $(SPAN style="color:black", $0)
+WHITE  = $(SPAN style="color:white", $0)
 _=
 
 _=Explanatory stuff of the kind "Throws: blah" or "Returns:
@@ -84,7 +86,7 @@ _=
 
 _=Predefined D-related stuff
 
-D_CODE = <pre class="d_code">$0</pre>
+D_CODE = $(TC pre, d_code, $0)
 D_COMMENT = $(SPANC d_comment, $0)
 D_STRING  = $(SPANC d_string, $0)
 D_KEYWORD = $(SPANC d_keyword, $0)
@@ -94,14 +96,13 @@ _=
 
 _=Main entry point
 
-DDOC = <html><head>
-<META http-equiv="content-type" content="text/html; charset=utf-8">
-<link rel="stylesheet" type="text/css" href="css/html.css" />
-<title>$(TITLE)</title>
-</head><body>
-$(H1 $(TITLE))
-$(BODY)
-</body></html>
+DDOC = $(T html,
+$(T head,
+  <META http-equiv="content-type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" type="text/css" href="css/html.css" />
+  $(T title, $(TITLE))
+)
+$(T body, $(H1 $(TITLE))$(BODY)))
 _=
 
 _=DDoc-related stuff
@@ -155,7 +156,7 @@ DDOC_PARAM_DESC  = $(TD $0)
 DDOC_BLANKLINE = $(BR)$(BR)
 _=
 
-DDOC_ANCHOR  = <a name="$1"></a>
+DDOC_ANCHOR  = $(ADEF $1)
 DDOC_PSYMBOL = $(U $0)
 DDOC_KEYWORD = $(B $0)
 DDOC_PARAM   = $(I $0)
