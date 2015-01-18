@@ -22,6 +22,7 @@ GIT_HOME=https://github.com/D-Programming-Language
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
+
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=0.9.22
 STABLE_DMD_VER=2.066.1
@@ -43,6 +44,9 @@ REBASE = MYBRANCH=`git rev-parse --abbrev-ref HEAD` &&\
 CHANGE_SUFFIX = \
  for f in `find "$3" -iname '*.$1'`; do\
   mv $$f `dirname $$f`/`basename $$f .$1`.$2; done
+ 
+ # Set to 1 in the command line to minify css files
+ CSS_MINIFY=
 
 # Latest released version
 ifeq (,${LATEST})
@@ -160,6 +164,14 @@ $(DOC_OUTPUT_DIR)/%.verbatim : %.dd verbatim.ddoc $(DMD)
 
 $(DOC_OUTPUT_DIR)/%.php : %.php.dd $(DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(DDOC) $<
+
+$(DOC_OUTPUT_DIR)/css/% : css/%
+	@mkdir -p $(dir $@)
+ifeq (1,$(CSS_MINIFY))
+	curl -X POST -fsS --data-urlencode 'input@$<' http://cssminifier.com/raw >$@
+else
+	cp $< $@
+endif
 
 $(DOC_OUTPUT_DIR)/% : %
 	@mkdir -p $(dir $@)
