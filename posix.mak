@@ -101,22 +101,23 @@ endif
 
 DDOC=macros.ddoc html.ddoc dlang.org.ddoc doc.ddoc ${LATEST}.ddoc $(NODATETIME)
 
-IMAGES=favicon.ico $(addprefix images/, apple_logo.png c1.gif		\
-centos_logo.png cpp1.gif d002.ico d3.png d4.gif d5.gif			\
-debian_logo.png dlogo.png dmlogo.gif dmlogo-smaller.gif download.png	\
-fedora_logo.png freebsd_logo.png github-ribbon.png gradient-green.jpg	\
-gradient-red.jpg globe.gif opensuse_logo.png pen.gif search-left.gif	\
-search-bg.gif search-button.gif tdpl.jpg ubuntu_logo.png		\
-windows_logo.png) $(addprefix images/ddox/, alias.png class.png		\
-enum.png enummember.png function.png inherited.png interface.png	\
-module.png package.png private.png property.png protected.png		\
-struct.png template.png tree-item-closed.png tree-item-open.png		\
-variable.png)
+IMAGES=favicon.ico $(addprefix images/, \
+	d002.ico \
+	$(addsuffix .png, apple_logo centos_logo d3 debian_logo dlogo download \
+		fedora_logo freebsd_logo opensuse_logo ubuntu_logo windows_logo \
+		icon_minus icon_plus pattern github-ribbon \
+		$(addprefix ddox/, alias class enum enummember function \
+			inherited interface module package private property protected \
+			struct template tree-item-closed tree-item-open variable)) \
+	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe \
+		pen search-left search-bg search-button) \
+	$(addsuffix .jpg, gradient-green gradient-red tdpl))
 
-JAVASCRIPT=$(addprefix js/, codemirror-compressed.js listanchors.js run.js	\
-run-main-website.js ddox.js)
+JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
+	codemirror-compressed cssmenu ddox listanchors run run-main-website))
 
-STYLES=css/style.css css/print.css css/codemirror.css css/ddox.css
+STYLES=$(addsuffix .css, $(addprefix css/, \
+	style print codemirror ddox cssmenu))
 
 PRETTIFY=prettify/prettify.css prettify/prettify.js
 
