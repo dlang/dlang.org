@@ -174,6 +174,9 @@ else
 	cp $< $@
 endif
 
+$(DOC_OUTPUT_DIR)/%.css : %.css.dd $(DMD)
+	$(DMD) -c -o- -Df$@ $<
+
 $(DOC_OUTPUT_DIR)/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
