@@ -3,6 +3,16 @@ $( document ).ready(function() {
 var menu_ul = $('#cssmenu > ul > li > ul');
 menu_ul.hide();
 
+$('#cssmenu > ul > li > ul > li > a').each(function(){
+  if ($(this)[0].href == window.location.href) {
+    var p = $(this).parent();
+    p.addClass('active');
+    p = p.parent();
+    p.addClass('active');
+    p.show();
+  }
+});
+
 $('#cssmenu > ul > li > a').click(function() {
   $('#cssmenu li').removeClass('active');
   $(this).closest('li').addClass('active');
