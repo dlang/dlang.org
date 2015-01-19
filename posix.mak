@@ -144,7 +144,7 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements ascii-table		\
 	download dstyle exception-safe faq features2 glossary gsoc2011 gsoc2012	\
 	gsoc2012-template hijack howto-promote htod htomodule index intro	\
 	intro-to-datetime lazy-evaluation memory migrate-to-shared mixin	\
-	overview pretod rationale rdmd regular-expression safed			\
+	mobilenav overview pretod rationale rdmd regular-expression safed			\
 	std_consolidated_header template-comparison templates-revisited tuple	\
 	variadic-function-templates warnings wc windbg windows
 
