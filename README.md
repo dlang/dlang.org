@@ -7,6 +7,8 @@ These are the source files for the [D Language Website](http://dlang.org).
 * [Forum](http://forum.dlang.org/)
 * [Wiki](http://wiki.dlang.org/)
 
+Much of this site is written in [DDoc](http://dlang.org/ddoc), a markup language for generating documentation from D source files.
+
 How to Fork and Build `dlang.org`
 --
 
