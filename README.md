@@ -9,3 +9,5 @@ documentation, and some articles.
 * [Forum](http://forum.dlang.org/)
 * [Wiki](http://wiki.dlang.org/)
 
+If you wish to contribute to the website or language documentation, please see
+the [CONTRIBUTING.md file] (CONTRIBUTING.md).
