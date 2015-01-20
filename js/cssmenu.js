@@ -24,7 +24,7 @@ $('#cssmenu > ul > li > a').click(function() {
     checkElement.slideUp('normal');
   }
   if((checkElement.is('ul')) && (!checkElement.is(':visible'))) {
-    $('#cssmenu ul ul:visible').slideUp('normal');
+    /* $('#cssmenu ul ul:visible').slideUp('normal'); */
     checkElement.slideDown('normal');
   }
   if($(this).closest('li').find('ul').children().length == 0) {
