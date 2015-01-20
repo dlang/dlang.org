@@ -99,7 +99,9 @@ endif
 
 # Documents
 
-DDOC=macros.ddoc html.ddoc dlang.org.ddoc doc.ddoc ${LATEST}.ddoc $(NODATETIME)
+DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${LATEST}) $(NODATETIME)
+STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${LATEST} std std_navbar-$(LATEST))
+STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${LATEST} std std_navbar-prerelease)
 
 IMAGES=favicon.ico $(addprefix images/, \
 	d002.ico \
@@ -314,18 +316,18 @@ $(DMD_REL) : ${DMD_DIR}-${LATEST}/.cloned
 # druntime, latest released build and current build
 ################################################################################
 
-druntime-prerelease : ${DRUNTIME_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
+druntime-prerelease : ${DRUNTIME_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html $(STD_DDOC_PRE)
 ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : $(DMD)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
-		DOCFMT="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-prerelease.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
+		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
-druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/object.html
+druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/object.html $(STD_DDOC)
 ${DOC_OUTPUT_DIR}/phobos/object.html : $(DMD_REL)
 	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak target doc \
 	  DMD=$(DMD_REL) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
-	  DOCFMT="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" -j 4
+		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC))"
 
 druntime-prerelease-verbatim : ${DRUNTIME_DIR}/.cloned \
 		${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
@@ -342,22 +344,23 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 # phobos, latest released build and current build
 ################################################################################
 
+.PHONY: phobos-prerelease
 phobos-prerelease : ${PHOBOS_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html
-${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : html.ddoc dlang.org.ddoc std.ddoc macros.ddoc \
+${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : $(STD_DDOC_PRE) \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
-	  STDDOC="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/std_navbar-prerelease.ddoc `pwd`/std.ddoc `pwd`/macros.ddoc" \
+	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
 phobos-release : ${PHOBOS_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/index.html
-${DOC_OUTPUT_DIR}/phobos/index.html : $(DMD_REL) html.ddoc dlang.org.ddoc std.ddoc macros.ddoc ${LATEST}.ddoc \
+${DOC_OUTPUT_DIR}/phobos/index.html : $(DMD_REL) $(STD_DDOC) \
 	    ${DOC_OUTPUT_DIR}/phobos/object.html
 	${MAKE} --directory=${PHOBOS_DIR}-${LATEST} -f posix.mak -j 4 \
 	  html \
 	  DMD=$(DMD_REL) \
 	  DRUNTIME_PATH=${DRUNTIME_DIR}-${LATEST} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
-	  STDDOC="`pwd`/html.ddoc `pwd`/dlang.org.ddoc `pwd`/$(LATEST).ddoc `pwd`/std_navbar-$(LATEST).ddoc `pwd`/std.ddoc `pwd`/macros.ddoc"
+	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC))"
 
 phobos-prerelease-verbatim : ${PHOBOS_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
