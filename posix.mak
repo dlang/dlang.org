@@ -147,7 +147,7 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements ascii-table		\
 	gsoc2012-template hijack howto-promote htod htomodule index intro	\
 	intro-to-datetime lazy-evaluation memory migrate-to-shared mixin	\
 	overview pretod rationale rdmd regular-expression safed			\
-	std_consolidated_header template-comparison templates-revisited tuple	\
+	template-comparison templates-revisited tuple				\
 	variadic-function-templates warnings wc windbg windows
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
