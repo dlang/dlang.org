@@ -14,7 +14,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	tuple.dd template-comparison.dd COM.dd hijack.dd features2.dd safed.dd	\
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
-	32-64-portability.dd dll-linux.dd bugstats.php.dd
+	32-64-portability.dd dll-linux.dd bugstats.php.dd css\cssmenu.css.dd
 
 SPECSRC=spec.dd intro.dd lex.dd grammar.dd module.dd declaration.dd type.dd property.dd	\
 	attribute.dd pragma.dd expression.dd statement.dd arrays.dd			\
@@ -51,7 +51,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.
 	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
 	D1toD2.html unittest.html hash-map.html intro-to-datetime.html		\
 	simd.html deprecate.html download.html 32-64-portability.html		\
-	d-array-article.html dll-linux.html bugstats.php.html
+	d-array-article.html dll-linux.html bugstats.php.html css/cssmenu.css
 
 
 CHMTARGETS=d.hhp d.hhc d.hhk d.chm
@@ -253,6 +253,9 @@ wc.html : $(DDOC) wc.dd
 windbg.html : $(DDOC) windows.ddoc windbg.dd
 
 windows.html : $(DDOC) windows.ddoc windows.dd
+
+css/cssmenu.css : $(DDOC) css/cssmenu.css.dd
+	$(DMD) -o- -c -Df$@ $(DDOC) css/cssmenu.css.dd
 
 ################ Ebook ########################
 
