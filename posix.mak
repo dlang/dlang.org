@@ -113,7 +113,7 @@ IMAGES=favicon.ico $(addprefix images/, \
 			struct template tree-item-closed tree-item-open variable)) \
 	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe \
 		pen search-left search-bg search-button) \
-	$(addsuffix .jpg, gradient-green tdpl))
+	$(addsuffix .jpg, tdpl))
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed cssmenu ddox listanchors run run-main-website))
