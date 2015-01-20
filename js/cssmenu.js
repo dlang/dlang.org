@@ -16,7 +16,7 @@ $('#cssmenu > ul > li > ul > li > a').each(function(){
 });
 
 $('#cssmenu > ul > li > a').click(function() {
-  $('#cssmenu li').removeClass('active');
+  /*$('#cssmenu li').removeClass('active');*/
   $(this).closest('li').addClass('active');
   var checkElement = $(this).next();
   if((checkElement.is('ul')) && (checkElement.is(':visible'))) {
