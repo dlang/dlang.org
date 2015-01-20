@@ -10,6 +10,8 @@ $('#cssmenu > ul > li > ul > li > a').each(function(){
     p = p.parent();
     p.addClass('active');
     p.show();
+    p = p.parent();
+    p.addClass('active');
   }
 });
 
