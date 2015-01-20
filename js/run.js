@@ -340,7 +340,7 @@ $(document).ready(function()
     if (currentPage != "/" && currentPage != "/index.html")
         return; // temporary workaround
 
-    $('pre[class=d_code]').each(function(index) 
+    $('pre[class~=d_code]').each(function(index)
     {
         var stripedText = $(this).text().replace(/\s/gm,'');
         var md5sum = MD5(stripedText);
