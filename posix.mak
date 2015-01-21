@@ -104,10 +104,10 @@ STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${LATEST} std std_navbar-$(LAT
 STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${LATEST} std std_navbar-prerelease)
 
 IMAGES=favicon.ico $(addprefix images/, \
-	d002.ico \
+	d002.ico icon_minus.svg icon_plus.svg \
 	$(addsuffix .png, apple_logo centos_logo d3 debian_logo dlogo download \
 		fedora_logo freebsd_logo opensuse_logo ubuntu_logo windows_logo \
-		icon_minus icon_plus pattern github-ribbon \
+		pattern github-ribbon \
 		$(addprefix ddox/, alias class enum enummember function \
 			inherited interface module package private property protected \
 			struct template tree-item-closed tree-item-open variable)) \
