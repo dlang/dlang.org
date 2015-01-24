@@ -112,7 +112,7 @@ IMAGES=favicon.ico $(addprefix images/, \
 			inherited interface module package private property protected \
 			struct template tree-item-closed tree-item-open variable)) \
 	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe \
-		pen search-left search-bg search-button) \
+		pen) \
 	$(addsuffix .jpg, tdpl))
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
