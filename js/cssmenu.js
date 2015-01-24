@@ -36,17 +36,34 @@ $('#cssmenu > ul > li > a').click(function() {
 });
 
 $(function() {
+	var $searchBox = $('#search-box');
+	var $mobileTitle = $('#mobile-title');
+	var $mobileSearch = $('#mobile-search');
+	var $top = $('#top');
+
+	// move search box in mobile mode, 
+	// could be done with html+css change
+	$(window).on('resize', updateSearchBox);
+
+	function updateSearchBox(){
+		if($mobileTitle.is(':visible')){
+			if(!$mobileSearch.has($searchBox).length > 0) $mobileSearch.append($searchBox.detach());
+		}else{
+			if(!$top.has($searchBox).length > 0) $top.append($searchBox.detach());
+		}
+	}
+	updateSearchBox();
+
 	$('#mobile-search-button').click(function() {
-		$('#mobile-search').append($('#search-box').detach());
 		$('#mobile-search').slideToggle();
 	});
 	$('#mobile-hamburger').click(function() {
 		var duration = 500;
-		$("#navigation").animate({left: "+=15em"}, duration);
+		$("#navigation").addClass('open');
 		var $cancel = $('<div>')
 			.attr('id', 'navigation-cancel')
 			.click(function() {
-				$("#navigation").animate({left: "-=15em"}, duration);
+				$("#navigation").removeClass('open');
 				$cancel.fadeOut(duration, function() {
 					$cancel.remove();
 				});
