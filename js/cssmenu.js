@@ -13,8 +13,11 @@ $('#cssmenu a').each(function(){
 });
 
 $('#cssmenu > ul > li > a').click(function() {
-  /*$('#cssmenu li').removeClass('active');*/
-  $(this).closest('li').addClass('active');
+  $li = $(this).closest('li');
+  if (!$li.hasClass('has-sub')) {
+    $('#cssmenu li').removeClass('active');
+  }
+  $li.addClass('active');
   var checkElement = $(this).next();
   if((checkElement.is('ul')) && (checkElement.is(':visible'))) {
     $(this).closest('li').removeClass('active');
