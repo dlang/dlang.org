@@ -6,123 +6,61 @@ $(D_S Example: wc,
     program.
     It serves to demonstrate how to read files, slice arrays,
     and simple symbol table management with associative arrays.
-    It has two main code paths, one for smaller files that will fit
-    in memory, and one using buffered file I/O for files that are larger.
     )
 
 ----
 import std.stdio;
-import std.stream;
+import std.algorithm;
 
-int main (string[] args)
+int main(string[] args)
 {
-    int w_total;
-    int l_total;
-    ulong c_total;
+    ulong wordCount;
+    ulong lineCount;
+    ulong charCount;
+
     int[string] dictionary;
-
     writeln("   lines   words   bytes file");
-    foreach (arg; args[1 .. args.length])
+
+    foreach(arg; args[1 .. args.length])
     {
-        int w_cnt, l_cnt;
-        bool inword;
+        ulong lWordCount;
+        ulong lCharCount;
+        ulong lLineCount;
 
-        auto c_cnt = std.file.getSize(arg);
-        if (c_cnt < 10_000_000)
+        auto file = File(arg);
+        foreach(line; file.byLine(KeepTerminator.yes))
         {
-            size_t wstart;
-            auto input = cast(string)std.file.read(arg);
-
-            foreach (j, c; input)
+            lCharCount += line.length;
+            foreach(char[] word; splitter(line))
             {
-                if (c == '\n')
-                    ++l_cnt;
-                if (c >= '0' && c <= '9')
-                {
-                }
-                else if (c >= 'a' && c <= 'z' ||
-                    c >= 'A' && c <= 'Z')
-                {
-                    if (!inword)
-                    {
-                        wstart = j;
-                        inword = true;
-                        ++w_cnt;
-                    }
-                }
-                else if (inword)
-                {
-                    auto word = input[wstart .. j];
+                lWordCount += 1;
+                if(auto count = word in dictionary)
+                    *count += 1;
+                else
+                    dictionary[word.idup] = 1;
+            }
 
-                    dictionary[word]++;
-                    inword = false;
-                }
-            }
-            if (inword)
-            {
-                auto w = input[wstart .. input.length];
-                dictionary[w]++;
-            }
+            lLineCount += 1;
         }
-        else
-        {
-            auto f = new BufferedFile(arg);
-            string buf;
 
-            while (!f.eof())
-            {
-                char c;
+        writefln("%8s%8s%8s %s\n", lLineCount, lWordCount, lCharCount, arg);
 
-                f.read(c);
-                if (c == '\n')
-                    ++l_cnt;
-                if (c >= '0' && c <= '9')
-                {
-                    if (inword)
-                        buf ~= c;
-                }
-                else if (c >= 'a' && c <= 'z' ||
-                         c >= 'A' && c <= 'Z')
-                {
-                    if (!inword)
-                    {
-                        buf.length = 0;
-                        buf ~= c;
-                        inword = 1;
-                        ++w_cnt;
-                    }
-                    else
-                        buf ~= c;
-                }
-                else if (inword)
-                {
-                    if (++dictionary[buf] == 1)
-                        buf = null;
-                    inword = 0;
-                }
-            }
-            if (inword)
-            {
-                dictionary[buf]++;
-            }
-        }
-        writefln("%8s%8s%8s %s\n", l_cnt, w_cnt, c_cnt, arg);
-        l_total += l_cnt;
-        w_total += w_cnt;
-        c_total += c_cnt;
+        wordCount += lWordCount;
+        lineCount += lLineCount;
+        charCount += lCharCount;
     }
 
     if (args.length > 2)
     {
         writefln("--------------------------------------\n%8s%8s%8s total",
-        l_total, w_total, c_total);
+                        lineCount, wordCount, charCount);
     }
 
     writeln("--------------------------------------");
 
-    foreach (word1; dictionary.keys.sort)
+    foreach (word; sort(dictionary.keys))
     {
-        writefln("%3s %s", dictionary[word1], word1);
+            writefln("%3s %s", dictionary[word], word);
     }
     return 0;
 }
