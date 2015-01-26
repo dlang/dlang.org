@@ -36,9 +36,9 @@ RDMD=rdmd --compiler=$(DMD) $(DFLAGS)
 
 # Tools
 REBASE = MYBRANCH=`git rev-parse --abbrev-ref HEAD` &&\
- git co master &&\
+ git checkout master &&\
  git pull --ff-only upstream master &&\
- git co $$MYBRANCH &&\
+ git checkout $$MYBRANCH &&\
  git rebase master
 
 CHANGE_SUFFIX = \
