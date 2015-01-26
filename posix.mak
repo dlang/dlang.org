@@ -37,16 +37,16 @@ RDMD=rdmd --compiler=$(DMD) $(DFLAGS)
 # Tools
 REBASE = MYBRANCH=`git rev-parse --abbrev-ref HEAD` &&\
  git checkout master &&\
- git pull --ff-only upstream master &&\
+ git pull --ff-only git@github.com:D-Programming-Language/$1.git master &&\
  git checkout $$MYBRANCH &&\
  git rebase master
 
 CHANGE_SUFFIX = \
  for f in `find "$3" -iname '*.$1'`; do\
   mv $$f `dirname $$f`/`basename $$f .$1`.$2; done
- 
- # Set to 1 in the command line to minify css files
- CSS_MINIFY=
+
+# Set to 1 in the command line to minify css files
+CSS_MINIFY=
 
 # Latest released version
 ifeq (,${LATEST})
@@ -220,10 +220,10 @@ ${LATEST}.ddoc :
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
-rebase-dlang: ; $(REBASE)
-rebase-dmd: ; cd $(DMD_DIR) && $(REBASE)
-rebase-druntime: ; cd $(DRUNTIME_DIR) && $(REBASE)
-rebase-phobos: ; cd $(PHOBOS_DIR) && $(REBASE)
+rebase-dlang: ; $(call REBASE,dlang.org)
+rebase-dmd: ; cd $(DMD_DIR) && $(call REBASE,dmd)
+rebase-druntime: ; cd $(DRUNTIME_DIR) && $(call REBASE,druntime)
+rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc dpl-docs/.dub
