@@ -4,7 +4,8 @@ var menu_ul = $('#cssmenu > ul > li > ul');
 menu_ul.hide();
 
 $('#cssmenu a').each(function(){
-  if (this.href == window.location.href) {
+  var href = window.location.href.split('#')[0];
+  if (this.href == href) {
     $(this)
       .parents('li,ul')
       .addClass('active')
