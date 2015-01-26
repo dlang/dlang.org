@@ -210,10 +210,10 @@ $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	cp -f sitemap-template.dd sitemap.dd
 	(true $(foreach F, $(TARGETS), \
 	  && echo \
-        "$F\t`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`")) \
+	    "$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`")) \
 	  | sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\(.*\)/<a href="\1">\2<\/a><p>/' >> sitemap.dd
 	$(DMD) -c -o- -Df$@ $(DDOC) sitemap.dd
-	rm -rf sitemap.dd
+	rm sitemap.dd
 
 ${LATEST}.ddoc :
 	echo "LATEST=${LATEST}" >$@
@@ -232,10 +232,10 @@ clean:
 	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} ${STABLE_DMD_ROOT} ${DUB_DIR}
 
 rsync : all kindle pdf
-	rsync -avz $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
+	rsync -avz --chmod=u=rwX,g=rwX,o=rX $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
 
 rsync-only :
-	rsync -avz $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
+	rsync -avz --chmod=u=rwX,g=rwX,o=rX $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
 
 ################################################################################
 # Ebook
