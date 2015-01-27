@@ -9,6 +9,7 @@ BLOCKQUOTE = $(T blockquote, $(P $0))
 BLOCKQUOTE_BY = $(BLOCKQUOTE $+ $(T cite, $1))
 BLACK=$(SPANC black, $0)
 BLUE=$(SPANC blue, $0)
+BODY_PREFIX=
 BOOKTABLE = $(TC table, book, $(T caption, $1)$+)
 BUGZILLA = $(SPANC bugzilla, $(AHTTPS issues.dlang.org/show_bug.cgi?id=$0, Bugzilla $0))
 _=
@@ -69,6 +70,44 @@ $(DIV ,
 )
 _=
 
+DDOC=
+<!DOCTYPE html>
+<html lang="en-US">
+<!--
+    Copyright (c) 1999-$(YEAR) by Digital Mars
+    All Rights Reserved Written by Walter Bright
+    http://digitalmars.com
+  -->
+<head>
+<meta charset="utf-8" />
+<meta name="keywords" content="$(META_KEYWORDS)" />
+<meta name="description" content="$(META_DESCRIPTION)" />
+$(T title, $(TITLE) - D Programming Language)
+<link rel="stylesheet" href="$(ROOT)/css/codemirror.css" />
+<link rel="stylesheet" href="$(ROOT)/css/style.css" />
+<link rel="stylesheet" href="$(ROOT)/css/print.css" media="print" />
+<link rel="stylesheet" href="$(ROOT)/css/cssmenu.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+<link rel="shortcut icon" href="$(ROOT)/favicon.ico" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0" />
+</head>
+<body id='$(TITLE)' class='$(BODYCLASS)'>
+$(TOP)
+$(DIVID navigation, $(NAVIGATION))
+$(LAYOUT_PREFIX)
+$(DIVCID hyphenate, content,
+    $(PAGE_TOOLS)
+    $(LAYOUT_TITLE)
+    $(BODY_PREFIX)
+    $(BODY)
+)
+$(FOOTER)
+$(COMMON_SCRIPTS)
+$(LAYOUT_SUFFIX)
+</body>
+</html>
+_=
+
 DDLINK=$(LINK2 $1.html, $3)
 DDOC_BACKQUOTED = $(D $0)
 DDOC_SUMMARY   = $(DIVC summary, $0)
@@ -102,29 +141,6 @@ DDOCKEYVAL=$(DIVC keyval $1, $(SPANC key key$1, $1:) $(DIVC val val$1, $+))
 DDSUBLINK=$(LINK2 $1.html#$2, $3)
 _=
 
-DOCTYPE_OPENHTML_COPYRIGHT_HEAD =
-<!DOCTYPE html>
-<html lang="en-US">
-<!--
-    Copyright (c) 1999-$(YEAR) by Digital Mars
-    All Rights Reserved Written by Walter Bright
-    http://digitalmars.com
-  -->
-<head>
-<meta charset="utf-8" />
-<meta name="keywords" content="$(META_KEYWORDS)" />
-<meta name="description" content="$(META_DESCRIPTION)" />
-$(T title, $(TITLE) - D Programming Language)
-<link rel="stylesheet" href="$(ROOT)/css/codemirror.css" />
-<link rel="stylesheet" href="$(ROOT)/css/style.css" />
-<link rel="stylesheet" href="$(ROOT)/css/print.css" media="print" />
-<link rel="stylesheet" href="$(ROOT)/css/cssmenu.css">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
-<link rel="shortcut icon" href="$(ROOT)/favicon.ico" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0" />
-</head>
-_=
-
 DRUNTIMESRC=$(HTTPS github.com/D-Programming-Language/druntime/blob/master/src/$0, $0)
 DPLLINK=$(LINK2 $1,$+)
 _=
@@ -155,6 +171,9 @@ _=
 ISEXPRESSION=$(GLINK2 expression, IsExpression)
 _=
 
+LAYOUT_PREFIX=
+LAYOUT_SUFFIX=
+LAYOUT_TITLE=$(H1 $(TITLE))
 LEGACY_LNAME2=<span id="$1">$(LNAME2 $+)</span>
 LIST=$(UL $(LIX $1, $+))
 LIX=$(LI $1)$(LIX $+)
