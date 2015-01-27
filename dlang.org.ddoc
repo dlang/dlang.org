@@ -9,6 +9,7 @@ BLOCKQUOTE = $(T blockquote, $(P $0))
 BLOCKQUOTE_BY = $(BLOCKQUOTE $+ $(T cite, $1))
 BLACK=$(SPANC black, $0)
 BLUE=$(SPANC blue, $0)
+BODY_PREFIX=
 BOOKTABLE = $(TC table, book, $(T caption, $1)$+)
 BUGZILLA = $(SPANC bugzilla, $(AHTTPS issues.dlang.org/show_bug.cgi?id=$0, Bugzilla $0))
 _=
@@ -43,30 +44,42 @@ D=$(SPANC d_inlinecode donthyphenate notranslate, $0)
 D_CODE=$(TC pre, d_code notranslate, $0)
 _=
 
-D_RUN_CODE =
-$(DIV ,
-	$(DIVC d_code, $1)
-	$(DIVC d_run_code,
-		$(TC textarea, d_code, $4)
-		$(DIVC d_code_stdin,
-		  $(SPANC d_code_title, Standard input)$(BR)
-		  $(TC textarea, d_code_stdin, $2)
-		)
-		$(DIVC d_code_args,
-		  $(SPANC d_code_title, Command line arguments)$(BR)
-		  $(TC textarea, d_code_args, $3)
-		)
-		$(DIVC d_code_output,
-		  $(SPANC d_code_title, Application output)$(BR)
-		  <textarea class="d_code_output" readonly>Running...</textarea>
-		)
-		<input type="button" class="editButton" value="Edit">
-		<input type="button" class="argsButton" value="Args">
-		<input type="button" class="inputButton" value="Input">
-		<input type="button" class="runButton" value="Run">
-		<input type="button" class="resetButton" value="Reset">
-	)
+DDOC=
+<!DOCTYPE html>
+<html lang="en-US">
+<!--
+    Copyright (c) 1999-$(YEAR) by Digital Mars
+    All Rights Reserved Written by Walter Bright
+    http://digitalmars.com
+  -->
+<head>
+<meta charset="utf-8" />
+<meta name="keywords" content="$(META_KEYWORDS)" />
+<meta name="description" content="$(META_DESCRIPTION)" />
+$(T title, $(TITLE) - D Programming Language)
+<link rel="stylesheet" href="$(ROOT)/css/codemirror.css" />
+<link rel="stylesheet" href="$(ROOT)/css/style.css" />
+<link rel="stylesheet" href="$(ROOT)/css/print.css" media="print" />
+<link rel="stylesheet" href="$(ROOT)/css/cssmenu.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+<link rel="shortcut icon" href="$(ROOT)/favicon.ico" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0" />
+</head>
+<body id='$(TITLE)' class='$(BODYCLASS)'>
+$(TOP)
+$(DIVID navigation, $(NAVIGATION))
+$(LAYOUT_PREFIX)
+$(DIVCID hyphenate, content,
+    $(PAGE_TOOLS)
+    $(LAYOUT_TITLE)
+    $(BODY_PREFIX)
+    $(BODY)
 )
+$(FOOTER)
+$(COMMON_SCRIPTS)
+$(LAYOUT_SUFFIX)
+</body>
+</html>
 _=
 
 DDLINK=$(LINK2 $1.html, $3)
@@ -102,29 +115,6 @@ DDOCKEYVAL=$(DIVC keyval $1, $(SPANC key key$1, $1:) $(DIVC val val$1, $+))
 DDSUBLINK=$(LINK2 $1.html#$2, $3)
 _=
 
-DOCTYPE_OPENHTML_COPYRIGHT_HEAD =
-<!DOCTYPE html>
-<html lang="en-US">
-<!--
-    Copyright (c) 1999-$(YEAR) by Digital Mars
-    All Rights Reserved Written by Walter Bright
-    http://digitalmars.com
-  -->
-<head>
-<meta charset="utf-8" />
-<meta name="keywords" content="$(META_KEYWORDS)" />
-<meta name="description" content="$(META_DESCRIPTION)" />
-$(T title, $(TITLE) - D Programming Language)
-<link rel="stylesheet" href="$(ROOT)/css/codemirror.css" />
-<link rel="stylesheet" href="$(ROOT)/css/style.css" />
-<link rel="stylesheet" href="$(ROOT)/css/print.css" media="print" />
-<link rel="stylesheet" href="$(ROOT)/css/cssmenu.css">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
-<link rel="shortcut icon" href="$(ROOT)/favicon.ico" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0" />
-</head>
-_=
-
 DRUNTIMESRC=$(HTTPS github.com/D-Programming-Language/druntime/blob/master/src/$0, $0)
 DPLLINK=$(LINK2 $1,$+)
 _=
@@ -155,6 +145,9 @@ _=
 ISEXPRESSION=$(GLINK2 expression, IsExpression)
 _=
 
+LAYOUT_PREFIX=
+LAYOUT_SUFFIX=
+LAYOUT_TITLE=$(H1 $(TITLE))
 LEGACY_LNAME2=<span id="$1">$(LNAME2 $+)</span>
 LIST=$(UL $(LIX $1, $+))
 LIX=$(LI $1)$(LIX $+)
@@ -246,12 +239,6 @@ TH=<th scope="col">$0</th>
 THEAD=$(TR $(THX $1, $+))
 THX=$(TC th, donthyphenate, $(B $1))$(THX $+)
 TOC=$(SPEC_S $1,$+)
-TOCENTRY = $(LI $(SPANC tocentry, $(LINK2 $1, $+)))
-TOCENTRYH = $(LI $(SPANC tocentryh, $(LINK2 $1, $2)$3))
-TOCENTRYT = $(LI $(SPANC tocentryt, <a href="$1" title="$2">$3</a>))
-TOCENTRYTH = $(LI $(SPANC tocentryth, <a href="$1" title="$2">$3</a>$4))
-TOCHEADER = $(TC h2, tocheader, $0)
-TOCHEADERL = $(TOCHEADER <a href="$1" title="$2">$3</a>)
 _=
 
 TOP =
