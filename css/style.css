@@ -1,3 +1,8 @@
+html
+{
+	height: 100%; /* of the viewport */
+}
+
 body
 {
 	padding: 0;
@@ -9,6 +14,17 @@ body
 	font-family: Verdana, "Deja Vu", "Bitstream Vera Sans", sans-serif;
 	margin: 0px auto;
 	position: relative; /* So that absolute/fixed positions cling to this. */
+	min-height: 100%;
+}
+
+/* Pseudo-padding. Can't use padding-top, because that's added to height.
+Can't use margin-top on children, because it collapses with body's, and
+consequently is added to height. */
+body::before
+{
+	content: "";
+	display: block;
+	height: 1em;
 }
 
 a.btn
@@ -421,54 +437,43 @@ td .d_code2, td .cppcode2, td .cppcode
 /* Focal symbol that is being documented */
 .ddoc_psymbol { color: #336600; }
 
+div#top, div#navigation
+{
+	width: 16em;
+	background: hsl(0, 52.7%, 37%); /* martian_red */
+	border-right: 0.25em solid hsl(0, 45%, 27%);
+}
 div#top
 {
-	position: relative;
-/* 	max-width: 85em; */
+	position: absolute;
+	top: 0;
+	left: 0;
+	font-size: 0.875em;
+	min-height: 100%;
 }
 
-div#header
+div#header img#logo
 {
-	margin: 0.875em;
-	margin-top: 0;
-	padding-top: 0.875em;;
-	position: relative;
+	display: none;
+}
+
+div#header a#d-language
+{
+	display: block;
+	background: url("../images/d-5-simple-full.svg") no-repeat scroll center 1em
+		transparent;
+	background-size: auto 8em;
+	padding-top: 8em;
+	font-variant: small-caps;
+	text-align: center;
+	color: white;
+	text-decoration: none;
+	line-height: 1.4em;
 }
 
 img
 {
 	border: 0;
-}
-
-img#logo
-{
-	vertical-align: text-bottom;
-	/* drop shadow isn't visible => align the logo */
-	margin-bottom: -3px;
-}
-
-/*div#d-language a*/
-#d-language
-{
-	color: white;
-	font-size: 1.7em;
-	font-family: Georgia, "Times New Roman", Times, serif;
-	font-variant: small-caps;
-	text-decoration: none;
-	position: absolute;
-	bottom: 0;
-	left: 7.25735294117647058824em;
-	/*
-		= (
-			11.5em [width of #navigation]
-			+ 1em [margin between #navigation and #content]
-			[border-left of #content is in px; is added via padding-left below]
-			+ 1.6em [padding-left of #content]
-		)
-		* 0.875em [font-size of #navigation and #content]
-		/ 1.7em [own font-size]
-	*/
-	padding-left: 3px; /* = border-left of #content */
 }
 
 img#github-ribbon
@@ -480,26 +485,34 @@ img#github-ribbon
   z-index: 1;
 }
 
+div#search-box, span#search-query, span#search-dropdown, span#search-submit
+{
+	border: 0.1em none #aaa;
+}
+
 div#search-box
 {
-	position: absolute;
-	bottom: 0em;
-	right: 1em;
-	z-index: 2;
 	white-space: nowrap;
+	margin: 3em 1em;
+	-webkit-border-radius: 0.3em 0.3em 0.3em 0.3em;
+	-moz-border-radius: 0.3em 0.3em 0.3em 0.3em;
+	border-radius: 0.3em 0.3em 0.3em 0.3em;
+	background: #F6F6F6;
+	border-style: solid;
 }
 
-div#search-query, div#search-dropdown, div#search-submit
+span#search-query, span#search-dropdown, span#search-submit
+{
+	vertical-align: top;
+	line-height: 1.3em;
+	height: 1.8em;
+}
+span#search-dropdown, span#search-submit
 {
 	display: inline-block;
-	vertical-align: top;
-	background: #F6F6F6;
-	border: 1px solid #aaa;
-	line-height: 1.3em;
-	height: 1.4em;
 }
 
-div#search-query input, div#search-dropdown select, div#search-submit button
+span#search-query input, span#search-dropdown select, span#search-submit button
 {
 	background: transparent;
 	border: none;
@@ -510,75 +523,103 @@ div#search-query input, div#search-dropdown select, div#search-submit button
 	outline: none;
 }
 
-div#search-query
+span#search-query
 {
-	-webkit-border-radius: 5px 0 0 5px;
-	-moz-border-radius: 5px 0 0 5px;
-	border-radius: 5px 0 0 5px;
+	display: block;
+	border-bottom-style: solid;
 }
 
-div#search-dropdown
+span#search-dropdown
 {
 	position: relative;
 	border-right: none;
-	border-left: none;
-	max-width: 8em;
-	width: 40%;
 	overflow: hidden;
+	width: 11em;
+	/*
+		= 16em [#navigation's width]
+		- 2 * 1em [#search-box's margin-{left,right}]
+		- 3em [#search-submit's width]
+	*/
 }
 
-div#search-dropdown select
+span#search-dropdown select
 {
 	position: relative;
-	width: 12em;
+	width: 14em;
 	z-index: 1;
 }
 
-div#search-dropdown:after{
+span#search-dropdown:after{
 	content: "\f107"; /* angle down */
 	font-family: FontAwesome;
 	position: absolute;
 	height: 10px;
-	width: 20px;
+	width: 1em;
 	top: 50%;
 	margin-top: -0.5em;
 	right: 0.2em;
 }
 
-div#search-submit
+span#search-submit
 {
-	-moz-border-radius: 0 5px 5px 0;
-	-webkit-border-radius: 0 5px 5px 0;
-	border-radius: 0 5px 5px 0;
 	line-height: 1.2em;
+	width: 3em;
+	/*
+		= 16em [#navigation's width]
+		- 2 * 1em [#search-box's margin-{left,right}]
+		- 11em [#search-submit's width]
+	*/
+	border-left-style: solid;
+	margin-left: -0.1em; /* = border-width */
+}
+
+span#search-submit span /* hide 'go' */
+{
+	display: none;
 }
 
 
 div#navigation
 {
+	position: relative;
 	font-size: 0.875em;
 	float: left;
-	width: 11.5em;
-	margin-left: 1em;
+	margin-top: 8.4em;
+	/*
+		= - 1em [body::before pseudo-padding]
+		+ 8em [#d-language's padding-top]
+		+ 1.4em [#d-language's line-height]
+	*/
 }
 
 div#content
 {
 	text-align: justify;
 	min-height: 440px;
-	margin-left: 13.5em;
+	margin-left: 18em;
+	/*
+		= 16em [#navigation's width]
+		+ 2em [inter-column space]
+	*/
+	margin-right: 1em;
 	padding: 1.6em;
 	padding-top: 1.3em;
 	padding-bottom: 1em;
-	margin-right: 1em;
 	background-color: #f6f6f6;
 	font-size: 0.875em;
 	line-height: 1.4em;
 	text-align: justify;
-	border: 3px solid #ccd5d5;
-	-moz-border-radius: 5px;
-	-webkit-border-radius: 5px;
-	border-radius: 5px;
+	border: 0.25em solid #ccd5d5;
+}
+
+body#Home div#content
+{
+	margin-right: 21em;
+	/*
+		= 1em [#news's margin-right]
+		+ 18em [#news's width]
+		+ 2em [inter-column space]
+	*/
 }
 
 body.chm
@@ -701,6 +742,11 @@ div#tools
 		-1.4em /* = -(1.6em [#content's padding-right] - 0.2em) */
 		1em 1em;
 	text-align: right;
+}
+
+body#Downloads div#tools
+{
+	padding-right: 149px; /* = width of github-ribbon.png */
 }
 
 div#tools a.button
@@ -1074,8 +1120,7 @@ input.runButton:active, input.resetButton:active, input.argsButton:active, input
 input.resetButton{display: none}
 /* Runnable-examples css -end */
 
-div#mobile-top, div#mobile-search, div#mobile-hamburger,
-div#mobile-search-button
+div#mobile-top, div#mobile-search, div#mobile-hamburger
 {
 	display: none;
 }
@@ -1103,66 +1148,68 @@ div#mobile-search-button
 	/* Header */
 
 	div#top {
+		position: relative;
+		width: auto;
 		display: block;
-		padding: 7px 0;
-		text-align: center;
-
-		background: -moz-linear-gradient(#555 0%, #333 100%);
-		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #555), color-stop(100%, #333));
-		background: -webkit-linear-gradient(#555 0%, #333 100%);
-		background: linear-gradient(#555 0%, #333 100%);
-	}
-
-	div#mobile-search-button {
-		float: right;
-		padding-right: 15px;
+		padding-top: 0.25m;
+		border: none;
+		border-bottom: 0.25em solid hsl(0, 45%, 27%);
+		background: url("../images/d-5-simple-wide.svg") no-repeat scroll
+			left bottom hsl(0, 52.7%, 37%); /* martian_red */
+		background-size: auto 3.2em;
+		overflow: hidden;
 	}
 
 	div#mobile-hamburger {
 		float: left;
-		padding-left: 15px;
+		width: 3.2em;
+		height: 3.2em;
+		line-height: 3.2em;
+		padding-top: 0.25em;
+		margin-top: -0.25em;
+		text-align: center;
+		background: hsl(0, 52.7%, 37%); /* martian_red */
+		border-right: 0.1em solid hsl(0, 45%, 27%)
 	}
 
-	div#mobile-search-button, div#mobile-hamburger {
+	div#mobile-hamburger:hover {
+		background: hsl(0, 54.7%, 35%); /* menu_active_bg */
+	}
+
+	div#mobile-hamburger {
 		display: block;
-		color: #aaa;
-		font-size: 1.7em;
+		color: white;
 		cursor: pointer;
-		padding-top: 6px;
+	}
+	div#mobile-hamburger::before {
+		font-size: 1.7em;
 	}
 
 	div#header {
 		margin: 0;
-		padding: 0;
 	}
 
 	div#header a.logo {
-		display: inline-block;
-	}
-
-	div#header a.logo, img#logo {
-		width: 50px;
-		height: 38px;
-		vertical-align: bottom;
+		display: none;
 	}
 
 	span#d-language-mobilehelper {
-		display: inline-block;
-		height: 38px;
-		max-width: 50%;
+		display: table;
+		margin-left: 6em;
+		height: 3.2em;
 		vertical-align: middle;
 		line-height: 1.0;
 	}
 
-	#d-language {
+	div#header a#d-language {
 		position: static;
 		display: table-cell;
 		vertical-align: middle;
 		color: white;
 		font-size: 1.1em;
-		text-align: center;
-		height: 38px;
 		padding: 0;
+		padding-left: 5em;
+		background: transparent;
 	}
 
 	/* Search */
@@ -1172,24 +1219,11 @@ div#mobile-search-button
 		position: static;
 		text-align: center;
 		overflow: hidden;
-		height: 0;
+		margin-top: 1em;
 
 		-moz-transition: height 0.5s;
 		-webkit-transition: height 0.5s;
 		transition: height 0.5s;
-	}
-
-	div#search-box.open {
-		height: 2.225em;
-		/*
-			= 0.625em [<form>'s margin-top]
-			+ 1.4 em [#search-{query,dropdown,submit}'s height]
-			+ 0.2em [ca. #search-{query,dropdown,submit}'s border]
-		*/
-	}
-
-	div#search-box form {
-		margin-top: 0.625em;
 	}
 
 	div#search-query {
@@ -1202,16 +1236,14 @@ div#mobile-search-button
 		display: block;
 		position: absolute;
 		top: 0;
-		left: -15em;
+		left: -20em;
 		min-height: 100%;
-		background-color: #1f252b;
 		padding: 0;
 		margin: 0;
 		-moz-box-shadow: 10px 0px 20px black;
 		-webkit-box-shadow: 10px 0px 20px black;
 		box-shadow: 10px 0px 20px black;
 		z-index: 10001;
-		overflow: auto; /* scroll if navigation is taller than content and window */
 		-moz-transition: left 0.5s;
 		-webkit-transition: left 0.5s;
 		transition: left 0.5s;
@@ -1238,11 +1270,19 @@ div#mobile-search-button
 		margin-right: 0 !important /* override inline style! */;
 	}
 
+	body::before { /* Disable pseudo-padding. */
+		display: none;
+	}
+
 	pre {
 		font-size: 1em;
 	}
 
 	img#github-ribbon {
 		display: none;
+	}
+
+	body#Downloads div#tools {
+		padding-right: 0;
 	}
 }
