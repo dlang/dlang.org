@@ -1,5 +1,7 @@
 # makefile to build html files for DMD
 
+LATEST=prerelease
+
 DMD=dmd
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)\dpl-docs.exe
@@ -25,6 +27,8 @@ SPECSRC=spec.dd intro.dd lex.dd grammar.dd module.dd declaration.dd type.dd prop
 	portability.dd entity.dd memory-safe-d.dd abi.dd simd.dd
 
 DDOC=macros.ddoc html.ddoc dlang.org.ddoc windows.ddoc doc.ddoc $(NODATETIME)
+
+DDOC_STD=std.ddoc std_navbar-$(LATEST).ddoc
 
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
@@ -278,13 +282,20 @@ dlangspec.mobi : dlangspec.opf dlangspec.html dlangspec.png dlangspec.ncx ebook.
 chm : d.chm
 
 chmgen.exe : chmgen.d
-	$(DMD) chmgen
+	$(DMD) -g chmgen
 
-d.hhp d.hhc d.hhk : chmgen.exe $(TARGETS)
+chm\d.hhp chm\d.hhc chm\d.hhk : chmgen.exe chm-nav-doc.json chm-nav-std.json $(TARGETS)
 	chmgen
 
-d.chm : d.hhp d.hhc d.hhk
-	-cmd /C ""$(HHC)" d.hhp"
+d.chm : chm\d.hhp chm\d.hhc chm\d.hhk
+	-cmd /C "cd chm && "$(HHC)" d.hhp"
+	copy /Y chm\d.chm d.chm
+
+chm-nav-doc.json : $(DDOC) chm-nav.dd
+	$(DMD) -o- -c -Df$@ $(DDOC) chm-nav.dd
+
+chm-nav-std.json : $(DDOC) $(DDOC_STD) chm-nav.dd
+	$(DMD) -o- -c -Df$@ $(DDOC) $(DDOC_STD) chm-nav.dd
 
 ################# Other #########################
 
