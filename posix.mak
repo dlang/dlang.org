@@ -269,12 +269,12 @@ dlangspec.tex : $(DMD) $(DDOC) latex.ddoc dlangspec-consolidated.d
 	$(DMD) -Df$@ $(DDOC) latex.ddoc dlangspec-consolidated.d
 
 # Run twice to fix multipage tables and \ref uses
-dlangspec.dvi : dlangspec.tex
-	latex $^
-	latex $^
-
-$(DOC_OUTPUT_DIR)/dlangspec.pdf : dlangspec.dvi
-	dvipdf $^ $@
+$(DOC_OUTPUT_DIR)/dlangspec.pdf : dlangspec.tex
+	mkdir -p .tmp
+	pdflatex -draftmode $^
+	pdflatex -output-directory=.tmp $^
+	mv .tmp/dlangspec.pdf $@
+	rm -rf .tmp
 
 ################################################################################
 # Plaintext/verbatim generation - not part of the build, demo purposes only
