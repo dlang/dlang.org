@@ -5,6 +5,7 @@ $(D_S D Change Log,
 $(VERSION 067, ???, 2015, =================================================,
 
 $(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 partial-type, Allow partial type specification in variable declaration.))
 $(LI $(RELATIVE_LINK2 asm-attributes, $(D asm) statements can now be used in $(D pure), $(D nothrow), $(D @nogc), or $(D @trusted) code.))
 )
 
@@ -14,6 +15,23 @@ $(LI $(RELATIVE_LINK2 gc-options, $(B Experimental:) The garbage collector can n
 $(LI $(RELATIVE_LINK2 aa-keyvalue, $(D byKeyValue) was added.))
 
 $(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 partial-type, Allow partial type specification in variable declaration.)
+
+    $(P By using $(D $(DOLLAR)), $(D auto), and type qualifiers, part of the variable type can be deduced from initializer.
+
+        ---------
+        int[$] sarr = [1, 2, 3];
+        static assert(is(typeof(sarr) == int[3]));
+
+        const[] darr = [1, 2, 3];
+        static assert(is(typeof(darr) == const(int)[]));
+
+        const[char[$]] aa = ["abc":1, "def":2];
+        static assert(is(typeof(aa) == const(int)[char[3]]));
+        ---------
+    )
+)
 
 $(LI $(LNAME2 asm-attributes, $(D asm) statements can now be used in $(D pure), $(D nothrow), $(D @nogc), or $(D @trusted) code.)
 
