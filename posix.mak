@@ -104,7 +104,7 @@ STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${LATEST} std std_navbar-$(LAT
 STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${LATEST} std std_navbar-prerelease)
 
 IMAGES=favicon.ico $(addprefix images/, \
-	d002.ico icon_minus.svg icon_plus.svg \
+	d002.ico \
 	$(addsuffix .png, apple_logo centos_logo d3 debian_logo dlogo download \
 		fedora_logo freebsd_logo opensuse_logo ubuntu_logo windows_logo \
 		pattern github-ribbon \
@@ -113,7 +113,8 @@ IMAGES=favicon.ico $(addprefix images/, \
 			struct template tree-item-closed tree-item-open variable)) \
 	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe \
 		pen) \
-	$(addsuffix .jpg, tdpl))
+	$(addsuffix .jpg, tdpl) \
+	$(addsuffix .svg, icon_minus icon_plus d-5-simple-full d-5-simple-wide))
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed cssmenu ddox listanchors run run-main-website))

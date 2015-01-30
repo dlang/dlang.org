@@ -38,14 +38,6 @@ $('#cssmenu > ul > li > a').click(function() {
 
 $(function() {
 	$('<div>')
-		.attr('id', 'mobile-search-button')
-		.attr('class', 'fa fa-search')
-		.click(function() {
-			$('#search-box').toggleClass('open')
-		})
-		.prependTo('#header');
-
-	$('<div>')
 		.attr('id', 'mobile-hamburger')
 		.attr('class', 'fa fa-bars')
 		.click(function() {
