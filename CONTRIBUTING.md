@@ -11,7 +11,6 @@ Make sure you have these prerequisites working:
 * The C++ compiler for your platform (invokable as `gcc`)
 * Optional: `latex` for building the pdf documentation
 * Optional: `kindlegen` for building the Kindle documentation
-* If you're running OSX, make sure you have some version of `libevent` installed
 
 ## Getting the code
 
@@ -99,3 +98,9 @@ make -f posix.mak apidocs-prerelease
 
 The output is in `$R/dlang.org/web/phobos-prerelease` and
 `$R/dlang.org/web/library-prerelease`.
+
+To rebuild your changes, use:
+
+```
+make -f posix.mak all
+```
