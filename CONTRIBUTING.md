@@ -11,6 +11,7 @@ Make sure you have these prerequisites working:
 * The C++ compiler for your platform (invokable as `gcc`)
 * Optional: `latex` for building the pdf documentation
 * Optional: `kindlegen` for building the Kindle documentation
+* If you're running OSX, make sure you have some version of `libevent` installed
 
 ## Getting the code
 
