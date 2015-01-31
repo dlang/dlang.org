@@ -37,44 +37,35 @@ $('#cssmenu > ul > li > a').click(function() {
 });
 
 $(function() {
-	var $searchBox = $('#search-box');
-	var $mobileTitle = $('#mobile-title');
-	var $mobileSearch = $('#mobile-search');
-	var $top = $('#top');
+	$('<div>')
+		.attr('id', 'mobile-search-button')
+		.attr('class', 'fa fa-search')
+		.click(function() {
+			$('#search-box').toggleClass('open')
+		})
+		.prependTo('#header');
 
-	// move search box in mobile mode, 
-	// could be done with html+css change
-	$(window).on('resize', updateSearchBox);
-
-	function updateSearchBox(){
-		if($mobileTitle.is(':visible')){
-			if(!$mobileSearch.has($searchBox).length > 0) $mobileSearch.append($searchBox.detach());
-		}else{
-			if(!$top.has($searchBox).length > 0) $top.append($searchBox.detach());
-		}
-	}
-	updateSearchBox();
-
-	$('#mobile-search-button').click(function() {
-		$('#mobile-search').slideToggle();
-	});
-	$('#mobile-hamburger').click(function() {
-		var duration = 500;
-		$("#navigation").addClass('open');
-		var $cancel = $('<div>')
-			.attr('id', 'navigation-cancel')
-			.click(function() {
-				$("#navigation").removeClass('open');
-				$cancel.fadeOut(duration, function() {
-					$cancel.remove();
-				});
-				$cancel.off();
-			})
-			.hide()
-			.appendTo('body')
-			.fadeIn(500)
-		;
-	});
+	$('<div>')
+		.attr('id', 'mobile-hamburger')
+		.attr('class', 'fa fa-bars')
+		.click(function() {
+			var duration = 500;
+			$("#navigation").addClass('open');
+			var $cancel = $('<div>')
+				.attr('id', 'navigation-cancel')
+				.click(function() {
+					$("#navigation").removeClass('open');
+					$cancel.fadeOut(duration, function() {
+						$cancel.remove();
+					});
+					$cancel.off();
+				})
+				.hide()
+				.appendTo('body')
+				.fadeIn(500)
+			;
+		})
+		.prependTo('#header');
 });
 
 } )( jQuery );
