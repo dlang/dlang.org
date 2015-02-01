@@ -1,4 +1,4 @@
-![D Logo](http://dlang.org/images/dlogo.png) D Language Website
+![D Logo](http://dlang.org/images/dlogo.svg) D Language Website
 ===============================================================
 
 This repository contains the source files for the [D Language
