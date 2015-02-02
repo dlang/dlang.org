@@ -99,3 +99,9 @@ make -f posix.mak apidocs-prerelease
 
 The output is in `$R/dlang.org/web/phobos-prerelease` and
 `$R/dlang.org/web/library-prerelease`.
+
+To rebuild your dlang.org changes, use:
+
+```
+make -f posix.mak html
+```
