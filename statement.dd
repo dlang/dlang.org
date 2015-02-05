@@ -572,79 +572,6 @@ foreach (string s, double d; a)
 }
 --------------
 
-$(H4 $(LEGACY_LNAME2 foreach_with_ranges, foreach-with-ranges, Foreach over Structs and Classes with Ranges))
-
-        $(P Iteration over struct and class objects can be done with ranges.
-        For $(D foreach), this means the following properties and methods must
-        be defined:
-        )
-
-        $(TABLE2 Foreach Range Properties,
-        $(THEAD Property, Purpose)
-        $(TROW $(ARGS $(D .empty)), $(ARGS returns true if no more elements))
-        $(TROW $(ARGS $(D .front)), $(ARGS return the leftmost element of the range))
-        )
-
-        $(TABLE2 Foreach Range Methods,
-        $(THEAD Method, Purpose)
-        $(TROW $(ARGS $(D .popFront())), $(ARGS move the left edge of the range
-        right by one))
-        )
-
-        $(P Meaning:)
-
----
-foreach (e; range) { ... }
----
-
-        $(P translates to:)
-
----
-for (auto __r = range; !__r.empty; __r.popFront())
-{
-    auto e = __r.front;
-    ...
-}
----
-
-        $(P Similarly, for $(D foreach_reverse), the following properties and
-        methods must be defined:
-        )
-
-        $(TABLE2 Foreach$(UNDERSCORE)reverse Range Properties,
-        $(THEAD Property, Purpose)
-        $(TROW $(ARGS $(D .empty)), $(ARGS returns true if no more elements))
-        $(TROW $(ARGS $(D .back)), $(ARGS return the rightmost element of the range))
-        )
-
-        $(TABLE2 Foreach$(UNDERSCORE)reverse Range Methods,
-        $(THEAD Method, Purpose)
-        $(TROW $(ARGS $(D .popBack())), $(ARGS move the right edge of the range
-        left by one))
-        )
-
-        $(P Meaning:)
-
----
-foreach_reverse (e; range) { ... }
----
-
-        $(P translates to:)
-
----
-for (auto __r = range; !__r.empty; __r.popBack())
-{
-    auto e = __r.back;
-    ...
-}
----
-
-        $(P If the $(D foreach) or $(D foreach_reverse) range properties do not
-        exist, the $(D opApply) or $(D opApplyReverse) method, respectively,
-        will be used instead.
-        )
-
-
 $(H4 Foreach over Structs and Classes with opApply)
 
         $(P If the aggregate expression is a struct or class object, and the
@@ -754,6 +681,78 @@ void main()
     foreach (int a, int b, float c; S()) { }  // calls second opApply function
 }
 --------------
+
+$(H4 $(LEGACY_LNAME2 foreach_with_ranges, foreach-with-ranges, Foreach over Structs and Classes with Ranges))
+
+        $(P Iteration over struct and class objects can be done with ranges.
+        For $(D foreach), this means the following properties and methods must
+        be defined:
+        )
+
+        $(TABLE2 Foreach Range Properties,
+        $(THEAD Property, Purpose)
+        $(TROW $(ARGS $(D .empty)), $(ARGS returns true if no more elements))
+        $(TROW $(ARGS $(D .front)), $(ARGS return the leftmost element of the range))
+        )
+
+        $(TABLE2 Foreach Range Methods,
+        $(THEAD Method, Purpose)
+        $(TROW $(ARGS $(D .popFront())), $(ARGS move the left edge of the range
+        right by one))
+        )
+
+        $(P Meaning:)
+
+---
+foreach (e; range) { ... }
+---
+
+        $(P translates to:)
+
+---
+for (auto __r = range; !__r.empty; __r.popFront())
+{
+    auto e = __r.front;
+    ...
+}
+---
+
+        $(P Similarly, for $(D foreach_reverse), the following properties and
+        methods must be defined:
+        )
+
+        $(TABLE2 Foreach$(UNDERSCORE)reverse Range Properties,
+        $(THEAD Property, Purpose)
+        $(TROW $(ARGS $(D .empty)), $(ARGS returns true if no more elements))
+        $(TROW $(ARGS $(D .back)), $(ARGS return the rightmost element of the range))
+        )
+
+        $(TABLE2 Foreach$(UNDERSCORE)reverse Range Methods,
+        $(THEAD Method, Purpose)
+        $(TROW $(ARGS $(D .popBack())), $(ARGS move the right edge of the range
+        left by one))
+        )
+
+        $(P Meaning:)
+
+---
+foreach_reverse (e; range) { ... }
+---
+
+        $(P translates to:)
+
+---
+for (auto __r = range; !__r.empty; __r.popBack())
+{
+    auto e = __r.back;
+    ...
+}
+---
+
+        $(P If the $(D foreach) or $(D foreach_reverse) range properties do not
+        exist, the $(D opApply) or $(D opApplyReverse) method, respectively,
+        will be used instead.
+        )
 
 $(H4 Foreach over Delegates)
 
