@@ -572,96 +572,23 @@ foreach (string s, double d; a)
 }
 --------------
 
-$(H4 $(LEGACY_LNAME2 foreach_with_ranges, foreach-with-ranges, Foreach over Structs and Classes with Ranges))
-
-        $(P Iteration over struct and class objects can be done with ranges.
-        For $(D foreach), this means the following properties and methods must
-        be defined:
-        )
-
-        $(TABLE2 Foreach Range Properties,
-        $(THEAD Property, Purpose)
-        $(TROW $(ARGS $(D .empty)), $(ARGS returns true if no more elements))
-        $(TROW $(ARGS $(D .front)), $(ARGS return the leftmost element of the range))
-        )
-
-        $(TABLE2 Foreach Range Methods,
-        $(THEAD Method, Purpose)
-        $(TROW $(ARGS $(D .popFront())), $(ARGS move the left edge of the range
-        right by one))
-        )
-
-        $(P Meaning:)
-
----
-foreach (e; range) { ... }
----
-
-        $(P translates to:)
-
----
-for (auto __r = range; !__r.empty; __r.popFront())
-{
-    auto e = __r.front;
-    ...
-}
----
-
-        $(P Similarly, for $(D foreach_reverse), the following properties and
-        methods must be defined:
-        )
-
-        $(TABLE2 Foreach$(UNDERSCORE)reverse Range Properties,
-        $(THEAD Property, Purpose)
-        $(TROW $(ARGS $(D .empty)), $(ARGS returns true if no more elements))
-        $(TROW $(ARGS $(D .back)), $(ARGS return the rightmost element of the range))
-        )
-
-        $(TABLE2 Foreach$(UNDERSCORE)reverse Range Methods,
-        $(THEAD Method, Purpose)
-        $(TROW $(ARGS $(D .popBack())), $(ARGS move the right edge of the range
-        left by one))
-        )
-
-        $(P Meaning:)
-
----
-foreach_reverse (e; range) { ... }
----
-
-        $(P translates to:)
-
----
-for (auto __r = range; !__r.empty; __r.popBack())
-{
-    auto e = __r.back;
-    ...
-}
----
-
-        $(P If the $(D foreach) or $(D foreach_reverse) range properties do not
-        exist, the $(D opApply) or $(D opApplyReverse) method, respectively,
-        will be used instead.
-        )
-
-
 $(H4 Foreach over Structs and Classes with opApply)
 
-        $(P If the aggregate expression is a struct or class object, and the
-        range properties do not exist, then the $(D foreach) is defined by the
+    $(P If the aggregate expression is a struct or class object,
+        the $(D foreach) is defined by the
         special $(LEGACY_LNAME2 opApply, op-apply, $(D opApply)) member function, and the $(D
         foreach_reverse) behavior is defined by the special
         $(LEGACY_LNAME2 opApplyReverse, op-apply-reverse, $(D opApplyReverse)) member function.
         These functions have the type:
-        )
+    )
 
---------------
-int opApply(int delegate(ref Type [, ...]) dg);
+        --------------
+        int opApply(int delegate(ref Type [, ...]) dg);
 
-int opApplyReverse(int delegate(ref Type [, ...]) dg);
---------------
+        int opApplyReverse(int delegate(ref Type [, ...]) dg);
+        --------------
 
-        $(P where $(I Type) matches the $(I Type) used in the $(I ForeachType)
+    $(P where $(I Type) matches the $(I Type) used in the $(I ForeachType)
         declaration of $(I Identifier). Multiple $(I ForeachType)s
         correspond with multiple $(I Type)'s in the delegate type
         passed to $(D opApply) or $(D opApplyReverse).
@@ -676,84 +603,153 @@ int opApplyReverse(int delegate(ref Type [, ...]) dg);
         If the $(I dg) returns a nonzero value, apply must cease
         iterating and return that value. Otherwise, after done iterating
         across all the elements, apply will return 0.
-        )
+    )
 
-        $(P For example, consider a class that is a container for two elements:
-        )
+    $(P For example, consider a class that is a container for two elements:)
 
---------------
-class Foo
-{
-    uint[2] array;
-
-    int opApply(int delegate(ref uint) dg)
-    {
-        int result = 0;
-
-        for (int i = 0; i < array.length; i++)
+        --------------
+        class Foo
         {
-            result = dg(array[i]);
-            if (result)
-                break;
+            uint[2] array;
+
+            int opApply(int delegate(ref uint) dg)
+            {
+                int result = 0;
+
+                for (int i = 0; i < array.length; i++)
+                {
+                    result = dg(array[i]);
+                    if (result)
+                        break;
+                }
+                return result;
+            }
         }
-        return result;
-    }
-}
---------------
+        --------------
 
-        An example using this might be:
+    $(P An example using this might be:)
 
---------------
-void test()
-{
-    Foo a = new Foo();
+        --------------
+        void test()
+        {
+            Foo a = new Foo();
 
-    a.array[0] = 73;
-    a.array[1] = 82;
+            a.array[0] = 73;
+            a.array[1] = 82;
 
-    foreach (uint u; a)
-    {
-        writefln("%d", u);
-    }
-}
---------------
+            foreach (uint u; a)
+            {
+                writefln("%d", u);
+            }
+        }
+        --------------
 
-        which would print:
+    $(P which would print:)
 
 $(CONSOLE
 73
 82
 )
 
-        $(P $(LEGACY_LNAME2 opApply, op-apply, $(I opApply)) can also be a templated function,
-        which will infer the types of parameters based on the $(I ForeachStatement).)
+    $(P $(LEGACY_LNAME2 opApply, op-apply, $(I opApply)) can also be a templated function,
+        which will infer the types of parameters based on the $(I ForeachStatement).
+    )
 
-        $(P For example:)
+    $(P For example:)
 
---------------
-struct S
-{
-    import std.traits : ParameterTypeTuple;  // introspection template
+        --------------
+        struct S
+        {
+            import std.traits : ParameterTypeTuple;  // introspection template
 
-    int opApply(Dg)(scope Dg dg)
-        if (ParameterTypeTuple!Dg.length == 2)  // foreach function takes 2 parameters
-    {
-        return 0;
-    }
+            int opApply(Dg)(scope Dg dg)
+                if (ParameterTypeTuple!Dg.length == 2)  // foreach function takes 2 parameters
+            {
+                return 0;
+            }
 
-    int opApply(Dg)(scope Dg dg)
-        if (ParameterTypeTuple!Dg.length == 3)  // foreach function takes 3 parameters
-    {
-        return 0;
-    }
-}
+            int opApply(Dg)(scope Dg dg)
+                if (ParameterTypeTuple!Dg.length == 3)  // foreach function takes 3 parameters
+            {
+                return 0;
+            }
+        }
 
-void main()
-{
-    foreach (int a, int b; S()) { }  // calls first opApply function
-    foreach (int a, int b, float c; S()) { }  // calls second opApply function
-}
---------------
+        void main()
+        {
+            foreach (int a, int b; S()) { }  // calls first opApply function
+            foreach (int a, int b, float c; S()) { }  // calls second opApply function
+        }
+        --------------
+
+$(H4 $(LEGACY_LNAME2 foreach_with_ranges, foreach-with-ranges, Foreach over Structs and Classes with Ranges))
+
+    $(P If the aggregate expression is a struct or class object, but the
+        $(D opApply) for $(D foreach), or $(D opApplyReverse) $(D foreach_reverse) do not exist,
+        then iteration over struct and class objects can be done with range primitives.
+        For $(D foreach), this means the following properties and methods must
+        be defined:
+    )
+
+        $(TABLE2 Foreach Range Properties,
+        $(THEAD Property, Purpose)
+        $(TROW $(ARGS $(D .empty)), $(ARGS returns true if no more elements))
+        $(TROW $(ARGS $(D .front)), $(ARGS return the leftmost element of the range))
+        )
+
+        $(TABLE2 Foreach Range Methods,
+        $(THEAD Method, Purpose)
+        $(TROW $(ARGS $(D .popFront())), $(ARGS move the left edge of the range
+        right by one))
+        )
+
+    $(P Meaning:)
+
+        ---
+        foreach (e; range) { ... }
+        ---
+
+    $(P translates to:)
+
+        ---
+        for (auto __r = range; !__r.empty; __r.popFront())
+        {
+            auto e = __r.front;
+            ...
+        }
+        ---
+
+    $(P Similarly, for $(D foreach_reverse), the following properties and
+        methods must be defined:
+    )
+
+        $(TABLE2 Foreach$(UNDERSCORE)reverse Range Properties,
+        $(THEAD Property, Purpose)
+        $(TROW $(ARGS $(D .empty)), $(ARGS returns true if no more elements))
+        $(TROW $(ARGS $(D .back)), $(ARGS return the rightmost element of the range))
+        )
+
+        $(TABLE2 Foreach$(UNDERSCORE)reverse Range Methods,
+        $(THEAD Method, Purpose)
+        $(TROW $(ARGS $(D .popBack())), $(ARGS move the right edge of the range
+        left by one))
+        )
+
+    $(P Meaning:)
+
+        ---
+        foreach_reverse (e; range) { ... }
+        ---
+
+    $(P translates to:)
+
+        ---
+        for (auto __r = range; !__r.empty; __r.popBack())
+        {
+            auto e = __r.back;
+            ...
+        }
+        ---
 
 $(H4 Foreach over Delegates)
 
