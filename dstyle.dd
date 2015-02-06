@@ -25,6 +25,29 @@ $(UL
     $(LI Use spaces instead of hardware tabs.)
 
     $(LI Each indentation level will be four columns.)
+
+    $(LI Braces should be on their own line. There are a few exceptions to this
+         (such as when declaring lambda functions), but with any normal function
+         block or type definition, the braces should be on their own line.)
+
+---
+void func(int param)
+{
+    if (param < 0)
+    {
+        ...
+    }
+    else
+    {
+        ...
+    }
+}
+---
+
+    $(LI Lines have a soft limit of 80 characters and a hard limit of 120
+         characters. This means that most lines of code should be no longer than
+         80 characters long but that they $(I can) exceed 80 characters when
+         appropriate. However, they can $(I never) exceed 120 characters.)
 )
 
 $(H3 Naming Conventions)
@@ -241,47 +264,33 @@ $(P
     verified by the $(LINK2 code_coverage.html, code coverage analyzer).
 )
 
-$(H2 Additional Requirements for Phobos)
+$(P Documentation examples should, as much as practical, be done as unit tests
+    marked with a Ddoc comment.
+)
 
-$(P
-    In general, this guide does not try to recommend or require that code
-    conform to any particular formatting guidelines. The small section on
-    whitespace at the top contains its only formatting guidelines. However, for
-    Phobos and other official D source code, there are two additional
-    requirements:
- )
+$(H3 @trusted Functions)
 
-$(UL
-    $(LI Braces should be on their own line. There are a few exceptions to this
-         (such as when declaring lambda functions), but with any normal function
-         block or type definition, the braces should be on their own line.)
+    $(P Trusted functions must expose a safe interface. For example:)
 
--------------------------------
-void func(int param)
+---
+static void trustedMemcopy(int[] dest, int[] src) @trusted
 {
-    if(param < 0)
-    {
-        ...
-    }
-    else
-    {
-        ...
-    }
-}
--------------------------------
+    assert(src.length == dest.length);
+    memcpy(dest.ptr, src.ptr, src.length * int.sizeof);
+} 
+---
 
-    $(LI Lines have a soft limit of 80 characters and a hard limit of 120
-         characters. This means that most lines of code should be no longer than
-         80 characters long but that they $(I can) exceed 80 characters when
-         appropriate. However, they can $(I never) exceed 120 characters.)
- )
+    $(P A trusted function with an unsafe interface is one that requires review
+    of the caller's context to determine if it is safe or not. Such functions are
+    not allowed. For example:)
 
-$(P
-    We are not necessarily recommending that all code follow these two rules.
-    They're both likely to be controversial in any discussion on coding
-    standards. However, they are required in submissions to Phobos and other
-    official D source code.
- )
+---
+static U trustedCast(U, V)(V v) @trusted { return cast(U) v; }
+return trustedCast!RetType(result); 
+---
+
+    $(P This requires review of what $(CODE RetType) and $(CODE result) are to determine
+    whether it is actually safe or not.)
 )
 
 Macros:
