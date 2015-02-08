@@ -133,21 +133,8 @@ $(GNAME BasicType2X):
     $(D [) $(VEXPRESSION) $(D ])
     $(D [) $(VEXPRESSION) .. $(VEXPRESSION) $(D ])
     $(D [) $(GLINK Type) $(D ])
-    $(D [) $(D auto) $(GLINK BasicType3)$(OPT) $(D ])
-    $(D [) $(GLINK TypeCtors) $(GLINK BasicType3)$(OPT) $(D ])
     $(D delegate) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT)
     $(D function) $(GLINK2 function, Parameters) $(GLINK2 function, FunctionAttributes)$(OPT)
-
-$(GNAME BasicType3):
-    $(GLINK BasicType3X) $(GLINK BasicType3)$(OPT)
-
-$(GNAME BasicType3X):
-    $(D *)
-    $(D [ ])
-    $(D [) $(VEXPRESSION) $(D ])
-    $(D [) $(GLINK Type) $(D ])
-    $(D [) $(D auto) $(I BasicType3)$(OPT) $(D ])
-    $(D [) $(GLINK TypeCtors) $(I BasicType3)$(OPT) $(D ])
 
 $(GNAME IdentifierList):
     $(I Identifier)
@@ -289,53 +276,45 @@ $(H3 $(LEGACY_LNAME2 AutoDeclaration, auto-declaration, Implicit Type Inference)
 
 $(GRAMMAR
 $(GNAME AutoDeclaration):
-    $(GLINK StorageClasses) $(GLINK BasicType3)$(OPT) $(I AutoDeclarationX) $(D ;)
+    $(GLINK StorageClasses) $(I AutoDeclarationX) $(D ;)
 
 $(GNAME AutoDeclarationX):
     $(I Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
     $(I AutoDeclarationX) $(D ,) $(I Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
 )
 
-    $(P If a declaration starts with a $(I StorageClass) and has
+        $(P If a declaration starts with a $(I StorageClass) and has
         a $(I NonVoidInitializer) from which the type can be inferred,
         the type on the declaration can be omitted.
+        )
 
-        ----------
-        static x = 3;      // x is type int
-        auto y = 4u;       // y is type uint
+----------
+static x = 3;      // x is type int
+auto y = 4u;       // y is type uint
 
-        auto s = "string"; // s is type immutable(char)[]
+auto s = "string"; // s is type immutable(char)[]
 
-        class C { ... }
+class C { ... }
 
-        auto c = new C();  // c is a handle to an instance of class C
-        ----------
-    )
+auto c = new C();  // c is a handle to an instance of class C
+----------
 
-    $(P The $(I NonVoidInitializer) cannot contain forward references
+        $(P The $(I NonVoidInitializer) cannot contain forward references
         (this restriction may be removed in the future).
         The implicitly inferred type is statically bound
         to the declaration at compile time, not run time.
-    )
+        )
 
-    $(P An $(GLINK2 expression, ArrayLiteral) is inferred to be a dynamic array
-        type rather than a static array:
+        $(P An $(GLINK2 expression, ArrayLiteral)
+        is inferred to be a dynamic array
+        type rather than a static array:)
 
-        ---
-        auto v = ["hello", "world"]; // type is string[], not string[2]
-        ---
-    )
+---
+auto v = ["hello", "world"]; // type is string[], not string[2]
+---
 
-    $(P $(I AutoDeclaration) can restrict the inferred type partially, by using
-        $(GLINK BasicType3).
 
-        ---
-        auto[$] a = ["hello", "world"]; // type is string[2]
-        const[] b = [1, 2];             // type is const(int)[]
-        immutable* c = new int(3);      // type is immutable(int)*
-        auto[$][auto[$]] d = [[1]:[2]]; // type is int[1][int[1]]
-        ---
-    )
+
 
 $(H3 $(LNAME2 alias, Alias Declarations))
 
@@ -504,6 +483,7 @@ extern(C) int foo;        // variable allocated and initialized in this module w
 extern extern(C) int bar; // variable allocated outside this module with C linkage
                           // (e.g. in a statically linked C library or another module)
 ---------------
+
 
 $(H3 $(LNAME2 typeof, $(D typeof)))
 
