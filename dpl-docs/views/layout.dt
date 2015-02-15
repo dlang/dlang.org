@@ -1,81 +1,80 @@
 !!! 5
 html(lang='en-US')
   //
-    | Copyright (c) 1999-2012 by Digital Mars
+    | Copyright (c) 1999-2015 by Digital Mars
     | All Rights Reserved Written by Walter Bright
-    | http://www.digitalmars.com
+    | http://digitalmars.com
   - string root_dir = info.linkTo(null) ~ (req is null ? "../" : "");
       
   head
-    meta(http-equiv='content-type', content='text/html; charset=utf-8')
+    meta(charset='utf-8')
+    meta(name='keywords', content='D programming language')
+    meta(name='description', content='D Programming Language')
     block title
     title #{title} - D Programming Language - Digital Mars
-
-    link(rel="stylesheet", type="text/css", href="#{root_dir}css/ddox.css")
-    link(rel="stylesheet", href="#{root_dir}prettify/prettify.css", type="text/css")
-
-    script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js', type='text/javascript')
-    script(src='#{root_dir}js/codemirror.js')
-    script(src='#{root_dir}js/d.js')
-    script(src='#{root_dir}js/run.js', type='text/javascript')
     link(rel='stylesheet', href='#{root_dir}css/codemirror.css')
-    link(rel='stylesheet', type='text/css', href='#{root_dir}css/style.css')
-    script(src='#{root_dir}js/hyphenate-selectively.js', type='text/javascript')
-
+    link(rel='stylesheet', href='#{root_dir}css/style.css')
+    link(rel='stylesheet', href='#{root_dir}css/print.css', media='print')
+    link(rel='stylesheet', href='#{root_dir}css/cssmenu.css')
+    link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css')
+    link(rel='shortcut icon', href='#{root_dir}favicon.ico')
     script(type="text/javascript", src="#{root_dir}prettify/prettify.js")
     script(type="text/javascript", src="#{root_dir}js/ddox.js")
+    meta(name='viewport', content='width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0')
 
-  body.hyphenate
+  body.std(id='Phobos Runtime Library')
+    script(type='text/javascript').
+      document.body.className += ' have-javascript';
     #top
+      #header
+        a.logo(href='#{root_dir}')
+          img#logo(width='125', height='95', alt='D Logo', src='#{root_dir}images/dlogo.svg')
+        | &#x9;&#x9;
+        span#d-language-mobilehelper
+          a#d-language(href='#{root_dir}') D Programming Language
+    #navigation
       #search-box
         form(method='get', action='http://google.com/search')
-          |<img src="#{root_dir}images/search-left.gif" width="11" height="22" alt=""><input id="q" name="q"><input id="search-submit" type="image" src="#{root_dir}images/search-button.gif">
           input#domains(type='hidden', name='domains', value='dlang.org')
+          |             
           input#sourceid(type='hidden', name='sourceid', value='google-search')
-          #search-dropdown
+          |             
+          span#search-query
+            input#q(name='q', placeholder='Search')
+          span#search-dropdown
             select#sitesearch(name='sitesearch', size='1')
-              option(value='dlang.org') Entire D  Site
-              option(value='dlang.org/library') Library Reference
-              option(value='www.digitalmars.com/d/archives') Newsgroup Archives
-      #header
-        a(href='/')
-          img#logo(width='125', height='95', border='0', alt='D Logo', src='#{root_dir}images/dlogo.svg')
-        a#d-language(href='/') D Programming Language 
+              option(value='dlang.org') Entire D Site
+              |                     
+              option(selected='', value='dlang.org/library') Library Reference
+              |                     
+              option(value='digitalmars.com/d/archives') Newsgroup Archives
+          span#search-submit
+            button(type='submit')
+              i.fa.fa-search
+              span go
 
-    #navigation
-      .navblock
-        #googleSymbolSearchPane
-          form(method='get', action='http://www.google.com/search')
-            #searchbox
-              input(name='q', size='10', placeholder='API Search')
-              input(type='hidden', name='domains', value='www.digitalmars.com')
-              input(type='hidden', name='sitesearch', value='dlang.org/library')
-              input(type='hidden', name='sourceid', value='google-search')
-              input(type='submit', name='submit', value='Go')
-        #symbolSearchPane(style="display: none")
-          input#symbolSearch(type="text", name="symbolSearch", placeholder="API Search", onchange="performSymbolSearch(80);", onkeypress="this.onchange();", onpaste="this.onchange();", oninput="this.onchange();", autofocus)
-        
-        #toctop
-          ul
-            li
-              a(href='#{root_dir}index.html', title='D Programming Language') D
-            li
-              a(href='#{root_dir}spec.html', title='D Language Specification') Language
-            li
-              a(href='#{root_dir}library/index.html', title='D Runtime Library') Phobos
-            li
-              a(href='#{root_dir}library-prerelease/index.html', title='D Runtime Library (prerelease)') Phobos (prerelease)
-            li
-              a(href='#{root_dir}comparison.html', title='Language Comparisons') Comparisons
-            li
-              a(href='http://code.dlang.org', title='Third Party Packages') Third Party Packages
-      .navblock
-        block navigation
-    
+      #symbolSearchPane(style="display: none")
+        input#symbolSearch(type="text", name="symbolSearch", placeholder="API Search", onchange="performSymbolSearch(80);", onkeypress="this.onchange();", onpaste="this.onchange();", oninput="this.onchange();", autofocus)
+
+      #cssmenu
+        ul
+          li
+            a(href='#{root_dir}index.html')
+              span D Lib 2.066.1
+          | &#x9;
+          li
+            a(href='#{root_dir}library-prerelease/index.html')
+              span Prerelease Version
+          | &#x9;
+          block navigation
+          li
+            a(href='http://code.dlang.org')
+              span 3rd Party Packages
+
     div(style="position: absolute; height: 0;")
       include ddox.inc.symbol-search.results
 
-    #content
+    #content.hyphenate
       - if( auto modname = info.node.moduleName )
         #tools
           - import std.process;
@@ -119,16 +118,25 @@ html(lang='en-US')
         h1= title
       block body
 
-      br
-      br
-      br
-      br
+      |     
+      #quickindex.quickindex
 
     #copyright
       block copyright
       | | Page generated by <a href="https://github.com/rejectedsoftware/ddox">ddox</a>.
 
-    :javascript
-      $('#googleSymbolSearchPane').hide();
+    script(type='text/javascript', src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js')
+    |     
+    script(type='text/javascript').
+      window.jQuery || document.write('<script src="#{root_dir}js/jquery-1.7.2.min.js">\\x3C/script>')
+    |     
+    script(type='text/javascript', src='#{root_dir}js/codemirror-compressed.js')
+    |     
+    script(type='text/javascript', src='#{root_dir}js/run.js')
+    |     
+    script(type='text/javascript', src='#{root_dir}js/cssmenu.js')
+    script(type='text/javascript', src='#{root_dir}js/listanchors.js')
+    script(type='text/javascript').
+      jQuery(document).ready(listanchors);
       setupDdox();
       prettyPrint();
