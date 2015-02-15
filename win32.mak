@@ -4,7 +4,7 @@ LATEST=prerelease
 
 DMD=dmd
 DPL_DOCS_PATH=dpl-docs
-DPL_DOCS=$(DPL_DOCS_PATH)\dpl-docs.exe
+DPL_DOCS=dub run --root $(DPL_DOCS_PATH) -- 
 
 SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd	\
 	mixin.dd memory.dd interface.dd windows.dd dll.dd htomodule.dd faq.dd	\
@@ -319,6 +319,7 @@ clean:
 	del docs.json
 	if exist chm rmdir /S /Q chm
 	if exist phobos rmdir /S /Q phobos
+	dub clean --root=$(DPL_DOCS_PATH)
 
 ################# DDOX based API docs #########################
 
@@ -328,13 +329,13 @@ apidocs: docs.json
 apidocs-serve: docs.json
 	$(DPL_DOCS) serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. docs.json
 
-docs.json: $(DPL_DOCS)
+docs.json:
 	mkdir .tmp
 	dir /s /b /a-d ..\druntime\src\*.d | findstr /V "unittest.d gcstub" > .tmp/files.txt
 	dir /s /b /a-d ..\phobos\*.d | findstr /V "unittest.d linux osx format.d" >> .tmp/files.txt
 	dmd -c -o- -version=CoreDdoc -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
+	# WORKAROUND FOR DEPENDECY TRACKING BUG IN DUB (issue #331)
+	dub build --force --root $(DPL_DOCS_PATH)
+	#
 	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented --ex=gc. --ex=rt. --ex=core.internal. --ex=std.internal.
 	rmdir /s /q .tmp
-
-$(DPL_DOCS):
-	dub build --root=$(DPL_DOCS_PATH)

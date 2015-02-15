@@ -3,6 +3,16 @@ function setupDdox()
 	$(".tree-view").children(".package").click(toggleTree);
 	$(".tree-view.collapsed").children("ul").hide();
 	$("#symbolSearch").attr("tabindex", "1000");
+
+	updateSearchBox();
+	$('#sitesearch').change(updateSearchBox);
+}
+
+function updateSearchBox()
+{
+	var ddox = $('#sitesearch').val() == "dlang.org/library";
+	$('#q').toggle(!ddox);
+	$('#symbolSearch').toggle(ddox);
 }
 
 function toggleTree()
