@@ -319,6 +319,7 @@ clean:
 	del docs.json
 	if exist chm rmdir /S /Q chm
 	if exist phobos rmdir /S /Q phobos
+	dub clean --root=$(DPL_DOCS_PATH)
 
 ################# DDOX based API docs #########################
 
