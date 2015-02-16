@@ -124,7 +124,7 @@ STYLES=$(addsuffix .css, $(addprefix css/, \
 PRETTIFY=prettify/prettify.css prettify/prettify.js
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php	\
-howtos.html language-reference.html robots.txt process.php
+howtos.html language-reference.html robots.txt .htaccess process.php
 
 # Language spec root filenames. They have extension .dd in the source
 # and .html in the generated HTML. These are also used for the mobi
