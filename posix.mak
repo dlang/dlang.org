@@ -434,3 +434,13 @@ ${STABLE_DMD}:
 
 ${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
 	cd ${DUB_DIR} && DC=$(abspath ${STABLE_DMD}) ./build.sh
+
+################################################################################
+# Dman tags
+################################################################################
+
+chmgen : chmgen.d $(DMD)
+	$(DMD) -I${PHOBOS_DIR} -g chmgen.d
+
+d.tag : chmgen $(ALL_FILES)
+	./chmgen --root=$(DOC_OUTPUT_DIR) --only-tags

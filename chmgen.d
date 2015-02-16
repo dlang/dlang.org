@@ -13,7 +13,7 @@ import std.string;
 import std.regex;
 import std.path;
 
-enum ROOT = `.`;
+string docRoot = `.`;
 
 // ********************************************************************
 
@@ -124,6 +124,7 @@ void main(string[] args)
 
     getopt(args,
         "only-tags", &onlyTags,
+        "root", &docRoot,
     );
 
     bool chm = !onlyTags;
@@ -135,16 +136,16 @@ void main(string[] args)
         mkdirRecurse(`chm/files`);
     }
 
-    enforce(exists(ROOT ~ `/phobos/index.html`),
+    enforce(exists(docRoot ~ `/phobos/index.html`),
         `Phobos documentation not present. Please place Phobos documentation HTML files into the "phobos" subdirectory.`);
 
     string[] files = chain(
-        dirEntries(ROOT ~ `/`       , "*.html", SpanMode.shallow),
-        dirEntries(ROOT ~ `/phobos/`, "*.html", SpanMode.shallow),
-    //    dirEntries(ROOT ~ `/js/`              , SpanMode.shallow),
-        dirEntries(ROOT ~ `/css/`             , SpanMode.shallow),
-        dirEntries(ROOT ~ `/images/`, "*.*"   , SpanMode.shallow),
-        only(ROOT ~ `/favicon.ico`)
+        dirEntries(docRoot ~ `/`       , "*.html", SpanMode.shallow),
+        dirEntries(docRoot ~ `/phobos/`, "*.html", SpanMode.shallow),
+    //  dirEntries(docRoot ~ `/js/`              , SpanMode.shallow),
+        dirEntries(docRoot ~ `/css/`             , SpanMode.shallow),
+        dirEntries(docRoot ~ `/images/`, "*.*"   , SpanMode.shallow),
+        only(docRoot ~ `/favicon.ico`)
     ).array();
 
     foreach (fileName; files)
@@ -152,7 +153,7 @@ void main(string[] args)
         scope(failure) stderr.writeln("Error while processing file: ", fileName);
 
         auto page = new Page;
-        fileName = page.fileName = fileName[ROOT.length+1 .. $].forwardSlashes();
+        fileName = page.fileName = fileName[docRoot.length+1 .. $].forwardSlashes();
         pages[fileName] = page;
 
         auto newFileName = `chm/files/` ~ fileName;

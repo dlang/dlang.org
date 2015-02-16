@@ -303,6 +303,9 @@ chm-nav-doc.json : $(DDOC) chm-nav.dd
 chm-nav-std.json : $(DDOC) $(DDOC_STD) chm-nav.dd
 	$(DMD) -o- -c -Df$@ $(DDOC) $(DDOC_STD) chm-nav.dd
 
+d.tag : chmgen.exe $(TARGETS)
+	chmgen --only-tags
+
 ################# Other #########################
 
 zip:
