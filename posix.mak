@@ -110,7 +110,7 @@ IMAGES=favicon.ico $(addprefix images/, \
 		pattern github-ribbon \
 		$(addprefix ddox/, alias class enum enummember function \
 			inherited interface module package private property protected \
-			struct template tree-item-closed tree-item-open variable)) \
+			struct template variable)) \
 	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe \
 		pen) \
 	$(addsuffix .jpg, tdpl))
