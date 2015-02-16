@@ -316,14 +316,14 @@ $(DMD_REL) : ${DMD_DIR}-${LATEST}/.cloned
 # druntime, latest released build and current build
 ################################################################################
 
-druntime-prerelease : ${DRUNTIME_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html $(STD_DDOC_PRE)
-${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : $(DMD)
+druntime-prerelease : ${DRUNTIME_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
+${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : $(DMD) $(STD_DDOC_PRE)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
-druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/object.html $(STD_DDOC)
-${DOC_OUTPUT_DIR}/phobos/object.html : $(DMD_REL)
+druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/object.html
+${DOC_OUTPUT_DIR}/phobos/object.html : $(DMD_REL) $(STD_DDOC)
 	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak target doc \
 	  DMD=$(DMD_REL) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
