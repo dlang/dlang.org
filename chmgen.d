@@ -148,21 +148,21 @@ void main(string[] args)
         only(docRoot ~ `/favicon.ico`)
     ).array();
 
-    foreach (fileName; files)
+    foreach (filePath; files)
     {
-        scope(failure) stderr.writeln("Error while processing file: ", fileName);
+        scope(failure) stderr.writeln("Error while processing file: ", filePath);
 
         auto page = new Page;
-        fileName = page.fileName = fileName[docRoot.length+1 .. $].forwardSlashes();
+        auto fileName = page.fileName = filePath[docRoot.length+1 .. $].forwardSlashes();
         pages[fileName] = page;
 
-        auto newFileName = `chm/files/` ~ fileName;
-        newFileName.dirName().mkdirRecurse();
+        auto outPath = `chm/files/` ~ fileName;
+        outPath.dirName().mkdirRecurse();
 
         if (fileName.endsWith(`.html`))
         {
             stderr.writeln("Processing ", fileName);
-            auto src = fileName.readText();
+            auto src = filePath.readText();
 
             // Find title
 
@@ -206,14 +206,14 @@ void main(string[] args)
             src = src.replaceAll(re!`<link rel="stylesheet" href="http.*?>`, ``);
 
             if (chm)
-                std.file.write(newFileName, src);
+                std.file.write(outPath, src);
         }
         else
         {
             if (chm)
             {
                 stderr.writeln("Copying ", fileName);
-                copy(fileName, newFileName);
+                copy(filePath, outPath);
             }
         }
     }
