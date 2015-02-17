@@ -41,8 +41,16 @@ Nav loadNav(string fileName, string base, bool warn)
         if (json.type == JSON_TYPE.ARRAY)
         {
             auto nodes = json.array;
-            auto root = parseNav(nodes[0]);
-            root.children = nodes[1..$].map!parseNav.array().filter!`a`.array();
+            auto parsedNodes = nodes.map!parseNav.array().filter!`a`.array();
+            if (!parsedNodes.length)
+            {
+                if (warn)
+                    stderr.writeln("Warning: Empty navigation group");
+                return null;
+            }
+
+            auto root = parsedNodes[0];
+            root.children = parsedNodes[1..$];
             return root;
         }
         else
