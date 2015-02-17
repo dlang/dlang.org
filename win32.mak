@@ -30,7 +30,7 @@ SPECSRC=spec.dd intro.dd lex.dd grammar.dd module.dd declaration.dd type.dd prop
 
 DDOC=macros.ddoc html.ddoc dlang.org.ddoc windows.ddoc doc.ddoc $(NODATETIME)
 
-DDOC_STD=std.ddoc std_navbar-$(LATEST).ddoc
+DDOC_STD=std.ddoc std_navbar-release.ddoc modlist-release.ddoc
 
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
@@ -59,8 +59,11 @@ TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.
 	simd.html deprecate.html download.html 32-64-portability.html		\
 	d-array-article.html dll-linux.html bugstats.php.html getstarted.html \
 	css/cssmenu.css \
-	
 
+# exclude list
+MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
+	--ex=std.c. --ex=std.algorithm.internal --ex=std.internal. --ex=std.regex.internal. \
+	--ex=std.typelist --ex=std.windows. --ex=etc.linux.memoryerror --ex=core.stdc.
 
 CHMTARGETS=d.hhp d.hhc d.hhk d.chm
 
@@ -267,6 +270,10 @@ windows.html : $(DDOC) windows.ddoc windows.dd
 css/cssmenu.css : $(DDOC) css/cssmenu.css.dd
 	$(DMD) -o- -c -Df$@ $(DDOC) css/cssmenu.css.dd
 
+modlist-release.ddoc : modlist.d
+# need + to run as sub-cmd, redirect doesn't work otherwise
+	+$(DMD) -run modlist.d ..\druntime ..\phobos $(MOD_EXCLUDES_RELEASE) >$@
+
 ################ Ebook ########################
 
 dlangspec.d : $(SPECSRC) win32.mak
@@ -340,5 +347,5 @@ docs.json:
 	# WORKAROUND FOR DEPENDECY TRACKING BUG IN DUB (issue #331)
 	dub build --force --root $(DPL_DOCS_PATH)
 	#
-	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented --ex=gc. --ex=rt. --ex=core.internal. --ex=std.internal.
+	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented $(MOD_EXCLUDES_RELEASE)
 	rmdir /s /q .tmp

@@ -22,6 +22,7 @@ GIT_HOME=https://github.com/D-Programming-Language
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
+GENERATED=.generated
 
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=0.9.22
@@ -29,6 +30,13 @@ STABLE_DMD_VER=2.066.1
 STABLE_DMD_ROOT=/tmp/.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2014/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
+
+# exclude lists
+MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
+	std.c. std.algorithm.internal std.internal. std.regex.internal. std.typelist		\
+	std.windows. etc.linux.memoryerror)
+
+MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE) --ex=core.stdc.
 
 # rdmd must fetch the model, imports, and libs from the specified version
 DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)
@@ -99,9 +107,9 @@ endif
 
 # Documents
 
-DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${LATEST}) $(NODATETIME)
-STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${LATEST} std std_navbar-$(LATEST))
-STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${LATEST} std std_navbar-prerelease)
+DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
+STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST})
+STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease)
 
 IMAGES=favicon.ico $(addprefix images/, \
 	d002.ico icon_minus.svg icon_plus.svg dlogo.svg \
@@ -215,8 +223,17 @@ $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) sitemap.dd
 	rm sitemap.dd
 
-${LATEST}.ddoc :
+${GENERATED}/${LATEST}.ddoc :
+	mkdir -p $(dir $@)
 	echo "LATEST=${LATEST}" >$@
+
+${GENERATED}/modlist-${LATEST}.ddoc : modlist.d
+	mkdir -p $(dir $@)
+	$(RDMD) modlist.d $(DRUNTIME_DIR)-$(LATEST) $(PHOBOS_DIR)-$(LATEST) $(MOD_EXCLUDES_RELEASE) >$@
+
+${GENERATED}/modlist-prerelease.ddoc : modlist.d
+	mkdir -p $(dir $@)
+	$(RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(MOD_EXCLUDES_PRERELEASE) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
@@ -226,9 +243,9 @@ rebase-druntime: ; cd $(DRUNTIME_DIR) && $(call REBASE,druntime)
 rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
-	rm -rf $(DOC_OUTPUT_DIR) ${LATEST}.ddoc dpl-docs/.dub
+	rm -rf $(DOC_OUTPUT_DIR) ${GENERATED} dpl-docs/.dub
 	rm -rf auto dlangspec-consolidated.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex .txt .verbatim.txt)
-	rm -f docs.json docs-prerelease.json dpl-docs/dpl-docs 
+	rm -f docs.json docs-prerelease.json dpl-docs/dpl-docs
 	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} ${STABLE_DMD_ROOT} ${DUB_DIR}
 
 rsync : all kindle pdf
@@ -403,8 +420,8 @@ docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 	  sed -e /unittest.d/d -e /format/d -e /windows/d >> .release-files.txt
 	${DMD_REL} -c -o- -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
 	  -Xfdocs.json -I${PHOBOS_DIR}-${LATEST} @.release-files.txt
-	${DPL_DOCS} filter docs.json --min-protection=Protected --only-documented \
-	  --ex=gc. --ex=rt. --ex=core.internal. --ex=std.internal.
+	${DPL_DOCS} filter docs.json --min-protection=Protected \
+	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
 	rm .release-files.txt .release-dummy.html
 
 docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
@@ -416,7 +433,7 @@ docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
 	${DMD} -c -o- -version=CoreDdoc -version=StdDdoc -Df.prerelease-dummy.html \
 	  -Xfdocs-prerelease.json -I${PHOBOS_DIR} @.prerelease-files.txt
 	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
-	  --only-documented --ex=gc. --ex=rt. --ex=core.internal. --ex=std.internal.
+	  --only-documented $(MOD_EXCLUDES_RELEASE)
 	rm .prerelease-files.txt .prerelease-dummy.html
 
 ################################################################################
