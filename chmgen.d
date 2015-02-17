@@ -179,16 +179,16 @@ void main(string[] args)
 
             // Add document CSS class
 
-            src = src.replaceAll(re!`(<body id='.*?' class='.*?)('>)`, `\1 chm\2`);
+            src = src.replaceAll(re!`(<body id='.*?' class='.*?)('>)`, `$1 chm$2`);
 
             // Fix links
 
-            src = src.replace(`<a href="."`, `<a href="index.html"`);
-            src = src.replace(`<a href=".."`, `<a href="../index.html"`);
+            enum attrs = `(?:(?:\w+=\"[^"]*\")?\s*)*`;
+
+            src = src.replaceAll(re!(`(<a `~attrs~`href="\.\.?)"`), `$1/index.html"`);
 
             // Find anchors
 
-            enum attrs = `(?:(?:\w+=\"[^"]*\")?\s*)*`;
             enum name = `(?:name|id)`;
 
             foreach (m; src.matchAll(re!(`<a `~attrs~name~`="(\.?[^"]*)"`~attrs~`>(.*?)</a>`)))
