@@ -3,15 +3,19 @@ $( document ).ready(function() {
 var menu_ul = $('#cssmenu > ul > li > ul');
 menu_ul.hide();
 
-$('#cssmenu a').each(function(){
-  var href = window.location.href.split('#')[0];
-  if (this.href == href) {
-    $(this)
-      .parents('li,ul')
-      .addClass('active')
-      .show();
-  }
-});
+function baseName(str) {
+  return str.split('/').pop();
+}
+
+// highlight menu entry of the current page
+var current = $('#cssmenu a[href="'+baseName(window.location.pathname)+'"]');
+// direct li parent containing the link
+current.parent('li').addClass('active');
+// topmost li parent, e.g. 'std'
+current.parents('#cssmenu li.has-sub').addClass('active')
+// show menu tree
+  .children('ul').show();
+
 
 $('#cssmenu > ul > li > a').click(function() {
   $li = $(this).closest('li');
