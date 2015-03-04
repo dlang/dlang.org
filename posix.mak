@@ -227,11 +227,11 @@ ${GENERATED}/${LATEST}.ddoc :
 	mkdir -p $(dir $@)
 	echo "LATEST=${LATEST}" >$@
 
-${GENERATED}/modlist-${LATEST}.ddoc : modlist.d
+${GENERATED}/modlist-${LATEST}.ddoc : modlist.d $(DRUNTIME_DIR)-$(LATEST)/.cloned $(PHOBOS_DIR)-$(LATEST)/.cloned
 	mkdir -p $(dir $@)
 	$(RDMD) modlist.d $(DRUNTIME_DIR)-$(LATEST) $(PHOBOS_DIR)-$(LATEST) $(MOD_EXCLUDES_RELEASE) >$@
 
-${GENERATED}/modlist-prerelease.ddoc : modlist.d
+${GENERATED}/modlist-prerelease.ddoc : modlist.d $(DRUNTIME_DIR)/.cloned $(PHOBOS_DIR)/.cloned
 	mkdir -p $(dir $@)
 	$(RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(MOD_EXCLUDES_PRERELEASE) >$@
 
