@@ -112,7 +112,8 @@ STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std
 STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease)
 
 IMAGES=favicon.ico $(addprefix images/, \
-	d002.ico icon_minus.svg icon_plus.svg dlogo.svg \
+	d002.ico \
+	$(addsuffix .svg, icon_minus icon_plus dlogo faster-gc-1) \
 	$(addsuffix .png, apple_logo centos_logo d3 debian_logo dlogo download \
 		fedora_logo freebsd_logo opensuse_logo ubuntu_logo windows_logo \
 		pattern github-ribbon \
