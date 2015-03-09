@@ -11,6 +11,7 @@ $(LI $(RELATIVE_LINK2 package-protection, $(D package) protection attribute can 
 )
 
 $(BUGSTITLE Library Changes,
+$(LI $(RELATIVE_LINK2 faster-gc-1, The garbage collector got faster.))
 $(LI $(RELATIVE_LINK2 volatile-load-store, $(D volatileLoad) and $(D volatileStore) intrinsics were added.))
 $(LI $(RELATIVE_LINK2 gc-options, $(B Experimental:) The garbage collector can now be configured.))
 $(LI $(RELATIVE_LINK2 aa-keyvalue, $(D byKeyValue) was added.))
@@ -62,6 +63,30 @@ $(LI $(LNAME2 package-protection, $(D package) protection attribute can be optio
 
 $(BUGSTITLE Library Changes,
 
+$(LI $(LNAME2 faster-gc-1, This release comes with various GC optimizations that make many applications faster.)
+
+    $(P A new GC growth policy was implemented that helps to reduce the
+        number of collections by keeping a collection threshold at 2x the size
+        of the used memory. After each collection the used memory and the
+        threshold are recomputed. This allows for an exponential growth of the
+        GC heap, e.g. during program startup, but limits the heap size relative
+        to the actual used memory.
+        The factor 2x is configurable by setting $(RELATIVE_LINK2 gc-options, heapSizeFactor).
+    )
+
+    $(P The heap traversal during the marking phase is now done using tail
+        recursion with a separate compact state stack. This allows to mark very
+        deep heaps (lists) much faster because the previous recursion limit of
+        50 is eliminated.
+    )
+
+    $(P You can see a list of all improvements $(LINK2
+        https://github.com/D-Programming-Language/druntime/pulls?q=is:merged+is:pr+label:GC+merged:2014-08-18..2015-03-01,
+        here).)
+
+    <img src="images/faster-gc-1.svg" alt="GC benchmarks" style="max-width: 100%">
+)
+
 $(LI $(LNAME2 volatile-load-store, $(D volatileLoad) and $(D volatileStore) intrinsics were added.)
 
     $(P Calls to $(D volatileLoad) and $(D volatileStore) are recognized by
@@ -106,6 +131,7 @@ $(LI $(LNAME2 gc-options, $(B Experimental:) The garbage collector can now be co
         $(LI minPoolSize:N  - initial and minimum pool size in MB)
         $(LI maxPoolSize:N  - maximum pool size in MB)
         $(LI incPoolSize:N  - pool size increment MB)
+        $(LI heapSizeFactor:N - targeted heap size to used memory ratio)
         )
      )
      $(P In addition, --DRT-gcopt=help will show the list of options and their current settings.
