@@ -8,7 +8,15 @@ function baseName(str) {
 }
 
 // highlight menu entry of the current page
-var current = $('#cssmenu a[href="'+baseName(window.location.pathname)+'"]');
+var href = window.location.href.split('#')[0];
+var current;
+var res = $('#cssmenu a').each(function (_, a) {
+    if (a.href == href) {
+        current = a;
+        return false;
+    }
+});
+current = $(current);
 // direct li parent containing the link
 current.parent('li').addClass('active');
 // topmost li parent, e.g. 'std'
