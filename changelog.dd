@@ -8,6 +8,7 @@ $(BUGSTITLE Language Changes,
 $(LI $(RELATIVE_LINK2 heap-struct-destructors, Destructors for structs allocated on the heap are now invoked.))
 $(LI $(RELATIVE_LINK2 asm-attributes, $(D asm) statements can now be used in $(D pure), $(D nothrow), $(D @nogc), or $(D @trusted) code.))
 $(LI $(RELATIVE_LINK2 package-protection, $(D package) protection attribute can be optionally bound to specified package))
+$(LI $(RELATIVE_LINK2 rvalue-class-this-super, $(D this) and $(D super) expressions in class method are changed to rvalue.))
 )
 
 $(BUGSTITLE Library Changes,
@@ -55,6 +56,66 @@ $(LI $(LNAME2 package-protection, $(D package) protection attribute can be optio
 
         // old style, means same as package(aaa.bbb.ccc)
         package void bar() {}
+        ---------
+    )
+)
+
+$(LI $(RED Breaking Change:) $(LNAME2 rvalue-class-this-super, $(D this) and $(D super) expressions in class method are changed to rvalue)
+
+    $(P Different from struct, $(D this) expression is a reference to the class instance.
+        However, passing it to ref function parameter, or returning through ref return
+        were wrongly accepted and generated wrong code.
+
+        --------
+        class C
+        {
+            ref C testThis()
+            {
+                C self = this;
+                rebindC(this);  // has been wrongly accepted
+                assert(this is self);   // failed!
+
+              //return self;    // correctly rejected but...
+                return this;    // wrongly accepted
+            }
+
+            void rebindC(ref C c)
+            {
+                // rebind 'this' in testThis()
+                c = new C();
+            }
+        }
+
+        void main()
+        {
+            C c1 = new C();
+            C c2 = c1.testThis();
+            assert(c1 is c2);   // failed!
+        }
+        ---------
+
+        There was same issue on $(D super) expression.
+
+        Now $(D this) and $(D super) are changed to rvalue, so taking them with $(D ref)
+        is correctly disallowed.
+
+        ---------
+        class B {}
+        class C : B
+        {
+            ref C testThis()
+            {
+                rebindC(this);  // Error: this is not an lvalue
+                return this;    // Error: this is not an lvalue
+            }
+            ref B testSuper()
+            {
+                rebindB(super); // Error: super is not an lvalue
+                return super;   // Error: super is not an lvalue
+            }
+            void rebindC(ref C c) { c = new C(); }
+            void rebindB(ref B b) { b = new B(); }
+        }
         ---------
     )
 )
