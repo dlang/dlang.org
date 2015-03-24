@@ -35,7 +35,7 @@ DDOC_STD=std.ddoc std_navbar-release.ddoc modlist-release.ddoc
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 
-PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
+PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html d-keyring.gpg
 
 TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.html	\
 	intro.html spec.html lex.html grammar.html module.html declaration.html type.html	\
@@ -58,7 +58,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.
 	D1toD2.html unittest.html hash-map.html intro-to-datetime.html		\
 	simd.html deprecate.html download.html 32-64-portability.html		\
 	d-array-article.html dll-linux.html bugstats.php.html getstarted.html \
-	css/cssmenu.css \
+	gpg_keys.html css/cssmenu.css \
 
 # exclude list
 MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
@@ -172,6 +172,8 @@ garbage.html : $(DDOC) garbage.dd
 getstarted.html : $(DDOC) getstarted.dd
 
 glossary.html : $(DDOC) glossary.dd
+
+gpg_keys.html : $(DDOC) gpg_keys.dd
 
 hash-map.html : $(DDOC) hash-map.dd
 
