@@ -132,8 +132,9 @@ STYLES=$(addsuffix .css, $(addprefix css/, \
 
 PRETTIFY=prettify/prettify.css prettify/prettify.js
 
-PREMADE=appendices.html articles.html fetch-issue-cnt.php	\
-howtos.html language-reference.html robots.txt .htaccess process.php
+PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
+language-reference.html robots.txt .htaccess process.php		\
+d-keyring.gpg
 
 # Language spec root filenames. They have extension .dd in the source
 # and .html in the generated HTML. These are also used for the mobi
@@ -152,7 +153,7 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements ascii-table		\
 	bugstats.php builtin changelog code_coverage concepts const-faq COM	\
 	comparison cpptod ctod D1toD2 d-array-article d-floating-point		\
 	deprecate dll dll-linux dmd-freebsd dmd-linux dmd-osx dmd-windows	\
-	download dstyle exception-safe faq features2 getstarted glossary gsoc2011 \
+	download dstyle exception-safe faq features2 gpg_keys getstarted glossary gsoc2011 \
 	gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index intro \
 	intro-to-datetime lazy-evaluation memory migrate-to-shared mixin	\
 	overview pretod rationale rdmd regular-expression safed			\
