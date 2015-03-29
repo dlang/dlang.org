@@ -16,6 +16,10 @@ $(LI $(RELATIVE_LINK2 volatile-load-store, $(D volatileLoad) and $(D volatileSto
 $(LI $(RELATIVE_LINK2 gc-options, $(B Experimental:) The garbage collector can now be configured.))
 $(LI $(RELATIVE_LINK2 aa-keyvalue, $(D byKeyValue) was added.))
 $(LI $(LINK2 phobos-prerelease/std_concurrency.html#.initOnce, $(D initOnce) was added to perform thread-safe lazy initialization.))
+$(LI $(RELATIVE_LINK2 std-range-enumerate, A new range algorithm $(D enumerate) was added to
+attach indexes to range elements.))
+$(LI $(RELATIVE_LINK2 std-exception-handle, A new range algorithm $(D handle) was added to
+enable exception handling in range compositions.))
 
 $(BUGSTITLE Language Changes,
 
@@ -180,6 +184,36 @@ $(LI $(LNAME2 aa-keyvalue, $(D byKeyValue) was added.)
     }
     ------
 )
+
+$(LI $(LNAME2 std-range-enumerate, $(XREF range, enumerate) was added.)
+    $(P $(D enumerate) enables iteration of ranges with an index variable:)
+    ------
+    void main()
+    {
+        import std.stdio : stdin, stdout;
+        import std.range : enumerate;
+
+        foreach (lineNum, line; stdin.byLine().enumerate(1))
+            stdout.writefln("line #%s: %s", lineNum, line);
+    }
+    ------
+)
+
+$(LI $(LNAME2 std-exception-handle, $(XREF exception, handle) was added.)
+    $(P $(D handle) enables exception handling in range compositions:)
+    ------
+    import std.algorithm : equal;
+    import std.range : retro;
+    import std.utf : UTFException;
+
+    auto str = "hello\xFFworld"; // 0xFF is an invalid UTF-8 code unit
+
+    auto handled = str.handle!(UTFException, RangePrimitive.access,
+            (e, r) => ' '); // Replace invalid code points with spaces
+
+    assert(handled.equal("hello world")); // `front` is handled,
+    assert(handled.retro.equal("dlrow olleh")); // as well as `back`
+    ------
 )
 )
 
