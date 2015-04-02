@@ -395,8 +395,8 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
 # phobos and druntime, latest released build and current build (DDOX version)
 ################################################################################
 
-apidocs-prerelease : ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml
-apidocs-release : ${DOC_OUTPUT_DIR}/library/sitemap.xml
+apidocs-prerelease : ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess
+apidocs-release : ${DOC_OUTPUT_DIR}/library/sitemap.xml ${DOC_OUTPUT_DIR}/library/.htaccess
 apidocs-serve : docs-prerelease.json
 	${DPL_DOCS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
@@ -413,6 +413,12 @@ ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
 	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
+
+${DOC_OUTPUT_DIR}/library/.htaccess : dpl_release_htaccess
+	cp $< $@
+
+${DOC_OUTPUT_DIR}/library-prerelease/.htaccess : dpl_prerelease_htaccess
+	cp $< $@
 
 docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
