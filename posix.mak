@@ -415,9 +415,11 @@ ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
 
 ${DOC_OUTPUT_DIR}/library/.htaccess : dpl_release_htaccess
+	@mkdir -p $(dir $@)
 	cp $< $@
 
 ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess : dpl_prerelease_htaccess
+	@mkdir -p $(dir $@)
 	cp $< $@
 
 docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
