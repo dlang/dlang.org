@@ -251,10 +251,10 @@ clean:
 	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} ${STABLE_DMD_ROOT} ${DUB_DIR}
 
 rsync : all kindle pdf
-	rsync -avz --chmod=u=rwX,g=rwX,o=rX $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
+	rsync -avzO --chmod=u=rwX,g=rwX,o=rX $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
 
 rsync-only :
-	rsync -avz --chmod=u=rwX,g=rwX,o=rX $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
+	rsync -avzO --chmod=u=rwX,g=rwX,o=rX $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
 
 ################################################################################
 # Ebook
