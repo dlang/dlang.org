@@ -2,6 +2,45 @@ Ddoc
 
 $(D_S D Change Log,
 
+$(VERSION 068.0, XXX ??, 2015, =================================================,
+
+$(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 array-bool-4733, The compiler now generates a warning when using an array as a boolean value))
+)
+
+$(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 array-bool-4733, The compiler now generates a warning when using an array as a boolean value)
+
+    $(P The compiler currently allows using an expression with an array type in some places where a boolean is expected.  This is evaluated as `arr.ptr != null`, which may cause unintended behavior when dealing with empty slices, which have a non-null pointer but zero length.  The code should be changed to explicitly use `arr.ptr != null` if it really meant to check for a null array, or `arr.length != 0` or `arr != null` if another behavior was intended.  Details and discussion can be found $(LINK2 https://issues.dlang.org/show_bug.cgi?id=4733, here),)
+
+        --------
+        auto x = new int[](7);
+        auto y = x[5..5]; // y has a valid .ptr but zero length
+        assert(y); // Will now give a warning, previously passed
+        assert(y == null); // passes, because both y and null are empty
+        assert(y.ptr != null); // passes because y has a valid .ptr
+        assert(y.length == 0); // passes
+
+        if (y) // Will now give a warning
+        {
+        }
+        --------
+
+        $(TABLE_10 $(ARGS Boolean values for different arrays and expressions),
+        $(VERTROW Expression/Array, non-empty array, empty array with valid ptr, null array)
+        $(TROW $(D arr.length != 0), $(D true), $(D false), $(D false))
+        $(TROW $(D !arr.empty), $(D true), $(D false), $(D false))
+        $(TROW $(D arr != null), $(D true), $(D false), $(D false))
+        $(TROW $(D arr.ptr != null), $(D true), $(D true), $(D false))
+        )
+
+)
+
+)
+
+)
+
 $(VERSION 067.0, Mar 24, 2015, =================================================,
 
 $(BUGSTITLE Language Changes,
