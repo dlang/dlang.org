@@ -73,3 +73,15 @@ $(function() {
 });
 
 } )( jQuery );
+
+// ---------------------------------------------------------------------------
+
+// [your code here] rotation for index.html
+$(function() {
+	var $examples = $('.your-code-here-extra > pre');
+	if ($examples.length) {
+		var n = Math.floor(Math.random() * ($examples.length+1));
+		if (n)
+			$('#your-code-here-default > pre').replaceWith($examples[n-1]);
+	}
+});
