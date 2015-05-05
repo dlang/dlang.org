@@ -347,7 +347,7 @@ docs.json:
 	dir /s /b /a-d ..\phobos\*.d | findstr /V "unittest.d linux osx format.d" >> .tmp/files.txt
 	dmd -c -o- -version=CoreDdoc -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
 	# WORKAROUND FOR DEPENDECY TRACKING BUG IN DUB (issue #331)
-	dub build --force --root $(DPL_DOCS_PATH)
+	dub build --nodeps --force --root $(DPL_DOCS_PATH)
 	#
 	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented $(MOD_EXCLUDES_RELEASE)
 	rmdir /s /q .tmp

@@ -454,7 +454,7 @@ docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
 
 .PHONY: dpl-docs
 dpl-docs: ${DUB} ${STABLE_DMD}
-	${DUB} build --root=${DPL_DOCS_PATH} --compiler=${STABLE_DMD}
+	${DUB} build --nodeps --root=${DPL_DOCS_PATH} --compiler=${STABLE_DMD}
 
 ${STABLE_DMD}:
 	mkdir -p ${STABLE_DMD_ROOT}
