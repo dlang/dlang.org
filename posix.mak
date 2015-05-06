@@ -25,11 +25,12 @@ REMOTE_DIR=d-programming@digitalmars.com:data
 GENERATED=.generated
 
 # stable dub and dmd versions used to build dpl-docs
-DUB_VER=0.9.22
-STABLE_DMD_VER=2.066.1
+DUB_VER=0.9.23
+STABLE_DMD_VER=2.067.1
 STABLE_DMD_ROOT=/tmp/.stable_dmd-$(STABLE_DMD_VER)
-STABLE_DMD_URL=http://downloads.dlang.org/releases/2014/dmd.$(STABLE_DMD_VER).$(OS).zip
+STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
+STABLE_DMD_CONF=$(STABLE_DMD).conf
 
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
@@ -454,7 +455,8 @@ docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
 
 .PHONY: dpl-docs
 dpl-docs: ${DUB} ${STABLE_DMD}
-	${DUB} build --nodeps --root=${DPL_DOCS_PATH} --compiler=${STABLE_DMD}
+	DFLAGS="-conf=$(abspath ${STABLE_DMD_CONF})" ${DUB} build --nodeps --root=${DPL_DOCS_PATH} \
+		--compiler=${STABLE_DMD}
 
 ${STABLE_DMD}:
 	mkdir -p ${STABLE_DMD_ROOT}
@@ -462,7 +464,7 @@ ${STABLE_DMD}:
 		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
 
 ${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
-	cd ${DUB_DIR} && DC=$(abspath ${STABLE_DMD}) ./build.sh
+	cd ${DUB_DIR} && DC="$(abspath ${STABLE_DMD}) -conf=$(abspath ${STABLE_DMD_CONF})" ./build.sh
 
 ################################################################################
 # Dman tags
