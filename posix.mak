@@ -338,14 +338,12 @@ $(DMD_REL) : ${DMD_DIR}-${LATEST}/.cloned
 # druntime, latest released build and current build
 ################################################################################
 
-druntime-prerelease : ${DRUNTIME_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
-${DOC_OUTPUT_DIR}/phobos-prerelease/object.html : $(DMD) $(STD_DDOC_PRE)
+druntime-prerelease : ${DRUNTIME_DIR}/.cloned $(DMD) $(STD_DDOC_PRE)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
-druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/object.html
-${DOC_OUTPUT_DIR}/phobos/object.html : $(DMD_REL) $(STD_DDOC)
+druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned $(DMD_REL) $(STD_DDOC)
 	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak target doc \
 	  DMD=$(DMD_REL) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
@@ -367,16 +365,13 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/index.html
-${DOC_OUTPUT_DIR}/phobos-prerelease/index.html : $(STD_DDOC_PRE) \
-	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.html
+phobos-prerelease : ${PHOBOS_DIR}/.cloned $(STD_DDOC_PRE) druntime-prerelease
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
-phobos-release : ${PHOBOS_DIR}-${LATEST}/.cloned ${DOC_OUTPUT_DIR}/phobos/index.html
-${DOC_OUTPUT_DIR}/phobos/index.html : $(DMD_REL) $(STD_DDOC) \
-	    ${DOC_OUTPUT_DIR}/phobos/object.html
+phobos-release : ${PHOBOS_DIR}-${LATEST}/.cloned $(DMD_REL) $(STD_DDOC) \
+		druntime-release
 	${MAKE} --directory=${PHOBOS_DIR}-${LATEST} -f posix.mak -j 4 \
 	  html \
 	  DMD=$(DMD_REL) \
