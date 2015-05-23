@@ -58,7 +58,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.
 	D1toD2.html unittest.html hash-map.html intro-to-datetime.html		\
 	simd.html deprecate.html download.html 32-64-portability.html		\
 	d-array-article.html dll-linux.html bugstats.php.html getstarted.html \
-	gpg_keys.html css/cssmenu.css \
+	gpg_keys.html forum-template.html css/cssmenu.css \
 
 # exclude list
 MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
@@ -269,6 +269,8 @@ wc.html : $(DDOC) wc.dd
 windbg.html : $(DDOC) windows.ddoc windbg.dd
 
 windows.html : $(DDOC) windows.ddoc windows.dd
+
+forum-template.html : $(DDOC) forum-template.dd
 
 css/cssmenu.css : $(DDOC) css/cssmenu.css.dd
 	$(DMD) -o- -c -Df$@ $(DDOC) css/cssmenu.css.dd
