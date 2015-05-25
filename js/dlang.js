@@ -1,5 +1,5 @@
-( function( $ ) {
-	$( document ).ready(function() {
+(function($) {
+	$(function() {
 		var menu_ul = $('#cssmenu > ul > li > ul');
 		menu_ul.hide();
 
@@ -46,9 +46,7 @@
 				return false;
 			}
 		});
-	});
 
-	$(function() {
 		$('<div>')
 			.attr('id', 'mobile-hamburger')
 			.attr('class', 'fa fa-bars')
@@ -70,18 +68,13 @@
 				;
 			})
 			.prependTo('#header');
+
+		// [your code here] rotation for index.html
+		var $examples = $('.your-code-here-extra > pre');
+		if ($examples.length) {
+			var n = Math.floor(Math.random() * ($examples.length+1));
+			if (n)
+				$('#your-code-here-default > pre').replaceWith($examples[n-1]);
+		}
 	});
-
-} )( jQuery );
-
-// ---------------------------------------------------------------------------
-
-// [your code here] rotation for index.html
-$(function() {
-	var $examples = $('.your-code-here-extra > pre');
-	if ($examples.length) {
-		var n = Math.floor(Math.random() * ($examples.length+1));
-		if (n)
-			$('#your-code-here-default > pre').replaceWith($examples[n-1]);
-	}
-});
+})(jQuery);
