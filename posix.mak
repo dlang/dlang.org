@@ -127,7 +127,7 @@ IMAGES=favicon.ico $(addprefix images/, \
 	$(addsuffix .jpg, tdpl))
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
-	codemirror-compressed cssmenu ddox listanchors run run-main-website jquery-1.7.2.min))
+	codemirror-compressed dlang ddox listanchors run run-main-website jquery-1.7.2.min))
 
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox cssmenu))
