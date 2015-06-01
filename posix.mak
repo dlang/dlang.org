@@ -35,7 +35,7 @@ STABLE_DMD_CONF=$(STABLE_DMD).conf
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
 	std.c. std.algorithm.internal std.internal. std.regex.internal. std.typelist		\
-	std.windows. etc.linux.memoryerror)
+	std.windows. etc.linux.memoryerror std.stream std.cstream std.socketstream)
 
 MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE) --ex=core.stdc.
 
