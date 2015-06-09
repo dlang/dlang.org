@@ -61,6 +61,49 @@ $(H3 $(LEGACY_LNAME2 Predefined-Pragmas, predefined-pragmas, Predefined Pragmas)
 
     $(DL
 
+    $(DT $(D inline))
+    $(DD $(P Affects whether functions are inlined or not. If at the declaration level, it
+     affects the functions declared in the block it controls. If inside a function, it
+     affects the function it is enclosed by. If there are multiple pragma inlines in a function,
+     the lexically last one takes effect.)
+
+     $(P It takes three forms:)
+     $(OL
+	$(LI
+---
+pragma(inline)
+---
+	Sets the behavior to match the default behavior set by the compiler switch
+	$(DDSUBLINK dmd-windows, switch-inline, $(TT -inline)).
+	)
+	$(LI
+---
+pragma(inline, false)
+---
+	Functions are never inlined.
+	)
+	$(LI
+---
+pragma(inline, true)
+---
+	If a function cannot be inlined with the $(DDSUBLINK dmd-windows, switch-inline, $(TT -inline))
+	switch, an error message is issued. This is expected to be improved in the future to causing
+	functions to always be inlined regardless of compiler switch settings. Whether a compiler can
+	inline a particular function or not is implementation defined.
+	)
+      )
+---
+pragma(inline):
+int foo(int x) // foo() is never inlined
+{
+    pragma(inline, true);
+    ++x;
+    pragma(inline, false); // supercedes the others
+    return x + 3;
+}
+---
+    )
+
     $(DT $(D msg))
     $(DD Constructs a message from the arguments and prints to the standard error stream while compiling:
 -----------------
