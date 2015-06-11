@@ -147,6 +147,7 @@ SPEC_ROOT=spec intro lex grammar module declaration type property attribute prag
 	version traits errors unittest garbage float iasm ddoc				\
 	interfaceToC cpp_interface portability entity memory-safe-d abi		\
 	simd
+SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
@@ -264,8 +265,8 @@ rsync-only :
 # Ebook
 ################################################################################
 
-dlangspec.d : $(addsuffix .dd,$(SPEC_ROOT)) ${STABLE_DMD}
-	$(STABLE_RDMD) ../tools/catdoc.d -o$@ $^
+dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
+	$(STABLE_RDMD) ../tools/catdoc.d -o$@ $(SPEC_DD)
 
 dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d $(DMD)
 	$(DMD) -conf= $(DDOC) ebook.ddoc dlangspec.d
@@ -285,8 +286,8 @@ $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
 # LaTeX
 ################################################################################
 
-dlangspec-consolidated.d : $(addsuffix .dd,$(SPEC_ROOT)) ${STABLE_DMD}
-	$(STABLE_RDMD) --force ../tools/catdoc.d -o$@ $^
+dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
+	$(STABLE_RDMD) --force ../tools/catdoc.d -o$@ $(SPEC_DD)
 
 dlangspec.tex : $(DMD) $(DDOC) latex.ddoc dlangspec-consolidated.d
 	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc dlangspec-consolidated.d
