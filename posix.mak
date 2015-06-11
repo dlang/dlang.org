@@ -30,6 +30,7 @@ STABLE_DMD_VER=2.067.1
 STABLE_DMD_ROOT=/tmp/.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
+STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/rdmd
 STABLE_DMD_CONF=$(STABLE_DMD).conf
 
 # exclude lists
@@ -230,13 +231,13 @@ ${GENERATED}/${LATEST}.ddoc :
 	mkdir -p $(dir $@)
 	echo "LATEST=${LATEST}" >$@
 
-${GENERATED}/modlist-${LATEST}.ddoc : modlist.d $(DRUNTIME_DIR)-$(LATEST)/.cloned $(PHOBOS_DIR)-$(LATEST)/.cloned
+${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR)-$(LATEST)/.cloned $(PHOBOS_DIR)-$(LATEST)/.cloned
 	mkdir -p $(dir $@)
-	$(RDMD) modlist.d $(DRUNTIME_DIR)-$(LATEST) $(PHOBOS_DIR)-$(LATEST) $(MOD_EXCLUDES_RELEASE) >$@
+	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR)-$(LATEST) $(PHOBOS_DIR)-$(LATEST) $(MOD_EXCLUDES_RELEASE) >$@
 
-${GENERATED}/modlist-prerelease.ddoc : modlist.d $(DRUNTIME_DIR)/.cloned $(PHOBOS_DIR)/.cloned
+${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR)/.cloned $(PHOBOS_DIR)/.cloned
 	mkdir -p $(dir $@)
-	$(RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(MOD_EXCLUDES_PRERELEASE) >$@
+	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(MOD_EXCLUDES_PRERELEASE) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
@@ -263,8 +264,8 @@ rsync-only :
 # Ebook
 ################################################################################
 
-dlangspec.d : $(addsuffix .dd,$(SPEC_ROOT))
-	$(RDMD) ../tools/catdoc.d -o$@ $^
+dlangspec.d : $(addsuffix .dd,$(SPEC_ROOT)) ${STABLE_DMD}
+	$(STABLE_RDMD) ../tools/catdoc.d -o$@ $^
 
 dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d $(DMD)
 	$(DMD) -conf= $(DDOC) ebook.ddoc dlangspec.d
@@ -284,8 +285,8 @@ $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
 # LaTeX
 ################################################################################
 
-dlangspec-consolidated.d : $(addsuffix .dd,$(SPEC_ROOT))
-	$(RDMD) --force ../tools/catdoc.d -o$@ $^
+dlangspec-consolidated.d : $(addsuffix .dd,$(SPEC_ROOT)) ${STABLE_DMD}
+	$(STABLE_RDMD) --force ../tools/catdoc.d -o$@ $^
 
 dlangspec.tex : $(DMD) $(DDOC) latex.ddoc dlangspec-consolidated.d
 	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc dlangspec-consolidated.d
