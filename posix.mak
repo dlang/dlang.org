@@ -127,7 +127,7 @@ IMAGES=favicon.ico $(addprefix images/, \
 	$(addsuffix .jpg, tdpl))
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
-	codemirror-compressed cssmenu ddox listanchors run run-main-website jquery-1.7.2.min))
+	codemirror-compressed dlang ddox listanchors run run-main-website jquery-1.7.2.min))
 
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox cssmenu))
@@ -156,7 +156,7 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements ascii-table		\
 	bugstats.php builtin changelog code_coverage concepts const-faq COM	\
 	comparison cpptod ctod D1toD2 d-array-article d-floating-point		\
 	deprecate dll dll-linux dmd-freebsd dmd-linux dmd-osx dmd-windows	\
-	download dstyle exception-safe faq features2 gpg_keys getstarted glossary gsoc2011 \
+	download dstyle exception-safe faq features2 forum-template gpg_keys getstarted glossary gsoc2011 \
 	gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index intro \
 	intro-to-datetime lazy-evaluation memory migrate-to-shared mixin	\
 	overview pretod rationale rdmd regular-expression safed			\
