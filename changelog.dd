@@ -2,12 +2,96 @@ Ddoc
 
 $(D_S D Change Log,
 
-$(VERSION 067, Mar 1, 2015, =================================================,
+$(COMMENT VERSION 068.0, XXX ??, 2015, =================================================,
+
+$(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 array-bool-4733, The compiler now generates a warning when using an array as a boolean value))
+)
+
+$(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 array-bool-4733, The compiler now generates a warning when using an array as a boolean value)
+
+    $(P The compiler currently allows using an expression with an array type in some places where a boolean is expected.  This is evaluated as `arr.ptr != null`, which may cause unintended behavior when dealing with empty slices, which have a non-null pointer but zero length.  The code should be changed to explicitly use `arr.ptr != null` if it really meant to check for a null array, or `arr.length != 0` or `arr != null` if another behavior was intended.  Details and discussion can be found $(LINK2 https://issues.dlang.org/show_bug.cgi?id=4733, here),)
+
+        --------
+        auto x = new int[](7);
+        auto y = x[5..5]; // y has a valid .ptr but zero length
+        assert(y); // Will now give a warning, previously passed
+        assert(y == null); // passes, because both y and null are empty
+        assert(y.ptr != null); // passes because y has a valid .ptr
+        assert(y.length == 0); // passes
+
+        if (y) // Will now give a warning
+        {
+        }
+        --------
+
+        $(TABLE_10 $(ARGS Boolean values for different arrays and expressions),
+        $(VERTROW Expression/Array, non-empty array, empty array with valid ptr, null array)
+        $(TROW $(D arr.length != 0), $(D true), $(D false), $(D false))
+        $(TROW $(D !arr.empty), $(D true), $(D false), $(D false))
+        $(TROW $(D arr != null), $(D true), $(D false), $(D false))
+        $(TROW $(D arr.ptr != null), $(D true), $(D true), $(D false))
+        )
+
+)
+
+)
+
+)
+
+$(VERSION 067.1, Apr 25, 2015, =================================================,
+
+$(BR)$(BIG List of all bug fixes and enhancements:)
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(P
+$(LI $(BUGZILLA 14344): [REG2.067] Wrong opBinary call in construction)
+$(LI $(BUGZILLA 14376): [REG2.064] false positive "Error: one path skips field")
+$(LI $(BUGZILLA 14395): [REG2.067] Typesafe variadic function call collapsed if being used for default value)
+$(LI $(BUGZILLA 14424): [REG2.066] dmd crashes with __traits$(LPAREN)getUnitTests$(RPAREN))
+$(LI $(BUGZILLA 14440): [REG2.067] [CTFE] Wrong values set in a matrix constructor)
+$(LI $(BUGZILLA 14443): [REG2.067.0] Incorrect double freeing of reference counted struct)
+$(LI $(BUGZILLA 14463): [REG2.067] DMD crashes compiling module level immutable struct that takes an array in ctor)
+)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(P
+$(LI $(BUGZILLA 14375): static assert leads to __traits$(LPAREN)allMembers$(RPAREN) retuning an extra empty entry)
+)
+)
+$(BUGSTITLE Phobos regressions,
+
+$(P
+$(LI $(BUGZILLA 14396): [REG2.066] compile error std.conv.parse!int with input range)
+)
+)
+$(BUGSTITLE Druntime regressions,
+
+$(P
+$(LI $(BUGZILLA 14467): arr.capacity sometimes erroneously returns 0)
+)
+)
+$(BUGSTITLE Website bugs,
+
+$(P
+$(LI $(BUGZILLA 14329): [2.067] offline doc - menu broken due to missing jquery-1.7.2.min.js)
+)
+)
+
+)
+
+$(VERSION 067.0, Mar 24, 2015, =================================================,
 
 $(BUGSTITLE Language Changes,
 $(LI $(RELATIVE_LINK2 heap-struct-destructors, Destructors for structs allocated on the heap are now invoked.))
 $(LI $(RELATIVE_LINK2 asm-attributes, $(D asm) statements can now be used in $(D pure), $(D nothrow), $(D @nogc), or $(D @trusted) code.))
 $(LI $(RELATIVE_LINK2 package-protection, $(D package) protection attribute can be optionally bound to specified package))
+$(LI $(RELATIVE_LINK2 sealed-references, Sealed references were added $(LPAREN)DIP25$(RPAREN)))
+$(LI $(RELATIVE_LINK2 with-statement-8269, The with statement now observes temporary object lifetime))
 )
 
 $(BUGSTITLE Library Changes,
@@ -15,7 +99,12 @@ $(LI $(RELATIVE_LINK2 faster-gc-1, The garbage collector got faster.))
 $(LI $(RELATIVE_LINK2 volatile-load-store, $(D volatileLoad) and $(D volatileStore) intrinsics were added.))
 $(LI $(RELATIVE_LINK2 gc-options, $(B Experimental:) The garbage collector can now be configured.))
 $(LI $(RELATIVE_LINK2 aa-keyvalue, $(D byKeyValue) was added.))
-$(LI $(LINK2 phobos-prerelease/std_concurrency.html#.initOnce, $(D initOnce) was added to perform thread-safe lazy initialization.))
+$(LI $(LINK2 phobos/std_concurrency.html#.initOnce, $(D initOnce) was added to perform thread-safe lazy initialization.))
+$(LI $(RELATIVE_LINK2 std-range-enumerate, A new range algorithm $(D enumerate) was added to
+attach indexes to range elements.))
+$(LI $(RELATIVE_LINK2 std-exception-handle, A new range algorithm $(D handle) was added to
+enable exception handling in range compositions.))
+$(LI $(RELATIVE_LINK2 logger, An experimental logging system was added.))
 
 $(BUGSTITLE Language Changes,
 
@@ -57,6 +146,33 @@ $(LI $(LNAME2 package-protection, $(D package) protection attribute can be optio
         package void bar() {}
         ---------
     )
+)
+
+$(LI $(LNAME2 sealed-references, Sealed references were added $(LPAREN)DIP25$(RPAREN))
+
+    $(P In $(D @safe) functions it is now required to use $(D return ref) to return a reference to a parameter or a field of it.)
+
+        --------
+        @safe:
+        ref int fun(ref int a) { return a; } // ERROR
+        ref int gun(return ref int a) { return a; } // FINE
+        ref T hun(T)(ref T a) { return a; } // FINE, templates use deduction
+        --------
+
+    $(P See $(LINK2 http://wiki.dlang.org/DIP25, DIP25) for more details.)
+)
+
+$(LI $(LNAME2 with-statement-8269, The with statement now observes temporary object lifetime)
+
+    $(P A longstanding $(LINK2 https://issues.dlang.org/show_bug.cgi?id=8269, bug) of the with statement was fixed which prevented the idiomatic use of $(LINK2 http://wiki.dlang.org/Commonly-Used_Acronyms,RAII) values.)
+
+        --------
+        with (File("output.log", "w"))
+        {
+            writeln("Content");
+        }
+        // File is automatically closed
+        --------
 )
 
 )
@@ -180,6 +296,621 @@ $(LI $(LNAME2 aa-keyvalue, $(D byKeyValue) was added.)
     }
     ------
 )
+
+$(LI $(LNAME2 std-range-enumerate, $(D enumerate) was added.)
+    $(P $(XREF range, enumerate) enables iteration of ranges with an index variable:)
+    ------
+    void main()
+    {
+        import std.stdio : stdin, stdout;
+        import std.range : enumerate;
+
+        foreach (lineNum, line; stdin.byLine().enumerate(1))
+            stdout.writefln("line #%s: %s", lineNum, line);
+    }
+    ------
+)
+
+$(LI $(LNAME2 std-exception-handle, $(D handle) was added.)
+    $(P $(XREF exception, handle) enables exception handling in range compositions:)
+    ------
+    import std.algorithm : equal;
+    import std.range : retro;
+    import std.utf : UTFException;
+
+    auto str = "hello\xFFworld"; // 0xFF is an invalid UTF-8 code unit
+
+    auto handled = str.handle!(UTFException, RangePrimitive.access,
+            (e, r) => ' '); // Replace invalid code points with spaces
+
+    assert(handled.equal("hello world")); // `front` is handled,
+    assert(handled.retro.equal("dlrow olleh")); // as well as `back`
+    ------
+)
+
+)
+)
+
+$(LI $(LNAME2 logger, An experimental logging system was added.)
+
+------
+import std.experimental.logger;
+
+void main()
+{
+    log("message logging in D");
+}
+------
+)
+$(BR)$(BIG List of all bug fixes and enhancements:)
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(P
+$(LI $(BUGZILLA 4890): GC.collect$(LPAREN)$(RPAREN) deadlocks multithreaded program.)
+$(LI $(BUGZILLA 12381): [REG2.065] [ICE] An internal error in e2ir.c while casting array ops)
+$(LI $(BUGZILLA 12422): [REG2.055] Templated nested function is inferred as `pure` even if it calls impure functions)
+$(LI $(BUGZILLA 12912): Lambda function is incorrectly inferred as impure if it uses member field or function)
+$(LI $(BUGZILLA 13009): [REG2.064] inout overload conflicts with non-inout when used via alias this)
+$(LI $(BUGZILLA 13311): [REG2.065] ICE, CtorDeclaration::semantic$(LPAREN)Scope*$(RPAREN): Assertion `tf && tf->ty == Tfunction' failed)
+$(LI $(BUGZILLA 13479): [REG2.067a] Templates not emitted when instantiated in mixins mixed in functions)
+$(LI $(BUGZILLA 13497): [REG2.065] [ICE e2ir 1911] Array op compiler error)
+$(LI $(BUGZILLA 13498): Return type is not checked in function template)
+$(LI $(BUGZILLA 13502): [REG2.065] Stray '$(LPAREN)' warning not emitted for documentation of enum templates)
+$(LI $(BUGZILLA 13503): [REG2.065] Bad code with -inline, varargs and auto return)
+$(LI $(BUGZILLA 13514): Druntime no longer builds with -g)
+$(LI $(BUGZILLA 13515): [REG2.064] "Range violation" when writing to array of AAs from static this)
+$(LI $(BUGZILLA 13550): [REG2.067a] Inner functions take outer function attributes erroneously)
+$(LI $(BUGZILLA 13564): [REG2.065] nested struct destructor trying to access members of a global class fail to compile)
+$(LI $(BUGZILLA 13601): [REG2.064] static if $(LPAREN)__ctfe$(RPAREN) should emit error)
+$(LI $(BUGZILLA 13640): [REG2.066] can break immutability with inout)
+$(LI $(BUGZILLA 13644): [REG2.066] ICE with foreach over array of Tuples)
+$(LI $(BUGZILLA 13673): ICE$(LPAREN)backend/cod2.d 5114$(RPAREN))
+$(LI $(BUGZILLA 13675): enum type used with template causes compiler to segfault)
+$(LI $(BUGZILLA 13694): Typesafe variadic function template overload fails to match to any template)
+$(LI $(BUGZILLA 13714): [REG2.066.1] Assertion failure: '0' on line 2022 in file 'mtype.c')
+$(LI $(BUGZILLA 13729): [REG2.067a] One not detected case of not purity)
+$(LI $(BUGZILLA 13760): [REG2.067a] Cannot deduce function for object.get)
+$(LI $(BUGZILLA 13775): [REG2.067a] Broken explicit casting of dynamic array slices of known size to static array of different type)
+$(LI $(BUGZILLA 13776): [REG2.067a] Incorrect "recursive alias declaration" error with `__traits$(LPAREN)compiles, ...$(RPAREN)`)
+$(LI $(BUGZILLA 13807): [REG2.067a] inout$(LPAREN)T$(RPAREN)[] no longer matches string[])
+$(LI $(BUGZILLA 13827): [REG2.067a] Internal Compiler Error: null field)
+$(LI $(BUGZILLA 13840): [REG2.067a] nothrow attribute affects inside of try-catch block when using foreach with opApply)
+$(LI $(BUGZILLA 13864): [REG2.066] tuple expand causes range violation)
+$(LI $(BUGZILLA 13873): 2.066.1 Compiling with -debug -inline generates huge files)
+$(LI $(BUGZILLA 13886): [REG2.066] global.gaggedErrors ICE)
+$(LI $(BUGZILLA 13921): ICE with template instantiation error)
+$(LI $(BUGZILLA 13934): Cannot pass 'this' to function by reference)
+$(LI $(BUGZILLA 13937): C++ mangling for template negative parameter not correct for dmc)
+$(LI $(BUGZILLA 13942): [REG2.066] Bad template error message)
+$(LI $(BUGZILLA 13950): [REG2.062] zero-length tuple does not work on function default argument)
+$(LI $(BUGZILLA 13952): [REG2.067a] change in struct ctor lowering triggers codegen bug)
+$(LI $(BUGZILLA 13966): [REG2.067a] dmd: expression.c:3761: size_t StringExp::length$(LPAREN)int$(RPAREN): Assertion  `encSize == 1 || encSize == 2 || encSize == 4' failed.)
+$(LI $(BUGZILLA 13968): [REG2.067a] constructing and returing union causes segfault)
+$(LI $(BUGZILLA 13969): [REG2.063] [ICE] $(LPAREN)backend\cgcod.c 2309$(RPAREN) with cycle$(LPAREN)iota$(LPAREN)a,b,s$(RPAREN)$(RPAREN))
+$(LI $(BUGZILLA 13992): [REG2.067a] CTFE produces strange error with += operator on integer type)
+$(LI $(BUGZILLA 13998): Wrong code with -O -inline, loops, and taking address of double)
+$(LI $(BUGZILLA 13999): [REG2.067a] Associative array literal with static array keys must now have matching key lengths)
+$(LI $(BUGZILLA 14038): [REG2.067a] Non-mutable AA initialization segfaults in runtime)
+$(LI $(BUGZILLA 14039): [REG2.067a] function is incorrectly inferred as 'pure')
+$(LI $(BUGZILLA 14044): dmd generates spurious functions in object file created from empty module)
+$(LI $(BUGZILLA 14049): [REG2.064] Wrong purity inference for nested lambda)
+$(LI $(BUGZILLA 14057): [REG2.066] opSlice not working correctly with AliasThis)
+$(LI $(BUGZILLA 14061): Refused array concat at compile-time)
+$(LI $(BUGZILLA 14074): [REG2.067a] non-separate compilation fails, but separate compilation works)
+$(LI $(BUGZILLA 14075): [REG2.067a] Segfault with ambiguous overloading functions without body)
+$(LI $(BUGZILLA 14089): [REG2.064] Assigning to AA has no value when overriding opAssign)
+$(LI $(BUGZILLA 14090): [REG2.067a] Incorrect "recursive alias declaration")
+$(LI $(BUGZILLA 14093): [REG2.065] __traits$(LPAREN)compiles, cast$(LPAREN)Object$(RPAREN)$(LPAREN)tuple$(RPAREN)$(RPAREN) is true even if it doesn't compile.)
+$(LI $(BUGZILLA 14104): aa with pointer key type doesn't find existing value)
+$(LI $(BUGZILLA 14106): sort is @safe in release mode, @system in debug mode)
+$(LI $(BUGZILLA 14109): [REG2.066.1] Property-like function call does not work on template value parameter)
+$(LI $(BUGZILLA 14126): GITHEAD - GC seemingly corrupting memory)
+$(LI $(BUGZILLA 14130): [REG2.067a] ICE following error in template parameter default value)
+$(LI $(BUGZILLA 14144): [REG2.067a] opAssign seems broken)
+$(LI $(BUGZILLA 14146): [REG2.067a] ICE with non-empty default constructor in struct)
+$(LI $(BUGZILLA 14155): [REG2.066] A defect in DIP29: the return value of some pure functions cannot be unique pointer)
+$(LI $(BUGZILLA 14160): [REG2.066] mutable global data access is wrongly accepted in pure function)
+$(LI $(BUGZILLA 14166): [REG2.066] Excess CTFE running for the temporary variable in module level expression)
+$(LI $(BUGZILLA 14169): Template symbol visibility regression)
+$(LI $(BUGZILLA 14173): [REG2.064] Omitting return type with override hides an error)
+$(LI $(BUGZILLA 14177): [REG2.066.1] ICE$(LPAREN)statement.c$(RPAREN) recursive aliases)
+$(LI $(BUGZILLA 14198): [REG2.067a] Link failure with Variant)
+$(LI $(BUGZILLA 14199): [REG2.067a] Dwarf Error: mangled line number section)
+$(LI $(BUGZILLA 14218): [REG2.067a] casting null to integer type causes error message)
+$(LI $(BUGZILLA 14220): Bad codegen for optimized std.conv.text in combination with concatenation)
+$(LI $(BUGZILLA 14232): redundant attribute 'const')
+$(LI $(BUGZILLA 14235): [REG2.066] full-qualified template instantiation misses its error location)
+$(LI $(BUGZILLA 14262): [REG] [2.067-b3] Can't use class `this` as ref argument)
+$(LI $(BUGZILLA 14267): [REG2.067beta2] ICE when determining if a function can be inlined)
+$(LI $(BUGZILLA 14283): [2.067-b4]: Spurious "this is not an lvalue" deprecation message for "auto ref" arguments)
+$(LI $(BUGZILLA 14285): [REG2.063] alias this to nothing is accepted)
+$(LI $(BUGZILLA 14299): [REG2.067.0-rc1] "ref" parameter in CTFE handled incorrectly for recursive calls)
+$(LI $(BUGZILLA 14301): [2.067-rc1] Private symbols of module conflicts with public from another)
+$(LI $(BUGZILLA 14304): [REG2.067a] ICE with static immutable variable CTFE)
+$(LI $(BUGZILLA 14317): [REG2.066] ICE $(LPAREN)cgcod.c 1767$(RPAREN) when compiing with -profile -O -inline)
+)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(P
+$(LI $(BUGZILLA 1625): CTFE: cannot evaluate function when return type includes a union)
+$(LI $(BUGZILLA 1829): Inline assembler cannot get label addresses)
+$(LI $(BUGZILLA 2644): Unresolved template reference)
+$(LI $(BUGZILLA 2834): Struct Destructors are not called by the GC, but called on explicit delete.)
+$(LI $(BUGZILLA 3022): scope x = new Foo; does not allocate on stack if Foo has allocator)
+$(LI $(BUGZILLA 3918): Parameter use before its use in an AndAnd expression with reals treats NaN as false)
+$(LI $(BUGZILLA 4062): can call method without this pointer inside is$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 4103): opAssign signature rules not enforced on templated opAssign)
+$(LI $(BUGZILLA 4149): refs displayed as pointers in gdb)
+$(LI $(BUGZILLA 4181): GDB prints wrong value of TLS variables)
+$(LI $(BUGZILLA 5314): Wrong error message: struct within immutable member and postblit function)
+$(LI $(BUGZILLA 5908): Optimizer generates wrong value with divide-by-zero.)
+$(LI $(BUGZILLA 6423): Garbage is returned from `void main$(LPAREN)$(RPAREN)`)
+$(LI $(BUGZILLA 6565): out 2D fixed-sized array)
+$(LI $(BUGZILLA 6574): Erroneous recursive call in template instantiation)
+$(LI $(BUGZILLA 6810): Strange `tuple used as a type` error)
+$(LI $(BUGZILLA 7104): linker error on void main$(LPAREN)$(RPAREN){ typeof$(LPAREN)new class{}$(RPAREN) c; c = new typeof$(LPAREN)c$(RPAREN); })
+$(LI $(BUGZILLA 7151): [CTFE] cannot compare classes with ==)
+$(LI $(BUGZILLA 7465): Duplicate error message for bad template mixin)
+$(LI $(BUGZILLA 7874): [CTFE] internal error: unsupported assignment $(LPAREN)x OP= y$(RPAREN) = z)
+$(LI $(BUGZILLA 7942): Appending different string types corrupts memory)
+$(LI $(BUGZILLA 8246): tuple fields pollute the linker namespace)
+$(LI $(BUGZILLA 8425): Missing line number and module name that can't use core.simd)
+$(LI $(BUGZILLA 9047): Expression requiring std.math fails with function-local import)
+$(LI $(BUGZILLA 9148): 'pure' is broken)
+$(LI $(BUGZILLA 9537): auto ref returns a reference its own stack)
+$(LI $(BUGZILLA 9554): Inconsistent stringof and mangleof result for module/package identifier)
+$(LI $(BUGZILLA 9581): Exceptions are too slow)
+$(LI $(BUGZILLA 9620): Error messages of failed pure enforcement)
+$(LI $(BUGZILLA 9685): Context pointer of struct isn't copied when a closure is passed by alias)
+$(LI $(BUGZILLA 9728): Ddoc anchors non-unique across overloads)
+$(LI $(BUGZILLA 9906): filter of static opCall)
+$(LI $(BUGZILLA 10307): Bad error message for not supported array operation)
+$(LI $(BUGZILLA 10311): gdb prints wrong value for variable updated from closure)
+$(LI $(BUGZILLA 10528): Private constant $(LPAREN)enum$(RPAREN) properties not private)
+$(LI $(BUGZILLA 10855): Missing dmd.conf for FreeBSD in DMD 2.063.2 release)
+$(LI $(BUGZILLA 10915): std.typecons.Nullable throws in writeln$(LPAREN)$(RPAREN) if it's null)
+$(LI $(BUGZILLA 10920): template instantiation order dependent link failure problem)
+$(LI $(BUGZILLA 11042): Inconsistent "static condition" behaviors)
+$(LI $(BUGZILLA 11260): Assertion `type->ty != Tstruct || $(LPAREN)$(LPAREN)TypeStruct *$(RPAREN)type$(RPAREN)->sym == this' failed)
+$(LI $(BUGZILLA 11355): Copy through alias this with @disabled this$(LPAREN)this$(RPAREN))
+$(LI $(BUGZILLA 11467): [CTFE] Overlapping array copy is allowed in CT)
+$(LI $(BUGZILLA 11746): invalid enum forward reference pattern not detected)
+$(LI $(BUGZILLA 11888): Incorrect behaviour taking slice from return value)
+$(LI $(BUGZILLA 11902): DMD debuginfo doesn't seem to write classes correctly)
+$(LI $(BUGZILLA 11915): Inconsistent overload resolution behaviour between `ref` and `out`)
+$(LI $(BUGZILLA 11916): [IFTI] Disabled by constraint overload with `out` with IFTI breaks overload resolution)
+$(LI $(BUGZILLA 12092): Wrong TLS access in PIC code $(LPAREN)X86_32$(RPAREN))
+$(LI $(BUGZILLA 12130): Segmentation fault if HOME environment variable does not exist)
+$(LI $(BUGZILLA 12163): pdb debugging $(LPAREN)win64$(RPAREN): stepping loops points to incorrect lines)
+$(LI $(BUGZILLA 12447): variadic template functions hijack all eponymous enum and alias template overloads)
+$(LI $(BUGZILLA 12495): CTFE slice cast can cause allocation)
+$(LI $(BUGZILLA 12500): ICE in codegen when multiplying an incremented size_t by a double)
+$(LI $(BUGZILLA 12502): Some static array casts incorrectly rejected in safe code)
+$(LI $(BUGZILLA 12531): forward reference with nested struct)
+$(LI $(BUGZILLA 12579): DMD rejects valid function literal)
+$(LI $(BUGZILLA 12636): extern$(LPAREN)C++$(RPAREN) class that implements D interface segfaults)
+$(LI $(BUGZILLA 12741): DMD accepts functions with contracts and no body)
+$(LI $(BUGZILLA 12776): Wrong type for __vector$(LPAREN)int[4]$(RPAREN).init)
+$(LI $(BUGZILLA 12780): Multiplying integer array by scalar double fails)
+$(LI $(BUGZILLA 12827): [ICE] Segfault on immutable field self-initialization)
+$(LI $(BUGZILLA 12871): inner function returning pointer to outer context local rejected)
+$(LI $(BUGZILLA 12908): [AA] `foreach` by keys and values over associative array in pure function allow impure function calls)
+$(LI $(BUGZILLA 12979): Nothrow violation error is hidden by inline assembler)
+$(LI $(BUGZILLA 12983): overload not recognized depending on order of declaration)
+$(LI $(BUGZILLA 13028): [ICE] CTFE internal error: cannot evaluate at compile time)
+$(LI $(BUGZILLA 13064): Redundant `auto` storage class is allowed for functions)
+$(LI $(BUGZILLA 13095): Sometimes struct destructor is called if constructor throws)
+$(LI $(BUGZILLA 13120): Body of `foreach` over string with transcoding ignores function attributes)
+$(LI $(BUGZILLA 13200): Assertion `protName' failed)
+$(LI $(BUGZILLA 13236): Invalid recursive struct field error not gagged in 'is'-expression)
+$(LI $(BUGZILLA 13280): `this.sizeof` rejected as static array length in some cases)
+$(LI $(BUGZILLA 13289): wchar and dchar C++ mangling is incorrect)
+$(LI $(BUGZILLA 13295): [CTFE] Modifications of const user type disappear)
+$(LI $(BUGZILLA 13297): [CTFE] Modifications of user type pointer member passed by ref in function disappear)
+$(LI $(BUGZILLA 13320): Redundant error messages for missing operation on struct instance)
+$(LI $(BUGZILLA 13336): auto ref return deduced to be ref despite return value coercion)
+$(LI $(BUGZILLA 13337): Invalid extern C++ namespace resolution)
+$(LI $(BUGZILLA 13356): [ICE] $(LPAREN)dmd 2.066: statement.c:754$(RPAREN) with recursive Algebraic)
+$(LI $(BUGZILLA 13361): Empty UDA accepted)
+$(LI $(BUGZILLA 13382): [e2ir] compare string to int - leads to ICE in e2ir.c 1902)
+$(LI $(BUGZILLA 13385): ICE with new package$(LPAREN)names$(RPAREN) protection)
+$(LI $(BUGZILLA 13403): [ICE][2.067Alpha] Internal error: backend\type.c 332 with new package protection extension.)
+$(LI $(BUGZILLA 13434): [ICE] indexing array with empty tuple causes dmd segfault)
+$(LI $(BUGZILLA 13437): [e2ir] ICE in e2ir.c 4616)
+$(LI $(BUGZILLA 13459): segfault in two auto opSlices$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 13465): Segfault by eager semantic2 running in template instantiation)
+$(LI $(BUGZILLA 13468): Wrong code when comparing class reference with typeof$(LPAREN)null$(RPAREN))
+$(LI $(BUGZILLA 13481): bug with inferring attributes from built-in properties)
+$(LI $(BUGZILLA 13484): Template type deduction from delegate parameter fails)
+$(LI $(BUGZILLA 13485): FP wrong-code with -O)
+$(LI $(BUGZILLA 13490): Can't append to array of structs with alias this as lvalue ternary opoerator result)
+$(LI $(BUGZILLA 13505): No line number with void array in class)
+$(LI $(BUGZILLA 13508): array vararg function safety not inferred)
+$(LI $(BUGZILLA 13521): [D1] -di disables declaration shadowing message)
+$(LI $(BUGZILLA 13528): Internal Compiler Error: CTFE DotType:)
+$(LI $(BUGZILLA 13530): [REG 2.066] D Inline Assembler in nothrow function hides errors)
+$(LI $(BUGZILLA 13539): Disallow optional template parameters with C-style syntax)
+$(LI $(BUGZILLA 13563): ICE with opIndexAssign op-overloading and ModuleScopeOperator)
+$(LI $(BUGZILLA 13574): incorrect code for assignment to dollar in slice expression)
+$(LI $(BUGZILLA 13583): Inconsistent naming of template arguments in debug symbols)
+$(LI $(BUGZILLA 13586): Destructors not run when argument list evaluation throws)
+$(LI $(BUGZILLA 13599): [D1] backend/cod1.c ICE with -inline)
+$(LI $(BUGZILLA 13600): ICE in dwarf.c line 1949 with -g enabled and lazy void parameter)
+$(LI $(BUGZILLA 13612): Wrong 'this' variable accessed in recursive ctfe member function)
+$(LI $(BUGZILLA 13613): Pragma msg affects data structure layout)
+$(LI $(BUGZILLA 13630): Senseless error with foreach over variadic list)
+$(LI $(BUGZILLA 13645): Incorrect ddoc generation for deprecated module)
+$(LI $(BUGZILLA 13661): static array init does not call destructors)
+$(LI $(BUGZILLA 13666): Undefined Symbols for __gshared data symbols in templates)
+$(LI $(BUGZILLA 13668): [ICE] unable to compile __traits$(LPAREN)allMembers...$(RPAREN))
+$(LI $(BUGZILLA 13669): [CTFE] Destructor call on static array variable is not yet supported in CTFE)
+$(LI $(BUGZILLA 13679): foreach_reverse is allowed for AAs)
+$(LI $(BUGZILLA 13701): [REG2.061] Associative array values ignore immutability)
+$(LI $(BUGZILLA 13707): msvc32 C++ struct return ABI not followed for structs with constructors)
+$(LI $(BUGZILLA 13739): in CTFE making an array over an array copies the data)
+$(LI $(BUGZILLA 13740): CTFE fails ref foreach over range)
+$(LI $(BUGZILLA 13747): Linux CMSG_NXTHDR is private, since alias doesn't change protection level)
+$(LI $(BUGZILLA 13757): [CTFE] extern$(LPAREN)C$(RPAREN) alias declaration does not work in CTFE)
+$(LI $(BUGZILLA 13779): gdb can't find frame base when using ld.gold)
+$(LI $(BUGZILLA 13783): Function overload with rvalue `inout` parameter not selected when `enum` parameter implicitly converted to its base type)
+$(LI $(BUGZILLA 13784): Wrong code with modulo operation and optimisations enabled)
+$(LI $(BUGZILLA 13787): Error without line number when slicing function pointer)
+$(LI $(BUGZILLA 13788): dmd segfault, pragma$(LPAREN)mangle$(RPAREN) and a mixin)
+$(LI $(BUGZILLA 13795): DMD ICE segfault compiling druntime)
+$(LI $(BUGZILLA 13831): DMD crash on newing struct with overlapped fields in CTFE)
+$(LI $(BUGZILLA 13832): delegates that return ref do not output correctly to .di file)
+$(LI $(BUGZILLA 13835): ICE in interpret.c:736 - Issue with static variables.)
+$(LI $(BUGZILLA 13841): infinite loop in compiler on simd arithmetic)
+$(LI $(BUGZILLA 13843): Issue when passing a delegate as an class alias template parameter)
+$(LI $(BUGZILLA 13847): CTFE internal error: dottype)
+$(LI $(BUGZILLA 13858): Wrong warning about unreachable code with break/goto case)
+$(LI $(BUGZILLA 13860): template required forward reference for typeof$(LPAREN)member$(RPAREN))
+$(LI $(BUGZILLA 13861): compiler segfault with nested struct, cannot access frame)
+$(LI $(BUGZILLA 13874): Invalid FunctionTypeOf segfault the compiler)
+$(LI $(BUGZILLA 13879): Default inizialization of function pointers array)
+$(LI $(BUGZILLA 13884): No error line number with std.array.array of range of type tuples)
+$(LI $(BUGZILLA 13899): Unwanted warning for pure opApply)
+$(LI $(BUGZILLA 13902): Compiler allows escaping the address of part of a local)
+$(LI $(BUGZILLA 13907): Surrogate pairs in wchar string literal will cause incorrect length match)
+$(LI $(BUGZILLA 13910): Internal error: e2ir.c 1926)
+$(LI $(BUGZILLA 13932): c++ mangling for template negative int parameter)
+$(LI $(BUGZILLA 13938): IASM shouldn't be able to access TLS variables)
+$(LI $(BUGZILLA 13939): IASM shouldn't access global symbol with PIC code)
+$(LI $(BUGZILLA 13947): Padding in empty structs is compared)
+$(LI $(BUGZILLA 13955): 64 bit C ABI not followed for passing structs with mixed floating types)
+$(LI $(BUGZILLA 13956): 64 bit C ABI not followed for passing empty structs)
+$(LI $(BUGZILLA 13959): ICE in e2ir when casting struct to pointer)
+$(LI $(BUGZILLA 13977): Front-end optimizer bug in AndAndExp)
+$(LI $(BUGZILLA 13978): Front-end optimizer bug in OrOrExp)
+$(LI $(BUGZILLA 13982): D1: wrong template instantiation is not rejected)
+$(LI $(BUGZILLA 13987): Invalid struct segfaults)
+$(LI $(BUGZILLA 14009): iasm parser accepts incorrect AsmExp)
+$(LI $(BUGZILLA 14010): Support mangleof property for opaque enum and struct type)
+$(LI $(BUGZILLA 14016): Nested inherited class doesn't know the type of its outer object)
+$(LI $(BUGZILLA 14022): [CTFE] postblits/destructors not called on static array field assignment)
+$(LI $(BUGZILLA 14023): [CTFE] postblits/destructors not called on static array index assignment)
+$(LI $(BUGZILLA 14024): [CTFE] unstable postblit/destructor call order on static array assignment)
+$(LI $(BUGZILLA 14028): [CTFE] Possible reinterpret cast to a pointer to static array)
+$(LI $(BUGZILLA 14050): `dmd -v` lists imports from failed __traits$(LPAREN)compiles$(RPAREN) blocks)
+$(LI $(BUGZILLA 14055): CTFE internal error with uninitialized array: Assertion failure: '0' on line 318 in file 'interpret.c')
+$(LI $(BUGZILLA 14083): Remained unresolved forward reference issue with template classes)
+$(LI $(BUGZILLA 14096): ICE in toir.c: 187)
+$(LI $(BUGZILLA 14116): Assertion failure: 'p->isPkgMod == PKGmodule' on line 143 in file 'import.c')
+$(LI $(BUGZILLA 14132): [ICE] error on arrays)
+$(LI $(BUGZILLA 14141): `pure` member function returning qualified member result is implicitly convertible to unqualified)
+$(LI $(BUGZILLA 14154): [e2ir] Error in e2ir at casting to struct)
+$(LI $(BUGZILLA 14163): No line number for error with disabled class constructor)
+$(LI $(BUGZILLA 14165): Link failure on class declaration with @disable this$(LPAREN)$(RPAREN);)
+$(LI $(BUGZILLA 14174): Weird IFTI deduction failure)
+$(LI $(BUGZILLA 14179): Posix x86_64 varargs prolog clobbers RDX)
+$(LI $(BUGZILLA 14195): Ice when mangling templated function parameter extern$(LPAREN)C++$(RPAREN) function)
+$(LI $(BUGZILLA 14200): C++ mangling issue with expanded tuples)
+$(LI $(BUGZILLA 14201): fatal error LNK1235: corrupt or invalid COFF symbol table)
+$(LI $(BUGZILLA 14210): invalid merging of template instances)
+$(LI $(BUGZILLA 14229): RAII ordering is wrong)
+$(LI $(BUGZILLA 14272): DMD segfault on invalid circular enum initialization)
+$(LI $(BUGZILLA 14275): Qualified package protection for aggregate member doesn't work)
+$(LI $(BUGZILLA 14276): DWARF debug info for SIMD broken)
+$(LI $(BUGZILLA 14306): Wrong codegen with -inline for generic lambdas)
+$(LI $(BUGZILLA 14311): Win32 COFF: bad symbols/relocation entries for global data accesses)
+$(LI $(BUGZILLA 14313): [ld.gold] gdb: wrong value of shared variables)
+)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(P
+$(LI $(BUGZILLA 1317): Document suggested means of overlapping array copy)
+$(LI $(BUGZILLA 2498): make foreach work for any callable symbol)
+$(LI $(BUGZILLA 2529): 'package' access qualifier should allow access to sub-packages)
+$(LI $(BUGZILLA 3449): const and immutable struct members do not behave according to spec)
+$(LI $(BUGZILLA 4567): dmd should print the dmd.conf location with usage statement)
+$(LI $(BUGZILLA 9089): Very restrictive Tuple constructor)
+$(LI $(BUGZILLA 9915): Typeid .name inconsistent between templated classes and structs)
+$(LI $(BUGZILLA 10165): No syntax to create thread-local shared variables)
+$(LI $(BUGZILLA 11530): need gdb test suite)
+$(LI $(BUGZILLA 12888): Include template constraints in JSON output)
+$(LI $(BUGZILLA 12985): Better error message for not supported array operation)
+$(LI $(BUGZILLA 13019): Different color for "Warning:")
+$(LI $(BUGZILLA 13350): is$(LPAREN)typeof$(LPAREN)fun$(RPAREN)$(RPAREN) causes link error when template fun calls undefined reference)
+$(LI $(BUGZILLA 13388): accept '@' before 'nothrow' and 'pure')
+$(LI $(BUGZILLA 13510): When adding "New issue" there should be no choice among DStress, puremagic, and D. Just leave D.)
+$(LI $(BUGZILLA 13609): better error message for missing '}')
+$(LI $(BUGZILLA 13704): Confusing error message when passing the same file on the command line twice)
+$(LI $(BUGZILLA 13756): [AA] Allow ref const index on foreach AA iteration)
+$(LI $(BUGZILLA 13802): Improve pretty-print result for the const$(LPAREN)string$(RPAREN) type)
+$(LI $(BUGZILLA 13803): Improve pretty-print result for the wstring an dstring types)
+$(LI $(BUGZILLA 13839): Use new style for alias declarations in di files)
+$(LI $(BUGZILLA 13944): Built-in stringof and mangleof properties are unnecessarily fixed to the type 'string')
+$(LI $(BUGZILLA 13976): Value range propagation to disable some slice bound tests)
+$(LI $(BUGZILLA 14105): strideImpl fails for 0xFF)
+$(LI $(BUGZILLA 14123): cannot compare typeid$(LPAREN)object.Object$(RPAREN) at compile time)
+$(LI $(BUGZILLA 14156): buffer overflow in LibELF)
+$(LI $(BUGZILLA 14211): Compiler should devirtualize calls to members of final class)
+$(LI $(BUGZILLA 14338): Implement DIP25 Sealed References)
+)
+)
+$(BUGSTITLE Phobos regressions,
+
+$(P
+$(LI $(BUGZILLA 13241): [REG2.067a] writeln no longer flushes stdout)
+$(LI $(BUGZILLA 13257): [REG2.067a] Deprecation message when using std.getopt with string[] parameter)
+$(LI $(BUGZILLA 13300): pure function 'std.array.Appender!$(LPAREN)T[]$(RPAREN).Appender.ensureAddable' cannot call impure function 'test.T.__fieldPostBlit')
+$(LI $(BUGZILLA 13304): std.algorithm.reduce: "Unable to deduce an acceptable seed type" with float[])
+$(LI $(BUGZILLA 13367): Buffer overflow when setting PATH)
+$(LI $(BUGZILLA 13375): Linking failure when importing both std.regex and std.algorithm)
+$(LI $(BUGZILLA 13390): [REG2.066] std.range.cycle ctor fails when empty input passed)
+$(LI $(BUGZILLA 13393): [REG2.067a] std.algorithm.joiner Assertion failure in popFront$(LPAREN)$(RPAREN) when using with cartesianProduct)
+$(LI $(BUGZILLA 13621): inout issue with std.container.Array opSlice)
+$(LI $(BUGZILLA 13716): Phobos std.file fails to build)
+$(LI $(BUGZILLA 13717): `split` no longer defined by std.string)
+$(LI $(BUGZILLA 13766): std.container, std.range, std.regex documentation is now broken)
+$(LI $(BUGZILLA 13774): Multiple definition of `conv_50c_dc8` with three libraries and `std.file` import)
+$(LI $(BUGZILLA 13871): [REG2.067a] Segmentation fault from std/variant.d:609)
+$(LI $(BUGZILLA 14037): Problem with BigInt and std.functional.memoize)
+$(LI $(BUGZILLA 14041): Refused writeln of a fixed size array of chars)
+$(LI $(BUGZILLA 14042): std.conv.to of a immutable char pointer)
+$(LI $(BUGZILLA 14197): "replace" was moved from std.string without alias added)
+$(LI $(BUGZILLA 14212): frexp for const and immutable fails to compile)
+$(LI $(BUGZILLA 14213): Strange deprecated message in std.typecons.Proxy with using method)
+$(LI $(BUGZILLA 14230): [REG2.067b2] std.array.join misses the first element which is empty string)
+$(LI $(BUGZILLA 14233): [REG2.067b2] Can't build Algebraic!$(LPAREN)This[]$(RPAREN) anymore)
+$(LI $(BUGZILLA 14253): [REG2.067b3] std.traits.ParameterStorageClassTuple gives compiler errors when encountering 'return' functions)
+$(LI $(BUGZILLA 14300): [2.067-rc1] DList casting to base type is broken)
+)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(P
+$(LI $(BUGZILLA 649): concatenation hangs in threaded program)
+$(LI $(BUGZILLA 3141): osx syntax problem with touch)
+$(LI $(BUGZILLA 5036): Remove caching from ranges)
+$(LI $(BUGZILLA 5233): [patch] std.range.put accepts *any* element type when putting to an array.)
+$(LI $(BUGZILLA 5698): va_arg sets wrong length for $(LPAREN)u$(RPAREN)short[])
+$(LI $(BUGZILLA 6256): [patch] std.algorithm.map does not support static arrays and has 'length' for narrow strings.)
+$(LI $(BUGZILLA 6339): stdin.byChunk throws with Windows pipes on command line)
+$(LI $(BUGZILLA 7223): Access violation when using rmdirRecurse on folder without modify permissions)
+$(LI $(BUGZILLA 7797): std.typelist should be deprecated)
+$(LI $(BUGZILLA 8578): std.demangle.demangle does not parse symbols that are type names)
+$(LI $(BUGZILLA 8708): Documentation for std.process.exec family is inaccurate)
+$(LI $(BUGZILLA 9507): std.range.transposed behaves poorly with jagged ranges of ranges)
+$(LI $(BUGZILLA 10104): std.algorithm.group of a const/immutable array)
+$(LI $(BUGZILLA 10125): readln!dchar misdecodes Unicode non-BMP)
+$(LI $(BUGZILLA 10139): std.stdio.writef and friends documentation is severely out of date)
+$(LI $(BUGZILLA 10460): std.algorithm: some of algorithms don't use 'auto ref' for front)
+$(LI $(BUGZILLA 11434): std.file.copy doesn't preserve file attributes $(LPAREN)eg: executable mode etc$(RPAREN))
+$(LI $(BUGZILLA 11539): wrong "Orphan format specifier:" error message)
+$(LI $(BUGZILLA 11895): Add Strings Overview page to Phobos documentation)
+$(LI $(BUGZILLA 12114): buildNormalizedPath shouldn't normalize current path to empty string)
+$(LI $(BUGZILLA 12320): std.stdio.LockingTextReader populates .front in .empty)
+$(LI $(BUGZILLA 12589): std.random.randomCover fails for empty ranges)
+$(LI $(BUGZILLA 12631): std.string.isNumeric uses among without explicit braces when calling 'std.algorithm.among' when compiling with dmd -property flag)
+$(LI $(BUGZILLA 12733): parallelism.amap incorrect assignment without initialization)
+$(LI $(BUGZILLA 12913): Mistake concerning DLists)
+$(LI $(BUGZILLA 12915): RedBlackTree leaks memory)
+$(LI $(BUGZILLA 12969): std.json: Lack of opIndexAssign operator for JSONValue may become a source of runtime errors)
+$(LI $(BUGZILLA 13018): std.string.translate needs mutable translation table)
+$(LI $(BUGZILLA 13124): std.algorithm.until with not-boolean predicates too)
+$(LI $(BUGZILLA 13248): std.range.tee unit test prints to stdout)
+$(LI $(BUGZILLA 13315): std.getopt: implicit help option doesn't work without config.passThrough)
+$(LI $(BUGZILLA 13316): std.getopt: implicit help option breaks the next argument)
+$(LI $(BUGZILLA 13317): std.getopt: endOfOptions broken when it doesn't look like an option)
+$(LI $(BUGZILLA 13352): Algebraic does not support binary arithmetic when omitting small number types)
+$(LI $(BUGZILLA 13354): Algebraic.opIndex/opIndexAssign makes wrong assumptions on the index/value type)
+$(LI $(BUGZILLA 13391): BigInt division by ulong rejected)
+$(LI $(BUGZILLA 13418): uninitializedArray & core.simd.Vector return incorrect type)
+$(LI $(BUGZILLA 13425): DList.linearRemove on last element returns non-empty range)
+$(LI $(BUGZILLA 13441): joiner asserts with only$(LPAREN)x$(RPAREN) separator)
+$(LI $(BUGZILLA 13446): Can't use executeShell/escapeShellFileName to redirect to file whose name starts with &)
+$(LI $(BUGZILLA 13447): Do not escape process parameters unless necessary)
+$(LI $(BUGZILLA 13477): std.process should ignore unnamed service variables on Windows)
+$(LI $(BUGZILLA 13529): std.string.lastIndexOf matches wrong element)
+$(LI $(BUGZILLA 13535): byCodeUnit doesn't satisfy hasSlicing)
+$(LI $(BUGZILLA 13592): std.datetime fails its unittests on Windows 7 - no Belarus Standard Time?)
+$(LI $(BUGZILLA 13594): std.algorithm.nextPermutation should accept ranges of lvalues)
+$(LI $(BUGZILLA 13647): std.traits documentation needs linking correctly and has spurious category value)
+$(LI $(BUGZILLA 13649): uniform01 Assertion failure)
+$(LI $(BUGZILLA 13686): Reading unicode string with readf $(LPAREN)"%s"$(RPAREN) produces a wrong string)
+$(LI $(BUGZILLA 13689): byCodeUnit fails to be a random access range)
+$(LI $(BUGZILLA 13746): formatValue of delegates with @nogc)
+$(LI $(BUGZILLA 13781): Tuple assign should be @nogc)
+$(LI $(BUGZILLA 13805): Nested struct initialization error)
+$(LI $(BUGZILLA 13877): Problem with map+join)
+$(LI $(BUGZILLA 13922): std.range.package.takeOne doesn't accept non-forward ranges)
+$(LI $(BUGZILLA 13931): Missing overflow checks in `std.conv` for negative numbers which start from the most negative number digits)
+$(LI $(BUGZILLA 13935): Problem with std.algorithm.cartesianProduct$(LPAREN)map, map$(RPAREN))
+$(LI $(BUGZILLA 13963): BigInt modulo ulong is rejected)
+$(LI $(BUGZILLA 13990): std.algorithm.move incorrectly uses hasAliasing for class references)
+$(LI $(BUGZILLA 14012): std.socket: wrong SocketSet.max on Posix)
+$(LI $(BUGZILLA 14013): std.socket: off-by-one error when automatically resizing on POSIX)
+$(LI $(BUGZILLA 14025): unittests for memoize fail intermittently)
+$(LI $(BUGZILLA 14059): Formatted write with wrong formatting string)
+$(LI $(BUGZILLA 14065): std.json not tracking line:column properly)
+$(LI $(BUGZILLA 14082): RedBlackTree unittest fails with custom predicate less)
+$(LI $(BUGZILLA 14111): Broken DDOC for std.format)
+$(LI $(BUGZILLA 14124): BigInt %= int can return "-0")
+$(LI $(BUGZILLA 14181): Wrong document for std.mathspecial.normalDistribution)
+$(LI $(BUGZILLA 14223): TimSort algorithm is incorrect)
+$(LI $(BUGZILLA 14231): findRoot fails with trivial bounds)
+$(LI $(BUGZILLA 14297): [2.067-rc1] Broken links in phobos/index.html)
+)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(P
+$(LI $(BUGZILLA 2138): Allow more than 65535 files in Zip archives)
+$(LI $(BUGZILLA 2181): Constant-time std.gc.removeRange)
+$(LI $(BUGZILLA 4493): Add sorting capability to toJSON)
+$(LI $(BUGZILLA 4764): Lazy versions of std.string.split and std.string.splitlines)
+$(LI $(BUGZILLA 5190): std.stdio should have File.fdopen)
+$(LI $(BUGZILLA 5494): [patch,enh] Issues with std.stdarg)
+$(LI $(BUGZILLA 5550): std.range.enumerate$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 6147): file scheme uri from file path and vice versa)
+$(LI $(BUGZILLA 6586): feqrel for const values too)
+$(LI $(BUGZILLA 6756): Idea about std.stdio.chunks and std.range.chunks)
+$(LI $(BUGZILLA 6989): Implement toString for std.concurrency.Tid)
+$(LI $(BUGZILLA 7775): std.range.chunks on const array of strings too)
+$(LI $(BUGZILLA 8371): Add a function to make a range from a sequence of elements)
+$(LI $(BUGZILLA 8851): std.string.join should allow 'char' as joiner)
+$(LI $(BUGZILLA 9959): Add functional pattern matching for object references)
+$(LI $(BUGZILLA 11363): std.process should offer a way to run a executable with a given working directory)
+$(LI $(BUGZILLA 11706): Add a TypedefType trait to extract the underlying type of a std.typecons.Typedef)
+$(LI $(BUGZILLA 12409): Add "each" function as found in Ruby and jQuery)
+$(LI $(BUGZILLA 13091): nothrow std.algorithm.cartesianProduct)
+$(LI $(BUGZILLA 13157): std.typecons.Unique: Support construction and conversion from compatible types)
+$(LI $(BUGZILLA 13319): tzDatabaseNameToWindowsTZName should return null on failure rather than throw)
+$(LI $(BUGZILLA 13380): Conflict with std.typecons.Identity and std.traits.Identity)
+$(LI $(BUGZILLA 13402): code cleanup: removing c-style array declarations in phobos)
+$(LI $(BUGZILLA 13419): code cleanup in std.uni: removing "comma expressions")
+$(LI $(BUGZILLA 13445): std.process fails to create process with empty $(LPAREN)non-null$(RPAREN) working directory)
+$(LI $(BUGZILLA 13450): Add WindowsException and wenforce to std.exception)
+$(LI $(BUGZILLA 13483): std.range.tee should also accept a function name)
+$(LI $(BUGZILLA 13555): Categorize functions in std.math)
+$(LI $(BUGZILLA 13595): Extend std.algorithm.groupBy to support non-equivalence relations)
+$(LI $(BUGZILLA 13623): std.typecons.Proxy doesn't work inside classes)
+$(LI $(BUGZILLA 13662): @safe pure @nogc nothrow findRoot)
+$(LI $(BUGZILLA 13681): @safe empty writeln)
+$(LI $(BUGZILLA 13837): Named tuples with type inference)
+$(LI $(BUGZILLA 13908): @safe write of a $(LPAREN)uint, uint$(RPAREN) tuple)
+$(LI $(BUGZILLA 13909): A problem with immutable zip + assocArray)
+$(LI $(BUGZILLA 14110): std.file.read cannot read files open for writing)
+$(LI $(BUGZILLA 14183): Updates to groupBy)
+)
+)
+$(BUGSTITLE Druntime regressions,
+
+$(P
+$(LI $(BUGZILLA 13748): benchmark druntime/benchmark/aabench/string.d fails)
+$(LI $(BUGZILLA 13809): dup no longer works with types with postblit and destructors)
+$(LI $(BUGZILLA 14134): Free of large array does not work)
+$(LI $(BUGZILLA 14192): Access Violation when assigning to shared AA)
+$(LI $(BUGZILLA 14225): [REG2.067a] GDB: error reading variable $(LPAREN)string + dup$(RPAREN))
+$(LI $(BUGZILLA 14291): Druntime master no longer builds)
+)
+)
+$(BUGSTITLE Druntime bugs,
+
+$(P
+$(LI $(BUGZILLA 5629): core.time unittest disabled)
+$(LI $(BUGZILLA 8960): DMD tester: Unable to set thread priority)
+$(LI $(BUGZILLA 13052): TypeInfo.getHash should return same hash for different floating point zeros.)
+$(LI $(BUGZILLA 13410): Performance problem with associative array byKey/byValue)
+$(LI $(BUGZILLA 13416): dead-lock in FreeBSD suspend handler)
+$(LI $(BUGZILLA 13722): onFinalizeError should not allocate)
+$(LI $(BUGZILLA 13723): onFinalizeError should not be called for Errors)
+$(LI $(BUGZILLA 13854): Appending to an interior slice of a large array results in unnecessary 16-byte offset)
+$(LI $(BUGZILLA 13878): Appending to an array block with modified flags loses flag info)
+$(LI $(BUGZILLA 14036): Do not throw FinalizeError on OutOfMemoryError or InvalidMemoryOperationError)
+$(LI $(BUGZILLA 14157): fabsf fabsl for CRuntime_Microsoft)
+$(LI $(BUGZILLA 14247): string within demangled symbol name should be made escape)
+$(LI $(BUGZILLA 14303): rt.util.container.array.Array unittest contains invalid code)
+)
+)
+$(BUGSTITLE Druntime enhancements,
+
+$(P
+$(LI $(BUGZILLA 9119): [AA] Forward range addition to associative arrays.)
+$(LI $(BUGZILLA 11216): Make synchronized statement `nothrow`)
+$(LI $(BUGZILLA 13401): code cleanup: removing c-style array declarations in druntime)
+$(LI $(BUGZILLA 13559): missing 64-bit version of array short operations)
+$(LI $(BUGZILLA 13725): onInvalidMemoryOperationError et al should not be inlined)
+$(LI $(BUGZILLA 13755): core.sys.linux.stdio, std.stdio.File: fopencookie, fmemopen missing)
+$(LI $(BUGZILLA 14007): shmctl with IPC_STAT returns wrong number of attachments. shmid_ds is defined wrong.)
+)
+)
+$(BUGSTITLE Optlink bugs,
+
+$(P
+$(LI $(BUGZILLA 4831): Optlink rejects paths with invalid characters based on HPFS filesystem instead of NTFS)
+)
+)
+$(BUGSTITLE Installer bugs,
+
+$(P
+$(LI $(BUGZILLA 9392): Misleading text about required OS version)
+)
+)
+$(BUGSTITLE Website regressions,
+
+$(P
+$(LI $(BUGZILLA 14258): SIGSEGV in dpldocs)
+$(LI $(BUGZILLA 14280): Links to command line tools have disappeared from navigation)
+)
+)
+$(BUGSTITLE Website bugs,
+
+$(P
+$(LI $(BUGZILLA 8307): inconsistent treatment of auto functions)
+$(LI $(BUGZILLA 9118): typo in github tools repo)
+$(LI $(BUGZILLA 9535): incomplete documentation for std.range.recurrence and std.range.sequence)
+$(LI $(BUGZILLA 9691): Static void arrays are not documented)
+$(LI $(BUGZILLA 9970): Document the definition and difference between storage class and type constructor)
+$(LI $(BUGZILLA 10232): AndExpression grammar is not correct)
+$(LI $(BUGZILLA 10235): Grammar does not contain a rule for function declarations)
+$(LI $(BUGZILLA 10284): dlang.org/phobos/index.html needs redesign)
+$(LI $(BUGZILLA 10285): Enum grammar documentation is incorrect)
+$(LI $(BUGZILLA 12810): PrimaryExpression grammar does not allow type constructors)
+$(LI $(BUGZILLA 13093): D ABI change for guaranteed efficient return of fixed size array)
+$(LI $(BUGZILLA 13308): AsmPrimaryExp documentation is incorrect)
+$(LI $(BUGZILLA 13310): Old style multiple alias declaration not documented)
+$(LI $(BUGZILLA 13328): Missing link to contracts description from function specification page)
+$(LI $(BUGZILLA 13329): AutoDeclarationX grammar lists '=' token and template parameters in the wrong order)
+$(LI $(BUGZILLA 13436): posix.mak is broken for dlang.org repo)
+$(LI $(BUGZILLA 13448): Class specification misses template classes in base classes list)
+$(LI $(BUGZILLA 13451): Lambda syntax with explicit return type not documented)
+$(LI $(BUGZILLA 13467): A little better std.algorithm.canFind documentation)
+$(LI $(BUGZILLA 13523): Auto function declaration does not match any grammar rule)
+$(LI $(BUGZILLA 13525): Redundant SpecialKeyword grammar listd in DefaultInitializerExpression)
+$(LI $(BUGZILLA 13538): Divide old C style syntax from D style grammar rule)
+$(LI $(BUGZILLA 13547): "D is a fully garbage collected language")
+$(LI $(BUGZILLA 13648): ddoc problem with std.random.uniform01)
+$(LI $(BUGZILLA 13664): Grammar does not allow @<template_instance> UDAs)
+$(LI $(BUGZILLA 13671): http://dlang.org/const3.html incorrectly calls type qualifiers "type constructors")
+$(LI $(BUGZILLA 13696): Missing entry for unicode code point literals on the lexer page)
+$(LI $(BUGZILLA 13895): Declaration grammar is insufficient)
+$(LI $(BUGZILLA 13941): NewExpression grammar is insufficient)
+$(LI $(BUGZILLA 13979): ForeachType grammar does not allow 'ref' to appear after type constructors)
+$(LI $(BUGZILLA 13991): Invariant grammar does not document that parenthesis are optional)
+$(LI $(BUGZILLA 14002): Book link is broken)
+$(LI $(BUGZILLA 14031): Frame content going outside frame)
+$(LI $(BUGZILLA 14047): "this" missing from AsmPrimaryExp grammar)
+$(LI $(BUGZILLA 14081): Table in the document of std.bigint.BigInt.toString$(LPAREN)$(RPAREN) duplicates.)
+$(LI $(BUGZILLA 14121): Wiki: "Create account" page completely broken!)
+$(LI $(BUGZILLA 14135): std.uuid.randomUUID breaks @safety)
+$(LI $(BUGZILLA 14153): std.format page displaying incorrectly)
+)
+)
+$(BUGSTITLE Website enhancements,
+
+$(P
+$(LI $(BUGZILLA 4954): Clarify documentation of foreach with delegates.)
+$(LI $(BUGZILLA 6251): D spec should warn about using foreach_reverse on a delegate)
+$(LI $(BUGZILLA 9469): Keywords list could use linkage; more-humane documentation)
+$(LI $(BUGZILLA 10154): Betas should be posted on dlang.org)
+$(LI $(BUGZILLA 10164): std.string.column examples and documentation)
+$(LI $(BUGZILLA 13325): __vector not documented in language specification)
+$(LI $(BUGZILLA 14011): Canonical links help message should clarify that 'thread' is invalid)
 )
 )
 
@@ -1437,7 +2168,7 @@ $(LI $(BUGZILLA 12858): Document opEquals usage in AAs)
 
 )
 
-$(VERSION 065, February 24, 2014, =================================================,
+$(VERSION 065.0, February 24, 2014, =================================================,
 
 $(BUGSTITLE Compiler Changes,
 $(LI $(RELATIVE_LINK2 d-scripts, Extensionless D source file names can now be run when using the -run switch.))
@@ -10138,10 +10869,7 @@ Macros:
 
 	VERSION=
 	<div class="version">
-	$(B $(LARGE <a name="new2_$1">
-	  Version
-	  <a HREF="http://ftp.digitalmars.com/dmd.2.$1.zip" title="D 2.$1">D 2.$1</a>
-	))
+	$(B $(LARGE $(LEGACY_LNAME2 new2_$1,2.$1,Version) $(LINK2 http://downloads.dlang.org/releases/2.x/2.$1, D 2.$1)))
 	$(SMALL $(I $2, $3))
 	$5
 	</div>

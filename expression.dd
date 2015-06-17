@@ -13,66 +13,24 @@ $(SPEC_S Expressions,
 
 $(H3 $(LNAME2 order-of-evaluation, Order Of Evaluation))
 
-    $(P The following binary expressions are evaluated in strictly
-        left-to-right order:
-    )
-
-    $(P
-        $(GLINK OrExpression),
-        $(GLINK XorExpression),
-        $(GLINK AndExpression),
-        $(GLINK CmpExpression),
-        $(GLINK ShiftExpression),
-        $(GLINK AddExpression),
-        $(GLINK CatExpression),
-        $(GLINK MulExpression),
-        $(GLINK PowExpression),
-
-        $(GLINK CommaExpression),
-        $(GLINK OrOrExpression),
-        $(GLINK AndAndExpression)
-    )
-
-    $(P The following binary expressions are evaluated in an
-        implementation-defined order:
-    )
-
-    $(P
-        $(GLINK AssignExpression),
-
-        function arguments
-    )
-
-    $(P It is an error
-        to depend on order of evaluation when it is not specified.
-        For example, the following are illegal:
-
-        -------------
-        i = i++;
-        -------------
-    )
-
-    $(P If the compiler can determine that the result of an expression
-        is illegally dependent on the order of evaluation, it can issue
-        an error (but is not required to). The ability to detect these kinds
-        of errors is a quality of implementation issue.
-    )
-
-    $(P The evaluation order of function arguments is defined to be left to
-        right. This is similar to Java but different to C/C++ where the evaluation
-        order is unspecified. Thus, the following code is valid and well defined.
+    $(P Binary expressions and function arguments are evaluated in strictly
+        left-to-right order. This is similar to Java but different to C and C++,
+        where the evaluation order is unspecified.
+        Thus, the following code is valid and well defined.
 
         -------------
         import std.conv;
         int i = 0;
-        assert(text(++i, ++i) == "12"); // left to right evaluation of arguments
+        (i = 2) = ++i * i++ + i;
+        assert(i == 13); // left to right evaluation of side effects
+        assert(text(++i, ++i) == "1415"); // left to right evaluation of arguments
         -------------
     )
 
-    $(P But even though the order of evaluation is well defined writing code that
+    $(P But even though the order of evaluation is well defined, writing code that
         depends on it is rarely recommended.
         $(B Note that dmd currently does not comply with left to right evaluation of
-        function arguments.)
+        function arguments and AssignExpression.)
     )
 
 $(H3 $(LEGACY_LNAME2 Expression, expression, Expressions))
@@ -486,7 +444,7 @@ $(H4 $(LEGACY_LNAME2 floating_point_comparisons, floating-point-comparisons, Flo
         $(LI "Exception" means the $(I Invalid Exception) is raised if one
                 of the operands is a NAN. It does not mean an exception
                 is thrown. The $(I Invalid Exception) can be checked
-                using the functions in $(DPLLINK phobos/std_c_fenv.html, std.c.fenv).
+                using the functions in $(D core.stdc.fenv).
         )
     )
 
