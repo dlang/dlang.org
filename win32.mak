@@ -35,7 +35,7 @@ DDOC_STD=std.ddoc std_navbar-release.ddoc modlist-release.ddoc
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 
-PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html
+PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html d-keyring.gpg
 
 TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.html	\
 	intro.html spec.html lex.html grammar.html module.html declaration.html type.html	\
@@ -58,12 +58,13 @@ TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.
 	D1toD2.html unittest.html hash-map.html intro-to-datetime.html		\
 	simd.html deprecate.html download.html 32-64-portability.html		\
 	d-array-article.html dll-linux.html bugstats.php.html getstarted.html \
-	css/cssmenu.css \
+	gpg_keys.html forum-template.html css/cssmenu.css \
 
 # exclude list
 MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
 	--ex=std.c. --ex=std.algorithm.internal --ex=std.internal. --ex=std.regex.internal. \
-	--ex=std.typelist --ex=std.windows. --ex=etc.linux.memoryerror --ex=core.stdc.
+	--ex=std.typelist --ex=std.windows. --ex=etc.linux.memoryerror \
+	--ex=core.stdc. --ex=std.stream --ex=std.cstream --ex=socketstream
 
 CHMTARGETS=d.hhp d.hhc d.hhk d.chm
 
@@ -173,6 +174,8 @@ getstarted.html : $(DDOC) getstarted.dd
 
 glossary.html : $(DDOC) glossary.dd
 
+gpg_keys.html : $(DDOC) gpg_keys.dd
+
 hash-map.html : $(DDOC) hash-map.dd
 
 hijack.html : $(DDOC) hijack.dd
@@ -267,6 +270,8 @@ windbg.html : $(DDOC) windows.ddoc windbg.dd
 
 windows.html : $(DDOC) windows.ddoc windows.dd
 
+forum-template.html : $(DDOC) forum-template.dd
+
 css/cssmenu.css : $(DDOC) css/cssmenu.css.dd
 	$(DMD) -o- -c -Df$@ $(DDOC) css/cssmenu.css.dd
 
@@ -345,7 +350,7 @@ docs.json:
 	dir /s /b /a-d ..\phobos\*.d | findstr /V "unittest.d linux osx format.d" >> .tmp/files.txt
 	dmd -c -o- -version=CoreDdoc -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
 	# WORKAROUND FOR DEPENDECY TRACKING BUG IN DUB (issue #331)
-	dub build --force --root $(DPL_DOCS_PATH)
+	dub build --nodeps --force --root $(DPL_DOCS_PATH)
 	#
 	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented $(MOD_EXCLUDES_RELEASE)
 	rmdir /s /q .tmp

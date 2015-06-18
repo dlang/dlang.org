@@ -710,11 +710,9 @@ void bar(A a)
         same name in the base class, even if the types of the parameters
         in the base class functions are different. If, through
         implicit conversions to the base class, those other functions do
-        get called, a $(CODE core.exception.HiddenFuncError) exception is raised:
+        get called, a compile-time error will be given:
         )
 ---
-import core.exception;
-
 class A
 {
     void $(CODE_HIGHLIGHT set)(long i) { }
@@ -728,15 +726,8 @@ class B : A
 void foo(A a)
 {
     int i;
-    try
-    {
-        a.set(3);   // error, throws runtime exception since
-                    // A.set(int) should not be available from B
-    }
-    catch ($(CODE_HIGHLIGHT HiddenFuncError) o)
-    {
-        i = 1;
-    }
+    a.set(3);   // error, use of A.set(int) is hidden by B
+                // use 'alias set = A.set;' to introduce base class overload set.
     assert(i == 1);
 }
 
@@ -745,18 +736,13 @@ void main()
     foo(new B);
 }
 ---
-        $(P Note that the this current runtime behavior is deprecated.
-        The compiler will currently emit a compile-time error for the
-        above test-case unless the ($(B -d)) deprecation switch is enabled.
-        In the future this deprecated runtime-only checking feature will be removed.)
-
-        $(P If an $(CODE HiddenFuncError) exception is thrown in your program,
+        $(P If an error occurs during the compilation of your program,
         the use of overloads and overrides needs to be reexamined in the
         relevant classes.)
 
-        $(P The $(CODE HiddenFuncError) exception is not thrown if the
-        hidden function is disjoint, as far as overloading is concerned,
-        from all the other virtual functions is the inheritance hierarchy.)
+        $(P The compiler will not give an error if the hidden function
+        is disjoint, as far as overloading is concerned, from all the
+        other virtual functions is the inheritance hierarchy.)
 
 
         $(P A function parameter's default value is not inherited:)
@@ -1108,7 +1094,7 @@ $(H4 C-style Variadic Functions)
         It has non-D linkage, such as $(D extern (C)):
 
 ------
-extern (C) int foo(int x, int y, ...);
+extern (C) void foo(int x, int y, ...);
 
 foo(3, 4);      // ok
 foo(3, 4, 6.8); // ok, one variadic argument
@@ -1139,9 +1125,9 @@ void test()
     foo(3, 4, 5);   // first variadic argument is 5
 }
 
-int foo(int x, int y, ...)
+void foo(int x, int y, ...)
 {
-    va_list ap;
+    va_list args;
 
     version (X86)
         va_start(args, y);  // y is the last named parameter
@@ -1155,7 +1141,7 @@ int foo(int x, int y, ...)
     static assert(0, "Platform not supported.");
 
     int z;
-    va_arg(ap, z);  // z is set to 5
+    va_arg(args, z);  // z is set to 5
 }
 ------
 
@@ -1193,7 +1179,7 @@ void test()
     foo(3, 4, 5);   // first variadic argument is 5
 }
 
-int foo(int x, int y, ...)
+void foo(int x, int y, ...)
 {
     int z;
 

@@ -57,18 +57,63 @@ $(H3 $(LEGACY_LNAME2 Predefined-Pragmas, predefined-pragmas, Predefined Pragmas)
 
         $(P All implementations must support these, even if by just ignoring
         them:
+
+        $(UL
+            $(LI $(LINK2 #inline, pragma inline))
+            $(LI $(LINK2 #lib, pragma lib))
+            $(LI $(LINK2 #mangle, pragma mangle))
+            $(LI $(LINK2 #msg, pragma msg))
+            $(LI $(LINK2 #startaddress, pragma startaddress))
+        )
         )
 
     $(DL
 
-    $(DT $(D msg))
-    $(DD Constructs a message from the arguments and prints to the standard error stream while compiling:
------------------
-pragma(msg, "compiling...", 1, 1.0);
------------------
+    $(DT $(LNAME2 inline, $(D inline)))
+    $(DD $(P Affects whether functions are inlined or not. If at the declaration level, it
+     affects the functions declared in the block it controls. If inside a function, it
+     affects the function it is enclosed by. If there are multiple pragma inlines in a function,
+     the lexically last one takes effect.)
+
+     $(P It takes three forms:)
+     $(OL
+        $(LI
+---
+pragma(inline)
+---
+        Sets the behavior to match the default behavior set by the compiler switch
+        $(DDSUBLINK dmd-windows, switch-inline, $(TT -inline)).
+        )
+        $(LI
+---
+pragma(inline, false)
+---
+        Functions are never inlined.
+        )
+        $(LI
+---
+pragma(inline, true)
+---
+        If a function cannot be inlined with the $(DDSUBLINK dmd-windows, switch-inline, $(TT -inline))
+        switch, an error message is issued. This is expected to be improved in the future to causing
+        functions to always be inlined regardless of compiler switch settings. Whether a compiler can
+        inline a particular function or not is implementation defined.
+        )
+      )
+---
+pragma(inline):
+int foo(int x) // foo() is never inlined
+{
+    pragma(inline, true);
+    ++x;
+    pragma(inline, false); // supercedes the others
+    return x + 3;
+}
+---
     )
 
-    $(DT $(D lib))
+
+    $(DT $(LNAME2 lib, $(D lib)))
     $(DD Inserts a directive in the object file to link in the library
         specified by the $(ASSIGNEXPRESSION).
         The $(ASSIGNEXPRESSION)s must be a string literal:
@@ -76,7 +121,28 @@ pragma(msg, "compiling...", 1, 1.0);
 pragma(lib, "foo.lib");
 -----------------
     )
-    $(DT $(D startaddress))
+
+
+    $(DT $(LNAME2 mangle, $(D mangle)))
+    $(DD Overrides the default mangling for a symbol. This allows
+        linking to a symbol which is a D keyword, which would normally
+        be disallowed as a symbol name:
+-----------------
+pragma(mangle, "body")
+extern(C) void body_func();
+-----------------
+    )
+
+
+    $(DT $(LNAME2 msg, $(D msg)))
+    $(DD Constructs a message from the arguments and prints to the standard error stream while compiling:
+-----------------
+pragma(msg, "compiling...", 1, 1.0);
+-----------------
+    )
+
+
+    $(DT $(LNAME2 startaddress, $(D startaddress)))
     $(DD Puts a directive into the object file saying that the
         function specified in the first argument will be the
         start address for the program:
@@ -89,17 +155,6 @@ pragma(startaddress, foo);
         For applications code, the start address is taken care of
         by the runtime library.
     )
-
-    $(DT $(D mangle))
-    $(DD Overrides the default mangling for a symbol. This allows
-        linking to a symbol which is a D keyword, which would normally
-        be disallowed as a symbol name:
------------------
-pragma(mangle, "body")
-extern(C) void body_func();
------------------
-    )
-
     )
 
 $(H3 Vendor Specific Pragmas)
