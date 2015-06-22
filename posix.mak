@@ -474,5 +474,5 @@ ${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
 chmgen : chmgen.d $(DMD)
 	$(DMD) -I${PHOBOS_DIR} -g chmgen.d
 
-d.tag : chmgen $(ALL_FILES)
+d.tag : chmgen $(ALL_FILES) phobos-release druntime-release
 	./chmgen --root=$(DOC_OUTPUT_DIR) --only-tags
