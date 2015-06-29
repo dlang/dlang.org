@@ -13,18 +13,17 @@ $(D_S Regular Expressions,
     Still no amount of fixed functionality could cover all needs, as naturally flexible text data
     needs flexible solutions.
     )
-    $(P This is where $(LUCKY regular expressions) come in handy, often succinctly called as regexes.
+    $(P This is where $(LUCKY regular expressions), often succinctly called regexes, come in handy.
      Regexes are simple yet powerful language for defining patterns for sets of strings.
      Combined with pattern matching, data extraction and substitution, they form a Swiss Army knife of text processing.
-     They are considered so important that a number of programming languages provides built-in support
-     for regular expressions.  Being built-in  however does $(B not) necessary
-     implies $(B faster) processing or having more features. It's just a matter of providing
-     $(B convenient and friendly syntax) for typical operations, and integrating it well
+     They are considered so important that a number of programming languages provide built-in support for regular expressions.  Being built-in  however does $(B not) necessary
+     imply $(B faster processing) or having more features. It's just a matter of providing
+     $(B convenient and friendly syntax) for typical operations, and integrating it well.
     )
     $(P The D programming language provides a standard library module $(STD regex).
-     Being a highly expressive systems language, D allows regexes to be $(I efficiently) implemented
+     Being a highly expressive systems language, D allows regexes to be $(I implemented efficiently)
      within the language itself, yet have good level of readability and usability.
-     And there a few things a pure D implementation adds to the table that are completely unbelievable
+     And there a few things a pure D implementation brings to the table that are completely unbelievable
      in a traditional compiled language, more on that at the end of article.
     )
     $(P By the end of article you'll have a good understanding of regular expression capabilities in this library,
@@ -51,10 +50,10 @@ $(D_S Regular Expressions,
     And that's it! Let us however keep in mind the boundaries of regular expressions power - to truly establish a
     validness of a phone number, one has to try dialing it or contact the authority.
     )
-    $(P Let's drill down into this tiny example, actually it showcases a lot of interesting things:
+    $(P Let's drill down into this tiny example because it actually showcases a lot of interesting things:
         $(UL
         $(LI A raw string literal of form r"...", that allows writing a regex pattern in its natural notation. )
-        $(LI $(D matchFirst) function to find first match in a string if any. To check if there was a match just
+        $(LI $(D matchFirst) function to find the first match in a string if any. To check if there was a match just
         test the return value explicitly in a boolean context, such as an $(D if) statement. )
         $(LI When matching special regex characters like  +, *, (, ), [, ] and $ don't forget to use escaping with backslash(\). )
         $(LI Unless there is a lot of text processing going on, it's perfectly fine to pass a plain string as a pattern.
@@ -79,10 +78,10 @@ $(D_S Regular Expressions,
     ---
 
     $(H3 To search and replace)
-    $(P While getting first match is a common theme in sting validation, another frequent need is
-    to extract all matches found in piece of text.  Picking an easy task, let's see how to
+    $(P While getting first match is a common theme in string validation, another frequent need is
+    to extract all matches found in a piece of text.  Picking an easy task, let's see how to
     filter out all white space-only lines. There is no special routine for looping over input
-    like search() or similar as found in some libraries.
+    like $(D search()) or similar as found in some libraries.
     Instead $(D std.regex) provides a natural syntax for looping via plain foreach.
     )
     ---
@@ -94,7 +93,7 @@ $(D_S Regular Expressions,
     ---
     $(P It may look and feel like a built-in but it just follows the common conventions to do that.
     In this case matchAll returns and object that follows the right "protocol" of an input range
-    simply by having the right set of methods. An input range is a lot like iterator found
+    simply by having the right set of methods. An input range is a lot like an iterator found
     in other languages. Likewise the result of matchFirst and each element of matchAll
     is a random access range, a thing that behaves like a "view" of an array.
     )
@@ -109,29 +108,28 @@ $(D_S Regular Expressions,
         writeln(item);  // will show lines: Ranges, R, s
     ---
     $(P By playing by the rules $(STD regex) gets some nice benefits in interaction with other modules e.g.
-    this is how one could count non-empty lines in text buffer:
+    this is how one could count non-empty lines in a text buffer:
     )
     ---
-    import std.algorithm, std.file;
-    auto buffer = std.file.readText("regex.d");
-    int count = count(matchAll(text, regex(r"^.*\P{WhiteSpace}+.*$", "m")));
+    import std.algorithm, std.file, std.regex;
+    auto buffer = std.file.readText(r"std\typecons.d");
+    int count = count(matchAll(buffer, regex(r"^.*\P{WhiteSpace}+.*$", "m")));
     ---
-    $(P This by the way tells me that $(STD regex) has 7128 non-blank lines as of this writing.
-    But let's get back to the regular expression itself.
+    $(P
     A seasoned regex user catches instantly that Unicode properties are supported with perl-style \p{xxx},
     to spice that all of Scripts and Blocks are supported as well. Let us dully note that \P{xxx} means not
-    having an xxx property, i.e here not a white space character. A Unicode is a vital subject to know, and it won't suffice
-    to try to cover it here. For details see the accessible $(STD uni) documentation and level 1 of conformance as per Unicode standard
-    $(LINK2 http://Unicode.org/reports/tr18/, UTS 18).
+    having an xxx property, i.e. here not a white space character. Unicode is a vital subject to know, and it won't suffice
+    to try to cover it here. For details see the accessible $(STD uni) documentation and level 1 of conformance
+    as per Unicode standard  $(LINK2 http://Unicode.org/reports/tr18/, UTS 18).
     )
 
-    $(P Another thing of importance is the option string - "m",  where m for multi-line mode.
+    $(P Another thing of importance is the option string - "m",  where m stands for multi-line mode.
     Historically utilities that supported regex patterns (unix grep, sed, etc.) processed text line by line.
     At that time anchors like ^, $ meant the start of the whole input buffer that has been same as that of the line.
-    As regular expressions became more ubiquitous the need to recognize multiple lines in a chunk of text,
-    with anchors ^ & $ matching before and after line break literally. For the curious, modern (Unicode) line
-    break is defined as (\n | \v | \r | \f | \u0085 | \u2028 | \u2029 | \r\n).
-    Needless to say, one need not to turn on multi-line mode if not using any of ^, $.
+    As regular expressions got more ubiquitous the need to recognize multiple lines in a chunk of text became apparent.
+    In such a mode with anchors ^ & $ were defined to match before and after line break literally.
+    For the curious, modern (Unicode) line break is defined as (\n | \v | \r | \f | \u0085 | \u2028 | \u2029 | \r\n).
+    Needless to say, one need not turn on multi-line mode if not using any of ^, $.
     )
 
     $(P Now that search was covered, the topic suggest that it's about time to do some replacements.
@@ -141,11 +139,11 @@ $(D_S Regular Expressions,
     auto text = readText(...);
     auto replaced = replaceAll(text, r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})".regex, "$3-$1-$2");
     ---
-    $(P The $(D "pattern".regex) is just another notation of writing $(D regex("pattern")) called UFCS that some
-    may find more slick. As can be seen the replacement is controlled by format string not unlike one in C's famous printf.
+    $(P $(D r"pattern".regex) is just another notation of writing $(D regex("pattern")) called
+    $(LINK2 function.html#pseudo-member, UFCS) that some may find more slick.
+    As can be seen the replacement is controlled by a format string not unlike one in C's famous printf.
     The &#36;1, &#36;2, &#36;3 substituted with content of sub-expressions.
-    Aside from referencing sub-matches, one can include the whole part of input preceding the match via &#36;$(BACKTICK) and &#36;'
-     for the content following right after the match.
+    Aside from referencing sub-matches, one can include the whole part of input preceding the match via &#36;$(BACKTICK) and &#36;' for the content following right after the match.
     )
     $(P Now let's aim for something bigger, this time to show that $(STD regex) can do things that
     are unattainable by classic textual substitution alone. Imagine you want to translate a web shop catalog so
@@ -179,9 +177,9 @@ $(D_S Regular Expressions,
     on the captured piece, then it uses the return value as replacement.
     )
 
-    $(P And I can't just resist to spice this example up with yet another feature - named groups.
-    Names work just like aliases for numbers of captured subexpressions.
-    Meaning that with the same exact regular expression one could as well change affected lines to:
+    $(P And I just can't resist to spice this example up with yet another feature - named groups.
+    Names work just like aliases for numbers of captured subexpressions,
+    meaning that with the same exact regular expression one could as well change affected lines to:
     ---
     real value = to!real(price[1]);
     if (!price[3].empty)
@@ -215,7 +213,7 @@ $(D_S Regular Expressions,
     )
 
     $(H3 Static regex)
-    $(P Let's stop going for features and think performance. And D has something to offer here.
+    $(P Let's stop going for features and start thinking performance. And D has something to offer here.
     For one, there is an ability to precompile constant regex at compile-time:
     )
     ---
@@ -223,14 +221,14 @@ $(D_S Regular Expressions,
     assert(match("What was that? Boo-hoo?", r));
     ---
     $(P Importantly it's the exact same Regex object that works through all of the API we've seen so far.
-    It's just takes next to nothing to initialize, just copy over ready-made structure from the data segment.
+    It takes next to nothing to initialize, just copy over ready-made structure from the data segment.
 
     Roughly ~ 1 μs of run-time to initialize. Run-time version took around 10-20 μs on my machine, keep in mind that it was a trivial pattern.
 
     $(P Now stepping further in this direction there is an ability to construct specialized
-    D code code that matches a given regex and compile it instead of using default run-time engine.
+    D code that matches a given regex and compile it instead of using the default run-time engine.
     Isn't it so often the case that code starts with regular expressions only to be later re-written
-    to heaps of scary-looking code to match speed requirements. No need to rewrite - we got you covered.
+    to heaps of scary-looking code to match speed requirements? No need to rewrite - we got you covered.
     )
     $(P Recalling the phone number example:
     )
@@ -250,8 +248,10 @@ $(D_S Regular Expressions,
     )
     $(P In this particular case it matched roughly 50% faster for me though I haven't
     done comprehensive analysis of this case.
-    That being said, there is no doubt ctRegex facility will immensely improve over time, we only scratched the surface of new exciting possibilities.
-    More data on real-world patterns, performance of CT-regex and other benchmarks$(LINK2 https://github.com/DmitryOlshansky/FReD, here).
+    That being said, there is no doubt ctRegex facility is going to improve immensely over time.
+    We only scratched the surface of new exciting possibilities.
+    More data on real-world patterns, performance of CT-regex and other benchmarks
+    $(LINK2 https://github.com/DmitryOlshansky/FReD, here).
     )
 
     $(H3 Conclusion)
@@ -265,7 +265,7 @@ $(D_S Regular Expressions,
      $(UL
      $(LI Fully Unicode-aware, qualifies to standard full level 1 Unicode support)
      $(LI Lots of modern extensions, including unlimited generalized lookaround.
-     That makes porting regexes from other libraries a breeze)
+     That makes porting regexes from other libraries a breeze.)
      $(LI Lean API that consists of a few flexible tools: $(D matchFirst)/$(D matchAll), $(D replaceFirst)/$(D replaceAll) and $(D splitter).)
      $(LI Uniform and powerful, with unique abilities like precompiling regex or generating
      specially tailored engine at compile-time with ctRegex. All of this fits within the common interface without a notch.)
@@ -273,7 +273,7 @@ $(D_S Regular Expressions,
     $(P The format of this article is intentionally more of an overview, it doesn't stop to talk in-depth about
      certain capabilities like case-insensitive matching (simple casefolding rules of Unicode),
      backreferences, lazy quantifiers. And even more features are coming to add more expressive power
-      and reach greater performance.
+     and reach greater performance.
     )
 
 )
