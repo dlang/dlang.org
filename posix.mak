@@ -475,3 +475,5 @@ chmgen : chmgen.d $(DMD)
 
 d.tag : chmgen $(ALL_FILES)
 	./chmgen --root=$(DOC_OUTPUT_DIR) --only-tags
+
+.DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
