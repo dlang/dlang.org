@@ -1,217 +1,218 @@
 Ddoc
 
-$(D_S Compile-time (argument) lists,
+$(D_S Compile-time Argument Lists,
 
-$(P Compile-time lists is a very important metaprogramming concept that comes naturally
-    from D support for $(LINK2 variadic-function-templates.html, variadic templates). Those
-    allow programmer to operate on types, symbols and expression allowing to define
-    compile-time algorithms that operate on types, symbols and expressions.
- )
+    $(P Compile-time lists is an important metaprogramming concept that comes naturally
+        from D support for $(LINK2 variadic-function-templates.html, variadic templates). They
+        allow a programmer to operate on types, symbols and expressions enabling the ability to define
+        compile-time algorithms that operate on types, symbols and expressions.
+    )
 
-$(P For historical reasons those sometimes can be called tuples in documentation or compiler
-    internals but don't get confused : this doesn't have much in common with tuples that
-    commonly exist in other languages. Sequences of values of different types that can be
-    returned from functions are provided by $(LINK2 phobos/std_typecons.html#.Tuple, std.typecons.Tuple).
-    Using term "tuple" to mean compile-time lists is discouraged to avoid confusion and
-    noticing one should result in a $(LINK issues.dlang.org, documentation bug report).
- )
+    $(P For historical reasons those sometimes can be called tuples in documentation or compiler
+        internals but don't get confused : this doesn't have much in common with tuples that
+        commonly exist in other languages. Sequences of values of different types that can be
+        returned from functions are provided by $(LINK2 phobos/std_typecons.html#.Tuple, std.typecons.Tuple).
+        Using term "tuple" to mean compile-time lists is discouraged to avoid confusion, and if encountered 
+        should result in a $(LINK2 http://issues.dlang.org, documentation bug report).
+    )
 
-$(P Consider this simple snippet:)
+    $(P Consider this simple snippet:)
 
----
-template Variadic(T...) { /* ... */ }
----
+    ---
+    template Variadic(T...) { /* ... */ }
+    ---
 
-$(P `T` here is variadic $(LINK2 template.html#TemplateArgumentList, template argument list)
-    which is a core language feature. It is has own very special semantics
-    and from the programmer point of view is most similar to array of compile-time entities - types,
-    symbols (names) and expressions (values). You can check the length of variadic argument list
-    and access any individual element:
- )
+    $(P `T` here is variadic $(LINK2 template.html#TemplateArgumentList, template argument list)
+        which is a core language feature. It has its own special semantics,
+        and, from the programmer's point of view, is most similar to an array of compile-time entities - types,
+        symbols (names) and expressions (values). One can check the length of this list
+        and access any individual element:
+    )
 
----
-template Variadic(T...)
-{
-    static assert (T.length > 1);
-    pragma(msg, T[0]);
-    pragma(msg, T[1]);
-}
+    ---
+    template Variadic(T...)
+    {
+        static assert (T.length > 1);
+        pragma(msg, T[0]);
+        pragma(msg, T[1]);
+    }
 
-alias Dummy = Variadic!(int, 42);
-// prints during compilation:
-// int
-// 42
----
+    alias Dummy = Variadic!(int, 42);
+    // prints during compilation:
+    // int
+    // 42
+    ---
 
-$(P However, language itself does not provide any means to define such lists outside of
-    template parameter declaration. Instead, there is a
-    $(LINK2 phobos/std_meta_arglist.html, simple utility) provided by D standard library:
- )
+    $(P However, the language itself does not provide any means to define such lists outside of
+        a template parameter declaration. Instead, there is a
+        $(LINK2 phobos/std_meta_arglist.html, simple utility) provided by the D standard library:
+    )
 
----
-alias Arguments(T...) = T;
----
+    ---
+    alias AliasSeq(T...) = T;
+    ---
 
-$(P All it does is giving specific variadic argument list externally accessible name so
-    that it can be worked with in any other context:
-  )
+    $(P All it does is give a specific variadic argument list an externally accessible name so
+        that it can be worked with in any other context:
+    )
 
----
-import std.meta.arglist;
-// can alias to some other name
-alias Name = Arguments!(int, 42);
-pragma(msg, Name[0]);
-pragma(msg, Name[1]);
-// or work with a list directly
-pragma(msg, Arguments!("aaa", 0, double)[2]);
----
+    ---
+    import std.meta.arglist;
+    // can alias to some other name
+    alias Name = AliasSeq!(int, 42);
+    pragma(msg, Name[0]);
+    pragma(msg, Name[1]);
+    // or work with a list directly
+    pragma(msg, AliasSeq!("aaa", 0, double)[2]);
+    ---
 
 $(H3 Available operations)
 
-$(H4 Checking the length)
+    $(H4 Checking the length)
 
----
-import std.meta.arglist;
-static assert (Arguments!(1, 2, 3, 4).length == 4);
----
+        ---
+        import std.meta.arglist;
+        static assert (AliasSeq!(1, 2, 3, 4).length == 4);
+        ---
 
-$(H4 Indexing and slicing)
+    $(H4 Indexing and slicing)
 
-$(P Indexes must be known at compile-time)
+        $(P Indexes must be known at compile-time)
 
----
-import std.meta.arglist;
-alias Numbers = Arguments!(1, 2, 3, 4);
-static assert (Numbers[1] == 2);
-alias SubNumbers = Numbers[1 .. $];
-static assert (SubNumbers[0] == 2);
----
+        ---
+        import std.meta.arglist;
+        alias Numbers = AliasSeq!(1, 2, 3, 4);
+        static assert (Numbers[1] == 2);
+        alias SubNumbers = Numbers[1 .. $];
+        static assert (SubNumbers[0] == 2);
+        ---
 
-$(H4 Assignment)
+    $(H4 Assignment)
 
-$(P Works only if list element is a symbol that refers to a mutable variable)
+        $(P Works only if the list element is a symbol that refers to a mutable variable)
 
----
-import std.meta.arglist;
+        ---
+        import std.meta.arglist;
 
-void main()
-{
-    int x;
-    alias List = Arguments!(10, x);
-    List[1] = 42;
-    assert (x == 42);
-    // List[0] = 42; // won't compile, can't assign to a constant
-}
----
+        void main()
+        {
+            int x;
+            alias List = AliasSeq!(10, x);
+            List[1] = 42;
+            assert (x == 42);
+            // List[0] = 42; // won't compile, can't assign to a constant
+        }
+        ---
 
-$(H4 Loops)
+    $(H4 Loops)
 
-$(P D $(LINK2 dlang.org/statement.html#ForeachStatement, foreach statement) has special
-    semantics when iterating over compile-time list. It duplicates body of the loop
-    for each of the list elements, with loop iteration "variable" becoming an alias
-    for that compile-time list elements.
- )
+        $(P D's $(LINK2 statement.html#ForeachStatement, foreach statement) has special
+            semantics when iterating over compile-time lists. It repeats the body of the loop
+            for each of the list elements, with the loop iteration "variable" becoming an alias
+            for each compile-time list element in turn.
+        )
 
----
-import std.meta.arglist;
+        ---
+        import std.meta.arglist;
 
-void main()
-{
-    foreach (sym; Arguments!(int, "literal", main))
-    {
-        static if (is(sym))
-            pragma (msg, sym);
-        else
-            pragma (msg, typeof(sym));
-    }
-}
+        void main()
+        {
+            foreach (sym; AliasSeq!(int, "literal", main))
+            {
+                static if (is(sym))
+                    pragma (msg, sym);
+                else
+                    pragma (msg, typeof(sym));
+            }
+        }
 
-/* Prints:
+        /* Prints:
 
-   int
-   string
-   void()
-*/
----
+        int
+        string
+        void()
+        */
+        ---
 
 $(H3 Auto-expansion)
 
-$(P One of less obvious properties of compile-time argument lists is that when used
-    as an argument to function or template those are automatically treated as list
-    of comma-separated arguments instead:
- )
+    $(P One less obvious property of compile-time argument lists is that when used
+        as an argument to a function or template, they are automatically treated as a list
+        of comma-separated arguments:
+    )
 
----
-import std.meta.arglist;
+    ---
+    import std.meta.arglist;
 
-template Print0(T...)
-{
-    pragma(msg, T[0]);
-}
+    template Print0(T...)
+    {
+        pragma(msg, T[0]);
+    }
 
-alias Dummy = Print0!(Arguments!(int, double));
----
+    alias Dummy = Print0!(AliasSeq!(int, double));
+    ---
 
-$(P This will only print `int` during compilation because last line gets rewritten
-    as `alias Dummy = Print0!(int, double)`. If auto-expansion didn't happen,
-    `Arguments!(int, double)` would be printed instead. This is inherent part of
-    language semantics for variadic lists and thus also preserved by `Arguments`.
- )
+    $(P This will only print `int` during compilation because the last line gets rewritten
+        as `alias Dummy = Print0!(int, double)`. If auto-expansion didn't happen,
+        `AliasSeq!(int, double)` would be printed instead. This is an inherent part of
+        the language semantics for variadic lists, and thus also preserved by `AliasSeq`.
+    )
 
 $(H3 Homogenous lists)
 
-$(P `Arguments` that only consists from only type or expression (value) elements is
-    commonly called "type list" or "expression list" accordingly. Concept of
-    "symbol list" is rarely mentioned explicitly but fits the same pattern.
- )
+    $(P An `AliasSeq` that consist of only type or expression (value) elements are
+        commonly called "type lists" or "expression lists" respectively. The concept of
+        a "symbol list" is rarely mentioned explicitly but fits the same pattern.
+    )
 
-$(P It is possible to use homogenous type lists in declarations:)
+    $(P It is possible to use homogenous type lists in declarations:)
 
----
-import std.meta.arglist;
-alias Params = Arguments!(int, double, string);
-void foo(Params); // void foo(int, double, string);
----
+    ---
+    import std.meta.arglist;
+    alias Params = AliasSeq!(int, double, string);
+    void foo(Params); // void foo(int, double, string);
+    ---
 
-$(P D supports special variable declaration syntax where type list acts as a type:)
+    $(P D supports a special variable declaration syntax where a type list acts as a type:)
 
----
-import std.meta.arglist;
+    ---
+    import std.meta.arglist;
 
-void foo()
-{
-    Arguments!(int, double, string) variables;
-    variables[0] = 42;
-    variables[1] = 42.0;
-    variables[2] = "just a normal variable";
-}
+    void foo()
+    {
+        AliasSeq!(int, double, string) variables;
+        variables[0] = 42;
+        variables[1] = 42.0;
+        variables[2] = "just a normal variable";
+    }
 
-/* Compiler will rewrite such declaration to something like this:
+    /* The compiler will rewrite such a declaration to something like this:
 
-   int __var1;
-   double __var2;
-   string __var3;
-   alias variables = Arguments!(__var1, __var2, __var3);
-*/
----
+    int __var1;
+    double __var2;
+    string __var3;
+    alias variables = AliasSeq!(__var1, __var2, __var3);
+    */
+    ---
 
-$(P This is also what happens when you declare variadic template function:)
+    $(P This is also what happens when declaring a variadic template function:)
 
----
-void foo(T...)(T args)
-{
-    // 'args' here is a compile-time list of symbols that
-    // refer to underlying compiler-generated arguments
-}
----
+    ---
+    void foo(T...)(T args)
+    {
+        // 'args' here is a compile-time list of symbols that
+        // refer to underlying compiler-generated arguments
+    }
+    ---
 
-$(P It is possible to use expression lists with values of same type to declare array literals:)
+    $(P It is possible to use expression lists with values of the same type to declare array literals:)
 
----
-import std.meta.arglist;
-static assert ([ Arguments!(1, 2, 3) ] == [ 1, 2, 3 ]);
----
+    ---
+    import std.meta.arglist;
+    static assert ([ AliasSeq!(1, 2, 3) ] == [ 1, 2, 3 ]);
+    ---
 
-$(H3 Further reading)
+)
 
-$(P TODO)
+Macros:
+    TITLE=Compile-time Argument Lists
