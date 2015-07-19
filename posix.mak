@@ -149,8 +149,8 @@ SPEC_ROOT=spec intro lex grammar module declaration type property attribute prag
 	expression statement arrays hash-map struct class interface enum	\
 	const3 function operatoroverloading template template-mixin contracts		\
 	version traits errors unittest garbage float iasm ddoc				\
-	interfaceToC cpp_interface portability entity memory-safe-d abi		\
-	simd
+	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
+	abi simd
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES=$(shell ls changelog/*.dd | sed s/\\.dd$$// )
