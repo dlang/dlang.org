@@ -4,7 +4,7 @@ LATEST=prerelease
 
 DMD=dmd
 DPL_DOCS_PATH=dpl-docs
-DPL_DOCS=dub run --root $(DPL_DOCS_PATH) -- 
+DPL_DOCS=dub run --root $(DPL_DOCS_PATH) --
 
 SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd	\
 	mixin.dd memory.dd interface.dd windows.dd dll.dd htomodule.dd faq.dd	\
