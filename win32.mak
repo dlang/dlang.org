@@ -52,7 +52,7 @@ SPECSRC=spec.dd intro.dd lex.dd grammar.dd module.dd declaration.dd type.dd prop
 	hash-map.dd struct.dd class.dd interface.dd enum.dd const3.dd		\
 	function.dd operatoroverloading.dd template.dd template-mixin.dd	\
 	contracts.dd version.dd traits.dd errors.dd unittest.dd garbage.dd		\
-	float.dd iasm.dd ddoc.dd interfaceToC.dd cpp_interface.dd			\
+	float.dd iasm.dd ddoc.dd interfaceToC.dd cpp_interface.dd objc_interface.dd			\
 	portability.dd entity.dd memory-safe-d.dd abi.dd simd.dd
 
 DDOC=macros.ddoc html.ddoc dlang.org.ddoc windows.ddoc doc.ddoc $(NODATETIME)
@@ -116,6 +116,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.
 	simd.html deprecate.html download.html 32-64-portability.html		\
 	d-array-article.html dll-linux.html bugstats.php.html getstarted.html \
 	gpg_keys.html forum-template.html css/cssmenu.css ctarguments.html \
+	objc_interface.html
 
 # exclude list
 MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
@@ -423,6 +424,8 @@ migrate-to-shared.html : $(DDOC) migrate-to-shared.dd
 mixin.html : $(DDOC) mixin.dd
 
 module.html : $(DDOC) module.dd
+
+objc_interface.html : $(DDOC) objc_interface.dd
 
 operatoroverloading.html : $(DDOC) operatoroverloading.dd
 
