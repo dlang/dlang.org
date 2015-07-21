@@ -121,14 +121,64 @@ int foo();
 
 $(H4 $(LNAME2 pure-functions, Pure Functions))
 
-        $(P Pure functions are functions which cannot access global or static, mutable
-        state save through their arguments. This can enable optimizations based on the fact
-        that a pure function is guaranteed to mutate nothing which isn't passed to it,
+    $(P Pure functions are functions that cannot directly access global or static
+        mutable state. It guarantees that a pure function call won't modify any
+        invisible places from the caller side.
+    )
+
+    $(P Unlike other functional programming languages, D's pure
+        functions allow modification of caller side state through their mutable
+        parameters.
+    )
+
+        ---
+        pure int foo(int[] arr) { arr[] += 1; return arr.length; }
+        int[] a = [1, 2, 3];
+        foo(a);
+        assert(a == [2, 3, 4]);
+        ---
+
+    $(P The minimum guarantee of "pure" is called "weak purity". It's designed to
+        increase modularity of functions.
+        In particular, weak pure functions are good reusable building blocks
+        for strongly pure functions.
+    )
+
+    $(P To control mutations, D has the $(D immutable) type qualifier. If all of
+        a $(D pure) function's parameters are $(D immutable) or copied values
+        without any indirections, it can guarantee that the pure function has
+        no side effects.
+    )
+
+        ---
+        struct S { double x; }
+        pure int foo(immutable(int)[] arr, int num, S val)
+        {
+            //arr[num] = 1; // compile error
+            num = 2;        // has no side effect to the caller side
+            val.x = 3.14;   // ditto
+            return arr.length;
+        }
+        ---
+
+    $(P The maximum guarantee of $(D pure) is called "strong purity". It can enable
+        optimizations based on the fact
+        that a function is guaranteed to not mutate anyhing which isn't passed to it,
         and in cases where the compiler can guarantee that a pure function cannot
         alter its arguments, it can enable full, functional purity (i.e. the guarantee
         that the function will always return the same result for the same arguments).
-        To that end, a pure function:
-        )
+    )
+
+$(COMMENT
+    $(P There's one more purity at the middle of two.
+
+        If a pure function has const indirections in its parameters,
+        it is called "constant purity".
+    )
+)
+
+    $(P To that end, a pure function:
+    )
 
         $(UL
         $(LI does not read or write any global or static mutable state)
@@ -174,6 +224,35 @@ pure int foo(int i,
 }
 ---
 
+    $(P $(RELATIVE_LINK2 variadicnested, Nested functions) inside pure function are implicitly marked as pure.
+
+        ---
+        pure int foo(int x, immutable int y)
+        {
+            int bar()
+            // implicitly marked as pure, to be "weak purity"
+            // hidden context pointer is mutable
+            {
+                x = 10;     // can access states in enclosing scope
+                            // through the mutable context pointer
+                return x;
+            }
+            pragma(msg, typeof(&bar));  // int delegate() pure
+
+            int baz() immutable
+            // qualify hidden context pointer with immutable,
+            // and has no other parameters, make "strong purity"
+            {
+                //return x; // error, cannot access mutable data
+                            // through the immutable context pointer
+                return y;   // ok
+            }
+
+            // can call pure nested functions
+            return bar() + baz();
+        }
+        ---
+    )
 
 $(H4 $(LNAME2 nothrow-functions, Nothrow Functions))
 
