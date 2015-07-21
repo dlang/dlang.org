@@ -2157,6 +2157,83 @@ const int x = foo("1");
         generated. A function template would be the appropriate
         method to implement this sort of thing.)
 
+$(H3 $(LNAME2 nogc-functions, No-GC Functions))
+
+    $(P No-GC functions are functions marked with the $(D @nogc) attribute.
+        Those functions do not allocate memory on the GC heap,
+        through the following language features:
+    )
+
+    $(UL
+    $(LI $(DDSUBLINK expression, ArrayLiteral, constructing an array) on the heap)
+    $(LI resizing an array with writing its $(D .length) property)
+    $(LI array $(DDSUBLINK expression, CatExpression, concatenation) and appending)
+    $(LI $(DDSUBLINK expression, AssocArrayLiteral, constructing an associative array) on the heap)
+    $(LI $(DDSUBLINK expression, IndexExpression, indexing) an associative array
+        (because it may throw $(D RangeError) if the specified key is not present))
+    $(LI $(DDSUBLINK expression, NewExpression, allocating an object) on the heap)
+    $(LI $(DDSUBLINK expression, DeleteExpression, deleting an object) on the heap)
+    )
+
+        ---
+        @nogc void foo()
+        {
+            auto a = ['a'];    // error, allocates
+            a.length = 1;      // error, array resizing allocates
+            a = a ~ a;         // error, arrays concatenation allocates
+            a ~= 'c';          // error, appending to arrays allocates
+
+            auto aa = ["x":1]; // error, allocates
+            aa["abc"];         // error, indexing may allocate and throws
+
+            auto p = new int;  // error, operator new allocates
+            delete p;          // error, operator delete deallocates
+        }
+        ---
+
+    $(P No-GC functions cannot call functions that are not $(D @nogc).
+    )
+
+        ---
+        @nogc void foo()
+        {
+            bar();             // error, bar() may allocate
+        }
+
+        void bar() { }
+        ---
+
+    $(P No-GC functions cannot be closures.
+    )
+
+        ---
+        @nogc int delegate() foo()
+        {
+            int n;              // error, variable n cannot be allocated on heap
+            return (){ return n; }
+        }
+        ---
+
+    $(P $(D @nogc) affects the type of the function. A $(D @nogc)
+        function is covariant with a non-$(D @nogc) function.
+    )
+
+        ---
+        void function() fp;
+        void function() @nogc gp;  // pointer to @nogc function
+
+        void foo();
+        @nogc void bar();
+
+        void test()
+        {
+            fp = &foo; // ok
+            fp = &bar; // ok, it's covariant
+            gp = &foo; // error, not contravariant
+            gp = &bar; // ok
+        }
+        ---
+
 $(H3 $(LNAME2 function-safety, Function Safety))
 
         $(P $(I Safe functions) are functions that are statically checked
@@ -2241,7 +2318,8 @@ $(H3 $(LNAME2 function-attribute-inference, Function Attribute Inference))
         $(DDSUBLINK template, function-templates, function template)s, since their function bodies
         are always present, infer the
         $(RELATIVE_LINK2 pure-functions, $(D pure)),
-        $(RELATIVE_LINK2 nothrow-functions, $(D nothrow)), and
+        $(RELATIVE_LINK2 nothrow-functions, $(D nothrow))
+        $(RELATIVE_LINK2 nogc-functions, $(D @nogc)), and
         $(RELATIVE_LINK2 safe-functions, $(D @safe)) attributes unless
         specifically overridden.
         )
