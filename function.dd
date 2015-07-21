@@ -1901,7 +1901,7 @@ void main()
 
 $(H3 $(LNAME2 interpretation, Compile Time Function Execution (CTFE)))
 
-    $(P Functions which are both portable and free of side-effects can be
+    $(P Functions which are both portable and free of side-effects to the global state can be
     executed at compile time. This is useful when constant folding
     algorithms need to include recursion and looping. Compile time function
     execution is subject to the following restrictions:
@@ -1968,7 +1968,7 @@ $(H3 $(LNAME2 interpretation, Compile Time Function Execution (CTFE)))
         )
 
         $(LI
-        Any pointer may be cast to $(D void *) and from $(D void *) back to
+        Any pointer may be cast to $(D void*) and from $(D void*) back to
         its original type. Casting between pointer and non-pointer types is
         prohibited.
         )
@@ -1987,7 +1987,7 @@ int countTen(int x)
     return x;
 }
 
-static assert(countTen(6) == 6); // OK
+static assert(countTen(6) == 6);    // OK
 static assert(countTen(12) == 12);  // invalid, modifies y.
 ---
     $(P The $(D __ctfe) boolean pseudo-variable, which evaluates to $(D_KEYWORD true)
@@ -2004,15 +2004,17 @@ static assert(countTen(12) == 12);  // invalid, modifies y.
 	example:)
 
 	$(UL
-	$(LI initialization of a static variable)
+	$(LI initialization of a static variable or a manifest constant)
 	$(LI dimension of a static array)
 	$(LI argument for a template value parameter)
 	)
 
 ---
-template eval( A... )
+import std.stdio;
+
+template eval(A...)
 {
-    const typeof(A[0]) eval = A[0];
+    enum typeof(A[0]) eval = A[0];
 }
 
 int square(int i)
@@ -2022,9 +2024,9 @@ int square(int i)
 
 void foo()
 {
-    static j = square(3);     // compile time
+    static j = square(3);      // compile time
     writeln(j);
-    writeln(square(4));      // run time
+    writeln(square(4));        // run time
     writeln(eval!(square(5))); // compile time
 }
 ---
