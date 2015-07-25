@@ -30,8 +30,9 @@ STABLE_DMD_VER=2.067.1
 STABLE_DMD_ROOT=/tmp/.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
-STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/rdmd
 STABLE_DMD_CONF=$(STABLE_DMD).conf
+STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/rdmd \
+	--compiler=$(STABLE_DMD) -conf=$(STABLE_DMD_CONF)
 
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
@@ -473,7 +474,7 @@ ${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
 chmgen : chmgen.d $(DMD)
 	$(DMD) -I${PHOBOS_DIR} -g chmgen.d
 
-d.tag : chmgen $(ALL_FILES)
+d.tag : chmgen $(ALL_FILES) phobos-release druntime-release
 	./chmgen --root=$(DOC_OUTPUT_DIR) --only-tags
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
