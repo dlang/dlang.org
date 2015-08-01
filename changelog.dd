@@ -4,7 +4,120 @@ $(D_S D Change Log,
 
 $(VERSION 068.0, XXX ??, 2015, =================================================,
 
-$(BR)$(BIG List of all bug fixes and enhancements:)
+$(BUGSTITLE Compiler Changes,
+$(LI $(RELATIVE_LINK2 lex-only-unittest, $(D unittest) blocks no longer parsed unless $(D -unittest) is specified.))
+)
+
+$(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 pragma-inline, $(D pragma(inline)) was added.))
+$(LI $(RELATIVE_LINK2 attribinference3, Do attribute inference for auto functions.))
+$(LI $(RELATIVE_LINK2 index-type-followed-ident, Indexed type tuple can be followed by dot identifiers.))
+$(LI $(RELATIVE_LINK2 ifti-from-default-arg, Support template parameter deduction from function default arguments.))
+$(LI $(RELATIVE_LINK2 invalid-cast-check, All invalid reinterpret casts can be detected in front-end.))
+)
+
+$(BR)$(BIG $(RELATIVE_LINK2 list2068, List of all bug fixes and enhancements in D 2.068.))
+
+$(HR)
+
+$(BUGSTITLE Compiler Changes,
+
+$(LI $(LNAME2 lex-only-unittest, $(D unittest) blocks no longer parsed unless $(D -unittest) is specified:)
+
+    $(P When the unittest code is not necessary, it will be merely analyzed
+        as the tokens enclosed with paired braces, to speed up compilation speed.
+    )
+
+        ---
+        unittest { auto r = test(); assert(r); }
+        // If you don't specify -unittest, no AST generated for the unittest block.
+
+        unittest { the contents is just ignored. }
+        // Since 2.067: this had caused parsing error.
+        //  From 2.068: no error happens, because it's equivalent with:
+        enum unittest_code = q{ the contents is just ignored. };
+        ---
+)
+
+)
+
+$(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 pragma-inline, $(D pragma(inline)) was added:)
+
+    $(P See $(DDSUBLINK pragma, inline, here).)
+)
+
+$(LI $(LNAME2 attribinference3, Do attribute inference for auto functions:)
+
+    $(P Example code:
+    )
+
+        ---
+        auto foo()() {} // template function
+        auto bar() {}   // non-template function without return type
+        void baz() {}   // non-template function with return type
+
+        void main()
+        {
+            foo();  // inferred to void() pure nothrow @nogc @safe
+            bar();  // From 2.068, also inferred to void() pure nothrow @nogc @safe
+            baz();  // no attribute inference, the function type is void()
+        }
+        ---
+)
+
+$(LI $(LNAME2 index-type-followed-ident, Indexed type tuple can be followed by dot identifiers:)
+
+    $(P A parsing limitation is lifted.
+    )
+
+        ---
+        alias TypeTuple(T...) = T;
+
+        struct S
+        {
+            alias T = int;
+            alias U = TypeTuple!(long, string);
+        }
+
+        alias Types = Tuple!(S, S);
+
+        Types[0].T a;     // Types[0] == S, then typeof(a) == S.T == int
+        Types[0].U[1] b;  // Types[0].U == S.U, then typeof(b) == S.U[1] == string
+        ---
+)
+
+$(LI $(LNAME2 ifti-from-default-arg, Support template parameter deduction from function default arguments:)
+
+    $(P Example code:
+    )
+
+        ---
+        void fun(T)(T t = 0) { }
+        void main() { fun(); }  // T is deduced to int
+        ---
+)
+
+$(LI $(LNAME2 invalid-cast-check, All invalid reinterpret casts can be detected in front-end:)
+
+    $(P It was a finally fixed bug.
+    )
+
+        ---
+        pragma(msg, is(typeof({ void* x; auto y = cast(void delegate())x; })));
+        // Since 2.067: it prints 'true'
+        //  From 2.068: it prints 'false'
+
+        void test() { void* x; auto y = cast(void delegate())x; }
+        // Since 2.067: it had reported internal compiler error "Error: e2ir: cannot cast ..."
+        //  From 2.068: it reports proper front-end error.
+        ---
+)
+
+)
+
+$(BR)$(BIG $(LNAME2 list2068, List of all bug fixes and enhancements in D 2.068:))
 
 $(BUGSTITLE DMD Compiler regressions,
 
