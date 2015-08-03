@@ -331,10 +331,10 @@ dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
 # dmd compiler, latest released build and current build
 ################################################################################
 
-$(DMD) : ${DMD_DIR}/.cloned
+$(DMD):
 	${MAKE} --directory=${DMD_DIR}/src -f posix.mak -j 4
 
-$(DMD_REL) : ${DMD_DIR}-${LATEST}/.cloned
+$(DMD_REL):
 	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak -j 4
 
 ################################################################################
