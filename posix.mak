@@ -30,9 +30,8 @@ STABLE_DMD_VER=2.067.1
 STABLE_DMD_ROOT=/tmp/.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
+STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/rdmd
 STABLE_DMD_CONF=$(STABLE_DMD).conf
-STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/rdmd \
-	--compiler=$(STABLE_DMD) -conf=$(STABLE_DMD_CONF)
 
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
@@ -111,8 +110,8 @@ endif
 # Documents
 
 DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
-STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
-STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
+STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST})
+STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease)
 
 IMAGES=favicon.ico $(addprefix images/, \
 	d002.ico \
@@ -331,10 +330,10 @@ dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
 # dmd compiler, latest released build and current build
 ################################################################################
 
-$(DMD) : ${DMD_DIR}/.cloned
+$(DMD):
 	${MAKE} --directory=${DMD_DIR}/src -f posix.mak -j 4
 
-$(DMD_REL) : ${DMD_DIR}-${LATEST}/.cloned
+$(DMD_REL):
 	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak -j 4
 
 ################################################################################
@@ -474,7 +473,5 @@ ${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
 chmgen : chmgen.d $(DMD)
 	$(DMD) -I${PHOBOS_DIR} -g chmgen.d
 
-d.tag : chmgen $(ALL_FILES) phobos-release druntime-release
+d.tag : chmgen $(ALL_FILES)
 	./chmgen --root=$(DOC_OUTPUT_DIR) --only-tags
-
-.DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
