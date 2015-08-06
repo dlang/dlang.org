@@ -17,7 +17,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
 	32-64-portability.dd dll-linux.dd bugstats.php.dd getstarted.dd \
-	css\cssmenu.css.dd \
+	css\cssmenu.css.dd ctarguments.dd \
 	
 
 SPECSRC=spec.dd intro.dd lex.dd grammar.dd module.dd declaration.dd type.dd property.dd	\
@@ -58,7 +58,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.
 	D1toD2.html unittest.html hash-map.html intro-to-datetime.html		\
 	simd.html deprecate.html download.html 32-64-portability.html		\
 	d-array-article.html dll-linux.html bugstats.php.html getstarted.html \
-	gpg_keys.html forum-template.html css/cssmenu.css \
+	gpg_keys.html forum-template.html css/cssmenu.css ctarguments.html \
 
 # exclude list
 MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
@@ -127,6 +127,8 @@ cpp_interface.html : $(DDOC) cpp_interface.dd
 cppcontracts.html : $(DDOC) cppcontracts.dd
 
 cpptod.html : $(DDOC) cpptod.dd
+
+ctarguments.html : $(DDOC) ctarguments.dd
 
 ctod.html : $(DDOC) ctod.dd
 
