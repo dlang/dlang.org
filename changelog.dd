@@ -25,6 +25,7 @@ $(LI The runtime implementations of `synchronized` and `synchronized (obj)` were
     rewritten to fix a race condition during mutex initialization, see $(DRUNTIMEPR 1274).)
 $(LI The handwritten object.di header was replaced by directly using the object.d source file,
     see $(DRUNTIMEPR 1222) for more details.)
+$(LI $(RELATIVE_LINK2 aa-open-addressing, The AA implementation now uses open addressing.))
 )
 
 $(BR)$(BIG $(RELATIVE_LINK2 list2068, List of all bug fixes and enhancements in D 2.068.))
@@ -175,6 +176,23 @@ $(LI $(LNAME2 gc-api-profile, GC API calls can now be profiled separately.)
     $(P The malloc function includes time for GC collections. Lock time (GC
         synchronization) is measured separately and not included in the other
         times.
+    )
+)
+
+$(LI $(LNAME2 aa-open-addressing, The AA implementation now uses open addressing.)
+
+    $(P The runtime implementation for associative arrays was rewritten and now
+        uses open addressing with $(LINK2 https://en.wikipedia.org/wiki/Quadratic_probing, quadratic probing)
+        and triangular numbers. This is much more cache friendly than the old
+        $(LINK2 https://en.wikipedia.org/wiki/Hash_table#Separate_chaining, separate chaining)
+        implementation and can result in ~25% faster lookups for big AAs. Also see $(DRUNTIMEPR 1229).
+    )
+
+    <img src="images/faster-aa-1.svg" alt="AA benchmarks" style="max-width: 100%">
+
+    $(P $(RED Note:) As the allocation pattern changed (the table is bigger, nodes
+        are smaller) you might see a small drop in performance because the GC manages
+        big allocations less efficiently.
     )
 )
 
