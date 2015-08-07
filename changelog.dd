@@ -30,6 +30,7 @@ $(LI $(RELATIVE_LINK2 invalid-cast-check, All invalid reinterpret casts can be d
 $(BUGSTITLE Library Changes,
 $(LI $(LINK2 phobos/std_traits.html#.hasUDA, $(D hasUDA)) was added to help check
 	for the existence of user-defined attributes on symbols.)
+$(LI $(RELATIVE_LINK2 gc-api-profile, GC API calls can now be profiled separately.))
 )
 
 $(BR)$(BIG $(RELATIVE_LINK2 list2068, List of all bug fixes and enhancements in D 2.068.))
@@ -129,6 +130,39 @@ $(LI $(LNAME2 invalid-cast-check, All invalid reinterpret casts can be detected 
         // Since 2.067: it had reported internal compiler error "Error: e2ir: cannot cast ..."
         //  From 2.068: it reports proper front-end error.
         ---
+)
+
+)
+
+$(BUGSTITLE Library Changes,
+
+$(LI $(LNAME2 gc-api-profile, GC API calls can now be profiled separately.)
+
+    $(P $(RELATIVE_LINK2 gc-options, GC option) --DRT-gcopt=profile has been 
+    enhanced to accept an additional level 2 that allows profiling API calls grouped
+    by most common operations. As this instrumentation has an impact on the GC even
+    if unused, you have to recompile the GC module with -debug=PROFILE_API, e.g.
+    )
+    
+    ---
+    dmd test.d -O -inline -debug=PROFILE_API -Ipath-to-druntime/src path-to-druntime/src/gc/gc.d
+    ./test --DRT-gcopt=profile:2
+    ---
+    
+    The profiling summary will then look like this:
+    ---
+        malloc:  9768628 calls, 531 ms
+        realloc: 0 calls, 0 ms
+        free:    0 calls, 0 ms
+        extend:  1100 calls, 0 ms
+        other:   826 calls, 0 ms
+        lock time: 160 ms
+        GC API: 692 ms
+    GC summary:   12 MB,   52 GC  331 ms, Pauses  227 ms <    4 ms API  692 ms
+    ---
+    malloc time includes collections, lock time for the GC synchronization object
+    not included in single function time.
+    )
 )
 
 )
