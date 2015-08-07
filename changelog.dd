@@ -11,10 +11,10 @@ $(LI $(RELATIVE_LINK2 lex-only-unittest, `unittest` blocks no longer parsed unle
 
 $(BUGSTITLE Language Changes,
 $(LI $(RELATIVE_LINK2 pragma-inline, `pragma(inline)` was added.))
-$(LI $(RELATIVE_LINK2 attribinference3, Do attribute inference for auto functions.))
-$(LI $(RELATIVE_LINK2 index-type-followed-ident, Indexed type tuple can be followed by dot identifiers.))
+$(LI $(RELATIVE_LINK2 attribinference3, attribute inference for auto functions))
+$(LI $(RELATIVE_LINK2 index-type-followed-ident, Indexed type tuples can now be followed by dot identifiers.))
 $(LI $(RELATIVE_LINK2 ifti-from-default-arg, Support template parameter deduction from function default arguments.))
-$(LI $(RELATIVE_LINK2 invalid-cast-check, All invalid reinterpret casts can be detected in front-end.))
+$(LI $(RELATIVE_LINK2 invalid-cast-check, Invalid reinterpret casts can be detected in the frontend.))
 )
 
 $(BUGSTITLE Library Changes,
@@ -91,9 +91,11 @@ $(LI $(LNAME2 pragma-inline, `pragma(inline)` was added:)
     )
 )
 
-$(LI $(LNAME2 attribinference3, Do attribute inference for auto functions:)
+$(LI $(LNAME2 attribinference3, Attributes for auto return function are now inferred.)
 
-    $(P Example code:
+    $(P Just like templated functions, functions with an auto return type must
+        always have a function body. The compiler was changed to take advantage
+        of this fact and now also infers attributes for them.
     )
 
         ---
@@ -101,18 +103,16 @@ $(LI $(LNAME2 attribinference3, Do attribute inference for auto functions:)
         auto bar() {}   // non-template function without return type
         void baz() {}   // non-template function with return type
 
-        void main()
-        {
-            foo();  // inferred to void() pure nothrow @nogc @safe
-            bar();  // From 2.068, also inferred to void() pure nothrow @nogc @safe
-            baz();  // no attribute inference, the function type is void()
-        }
+        static assert(is(typeof(&foo!()) == void function() pure nothrow @nogc @safe));
+        static assert(is(typeof(&bar) == void function() pure nothrow @nogc @safe));
+        static assert(is(typeof(&baz) == void function()));
         ---
 )
 
-$(LI $(LNAME2 index-type-followed-ident, Indexed type tuple can be followed by dot identifiers:)
+$(LI $(LNAME2 index-type-followed-ident, Indexed type tuples can now be followed by dot identifiers.)
 
-    $(P A parsing limitation is lifted.
+    $(P A parsing limitation was lifted and it's now possible to use an indexed
+        type tuple followed by dot identifiers as typename.
     )
 
         ---
@@ -133,18 +133,24 @@ $(LI $(LNAME2 index-type-followed-ident, Indexed type tuple can be followed by d
 
 $(LI $(LNAME2 ifti-from-default-arg, Support template parameter deduction from function default arguments:)
 
-    $(P Example code:
+    $(P When performing $(LINK2 http://wiki.dlang.org/Commonly-Used_Acronyms,
+        IFTI) templated types can now be deduced from a parameter's default argument.
+        This avoids a redundant and error prone declaration of the default type.
     )
 
         ---
-        void fun(T)(T t = 0) { }
-        void main() { fun(); }  // T is deduced to int
+        void previously(T=int)(T t = 0) { } // it was necessary to also specify a default type
+        void now(T)(T t = 0) { } // the default type can be deduced from the default argument as int
+        void main() { previously(); now(); }
         ---
 )
 
-$(LI $(LNAME2 invalid-cast-check, All invalid reinterpret casts can be detected in front-end:)
+$(LI $(LNAME2 invalid-cast-check, Invalid reinterpret casts can be detected in the frontend.)
 
-    $(P It was a finally fixed bug.
+    $(P Invalid reinterpret casts are now detected in the compiler frontend
+        instead of the backend. This allows to check for possible reinterpret
+        casts during compile time and improves the error messages for invalid
+        casts.
     )
 
         ---
@@ -154,7 +160,7 @@ $(LI $(LNAME2 invalid-cast-check, All invalid reinterpret casts can be detected 
 
         void test() { void* x; auto y = cast(void delegate())x; }
         // Since 2.067: it had reported internal compiler error "Error: e2ir: cannot cast ..."
-        //  From 2.068: it reports proper front-end error.
+        //  From 2.068: it reports proper frontend error.
         ---
 )
 
