@@ -5,6 +5,7 @@ $(D_S D Change Log,
 $(VERSION 068.0, XXX ??, 2015, =================================================,
 
 $(BUGSTITLE Compiler Changes,
+$(LI $(RELATIVE_LINK2 fix14828-warning, $(RED Warning:) Change in helper function generation might cause link error.))
 $(LI $(RELATIVE_LINK2 lex-only-unittest, $(D unittest) blocks no longer parsed unless $(D -unittest) is specified.))
 )
 
@@ -27,6 +28,23 @@ $(BR)$(BIG $(RELATIVE_LINK2 list2068, List of all bug fixes and enhancements in 
 $(HR)
 
 $(BUGSTITLE Compiler Changes,
+
+$(LI $(LNAME2 fix14828-warning, $(RED Warning:) Change in helper function generation might cause link error.)
+
+    $(P In order to fix $(LINK2 https://issues.dlang.org/show_bug.cgi?id=14828,
+        Issue 14828) compiler helper functions for array bounds checking and
+        assert are now generated only once when a module is compiled, not
+        everytime they are used. This may lead to link errors when using a
+        module without compiling and linking against it.
+    )
+
+    $(P If you encounter link errors like
+        $(PRE undefined reference to '_D5mylib5mymod7__arrayZ')
+        $(PRE undefined reference to '_D5mylib5mymod8__assertFiZv')
+        $(PRE undefined reference to '_D5mylib5mymod15__unittest_failFiZv') then you're
+        not compiling and/or not linking the module mylib.mymod.
+    )
+)
 
 $(LI $(LNAME2 lex-only-unittest, $(D unittest) blocks no longer parsed unless $(D -unittest) is specified:)
 
