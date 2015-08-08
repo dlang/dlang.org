@@ -5,21 +5,39 @@ $(D_S D Change Log,
 $(VERSION 068.0, XXX ??, 2015, =================================================,
 
 $(BUGSTITLE Compiler Changes,
-$(LI $(RELATIVE_LINK2 lex-only-unittest, $(D unittest) blocks no longer parsed unless $(D -unittest) is specified.))
+$(LI $(RELATIVE_LINK2 fix14828-warning, $(RED Warning:) Change in helper function generation might cause link error.))
+$(LI $(RELATIVE_LINK2 lex-only-unittest, `unittest` blocks no longer parsed unless `-unittest` is specified.))
+$(LI Compiler generated inclusive destructor and postblit functions for
+     $(LINK2 http://wiki.dlang.org/Commonly-Used_Acronyms, UDTs) are now
+     accessible as `.__xdtor` and `.__xpostblit`, see $(DMDPR 4650).)
 )
 
 $(BUGSTITLE Language Changes,
-$(LI $(RELATIVE_LINK2 pragma-inline, $(D pragma(inline)) was added.))
-$(LI $(RELATIVE_LINK2 attribinference3, Do attribute inference for auto functions.))
-$(LI $(RELATIVE_LINK2 index-type-followed-ident, Indexed type tuple can be followed by dot identifiers.))
+$(LI $(RELATIVE_LINK2 pragma-inline, `pragma(inline)` was added.))
+$(LI $(RELATIVE_LINK2 attribinference3, attribute inference for auto functions))
+$(LI $(RELATIVE_LINK2 index-type-followed-ident, Indexed type tuples can now be followed by dot identifiers.))
 $(LI $(RELATIVE_LINK2 ifti-from-default-arg, Support template parameter deduction from function default arguments.))
-$(LI $(RELATIVE_LINK2 invalid-cast-check, All invalid reinterpret casts can be detected in front-end.))
+$(LI $(RELATIVE_LINK2 invalid-cast-check, Invalid reinterpret casts can be detected in the frontend.))
 )
 
 $(BUGSTITLE Library Changes,
-$(LI $(LINK2 phobos/std_traits.html#.hasUDA, $(D hasUDA)) was added to help check
+$(LI $(STDMODREF typetuple, std.typetuple) was renamed to $(STDMODREF meta, std.meta)
+    but a backwards compatible forwarding module will remain.)
+$(LI $(XREF typetuple, TypeTuple) was renamed to $(XREF meta, AliasSeq)
+    but a backwards compatible alias will remain.)
+$(LI $(XREF traits,hasUDA) was added to help check
 	for the existence of user-defined attributes on symbols.)
 $(LI $(RELATIVE_LINK2 gc-api-profile, GC API calls can now be profiled separately.))
+$(LI The runtime implementations of `synchronized` and `synchronized (obj)` were
+    rewritten to fix a race condition during mutex initialization, see $(DRUNTIMEPR 1274).)
+$(LI The handwritten object.di header was replaced by directly using the object.d source file,
+    see $(DRUNTIMEPR 1222) for more details.)
+$(LI $(RELATIVE_LINK2 aa-open-addressing, The AA implementation now uses open addressing.))
+$(LI Merging code coverage reports was fixed, see $(BUGZILLA 14464) and $(CXREF runtime,dmd_coverSetMerge).)
+$(LI $(XREF process,executeShell) now ignores the `SHELL` environment variable and always uses `sh`, see $(BUGZILLA 14282).)
+$(LI $(XREF stdio,byLine) was improved to use `getdelim` where available and is now up to 3x faster, see $(BUGZILLA 11810).)
+$(LI The newly added $(XREF algorithm_sorting, ordered) and $(XREF algorithm_sorting, strictlyOrdered) can be used to test whether a few given values are ordered.)
+$(LI $(XREF typecons, RefCounted) uses the new `return` attribute to enable escape checking for it's payload.)
 )
 
 $(BR)$(BIG $(RELATIVE_LINK2 list2068, List of all bug fixes and enhancements in D 2.068.))
@@ -28,7 +46,24 @@ $(HR)
 
 $(BUGSTITLE Compiler Changes,
 
-$(LI $(LNAME2 lex-only-unittest, $(D unittest) blocks no longer parsed unless $(D -unittest) is specified:)
+$(LI $(LNAME2 fix14828-warning, $(RED Warning:) Change in helper function generation might cause link error.)
+
+    $(P In order to fix $(LINK2 https://issues.dlang.org/show_bug.cgi?id=14828,
+        Issue 14828) compiler helper functions for array bounds checking and
+        assert are now generated only once when a module is compiled, not
+        everytime they are used. This may lead to link errors when using a
+        module without compiling and linking against it.
+    )
+
+    $(P If you encounter link errors like
+        $(PRE undefined reference to '_D5mylib5mymod7__arrayZ')
+        $(PRE undefined reference to '_D5mylib5mymod8__assertFiZv')
+        $(PRE undefined reference to '_D5mylib5mymod15__unittest_failFiZv') then you're
+        not compiling and/or not linking the module mylib.mymod.
+    )
+)
+
+$(LI $(LNAME2 lex-only-unittest, `unittest` blocks no longer parsed unless `-unittest` is specified:)
 
     $(P When the unittest code is not necessary, it will be merely analyzed
         as the tokens enclosed with paired braces, to speed up compilation speed.
@@ -49,14 +84,29 @@ $(LI $(LNAME2 lex-only-unittest, $(D unittest) blocks no longer parsed unless $(
 
 $(BUGSTITLE Language Changes,
 
-$(LI $(LNAME2 pragma-inline, $(D pragma(inline)) was added:)
+$(LI $(LNAME2 pragma-inline, `pragma(inline)` was added:)
 
-    $(P See $(DDSUBLINK pragma, inline, here).)
+    $(P A new pragma was added for more fine-grained control of inlining.
+        It must be used together with the `-inline` switch.
+    )
+        ---
+        pragma(inline, true) // errors if function isn't inlined
+        int double(int val) { return 2 * val; }
+        ---
+        ---
+        pragma(inline, false) // never inline
+        int double(int val) { return 2 * val; }
+        ---
+
+    $(P Read the $(DDSUBLINK pragma, inline, documentation) for more details.
+    )
 )
 
-$(LI $(LNAME2 attribinference3, Do attribute inference for auto functions:)
+$(LI $(LNAME2 attribinference3, Attributes for auto return function are now inferred.)
 
-    $(P Example code:
+    $(P Just like templated functions, functions with an auto return type must
+        always have a function body. The compiler was changed to take advantage
+        of this fact and now also infers attributes for them.
     )
 
         ---
@@ -64,18 +114,16 @@ $(LI $(LNAME2 attribinference3, Do attribute inference for auto functions:)
         auto bar() {}   // non-template function without return type
         void baz() {}   // non-template function with return type
 
-        void main()
-        {
-            foo();  // inferred to void() pure nothrow @nogc @safe
-            bar();  // From 2.068, also inferred to void() pure nothrow @nogc @safe
-            baz();  // no attribute inference, the function type is void()
-        }
+        static assert(is(typeof(&foo!()) == void function() pure nothrow @nogc @safe));
+        static assert(is(typeof(&bar) == void function() pure nothrow @nogc @safe));
+        static assert(is(typeof(&baz) == void function()));
         ---
 )
 
-$(LI $(LNAME2 index-type-followed-ident, Indexed type tuple can be followed by dot identifiers:)
+$(LI $(LNAME2 index-type-followed-ident, Indexed type tuples can now be followed by dot identifiers.)
 
-    $(P A parsing limitation is lifted.
+    $(P A parsing limitation was lifted and it's now possible to use an indexed
+        type tuple followed by dot identifiers as typename.
     )
 
         ---
@@ -96,18 +144,24 @@ $(LI $(LNAME2 index-type-followed-ident, Indexed type tuple can be followed by d
 
 $(LI $(LNAME2 ifti-from-default-arg, Support template parameter deduction from function default arguments:)
 
-    $(P Example code:
+    $(P When performing $(LINK2 http://wiki.dlang.org/Commonly-Used_Acronyms,
+        IFTI) templated types can now be deduced from a parameter's default argument.
+        This avoids a redundant and error prone declaration of the default type.
     )
 
         ---
-        void fun(T)(T t = 0) { }
-        void main() { fun(); }  // T is deduced to int
+        void previously(T=int)(T t = 0) { } // it was necessary to also specify a default type
+        void now(T)(T t = 0) { } // the default type can be deduced from the default argument as int
+        void main() { previously(); now(); }
         ---
 )
 
-$(LI $(LNAME2 invalid-cast-check, All invalid reinterpret casts can be detected in front-end:)
+$(LI $(LNAME2 invalid-cast-check, Invalid reinterpret casts can be detected in the frontend.)
 
-    $(P It was a finally fixed bug.
+    $(P Invalid reinterpret casts are now detected in the compiler frontend
+        instead of the backend. This allows to check for possible reinterpret
+        casts during compile time and improves the error messages for invalid
+        casts.
     )
 
         ---
@@ -117,7 +171,7 @@ $(LI $(LNAME2 invalid-cast-check, All invalid reinterpret casts can be detected 
 
         void test() { void* x; auto y = cast(void delegate())x; }
         // Since 2.067: it had reported internal compiler error "Error: e2ir: cannot cast ..."
-        //  From 2.068: it reports proper front-end error.
+        //  From 2.068: it reports proper frontend error.
         ---
 )
 
@@ -127,17 +181,18 @@ $(BUGSTITLE Library Changes,
 
 $(LI $(LNAME2 gc-api-profile, GC API calls can now be profiled separately.)
 
-    $(P $(RELATIVE_LINK2 gc-options, GC option) --DRT-gcopt=profile has been 
-    enhanced to accept an additional level 2 that allows profiling API calls grouped
-    by most common operations. As this instrumentation has an impact on the GC even
-    if unused, you have to recompile the GC module with -debug=PROFILE_API, e.g.
+    $(P The $(RELATIVE_LINK2 gc-options, GC option) `--DRT-gcopt=profile` has been
+        enhanced to accept an additional level 2 that allows profiling API calls grouped
+        by most common operations.
     )
-    
+    $(P As this instrumentation has an impact on the GC performance even if unused, you have
+        to recompile the GC module with -debug=PROFILE_API, e.g.
+    )
     ---
     dmd test.d -O -inline -debug=PROFILE_API -Ipath-to-druntime/src path-to-druntime/src/gc/gc.d
     ./test --DRT-gcopt=profile:2
     ---
-    
+
     The profiling summary will then look like this:
     ---
         malloc:  9768628 calls, 531 ms
@@ -149,8 +204,26 @@ $(LI $(LNAME2 gc-api-profile, GC API calls can now be profiled separately.)
         GC API: 692 ms
     GC summary:   12 MB,   52 GC  331 ms, Pauses  227 ms <    4 ms API  692 ms
     ---
-    malloc time includes collections, lock time for the GC synchronization object
-    not included in single function time.
+    $(P The malloc function includes time for GC collections. Lock time (GC
+        synchronization) is measured separately and not included in the other
+        times.
+    )
+)
+
+$(LI $(LNAME2 aa-open-addressing, The AA implementation now uses open addressing.)
+
+    $(P The runtime implementation for associative arrays was rewritten and now
+        uses open addressing with $(LINK2 https://en.wikipedia.org/wiki/Quadratic_probing, quadratic probing)
+        and triangular numbers. This is much more cache friendly than the old
+        $(LINK2 https://en.wikipedia.org/wiki/Hash_table#Separate_chaining, separate chaining)
+        implementation and can result in ~25% faster lookups for big AAs. Also see $(DRUNTIMEPR 1229).
+    )
+
+    <img src="images/faster-aa-1.svg" alt="AA benchmarks" style="max-width: 100%">
+
+    $(P $(RED Note:) As the allocation pattern changed (the table is bigger, nodes
+        are smaller) you might see a small drop in performance because the GC manages
+        big allocations less efficiently.
     )
 )
 
@@ -407,7 +480,7 @@ $(LI $(RELATIVE_LINK2 faster-gc-1, The garbage collector got faster.))
 $(LI $(RELATIVE_LINK2 volatile-load-store, $(D volatileLoad) and $(D volatileStore) intrinsics were added.))
 $(LI $(RELATIVE_LINK2 gc-options, $(B Experimental:) The garbage collector can now be configured.))
 $(LI $(RELATIVE_LINK2 aa-keyvalue, $(D byKeyValue) was added.))
-$(LI $(LINK2 phobos/std_concurrency.html#.initOnce, $(D initOnce) was added to perform thread-safe lazy initialization.))
+$(LI $(XREF concurrency,initOnce) was added to perform thread-safe lazy initialization.))
 $(LI $(RELATIVE_LINK2 std-range-enumerate, A new range algorithm $(D enumerate) was added to
 attach indexes to range elements.))
 $(LI $(RELATIVE_LINK2 std-exception-handle, A new range algorithm $(D handle) was added to
@@ -11211,3 +11284,8 @@ Macros:
     STDMODREF = <a href="phobos/std_$1.html">$(D $2)</a>
     XREF = <a href="phobos/std_$1.html#$2">$(D $2)</a>
     CXREF = <a href="phobos/core_$1.html#$2">$(D $2)</a>
+
+    PULL_REQUEST = $(LINK2 https://github.com/D-Programming-Language/$1/pull/$2, $1#$2)
+    DMDPR = $(PULL_REQUEST dmd,$1)
+    DRUNTIMEPR = $(PULL_REQUEST druntime,$1)
+    PHOBOSPR = $(PULL_REQUEST phobos,$1)
