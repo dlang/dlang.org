@@ -2,10 +2,11 @@ Ddoc
 
 $(D_S D Change Log,
 
-$(VERSION 068.0, XXX ??, 2015, =================================================,
+$(VERSION 068.0, Aug 09, 2015, =================================================,
 
 $(BUGSTITLE Compiler Changes,
 $(LI $(RELATIVE_LINK2 fix14828-warning, $(RED Warning:) Change in helper function generation might cause link error.))
+$(LI $(RELATIVE_LINK2 profile-gc, The new `-profile=gc` switch enables profiling memory allocation.))
 $(LI $(RELATIVE_LINK2 lex-only-unittest, `unittest` blocks no longer parsed unless `-unittest` is specified.))
 $(LI Compiler generated inclusive destructor and postblit functions for
      $(LINK2 http://wiki.dlang.org/Commonly-Used_Acronyms, UDTs) are now
@@ -21,10 +22,12 @@ $(LI $(RELATIVE_LINK2 invalid-cast-check, Invalid reinterpret casts can be detec
 )
 
 $(BUGSTITLE Library Changes,
+$(LI $(RELATIVE_LINK2 rangified-functions, Many phobos functions were rangified.))
 $(LI $(STDMODREF typetuple, std.typetuple) was renamed to $(STDMODREF meta, std.meta)
     but a backwards compatible forwarding module will remain.)
 $(LI $(XREF typetuple, TypeTuple) was renamed to $(XREF meta, AliasSeq)
     but a backwards compatible alias will remain.)
+$(LI $(XREF conv, hexString) was added to replace core language hex strings.)
 $(LI $(XREF traits,hasUDA) was added to help check
 	for the existence of user-defined attributes on symbols.)
 $(LI $(RELATIVE_LINK2 gc-api-profile, GC API calls can now be profiled separately.))
@@ -63,6 +66,28 @@ $(LI $(LNAME2 fix14828-warning, $(RED Warning:) Change in helper function genera
     )
 )
 
+$(LI $(LNAME2 profile-gc, The new `-profile=gc` switch enables profiling memory allocation.)
+
+
+    $(P When compiling with `-profile=gc` dmd will instrument GC allocations to
+        be traced by the runtime. The runtime accumulates the traces and
+        writes a report to the file $(TT profilegc.log) upon program termination.
+    )
+
+    $(P
+        Example:
+            $(PRE
+bytes allocated, type, function, file:line
+     171	immutable(char)[] example.concat example.d:4
+      24	closure D main example.d:18
+      16	example.Klass D main example.d:20
+            )
+    )
+
+    $(P $(RED Note:) GC allocations using the core.memory interface are not profiled.
+    )
+)
+
 $(LI $(LNAME2 lex-only-unittest, `unittest` blocks no longer parsed unless `-unittest` is specified:)
 
     $(P When the unittest code is not necessary, it will be merely analyzed
@@ -83,6 +108,74 @@ $(LI $(LNAME2 lex-only-unittest, `unittest` blocks no longer parsed unless `-uni
 )
 
 $(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 rangified-functions, Many phobos functions were rangified.)
+
+    $(P Many phobos functions that allocated GC memory were changed to support
+        ranges or were complemented by an alternative supporting ranges.
+        Using ranges often eliminates GC allocations.
+    )
+
+        ---
+        setExtension("foo.jpg", ".png"); // allocates a new string
+        withExtension("foo.jpg", ".png"); // returns a range without allocating
+        ---
+
+    $(BOOKTABLE Rangified Functions:,
+        $(TR $(TH Module) $(TH Functions)
+        )
+        $(TR $(TD $(STDMODREF algorithm_comparison, std.algorithm.comparison))
+            $(TD
+                $(XREF algorithm_comparison, levenshteinDistance)
+            )
+        )
+        $(TR $(TD $(STDMODREF path, std.path))
+            $(TD
+                $(XREF path, asAbsolutePath)
+                $(XREF path, asNormalizedPath)
+                $(XREF path, asRelativePath)
+                $(XREF path, chainPath)
+                $(XREF path, dirName)
+                $(XREF path, driveName)
+                $(XREF path, filenameCmp)
+                $(XREF path, globMatch)
+                $(XREF path, isValidFilename)
+                $(XREF path, isValidPath)
+                $(XREF path, pathSplitter)
+                $(XREF path, rootName)
+                $(XREF path, stripExtension)
+                $(XREF path, withDefaultExtension)
+                $(XREF path, withExtension)
+            )
+        )
+        $(TR $(TD $(STDMODREF string, std.string))
+            $(TD
+                $(XREF string, centerJustifier)
+                $(XREF string, chomp)
+                $(XREF string, chompPrefix)
+                $(XREF string, chop)
+                $(XREF string, column)
+                $(XREF string, detabber)
+                $(XREF string, entabber)
+                $(XREF string, indexOf)
+                $(XREF string, leftJustifier)
+                $(XREF string, makeTransTable)
+                $(XREF string, rightJustifier)
+                $(XREF string, soundexer)
+                $(XREF string, strip)
+                $(XREF string, stripLeft)
+                $(XREF string, stripRight)
+            )
+        )
+        $(TR $(TD $(STDMODREF uni, std.uni))
+            $(TD
+                $(XREF uni, asCapitalized)
+                $(XREF uni, asLowerCase)
+                $(XREF uni, asUpperCase)
+            )
+        )
+    )
+)
 
 $(LI $(LNAME2 pragma-inline, `pragma(inline)` was added:)
 
