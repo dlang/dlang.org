@@ -6,6 +6,7 @@ $(VERSION 068.0, XXX ??, 2015, =================================================
 
 $(BUGSTITLE Compiler Changes,
 $(LI $(RELATIVE_LINK2 fix14828-warning, $(RED Warning:) Change in helper function generation might cause link error.))
+$(LI $(RELATIVE_LINK2 profile-gc, The new `-profile=gc` switch enables profiling memory allocation.))
 $(LI $(RELATIVE_LINK2 lex-only-unittest, `unittest` blocks no longer parsed unless `-unittest` is specified.))
 $(LI Compiler generated inclusive destructor and postblit functions for
      $(LINK2 http://wiki.dlang.org/Commonly-Used_Acronyms, UDTs) are now
@@ -60,6 +61,28 @@ $(LI $(LNAME2 fix14828-warning, $(RED Warning:) Change in helper function genera
         $(PRE undefined reference to '_D5mylib5mymod8__assertFiZv')
         $(PRE undefined reference to '_D5mylib5mymod15__unittest_failFiZv') then you're
         not compiling and/or not linking the module mylib.mymod.
+    )
+)
+
+$(LI $(LNAME2 profile-gc, The new `-profile=gc` switch enables profiling memory allocation.)
+
+
+    $(P When compiling with `-profile=gc` dmd will instrument GC allocations to
+        be traced by the runtime. The runtime accumulates the traces and
+        writes a report to the file $(TT profilegc.log) upon program termination.
+    )
+
+    $(P
+        Example:
+            $(PRE
+bytes allocated, type, function, file:line
+     171	immutable(char)[] example.concat example.d:4
+      24	closure D main example.d:18
+      16	example.Klass D main example.d:20
+            )
+    )
+
+    $(P $(RED Note:) GC allocations using the core.memory interface are not profiled.
     )
 )
 
