@@ -13,23 +13,45 @@ $(LI $(LINK2 phobos/std_traits.html#.getSymbolsByUDA, $(D getSymbolsByUDA)) was
 
 )
 
-$(VERSION 068.0, XXX ??, 2015, =================================================,
+$(VERSION 068.0, Aug 09, 2015, =================================================,
 
 $(BUGSTITLE Compiler Changes,
-$(LI $(RELATIVE_LINK2 lex-only-unittest, $(D unittest) blocks no longer parsed unless $(D -unittest) is specified.))
+$(LI $(RELATIVE_LINK2 fix14828-warning, $(RED Warning:) Change in helper function generation might cause link error.))
+$(LI $(RELATIVE_LINK2 profile-gc, The new `-profile=gc` switch enables profiling memory allocation.))
+$(LI $(RELATIVE_LINK2 lex-only-unittest, `unittest` blocks no longer parsed unless `-unittest` is specified.))
+$(LI Compiler generated inclusive destructor and postblit functions for
+     $(LINK2 http://wiki.dlang.org/Commonly-Used_Acronyms, UDTs) are now
+     accessible as `.__xdtor` and `.__xpostblit`, see $(DMDPR 4650).)
 )
 
 $(BUGSTITLE Language Changes,
-$(LI $(RELATIVE_LINK2 pragma-inline, $(D pragma(inline)) was added.))
-$(LI $(RELATIVE_LINK2 attribinference3, Do attribute inference for auto functions.))
-$(LI $(RELATIVE_LINK2 index-type-followed-ident, Indexed type tuple can be followed by dot identifiers.))
+$(LI $(RELATIVE_LINK2 pragma-inline, `pragma(inline)` was added.))
+$(LI $(RELATIVE_LINK2 attribinference3, attribute inference for auto functions))
+$(LI $(RELATIVE_LINK2 index-type-followed-ident, Indexed type tuples can now be followed by dot identifiers.))
 $(LI $(RELATIVE_LINK2 ifti-from-default-arg, Support template parameter deduction from function default arguments.))
-$(LI $(RELATIVE_LINK2 invalid-cast-check, All invalid reinterpret casts can be detected in front-end.))
+$(LI $(RELATIVE_LINK2 invalid-cast-check, Invalid reinterpret casts can be detected in the frontend.))
 )
 
 $(BUGSTITLE Library Changes,
-$(LI $(LINK2 phobos/std_traits.html#.hasUDA, $(D hasUDA)) was added to help check
+$(LI $(RELATIVE_LINK2 rangified-functions, Many phobos functions were rangified.))
+$(LI $(STDMODREF typetuple, std.typetuple) was renamed to $(STDMODREF meta, std.meta)
+    but a backwards compatible forwarding module will remain.)
+$(LI $(XREF typetuple, TypeTuple) was renamed to $(XREF meta, AliasSeq)
+    but a backwards compatible alias will remain.)
+$(LI $(XREF conv, hexString) was added to replace core language hex strings.)
+$(LI $(XREF traits,hasUDA) was added to help check
 	for the existence of user-defined attributes on symbols.)
+$(LI $(RELATIVE_LINK2 gc-api-profile, GC API calls can now be profiled separately.))
+$(LI The runtime implementations of `synchronized` and `synchronized (obj)` were
+    rewritten to fix a race condition during mutex initialization, see $(DRUNTIMEPR 1274).)
+$(LI The handwritten object.di header was replaced by directly using the object.d source file,
+    see $(DRUNTIMEPR 1222) for more details.)
+$(LI $(RELATIVE_LINK2 aa-open-addressing, The AA implementation now uses open addressing.))
+$(LI Merging code coverage reports was fixed, see $(BUGZILLA 14464) and $(CXREF runtime,dmd_coverSetMerge).)
+$(LI $(XREF process,executeShell) now ignores the `SHELL` environment variable and always uses `sh`, see $(BUGZILLA 14282).)
+$(LI $(XREF stdio,byLine) was improved to use `getdelim` where available and is now up to 3x faster, see $(BUGZILLA 11810).)
+$(LI The newly added $(XREF algorithm_sorting, ordered) and $(XREF algorithm_sorting, strictlyOrdered) can be used to test whether a few given values are ordered.)
+$(LI $(XREF typecons, RefCounted) uses the new `return` attribute to enable escape checking for it's payload.)
 )
 
 $(BR)$(BIG $(RELATIVE_LINK2 list2068, List of all bug fixes and enhancements in D 2.068.))
@@ -38,7 +60,46 @@ $(HR)
 
 $(BUGSTITLE Compiler Changes,
 
-$(LI $(LNAME2 lex-only-unittest, $(D unittest) blocks no longer parsed unless $(D -unittest) is specified:)
+$(LI $(LNAME2 fix14828-warning, $(RED Warning:) Change in helper function generation might cause link error.)
+
+    $(P In order to fix $(LINK2 https://issues.dlang.org/show_bug.cgi?id=14828,
+        Issue 14828) compiler helper functions for array bounds checking and
+        assert are now generated only once when a module is compiled, not
+        everytime they are used. This may lead to link errors when using a
+        module without compiling and linking against it.
+    )
+
+    $(P If you encounter link errors like
+        $(PRE undefined reference to '_D5mylib5mymod7__arrayZ')
+        $(PRE undefined reference to '_D5mylib5mymod8__assertFiZv')
+        $(PRE undefined reference to '_D5mylib5mymod15__unittest_failFiZv') then you're
+        not compiling and/or not linking the module mylib.mymod.
+    )
+)
+
+$(LI $(LNAME2 profile-gc, The new `-profile=gc` switch enables profiling memory allocation.)
+
+
+    $(P When compiling with `-profile=gc` dmd will instrument GC allocations to
+        be traced by the runtime. The runtime accumulates the traces and
+        writes a report to the file $(TT profilegc.log) upon program termination.
+    )
+
+    $(P
+        Example:
+            $(PRE
+bytes allocated, type, function, file:line
+     171	immutable(char)[] example.concat example.d:4
+      24	closure D main example.d:18
+      16	example.Klass D main example.d:20
+            )
+    )
+
+    $(P $(RED Note:) GC allocations using the core.memory interface are not profiled.
+    )
+)
+
+$(LI $(LNAME2 lex-only-unittest, `unittest` blocks no longer parsed unless `-unittest` is specified:)
 
     $(P When the unittest code is not necessary, it will be merely analyzed
         as the tokens enclosed with paired braces, to speed up compilation speed.
@@ -59,14 +120,97 @@ $(LI $(LNAME2 lex-only-unittest, $(D unittest) blocks no longer parsed unless $(
 
 $(BUGSTITLE Language Changes,
 
-$(LI $(LNAME2 pragma-inline, $(D pragma(inline)) was added:)
+$(LI $(LNAME2 rangified-functions, Many phobos functions were rangified.)
 
-    $(P See $(DDSUBLINK pragma, inline, here).)
+    $(P Many phobos functions that allocated GC memory were changed to support
+        ranges or were complemented by an alternative supporting ranges.
+        Using ranges often eliminates GC allocations.
+    )
+
+        ---
+        setExtension("foo.jpg", ".png"); // allocates a new string
+        withExtension("foo.jpg", ".png"); // returns a range without allocating
+        ---
+
+    $(BOOKTABLE Rangified Functions:,
+        $(TR $(TH Module) $(TH Functions)
+        )
+        $(TR $(TD $(STDMODREF algorithm_comparison, std.algorithm.comparison))
+            $(TD
+                $(XREF algorithm_comparison, levenshteinDistance)
+            )
+        )
+        $(TR $(TD $(STDMODREF path, std.path))
+            $(TD
+                $(XREF path, asAbsolutePath)
+                $(XREF path, asNormalizedPath)
+                $(XREF path, asRelativePath)
+                $(XREF path, chainPath)
+                $(XREF path, dirName)
+                $(XREF path, driveName)
+                $(XREF path, filenameCmp)
+                $(XREF path, globMatch)
+                $(XREF path, isValidFilename)
+                $(XREF path, isValidPath)
+                $(XREF path, pathSplitter)
+                $(XREF path, rootName)
+                $(XREF path, stripExtension)
+                $(XREF path, withDefaultExtension)
+                $(XREF path, withExtension)
+            )
+        )
+        $(TR $(TD $(STDMODREF string, std.string))
+            $(TD
+                $(XREF string, centerJustifier)
+                $(XREF string, chomp)
+                $(XREF string, chompPrefix)
+                $(XREF string, chop)
+                $(XREF string, column)
+                $(XREF string, detabber)
+                $(XREF string, entabber)
+                $(XREF string, indexOf)
+                $(XREF string, leftJustifier)
+                $(XREF string, makeTransTable)
+                $(XREF string, rightJustifier)
+                $(XREF string, soundexer)
+                $(XREF string, strip)
+                $(XREF string, stripLeft)
+                $(XREF string, stripRight)
+            )
+        )
+        $(TR $(TD $(STDMODREF uni, std.uni))
+            $(TD
+                $(XREF uni, asCapitalized)
+                $(XREF uni, asLowerCase)
+                $(XREF uni, asUpperCase)
+            )
+        )
+    )
 )
 
-$(LI $(LNAME2 attribinference3, Do attribute inference for auto functions:)
+$(LI $(LNAME2 pragma-inline, `pragma(inline)` was added:)
 
-    $(P Example code:
+    $(P A new pragma was added for more fine-grained control of inlining.
+        It must be used together with the `-inline` switch.
+    )
+        ---
+        pragma(inline, true) // errors if function isn't inlined
+        int double(int val) { return 2 * val; }
+        ---
+        ---
+        pragma(inline, false) // never inline
+        int double(int val) { return 2 * val; }
+        ---
+
+    $(P Read the $(DDSUBLINK pragma, inline, documentation) for more details.
+    )
+)
+
+$(LI $(LNAME2 attribinference3, Attributes for auto return function are now inferred.)
+
+    $(P Just like templated functions, functions with an auto return type must
+        always have a function body. The compiler was changed to take advantage
+        of this fact and now also infers attributes for them.
     )
 
         ---
@@ -74,18 +218,16 @@ $(LI $(LNAME2 attribinference3, Do attribute inference for auto functions:)
         auto bar() {}   // non-template function without return type
         void baz() {}   // non-template function with return type
 
-        void main()
-        {
-            foo();  // inferred to void() pure nothrow @nogc @safe
-            bar();  // From 2.068, also inferred to void() pure nothrow @nogc @safe
-            baz();  // no attribute inference, the function type is void()
-        }
+        static assert(is(typeof(&foo!()) == void function() pure nothrow @nogc @safe));
+        static assert(is(typeof(&bar) == void function() pure nothrow @nogc @safe));
+        static assert(is(typeof(&baz) == void function()));
         ---
 )
 
-$(LI $(LNAME2 index-type-followed-ident, Indexed type tuple can be followed by dot identifiers:)
+$(LI $(LNAME2 index-type-followed-ident, Indexed type tuples can now be followed by dot identifiers.)
 
-    $(P A parsing limitation is lifted.
+    $(P A parsing limitation was lifted and it's now possible to use an indexed
+        type tuple followed by dot identifiers as typename.
     )
 
         ---
@@ -106,18 +248,24 @@ $(LI $(LNAME2 index-type-followed-ident, Indexed type tuple can be followed by d
 
 $(LI $(LNAME2 ifti-from-default-arg, Support template parameter deduction from function default arguments:)
 
-    $(P Example code:
+    $(P When performing $(LINK2 http://wiki.dlang.org/Commonly-Used_Acronyms,
+        IFTI) templated types can now be deduced from a parameter's default argument.
+        This avoids a redundant and error prone declaration of the default type.
     )
 
         ---
-        void fun(T)(T t = 0) { }
-        void main() { fun(); }  // T is deduced to int
+        void previously(T=int)(T t = 0) { } // it was necessary to also specify a default type
+        void now(T)(T t = 0) { } // the default type can be deduced from the default argument as int
+        void main() { previously(); now(); }
         ---
 )
 
-$(LI $(LNAME2 invalid-cast-check, All invalid reinterpret casts can be detected in front-end:)
+$(LI $(LNAME2 invalid-cast-check, Invalid reinterpret casts can be detected in the frontend.)
 
-    $(P It was a finally fixed bug.
+    $(P Invalid reinterpret casts are now detected in the compiler frontend
+        instead of the backend. This allows to check for possible reinterpret
+        casts during compile time and improves the error messages for invalid
+        casts.
     )
 
         ---
@@ -127,8 +275,60 @@ $(LI $(LNAME2 invalid-cast-check, All invalid reinterpret casts can be detected 
 
         void test() { void* x; auto y = cast(void delegate())x; }
         // Since 2.067: it had reported internal compiler error "Error: e2ir: cannot cast ..."
-        //  From 2.068: it reports proper front-end error.
+        //  From 2.068: it reports proper frontend error.
         ---
+)
+
+)
+
+$(BUGSTITLE Library Changes,
+
+$(LI $(LNAME2 gc-api-profile, GC API calls can now be profiled separately.)
+
+    $(P The $(RELATIVE_LINK2 gc-options, GC option) `--DRT-gcopt=profile` has been
+        enhanced to accept an additional level 2 that allows profiling API calls grouped
+        by most common operations.
+    )
+    $(P As this instrumentation has an impact on the GC performance even if unused, you have
+        to recompile the GC module with -debug=PROFILE_API, e.g.
+    )
+    ---
+    dmd test.d -O -inline -debug=PROFILE_API -Ipath-to-druntime/src path-to-druntime/src/gc/gc.d
+    ./test --DRT-gcopt=profile:2
+    ---
+
+    The profiling summary will then look like this:
+    ---
+        malloc:  9768628 calls, 531 ms
+        realloc: 0 calls, 0 ms
+        free:    0 calls, 0 ms
+        extend:  1100 calls, 0 ms
+        other:   826 calls, 0 ms
+        lock time: 160 ms
+        GC API: 692 ms
+    GC summary:   12 MB,   52 GC  331 ms, Pauses  227 ms <    4 ms API  692 ms
+    ---
+    $(P The malloc function includes time for GC collections. Lock time (GC
+        synchronization) is measured separately and not included in the other
+        times.
+    )
+)
+
+$(LI $(LNAME2 aa-open-addressing, The AA implementation now uses open addressing.)
+
+    $(P The runtime implementation for associative arrays was rewritten and now
+        uses open addressing with $(LINK2 https://en.wikipedia.org/wiki/Quadratic_probing, quadratic probing)
+        and triangular numbers. This is much more cache friendly than the old
+        $(LINK2 https://en.wikipedia.org/wiki/Hash_table#Separate_chaining, separate chaining)
+        implementation and can result in ~25% faster lookups for big AAs. Also see $(DRUNTIMEPR 1229).
+    )
+
+    <img src="images/faster-aa-1.svg" alt="AA benchmarks" style="max-width: 100%">
+
+    $(P $(RED Note:) As the allocation pattern changed (the table is bigger, nodes
+        are smaller) you might see a small drop in performance because the GC manages
+        big allocations less efficiently.
+    )
 )
 
 )
@@ -170,6 +370,16 @@ $(LI $(BUGZILLA 14666): [REG2.061] Bogus forward reference error)
 $(LI $(BUGZILLA 14672): [REG2.067.0] Internal error: e2ir.c 4620 when copying array of derived class to an array of base class)
 $(LI $(BUGZILLA 14805): [REG2.064] Unreasonably slow "new Struct[large]")
 $(LI $(BUGZILLA 14806): [REG2.063] alias this doesn't force elaborate equality, but is followed during it)
+$(LI $(BUGZILLA 14814): ld: GOT load reloc does not point to a movq instruction)
+$(LI $(BUGZILLA 14828): [REG2.067] duplicate symbol __ModuleInfoZ depending on ordering of files passed to dmd)
+$(LI $(BUGZILLA 14829): [REG2.066.0] wrong code with -O -inline)
+$(LI $(BUGZILLA 14834): [REG 2.068-b2] dirEntries with mask stopped working with "-inline -debug")
+$(LI $(BUGZILLA 14836): [REG2.068a] Multiple variadic template argument trick broken)
+$(LI $(BUGZILLA 14838): [REG 2.066] Wrong attribute inference for auto-generated class destructor with static array of non-POD type)
+$(LI $(BUGZILLA 14844): [REG2.068a] __traits$(LPAREN)allMembers$(RPAREN) must not visit yet not instantiated template members)
+$(LI $(BUGZILLA 14851): [REG2.068.0-b2] Cannot assign array operation result to static array variable)
+$(LI $(BUGZILLA 14853): [REG2.066] DMD segfaults with the cast from mutable struct new to shared)
+$(LI $(BUGZILLA 14890): [REG 2.068.0-rc1] Can not construct a RedBlackTree of Tuples)
 )
 )
 $(BUGSTITLE DMD Compiler bugs,
@@ -233,7 +443,6 @@ $(LI $(BUGZILLA 14656): "auto" of "auto ref" spills over to other function)
 $(BUGSTITLE DMD Compiler enhancements,
 
 $(P
-$(LI $(BUGZILLA 4733): Possible bugs caused by dynamic arrays in boolean evaluation context)
 $(LI $(BUGZILLA 9914): Do attribute inference for auto functions)
 $(LI $(BUGZILLA 11003): Improve .di generation)
 $(LI $(BUGZILLA 14465): CTFE exception stacktrace shows location of Exception constructor)
@@ -244,7 +453,10 @@ $(BUGSTITLE Phobos regressions,
 
 $(P
 $(LI $(BUGZILLA 14712): GIT HEAD : std.net.curl regressions)
+$(LI $(BUGZILLA 14748): Removing std.stdio import causes 2x increase in "Hello, world" program binary filesize)
 $(LI $(BUGZILLA 14765): [Reg2.068.0] Rangified functions no longer accept types that implicitly cast to string)
+$(LI $(BUGZILLA 14842): [REG 2.068-b2] approxEqual does not work with integers)
+$(LI $(BUGZILLA 14881): [REG] posix.mak omits package.d files when building zip file)
 )
 )
 $(BUGSTITLE Phobos bugs,
@@ -282,6 +494,7 @@ $(BUGSTITLE Druntime regressions,
 $(P
 $(LI $(BUGZILLA 14626): [REG2.066] byValue doesn't work with inout AA)
 $(LI $(BUGZILLA 14746): [REG2.068a] Behavior change with struct destructor and alias this)
+$(LI $(BUGZILLA 14863): CLOCK_BOOTTIME should be optional to support <2.6.39 kernels)
 )
 )
 $(BUGSTITLE Druntime bugs,
@@ -321,6 +534,13 @@ $(BUGSTITLE Tools bugs,
 $(P
 $(LI $(BUGZILLA 13758): RDMD renames directory if -ofNAME is the name of a directory)
 $(LI $(BUGZILLA 14259): rdmd: --build-only / -of / -od incompatible with --dry-run)
+)
+)
+$(BUGSTITLE Installer bugs,
+
+$(P
+$(LI $(BUGZILLA 14801): OS X installer not compatible with OS X 10.11)
+$(LI $(BUGZILLA 14864): windows uninstall during installation pops up spurious warning)
 )
 )
 
@@ -384,7 +604,7 @@ $(LI $(RELATIVE_LINK2 faster-gc-1, The garbage collector got faster.))
 $(LI $(RELATIVE_LINK2 volatile-load-store, $(D volatileLoad) and $(D volatileStore) intrinsics were added.))
 $(LI $(RELATIVE_LINK2 gc-options, $(B Experimental:) The garbage collector can now be configured.))
 $(LI $(RELATIVE_LINK2 aa-keyvalue, $(D byKeyValue) was added.))
-$(LI $(LINK2 phobos/std_concurrency.html#.initOnce, $(D initOnce) was added to perform thread-safe lazy initialization.))
+$(LI $(XREF concurrency,initOnce) was added to perform thread-safe lazy initialization.))
 $(LI $(RELATIVE_LINK2 std-range-enumerate, A new range algorithm $(D enumerate) was added to
 attach indexes to range elements.))
 $(LI $(RELATIVE_LINK2 std-exception-handle, A new range algorithm $(D handle) was added to
@@ -11188,3 +11408,8 @@ Macros:
     STDMODREF = <a href="phobos/std_$1.html">$(D $2)</a>
     XREF = <a href="phobos/std_$1.html#$2">$(D $2)</a>
     CXREF = <a href="phobos/core_$1.html#$2">$(D $2)</a>
+
+    PULL_REQUEST = $(LINK2 https://github.com/D-Programming-Language/$1/pull/$2, $1#$2)
+    DMDPR = $(PULL_REQUEST dmd,$1)
+    DRUNTIMEPR = $(PULL_REQUEST druntime,$1)
+    PHOBOSPR = $(PULL_REQUEST phobos,$1)
