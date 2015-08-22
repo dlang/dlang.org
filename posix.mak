@@ -113,6 +113,7 @@ endif
 DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
 STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
 STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
+CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 
 IMAGES=favicon.ico $(addprefix images/, \
 	d002.ico \
@@ -150,11 +151,13 @@ SPEC_ROOT=spec intro lex grammar module declaration type property attribute prag
 	simd
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
+CHANGELOG_FILES=$(shell ls changelog/*.dd | sed s/\\.dd$$// )
+
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
 PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements ascii-table		\
-	bugstats.php builtin changelog code_coverage concepts const-faq COM	\
+	bugstats.php builtin $(CHANGELOG_FILES) code_coverage concepts const-faq COM	\
 	comparison cpptod ctarguments ctod D1toD2 d-array-article d-floating-point		\
 	deprecate dll dll-linux dmd-freebsd dmd-linux dmd-osx dmd-windows	\
 	download dstyle exception-safe faq features2 forum-template gpg_keys getstarted glossary gsoc2011 \
@@ -172,6 +175,9 @@ $(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT) $(PRETTIFY))
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
 # Pattern rulez
+
+$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<

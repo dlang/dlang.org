@@ -1,0 +1,546 @@
+Ddoc
+
+$(CHANGELOG_NAV_LAST 2.067.1)
+
+$(VERSION Aug 09, 2015, =================================================,
+
+$(BUGSTITLE Compiler Changes,
+$(LI $(RELATIVE_LINK2 fix14828-warning, $(RED Warning:) Change in helper function generation might cause link error.))
+$(LI $(RELATIVE_LINK2 profile-gc, The new `-profile=gc` switch enables profiling memory allocation.))
+$(LI $(RELATIVE_LINK2 lex-only-unittest, `unittest` blocks no longer parsed unless `-unittest` is specified.))
+$(LI Compiler generated inclusive destructor and postblit functions for
+     $(LINK2 http://wiki.dlang.org/Commonly-Used_Acronyms, UDTs) are now
+     accessible as `.__xdtor` and `.__xpostblit`, see $(DMDPR 4650).)
+)
+
+$(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 pragma-inline, `pragma(inline)` was added.))
+$(LI $(RELATIVE_LINK2 attribinference3, attribute inference for auto functions))
+$(LI $(RELATIVE_LINK2 index-type-followed-ident, Indexed type tuples can now be followed by dot identifiers.))
+$(LI $(RELATIVE_LINK2 ifti-from-default-arg, Support template parameter deduction from function default arguments.))
+$(LI $(RELATIVE_LINK2 invalid-cast-check, Invalid reinterpret casts can be detected in the frontend.))
+)
+
+$(BUGSTITLE Library Changes,
+$(LI $(RELATIVE_LINK2 rangified-functions, Many phobos functions were rangified.))
+$(LI $(STDMODREF typetuple, std.typetuple) was renamed to $(STDMODREF meta, std.meta)
+    but a backwards compatible forwarding module will remain.)
+$(LI $(XREF typetuple, TypeTuple) was renamed to $(XREF meta, AliasSeq)
+    but a backwards compatible alias will remain.)
+$(LI $(XREF conv, hexString) was added to replace core language hex strings.)
+$(LI $(XREF traits,hasUDA) was added to help check
+	for the existence of user-defined attributes on symbols.)
+$(LI $(RELATIVE_LINK2 gc-api-profile, GC API calls can now be profiled separately.))
+$(LI The runtime implementations of `synchronized` and `synchronized (obj)` were
+    rewritten to fix a race condition during mutex initialization, see $(DRUNTIMEPR 1274).)
+$(LI The handwritten object.di header was replaced by directly using the object.d source file,
+    see $(DRUNTIMEPR 1222) for more details.)
+$(LI $(RELATIVE_LINK2 aa-open-addressing, The AA implementation now uses open addressing.))
+$(LI Merging code coverage reports was fixed, see $(BUGZILLA 14464) and $(CXREF runtime,dmd_coverSetMerge).)
+$(LI $(XREF process,executeShell) now ignores the `SHELL` environment variable and always uses `sh`, see $(BUGZILLA 14282).)
+$(LI $(XREF stdio,byLine) was improved to use `getdelim` where available and is now up to 3x faster, see $(BUGZILLA 11810).)
+$(LI The newly added $(XREF algorithm_sorting, ordered) and $(XREF algorithm_sorting, strictlyOrdered) can be used to test whether a few given values are ordered.)
+$(LI $(XREF typecons, RefCounted) uses the new `return` attribute to enable escape checking for it's payload.)
+)
+
+$(BR)$(BIG $(RELATIVE_LINK2 list2068, List of all bug fixes and enhancements in D 2.068.))
+
+$(HR)
+
+$(BUGSTITLE Compiler Changes,
+
+$(LI $(LNAME2 fix14828-warning, $(RED Warning:) Change in helper function generation might cause link error.)
+
+    $(P In order to fix $(LINK2 https://issues.dlang.org/show_bug.cgi?id=14828,
+        Issue 14828) compiler helper functions for array bounds checking and
+        assert are now generated only once when a module is compiled, not
+        everytime they are used. This may lead to link errors when using a
+        module without compiling and linking against it.
+    )
+
+    $(P If you encounter link errors like
+        $(PRE undefined reference to '_D5mylib5mymod7__arrayZ')
+        $(PRE undefined reference to '_D5mylib5mymod8__assertFiZv')
+        $(PRE undefined reference to '_D5mylib5mymod15__unittest_failFiZv') then you're
+        not compiling and/or not linking the module mylib.mymod.
+    )
+)
+
+$(LI $(LNAME2 profile-gc, The new `-profile=gc` switch enables profiling memory allocation.)
+
+
+    $(P When compiling with `-profile=gc` dmd will instrument GC allocations to
+        be traced by the runtime. The runtime accumulates the traces and
+        writes a report to the file $(TT profilegc.log) upon program termination.
+    )
+
+    $(P
+        Example:
+            $(PRE
+bytes allocated, type, function, file:line
+     171	immutable(char)[] example.concat example.d:4
+      24	closure D main example.d:18
+      16	example.Klass D main example.d:20
+            )
+    )
+
+    $(P $(RED Note:) GC allocations using the core.memory interface are not profiled.
+    )
+)
+
+$(LI $(LNAME2 lex-only-unittest, `unittest` blocks no longer parsed unless `-unittest` is specified:)
+
+    $(P When the unittest code is not necessary, it will be merely analyzed
+        as the tokens enclosed with paired braces, to speed up compilation.
+    )
+
+        ---
+        unittest { auto r = test(); assert(r); }
+        // If you don't specify -unittest, no AST generated for the unittest block.
+
+        unittest { the contents is just ignored. }
+        // Since 2.067: this had caused parsing error.
+        //  From 2.068: no error happens, because it's equivalent with:
+        enum unittest_code = q{ the contents is just ignored. };
+        ---
+)
+
+)
+
+$(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 rangified-functions, Many phobos functions were rangified.)
+
+    $(P Many phobos functions that allocated GC memory were changed to support
+        ranges or were complemented by an alternative supporting ranges.
+        Using ranges often eliminates GC allocations.
+    )
+
+        ---
+        setExtension("foo.jpg", ".png"); // allocates a new string
+        withExtension("foo.jpg", ".png"); // returns a range without allocating
+        ---
+
+    $(BOOKTABLE Rangified Functions:,
+        $(TR $(TH Module) $(TH Functions)
+        )
+        $(TR $(TD $(STDMODREF algorithm_comparison, std.algorithm.comparison))
+            $(TD
+                $(XREF algorithm_comparison, levenshteinDistance)
+            )
+        )
+        $(TR $(TD $(STDMODREF path, std.path))
+            $(TD
+                $(XREF path, asAbsolutePath)
+                $(XREF path, asNormalizedPath)
+                $(XREF path, asRelativePath)
+                $(XREF path, chainPath)
+                $(XREF path, dirName)
+                $(XREF path, driveName)
+                $(XREF path, filenameCmp)
+                $(XREF path, globMatch)
+                $(XREF path, isValidFilename)
+                $(XREF path, isValidPath)
+                $(XREF path, pathSplitter)
+                $(XREF path, rootName)
+                $(XREF path, stripExtension)
+                $(XREF path, withDefaultExtension)
+                $(XREF path, withExtension)
+            )
+        )
+        $(TR $(TD $(STDMODREF string, std.string))
+            $(TD
+                $(XREF string, centerJustifier)
+                $(XREF string, chomp)
+                $(XREF string, chompPrefix)
+                $(XREF string, chop)
+                $(XREF string, column)
+                $(XREF string, detabber)
+                $(XREF string, entabber)
+                $(XREF string, indexOf)
+                $(XREF string, leftJustifier)
+                $(XREF string, makeTransTable)
+                $(XREF string, rightJustifier)
+                $(XREF string, soundexer)
+                $(XREF string, strip)
+                $(XREF string, stripLeft)
+                $(XREF string, stripRight)
+            )
+        )
+        $(TR $(TD $(STDMODREF uni, std.uni))
+            $(TD
+                $(XREF uni, asCapitalized)
+                $(XREF uni, asLowerCase)
+                $(XREF uni, asUpperCase)
+            )
+        )
+    )
+)
+
+$(LI $(LNAME2 pragma-inline, `pragma(inline)` was added:)
+
+    $(P A new pragma was added for more fine-grained control of inlining.
+        It must be used together with the `-inline` switch.
+    )
+        ---
+        pragma(inline, true) // errors if function isn't inlined
+        int double(int val) { return 2 * val; }
+        ---
+        ---
+        pragma(inline, false) // never inline
+        int double(int val) { return 2 * val; }
+        ---
+
+    $(P Read the $(DDSUBLINK pragma, inline, documentation) for more details.
+    )
+)
+
+$(LI $(LNAME2 attribinference3, Attributes for auto return function are now inferred.)
+
+    $(P Just like templated functions, functions with an auto return type must
+        always have a function body. The compiler was changed to take advantage
+        of this fact and now also infers attributes for them.
+    )
+
+        ---
+        auto foo()() {} // template function
+        auto bar() {}   // non-template function without return type
+        void baz() {}   // non-template function with return type
+
+        static assert(is(typeof(&foo!()) == void function() pure nothrow @nogc @safe));
+        static assert(is(typeof(&bar) == void function() pure nothrow @nogc @safe));
+        static assert(is(typeof(&baz) == void function()));
+        ---
+)
+
+$(LI $(LNAME2 index-type-followed-ident, Indexed type tuples can now be followed by dot identifiers.)
+
+    $(P A parsing limitation was lifted and it's now possible to use an indexed
+        type tuple followed by dot identifiers as typename.
+    )
+
+        ---
+        alias TypeTuple(T...) = T;
+
+        struct S
+        {
+            alias T = int;
+            alias U = TypeTuple!(long, string);
+        }
+
+        alias Types = TypeTuple!(S, S);
+
+        struct X(Types...)   // used tuple parameter
+        {
+
+            Types[0].T a;     // Types[0] == S, then typeof(a) == S.T == int
+            Types[0].U[1] b;  // Types[0].U == S.U, then typeof(b) == S.U[1] == string
+        }
+        alias x = X!Types;
+        ---
+)
+
+$(LI $(LNAME2 ifti-from-default-arg, Support template parameter deduction from function default arguments:)
+
+    $(P When performing $(LINK2 http://wiki.dlang.org/Commonly-Used_Acronyms,
+        IFTI) templated types can now be deduced from a parameter's default argument.
+        This avoids a redundant and error prone declaration of the default type.
+    )
+
+        ---
+        void previously(T=int)(T t = 0) { } // it was necessary to also specify a default type
+        void now(T)(T t = 0) { } // the default type can be deduced from the default argument as int
+        void main() { previously(); now(); }
+        ---
+)
+
+$(LI $(LNAME2 invalid-cast-check, Invalid reinterpret casts can be detected in the frontend.)
+
+    $(P Invalid reinterpret casts are now detected in the compiler frontend
+        instead of the backend. This allows to check for possible reinterpret
+        casts during compile time and improves the error messages for invalid
+        casts.
+    )
+
+        ---
+        pragma(msg, is(typeof({ void* x; auto y = cast(void delegate())x; })));
+        // Since 2.067: it prints 'true'
+        //  From 2.068: it prints 'false'
+
+        void test() { void* x; auto y = cast(void delegate())x; }
+        // Since 2.067: it had reported internal compiler error "Error: e2ir: cannot cast ..."
+        //  From 2.068: it reports proper frontend error.
+        ---
+)
+
+)
+
+$(BUGSTITLE Library Changes,
+
+$(LI $(LNAME2 gc-api-profile, GC API calls can now be profiled separately.)
+
+    $(P The $(RELATIVE_LINK2 gc-options, GC option) `--DRT-gcopt=profile` has been
+        enhanced to accept an additional level 2 that allows profiling API calls grouped
+        by most common operations.
+    )
+    $(P As this instrumentation has an impact on the GC performance even if unused, you have
+        to recompile the GC module with -debug=PROFILE_API, e.g.
+    )
+    ---
+    dmd test.d -O -inline -debug=PROFILE_API -Ipath-to-druntime/src path-to-druntime/src/gc/gc.d
+    ./test --DRT-gcopt=profile:2
+    ---
+
+    The profiling summary will then look like this:
+    ---
+        malloc:  9768628 calls, 531 ms
+        realloc: 0 calls, 0 ms
+        free:    0 calls, 0 ms
+        extend:  1100 calls, 0 ms
+        other:   826 calls, 0 ms
+        lock time: 160 ms
+        GC API: 692 ms
+    GC summary:   12 MB,   52 GC  331 ms, Pauses  227 ms <    4 ms API  692 ms
+    ---
+    $(P The malloc function includes time for GC collections. Lock time (GC
+        synchronization) is measured separately and not included in the other
+        times.
+    )
+)
+
+$(LI $(LNAME2 aa-open-addressing, The AA implementation now uses open addressing.)
+
+    $(P The runtime implementation for associative arrays was rewritten and now
+        uses open addressing with $(LINK2 https://en.wikipedia.org/wiki/Quadratic_probing, quadratic probing)
+        and triangular numbers. This is much more cache friendly than the old
+        $(LINK2 https://en.wikipedia.org/wiki/Hash_table#Separate_chaining, separate chaining)
+        implementation and can result in ~25% faster lookups for big AAs. Also see $(DRUNTIMEPR 1229).
+    )
+
+    <img src="../images/faster-aa-1.svg" alt="AA benchmarks" style="max-width: 100%">
+
+    $(P $(RED Note:) As the allocation pattern changed (the table is bigger, nodes
+        are smaller) you might see a small drop in performance because the GC manages
+        big allocations less efficiently.
+    )
+)
+
+)
+
+$(BR)$(BIG $(LNAME2 list2068, List of all bug fixes and enhancements in D 2.068:))
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(P
+$(LI $(BUGZILLA 9279): [REG2.055/2.063] Static array return value implicitly converted to immutable dynamic array)
+$(LI $(BUGZILLA 12984): [REG2.068a] ICE on forward reference of derived class from other instantiated class)
+$(LI $(BUGZILLA 13816): [REG2.066.0] The compiler crashes with recursive tuple expansion)
+$(LI $(BUGZILLA 14207): [REG2.065] [CTFE] ICE on unsupported reinterpret cast in compile time)
+$(LI $(BUGZILLA 14351): [REG2.063] `inout` base class constructor can't be called)
+$(LI $(BUGZILLA 14390): [REG2.068a] ICE or bad "has forward references" error with circular class structure)
+$(LI $(BUGZILLA 14406): [REG2.068a] GIT HEAD ignores forward reference and generates wrong code)
+$(LI $(BUGZILLA 14430): [REG2.060] Null parameter is detected as non-null.)
+$(LI $(BUGZILLA 14468): [Reg 2.068.0-devel] overload mismatch for template instance with typesafe variadic parameter)
+$(LI $(BUGZILLA 14481): [REG2.066] ICE with forward reference of manifest constant on template arguments)
+$(LI $(BUGZILLA 14520): [REG2.067.0] string/alias template overload)
+$(LI $(BUGZILLA 14528): [REG2.058a] can't pass protected member to template by alias)
+$(LI $(BUGZILLA 14546): "ClockType.uptime is not supported by MonoTimeImpl on this system")
+$(LI $(BUGZILLA 14549): isVirtualMethod does not work well with Github DMD)
+$(LI $(BUGZILLA 14552): [REG2.066] SIGSEGV with compile construction nested class in predicate)
+$(LI $(BUGZILLA 14556): [REG2.067] can't instantiate struct that has constructor and static array of enum)
+$(LI $(BUGZILLA 14560): [REG2.058] Strange -inline behavior)
+$(LI $(BUGZILLA 14568): [REG2.067] gaggederrors ICE)
+$(LI $(BUGZILLA 14571): [REG2.064] Large static arrays seem to lock up DMD)
+$(LI $(BUGZILLA 14572): cannot build dmd from source anymore: 'g++ -m64: No such file or directory')
+$(LI $(BUGZILLA 14573): [REG2.067] Extreme memory usage when `synchronized$(LPAREN) object $(RPAREN)` is used)
+$(LI $(BUGZILLA 14587): [REG2.064] generated 64 bit code for switch jump tables is wrong)
+$(LI $(BUGZILLA 14594): [REG2.068a] DDoc for template functions and structs has disappeared)
+$(LI $(BUGZILLA 14606): [REG2.067.0] Bad code with -inline and structs)
+$(LI $(BUGZILLA 14609): [REG2.068a] Github HEAD: DMD assertion failure for valid code)
+$(LI $(BUGZILLA 14610): [REG2.067] 'null this' assertion missing in 2.067)
+$(LI $(BUGZILLA 14634): dmd crashes without any input)
+$(LI $(BUGZILLA 14642): [REG2.066] ICE in ctfeInterpret)
+$(LI $(BUGZILLA 14666): [REG2.061] Bogus forward reference error)
+$(LI $(BUGZILLA 14672): [REG2.067.0] Internal error: e2ir.c 4620 when copying array of derived class to an array of base class)
+$(LI $(BUGZILLA 14805): [REG2.064] Unreasonably slow "new Struct[large]")
+$(LI $(BUGZILLA 14806): [REG2.063] alias this doesn't force elaborate equality, but is followed during it)
+$(LI $(BUGZILLA 14814): ld: GOT load reloc does not point to a movq instruction)
+$(LI $(BUGZILLA 14828): [REG2.067] duplicate symbol __ModuleInfoZ depending on ordering of files passed to dmd)
+$(LI $(BUGZILLA 14829): [REG2.066.0] wrong code with -O -inline)
+$(LI $(BUGZILLA 14834): [REG 2.068-b2] dirEntries with mask stopped working with "-inline -debug")
+$(LI $(BUGZILLA 14836): [REG2.068a] Multiple variadic template argument trick broken)
+$(LI $(BUGZILLA 14838): [REG 2.066] Wrong attribute inference for auto-generated class destructor with static array of non-POD type)
+$(LI $(BUGZILLA 14844): [REG2.068a] __traits$(LPAREN)allMembers$(RPAREN) must not visit yet not instantiated template members)
+$(LI $(BUGZILLA 14851): [REG2.068.0-b2] Cannot assign array operation result to static array variable)
+$(LI $(BUGZILLA 14853): [REG2.066] DMD segfaults with the cast from mutable struct new to shared)
+$(LI $(BUGZILLA 14890): [REG 2.068.0-rc1] Can not construct a RedBlackTree of Tuples)
+)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(P
+$(LI $(BUGZILLA 1759): Closures and With Statements)
+$(LI $(BUGZILLA 2803): template + default argument = doesn't work)
+$(LI $(BUGZILLA 3869): Unreasonable error without line number: "recursive template expansion")
+$(LI $(BUGZILLA 5770): Template constructor bypass access check)
+$(LI $(BUGZILLA 6613): Can't use empty tuple as default value for variadic template function parameter)
+$(LI $(BUGZILLA 6766): Forward reference error for default struct/class arguments)
+$(LI $(BUGZILLA 8217): static nested class can reference outer scope by template instantiation)
+$(LI $(BUGZILLA 8234): symbols used in CTFE affect the function literal type)
+$(LI $(BUGZILLA 9023): CTFE: cannot use ~= on an empty AA.)
+$(LI $(BUGZILLA 10158): 'offsetof' property of nested struct does not work properly)
+$(LI $(BUGZILLA 10282): Refused assignment of vector op result to const array)
+$(LI $(BUGZILLA 10492): Illegal Instruction for mixin template with scope declarations)
+$(LI $(BUGZILLA 10972): aggregate postblit doesn't clean up in case of failure)
+$(LI $(BUGZILLA 11166): Forward reference error when alias of template instance is private)
+$(LI $(BUGZILLA 12036): Wrong code with auto-returning function as mixin alias param)
+$(LI $(BUGZILLA 12152): Cannot forward reference subclass member in superclass)
+$(LI $(BUGZILLA 12406): Broken delegate closure)
+$(LI $(BUGZILLA 12603): [CTFE] goto does not correctly call dtors)
+$(LI $(BUGZILLA 12799): Forward reference to nested enum with struct.sizeof)
+$(LI $(BUGZILLA 12971): Missing REX prefix for 8 bit register access)
+$(LI $(BUGZILLA 13270): ddoc can't find parameters of ditto'd function overloads)
+$(LI $(BUGZILLA 13920): DMD crash when trying to set a delegate from __traits$(LPAREN)getOverloads$(RPAREN))
+$(LI $(BUGZILLA 13985): Wrong code when using "super" to call final interface method)
+$(LI $(BUGZILLA 14097): root/async.c: use after free)
+$(LI $(BUGZILLA 14185): [ICE] [mtype.c] compiler segfault in in Type::aliasthisOf)
+$(LI $(BUGZILLA 14243): mixin template scope inconsistency?)
+$(LI $(BUGZILLA 14249): Loose error check for incorrect template mixin)
+$(LI $(BUGZILLA 14264): Destructor not called when struct is returned from a parenthesis-less function call)
+$(LI $(BUGZILLA 14268): Win64: debug info for associative arrays have no type information)
+$(LI $(BUGZILLA 14281): duplicate .debug_info entries for arrays, delegates and aa's)
+$(LI $(BUGZILLA 14290): is-expression accepts instantiation of already instantiated template)
+$(LI $(BUGZILLA 14320): Improve diagnostic message for "undefined identifier" error)
+$(LI $(BUGZILLA 14321): Unnecessary destructor call with and AA's)
+$(LI $(BUGZILLA 14325): [CTFE] Comparison of AAs makes wrong result)
+$(LI $(BUGZILLA 14330): Wrong DWARF type of dynamic array variable)
+$(LI $(BUGZILLA 14343): Postfix increment doesn't work on structs with immutable member)
+$(LI $(BUGZILLA 14348): typeof$(LPAREN)x$(RPAREN).ident is not accepted as a symbol)
+$(LI $(BUGZILLA 14352): Two goto cases in one case branch does not work correctly)
+$(LI $(BUGZILLA 14357): Match on specType does not check the conflict with already deduced template arguments)
+$(LI $(BUGZILLA 14371): [CTFE] Binary assignment expression makes wrong result in compile-time)
+$(LI $(BUGZILLA 14388): ICE with idup-ed struct literal in template argument)
+$(LI $(BUGZILLA 14398): Segfault when nested struct in static array accesses context)
+$(LI $(BUGZILLA 14407): No protection and attributes check for class/struct allocator in NewExp)
+$(LI $(BUGZILLA 14409): false positive "Error: one path skips constructor")
+$(LI $(BUGZILLA 14416): .sizeof yields 1 for uninstantiated struct templates)
+$(LI $(BUGZILLA 14425): Indirect template instantiation within is expression causes missing linker symbols)
+$(LI $(BUGZILLA 14446): ICE on invalid import)
+$(LI $(BUGZILLA 14510): Bad tail call optimization with static arrays)
+$(LI $(BUGZILLA 14596): Error: e2ir: cannot cast malloc$(LPAREN)42u$(RPAREN) of type void* to type char[])
+$(LI $(BUGZILLA 14617): PTHREAD_MUTEX_INITIALIZER does not work on OSX)
+$(LI $(BUGZILLA 14629): Type system breaking and wrong code bugs in casting reference types to typeof$(LPAREN)null$(RPAREN))
+$(LI $(BUGZILLA 14649): ICE on invalid array operation with string literals)
+$(LI $(BUGZILLA 14656): "auto" of "auto ref" spills over to other function)
+)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(P
+$(LI $(BUGZILLA 9914): Do attribute inference for auto functions)
+$(LI $(BUGZILLA 11003): Improve .di generation)
+$(LI $(BUGZILLA 14465): CTFE exception stacktrace shows location of Exception constructor)
+$(LI $(BUGZILLA 14547): Ddoc should prefer new Variable Template syntax)
+)
+)
+$(BUGSTITLE Phobos regressions,
+
+$(P
+$(LI $(BUGZILLA 14712): GIT HEAD : std.net.curl regressions)
+$(LI $(BUGZILLA 14748): Removing std.stdio import causes 2x increase in "Hello, world" program binary filesize)
+$(LI $(BUGZILLA 14765): [Reg2.068.0] Rangified functions no longer accept types that implicitly cast to string)
+$(LI $(BUGZILLA 14842): [REG 2.068-b2] approxEqual does not work with integers)
+$(LI $(BUGZILLA 14881): [REG] posix.mak omits package.d files when building zip file)
+)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(P
+$(LI $(BUGZILLA 12702): [FixIncluded] std.container.RedBlackTree's in operator is not const)
+$(LI $(BUGZILLA 13534): std.variant can violate memory safety)
+$(LI $(BUGZILLA 14282): executeShell should use sh and ignore the SHELL env variable)
+$(LI $(BUGZILLA 14373): std.range.refRange doesn't work on mere input ranges)
+$(LI $(BUGZILLA 14408): std.process: Can't start interactive process from Windows GUI application)
+$(LI $(BUGZILLA 14422): std.process: Pipes do not append to files on Win64)
+$(LI $(BUGZILLA 14469): file.readText on Win64 doesn't work for files > 4GB.)
+$(LI $(BUGZILLA 14526): GetOptException DDOC needs cleanup)
+$(LI $(BUGZILLA 14544): isForwardRange failed to recognise valid forward range)
+$(LI $(BUGZILLA 14575): compile error with std.range.refRange when front/back isn't implicitly convertible from const to mutable)
+$(LI $(BUGZILLA 14585): destructor called on garbage in std.variant)
+)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(P
+$(LI $(BUGZILLA 14194): nothrow emplace for classes needed)
+$(LI $(BUGZILLA 14288): std.windows.registry should use std.windows.syserror)
+$(LI $(BUGZILLA 14289): WindowsException should not attempt to parse code 0)
+$(LI $(BUGZILLA 14368): stdio.rawRead underperforms stdio)
+$(LI $(BUGZILLA 14432): move construction for RefCounted)
+$(LI $(BUGZILLA 14457): Algebraic does not allow assignment from subset type)
+$(LI $(BUGZILLA 14535): std.net.curl.CurlException should include status line)
+$(LI $(BUGZILLA 14548): std.stdio.File should have sync$(LPAREN)$(RPAREN) method $(LPAREN)fsync/FlushFileBuffers wrapper$(RPAREN))
+$(LI $(BUGZILLA 14586): can't get an immutable value from a const std.variant.Variant)
+)
+)
+$(BUGSTITLE Druntime regressions,
+
+$(P
+$(LI $(BUGZILLA 14626): [REG2.066] byValue doesn't work with inout AA)
+$(LI $(BUGZILLA 14746): [REG2.068a] Behavior change with struct destructor and alias this)
+$(LI $(BUGZILLA 14863): CLOCK_BOOTTIME should be optional to support <2.6.39 kernels)
+)
+)
+$(BUGSTITLE Druntime bugs,
+
+$(P
+$(LI $(BUGZILLA 6607): critical_.d and critical.c use double check locking the wrong way)
+$(LI $(BUGZILLA 12289): incorrect core.stdc.stdio.fpos_t alias)
+$(LI $(BUGZILLA 14350): Unit test failures are not displayed in Windows GUI programs)
+$(LI $(BUGZILLA 14401): typeid$(LPAREN)shared X$(RPAREN).init is empty for class types)
+$(LI $(BUGZILLA 14423): struct destructors not finalized for AA values)
+$(LI $(BUGZILLA 14464): coverage merge doesn't work)
+$(LI $(BUGZILLA 14476): core.thread unit tests failing on FreeBSD 9+)
+$(LI $(BUGZILLA 14511): Profiler does not work with multithreaded programs)
+$(LI $(BUGZILLA 14565): dmd -profile produces garbled output for long-running CPU-intensive processes)
+)
+)
+$(BUGSTITLE Druntime enhancements,
+
+$(P
+$(LI $(BUGZILLA 12891): add atomicFetchAdd and atomicFetchSub to core.atomic)
+$(LI $(BUGZILLA 14385): AA should use open addressing hash)
+)
+)
+$(BUGSTITLE dlang.org bugs,
+
+$(P
+$(LI $(BUGZILLA 12803): __traits$(LPAREN)getFunctionAttributes$(RPAREN) is not documented)
+$(LI $(BUGZILLA 13527): ddoc website documentation does not match the current built-in symbols)
+$(LI $(BUGZILLA 14079): Variable templates' documentation not generated.)
+$(LI $(BUGZILLA 14080): No mention of documented unittests on ddoc's page)
+$(LI $(BUGZILLA 14326): syntax highlighting of dpl-docs no longer works)
+$(LI $(BUGZILLA 14418): D-style Variadic Function example does not compile)
+)
+)
+$(BUGSTITLE Tools bugs,
+
+$(P
+$(LI $(BUGZILLA 13758): RDMD renames directory if -ofNAME is the name of a directory)
+$(LI $(BUGZILLA 14259): rdmd: --build-only / -of / -od incompatible with --dry-run)
+)
+)
+$(BUGSTITLE Installer bugs,
+
+$(P
+$(LI $(BUGZILLA 14801): OS X installer not compatible with OS X 10.11)
+$(LI $(BUGZILLA 14864): windows uninstall during installation pops up spurious warning)
+)
+)
+
+)
+$(CHANGELOG_NAV_LAST 2.067.1)
+
+Macros:
+	VER=2.068.0
+	TITLE=Change Log: $(VER)

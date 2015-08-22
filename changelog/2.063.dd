@@ -1,0 +1,1659 @@
+Ddoc
+
+$(CHANGELOG_NAV 2.062,2.064)
+
+$(VERSION May 28, 2013, =================================================,
+
+$(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 staticfields, Const and immutable fields with initializers are now warned about.))
+$(LI $(RELATIVE_LINK2 ctorqualifier, Constructor qualifiers are taken into account when constructing objects.))
+$(LI $(RELATIVE_LINK2 structuralcompare, Struct members which require non-bitwise comparison are now properly compared.))
+$(LI $(RELATIVE_LINK2 slicecopy, Array copy operations now always require using the slice syntax.))
+$(LI $(RELATIVE_LINK2 passtype, Types no longer act as arguments in typeof expressions.))
+$(LI $(RELATIVE_LINK2 foreachref, The index variable in a foreach range is no longer implicitly a reference.))
+$(LI $(RELATIVE_LINK2 hashentry, Associative array entries are no longer default-initialized before assignment.))
+$(LI $(RELATIVE_LINK2 constinherit, The const attribute is no longer inherited in overriden methods.))
+$(LI $(RELATIVE_LINK2 typeofnullconv, typeof(null) no longer implicitly converts to T[].))
+$(LI $(RELATIVE_LINK2 templatethisattrib, The Template This Parameter now changes the member function qualifier.))
+$(LI $(RELATIVE_LINK2 sliceref, Array slices are now r-values.))
+$(LI $(RELATIVE_LINK2 thisrefaccess, Accessing a non-static field without a $(D this) reference is only allowed in certain contexts.))
+$(LI $(RELATIVE_LINK2 implicitarrayptr, Arrays no longer implicitly convert to a pointer.))
+)
+
+$(BUGSTITLE Language Enhancements,
+$(LI $(RELATIVE_LINK2 uniqueinference, Expressions which return unique objects can be implicitly casted to immutable.))
+$(LI $(RELATIVE_LINK2 staticarrayvoid, Static array of void can now be user-initialized.))
+$(LI $(RELATIVE_LINK2 multiinvariant, Aggregates can now contain multiple invariants.))
+$(LI $(RELATIVE_LINK2 attribinference, Methods of templated aggregates can now infer attributes.))
+$(LI $(RELATIVE_LINK2 isexpident, $(B is expression) no longer requires an identifier.))
+$(LI $(RELATIVE_LINK2 implicitarraycast, Dynamic arrays of known size can be implicitly cast to static arrays in some contexts.))
+$(LI $(RELATIVE_LINK2 tupleinitvoid, Tuples can now be void-initialized.))
+$(LI $(RELATIVE_LINK2 tupleequality, Tuples can now be compared for equality.))
+$(LI $(RELATIVE_LINK2 templconstraint, Template constraints can now be put after the inheritance list.))
+$(LI $(RELATIVE_LINK2 initfield, Fields with initializers can now be re-initialized in a const constructor.))
+$(LI $(RELATIVE_LINK2 isnestedtrait, Added the $(B isNested) trait for discovery of aggregates and functions with context pointers.))
+$(LI $(RELATIVE_LINK2 nestedtemplate, Templates can now be nested inside of functions.))
+$(LI $(RELATIVE_LINK2 ufcslocalimport, UFCS now works with scoped local imports.))
+$(LI $(RELATIVE_LINK2 prettyfunc, Added $(D __FUNCTION__), $(D __PRETTY_FUNCTION__) and $(D __MODULE__).))
+$(LI $(RELATIVE_LINK2 deprecatedmacro, DDoc: Deprecated declarations are now wrapped in a $(B DEPRECATED) macro.))
+$(LI $(RELATIVE_LINK2 documentedunittest, Added documented unittest feature for verifiable code example generation.))
+)
+
+$(BUGSTITLE Compiler Enhancements,
+$(LI $(RELATIVE_LINK2 mainswitch, Added -main switch which adds an empty main function.))
+$(LI $(RELATIVE_LINK2 minimalcov, Added -cov=percentage switch for minimal coverage tests.))
+$(LI $(RELATIVE_LINK2 symbolmangle, Added ability to override the mangling of a symbol with a compiler pragma.))
+)
+
+$(BUGSTITLE Phobos Changes,
+$(LI $(RELATIVE_LINK2 scopedtypeof, std.typecons.scoped implementation changed, potentially breaking some user-code.))
+)
+
+$(BUGSTITLE Phobos Enhancements,
+$(LI $(RELATIVE_LINK2 newstdprocess, std.process has been redesigned from the ground up and introduces a new API and functionality.))
+$(LI $(RELATIVE_LINK2 getoptbool, std.getopt can now set booleans to false.))
+$(LI $(RELATIVE_LINK2 ownertid, Added ownerTid property in std.concurrency.))
+)
+
+$(BR)$(BIG $(RELATIVE_LINK2 list2063, List of all bug fixes and enhancements in D 2.063.))
+
+$(HR)
+
+$(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 staticfields, Const and immutable fields with initializers are now warned about:)
+
+$(P Eventually, they will be deprecated, and then will trigger an error. Such fields should now
+be changed to enum or static.)
+
+$(P In a future release, a new behavior for them will be enabled:)
+
+$(P Fields in an aggregate which are not static will always be addressable.
+This means they will occupy space in the object:)
+
+---------
+struct S
+{
+    // used to be implicitly static in 2.062, now warns. In a future release it will become non-static.
+    immutable int[] arr = [1, 2];
+
+    // ditto
+    const int[] arr2 = [1, 2];
+}
+---------
+
+$(P This means that code which accessed such declarations without the $(D this)
+reference will no longer compile. Additionally code which depended on the size
+of a structure with such fields will have to be fixed:)
+
+---------
+struct S
+{
+    immutable int[] arr = [1, 2];
+}
+
+void main()
+{
+    auto x = S.arr;  // becomes an error in a future release, 'arr' will require the 'this' reference.
+
+    // S is size 1 in 2.062 and 2.063. In a future release this will change and the following static assert will pass.
+    static assert(S.sizeof == size_t.sizeof + size_t.sizeof);  // ptr + length for the array
+}
+---------
+
+$(P To make the field static again, simply use the static keyword. Alternatively
+make the field an $(D enum) to turn it into a manifest constant:)
+
+---------
+struct S
+{
+    static immutable int[] arr = [1, 2];
+    enum arr2 = [1, 2];
+}
+---------
+
+$(P Note however that manifest constants which are arrays are allocated on each usage,
+so you may prefer using $(D static) instead.)
+
+$(H3 Rationale:)
+
+$(P Making a field implicitly static based on whether it is const/immutable and has an initializer leads to confusion. The $(D static) keyword can be used to explicitly make any field static.))
+
+$(LI $(LNAME2 ctorqualifier, Constructor qualifiers are taken into account when constructing objects:)
+
+$(P A qualified constructor is now invoked when a $(D const)/$(D immutable)/$(D shared) aggregate object is
+    instantiated, respectively:)
+
+---------
+import std.stdio;
+
+class C
+{
+    this()           { writeln("1"); }
+    this() const     { writeln("2"); }
+    this() immutable { writeln("3"); }
+    this() shared    { writeln("4"); }
+}
+
+void main()
+{
+    auto a = new C;           // writes "1"
+    auto b = new const C;     // writes "2"
+    auto c = new immutable C; // writes "3"
+    auto d = new shared C;    // writes "4"
+}
+---------
+
+
+$(P This has the consequence that aggregates which have only $(D immutable) or $(D shared)
+    constructors can no longer be used to instantiate mutable objects:)
+
+---------
+class C
+{
+    this() immutable { }
+    this() shared { }
+}
+
+void main()
+{
+    auto c1 = new C;           // disallowed
+    auto c2 = new immutable C; // ok
+    auto c3 = new shared C;    // ok
+}
+---------
+
+$(P On the other hand, aggregates which do not have $(D shared) or $(D immutable) constructors can
+    no longer be used to construct $(D shared) or $(D immutable) objects, respectively:)
+
+---------
+class C
+{
+    this() { }
+}
+
+void main()
+{
+    auto c1 = new C;           // ok
+    auto c2 = new immutable C; // disallowed
+    auto c3 = new shared C;    // disallowed
+}
+---------
+
+$(P However, if an aggregate has a $(D pure) constructor it can be used to construct an object with any type constructor:)
+
+---------
+class C
+{
+    this() pure { }
+}
+
+void main()
+{
+    auto c1 = new C;  // ok
+    auto c2 = new immutable C;  // ok
+    auto c3 = new shared C;  // ok
+}
+---------
+)
+$(LI $(LNAME2 structuralcompare, Struct members which require non-bitwise comparison are now properly compared.)
+
+$(P In earlier releases some struct members such as arrays would be bitwise-compared in a comparison operation.
+    This has now been changed to be a structural comparison instead:)
+
+---------
+struct S
+{
+    char[] data;
+}
+
+void main ()
+{
+    auto s1 = S("foo".dup);
+    auto s2 = S("foo".dup);
+
+    assert(s1.data !is s2.data);  // both are unique data
+
+    assert(s1 == s2);   // passes in 2.063
+    assert(s1.data == s2.data);  // equivalent of above
+}
+---------
+
+$(P If an $(D opEquals) function is not present the compiler rewrites the expression
+    $(CODE s1 == s2) to $(CODE s1.tupleof == s2.tupleof). Comparing $(D .tupleof) expressions is
+    also a feature new to D in the 2.063 release.))
+
+$(LI $(LNAME2 slicecopy, Array copy operations now always require using the slice syntax:)
+
+$(P The right-hand-side of an array copy operation now requires using the slice syntax:)
+
+---------
+void main()
+{
+    int[][2] x;
+    int[] y;
+    int[] z;
+
+    x[] = z;    // copies z (pointer + length) 2 times to x
+    y[] = z;    // copies each element of z into y (compiler emits warning)
+}
+---------
+
+$(P If the user intended to write such code they must use the slice syntax for both the source and target arrays:)
+
+---------
+void main()
+{
+    int[][2] x;
+    int[] y;
+    int[] z;
+
+    y[] = z[];  // copies each element of z into y (no warnings)
+}
+---------
+
+$(H3 Rationale:)
+
+$(P The compiler will emit a warning to make the user aware that the copy operation is arbitrarily expensive.))
+
+$(LI $(LNAME2 passtype, Types no longer act as arguments in $(D typeof) expressions:)
+
+$(P A type can no longer be passed to a function as a value of that type:)
+
+---------
+T[] foo(T)(T t)
+{
+    return null;
+}
+
+void main()
+{
+    alias int Int;
+
+    // used to work (only with an alias), now a compiler error
+    alias typeof(foo(Int)) IntArray;
+}
+---------
+
+$(P If the user wants to pass an argument of a certain type, they can use the $(D .init) property:)
+
+---------
+T[] foo(T)(T t)
+{
+    return null;
+}
+
+void main()
+{
+    alias typeof(foo(int.init)) IntArray;  // ok
+}
+---------
+
+$(H3 Rationale:)
+
+$(P Treating types as expressions in special contexts only leads to confusion.
+Instead, the $(D .init) property can be used for such purposes.))
+
+$(LI $(LNAME2 foreachref, The index variable in a foreach range is no longer implicitly a reference:)
+
+$(P The index variable in a foreach range is now by default a value type:)
+
+---------
+void main()
+{
+    size_t count;
+    foreach (n; 0 .. 10)
+    {
+        ++n;
+        ++count;
+    }
+    assert(count == 10);  // passes
+}
+---------
+
+$(P If the user wants to modify the index variable he must use the $(D ref) keyword:)
+
+---------
+void main()
+{
+    size_t count;
+    foreach (ref n; 0 .. 10)
+    {
+        ++n;
+        ++count;
+    }
+    assert(count == 5);
+}
+---------
+
+
+$(H3 Rationale:)
+
+$(P Making the index variable implicitly $(D ref) can introduce bugs that are hard to track down.))
+
+$(LI $(LNAME2 hashentry, Associative array entries are no longer default-initialized before assignment:)
+
+$(P An associative array entry used to be default-initialized before assignment took place:)
+
+---------
+void main()
+{
+    int[int] aa;
+    aa[1] = aa[1] + 1;   // no Error thrown in 2.062
+    assert(aa[1] == 1);  // worked in 2.062
+}
+---------
+
+$(P In 2.063, accessing an entry which does not exist will now throw a RangeError:)
+
+---------
+void main()
+{
+    int[int] aa;
+    aa[1] = aa[1] + 1;   // RangeError thrown in 2.063
+}
+---------
+
+$(H3 Rationale:)
+
+$(P Default-initialization during assignment can be a source of bugs.))
+
+$(LI $(LNAME2 constinherit, The const attribute is no longer inherited in overriden methods.)
+
+$(P Method overrides no longer inherit constness of the base method:)
+
+---------
+class A
+{
+    void foo() const { }
+}
+
+class B : A
+{
+    // used to work in 2.062, now an error
+    override void foo() { }  // note missing 'const'
+}
+---------
+
+$(P If the user wants to override a const method he has to mark the overriden
+    method as const:)
+
+---------
+class A
+{
+    void foo() const { }
+}
+
+class B : A
+{
+    override void foo() const { }  // ok
+}
+---------
+
+$(P The feature allows introducing new overloads based on the constness of the method:)
+
+---------
+class A
+{
+    void foo() const { }
+}
+
+class B : A
+{
+    // introduces new overload (not override!)
+    void foo() { }
+
+    // if the above overload is introduced the user must either:
+    // a: re-introduce the const overload to prevent function hijacking
+    alias super.foo foo;  // without this you will get a compiler error
+
+    // or b: provide a properly typed override:
+    override void foo() const { }
+}
+---------
+)
+
+$(LI $(LNAME2 typeofnullconv, $(D typeof(null)) no longer implicitly converts to T[]:)
+
+$(P The following code used to be allowed:)
+
+---------
+void f(int[] function() del)
+{
+    assert(!del());  // fails
+}
+
+typeof(null) g() { return null; }
+
+void main()
+{
+    f(&g);
+    f(() => null);
+}
+---------
+
+$(P However the implicit conversion would end up generating wrong code.
+    To work around this, make sure the return type is typed properly,
+    or use $(CODE (T[]).init) in the return expression of a lambda expression:)
+
+---------
+void f(int[] function() del)
+{
+    assert(!del());  // passes
+}
+
+int[] g() { return null; }  // fixed return type
+
+void main()
+{
+    f(&g);  // ok
+    f(() => (int[]).init);  // ok
+}
+---------
+)
+$(LI $(LNAME2 templatethisattrib, The Template This Parameter now changes the member function qualifier:)
+
+$(P The $(LINK2 $(ROOT_DIR)template.html#TemplateThisParameter, Template This
+Parameter) can now be used to infer the qualifier of $(D this) to member
+functions:)
+
+---------
+struct S
+{
+    void foo(this T)()
+    {
+    }
+}
+
+void main()
+{
+     immutable S s;
+     s.foo();  // makes S.foo immutable
+}
+---------
+)
+$(LI $(LNAME2 sliceref, Array slices are now r-values:)
+
+$(P Array slices are no longer l-values. This means an address can no longer be
+taken of a slice, and slices cannot be passed by ref to functions:)
+
+---------
+void foo(ref int[] arr) { arr = new int[10]; }
+
+void main()
+{
+    int[] arr;
+    foo(arr);  // ok
+    assert(arr.length == 10);
+
+    foo(arr[]);  // disallowed in 2.063, the slice is an r-value
+    auto ptr = &arr[1..2];  // disallowed in 2.063, cannot take address of r-value
+}
+---------
+
+$(P To work around this you can make your function take an r-value if it doesn't
+    need to reassign and resize the slice, but only needs to read or modify its contents.
+    Otherwise, to accept both l-values and r-values you can make your function take
+    its argument by $(D auto ref):)
+
+---------
+void take(int[] arr) { }
+void takeRef(ref int[] arr) { }
+void takeAutoRef(T)(auto ref T[] arr) { }
+
+void main()
+{
+    int[] arr = [1, 2, 3, 4];
+    take(arr);          // ok
+    takeRef(arr);       // ok
+    takeAutoRef(arr);   // ok
+
+    int[] arr2 = arr[1 .. 2];
+    take(arr2);         // ok, arr2 is a variable
+    takeRef(arr2);      // ditto
+    takeAutoRef(arr2);  // ditto
+
+    take(arr[1 .. 2]);         // ok
+    takeRef(arr[1 .. 2]);      // error, cannot pass r-value by reference
+    takeAutoRef(arr[1 .. 2]);  // ok
+}
+---------
+
+$(H3 Rationale:)
+
+$(P Passing slices by reference had no observable effect when reassigning or
+resizing such a slice at the call site, therefore such slices should by default be r-values.
+For example, the following code used to be allowed but is now a compile-time error:)
+
+---------
+void reAssign(ref int[] arr) { arr = new int[2]; }
+void reSize(ref int[] arr)   { arr.length = 10; }
+
+void main()
+{
+    int[] arr = [1, 2, 3, 4];
+
+    reAssign(arr[0 .. 4]);  // reassigning has no observable effect at the call site
+    assert(arr == [1, 2, 3, 4]);
+
+    reSize(arr[0 .. 4]);    // resizing has no observable effect at the call site
+    assert(arr.length == 4);
+}
+---------
+)
+$(LI $(LNAME2 thisrefaccess, Accessing a non-static field without a $(D this) reference is only allowed in certain contexts:)
+
+$(P Accessing non-static fields used to be allowed in many contexts, but is now limited to only a few:)
+
+$(P - $(D offsetof), $(D init), and other built-in properties are allowed:)
+
+---------
+struct S { int field; }
+
+void main()
+{
+    auto a = S.field.offsetof;  // ok, statically known
+    auto c = S.field.max;       // ditto
+    auto d = S.field;           // disallowed, no `this` reference
+}
+---------
+
+$(P - When invoking static methods of a non-static field:)
+
+---------
+struct Foo
+{
+    static struct Bar
+    {
+        static int get() { return 0; }
+    }
+
+    Bar bar;
+}
+
+void main()
+{
+    static assert(Foo.bar.get() == 0);  // ok, equivalent to `typeof(Foo.bar).get()`
+}
+---------
+
+$(P - When accessing static fields implicitly using an
+$(LINK2 $(ROOT_DIR)class.html#AliasThis, $(D alias this)) expression:)
+
+---------
+struct Foo
+{
+    static struct Bar
+    {
+        static int get() { return 0; }
+    }
+
+    Bar bar;
+    alias bar this;
+}
+
+void main()
+{
+    static assert(Foo.get() == 0);  // ok, equivalent to 'typeof(Foo.bar).get()'
+}
+---------
+)
+$(LI $(LNAME2 implicitarrayptr, Arrays no longer implicitly convert to a pointer:)
+
+$(P The implicit conversion of an array to a pointer was a deprecated feature:)
+
+---------
+void foo(int* p) { }
+
+void main()
+{
+    int[] arr = [1, 2];
+    foo(arr);   // ok if -d switch is used during compilation
+}
+---------
+
+$(P This feature has now been completely removed. The workaround is to either
+    use the $(D .ptr) property, or explicitly pass the pointer to the first element:)
+
+---------
+void foo(int* p) { }
+
+void main()
+{
+    int[] arr = [1, 2];
+    foo(arr);      // compile error
+    foo(arr.ptr);  // ok
+    foo(&arr[0]);  // ok
+}
+---------
+))
+$(BUGSTITLE Language Enhancements,
+
+$(LI $(LNAME2 uniqueinference, Expressions which return unique objects can be implicitly casted to immutable:)
+
+$(P Expressions such as $(D new) for objects and arrays, and $(D dup) for arrays, can now be inferred to be unique.
+    This allows the compiler to implicitly convert such an expression to immutable:)
+
+---------
+class C { }
+
+void main()
+{
+    immutable int[] arr1 = new int[](3);   // ok
+    immutable int[] arr2 = [1, 2, 3].dup;  // ok in 2.063
+    immutable C[] arr3 = [new C, new C].dup;  // ok in 2.063
+}
+---------
+)
+$(LI $(LNAME2 staticarrayvoid, Static array of void can now be user-initialized.)
+
+$(P A static array of void could not be initialized in user-code:)
+
+---------
+void main()
+{
+    void[2] varr1;  // error in 2.062
+    void[2] varr2 = (void[2]).init;  // error in 2.062
+    void[2] varr3 = void;  // ok in 2.062
+}
+---------
+
+$(P In 2.063, an explicit initializer can be used:)
+
+---------
+void main()
+{
+    void[2] varr1;  // still an error in 2.063
+    void[2] varr2 = (void[2]).init;  // ok in 2.063
+    void[2] varr3 = void;  // ok in 2.063
+}
+---------
+
+$(P The $(D .init) property effectively zero-initializes the array.)
+
+$(H3 Rationale:)
+
+$(P The restriction has been lifted to allow generic code to use $(D .init) without
+having to specialize for static void arrays.))
+
+$(LI $(LNAME2 multiinvariant, Aggregates can now contain multiple invariants:)
+
+$(P If an aggregate type has multiple invariants, the invariants' bodies will be merged
+    into a single invariant function and will be run in sequence. Note that the code in
+    one invariant cannot reference code or data in another invariant:)
+
+---------
+struct S
+{
+    int x;
+
+    void foo() { }
+
+    invariant()
+    {
+        int local;
+        assert(x != 0);
+    }
+
+    invariant()
+    {
+        // local = 1;  // invariant does not have access to the other invariant's body
+        assert(x % 2 == 0);
+    }
+}
+
+void main()
+{
+    S s = S(2);
+    s.foo();  // invoking public function triggers both invariants in sequence
+}
+---------
+)
+$(LI $(LNAME2 attribinference, Methods of templated aggregates can now infer attributes:)
+
+$(P If a function with some attributes instantiates a templated aggregate,
+    it's member functions will infer those attributes:)
+
+---------
+struct S(T)
+{
+    T square(T x)
+    {
+        return x * x;
+    }
+}
+
+void main() pure
+{
+    S!int s;  // S!int.square becomes pure and callable from main()
+    assert(s.square(2) == 4);  // ok
+}
+---------
+)
+$(LI $(LNAME2 isexpident, $(B is expression) no longer requires an identifier:)
+
+$(P In some cases the
+    $(LINK2 $(ROOT_DIR)expression.html#IsExpression, is expression)
+    required an identifier even when you didn't have a use for it:)
+
+---------
+void main()
+{
+    alias AA = string[int];
+
+    static if (is(AA _ == V[K], V, K))
+    {
+        pragma(msg, _);  // prints string[int]
+        pragma(msg, K);  // prints int
+        pragma(msg, V);  // prints string
+    }
+}
+---------
+
+$(P The identifier is no longer required, so the above can be rewritten to:)
+
+---------
+void main()
+{
+    alias AA = string[int];
+
+    static if (is(AA == V[K], V, K))
+    {
+        pragma(msg, AA); // prints string[int]
+        pragma(msg, K);  // prints int
+        pragma(msg, V);  // prints string
+    }
+}
+---------
+)
+$(LI $(LNAME2 implicitarraycast, Dynamic arrays of known size can be implicitly cast to static arrays in some contexts:)
+
+$(P In some contexts the compiler knows the size of a dynamic array or of a slice of an array.
+    In such a case the compiler will allow an implicit conversion to a static array of the same size:)
+
+---------
+void foo(int[4] x) { }
+
+void main()
+{
+    int[] arr = [1, 2, 3, 4, 5, 6, 7, 8];
+    foo(arr[0 .. 4]);  // ok
+}
+---------
+
+$(P Another example, where a string is converted to a reference to a static array:)
+
+---------
+string str = "aaaabbbbccccdddd";
+
+void foo(ref const(char)[16] buf)
+{
+    assert(buf.ptr is str.ptr);
+}
+
+void main()
+{
+    foo(str[0..16]);  // ok
+}
+---------
+
+$(H3 Limitations:)
+
+$(P - This feature does not yet work with complex expressions where it might be
+    reasonable to assume the size of a slice:)
+
+---------
+void foo(int[4] x) { }
+
+void main()
+{
+    int[] arr = [1, 2, 3, 4, 5, 6, 7, 8];
+    foreach (i; 0 .. 4)
+    {
+        foo(arr[i .. i + 4]);  // not yet supported
+    }
+}
+---------
+)
+$(LI $(LNAME2 tupleinitvoid, Tuples can now be void-initialized:)
+
+$(P You can now void-initialize a tuple variable:)
+
+---------
+template Tuple(T...)
+{
+    alias T Tuple;
+}
+
+void main()
+{
+    Tuple!(int, int) tup1 = void;  // ok
+}
+---------
+
+$(P Upon such initialization the values in the tuple are undetermined.))
+
+$(LI $(LNAME2 templconstraint, Template constraints can now be put after the inheritance list:)
+
+$(P Template constraints used to be allowed only before the inheritance list, leading to
+    code where the inheritance list could be hard to spot:)
+
+---------
+class Foo(T1, T2)
+    if (is(T1 == int) && is(T2 == string)) : Base
+{
+}
+---------
+
+$(P This restriction has been lifted, so you can now write:)
+
+---------
+class Foo(T1, T2) : Base
+    if (is(T1 == int) && is(T2 == string))
+{
+}
+---------
+)
+$(LI $(LNAME2 tupleequality, Tuples can now be compared for equality:)
+
+$(P Example:)
+
+---------
+struct Tuple(T...) { T field; alias field this; }
+
+void main()
+{
+    auto tup1 = Tuple!(int, int)(1, 2);
+    auto tup2 = Tuple!(int, int)(1, 2);
+    auto tup3 = Tuple!(int, int)(1, 3);
+
+    assert(tup1 == tup2);  // works since 2.063
+    assert(tup1 != tup3);  // works since 2.063
+}
+---------
+
+$(P This also means you can now compare $(B ParameterStorageClassTuple) instances from std.traits:)
+
+---------
+import std.traits;
+
+void func1(ref int x, ref int y) { }
+void func2(ref float x, ref float y) { }
+
+void main()
+{
+    alias Storages = ParameterStorageClassTuple;
+    assert(Storages!func1 == Storages!func2);
+}
+---------
+
+$(P In addition to that, builtin $(D .tupleof) expressions can be used to easily compare fields of an aggregate:)
+
+---------
+struct S
+{
+    char[] a, b;
+
+    // Implements equality test against another instance of this type.
+    bool opEquals(S rhs) { return this.tupleof == rhs.tupleof; }
+}
+
+void main()
+{
+    S s1 = S("a".dup, "b".dup);
+    S s2 = S("a".dup, "b".dup);
+    assert(s1 == s2);
+}
+---------
+
+$(P This also allows you to implement a structural equality test against an instance of a different
+    type:)
+
+---------
+struct S1
+{
+    char[] a, b;
+
+    // Implements a structural equality test against any other type T
+    bool opEquals(T)(T rhs) { return this.tupleof == rhs.tupleof; }
+}
+
+struct S2
+{
+    string x, y;
+}
+
+void main()
+{
+    auto s1 = S1("123".dup, "456".dup);
+    auto s2 = S2("123", "456");
+    assert(s1 == s2);
+}
+---------
+
+
+$(P Since tuples can be sliced you can use this feature to compare a subset of tuples:)
+
+---------
+struct S
+{
+    int a, b, c, d, e;
+
+    bool opEquals(S rhs)
+    {
+        // compares a, b, d, and e
+        return this.tupleof[0..2] == rhs.tupleof[0..2] &&
+               this.tupleof[3..5] == rhs.tupleof[3..5];
+    }
+}
+
+void main()
+{
+    S s1 = S(1, 2, 0, 3, 4);
+    S s2 = S(1, 2, 1, 3, 4);
+    assert(s1 == s2);
+}
+---------
+)
+$(LI $(LNAME2 initfield, Fields with initializers can now be re-initialized in a const constructor:)
+
+$(P You can now initialize a field in a const constructor even if
+    such a field already has an initializer:)
+
+---------
+struct S
+{
+    bool field = true;
+
+    this(int v) const
+    {
+        field = false;  // ok
+    }
+}
+---------
+)
+$(LI $(LNAME2 isnestedtrait, Added the $(B isNested) trait for discovery of aggregates and functions with context pointers:)
+
+$(P The new $(LINK2 $(ROOT_DIR)traits.html#isNested, isNested) trait allows you
+    to discover whether an aggregate or function contains a context pointer:)
+
+---------
+void main()
+{
+    int x;
+
+    struct S1 { void f() { x++; } }
+    static struct S2 { }
+
+    void f1() { x++; }
+    static void f2() { }
+
+    static assert(__traits(isNested, S1));
+    static assert(__traits(isNested, f1));
+    static assert(!__traits(isNested, S2));
+    static assert(!__traits(isNested, f2));
+}
+---------
+)
+$(LI $(LNAME2 nestedtemplate, Templates can now be nested inside of functions:))
+
+---------
+void test()
+{
+    template ArrayOf(T) { alias ArrayOf = T[]; }
+    static assert(is(ArrayOf!int == int[]));
+}
+---------
+
+$(P Allowing $(D template)'s inside of functions will enable better encapsulation and avoid the
+    pollution of module-scoped symbol names.)
+
+$(LI $(LNAME2 ufcslocalimport, UFCS now works with scoped local imports:)
+
+$(P Functions that are made available through a local import are now picked up when using Uniform Function Call Syntax:)
+
+---------
+module foo;
+string concat(string arg1, string arg2) { return arg1 ~ arg2; }
+---------
+
+---------
+module test;
+void main()
+{
+    import foo;
+    assert("foo".concat("bar") == "foobar");  // UFCS now works
+}
+---------
+
+$(P This feature also works for imports within aggregates. Note that local imports have a higher precedence than
+    module-scoped imports.))
+
+$(LI $(LNAME2 prettyfunc, Added $(D __FUNCTION__), $(D __PRETTY_FUNCTION__) and $(D __MODULE__):)
+
+$(P A new set of
+    $(LINK2 $(ROOT_DIR)traits.html#specialkeywords, special keywords) were
+    added. Together with $(D __FILE__) and $(D __LINE__) they form a complete
+    feature set that is useful in debugging code:)
+
+---------
+module test;
+import std.stdio;
+
+void test(string file = __FILE__, size_t line = __LINE__, string mod = __MODULE__,
+          string func = __FUNCTION__, string pretty = __PRETTY_FUNCTION__)
+{
+    writefln("file: '%s', line: '%s', module: '%s',\nfunction: '%s', pretty function: '%s'",
+             file, line, mod, func, pretty);
+}
+
+int main(string[] args)
+{
+    test();
+    return 0;
+}
+---------
+
+$(P The above will output:)
+
+$(CONSOLE
+file: 'test.d', line: '13', module: 'test',
+function: 'test.main', pretty function: 'int test.main(string[] args)'
+))
+
+$(LI $(LNAME2 deprecatedmacro, DDoc: Deprecated declarations are now wrapped in a $(B DEPRECATED) macro:)
+
+---------
+module test;
+
+/// sum function
+deprecated int sum(int x, int y) { return x + y; }
+---------
+
+$(P By default the macro expands to its argument. It can be overriden by the user, for example:)
+
+$(P $(B macros.ddoc:))
+
+---------
+DEPRECATED=<del>$(DOLLAR)0</del>
+---------
+
+$(P The above ddoc file can then be used when the documentation is being generated:)
+
+$(CONSOLE
+$ dmd -D -o- test.d macros.ddoc
+))
+
+$(LI $(LNAME2 documentedunittest, Added documented unittest feature for verifiable code example generation:)
+
+$(P Documented unittests which follow any symbol declarations are now used to generate example sections for the symbol
+    when generating DDOC documentation. Example:)
+
+---------
+/// sum function
+int sum(int x, int y) { return x + y; }
+
+///
+unittest
+{
+    assert(sum(2, 2) == 4);
+}
+---------
+
+$(P The body of the unittest will be part of the documentation of the sum function. This allows the
+    implementor of the function to keep their examples always up-to-date.)
+
+$(P For more information, see the
+    $(LINK2 $(ROOT_DIR)unittest.html#documented-unittests, documentation page)
+    of documented unittests.)
+
+))
+
+
+$(BUGSTITLE Compiler Enhancements,
+$(LI $(LNAME2 mainswitch, Added -main switch which adds an empty main function:)
+
+$(P The $(B -main) switch is primarily useful when unittesting libraries:)
+
+---------
+module test;
+
+int sum(int a, int b) { return a + b; }
+unittest
+{
+    assert(sum(2, 2) == 4);
+}
+---------
+
+$(P The above library would need a $(B main()) function for the unittests to run,
+    and $(B -main) can be used for this purpose:)
+
+$(CONSOLE
+$ dmd -unittest -main -run test.d
+))
+
+$(LI $(LNAME2 minimalcov, Added -cov=percentage switch for minimal coverage tests.)
+
+$(P The $(B -cov) switch now has an optional percentage setting which makes the
+    executable emit an error when the coverage doesn't meet the specified requirement:)
+
+---------
+module test;
+
+void test1() { int x = 5; }
+void test2() { int x = 5; }
+void test3() { int x = 5; }
+
+void main()
+{
+    test1();
+    test2();
+}
+---------
+
+$(P Example of coverage testing:)
+
+$(CONSOLE
+$ dmd -cov=90 test.d
+$ test
+Error: test.d is 80% covered, less than required 90%
+))
+
+$(LI $(LNAME2 symbolmangle, Added ability to override the mangling of a symbol with a compiler pragma:)
+
+$(P The new $(CODE pragma(mangle, ...)) directive allows you to set a custom mangling for any symbol:)
+
+---------
+pragma(mangle, "module") extern(C) void module_();
+---------
+
+$(P The above allows linking to a C function named "module", which ordinarily we wouldn't be
+    able to link to directly since "module" is a reserved D keyword.)
+
+))
+
+$(BUGSTITLE Phobos Changes,
+
+$(LI $(LNAME2 scopedtypeof, std.typecons.scoped implementation changed, potentially breaking some user-code:)
+
+$(P User-code which used the $(D std.traits.ReturnType) trait to retrieve the type of a $(D scoped) call will have to be
+    changed to use the $(D typeof) operator instead:)
+
+---------
+class A
+{
+    this() {}
+    this(int) {}
+}
+
+class B
+{
+    // ReturnType!(scoped!A) a;  // disallowed in 2.063
+    typeof(scoped!A()) a;        // rewritten, compiles in 2.063
+
+    this()
+    {
+        a = scoped!A(1);  // would not compile in 2.062, but works with syntax used for 2.063
+    }
+}
+---------
+
+$(P The reason for this change is that the $(D ReturnType) trait would retrieve the wrong type when a class
+    had multiple constructors, and this would cause initializing the field to fail.)
+
+$(P Another benefit of the new implementation is that $(D scoped) can now be aliased for usability purposes:)
+
+---------
+class A
+{
+    this(int) { }
+}
+
+void main()
+{
+    alias scoped!A scopeA;
+    auto a = scopeA(1);
+}
+---------
+
+))
+
+$(BUGSTITLE Phobos Enhancements,
+
+$(LI $(LNAME2 newstdprocess, $(STDMODREF process, std.process) has been redesigned from the ground up and introduces a new API and functionality:)
+
+$(P The new $(STDMODREF process, std.process) module introduces functionality for invoking processes with custom pipe redirection,
+the ability to wait for processes to finish, and the ability to kill processes. The full list of features
+can be found in the $(STDMODREF process, std.process) documentation.))
+
+$(LI $(LNAME2 getoptbool, $(STDMODREF getopt, std.getopt) can now set booleans to false:)
+
+$(P Example code:)
+
+---------
+void main(string[] args)
+{
+    bool flag = true;
+    getopt(args, &flag);
+}
+---------
+
+$(P When invoked via $(CODE --flag=false), it will set $(B flag) to $(D false).))
+
+$(LI $(LNAME2 ownertid, Added ownerTid property in $(STDMODREF concurrency, std.concurrency):)
+
+$(P It is now easier to send a message from a child thread to its
+owner thread. Simply use the $(B ownerTid) property to get the owner
+thread's Tid identifier:)
+
+---------
+void fun()
+{
+    string res = receiveOnly!string();
+    assert(res == "Main calling");
+
+    ownerTid.send("Child responding");  // new
+}
+
+void main()
+{
+    auto child = spawn(&fun);
+    child.send("Main calling");
+
+    string res = receiveOnly!string();
+    assert(res == "Child responding");
+}
+---------
+
+$(P If the owner thread has exited, accessing ownerTid from any
+    of its child threads will throw a $(B TidMissingException).)
+
+))
+
+$(BR)$(BIG $(LNAME2 list2063, List of all bug fixes and enhancements in D 2.063:))
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(P
+$(LI $(BUGZILLA 9130): Wrong codegen for compile time constructed struct)
+$(LI $(BUGZILLA 9258): opAssign with base class triggers "identity assignment operator overload" error)
+$(LI $(BUGZILLA 9526): ICE when compiling project with unittests)
+$(LI $(BUGZILLA 9536): IFTI fails when calling a static member from const member)
+$(LI $(BUGZILLA 9538): Regression $(LPAREN)2.062$(RPAREN): Can't use typeid on .ptr of static array)
+$(LI $(BUGZILLA 9539): Wrong implicit conversion of array to pointer)
+$(LI $(BUGZILLA 9545): [REG 2.063a] ICE with member template instantiation)
+$(LI $(BUGZILLA 9552): DMD crashed when taking member delegate from __traits$(LPAREN)getOverloads$(RPAREN))
+$(LI $(BUGZILLA 9566): Regression $(LPAREN)2.062$(RPAREN): Cannot use struct .init when it contains a static array initialized from a single element.)
+$(LI $(BUGZILLA 9568): [64bit] wrong code for scope$(LPAREN)exit$(RPAREN))
+$(LI $(BUGZILLA 9633): compiles trait wrongly returns true even when object method call actually does not compile)
+$(LI $(BUGZILLA 9650): __traits$(LPAREN)compiles$(RPAREN) + mixin)
+$(LI $(BUGZILLA 9663): [REG2.063a] ICE caused by issue 7444 change.)
+$(LI $(BUGZILLA 9672): mixin within cyclic import causes undefined properties)
+$(LI $(BUGZILLA 9689): std.typecons.Proxy breaks with @disable this$(LPAREN)this$(RPAREN))
+$(LI $(BUGZILLA 9694): A member struct that has mutable opEquals reports weird error message)
+$(LI $(BUGZILLA 9739): Regression $(LPAREN)1.077 git-head$(RPAREN): DMD not considering ctor with default args as default ctor)
+$(LI $(BUGZILLA 9759): compiler segfault in StructLiteral::implicitConvTo$(LPAREN)Type*$(RPAREN) on invalid code)
+$(LI $(BUGZILLA 9764): Ddoc: Ddoc file name is incorrectly emphasized)
+$(LI $(BUGZILLA 9775): Can no longer create a const Date in CTFE if the variable is explicitly typed)
+$(LI $(BUGZILLA 9806): assertion failure in struct.c:668)
+$(LI $(BUGZILLA 9834): incorrect detection of lambda locality.)
+$(LI $(BUGZILLA 9846): regression of forward references)
+$(LI $(BUGZILLA 9858): const alias this fails when opAssign is present)
+$(LI $(BUGZILLA 9865): Crash on bogus import / circular reference)
+$(LI $(BUGZILLA 9890): Alias This + Alias Fields)
+$(LI $(BUGZILLA 9903): Broken ddoc in std.typecons and etc.c.sqlite3)
+$(LI $(BUGZILLA 9919): Regression $(LPAREN)2.062$(RPAREN): Symbol lookup fails with public import and mixin)
+$(LI $(BUGZILLA 9952): regression$(LPAREN)HEAD$(RPAREN): Attribute inference for virtual functions breaks subclasses)
+$(LI $(BUGZILLA 9957): [2.061 -> 2.062] Taking pointer of enum float array gives some garbage)
+$(LI $(BUGZILLA 9974): immutable class constructor is broken)
+$(LI $(BUGZILLA 9984): inout qualifier is skipped for constructor arguments $(LPAREN)template constructor only$(RPAREN))
+$(LI $(BUGZILLA 9987): Declaring struct ModuleInfo should be allowed)
+$(LI $(BUGZILLA 10002): 2.062 -> 2.063 calling "remove" is impure)
+$(LI $(BUGZILLA 10003): void* UFCS regression)
+$(LI $(BUGZILLA 10016): Incorrect error gagging using RefCounted)
+$(LI $(BUGZILLA 10040): struct-related ICE)
+$(LI $(BUGZILLA 10041): ufcs writeln of associative array)
+$(LI $(BUGZILLA 10043): ICE with __traits$(LPAREN)compiles$(RPAREN))
+$(LI $(BUGZILLA 10044): Wrong di generation for IsExp with TemplateParameterList)
+$(LI $(BUGZILLA 10047): opDispatch instantiation failure should be gagged for UFCS)
+$(LI $(BUGZILLA 10049): Spurious "Label already defined" error inside a foreach over a range aggregate)
+$(LI $(BUGZILLA 10050): Regression $(LPAREN)git-head$(RPAREN): RDMD no longer emits error messages from DMD)
+$(LI $(BUGZILLA 10053): struct member with pure dtor forces declared dtor to be pure, too)
+$(LI $(BUGZILLA 10055): Incorrect attribute merging in dtor/postblit building)
+$(LI $(BUGZILLA 10056): Strange Error with templates and string.format)
+$(LI $(BUGZILLA 10067): [REG] Recursive template instantiation)
+$(LI $(BUGZILLA 10073): Default opEquals depends on class declaration order with DMD HEAD)
+$(LI $(BUGZILLA 10076): expression.c:4310: virtual Expression* TypeExp::semantic$(LPAREN)Scope*$(RPAREN): Assertion `0` failed.)
+$(LI $(BUGZILLA 10089): Strange function call error message with specified module)
+$(LI $(BUGZILLA 10091): [HEAD] Cannot cast struct member string enum to static ubyte array of same size)
+$(LI $(BUGZILLA 10096): Regression $(LPAREN)git-head$(RPAREN): __traits$(LPAREN)allMembers$(RPAREN) triggers out of bounds error)
+$(LI $(BUGZILLA 10101): static if conditional cannot be at global scope using mixin template)
+$(LI $(BUGZILLA 10106): [ICE] Ice in glue.c:1215 + 2 error messages without lines)
+$(LI $(BUGZILLA 10134): Mutual referencing templates error)
+$(LI $(BUGZILLA 10142): [REG2.063a] enum value semantic problem that declared in class member)
+$(LI $(BUGZILLA 10144): Using enum inside final class occurs weird errors)
+$(LI $(BUGZILLA 10148): regression 062=>063: unjustified 'safe function cannot call system function')
+$(LI $(BUGZILLA 10151): final: before enum is now an error.)
+$(LI $(BUGZILLA 10160): No line number "cannot modify struct ... with immutable members")
+$(LI $(BUGZILLA 10166): XXX is not a template)
+$(LI $(BUGZILLA 10178): Compiler segfault with zero-length tuple comparison)
+)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(P
+$(LI $(BUGZILLA 1520): TypeInfo_Const.opEquals is incorrect)
+$(LI $(BUGZILLA 1804): Severe GC leaks with repetitive array allocations)
+$(LI $(BUGZILLA 2356): array literal as non static initializer generates horribly inefficient code.)
+$(LI $(BUGZILLA 3789): [TDPL] Structs members that require non-bitwise comparison not correctly compared)
+$(LI $(BUGZILLA 4094): ICE$(LPAREN)expression.c$(RPAREN): recursive struct templates with type inference)
+$(LI $(BUGZILLA 4247): Cannot create default-constructed struct on heap when constructor is defined)
+$(LI $(BUGZILLA 4414): ICE$(LPAREN)cgcs.c$(RPAREN) Taking item of static array returned by function)
+$(LI $(BUGZILLA 4436): Double bug regarding Tuple.init)
+$(LI $(BUGZILLA 4479): Module Foo is in multiple files Foo)
+$(LI $(BUGZILLA 4617): Alias this'ed symbols cannot be passed to templates)
+$(LI $(BUGZILLA 4814): rdmd: Doesn't rebuild when using -of and turning an -L linker option on or off)
+$(LI $(BUGZILLA 5450): no match for implicit super$(LPAREN)$(RPAREN) call in constructor)
+$(LI $(BUGZILLA 5625): std.format unittest disabled)
+$(LI $(BUGZILLA 6070): CTFE UFCS forward reference error)
+$(LI $(BUGZILLA 6089): __gshared with not static 2D array)
+$(LI $(BUGZILLA 6153): Inserting to An Array!T inside an Array!$(LPAREN)Array!T$(RPAREN) causes a segfault.)
+$(LI $(BUGZILLA 6312): template instance cannot use argument from enclosing template)
+$(LI $(BUGZILLA 6431): [RDMD] Modifying a library doesn't trigger a rebuild)
+$(LI $(BUGZILLA 6535): RDMD outputs broken library files)
+$(LI $(BUGZILLA 6539): Incomprehensible error message with failed template instantiation)
+$(LI $(BUGZILLA 6545): [CTFE] Hard-coded array operations not yet supported)
+$(LI $(BUGZILLA 6578): Ignored const with struct with constructor)
+$(LI $(BUGZILLA 6795): ICE$(LPAREN)cgcs.c$(RPAREN): Incrementing an enum array item)
+$(LI $(BUGZILLA 6852): Cannot compare instances of ParameterStorageClassTuple)
+$(LI $(BUGZILLA 7068): copying array of pointers calls memset instead of memcpy with -d)
+$(LI $(BUGZILLA 7437): DMD enters infinite loop during overload resolution)
+$(LI $(BUGZILLA 7569): cannot void initialize tuple declarations)
+$(LI $(BUGZILLA 7572): f.fn!$(LPAREN)void$(RPAREN) is not an lvalue)
+$(LI $(BUGZILLA 7719): enum forward reference error when enum is in braces)
+$(LI $(BUGZILLA 7980): Stack overflow / recursive expansion with alias this)
+$(LI $(BUGZILLA 8041): __gshared/static problem)
+$(LI $(BUGZILLA 8081): pure nothrow unittest problem in generated 'header' file)
+$(LI $(BUGZILLA 8130): Memory corruption because without *.def file DMD compiles DLL with assumption `_tls_index = 0`)
+$(LI $(BUGZILLA 8213): Incorrect error message with pointer to ubyte[] and front)
+$(LI $(BUGZILLA 8238): templates can create ghost fields)
+$(LI $(BUGZILLA 8245): UFCS doesn't work for pointers)
+$(LI $(BUGZILLA 8294): complex breaks calling in 64 bit DMD)
+$(LI $(BUGZILLA 8347): Parser bug with const placed after ~this$(LPAREN)$(RPAREN) in decl)
+$(LI $(BUGZILLA 8366): Overriding const member function in conjunction with mutable overload causes a strange error)
+$(LI $(BUGZILLA 8589): Incorrect conversion of function returning `typeof$(LPAREN)null$(RPAREN)` to function returning an array)
+$(LI $(BUGZILLA 8609): A forward reference error with static arrays)
+$(LI $(BUGZILLA 8668): public selective import makes functions conflict when otherwise they don't)
+$(LI $(BUGZILLA 8670): IFTI fails from aliases)
+$(LI $(BUGZILLA 8697): Invalid error message: Forward reference of interface)
+$(LI $(BUGZILLA 8698): Forward reference error with interfaces)
+$(LI $(BUGZILLA 8827): Cannot move contents of R12)
+$(LI $(BUGZILLA 8828): Long compilation time of a destroy$(LPAREN)$(RPAREN) on a large fixed-sized matrix)
+$(LI $(BUGZILLA 8833): Odd error with expression tuples)
+$(LI $(BUGZILLA 8902): Unexpected "duplicate union initialization for X" error)
+$(LI $(BUGZILLA 8945): Can't call static struct initializer or constructor without qualifier for templated inner struct)
+$(LI $(BUGZILLA 8953): Parser rejects qualifier after destructor i.e. `~this$(LPAREN)$(RPAREN) $(LESS)qualifier$(GREATER) { }`)
+$(LI $(BUGZILLA 8989): cfloat argument passing broken)
+$(LI $(BUGZILLA 8998): 'inout pure' returns immutable, which in reality is mutable)
+$(LI $(BUGZILLA 9091): Using __traits$(LPAREN)getMember$(RPAREN) on template argument fails inside member function)
+$(LI $(BUGZILLA 9144): synchronized CRITSECSIZE should be a target constant)
+$(LI $(BUGZILLA 9199): Module level qualified functions should be rejected)
+$(LI $(BUGZILLA 9209): ice$(LPAREN)symbol.c$(RPAREN) with const struct heap allocation)
+$(LI $(BUGZILLA 9231): overriding inout funcion with attribute inference reports weird error)
+$(LI $(BUGZILLA 9232): Parsing error on some templated methods calls)
+$(LI $(BUGZILLA 9241): 2.061: Property call error message disappeared)
+$(LI $(BUGZILLA 9280): Runtime range violation with named capture groups in regex)
+$(LI $(BUGZILLA 9311): shared library file extension incorrectly modified)
+$(LI $(BUGZILLA 9345): CTFE fails when using std.string.format with imported string enum)
+$(LI $(BUGZILLA 9346): nested struct calls disabled postblit)
+$(LI $(BUGZILLA 9386): struct destructor called erroneously)
+$(LI $(BUGZILLA 9393): Partial template specialization and template lambda does not work)
+$(LI $(BUGZILLA 9401): destructor and nothrow syntax)
+$(LI $(BUGZILLA 9413): Incorrect modification inside contracts is not detected correctly)
+$(LI $(BUGZILLA 9414): Incorrect modification inside contracts is not detected on virtual function)
+$(LI $(BUGZILLA 9415): delegate inference should make function literal impure)
+$(LI $(BUGZILLA 9417): "no size yet for forward reference" error with nested structure)
+$(LI $(BUGZILLA 9428): Wrong array concatenation)
+$(LI $(BUGZILLA 9441): struct constructor missed on auto/type-inferred variable definition)
+$(LI $(BUGZILLA 9445): interpret.c:151: Assertion `v->ctfeAdrOnStack >= 0 && v->ctfeAdrOnStack < stackPointer$(LPAREN)$(RPAREN)` failed.)
+$(LI $(BUGZILLA 9451): Listing abstract functions in diagnostic should show full signature)
+$(LI $(BUGZILLA 9473): Unittest docs should each be in their own section)
+$(LI $(BUGZILLA 9474): Ddoc'd unittests should work correctly with interspersed version$(LPAREN)none$(RPAREN))
+$(LI $(BUGZILLA 9475): Should retain source formatting in ddoc's unittests)
+$(LI $(BUGZILLA 9480): The template name in the JSON output contains template and function arguments)
+$(LI $(BUGZILLA 9494): compiler stack overflow on invalid associative array)
+$(LI $(BUGZILLA 9495): Win64 vararg issue when first argument is > 8 byte)
+$(LI $(BUGZILLA 9508): RDMD doesn't generate new dependency list when a file is changed.)
+$(LI $(BUGZILLA 9540): Compiler crash on delegate context frame assignment)
+$(LI $(BUGZILLA 9561): Many error messages from std.format)
+$(LI $(BUGZILLA 9590): UFCS does not work with void lazy expressions)
+$(LI $(BUGZILLA 9613): Parser bug when using .init with type constructor)
+$(LI $(BUGZILLA 9617): ulong.max is wrongly accepted by smaller signed parameter)
+$(LI $(BUGZILLA 9619): Failed struct field typeof in inner function)
+$(LI $(BUGZILLA 9622): Range violation in rdmd)
+$(LI $(BUGZILLA 9649): DMD doesn't parse valid PostfixExpression . NewExpression syntax.)
+$(LI $(BUGZILLA 9652): __traits$(LPAREN)getAttributes$(RPAREN) doesn't work with manifest constants)
+$(LI $(BUGZILLA 9654): Template function cannot take string by ref T[len])
+$(LI $(BUGZILLA 9656): Built-in dup result should behave as like unique array, if it is possible.)
+$(LI $(BUGZILLA 9658): Setting pre-initialized field should be allowed in qualified constructor.)
+$(LI $(BUGZILLA 9677): Crash on setting length property of array VC 2012 64 bit)
+$(LI $(BUGZILLA 9679): Refused const/immutable assignment in conditional)
+$(LI $(BUGZILLA 9692): __traits$(LPAREN)allMembers$(RPAREN) fails on module without a package)
+$(LI $(BUGZILLA 9700): std.typecons.Proxy with invaliant and in-place operation causes Access Violation)
+$(LI $(BUGZILLA 9712): IFTI does not support deducing static array types from array literal arguments)
+$(LI $(BUGZILLA 9713): Ddoc: Empty description suppress automatic example generation)
+$(LI $(BUGZILLA 9714): Ddoc: Combination of -D and -unittest reveals hidden unittest function)
+$(LI $(BUGZILLA 9720): OSX wrong code with -O Illegal instruction)
+$(LI $(BUGZILLA 9722): optimizer kills GOT to EBX load)
+$(LI $(BUGZILLA 9729): interface thunk doesn't set EBX to GOT)
+$(LI $(BUGZILLA 9735): Casting delegates to void* should be illegal)
+$(LI $(BUGZILLA 9736): VS2010 project file does full rebuild every time)
+$(LI $(BUGZILLA 9743): IFTI and polymorphic string literal should support implicit conversion to static array type)
+$(LI $(BUGZILLA 9744): Poor error message taking address of thread-local variable at compile time)
+$(LI $(BUGZILLA 9747): IFTI argument deduction fails for committed string literals which are implicitly converted to a static array)
+$(LI $(BUGZILLA 9755): JSON output is missing the protection attribute for templates)
+$(LI $(BUGZILLA 9757): Ddoc: documented unittest after ditto should work)
+$(LI $(BUGZILLA 9758): Ddoc: empty ddoc comment and unittest block generates no Examples section)
+$(LI $(BUGZILLA 9768): No line number for wrong foreach type)
+$(LI $(BUGZILLA 9773): ref parameter with default value should not compile)
+$(LI $(BUGZILLA 9774): Error message with __error using == on tuple members)
+$(LI $(BUGZILLA 9777): Calling final interface method leads to wrong code)
+$(LI $(BUGZILLA 9781): -inline will cause backend ICE)
+$(LI $(BUGZILLA 9788): -profile doesn't work if exceptions are thrown in the running program)
+$(LI $(BUGZILLA 9790): Internal error when compiling a invalid variable in template $(LPAREN)in expression.c and backend\evalu8.c$(RPAREN))
+$(LI $(BUGZILLA 9791): [ICE] $(LPAREN)struct.c line 668$(RPAREN) map with a missing tuple import)
+$(LI $(BUGZILLA 9818): Constant folding for static array does not work with initializing by element)
+$(LI $(BUGZILLA 9829): rdmd passes '--' to dmd)
+$(LI $(BUGZILLA 9837): IFTI should consider enum base type)
+$(LI $(BUGZILLA 9844): DMD $(LPAREN)-m64$(RPAREN) int long initialisation bug)
+$(LI $(BUGZILLA 9845): enum value should be able to contain forward references in global scope)
+$(LI $(BUGZILLA 9863): Incorrect generation of SAHF instruction on 64 bits)
+$(LI $(BUGZILLA 9873): Built-in tuple should support equality comparison)
+$(LI $(BUGZILLA 9874): Function call syntax disuniformity in template constraints)
+$(LI $(BUGZILLA 9880): Redundant template instance displaying in error message)
+$(LI $(BUGZILLA 9883): Error on using property as new dynamic array size)
+$(LI $(BUGZILLA 9885): IFTI should consider known tuple types.)
+$(LI $(BUGZILLA 9892): [ICE] forward reference in enum declaration members causes compiler segfault)
+$(LI $(BUGZILLA 9899): struct with pure/nothrow destructor cannot be used as a struct member in pure/nothrow functions)
+$(LI $(BUGZILLA 9901): string return from inner template function error)
+$(LI $(BUGZILLA 9907): Struct literal with destructor should match to non-ref overload)
+$(LI $(BUGZILLA 9910): Scalar op vector is broken.)
+$(LI $(BUGZILLA 9928): ice with void* and function literal)
+$(LI $(BUGZILLA 9936): Wrong opBinary/opBinaryRight rewrite.)
+$(LI $(BUGZILLA 9939): allMembers trait doesn't returns members of nested anonymous enum)
+$(LI $(BUGZILLA 9940): ICE applying getProtection to a functions obtained using getOverloads.)
+$(LI $(BUGZILLA 9946): A UFCS disallowed in dynamic array allocation)
+$(LI $(BUGZILLA 9961): Using UFCS properties suppress actual errors)
+$(LI $(BUGZILLA 9965): Wrong Assembly For DIL, SIL Registers)
+$(LI $(BUGZILLA 9971): eponymous function is not an lvalue)
+$(LI $(BUGZILLA 9985): Postblit isn't called on local struct return)
+$(LI $(BUGZILLA 9990): templates with function alias cause forward reference error)
+$(LI $(BUGZILLA 9993): const ctor should be preferred than mutable for const obj creation)
+$(LI $(BUGZILLA 9994): Built-in generated opAssign should call dtor on assignment)
+$(LI $(BUGZILLA 10004): tuple comparison with side-effect should work)
+$(LI $(BUGZILLA 10005): struct variable declaration and const-correctness)
+$(LI $(BUGZILLA 10011): Wrong JSON "init" property output for class reference initializers)
+$(LI $(BUGZILLA 10029): Update list of reserved version identifiers.)
+$(LI $(BUGZILLA 10058): Inconsistent mangling between C++ and extern$(LPAREN)C++$(RPAREN).)
+$(LI $(BUGZILLA 10059): export doesn't work for variable declarations)
+$(LI $(BUGZILLA 10063): inout+pure results in ability to produce immutable reference to mutable data)
+$(LI $(BUGZILLA 10066): Template opEquals sometimes obstructs struct compilation)
+$(LI $(BUGZILLA 10102): @disable incompletely implemented)
+$(LI $(BUGZILLA 10103): template mixin with property overloads)
+$(LI $(BUGZILLA 10105): ICE when converting string literal to static char array in enum initializer)
+$(LI $(BUGZILLA 10115): More @disabled holes)
+$(LI $(BUGZILLA 10171): Unexpected error "cannot infer type from overloaded function symbol")
+$(LI $(BUGZILLA 10180): offsetof doesn't work through function call alias this)
+)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(P
+$(LI $(BUGZILLA 3449): const and invariant struct members do not behave according to spec)
+$(LI $(BUGZILLA 3502): Fix for dropped Mac OS X 10.5)
+$(LI $(BUGZILLA 3673): inheritance + if clause = no go)
+$(LI $(BUGZILLA 4528): Better error message for private abstract method)
+$(LI $(BUGZILLA 5140): Add __FUNCTION__, __PRETTY_FUNCTION__, and __MODULE__)
+$(LI $(BUGZILLA 6185): Include non-global functions when resolving UFCS)
+$(LI $(BUGZILLA 6453): Allow multiple invariant per struct/class)
+$(LI $(BUGZILLA 6809): IFTI should imply const where inout is present on args, but not on return type)
+$(LI $(BUGZILLA 7444): Require [] for array copies too)
+$(LI $(BUGZILLA 7511): attribute inference should work for template functions)
+$(LI $(BUGZILLA 8220): invalid function call not detected during semantic analysis)
+$(LI $(BUGZILLA 8669): TemplateThisParameter should change member function's qualifier)
+$(LI $(BUGZILLA 8819): void static array should have init built-in propert)
+$(LI $(BUGZILLA 8959): IsExpression should support syntax which has no Identifier in all cases)
+$(LI $(BUGZILLA 9033): Remove  __thread from the language)
+$(LI $(BUGZILLA 9136): Add isNested trait)
+$(LI $(BUGZILLA 9155): Ddoc: code section should strip leading spaces)
+$(LI $(BUGZILLA 9170): CTFE: Allow reinterpret casts float $(LESS)-$(GREATER) int)
+$(LI $(BUGZILLA 9185): Add note about where -op is useful)
+$(LI $(BUGZILLA 9574): Diagnostic for old use of 'alias this = that' should be informative)
+$(LI $(BUGZILLA 9627): Not good enough error messages in some cases when using UFCS)
+$(LI $(BUGZILLA 9635): Improved error message for failed access of array field properties from static method)
+$(LI $(BUGZILLA 9676): Ddoc: Wrap deprecated declarations in a $$(LPAREN)DEPRECATED$(RPAREN) macro)
+$(LI $(BUGZILLA 9680): Include entry point location in "dmd -v -o-" output)
+$(LI $(BUGZILLA 9723): Implement -main switch to inject a default main$(LPAREN)$(RPAREN) function)
+$(LI $(BUGZILLA 9726): Add minimum % coverage required for -cov testing)
+$(LI $(BUGZILLA 9727): Documented unittest comment should appear before Example section)
+$(LI $(BUGZILLA 9745): Allow non-thread local static variables to have their address taken in CTFE)
+$(LI $(BUGZILLA 9778): RDMD: Support passing resource files to DMD)
+$(LI $(BUGZILLA 9789): Ddoc for aliases should use new "alias x=y" syntax)
+$(LI $(BUGZILLA 9866): movsxd not supported)
+$(LI $(BUGZILLA 9920): [Optimizer] Use mul/imul for integer division by constant)
+$(LI $(BUGZILLA 9941): [CTFE] Allow to store "newed" classes and structs in the data segment)
+$(LI $(BUGZILLA 9943): Allow to return typeid from CTFE)
+$(LI $(BUGZILLA 9963): Absurdly Inefficient Codegen For Adding Boolean Predicates)
+$(LI $(BUGZILLA 9977): Function local templates should be allowed)
+$(LI $(BUGZILLA 10030): Support '-l:' switch when passing default library to ld)
+$(LI $(BUGZILLA 10077): add pragma$(LPAREN)mangle, "..."$(RPAREN) to override symbol mangle.)
+$(LI $(BUGZILLA 10109): add -transition compiler switch to aid in dealing with breaking changes)
+$(LI $(BUGZILLA 10150): Prefix method 'this' qualifiers should be just ignored anytime)
+$(LI $(BUGZILLA 10179): Tuple assignment should not cause "has no effect" error even if the length is zero)
+)
+)
+$(BUGSTITLE Phobos regressions,
+
+$(P
+$(LI $(BUGZILLA 9122): std.concurrency send$(LPAREN)$(RPAREN) fails with multiple arrays)
+$(LI $(BUGZILLA 9742): std.math.floor returns 0 for any value x > -1 and x $(LESS) 0)
+$(LI $(BUGZILLA 10122): `Appender` doesn't work with disabled default construction)
+)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(P
+$(LI $(BUGZILLA 3795): Problem with phobos std.variant)
+$(LI $(BUGZILLA 4729): std.algorithm: strange iota behaviour)
+$(LI $(BUGZILLA 4798): std.algorithm.map unusable for ranges with const elements)
+$(LI $(BUGZILLA 4955): struct dirent.d_type is not a mask)
+$(LI $(BUGZILLA 5032): std.file.rename acts differently on Windows and Linux when the target file already exists.)
+$(LI $(BUGZILLA 5201): std.string.indexOf and std.algorithm.indexOf return different things for narrow strings)
+$(LI $(BUGZILLA 5310): Variant == const$(LPAREN)Variant$(RPAREN) doesn't compile)
+$(LI $(BUGZILLA 5359): std.traits.isDelegate should work for types and expressions)
+$(LI $(BUGZILLA 5360): calling rdmd from different folder)
+$(LI $(BUGZILLA 5514): Erroneous documentation and lacking randomization for topN)
+$(LI $(BUGZILLA 5658): Undocumented fields in std.typecons.Tuple)
+$(LI $(BUGZILLA 5924): schwartzSort of Tuple!$(LPAREN)char$(RPAREN)[])
+$(LI $(BUGZILLA 8321): std.range.put doesn't work with RefCounted output range)
+$(LI $(BUGZILLA 8613): std.typecons.Proxy cannot work with operator 'in')
+$(LI $(BUGZILLA 8655): bitfields and Typedef don't mix)
+$(LI $(BUGZILLA 9164): Can't easily assign one Nullable to another)
+$(LI $(BUGZILLA 9431): Tuple creation problem with array of array)
+$(LI $(BUGZILLA 9456): decodeFront is inconsistent in whether it pops elements off of the range or not)
+$(LI $(BUGZILLA 9512): std.regex: Incorrect parsing of hex sequences composed from capital letters.)
+$(LI $(BUGZILLA 9553): SOCKET should be 64 bit wide on Win64)
+$(LI $(BUGZILLA 9583): std.getopt.getopt does not consume options terminator "--" from args list, as docs claim)
+$(LI $(BUGZILLA 9612): std.range.Cycle.opSlice tests on the bounds are missing)
+$(LI $(BUGZILLA 9624): fullyQualifiedName fails for functions)
+$(LI $(BUGZILLA 9648): Missing std.random import for std.algorithm.topN)
+$(LI $(BUGZILLA 9753): std.string.translate precondition asserts)
+$(LI $(BUGZILLA 9794): std.json cannot handle delete character)
+$(LI $(BUGZILLA 9804): `std.math.FloatingPointControl` corrupts floating point state)
+$(LI $(BUGZILLA 9812): std.conv.parse string fails on certain escape characters.)
+$(LI $(BUGZILLA 9836): std.array.popFront does not work with alias this.)
+$(LI $(BUGZILLA 9950): std.json should return empty string/array instead of null on empty input)
+$(LI $(BUGZILLA 9956): hasElaborateAssign trait does not work with static arrays)
+$(LI $(BUGZILLA 9979): Regex bug with \b and look-behind)
+$(LI $(BUGZILLA 10116): stdio.File.byLine repeats last line forever, readln$(LPAREN)ref C[],R$(RPAREN) returns bad data)
+$(LI $(BUGZILLA 10167): Wrong Document Comment on std.format.d$(LPAREN)181$(RPAREN))
+$(LI $(BUGZILLA 10182): std.bitmanip unit test has pointless/unused foreach loop)
+)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(P
+$(LI $(BUGZILLA 4787): std.algorithm.bisectRight$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 4921): Synopsis code in std.variant documentation throws an assertion error)
+$(LI $(BUGZILLA 5013): std.typecons.Tuple should have constructor for static arrays)
+$(LI $(BUGZILLA 5106): makeIndex should return SortedRange)
+$(LI $(BUGZILLA 5226): indexOf$(LPAREN)$(RPAREN) which takes a pred but no needle)
+$(LI $(BUGZILLA 5401): std.socket updates and boost license)
+$(LI $(BUGZILLA 5507): countUntil should take Ranges... instead of R2)
+$(LI $(BUGZILLA 6224): Add an ownerTid property in std.concurrency)
+$(LI $(BUGZILLA 6486): std.math.abs$(LPAREN)BigInt$(RPAREN))
+$(LI $(BUGZILLA 7405): std.algorithm.schwartzSort.release)
+$(LI $(BUGZILLA 9260): getopt should allow setting booleans to false)
+$(LI $(BUGZILLA 9265): Nullable fixed-sized array wrapper)
+$(LI $(BUGZILLA 9625): assertNotThrown should print exception msg if no msg is provided)
+$(LI $(BUGZILLA 9802): Add `std.traits.{isNested,hasNested}`.)
+$(LI $(BUGZILLA 9814): Add std.traits.isNestedFunction)
+$(LI $(BUGZILLA 9839): std.traits.Select should be able to select symbols)
+$(LI $(BUGZILLA 9888): Allow passing a generator to std.random.uniform for enums)
+)
+)
+$(BUGSTITLE Druntime bugs,
+
+$(P
+$(LI $(BUGZILLA 4307): spawn$(LPAREN)$(RPAREN)'ed thread doesn't terminate)
+$(LI $(BUGZILLA 6024): Document that Windows 2000 SP4 is no longer supported)
+$(LI $(BUGZILLA 10057): [2.063 beta] Module info overwritten in shared phobos.)
+$(LI $(BUGZILLA 10081): Incorrect char array comparison)
+)
+)
+$(BUGSTITLE Optlink bugs,
+
+$(P
+$(LI $(BUGZILLA 6144): Unexpected OPTLINK Termination at EIP=00428DA3)
+)
+)
+$(BUGSTITLE Installer bugs,
+
+$(P
+$(LI $(BUGZILLA 9343): Problem installing dmd-2.061-0.fedora.x86_64.rpm on Fedora 18)
+)
+)
+$(BUGSTITLE Website bugs,
+
+$(P
+$(LI $(BUGZILLA 4847): std.algorithm.topN documentation)
+$(LI $(BUGZILLA 9544): D logo image is broken on non-root-level pages)
+$(LI $(BUGZILLA 9609): Ddoc tags for std.string.icmp seem wrong)
+$(LI $(BUGZILLA 10036): missing core.atomic docs on dlang.org)
+)
+))
+$(CHANGELOG_NAV 2.062,2.064)
+
+Macros:
+	VER=2.063
+	TITLE=Change Log: $(VER)

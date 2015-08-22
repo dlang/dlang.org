@@ -8,7 +8,34 @@ DPL_DOCS=dub run --root $(DPL_DOCS_PATH) --
 
 SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd	\
 	mixin.dd memory.dd interface.dd windows.dd dll.dd htomodule.dd faq.dd	\
-	dstyle.dd wc.dd changelog.dd glossary.dd acknowledgements.dd		\
+	dstyle.dd wc.dd \
+	changelog\2.000.dd changelog\2.001.dd changelog\2.002.dd \
+	changelog\2.003.dd changelog\2.004.dd changelog\2.005.dd \
+	changelog\2.006.dd changelog\2.007.dd changelog\2.008.dd \
+	changelog\2.009.dd changelog\2.010.dd changelog\2.011.dd \
+	changelog\2.012.dd changelog\2.013.dd changelog\2.014.dd \
+	changelog\2.015.dd changelog\2.016.dd changelog\2.017.dd \
+	changelog\2.018.dd changelog\2.019.dd changelog\2.020.dd \
+	changelog\2.021.dd changelog\2.022.dd changelog\2.023.dd \
+	changelog\2.025.dd changelog\2.026.dd changelog\2.027.dd \
+	changelog\2.028.dd changelog\2.029.dd changelog\2.030.dd \
+	changelog\2.031.dd changelog\2.032.dd changelog\2.033.dd \
+	changelog\2.034.dd changelog\2.035.dd changelog\2.036.dd \
+	changelog\2.037.dd changelog\2.038.dd changelog\2.039.dd \
+	changelog\2.040.dd changelog\2.041.dd changelog\2.042.dd \
+	changelog\2.043.dd changelog\2.044.dd changelog\2.045.dd \
+	changelog\2.046.dd changelog\2.047.dd changelog\2.048.dd \
+	changelog\2.049.dd changelog\2.050.dd changelog\2.051.dd \
+	changelog\2.052.dd changelog\2.053.dd changelog\2.054.dd \
+	changelog\2.055.dd changelog\2.056.dd changelog\2.057.dd \
+	changelog\2.058.dd changelog\2.059.dd changelog\2.060.dd \
+	changelog\2.061.dd changelog\2.062.dd changelog\2.063.dd \
+	changelog\2.064.dd changelog\2.065.0.dd \
+	changelog\2.066.0.dd changelog\2.066.1.dd \
+	changelog\2.067.0.dd changelog\2.067.1.dd \
+	changelog\2.068.0.dd \
+	changelog\index.dd changelog\upcoming.dd \
+	glossary.dd acknowledgements.dd		\
 	dcompiler.dd builtin.dd comparison.dd rationale.dd code_coverage.dd	\
 	exception-safe.dd rdmd.dd templates-revisited.dd warnings.dd		\
 	ascii-table.dd windbg.dd htod.dd regular-expression.dd			\
@@ -32,6 +59,8 @@ DDOC=macros.ddoc html.ddoc dlang.org.ddoc windows.ddoc doc.ddoc $(NODATETIME)
 
 DDOC_STD=std.ddoc std_navbar-release.ddoc modlist-release.ddoc
 
+CHANGELOG_DDOC=$(DDOC) changelog/changelog.ddoc
+
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 
@@ -44,7 +73,33 @@ TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.
 	operatoroverloading.html template.html mixin.html contracts.html version.html	\
 	errors.html garbage.html memory.html float.html iasm.html		\
 	interface.html portability.html entity.html abi.html windows.html	\
-	dll.html htomodule.html faq.html dstyle.html wc.html changelog.html	\
+	dll.html htomodule.html faq.html dstyle.html wc.html \
+	changelog\2.000.html changelog\2.001.html changelog\2.002.html \
+	changelog\2.003.html changelog\2.004.html changelog\2.005.html \
+	changelog\2.006.html changelog\2.007.html changelog\2.008.html \
+	changelog\2.009.html changelog\2.010.html changelog\2.011.html \
+	changelog\2.012.html changelog\2.013.html changelog\2.014.html \
+	changelog\2.015.html changelog\2.016.html changelog\2.017.html \
+	changelog\2.018.html changelog\2.019.html changelog\2.020.html \
+	changelog\2.021.html changelog\2.022.html changelog\2.023.html \
+	changelog\2.025.html changelog\2.026.html changelog\2.027.html \
+	changelog\2.028.html changelog\2.029.html changelog\2.030.html \
+	changelog\2.031.html changelog\2.032.html changelog\2.033.html \
+	changelog\2.034.html changelog\2.035.html changelog\2.036.html \
+	changelog\2.037.html changelog\2.038.html changelog\2.039.html \
+	changelog\2.040.html changelog\2.041.html changelog\2.042.html \
+	changelog\2.043.html changelog\2.044.html changelog\2.045.html \
+	changelog\2.046.html changelog\2.047.html changelog\2.048.html \
+	changelog\2.049.html changelog\2.050.html changelog\2.051.html \
+	changelog\2.052.html changelog\2.053.html changelog\2.054.html \
+	changelog\2.055.html changelog\2.056.html changelog\2.057.html \
+	changelog\2.058.html changelog\2.059.html changelog\2.060.html \
+	changelog\2.061.html changelog\2.062.html changelog\2.063.html \
+	changelog\2.064.html changelog\2.065.0.html \
+	changelog\2.066.0.html changelog\2.066.1.html \
+	changelog\2.067.0.html changelog\2.067.1.html \
+	changelog\2.068.0.html \
+	changelog\index.html changelog\upcoming.html \
 	glossary.html acknowledgements.html builtin.html interfaceToC.html	\
 	comparison.html rationale.html ddoc.html code_coverage.html		\
 	exception-safe.html rdmd.html templates-revisited.html warnings.html	\
@@ -106,7 +161,150 @@ bug-stats.php.html : $(DDOC) bug-stats.php.dd
 
 builtin.html : $(DDOC) builtin.dd
 
-changelog.html : $(DDOC) changelog.dd
+changelog\2.000.html : $(CHANGELOG_DDOC) changelog\2.000.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.001.html : $(CHANGELOG_DDOC) changelog\2.001.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.002.html : $(CHANGELOG_DDOC) changelog\2.002.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.003.html : $(CHANGELOG_DDOC) changelog\2.003.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.004.html : $(CHANGELOG_DDOC) changelog\2.004.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.005.html : $(CHANGELOG_DDOC) changelog\2.005.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.006.html : $(CHANGELOG_DDOC) changelog\2.006.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.007.html : $(CHANGELOG_DDOC) changelog\2.007.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.008.html : $(CHANGELOG_DDOC) changelog\2.008.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.009.html : $(CHANGELOG_DDOC) changelog\2.009.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.010.html : $(CHANGELOG_DDOC) changelog\2.010.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.011.html : $(CHANGELOG_DDOC) changelog\2.011.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.012.html : $(CHANGELOG_DDOC) changelog\2.012.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.013.html : $(CHANGELOG_DDOC) changelog\2.013.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.014.html : $(CHANGELOG_DDOC) changelog\2.014.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.015.html : $(CHANGELOG_DDOC) changelog\2.015.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.016.html : $(CHANGELOG_DDOC) changelog\2.016.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.017.html : $(CHANGELOG_DDOC) changelog\2.017.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.018.html : $(CHANGELOG_DDOC) changelog\2.018.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.019.html : $(CHANGELOG_DDOC) changelog\2.019.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.020.html : $(CHANGELOG_DDOC) changelog\2.020.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.021.html : $(CHANGELOG_DDOC) changelog\2.021.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.022.html : $(CHANGELOG_DDOC) changelog\2.022.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.023.html : $(CHANGELOG_DDOC) changelog\2.023.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.025.html : $(CHANGELOG_DDOC) changelog\2.025.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.026.html : $(CHANGELOG_DDOC) changelog\2.026.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.027.html : $(CHANGELOG_DDOC) changelog\2.027.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.028.html : $(CHANGELOG_DDOC) changelog\2.028.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.029.html : $(CHANGELOG_DDOC) changelog\2.029.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.030.html : $(CHANGELOG_DDOC) changelog\2.030.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.031.html : $(CHANGELOG_DDOC) changelog\2.031.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.032.html : $(CHANGELOG_DDOC) changelog\2.032.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.033.html : $(CHANGELOG_DDOC) changelog\2.033.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.034.html : $(CHANGELOG_DDOC) changelog\2.034.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.035.html : $(CHANGELOG_DDOC) changelog\2.035.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.036.html : $(CHANGELOG_DDOC) changelog\2.036.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.037.html : $(CHANGELOG_DDOC) changelog\2.037.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.038.html : $(CHANGELOG_DDOC) changelog\2.038.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.039.html : $(CHANGELOG_DDOC) changelog\2.039.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.040.html : $(CHANGELOG_DDOC) changelog\2.040.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.041.html : $(CHANGELOG_DDOC) changelog\2.041.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.042.html : $(CHANGELOG_DDOC) changelog\2.042.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.043.html : $(CHANGELOG_DDOC) changelog\2.043.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.044.html : $(CHANGELOG_DDOC) changelog\2.044.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.045.html : $(CHANGELOG_DDOC) changelog\2.045.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.046.html : $(CHANGELOG_DDOC) changelog\2.046.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.047.html : $(CHANGELOG_DDOC) changelog\2.047.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.048.html : $(CHANGELOG_DDOC) changelog\2.048.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.049.html : $(CHANGELOG_DDOC) changelog\2.049.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.050.html : $(CHANGELOG_DDOC) changelog\2.050.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.051.html : $(CHANGELOG_DDOC) changelog\2.051.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.052.html : $(CHANGELOG_DDOC) changelog\2.052.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.053.html : $(CHANGELOG_DDOC) changelog\2.053.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.054.html : $(CHANGELOG_DDOC) changelog\2.054.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.055.html : $(CHANGELOG_DDOC) changelog\2.055.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.056.html : $(CHANGELOG_DDOC) changelog\2.056.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.057.html : $(CHANGELOG_DDOC) changelog\2.057.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.058.html : $(CHANGELOG_DDOC) changelog\2.058.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.059.html : $(CHANGELOG_DDOC) changelog\2.059.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.060.html : $(CHANGELOG_DDOC) changelog\2.060.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.061.html : $(CHANGELOG_DDOC) changelog\2.061.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.062.html : $(CHANGELOG_DDOC) changelog\2.062.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.063.html : $(CHANGELOG_DDOC) changelog\2.063.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.064.html : $(CHANGELOG_DDOC) changelog\2.064.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.065.0.html : $(CHANGELOG_DDOC) changelog\2.065.0.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.066.0.html : $(CHANGELOG_DDOC) changelog\2.066.0.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.066.1.html : $(CHANGELOG_DDOC) changelog\2.066.1.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.067.0.html : $(CHANGELOG_DDOC) changelog\2.067.0.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.067.1.html : $(CHANGELOG_DDOC) changelog\2.067.1.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.068.0.html : $(CHANGELOG_DDOC) changelog\2.068.0.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\index.html : $(CHANGELOG_DDOC) changelog\index.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\upcoming.html : $(CHANGELOG_DDOC) changelog\upcoming.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 
 class.html : $(DDOC) class.dd
 
