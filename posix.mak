@@ -117,6 +117,7 @@ CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 
 IMAGES=favicon.ico $(addprefix images/, \
 	d002.ico \
+	$(addprefix compiler-, dmd.png gdc.svg ldc.png) \
 	$(addsuffix .svg, icon_minus icon_plus hamburger dlogo faster-aa-1 faster-gc-1) \
 	$(addsuffix .png, apple_logo centos_logo d3 debian_logo dlogo \
 		fedora_logo freebsd_logo opensuse_logo ubuntu_logo windows_logo \
