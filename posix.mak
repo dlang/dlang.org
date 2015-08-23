@@ -240,11 +240,11 @@ ${GENERATED}/${LATEST}.ddoc :
 	mkdir -p $(dir $@)
 	echo "LATEST=${LATEST}" >$@
 
-${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR)-$(LATEST)/.cloned $(PHOBOS_DIR)-$(LATEST)/.cloned
+${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR)-$(LATEST) $(PHOBOS_DIR)-$(LATEST)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR)-$(LATEST) $(PHOBOS_DIR)-$(LATEST) $(MOD_EXCLUDES_RELEASE) >$@
 
-${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR)/.cloned $(PHOBOS_DIR)/.cloned
+${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(MOD_EXCLUDES_PRERELEASE) >$@
 
@@ -322,44 +322,41 @@ dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
 # Git rules
 ################################################################################
 
-../%-${LATEST}/.cloned :
-	[ -d $(@D) ] || git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$* $(@D)/
-	touch $@
+../%-${LATEST} :
+	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$* $@
 
-../%-${DUB_VER}/.cloned :
-	[ -d $(@D) ] || git clone -b v${DUB_VER} --depth=1 ${GIT_HOME}/$* $(@D)/
-	touch $@
+../%-${DUB_VER} :
+	git clone --depth=1 -b v${DUB_VER} ${GIT_HOME}/$* $@
 
-../%/.cloned :
-	[ -d $(@D) ] || git clone --depth=1 ${GIT_HOME}/$* $(@D)/
-	touch $@
+${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} :
+	git clone --depth=1 ${GIT_HOME}/$(@F) $@
 
 ################################################################################
 # dmd compiler, latest released build and current build
 ################################################################################
 
-$(DMD) : ${DMD_DIR}/.cloned
+$(DMD) : ${DMD_DIR}
 	${MAKE} --directory=${DMD_DIR}/src -f posix.mak -j 4
 
-$(DMD_REL) : ${DMD_DIR}-${LATEST}/.cloned
+$(DMD_REL) : ${DMD_DIR}-${LATEST}
 	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak -j 4
 
 ################################################################################
 # druntime, latest released build and current build
 ################################################################################
 
-druntime-prerelease : ${DRUNTIME_DIR}/.cloned $(DMD) $(STD_DDOC_PRE)
+druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRE)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
-druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned $(DMD_REL) $(STD_DDOC)
+druntime-release : ${DRUNTIME_DIR}-${LATEST} $(DMD_REL) $(STD_DDOC)
 	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak target doc \
 	  DMD=$(DMD_REL) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC))"
 
-druntime-prerelease-verbatim : ${DRUNTIME_DIR}/.cloned \
+druntime-prerelease-verbatim : ${DRUNTIME_DIR} \
 		${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
@@ -375,12 +372,12 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_DIR}/.cloned $(STD_DDOC_PRE) druntime-prerelease
+phobos-prerelease : ${PHOBOS_DIR} $(STD_DDOC_PRE) druntime-prerelease
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
-phobos-release : ${PHOBOS_DIR}-${LATEST}/.cloned $(DMD_REL) $(STD_DDOC) \
+phobos-release : ${PHOBOS_DIR}-${LATEST} $(DMD_REL) $(STD_DDOC) \
 		druntime-release
 	${MAKE} --directory=${PHOBOS_DIR}-${LATEST} -f posix.mak -j 4 \
 	  html \
@@ -389,7 +386,7 @@ phobos-release : ${PHOBOS_DIR}-${LATEST}/.cloned $(DMD_REL) $(STD_DDOC) \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC))"
 
-phobos-prerelease-verbatim : ${PHOBOS_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
+phobos-prerelease-verbatim : ${PHOBOS_DIR} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
@@ -430,8 +427,8 @@ ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess : dpl_prerelease_htaccess
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
-		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
+docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST} \
+		${PHOBOS_DIR}-${LATEST} | dpl-docs
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
@@ -442,8 +439,8 @@ docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
 	rm .release-files.txt .release-dummy.html
 
-docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
-		${PHOBOS_DIR}/.cloned | dpl-docs
+docs-prerelease.json : ${DMD} ${DRUNTIME_DIR} \
+		${PHOBOS_DIR} | dpl-docs
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 	  -e /unittest/d > .prerelease-files.txt
 	find ${PHOBOS_DIR} -name '*.d' | sed -e /unittest.d/d -e /format/d \
@@ -471,7 +468,7 @@ ${STABLE_DMD}:
 	TMPFILE=$$(mktemp deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > $${TMPFILE}.zip && \
 		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
 
-${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
+${DUB}: ${DUB_DIR} ${STABLE_DMD}
 	cd ${DUB_DIR} && DC="$(abspath ${STABLE_DMD}) -conf=$(abspath ${STABLE_DMD_CONF})" ./build.sh
 
 ################################################################################
