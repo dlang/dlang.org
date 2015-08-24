@@ -4,12 +4,11 @@ $(SPEC_S Lexical,
 
 	The lexical analysis is independent of the syntax parsing and the
 	semantic analysis. The lexical analyzer splits the source text up into
-	tokens. The lexical grammar describes what those tokens are. The
-	grammar is designed to be suitable for high speed scanning, it
-	has a minimum of special case rules, there is only one phase of
-	translation, and to make it easy to write a correct scanner
-	for. The tokens are readily recognizable by those familiar with C and
-	C++.
+	tokens. The lexical grammar describes the syntax of those tokens. The
+	grammar is designed to be suitable for high speed scanning and to make it
+	easy to write a correct scanner for it. It has a minimum of special case
+	rules and there is only one phase of translation. The tokens are readily
+	recognizable by those familiar with C and C++.
 
 $(H3 Source Text)
 
@@ -365,9 +364,7 @@ $(GNAME TokenString):
 
 	$(P
 	A string literal is either a double quoted string, a wysiwyg quoted
-	string, an escape sequence,
-	a delimited string, a token string,
-	or a hex string.
+	string, a delimited string, a token string,	or a hex string.
 	)
 
 	$(P In all string literal forms, an $(GLINK EndOfLine) is regarded as a single
@@ -376,7 +373,7 @@ $(GNAME TokenString):
 $(H4 Wysiwyg Strings)
 
 	$(P
-	Wysiwyg "what you see is what you get" quoted strings are enclosed by r" and ".
+	Wysiwyg ("what you see is what you get") quoted strings are enclosed by r" and ".
 	All characters between
 	the r" and " are part of the string.
 	There are no escape sequences inside r" ":
@@ -611,7 +608,7 @@ $(H3 $(LNAME2 integerliteral, Integer Literals))
 $(GRAMMAR
 $(GNAME IntegerLiteral):
     $(GLINK Integer)
-    $(GLINK Integer) $(I IntegerSuffix)
+    $(GLINK Integer) $(GLINK IntegerSuffix)
 
 $(GNAME Integer):
     $(GLINK DecimalInteger)
@@ -630,7 +627,7 @@ $(GNAME IntegerSuffix):
 $(GNAME DecimalInteger):
     $(B 0)
     $(GLINK NonZeroDigit)
-    $(GLINK NonZeroDigit) $(I DecimalDigitsUS)
+    $(GLINK NonZeroDigit) $(GLINK DecimalDigitsUS)
 
 $(GNAME BinaryInteger):
     $(GLINK BinPrefix) $(GLINK BinaryDigitsUS)
@@ -690,14 +687,6 @@ $(GNAME BinaryDigitUS):
     $(GLINK BinaryDigit)
     $(D _)
 
-$(GNAME OctalDigits):
-    $(GLINK OctalDigit)
-    $(GLINK OctalDigit) $(I OctalDigits)
-
-$(GNAME OctalDigitsUS):
-    $(GLINK OctalDigitUS)
-    $(GLINK OctalDigitUS) $(I OctalDigitsUS)
-
 $(GNAME OctalDigit):
     $(B 0)
     $(B 1)
@@ -707,10 +696,6 @@ $(GNAME OctalDigit):
     $(B 5)
     $(B 6)
     $(B 7)
-
-$(GNAME OctalDigitUS):
-    $(GLINK OctalDigit)
-    $(D _)
 
 $(GNAME HexDigits):
     $(GLINK HexDigit)
@@ -733,6 +718,10 @@ $(GNAME HexDigit):
     $(GLINK DecimalDigit)
     $(GLINK HexLetter)
 
+$(GNAME HexDigitUS):
+    $(GLINK HexDigit)
+    $(D _)
+    
 $(GNAME HexLetter):
     $(B a)
     $(B b)
@@ -746,24 +735,23 @@ $(GNAME HexLetter):
     $(B D)
     $(B E)
     $(B F)
-    $(D _)
 )
 
-	$(P Integers can be specified in decimal, binary, octal, or hexadecimal.)
+	$(P Integers can be specified in decimal, binary or hexadecimal.)
 
 	$(P Decimal integers are a sequence of decimal digits.)
 
 	$(P $(LNAME2 binary-literals, Binary integers) are a sequence of binary digits preceded
-	by a $(SINGLEQUOTE 0b).
+	by a $(SINGLEQUOTE 0b) or $(SINGLEQUOTE 0B).
 	)
 
-	$(P C-style octal integer notation was deemed too easy to mix up with decimal notation.
-	The above is only fully supported in string literals.
+	$(P C-style octal integer notation was deemed too easy to mix up with decimal notation;
+	it is only fully supported in string literals.
 	D still supports octal integer literals interpreted at compile time through the $(FULL_XREF conv, octal)
 	template, as in $(D octal!167).)
 
 	$(P Hexadecimal integers are a sequence of hexadecimal digits preceded
-	by a $(SINGLEQUOTE 0x).
+	by a $(SINGLEQUOTE 0x) or $(SINGLEQUOTE 0X).
 	)
 
 	$(P Integers can have embedded $(SINGLEQUOTE $(UNDERSCORE)) characters, which are ignored.
@@ -892,10 +880,9 @@ $(GNAME LeadingDecimal):
 
 	$(P Floats can be in decimal or hexadecimal format.)
 
-	$(P Hexadecimal floats are preceded with a $(B 0x) and the
-	exponent is a $(B p)
-	or $(B P) followed by a decimal number serving as the exponent
-	of 2.
+	$(P Hexadecimal floats are preceded with a $(B 0x) or $(B 0X) and the
+	exponent is a $(B p) or $(B P) followed by a decimal number serving as
+	the exponent of 2.
 	)
 
 	$(P Floating literals can have embedded $(SINGLEQUOTE $(UNDERSCORE)) characters, which are ignored.
