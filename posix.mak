@@ -471,8 +471,5 @@ ${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
 # Dman tags
 ################################################################################
 
-chmgen : chmgen.d $(DMD)
-	$(DMD) -I${PHOBOS_DIR} -g chmgen.d
-
-d.tag : chmgen $(ALL_FILES) phobos-release druntime-release
-	./chmgen --root=$(DOC_OUTPUT_DIR) --only-tags
+d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
+	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags
