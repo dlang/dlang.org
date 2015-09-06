@@ -476,10 +476,7 @@ ${DUB}: ${DUB_DIR} ${STABLE_DMD}
 # Dman tags
 ################################################################################
 
-chmgen : chmgen.d $(DMD)
-	$(DMD) -I${PHOBOS_DIR} -g chmgen.d
-
-d.tag : chmgen $(ALL_FILES) phobos-release druntime-release
-	./chmgen --root=$(DOC_OUTPUT_DIR) --only-tags
+d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
+	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
