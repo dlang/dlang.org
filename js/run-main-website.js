@@ -19,7 +19,7 @@ mainPage["9386a20f75d1fd4281ae6c6d6e645705"] = ["3 4 +\n1 2 + 4 * 5 + 3 -\n2 3 7
 mainPage["3d41a91e2b9e27835ab8d6c73367a909"] = ["2.4 plus 2.4 equals 5 for sufficiently large values of 2."];
 
 // Automatic memory management makes for safe...
-mainPage["54f2095e83f8ef851a711db0a29b0e26"] = ["", "text.txt"];
+mainPage["54f2095e83f8ef851a711db0a29b0e26"] = null;
 
 // Built-in linear and associative arrays, slices, and ranges make...
 mainPage["6c843684c0231b847f933e6d7b5a697a"] = ["The D programming language.\nModern convenience.\nModeling power.\nNative efficiency."];
