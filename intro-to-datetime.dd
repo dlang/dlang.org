@@ -560,20 +560,20 @@ immutable tzWithoutDST = new SimpleTimeZone(utcOffset);
 
      $(P The last thing that I have to note is some differences in numerical
          values between $(STD_DATE) and $(STD_DATETIME).
-         $(FULL_XREF date, Date)'s $(D weekday) property gives Sunday a value of
-         1, but $(FULL_XREF date, weekDay) gives Sunday a value of 0.
+         $(D std.date.Date)'s $(D weekday) property gives Sunday a value of
+         1, but $(D std.date.weekDay) gives Sunday a value of 0.
          $(FULL_XREF datetime, DayOfWeek) gives Sunday a value of 0. So,
          depending on which part of $(STD_DATE) you're dealing with it, it
          may or may not match what $(STD_DATETIME) is doing for the numerical
          values of weekdays. Months have a similar problem.
-         $(FULL_XREF date, Date)'s $(D month) property gives January a value of
+         $(D std.date.Date)'s $(D month) property gives January a value of
          1 - which matches what $(FULL_XREF datetime, Month) does - but
-         $(FULL_XREF date, monthFromTime) gives January a value of 0. So,
+         $(D std.date.monthFromTime) gives January a value of 0. So,
          just as with the days of the week, you have to be careful with the
          numerical values of the months. Whether $(STD_DATETIME) matches what
          $(STD_DATE) is doing depends on which part of $(STD_DATE) you're using.
          And as you'll notice, it's not even consistent as to whether
-         $(FULL_XREF date, Date) or the free function in $(STD_DATE) is the one
+         $(D std.date.Date) or the free function in $(STD_DATE) is the one
          which matches $(STD_DATETIME). So, you should be very careful when
          converting code which uses numerical values for either the days of the
          week or the months of the year.)
@@ -581,9 +581,9 @@ immutable tzWithoutDST = new SimpleTimeZone(utcOffset);
     $(BOOKTABLE $(H3 std.date symbols and their std.datetime counterparts),
         $(TR $(TD $(B $(STD_DATE)))
              $(TD $(B $(STD_DATETIME) Equivalent)))
-        $(TR $(TD $(XREF date, d_time))
+        $(TR $(TD $(D d_time))
              $(TD The closest would be $(SYSTIME).))
-        $(TR $(TD $(XREF date, d_time_nan))
+        $(TR $(TD $(D d_time_nan))
              $(TD There is no equivalent. $(SYSTIME).$(D init), which has a
                   $(D null) $(TIMEZONE) object, would be the closest, but once
                   CTFE advances to the point that you can new up class objects
@@ -592,26 +592,26 @@ immutable tzWithoutDST = new SimpleTimeZone(utcOffset);
                   invalid. $(STD_DATETIME) in general tries to avoid having any
                   invalid states for any of its types. It's intended that
                   creating such values be impossible.))
-        $(TR $(TD $(XREF date, Date))
+        $(TR $(TD $(D Date))
              $(TD $(SYSTIME)))
-        $(TR $(TD $(XREF date, Date).$(D year))
+        $(TR $(TD $(D Date).$(D year))
              $(TD $(SYSTIME).$(D year)))
-        $(TR $(TD $(XREF date, Date).$(D month))
+        $(TR $(TD $(D Date).$(D month))
              $(TD $(SYSTIME).$(D month)))
-        $(TR $(TD $(XREF date, Date).$(D day))
+        $(TR $(TD $(D Date).$(D day))
              $(TD $(SYSTIME).$(D day)))
-        $(TR $(TD $(XREF date, Date).$(D hour))
+        $(TR $(TD $(D Date).$(D hour))
              $(TD $(SYSTIME).$(D hour)))
-        $(TR $(TD $(XREF date, Date).$(D minute))
+        $(TR $(TD $(D Date).$(D minute))
              $(TD $(SYSTIME).$(D minute)))
-        $(TR $(TD $(XREF date, Date).$(D second))
+        $(TR $(TD $(D Date).$(D second))
              $(TD $(SYSTIME).$(D second)))
-        $(TR $(TD $(XREF date, Date).$(D ms))
+        $(TR $(TD $(D Date).$(D ms))
              $(TD $(SYSTIME).$(D fracSec.msecs)))
-        $(TR $(TD $(XREF date, Date).$(D weekday))
+        $(TR $(TD $(D Date).$(D weekday))
              $(TD $(SYSTIME).$(D dayOfWeek) - but note that the values are off
                   by 1.))
-        $(TR $(TD $(XREF date, Date).$(D tzcorrection))
+        $(TR $(TD $(D Date).$(D tzcorrection))
              $(TD
 --------------------
 immutable tz = sysTime.timezone;
@@ -621,40 +621,40 @@ auto tzcorrection = convert!("hnsecs", "minutes")(diff);
 However, it looks like $(D tzcorrection) is broken, so you're probably not using
 it in your code anyway.
               ))
-        $(TR $(TD $(XREF date, Date).$(D parse))
+        $(TR $(TD $(D Date).$(D parse))
              $(TD $(SYSTIME).$(D fromISOString),
                   $(SYSTIME).$(D fromISOExtString), and
                   $(SYSTIME).$(D fromSimpleString), but the formats of the
-                  strings differ from what $(FULL_XREF date, Date).$(D parse)
+                  strings differ from what $(D std.date.Date).$(D parse)
                   accepts.))
-        $(TR $(TD $(XREF date, ticksPerSecond))
+        $(TR $(TD $(D ticksPerSecond))
              $(TD There is no equivalent. It's only relevant to $(D d_time).))
-        $(TR $(TD $(XREF date, toISO8601YearWeek))
+        $(TR $(TD $(D toISO8601YearWeek))
              $(TD $(SYSTIME).$(D isoWeek)))
-        $(TR $(TD $(XREF date, hourFromTime))
+        $(TR $(TD $(D hourFromTime))
              $(TD $(SYSTIME).$(D hour)))
-        $(TR $(TD $(XREF date, minFromTime))
+        $(TR $(TD $(D minFromTime))
              $(TD $(SYSTIME).$(D minute)))
-        $(TR $(TD $(XREF date, secFromTime))
+        $(TR $(TD $(D secFromTime))
              $(TD $(SYSTIME).$(D second)))
-        $(TR $(TD $(XREF date, daysInYear))
+        $(TR $(TD $(D daysInYear))
              $(TD $(D sysTime.isLeapYear ? 366 : 365)))
-        $(TR $(TD $(XREF date, dayFromYear))
+        $(TR $(TD $(D dayFromYear))
              $(TD $(D (sysTime - SysTime(Date(1970, 1, 1), UTC())).total!"days"())))
-        $(TR $(TD $(XREF date, yearFromTime))
+        $(TR $(TD $(D yearFromTime))
              $(TD $(SYSTIME).$(D year)))
-        $(TR $(TD $(XREF date, inLeapYear))
+        $(TR $(TD $(D inLeapYear))
              $(TD $(SYSTIME).$(D isLeapYear)))
-        $(TR $(TD $(XREF date, monthFromTime))
+        $(TR $(TD $(D monthFromTime))
              $(TD $(SYSTIME).$(D month) - but note that the values are off by
                   1.))
-        $(TR $(TD $(XREF date, dateFromTime))
+        $(TR $(TD $(D dateFromTime))
              $(TD $(SYSTIME).$(D day)))
-        $(TR $(TD $(XREF date, weekDay))
+        $(TR $(TD $(D weekDay))
              $(TD $(SYSTIME).$(D dayOfWeek)))
-        $(TR $(TD $(XREF date, UTCtoLocalTime))
+        $(TR $(TD $(D UTCtoLocalTime))
              $(TD $(SYSTIME).$(D toUTC)))
-        $(TR $(TD $(XREF date, dateFromNthWeekdayOfMonth))
+        $(TR $(TD $(D dateFromNthWeekdayOfMonth))
              $(TD
 --------------------
 //There is no equivalent. This is a possible implementation.
@@ -685,52 +685,52 @@ int dateFromNthWeekdayOfMonth(int year, Month month,
 }
 --------------------
               ))
-        $(TR $(TD $(XREF date, daysInMonth))
+        $(TR $(TD $(D daysInMonth))
              $(TD $(SYSTIME).$(D endOfMonthDay); Actually, this name is overly
                   easy to confuse with $(D endOfMonth) - which returns a
                   $(SYSTIME) of the last day of the month. I will probably
                   rename this to $(D daysInMonth). But if I do, it won't be
                   until the next release (2.054), and this name will be around
                   until it's gone through the full deprecation cycle.))
-        $(TR $(TD $(XREF date, UTCtoString))
+        $(TR $(TD $(D UTCtoString))
              $(TD There is no equivalent. You could probably parse and recombine
                   $(D core.stdc.time.ctime) and
                   $(SYSTIME).$(D toISOExtString) to create it though. However,
                   this function appears to be fairly buggy in the first place,
                   so odds are that your code isn't using it anyway.))
-        $(TR $(TD $(XREF date, toUTCString))
+        $(TR $(TD $(D toUTCString))
              $(TD There is no equivalent. You could probably parse and recombine
                   $(D core.stdc.time.ctime) and
                   $(SYSTIME).$(D toISOExtString) to create it though.))
-        $(TR $(TD $(XREF date, toDateString))
+        $(TR $(TD $(D toDateString))
              $(TD There is no equivalent. You could probably parse and recombine
                   $(D core.stdc.time.ctime) and
                   $(SYSTIME).$(D toISOExtString) to create it though. However,
                   this function appears to be fairly buggy in the first place,
                   so odds are that your code isn't using it anyway.))
-        $(TR $(TD $(XREF date, toTimeString))
+        $(TR $(TD $(D toTimeString))
              $(TD There is no equivalent. You could probably parse and recombine
                   $(D core.stdc.time.ctime) and
                   $(SYSTIME).$(D toISOExtString) to create it though. However,
                   this function appears to be fairly buggy in the first place,
                   so odds are that your code isn't using it anyway.))
-        $(TR $(TD $(XREF date, parse).$(D parse))
+        $(TR $(TD $(D parse).$(D parse))
              $(TD $(SYSTIME).$(D fromISOString),
                   $(SYSTIME).$(D fromISOExtString), and
                   $(SYSTIME).$(D fromSimpleString), but the formats of the
-                  strings differ from what $(FULL_XREF date, parse) accepts.))
-        $(TR $(TD $(XREF date, getUTCtime))
+                  strings differ from what $(D std.date.parse) accepts.))
+        $(TR $(TD $(D getUTCtime))
              $(TD $(D Clock.currTime(UTC())) if you want the $(SYSTIME) to have
                   its time zone be $(UTC). More likely though, you'll just use
                   $(D Clock.currTime()). Its internal time is in UTC
                   regardless.))
-        $(TR $(TD $(XREF date, DosFileTime))
+        $(TR $(TD $(D DosFileTime))
              $(TD $(XREF datetime, DosFileTime)))
-        $(TR $(TD $(XREF date, toDtime))
+        $(TR $(TD $(D toDtime))
              $(TD $(XREF datetime, DosFileTimeToSysTime)))
-        $(TR $(TD $(XREF date, toDosFileTime))
+        $(TR $(TD $(D toDosFileTime))
              $(TD $(XREF datetime, SysTimeToDosFileTime)))
-        $(TR $(TD $(XREF date, benchmark))
+        $(TR $(TD $(D benchmark))
              $(TD $(XREF datetime, benchmark)))
     )
 
@@ -770,7 +770,7 @@ Macros:
     XREF = <a href="phobos/std_$1.html#$2">$(D $2)</a>
     CORE_TIME=<a href="phobos/core_time.html">$(D core.time)</a>
     STD_DATETIME=<a href="phobos/std_datetime.html">$(D std.datetime)</a>
-    STD_DATE=<a href="phobos/std_date.html">$(D std.date)</a>
+    STD_DATE=$(D std.date)
     STD_FILE=<a href="phobos/std_file.html">$(D std.file)</a>
 
     DATE=$(XREF datetime, Date)
