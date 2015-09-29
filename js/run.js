@@ -50,8 +50,6 @@ your example to have deafault standard input or default standard arguments.
 
 */
 
-
-
 /**
 Taken from http://www.webtoolkit.info/javascript-md5.html
 */
@@ -278,25 +276,43 @@ function showHideAnswer(zis)
     }
 }
 
+function safeVar(data, path)
+{
+    var p = path.split(".");
+    var res = null;
+
+    try
+    {
+        res = data[p[0]][p[1]];
+        if (typeof res == "object")
+            res = "";
+    }
+    catch (e)
+    {
+        return "";
+    }
+
+    return res;
+}
+
 function parseOutput(data, o, oTitle)
 {
-    var xml = $(data);
-    if (xml == null || xml.find("response") == null)
+    if (typeof data.compilation == "undefined")
     {
         o.text("Temporarily unavaible");
         return;
     }
 
     var output = "";
-    var cout = xml.find("response").find("compilation").find("stdout").text();
-    var stdout = xml.find("response").find("runtime").find("stdout").text();
-    var stderr = xml.find("response").find("runtime").find("stderr").text();
-    var ctime = parseInt(xml.find("response").find("compilation").find("time").text());
-    var rtime = parseInt(xml.find("response").find("runtime").find("time").text());
-    var cstatus = parseInt(xml.find("response").find("compilation").find("status").text());
-    var rstatus = parseInt(xml.find("response").find("runtime").find("status").text());
-    var cerr = xml.find("response").find("compilation").find("err").text();
-    var rerr = xml.find("response").find("runtime").find("err").text();
+    var cout = safeVar(data, "compilation.stdout");
+    var stdout = safeVar(data, "runtime.stdout");
+    var stderr = safeVar(data, "runtime.stderr");
+    var ctime = parseInt(safeVar(data, "compilation.time"));
+    var rtime = parseInt(safeVar(data, "runtime.time"));
+    var cstatus = parseInt(safeVar(data, "compilation.status"));
+    var rstatus = parseInt(safeVar(data, "runtime.status"));
+    var cerr = safeVar(data, "compilation.err");
+    var rerr = safeVar(data, "runtime.err");
 
     if (cstatus != 0)
     {
@@ -338,7 +354,7 @@ $(document).ready(function()
     var currentPage = $(location).attr('pathname');
     
     if (currentPage != "/" && currentPage != "/index.html")
-        return; // temporary workaround
+        return;
 
     $('pre[class~=d_code]').each(function(index)
     {
@@ -360,8 +376,6 @@ $(document).ready(function()
             if (elements[1] != null)
                 args = elements[1];                
         }
-        // else
-            //console.log(md5sum + " - " + $(this).text().substr(0, 100));
 
         currentExample.replaceWith(
             '<div class="d_code"><pre class="d_code">'+orig+'</pre></div>'
@@ -493,22 +507,27 @@ $(document).ready(function()
            
             $.ajax({
                 type: 'POST',
-                url: "/process.php",
-                dataType: "xml",
+                url: "http://dpaste.dzfl.pl/request/",
+                dataType: "json",
                 data: 
                 {
-                    'code' : encodeURIComponent(editor.getValue()), 
-                    'stdin' : encodeURIComponent(stdin.val()), 
-                    'args': encodeURIComponent(args.val())
+                    'code' : editor.getValue(),
+                    'stdin' : stdin.val(),
+                    'args': args.val()
                 },
                 success: function(data) 
                 {
                     parseOutput(data, output, outputTitle);
                     runBtn.attr("disabled", false);
                 },
-                error: function() 
+                error: function(jqXHR, textStatus, errorThrown )
                 {
                     output.html("Temporarily unavailable");
+                    if (typeof console != "undefined")
+                    {
+                        console.log(textStatus + ": " + errorThrown);
+                    }
+
                     runBtn.attr("disabled", false);
                 }
             });
