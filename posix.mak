@@ -37,7 +37,8 @@ STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODE
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
 	std.c. std.algorithm.internal std.internal. std.regex.internal. std.typelist		\
-	std.windows. etc.linux.memoryerror std.stream std.cstream std.socketstream)
+	std.windows. etc.linux.memoryerror std.stream std.cstream std.socketstream		\
+	std.metastrings)
 
 MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE) --ex=core.stdc.
 
@@ -111,12 +112,14 @@ endif
 # Documents
 
 DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
-STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST})
-STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease)
+STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
+STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
+CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 
 IMAGES=favicon.ico $(addprefix images/, \
 	d002.ico \
-	$(addsuffix .svg, icon_minus icon_plus dlogo faster-aa-1 faster-gc-1) \
+	$(addprefix compiler-, dmd.png gdc.svg ldc.png) \
+	$(addsuffix .svg, icon_minus icon_plus hamburger dlogo faster-aa-1 faster-gc-1) \
 	$(addsuffix .png, apple_logo centos_logo d3 debian_logo dlogo \
 		fedora_logo freebsd_logo opensuse_logo ubuntu_logo windows_logo \
 		pattern github-ribbon \
@@ -137,7 +140,7 @@ PRETTIFY=prettify/prettify.css prettify/prettify.js
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
 language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
-process.php d-keyring.gpg
+d-keyring.gpg
 
 # Language spec root filenames. They have extension .dd in the source
 # and .html in the generated HTML. These are also used for the mobi
@@ -150,12 +153,14 @@ SPEC_ROOT=spec intro lex grammar module declaration type property attribute prag
 	simd
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
+CHANGELOG_FILES=$(shell ls changelog/*.dd | sed s/\\.dd$$// )
+
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
 PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements ascii-table		\
-	bugstats.php builtin changelog code_coverage concepts const-faq COM	\
-	comparison cpptod ctod D1toD2 d-array-article d-floating-point		\
+	bugstats.php builtin $(CHANGELOG_FILES) code_coverage concepts const-faq COM	\
+	comparison cpptod ctarguments ctod D1toD2 d-array-article d-floating-point		\
 	deprecate dll dll-linux dmd-freebsd dmd-linux dmd-osx dmd-windows	\
 	download dstyle exception-safe faq features2 forum-template gpg_keys getstarted glossary gsoc2011 \
 	gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index intro \
@@ -172,6 +177,9 @@ $(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT) $(PRETTIFY))
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
 # Pattern rulez
+
+$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
@@ -233,11 +241,11 @@ ${GENERATED}/${LATEST}.ddoc :
 	mkdir -p $(dir $@)
 	echo "LATEST=${LATEST}" >$@
 
-${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR)-$(LATEST)/.cloned $(PHOBOS_DIR)-$(LATEST)/.cloned
+${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR)-$(LATEST) $(PHOBOS_DIR)-$(LATEST)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR)-$(LATEST) $(PHOBOS_DIR)-$(LATEST) $(MOD_EXCLUDES_RELEASE) >$@
 
-${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR)/.cloned $(PHOBOS_DIR)/.cloned
+${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(MOD_EXCLUDES_PRERELEASE) >$@
 
@@ -315,44 +323,41 @@ dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
 # Git rules
 ################################################################################
 
-../%-${LATEST}/.cloned :
-	[ -d $(@D) ] || git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$* $(@D)/
-	touch $@
+../%-${LATEST} :
+	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$* $@
 
-../%-${DUB_VER}/.cloned :
-	[ -d $(@D) ] || git clone -b v${DUB_VER} --depth=1 ${GIT_HOME}/$* $(@D)/
-	touch $@
+../%-${DUB_VER} :
+	git clone --depth=1 -b v${DUB_VER} ${GIT_HOME}/$* $@
 
-../%/.cloned :
-	[ -d $(@D) ] || git clone --depth=1 ${GIT_HOME}/$* $(@D)/
-	touch $@
+${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} :
+	git clone --depth=1 ${GIT_HOME}/$(@F) $@
 
 ################################################################################
 # dmd compiler, latest released build and current build
 ################################################################################
 
-$(DMD) : ${DMD_DIR}/.cloned
+$(DMD) : ${DMD_DIR}
 	${MAKE} --directory=${DMD_DIR}/src -f posix.mak -j 4
 
-$(DMD_REL) : ${DMD_DIR}-${LATEST}/.cloned
+$(DMD_REL) : ${DMD_DIR}-${LATEST}
 	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak -j 4
 
 ################################################################################
 # druntime, latest released build and current build
 ################################################################################
 
-druntime-prerelease : ${DRUNTIME_DIR}/.cloned $(DMD) $(STD_DDOC_PRE)
+druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRE)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
-druntime-release : ${DRUNTIME_DIR}-${LATEST}/.cloned $(DMD_REL) $(STD_DDOC)
+druntime-release : ${DRUNTIME_DIR}-${LATEST} $(DMD_REL) $(STD_DDOC)
 	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak target doc \
 	  DMD=$(DMD_REL) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC))"
 
-druntime-prerelease-verbatim : ${DRUNTIME_DIR}/.cloned \
+druntime-prerelease-verbatim : ${DRUNTIME_DIR} \
 		${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
@@ -368,12 +373,12 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_DIR}/.cloned $(STD_DDOC_PRE) druntime-prerelease
+phobos-prerelease : ${PHOBOS_DIR} $(STD_DDOC_PRE) druntime-prerelease
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
-phobos-release : ${PHOBOS_DIR}-${LATEST}/.cloned $(DMD_REL) $(STD_DDOC) \
+phobos-release : ${PHOBOS_DIR}-${LATEST} $(DMD_REL) $(STD_DDOC) \
 		druntime-release
 	${MAKE} --directory=${PHOBOS_DIR}-${LATEST} -f posix.mak -j 4 \
 	  html \
@@ -382,7 +387,7 @@ phobos-release : ${PHOBOS_DIR}-${LATEST}/.cloned $(DMD_REL) $(STD_DDOC) \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC))"
 
-phobos-prerelease-verbatim : ${PHOBOS_DIR}/.cloned ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
+phobos-prerelease-verbatim : ${PHOBOS_DIR} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
@@ -423,8 +428,8 @@ ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess : dpl_prerelease_htaccess
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
-		${PHOBOS_DIR}-${LATEST}/.cloned | dpl-docs
+docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST} \
+		${PHOBOS_DIR}-${LATEST} | dpl-docs
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
@@ -435,8 +440,8 @@ docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST}/.cloned \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
 	rm .release-files.txt .release-dummy.html
 
-docs-prerelease.json : ${DMD} ${DRUNTIME_DIR}/.cloned \
-		${PHOBOS_DIR}/.cloned | dpl-docs
+docs-prerelease.json : ${DMD} ${DRUNTIME_DIR} \
+		${PHOBOS_DIR} | dpl-docs
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 	  -e /unittest/d > .prerelease-files.txt
 	find ${PHOBOS_DIR} -name '*.d' | sed -e /unittest.d/d -e /format/d \
@@ -464,7 +469,7 @@ ${STABLE_DMD}:
 	TMPFILE=$$(mktemp deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > $${TMPFILE}.zip && \
 		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
 
-${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
+${DUB}: ${DUB_DIR} ${STABLE_DMD}
 	cd ${DUB_DIR} && DC="$(abspath ${STABLE_DMD}) -conf=$(abspath ${STABLE_DMD_CONF})" ./build.sh
 
 ################################################################################
@@ -473,3 +478,5 @@ ${DUB}: ${DUB_DIR}/.cloned ${STABLE_DMD}
 
 d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags
+
+.DELETE_ON_ERROR: # GNU Make directive (delete output files on error)

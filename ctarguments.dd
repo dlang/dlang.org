@@ -1,0 +1,219 @@
+Ddoc
+
+$(D_S Compile-time Argument Lists,
+
+    $(P Compile-time lists is an important metaprogramming concept that comes naturally
+        from D support for $(LINK2 variadic-function-templates.html, variadic templates). They
+        allow a programmer to operate on types, symbols and expressions enabling the ability to define
+        compile-time algorithms that operate on types, symbols and expressions.
+    )
+
+    $(P For historical reasons those sometimes can be called tuples in documentation or compiler
+        internals but don't get confused : this doesn't have much in common with tuples that
+        commonly exist in other languages. Sequences of values of different types that can be
+        returned from functions are provided by $(LINK2 phobos/std_typecons.html#.Tuple, std.typecons.Tuple).
+        Using term "tuple" to mean compile-time lists is discouraged to avoid confusion, and if encountered 
+        should result in a $(LINK2 http://issues.dlang.org, documentation bug report).
+    )
+
+    $(P Consider this simple snippet:)
+
+    ---
+    template Variadic(T...) { /* ... */ }
+    ---
+
+    $(P `T` here is variadic $(LINK2 template.html#TemplateArgumentList, template argument list)
+        which is a core language feature. It has its own special semantics,
+        and, from the programmer's point of view, is most similar to an array of compile-time entities - types,
+        symbols (names) and expressions (values). One can check the length of this list
+        and access any individual element:
+    )
+
+    ---
+    template Variadic(T...)
+    {
+        static assert (T.length > 1);
+        pragma(msg, T[0]);
+        pragma(msg, T[1]);
+    }
+
+    alias Dummy = Variadic!(int, 42);
+    // prints during compilation:
+    // int
+    // 42
+    ---
+
+    $(P However, the language itself does not provide any means to define such lists outside of
+        a template parameter declaration. Instead, there is a
+        $(LINK2 phobos/std_meta.html, simple utility) provided by the D standard
+        library:
+    )
+
+    ---
+    alias AliasSeq(T...) = T;
+    ---
+
+    $(P All it does is give a specific variadic argument list an externally accessible name so
+        that it can be worked with in any other context:
+    )
+
+    ---
+    import std.meta;
+    // can alias to some other name
+    alias Name = AliasSeq!(int, 42);
+    pragma(msg, Name[0]);
+    pragma(msg, Name[1]);
+    // or work with a list directly
+    pragma(msg, AliasSeq!("aaa", 0, double)[2]);
+    ---
+
+$(H3 Available operations)
+
+    $(H4 Checking the length)
+
+        ---
+        import std.meta;
+        static assert (AliasSeq!(1, 2, 3, 4).length == 4);
+        ---
+
+    $(H4 Indexing and slicing)
+
+        $(P Indexes must be known at compile-time)
+
+        ---
+        import std.meta;
+        alias Numbers = AliasSeq!(1, 2, 3, 4);
+        static assert (Numbers[1] == 2);
+        alias SubNumbers = Numbers[1 .. $];
+        static assert (SubNumbers[0] == 2);
+        ---
+
+    $(H4 Assignment)
+
+        $(P Works only if the list element is a symbol that refers to a mutable variable)
+
+        ---
+        import std.meta;
+
+        void main()
+        {
+            int x;
+            alias List = AliasSeq!(10, x);
+            List[1] = 42;
+            assert (x == 42);
+            // List[0] = 42; // won't compile, can't assign to a constant
+        }
+        ---
+
+    $(H4 Loops)
+
+        $(P D's $(LINK2 statement.html#ForeachStatement, foreach statement) has special
+            semantics when iterating over compile-time lists. It repeats the body of the loop
+            for each of the list elements, with the loop iteration "variable" becoming an alias
+            for each compile-time list element in turn.
+        )
+
+        ---
+        import std.meta;
+
+        void main()
+        {
+            foreach (sym; AliasSeq!(int, "literal", main))
+            {
+                static if (is(sym))
+                    pragma (msg, sym);
+                else
+                    pragma (msg, typeof(sym));
+            }
+        }
+
+        /* Prints:
+
+        int
+        string
+        void()
+        */
+        ---
+
+$(H3 Auto-expansion)
+
+    $(P One less obvious property of compile-time argument lists is that when used
+        as an argument to a function or template, they are automatically treated as a list
+        of comma-separated arguments:
+    )
+
+    ---
+    import std.meta;
+
+    template Print0(T...)
+    {
+        pragma(msg, T[0]);
+    }
+
+    alias Dummy = Print0!(AliasSeq!(int, double));
+    ---
+
+    $(P This will only print `int` during compilation because the last line gets rewritten
+        as `alias Dummy = Print0!(int, double)`. If auto-expansion didn't happen,
+        `AliasSeq!(int, double)` would be printed instead. This is an inherent part of
+        the language semantics for variadic lists, and thus also preserved by `AliasSeq`.
+    )
+
+$(H3 Homogenous lists)
+
+    $(P An `AliasSeq` that consist of only type or expression (value) elements are
+        commonly called "type lists" or "expression lists" respectively. The concept of
+        a "symbol list" is rarely mentioned explicitly but fits the same pattern.
+    )
+
+    $(P It is possible to use homogenous type lists in declarations:)
+
+    ---
+    import std.meta;
+    alias Params = AliasSeq!(int, double, string);
+    void foo(Params); // void foo(int, double, string);
+    ---
+
+    $(P D supports a special variable declaration syntax where a type list acts as a type:)
+
+    ---
+    import std.meta;
+
+    void foo()
+    {
+        AliasSeq!(int, double, string) variables;
+        variables[0] = 42;
+        variables[1] = 42.0;
+        variables[2] = "just a normal variable";
+    }
+
+    /* The compiler will rewrite such a declaration to something like this:
+
+    int __var1;
+    double __var2;
+    string __var3;
+    alias variables = AliasSeq!(__var1, __var2, __var3);
+    */
+    ---
+
+    $(P This is also what happens when declaring a variadic template function:)
+
+    ---
+    void foo(T...)(T args)
+    {
+        // 'args' here is a compile-time list of symbols that
+        // refer to underlying compiler-generated arguments
+    }
+    ---
+
+    $(P It is possible to use expression lists with values of the same type to declare array literals:)
+
+    ---
+    import std.meta;
+    static assert ([ AliasSeq!(1, 2, 3) ] == [ 1, 2, 3 ]);
+    ---
+
+)
+
+Macros:
+    TITLE=Compile-time Argument Lists

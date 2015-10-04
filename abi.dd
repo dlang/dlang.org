@@ -381,10 +381,9 @@ $(SECTION3 Type Mangling,
 
 $(GRAMMAR
 $(GNAME Type):
-    $(GLINK Shared)
-    $(GLINK Const)
-    $(GLINK Immutable)
-    $(GLINK Wild)
+    $(GLINK TypeModifiers)$(OPT) $(GLINK TypeX)
+
+$(GNAME TypeX):
     $(GLINK TypeArray)
     $(GLINK TypeStaticArray)
     $(GLINK TypeAssocArray)
@@ -423,17 +422,27 @@ $(GNAME Type):
     $(GLINK TypeVector)
     $(GLINK Internal)
 
+$(GNAME TypeModifiers)
+    $(GLINK Const)
+    $(GLINK Wild)
+    $(GLINK Wild) $(GLINK Const)
+    $(GLINK Shared)
+    $(GLINK Shared) $(GLINK Const)
+    $(GLINK Shared) $(GLINK Wild)
+    $(GLINK Shared) $(GLINK Wild) $(GLINK Const)
+    $(GLINK Immutable)
+
 $(GNAME Shared):
-    $(B O) $(GLINK Type)
+    $(B O)
 
 $(GNAME Const):
-    $(B x) $(GLINK Type)
+    $(B x)
 
 $(GNAME Immutable):
-    $(B y) $(GLINK Type)
+    $(B y)
 
 $(GNAME Wild):
-    $(B Ng) $(GLINK Type)
+    $(B Ng)
 
 $(GNAME TypeArray):
     $(B A) $(GLINK Type)
@@ -530,7 +539,7 @@ $(GNAME TypeTypedef):
     $(B T) $(GLINK QualifiedName)
 
 $(GNAME TypeDelegate):
-    $(B D) $(GLINK TypeFunction)
+    $(B D) $(GLINK TypeModifiers)$(OPT) $(GLINK TypeFunction)
 
 $(GNAME TypeVoid):
     $(B v)
@@ -950,36 +959,6 @@ $(SECTION3 $(LNAME2 codeview, Codeview Debugger Extensions),
 	)
 )
 
-$(SECTION3 $(LNAME2 dwarf, Dwarf Debugger Extensions),
-	$(P The following leaf types are added:)
-
-	$(TABLE2 Dwarf Extensions for D,
-	$(THEAD D type, ID, Value, Format)
-	$(TROW $(ARGS dynamic array)
-	, $(ARGS $(D DW_TAG_darray_type))
-	, $(ARGS 0x41)
-	, $(ARGS $(D DW_AT_type) is element type))
-	$(TROW
-	$(ARGS associative array)
-	, $(ARGS $(D DW_TAG_aarray_type))
-	, $(ARGS 0x42)
-	, $(ARGS $(D DW_AT_type) is element type, $(D DW_AT_containing_type) key type))
-	$(TROW $(ARGS delegate)
-	, $(ARGS $(D DW_TAG_delegate_type))
-	, $(ARGS 0x43)
-	, $(ARGS $(D DW_AT_type) is function type, $(D DW_AT_containing_type) is $(SINGLEQUOTE this) type)))
-
-	$(P These extensions can be pretty-printed
-	by $(LINK2 http://www.digitalmars.com/ctg/dumpobj.html, dumpobj).
-
-	$(P The $(LINK2 https://zerobugs.codeplex.com, ZeroBUGS)
-	debugger supports them.)
-	)
-
-	$(P Note that these Dwarf extensions have been removed as they conflict with
-	recent gcc additions.
-	)
-)
 )
 )
 

@@ -49,27 +49,23 @@
 			});
 		}
 
-		$('<div>')
-			.attr('id', 'mobile-hamburger')
-			.attr('class', 'fa fa-bars')
-			.click(function() {
-				var duration = 500;
-				$("#navigation").addClass('open');
-				var $cancel = $('<div>')
-					.attr('id', 'navigation-cancel')
-					.click(function() {
-						$("#navigation").removeClass('open');
-						$cancel.fadeOut(duration, function() {
-							$cancel.remove();
-						});
-						$cancel.off();
-					})
-					.hide()
-					.appendTo('body')
-					.fadeIn(500)
-				;
-			})
-			.prependTo('#header');
+		$('#mobile-hamburger').click(function() {
+			var duration = 500;
+			$("#navigation").addClass('open');
+			var $cancel = $('<div>')
+				.attr('id', 'navigation-cancel')
+				.click(function() {
+					$("#navigation").removeClass('open');
+					$cancel.fadeOut(duration, function() {
+						$cancel.remove();
+					});
+					$cancel.off();
+				})
+				.hide()
+				.appendTo('body')
+				.fadeIn(500)
+			;
+		});
 
 		// [your code here] rotation for index.html
 		var $examples = $('.your-code-here-extra > pre');
