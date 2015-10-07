@@ -58,28 +58,49 @@ $(TABLEC download-compilers,
   )
 )
 
-$(H2 $(LNAME2 dmd,DMD $(DMDV2)))
-$(LINK2 changelog/$(DMDV2).html, Changelog)
+$(DIVC download_channels,
+  $(DIVC download_channel,
+    $(H2 $(LNAME2 dmd,DMD $(DMDV2)))
+    $(LINK2 changelog/$(DMDV2).html, Changelog)
 
-$(BR)$(BR)
+    $(BR)$(BR)
 
-$(DOWNLOAD $(WINDOWS), Windows, $(SBTN $(WINEXE), exe) $(SBTN $(ARCH windows, 7z), 7z))
+    $(DOWNLOAD $(WINDOWS), Windows, $(SBTN $(WINEXE), exe) $(SBTN $(ARCH windows, 7z), 7z))
 
-$(DOWNLOAD $(OSX), OS X, $(SBTN $(OSXDMG), dmg) $(SBTN $(ARCH osx, tar.xz), tar.xz))
+    $(DOWNLOAD $(OSX), OS X, $(SBTN $(OSXDMG), dmg) $(SBTN $(ARCH osx, tar.xz), tar.xz))
 
-$(DOWNLOAD $(UBUNTU) &nbsp; $(DEBIAN), Ubuntu/Debian, $(SBTN $(DEB32), i386) $(SBTN $(DEB64), x86_64) $(SBTN $(ARCH linux, tar.xz), tar.xz))
+    $(DOWNLOAD $(UBUNTU) &nbsp; $(DEBIAN), Ubuntu/Debian, $(SBTN $(DEB32), i386) $(SBTN $(DEB64), x86_64) $(SBTN $(ARCH linux, tar.xz), tar.xz))
 
-$(DOWNLOAD $(FEDORA) &nbsp; $(CENTOS), Fedora/CentOS, $(SBTN $(RPM32), i386) $(SBTN $(RPM64), x86_64) $(SBTN $(ARCH linux, tar.xz), tar.xz))
+    $(DOWNLOAD $(FEDORA) &nbsp; $(CENTOS), Fedora/CentOS, $(SBTN $(RPM32), i386) $(SBTN $(RPM64), x86_64) $(SBTN $(ARCH linux, tar.xz), tar.xz))
 
-$(DOWNLOAD $(OPENSUSE), openSUSE, $(SBTN $(SUSE32), i386) $(SBTN $(SUSE64), x86_64) $(SBTN $(ARCH linux, tar.xz), tar.xz))
+    $(DOWNLOAD $(OPENSUSE), openSUSE, $(SBTN $(SUSE32), i386) $(SBTN $(SUSE64), x86_64) $(SBTN $(ARCH linux, tar.xz), tar.xz))
 
-$(DOWNLOAD $(FREEBSD), FreeBSD, $(SBTN $(FBSD32), i386) $(SBTN $(FBSD64), x86_64))
+    $(DOWNLOAD $(FREEBSD), FreeBSD, $(SBTN $(FBSD32), i386) $(SBTN $(FBSD64), x86_64))
+  )
+
+  $(BETA
+  $(DIVC download_channel,
+    $(H2 $(LNAME2 dmd_beta,DMD Beta $(B_DMDV2)-$(B_SUFFIX)))
+    $(LINK2 changelog/$(B_DMDV2).html, Changelog)
+
+    $(BR)$(BR)
+
+    $(DOWNLOAD $(WINDOWS), Windows, $(SBTN $(B_WINEXE), exe) $(SBTN $(B_ARCH windows, 7z), 7z))
+
+    $(DOWNLOAD $(OSX), OS X, $(SBTN $(B_OSXDMG), dmg) $(SBTN $(B_ARCH osx, tar.xz), tar.xz))
+
+    $(DOWNLOAD $(UBUNTU) &nbsp; $(DEBIAN), Ubuntu/Debian, $(SBTN $(B_DEB32), i386) $(SBTN $(B_DEB64), x86_64) $(SBTN $(B_ARCH linux, tar.xz), tar.xz))
+
+    $(DOWNLOAD $(FEDORA) &nbsp; $(CENTOS), Fedora/CentOS, $(SBTN $(B_RPM32), i386) $(SBTN $(B_RPM64), x86_64) $(SBTN $(B_ARCH linux, tar.xz), tar.xz))
+
+    $(DOWNLOAD $(OPENSUSE), openSUSE, $(SBTN $(B_SUSE32), i386) $(SBTN $(B_SUSE64), x86_64) $(SBTN $(B_ARCH linux, tar.xz), tar.xz))
+
+    $(DOWNLOAD $(FREEBSD), FreeBSD, $(SBTN $(B_FBSD32), i386) $(SBTN $(B_FBSD64), x86_64))
+    )
+  )
+)
 
 $(H3
-    $(COMMENT
-        $(LINK2 http://downloads.dlang.org/pre-releases/2.x/2.068.1/, Beta 2.068.1-b2)
-        $(BR)
-    )
     $(LINK2 http://downloads.dlang.org, Release Archive)
 )
 $(LINK2 gpg_keys.html, GPG keys)
@@ -103,6 +124,11 @@ Macros:
 
     DMDV2=$(LATEST)
 
+    _=BETA=$(COMMENT $0)
+    BETA=$0
+    B_DMDV2=2.069.0
+    B_SUFFIX=b1
+
 	DEB32=$(DLSITE dmd_$(DMDV2)-0_i386.deb)
 	DEB64=$(DLSITE dmd_$(DMDV2)-0_amd64.deb)
 	RPM32=$(DLSITE dmd-$(DMDV2)-0.fedora.i386.rpm)
@@ -114,6 +140,18 @@ Macros:
     OSXDMG=$(DLSITE dmd.$(DMDV2).dmg)
     WINEXE=$(DLSITE dmd-$(DMDV2).exe)
     ARCH=$(DLSITE dmd.$(DMDV2).$1.$2)
+
+    B_DEB32=$(B_DLSITE dmd_$(B_DMDV2)~$(B_SUFFIX)-0_i386.deb)
+    B_DEB64=$(B_DLSITE dmd_$(B_DMDV2)~$(B_SUFFIX)-0_amd64.deb)
+    B_RPM32=$(B_DLSITE dmd-$(B_DMDV2)~$(B_SUFFIX)-0.fedora.i386.rpm)
+    B_RPM64=$(B_DLSITE dmd-$(B_DMDV2)~$(B_SUFFIX)-0.fedora.x86_64.rpm)
+    B_SUSE32=$(B_DLSITE dmd-$(B_DMDV2)~$(B_SUFFIX)-0.openSUSE.i386.rpm)
+    B_SUSE64=$(B_DLSITE dmd-$(B_DMDV2)~$(B_SUFFIX)-0.openSUSE.x86_64.rpm)
+    B_FBSD32=$(B_DLSITE dmd.$(B_DMDV2)-$(B_SUFFIX).freebsd-32.tar.xz)
+    B_FBSD64=$(B_DLSITE dmd.$(B_DMDV2)-$(B_SUFFIX).freebsd-64.tar.xz)
+    B_OSXDMG=$(B_DLSITE dmd.$(B_DMDV2)-$(B_SUFFIX).dmg)
+    B_WINEXE=$(B_DLSITE dmd-$(B_DMDV2)-$(B_SUFFIX).exe)
+    B_ARCH=$(B_DLSITE dmd.$(B_DMDV2)-$(B_SUFFIX).$1.$2)
 
 	LOGO=<img src="images/$1_logo.png" alt="$2">
 	CENTOS=$(LOGO centos, CentOS)
@@ -130,6 +168,7 @@ Macros:
     BTN=<a href="$1" class="btn">$+</a>
     H3I=<h3 class="download">$0</h3>
     DLSITE=http://downloads.dlang.org/releases/2.x/$(DMDV2)/$0
+    B_DLSITE=http://downloads.dlang.org/pre-releases/2.x/$(B_DMDV2)/$0
     DOWNLOAD =
     $(DIV,
         $(DIVC download_image, $1)
