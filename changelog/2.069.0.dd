@@ -1,0 +1,408 @@
+Ddoc
+
+$(CHANGELOG_NAV_LAST 2.068.2)
+
+$(BETA_VERSION Oct 18, 2015, =================================================,
+
+$(BUGSTITLE Compiler Changes,
+$(LI $(RELATIVE_LINK2 objective-c-support, Basic support for Objective-C.))
+$(LI $(RELATIVE_LINK2 property-switch-deprecated, The $(TT -property) switch has
+    been deprecated.))
+)
+
+$(BUGSTITLE Library Changes,
+$(LI $(RELATIVE_LINK2 backtraces-with-line-numbers, Backtraces now include file name and line number.))
+$(LI $(RELATIVE_LINK2 more-rangified-functions, More phobos functions were rangified.))
+$(LI $(RELATIVE_LINK2 std-algorithm-moveEmplace, `moveEmplace` was added))
+$(LI $(RELATIVE_LINK2 curl-dynamic-loading, libcurl is now loaded dynamically))
+$(LI $(XREF traits, getUDAs) was added to help get
+	user-defined attributes of specific types from symbols.)
+$(LI $(XREF traits, getSymbolsByUDA) was
+	added to find symbols with specific user-defined attributes.)
+$(LI $(XREF math, cmp) was added, defining total ordering on
+	floating-point numbers, including NaN.)
+$(LI FreeBSD now also ships with a shared libphobos2.so library ($(LINK2 http://dlang.org/dll-linux.html, usage info)).)
+$(LI The package $(STDMODREF experimental_allocator, std.experimental.allocator) was added.)
+)
+
+$(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D 2.069.0.))
+
+$(HR)
+
+$(BUGSTITLE Compiler Changes,
+
+$(LI $(LNAME2 objective-c-support, Basic support for Objective-C.)
+
+    $(P Basic support for Objective-C classes, interfaces and instance methods.
+        This is implemented by adding a new linkage attribute, Objective-C, and
+        a compiler recognized UDA, @selector. The linkage attribute is to be
+        used on a class or interface. The UDA is attached to a method.
+    )
+)
+
+$(LI $(LNAME2 property-switch-deprecated, The $(TT -property) switch has
+    been deprecated.)
+
+    $(P The $(TT -property) switch used to disallow calling non-properties
+        without parentheses. The switch has not been used to build Phobos for
+        some time now. So naturally, code that's incompatible with
+        $(TT -property) has found its way in. This means, the switch has
+        effectively not been supported by D at large.
+    )
+
+    $(P Since the behaviour of the $(TT -property) switch was not well-liked,
+        it's been deprecated and made to have no effect when used.
+    )
+)
+
+)
+
+$(BUGSTITLE Library Changes,
+
+$(LI $(LNAME2 backtraces-with-line-numbers, Backtraces now include file name and line number.)
+
+    $(P The default tracehandler on linux and FreeBSD now parses DWARF
+        debug info to add file names and line numbers to backtraces.
+    )
+
+    $(PRE
+std.conv.ConvException@DPL/dmd/src/../../phobos/std/conv.d(1720): Unexpected 'a' when converting from type string to type ulong
+
+DPL/dmd/src/../../phobos/std/conv.d:1720 pure @safe ulong std.conv.toImpl!(ulong, immutable(char)[]).toImpl(immutable(char)[]) [0x43b339]
+DPL/dmd/src/../../phobos/std/conv.d:298 pure @safe ulong std.conv.to!(ulong).to!(immutable(char)[]).to(immutable(char)[]) [0x437717]
+example.d:5 ulong example.foo(immutable(char)[]) [0x4376c7]
+example.d:10 _Dmain [0x4376e5]
+??:? _D2rt6dmain211_d_run_mainUiPPaPUAAaZiZ6runAllMFZ9__lambda1MFZv [0x444576]
+??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).tryExec(scope void delegate()) [0x4444cc]
+??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).runAll() [0x444532]
+??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).tryExec(scope void delegate()) [0x4444cc]
+??:? _d_run_main [0x444429]
+??:? main [0x44039f]
+??:? __libc_start_main [0xc3ae96ff]
+    )
+)
+
+$(LI $(LNAME2 more-rangified-functions, More phobos functions were rangified.)
+
+    $(P Following the work released with $(LINK2 2.068.0.html#rangified-functions,
+        2.068.0) more phobos functions were rangified.
+    )
+
+    $(BOOKTABLE Rangified Functions:,
+        $(TR $(TH Module) $(TH Functions)
+        )
+        $(TR $(TD $(STDMODREF stdio, std.stdio))
+            $(TD
+                <a href="phobos/std_file.html#.File.this">File.this</a>
+            )
+        )
+        $(TR $(TD $(STDMODREF file, std.file))
+            $(TD
+                $(XREF file, append)
+                $(XREF file, chdir)
+                $(XREF file, copy)
+                $(XREF file, exists)
+                $(XREF file, getAttributes)
+                $(XREF file, getLinkAttributes)
+                $(XREF file, getSize)
+                $(XREF file, getTimes)
+                $(XREF file, getTimesWin)
+                $(XREF file, isDir)
+                $(XREF file, isFile)
+                $(XREF file, isSymlink)
+                $(XREF file, mkdir)
+                $(XREF file, read)
+                $(XREF file, readText)
+                $(XREF file, remove)
+                $(XREF file, rename)
+                $(XREF file, rmdir)
+                $(XREF file, setAttributes)
+                $(XREF file, setTimes)
+                $(XREF file, timeLastModified)
+                $(XREF file, write)
+            )
+        )
+    )
+)
+
+$(LI $(LNAME2 std-algorithm-moveEmplace, A combined `moveEmplace` was added.)
+
+    $(P $(XREF algorithm_mutation, MoveEmplace) efficiently combines $(XREF
+        algorithm_mutation, move) with $(XREF conv, emplace) thus avoids having
+        to initialize and destroy a value before moving into uninitialized data.
+    )
+
+    ------
+    T* moveToHeap(T)(ref T value)
+    {
+        import core.memory : GC;
+
+        auto ptr = cast(T*)GC.malloc(T.sizeof);
+        // move value and emplace it into ptr
+        moveEmplace(value, *ptr);
+        return ptr;
+    }
+    ------
+    $(P There are also $(XREF algorithm_mutation, moveEmplaceAll)
+        and $(XREF algorithm_mutation, moveEmplaceSome) as counterparts of
+        $(XREF algorithm_mutation, moveAll) and $(XREF algorithm_mutation, moveSome).
+    )
+)
+
+$(LI $(RELATIVE_LINK2 curl-dynamic-loading, libcurl is now loaded dynamically)
+
+    $(P $(STDMODREF net_curl, std.net.curl) was changed to load curl as shared
+        library at runtime.  This simplifies the usage as it's no longer
+        necessary to link against libcurl or to install any development
+        libraries.
+    )
+
+    $(P The implementation will also try to get the needed curl symbols from the
+        executable itself. So it remains possible to link with a specific
+        version of libcurl or with a static libcurl library.
+    )
+
+    $(P To make this work you have to link with $(I --export-dynamic) respectively
+        use a $(I .DEF) file on Windows (see $(LINK2
+        http://wiki.dlang.org/Curl_on_Windows#Using_the_static_lib, wiki) for
+        more info on the latter).
+    )
+)
+
+)
+
+$(BR)$(BIG $(LNAME2 bugfix-list, List of all bug fixes and enhancements in D 2.069.0:))
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(P
+$(LI $(BUGZILLA 13720): [REG2.067] Adding trivial destructor to std.datetime causes Internal error: ..\ztc\cgelem.c 2418)
+$(LI $(BUGZILLA 14430): [REG2.060] Null parameter is detected as non-null.)
+$(LI $(BUGZILLA 14572): cannot build dmd from source anymore: 'g++ -m64: No such file or directory')
+$(LI $(BUGZILLA 14588): [REG2.067] undefined reference error while linking with -debug option to a static library.)
+$(LI $(BUGZILLA 14682): [REG2.037] Incorrect interpretation of ~ [])
+$(LI $(BUGZILLA 14699): [REG2.062] ICE: segfaults on array with zero size)
+$(LI $(BUGZILLA 14710): VC-built DMD crashes on templated variadic function IFTI)
+$(LI $(BUGZILLA 14731): [REG2.068a] Error location insufficient when CTFE)
+$(LI $(BUGZILLA 14735): [REG2.068-b1] std.string.indexOf cannot deduce function for char argument)
+$(LI $(BUGZILLA 14737): [REG2.058] A concatenation of array literal and static array should make dynamic array)
+$(LI $(BUGZILLA 14754): [REG2.068b1] 64bit wrong code with -inline)
+$(LI $(BUGZILLA 14779): incorrect addressing of arguments in require/in-contract)
+$(LI $(BUGZILLA 14829): [REG2.066.0] wrong code with -O -inline)
+$(LI $(BUGZILLA 14886): [REG2.066] std.parallelism.parallel with large static array seems to hang compile)
+$(LI $(BUGZILLA 14926): Programs compiled using dmd 2.068 are generating dummy profilegc.log files)
+$(LI $(BUGZILLA 14952): Redundant REX.W before FSTP confuses Valgrind)
+$(LI $(BUGZILLA 14991): dmd doesn't build under OSX 32 bit)
+$(LI $(BUGZILLA 15045): [Reg 2.069-devel] hasElaborateCopyConstructor is true for struct with opDispatch)
+$(LI $(BUGZILLA 15072): [REG2.069-devel] Re-introducing codegen performance regression 14805)
+$(LI $(BUGZILLA 15079): [REG2.068.1] Assertion `fd->semanticRun == PASSsemantic3done' failed.)
+$(LI $(BUGZILLA 15123): [REG2.069.0-devel] segfault when compiling simple SIMD code)
+$(LI $(BUGZILLA 15126): [REG2.069-devel] dmd crashes when analyzing array literal)
+$(LI $(BUGZILLA 15138): [REG2.068.2] ICE with basic use of stdx.data.json)
+$(LI $(BUGZILLA 15149): [REG2.068.1] Linker error with separate compilation)
+$(LI $(BUGZILLA 15150): [REG2.068.1] Public selective import causes conflict)
+$(LI $(BUGZILLA 15152): [REG2.069.0-devel] template fails to instantiate if argument is itself a template)
+)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(P
+$(LI $(BUGZILLA 1747): class to base interface static cast is incorrect in some cases)
+$(LI $(BUGZILLA 2013): interface to interface dynamic cast is incorrect in some cases)
+$(LI $(BUGZILLA 2091): D2 final cannot be applied to variable)
+$(LI $(BUGZILLA 2354): conditional compilation rejects else if the declaration is a single pragma)
+$(LI $(BUGZILLA 3243): instantiated 'static this$(LPAREN)$(RPAREN)' bring on a compiler message ': __gate is thread local')
+$(LI $(BUGZILLA 6417): Wrong context for nested functions in virtual class member function contracts)
+$(LI $(BUGZILLA 7625): inlining only works with explicit else branch)
+$(LI $(BUGZILLA 7979): Alias this does not work with switch)
+$(LI $(BUGZILLA 9383): Wrong context for contracts if closure [dis]appears in override function)
+$(LI $(BUGZILLA 9891): Ability to modify immutable using default value of ref/out parameter)
+$(LI $(BUGZILLA 12487): DMD correctly reports excessive CTFE recursion, but not template recursion)
+$(LI $(BUGZILLA 12744): auto ref crashes DMD on ASSERT)
+$(LI $(BUGZILLA 13007): Wrong x86 code: long negate)
+$(LI $(BUGZILLA 13203): conflicting aliases allowed with static if)
+$(LI $(BUGZILLA 13244): Wrong code with -inline and foreach/map/all)
+$(LI $(BUGZILLA 13652): 2D Static Array Init produces wrong result $(LPAREN)-m64/-m32$(RPAREN))
+$(LI $(BUGZILLA 13792): Segfault with a pointer of opaque enum type)
+$(LI $(BUGZILLA 14140): Bad codegen for CTFE union initialisers for immutable structs)
+$(LI $(BUGZILLA 14459): String literal merge bug causes incorrect runtime program behavior)
+$(LI $(BUGZILLA 14510): Bad tail call optimization with static arrays)
+$(LI $(BUGZILLA 14541): "duplicate COMDAT" linker error with the template forward reference in Tuple.opAssign)
+$(LI $(BUGZILLA 14653): scoped!range in foreach crashes)
+$(LI $(BUGZILLA 14669): auto attribute on function parameter should be error always)
+$(LI $(BUGZILLA 14709): dmd/samples/listener.d socket.accept exception handling is incorrect)
+$(LI $(BUGZILLA 14743): ICE in TemplateInstance::needsTypeInference$(LPAREN)$(RPAREN) with template forward reference)
+$(LI $(BUGZILLA 14745): Qualifiers rejected for delegate literals)
+$(LI $(BUGZILLA 14747): compiler insists on unnecessary return statement)
+$(LI $(BUGZILLA 14753): pragma$(LPAREN)inline$(RPAREN) hides the alias "string")
+$(LI $(BUGZILLA 14768): Error: index 174762 overflow for static array)
+$(LI $(BUGZILLA 14802): Template argument deduction depends on order of arguments)
+$(LI $(BUGZILLA 14815): Destructor is not called for static array assignment)
+$(LI $(BUGZILLA 14818): Unhelpful "does not match template overload set" error)
+$(LI $(BUGZILLA 14846): Insufficient context deduction with implicit nested lambda)
+$(LI $(BUGZILLA 14858): spurious "Error: overload alias 'foo' is not a variable" when overloading template and non-template via aliases)
+$(LI $(BUGZILLA 14860): Destructor is not called for block assignment)
+$(LI $(BUGZILLA 14862): Constructor of overlapped struct does not initialize correctly global variables)
+$(LI $(BUGZILLA 14874): __traits$(LPAREN)getFunctionAttributes$(RPAREN) does not support the new `return` attribute)
+$(LI $(BUGZILLA 14875): A template instance with deprecated symbol/type needlessly repeats "Deprecation:" messages)
+$(LI $(BUGZILLA 14876): Deprecation message is sometimes duplicated)
+$(LI $(BUGZILLA 14906): dmd dumps core at incorrect enum declaration)
+$(LI $(BUGZILLA 14928): Switches -betterC and -m32mscoff do not appear in DMD's help text)
+$(LI $(BUGZILLA 14950): Setting enum value to the last member of another enum causes int overflow error)
+$(LI $(BUGZILLA 14996): only$(LPAREN)EnumMembers!T$(RPAREN) eats all my memory when T : string)
+$(LI $(BUGZILLA 15001): Duplicate error message without line number on if statement)
+$(LI $(BUGZILLA 15014): Win64: Invalid C++ mangling for multiple long arguments)
+$(LI $(BUGZILLA 15018): Win64: ICE when assigning struct of size 4 to slice)
+$(LI $(BUGZILLA 15019): [ICE] Heisencrash on OS X 32-bit with non-trivial projects)
+$(LI $(BUGZILLA 15065): associative array has no keys property)
+$(LI $(BUGZILLA 15080): extern$(LPAREN)C++$(RPAREN) classes have wrong static data layout)
+$(LI $(BUGZILLA 15089): Marks wrong line as where error occurs.)
+$(LI $(BUGZILLA 15127): Parser assertion on wrong code)
+)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(P
+$(LI $(BUGZILLA 14717): Ddoc macro recursion limit too low)
+$(LI $(BUGZILLA 14755): Could -profile=gc also give the number of allocations that led to X bytes being allocated?)
+$(LI $(BUGZILLA 14975): DMD refuses to inline even trivial struct constructors)
+)
+)
+$(BUGSTITLE Phobos regressions,
+
+$(P
+$(LI $(BUGZILLA 14564): [REG2.067] dmd -property -unittest combination causes compiler error)
+$(LI $(BUGZILLA 14685): [REG2.067] Silent incorrect behavior with enforce and custom exception)
+$(LI $(BUGZILLA 14712): GIT HEAD : std.net.curl regressions)
+$(LI $(BUGZILLA 14817): [REG-master] copy$(LPAREN)"foo", "bar"$(RPAREN) std.algorithm/std.file conflict)
+$(LI $(BUGZILLA 14881): [REG] posix.mak omits package.d files when building zip file)
+)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(P
+$(LI $(BUGZILLA 10895): incorrect std.array.join behavior with array of string-like class using alias this)
+$(LI $(BUGZILLA 13650): std.algorithm.copy doesn't work with char/wchar)
+$(LI $(BUGZILLA 13856): std.stdio.readln stomps arrays)
+$(LI $(BUGZILLA 14282): executeShell should use sh and ignore the SHELL env variable)
+$(LI $(BUGZILLA 14605): RefAppender fails isOutputRange)
+$(LI $(BUGZILLA 14724): std.getopt: config.required breaks --help)
+$(LI $(BUGZILLA 14760): Clear content-length for libcurl option to eliminate segmentation fault.)
+$(LI $(BUGZILLA 14762): Do not use other method options on persistent connection.)
+$(LI $(BUGZILLA 14799): Documentation for std.zlib.compress is incorrect)
+$(LI $(BUGZILLA 14868): MmFile destructor seems to corrupt memory)
+$(LI $(BUGZILLA 14880): findSkip summary is wrong)
+$(LI $(BUGZILLA 14884): `among` docs broken link to `find` and `canFind`)
+$(LI $(BUGZILLA 14924): Error in std.uri definition/description)
+$(LI $(BUGZILLA 14925): replaceInPlace fail compilation)
+$(LI $(BUGZILLA 14949): Non-descriptive "Enforcement failed" when attempting to write to closed file)
+$(LI $(BUGZILLA 14994): std.mmfile incorrectly handles map failure)
+$(LI $(BUGZILLA 14995): std.mmfile incorrectly handles errors in ctor)
+$(LI $(BUGZILLA 15000): Changes to userShell either need to be reverted or the std.process documentation needs to be updated)
+$(LI $(BUGZILLA 15003): assumeSorted Allocates GC Memory in Debug Mode)
+$(LI $(BUGZILLA 15033): Element type of float iota is double)
+$(LI $(BUGZILLA 15115): std.typetuple link to std.meta is 404)
+)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(P
+$(LI $(BUGZILLA 5945): redBlackTree printing)
+$(LI $(BUGZILLA 12752): std.algorithm.isPermutation)
+$(LI $(BUGZILLA 12966): Merge the heapsort code in std with the binary heap in std.range)
+$(LI $(BUGZILLA 13596): permutations range)
+$(LI $(BUGZILLA 14433): std.encoding does not support Central European ISO-8859-2 and CP1250 encodings)
+$(LI $(BUGZILLA 14763): Use optionsData argument for curl options function.)
+$(LI $(BUGZILLA 14777): 0 is not the initial value for std.zlib.adler32)
+$(LI $(BUGZILLA 14798): [etc.c.sqlite3] sqlite3_errstr definition missing)
+$(LI $(BUGZILLA 14877): std.net.curl needs PATCH http method)
+$(LI $(BUGZILLA 14938): std.net.curl tests should use localhost or stub any networking)
+$(LI $(BUGZILLA 14940): Can't call logger with more complex objects)
+)
+)
+$(BUGSTITLE Druntime regressions,
+
+$(P
+$(LI $(BUGZILLA 14750): druntime/test/coverage was added to druntime, but not to the MANIFEST - zip file broken again)
+$(LI $(BUGZILLA 14882): [REG] MANIFEST is missing test/common.mak)
+$(LI $(BUGZILLA 14990): No rule to make target `src/core/sys/windows/stdio_msvc12.d', needed by 'druntime.zip'.)
+$(LI $(BUGZILLA 15012): Druntime Makefile whitelists compilers)
+)
+)
+$(BUGSTITLE Druntime bugs,
+
+$(P
+$(LI $(BUGZILLA 11414): druntime should run debug unittest)
+$(LI $(BUGZILLA 14663): shared library test - link_linkdep - segfaults on FreeBSD 10)
+$(LI $(BUGZILLA 14776): shared library test - loadDR - segfaults on FreeBSD 10 when not building with -release)
+$(LI $(BUGZILLA 14785): Some corner cases are not handled properly by core.checkedint.)
+$(LI $(BUGZILLA 14870): incorrect use of assert to detect environmental errors in core.time)
+$(LI $(BUGZILLA 15009): Object.destroy calls unnecessary postblits for destruction of static arrays object)
+$(LI $(BUGZILLA 15036): SimpleDllMain assumes various symbols are available unqualified)
+$(LI $(BUGZILLA 15104): Switching fibers in finally blocks breaks EH)
+)
+)
+$(BUGSTITLE Druntime enhancements,
+
+$(P
+$(LI $(BUGZILLA 15076): Get ID of current thread)
+$(LI $(BUGZILLA 15137): core.time: Support Duration/Duration and Duration%Duration)
+)
+)
+$(BUGSTITLE dlang.org regressions,
+
+$(P
+$(LI $(BUGZILLA 15046): [REG2.068] isForwardRange documentation is documenting issue 14544)
+)
+)
+$(BUGSTITLE dlang.org bugs,
+
+$(P
+$(LI $(BUGZILLA 12072): Regex article needs update)
+$(LI $(BUGZILLA 14579): [SPEC] No specification on modifiers in TypeDelegate symbols)
+$(LI $(BUGZILLA 14695): [dlang.org] std.uuid Is Not Listed On The Index Page)
+$(LI $(BUGZILLA 14879): tuple documentation broken link)
+$(LI $(BUGZILLA 15095): Malformed URL in documentation link)
+)
+)
+$(BUGSTITLE dlang.org enhancements,
+
+$(P
+$(LI $(BUGZILLA 14328): The terms "lvalue" and "rvalue" should be added to the glossary)
+$(LI $(BUGZILLA 14522): Postfix array declaration examples should be removed from arrays.html)
+$(LI $(BUGZILLA 14808): phobos sidebar "D Lib" link is back to homepage)
+$(LI $(BUGZILLA 14933): specifications for the pragma$(LPAREN)mangle$(RPAREN) are vague)
+)
+)
+$(BUGSTITLE Tools bugs,
+
+$(P
+$(LI $(BUGZILLA 15031): rdmd should force rebuild when --compiler changes)
+)
+)
+$(BUGSTITLE Tools enhancements,
+
+$(P
+$(LI $(BUGZILLA 14715): Add README.md to the tools Repository)
+)
+)
+$(BUGSTITLE Installer bugs,
+
+$(P
+$(LI $(BUGZILLA 13234): Windows installer: when updating, uninstaller reports wrong installation directory)
+$(LI $(BUGZILLA 14801): OS X installer not compatible with OS X 10.11)
+)
+)
+$(BUGSTITLE Installer enhancements,
+
+$(P
+$(LI $(BUGZILLA 14714): Add README.md to the Installer Repository)
+)
+)
+
+)
+$(CHANGELOG_NAV_LAST 2.068.2)
+
+Macros:
+	VER=2.069.0
+	TITLE=Change Log: $(VER) Beta
