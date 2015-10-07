@@ -33,7 +33,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	changelog\2.064.dd changelog\2.065.0.dd \
 	changelog\2.066.0.dd changelog\2.066.1.dd \
 	changelog\2.067.0.dd changelog\2.067.1.dd \
-	changelog\2.068.0.dd changelog\2.068.1.dd
+	changelog\2.068.0.dd changelog\2.068.1.dd \
 	changelog\2.068.2.dd changelog\2.069.0.dd \
 	changelog\index.dd changelog\upcoming.dd \
 	glossary.dd acknowledgements.dd		\
@@ -45,8 +45,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
 	32-64-portability.dd dll-linux.dd bugstats.php.dd getstarted.dd \
-	css\cssmenu.css.dd ctarguments.dd \
-	
+	css\cssmenu.css.dd ctarguments.dd
 
 SPECSRC=spec.dd intro.dd lex.dd grammar.dd module.dd declaration.dd type.dd property.dd	\
 	attribute.dd pragma.dd expression.dd statement.dd arrays.dd			\
