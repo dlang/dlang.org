@@ -115,6 +115,7 @@ DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODA
 STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
 STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
+CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 
 IMAGES=favicon.ico $(addprefix images/, \
 	d002.ico \
@@ -153,7 +154,7 @@ SPEC_ROOT=spec intro lex grammar module declaration type property attribute prag
 	simd
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES=$(shell ls changelog/*.dd | sed s/\\.dd$$// )
+CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
@@ -181,10 +182,16 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
+$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
 $(DOC_OUTPUT_DIR)/%.verbatim : %.dd verbatim.ddoc $(DMD)
+	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
+
+$(DOC_OUTPUT_DIR)/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
 
 $(DOC_OUTPUT_DIR)/%.php : %.php.dd $(DDOC) $(DMD)
