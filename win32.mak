@@ -60,6 +60,7 @@ DDOC=macros.ddoc html.ddoc dlang.org.ddoc windows.ddoc doc.ddoc $(NODATETIME)
 DDOC_STD=std.ddoc std_navbar-release.ddoc modlist-release.ddoc
 
 CHANGELOG_DDOC=$(DDOC) changelog/changelog.ddoc
+CHANGELOG_PRE_DDOC=$(CHANGELOG_DDOC) changelog/prerelease.ddoc
 
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
@@ -306,8 +307,8 @@ changelog\2.068.1.html : $(CHANGELOG_DDOC) changelog\2.068.1.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 changelog\2.068.2.html : $(CHANGELOG_DDOC) changelog\2.068.2.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
-changelog\2.069.0.html : $(CHANGELOG_DDOC) changelog\2.069.0.dd
-	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.069.0.html : $(CHANGELOG_DDOC) changelog\2.069.0_pre.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_PRE_DDOC) $*.dd
 changelog\index.html : $(CHANGELOG_DDOC) changelog\index.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 changelog\upcoming.html : $(CHANGELOG_DDOC) changelog\upcoming.dd
