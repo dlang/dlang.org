@@ -366,9 +366,12 @@ $(document).ready(function()
         var currentExample = $(this);
         var orig = currentExample.html();
 
-        if (typeof mainPage !== 'undefined' && mainPage[md5sum] != null)
+        if (typeof mainPage !== 'undefined' && md5sum in mainPage)
         {
             var elements = mainPage[md5sum];
+
+            if (elements == null)
+                return; // this example is not runnable online
 
             if (elements[0] != null)
                 stdin = elements[0];

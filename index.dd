@@ -19,26 +19,6 @@ $(NOTICE_L http://dconf.org/2015/schedule/index.html, Videos and Slides from DCo
 $(DIVID your-code-here,
 $(DIVID your-code-here-default,
 ----
-#!/usr/bin/env rdmd
-// Computes average line length for standard input.
-import std.stdio;
-
-void main()
-{
-    ulong lines = 0;
-    double sumLength = 0;
-    foreach (line; stdin.byLine())
-    {
-        ++lines;
-        sumLength += line.length;
-    }
-    writeln("Average line length: ",
-        lines ? sumLength / lines : 0);
-}
-----
-)
-$(EXTRA_EXAMPLE
-----
 // Round floating point numbers
 import std.algorithm,
     std.conv,
@@ -49,7 +29,7 @@ import std.algorithm,
 
 // Transforms input into a real number,
 // rounds it, then to a string
-alias round = pipe!(to!real, lround, to!string);
+alias round = pipe!(to!real, std.math.round, to!string);
 
 // Matches numbers that look like they need rounding
 static reFloatingPoint = ctRegex!`[0-9]+\.[0-9]+`;
@@ -86,62 +66,6 @@ void main()
         .sort
         .copy(
             stdout.lockingTextWriter());
-}
-----
-)
-$(EXTRA_EXAMPLE
-----
-// Get your local weather report
-pragma(lib, "curl");
-import std.functional, std.json, std.net.curl,
-    std.stdio, std.string;
-
-alias getJSON = pipe!(get, parseJSON);
-auto K2C = (float f) => f - 273.15;
-auto K2F = (float f) => f / 5 * 9 - 459.67;
-
-void main()
-{
-    auto loc = getJSON("ipinfo.io/")["loc"]
-        .str.split(",");
-    auto resp = getJSON(
-        "api.openweathermap.org/data/2.5/weather" ~
-        "?lat=" ~ loc[0] ~ "&lon=" ~ loc[1]);
-
-    auto city = resp["name"].str;
-    auto country = resp["sys"]["country"].str;
-    auto desc = resp["weather"][0]["description"].str;
-    auto temp = resp["main"]["temp"].floating;
-
-    writefln(`
-        +-----------------------------------------+
-        |%s|
-        +-----------------------------------------+
-        |  weather      |  %-23s|
-        +-----------------------------------------+
-        |  temperature  |  %.2f°C (%.2f°F)      |
-        +-----------------------------------------+
-        `.outdent,
-        centerJustifier(city ~ ", " ~ country, 41),
-        desc, temp.K2C, temp.K2F);
-}
-----
-)
-$(EXTRA_EXAMPLE
-----
-// D is like...
-pragma(lib, "curl");
-import std.functional, std.json, std.net.curl,
-    std.stdio;
-
-alias getJSON = pipe!(get, parseJSON);
-
-void main()
-{
-    auto json = getJSON(
-        "itsthisforthat.com/api.php?json");
-    writefln("So, basically D is like a %s for %s",
-        json["this"].str, json["that"].str);
 }
 ----
 )
@@ -206,17 +130,21 @@ dynamic worlds. $(EXAMPLE 1,
 ----
 void main()
 {
-    // Define an array of numbers, double[]. Compiler recognizes the common
+    // Define an array of numbers, double[].
+    // Compiler recognizes the common
     // type of all initializers.
     auto arr = [ 1, 2, 3.14, 5.1, 6 ];
-    // Dictionary that maps string to int, type is spelled int[string]
-    auto dictionary = [ "one" : 1, "two" : 2, "three" : 3 ];
+    // Dictionary that maps string to int,
+    // type is spelled int[string]
+    auto dictionary = [ "one" : 1, "two" : 2,
+        "three" : 3 ];
     // Calls the min function defined below
     auto x = min(arr[0], dictionary["two"]);
 }
-// Type deduction works for function results. This is important for generic
-// functions, such as min below, which works correctly for all comparable
-// types.
+// Type deduction works for function results.
+// This is important for generic functions,
+// such as min below, which works correctly
+// for all comparable types.
 auto min(T1, T2)(T1 lhs, T2 rhs)
 {
     return rhs < lhs ? rhs : lhs;
@@ -287,7 +215,8 @@ and more&mdash;all harmoniously integrated. $(EXAMPLE 4,
 interface Printable
 {
    void print(uint level)
-   in { assert(level > 0); } // contract is part of the interface
+   // contract is part of the interface
+   in { assert(level > 0); }
 }
 
 // Interface implementation
@@ -362,7 +291,8 @@ void livingDangerously()
 {
     // Access to C's malloc and free primitives
     auto buf = malloc(1024 * 1024);
-    scope(exit) free(buf); // free automatically upon scope exit
+    // free automatically upon scope exit
+    scope(exit) free(buf);
     // Interprets memory as an array of floats
     auto floats = cast(float[]) buf[0 .. 1024 * 1024];
     // Even stack allocation is possible
