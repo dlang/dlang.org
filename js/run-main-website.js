@@ -10,10 +10,10 @@ Authors:   Damian Ziemba
 var mainPage = new Array();
 
 // Top rotation - sort lines
-mainPage["eaed85820b01767abc1e1da8a35ebd12"] = ["The D programming language.\nModern convenience.\nModeling power.\nNative efficiency."];
+mainPage["eaed85820b01767abc1e1da8a35ebd12"] = ["Mercury\nVenus\nEarth\nMars\nJupiter\nSaturn\nUranus\nNeptune"];
 
 // Top rotation - RPN calculator
-mainPage["9386a20f75d1fd4281ae6c6d6e645705"] = ["3 4 +\n1 2 + 4 * 5 + 3 -\n2 3 7 * *"];
+mainPage["651b6c20f520426a1b5bb77eca67ce44"] = ["2 3 ^^ 5 * 1 +\n3 4 +\n1 2 + 4 * 5 + 3 -\n2 3 7 * *"];
 
 // Top rotation - round floating point numbers
 mainPage["3d41a91e2b9e27835ab8d6c73367a909"] = ["2.4 plus 2.4 equals 5 for sufficiently large values of 2."];
