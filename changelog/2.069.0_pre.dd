@@ -16,6 +16,8 @@ $(BUGSTITLE Library Changes,
 $(LI $(RELATIVE_LINK2 backtraces-with-line-numbers, Backtraces now include file name and line number.))
 $(LI $(RELATIVE_LINK2 more-rangified-functions, More phobos functions were rangified.))
 $(LI $(RELATIVE_LINK2 std-algorithm-moveEmplace, `moveEmplace` was added))
+$(LI $(RELATIVE_LINK2 std-algorithm-isPermutation, `isPermutation` was added))
+$(LI $(RELATIVE_LINK2 std-algorithm-isSameLength, `isSameLength` was added))
 $(LI $(RELATIVE_LINK2 curl-dynamic-loading, libcurl is now loaded dynamically))
 $(LI $(XREF traits, getUDAs) was added to help get
 	user-defined attributes of specific types from symbols.)
@@ -146,7 +148,7 @@ $(LI $(LNAME2 more-rangified-functions, More phobos functions were rangified.)
 
 $(LI $(LNAME2 std-algorithm-moveEmplace, A combined `moveEmplace` was added.)
 
-    $(P $(XREF algorithm_mutation, MoveEmplace) efficiently combines $(XREF
+    $(P $(XREF algorithm_mutation, moveEmplace) efficiently combines $(XREF
         algorithm_mutation, move) with $(XREF conv, emplace) thus avoids having
         to initialize and destroy a value before moving into uninitialized data.
     )
@@ -166,6 +168,36 @@ $(LI $(LNAME2 std-algorithm-moveEmplace, A combined `moveEmplace` was added.)
         and $(XREF algorithm_mutation, moveEmplaceSome) as counterparts of
         $(XREF algorithm_mutation, moveAll) and $(XREF algorithm_mutation, moveSome).
     )
+)
+
+$(LI $(LNAME2 std-algorithm-isPermutation, `isPermutation` was added.)
+
+    $(P $(XREF algorithm_comparison, isPermuatation) compares two forward ranges to
+        determine if they are permuations of each other.
+    )
+
+    ------
+    auto r1 = [10, 15, 7, 12, 30];
+    auto r2 = [7, 10, 12, 15, 30];
+
+    assert(r1.isPermutation(r2));
+    ------
+)
+
+$(LI $(LNAME2 std-algorithm-isSameLength, `isSameLength` was added.)
+
+    $(P $(XREF algorithm_comparison, isSameLength) compares two input ranges to
+        determine if they have the same length. This algorithm always takes advantage
+        of the `length` range primitive if it exists. Otherwise, this algorithm will
+        walk the ranges to find their length.
+    )
+
+    ------
+    auto r1 = [1, 10, 100, 1000, 10000];
+    auto r2 = [1, 2, 3, 4, 5];
+
+    assert(r1.isSameLength(r2));
+    ------
 )
 
 $(LI $(LNAME2 curl-dynamic-loading, libcurl is now loaded dynamically)
@@ -221,6 +253,10 @@ $(LI $(BUGZILLA 15138): [REG2.068.2] ICE with basic use of stdx.data.json)
 $(LI $(BUGZILLA 15149): [REG2.068.1] Linker error with separate compilation)
 $(LI $(BUGZILLA 15150): [REG2.068.1] Public selective import causes conflict)
 $(LI $(BUGZILLA 15152): [REG2.069.0-devel] template fails to instantiate if argument is itself a template)
+$(LI $(BUGZILLA 15176): [REG2.069.0-b1] ICE$(LPAREN)glue.c$(RPAREN):separate compilation with -inline crash in glue.c)
+$(LI $(BUGZILLA 15177): [REG2.069.0-b1] mixin + traits issue with 2.069 beta 1)
+$(LI $(BUGZILLA 15181): SYSCONFDIR is broken)
+$(LI $(BUGZILLA 15200): [REG2.068.2] ICE$(LPAREN)glue.c$(RPAREN) when compiling with -inline)
 )
 )
 $(BUGSTITLE DMD Compiler bugs,
@@ -345,6 +381,7 @@ $(P
 $(LI $(BUGZILLA 14750): druntime/test/coverage was added to druntime, but not to the MANIFEST - zip file broken again)
 $(LI $(BUGZILLA 14882): [REG] MANIFEST is missing test/common.mak)
 $(LI $(BUGZILLA 14990): No rule to make target `src/core/sys/windows/stdio_msvc12.d', needed by 'druntime.zip'.)
+$(LI $(BUGZILLA 14993): Allocating in a destructor segfaults instead of throwing InvalidMemoryOperationError)
 $(LI $(BUGZILLA 15012): Druntime Makefile whitelists compilers)
 )
 )
