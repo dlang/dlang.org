@@ -13,18 +13,23 @@ $(LI $(RELATIVE_LINK2 backend-improvements, DMD's codegen has improved.))
 )
 
 $(BUGSTITLE Library Changes,
-$(LI $(RELATIVE_LINK2 backtraces-with-line-numbers, Backtraces now include file name and line number.))
-$(LI $(RELATIVE_LINK2 more-rangified-functions, More phobos functions were rangified.))
-$(LI $(RELATIVE_LINK2 std-algorithm-moveEmplace, `moveEmplace` was added))
-$(LI $(RELATIVE_LINK2 curl-dynamic-loading, libcurl is now loaded dynamically))
-$(LI $(XREF traits, getUDAs) was added to help get
-	user-defined attributes of specific types from symbols.)
-$(LI $(XREF traits, getSymbolsByUDA) was
-	added to find symbols with specific user-defined attributes.)
-$(LI $(XREF math, cmp) was added, defining total ordering on
-	floating-point numbers, including NaN.)
-$(LI FreeBSD now also ships with a shared libphobos2.so library ($(LINK2 http://dlang.org/dll-linux.html, usage info)).)
 $(LI The package $(STDMODREF experimental_allocator, std.experimental.allocator) was added.)
+$(LI $(RELATIVE_LINK2 more-rangified-functions, More phobos functions were rangified.))
+$(LI $(RELATIVE_LINK2 curl-dynamic-loading, libcurl is now loaded dynamically))
+$(LI $(RELATIVE_LINK2 backtraces-with-line-numbers, Backtraces now include file name and line number.))
+$(LI $(RELATIVE_LINK2 std-algorithm-moveEmplace, `moveEmplace` was added))
+$(LI Use $(XREF algorithm_comparison, isPermutation) to test
+    whether two ranges are permutations of each other.)
+$(LI The new $(XREF algorithm_comparison, isSameLength) can be more
+     efficient than comparing the $(XREF range_primitives, walkLength) of two
+     ranges.)
+$(LI $(XREF traits, getUDAs) was added to help get
+    user-defined attributes of specific types from symbols.)
+$(LI $(XREF traits, getSymbolsByUDA) was
+    added to find symbols with specific user-defined attributes.)
+$(LI $(XREF math, cmp) was added, defining total ordering on
+    floating-point numbers, including NaN.)
+$(LI FreeBSD now also ships with a shared libphobos2.so library ($(LINK2 http://dlang.org/dll-linux.html, usage info)).)
 )
 
 $(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D 2.069.0.))
@@ -80,29 +85,6 @@ $(LI $(LNAME2 backend-improvements, DMD's codegen has improved.)
 
 $(BUGSTITLE Library Changes,
 
-$(LI $(LNAME2 backtraces-with-line-numbers, Backtraces now include file name and line number.)
-
-    $(P The default tracehandler on linux and FreeBSD now parses DWARF
-        debug info to add file names and line numbers to backtraces.
-    )
-
-    $(PRE
-std.conv.ConvException@DPL/dmd/src/../../phobos/std/conv.d(1720): Unexpected 'a' when converting from type string to type ulong
-
-DPL/dmd/src/../../phobos/std/conv.d:1720 pure @safe ulong std.conv.toImpl!(ulong, immutable(char)[]).toImpl(immutable(char)[]) [0x43b339]
-DPL/dmd/src/../../phobos/std/conv.d:298 pure @safe ulong std.conv.to!(ulong).to!(immutable(char)[]).to(immutable(char)[]) [0x437717]
-example.d:5 ulong example.foo(immutable(char)[]) [0x4376c7]
-example.d:10 _Dmain [0x4376e5]
-??:? _D2rt6dmain211_d_run_mainUiPPaPUAAaZiZ6runAllMFZ9__lambda1MFZv [0x444576]
-??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).tryExec(scope void delegate()) [0x4444cc]
-??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).runAll() [0x444532]
-??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).tryExec(scope void delegate()) [0x4444cc]
-??:? _d_run_main [0x444429]
-??:? main [0x44039f]
-??:? __libc_start_main [0xc3ae96ff]
-    )
-)
-
 $(LI $(LNAME2 more-rangified-functions, More phobos functions were rangified.)
 
     $(P Following the work released with $(LINK2 2.068.0.html#rangified-functions,
@@ -146,9 +128,52 @@ $(LI $(LNAME2 more-rangified-functions, More phobos functions were rangified.)
     )
 )
 
+$(LI $(LNAME2 curl-dynamic-loading, libcurl is now loaded dynamically)
+
+    $(P $(STDMODREF net_curl, std.net.curl) was changed to load curl as shared
+        library at runtime.  This simplifies the usage as it's no longer
+        necessary to link against libcurl or to install any development
+        libraries.
+    )
+
+    $(P The implementation will also try to get the needed curl symbols from the
+        executable itself. So it remains possible to link with a specific
+        version of libcurl or with a static libcurl library.
+    )
+
+    $(P To make this work you have to link with $(I --export-dynamic) respectively
+        use a $(I .DEF) file on Windows (see $(LINK2
+        http://wiki.dlang.org/Curl_on_Windows#Using_the_static_lib, wiki) for
+        more info on the latter).
+    )
+)
+
+$(LI $(LNAME2 backtraces-with-line-numbers, Backtraces now include file name and line number.)
+
+    $(P The default tracehandler on linux and FreeBSD now parses DWARF
+        debug info to add file names and line numbers to backtraces.
+    )
+
+    $(PRE
+std.conv.ConvException@DPL/dmd/src/../../phobos/std/conv.d(1720): Unexpected 'a' when converting from type string to type ulong
+
+DPL/dmd/src/../../phobos/std/conv.d:1720 pure @safe ulong std.conv.toImpl!(ulong, immutable(char)[]).toImpl(immutable(char)[]) [0x43b339]
+DPL/dmd/src/../../phobos/std/conv.d:298 pure @safe ulong std.conv.to!(ulong).to!(immutable(char)[]).to(immutable(char)[]) [0x437717]
+example.d:5 ulong example.foo(immutable(char)[]) [0x4376c7]
+example.d:10 _Dmain [0x4376e5]
+??:? _D2rt6dmain211_d_run_mainUiPPaPUAAaZiZ6runAllMFZ9__lambda1MFZv [0x444576]
+??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).tryExec(scope void delegate()) [0x4444cc]
+??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).runAll() [0x444532]
+??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).tryExec(scope void delegate()) [0x4444cc]
+??:? _d_run_main [0x444429]
+??:? main [0x44039f]
+??:? __libc_start_main [0xc3ae96ff]
+    )
+)
+
 $(LI $(LNAME2 std-algorithm-moveEmplace, A combined `moveEmplace` was added.)
 
-    $(P $(XREF algorithm_mutation, MoveEmplace) efficiently combines $(XREF
+    $(P $(XREF algorithm_mutation, moveEmplace) efficiently combines $(XREF
         algorithm_mutation, move) with $(XREF conv, emplace) thus avoids having
         to initialize and destroy a value before moving into uninitialized data.
     )
@@ -167,26 +192,6 @@ $(LI $(LNAME2 std-algorithm-moveEmplace, A combined `moveEmplace` was added.)
     $(P There are also $(XREF algorithm_mutation, moveEmplaceAll)
         and $(XREF algorithm_mutation, moveEmplaceSome) as counterparts of
         $(XREF algorithm_mutation, moveAll) and $(XREF algorithm_mutation, moveSome).
-    )
-)
-
-$(LI $(LNAME2 curl-dynamic-loading, libcurl is now loaded dynamically)
-
-    $(P $(STDMODREF net_curl, std.net.curl) was changed to load curl as shared
-        library at runtime.  This simplifies the usage as it's no longer
-        necessary to link against libcurl or to install any development
-        libraries.
-    )
-
-    $(P The implementation will also try to get the needed curl symbols from the
-        executable itself. So it remains possible to link with a specific
-        version of libcurl or with a static libcurl library.
-    )
-
-    $(P To make this work you have to link with $(I --export-dynamic) respectively
-        use a $(I .DEF) file on Windows (see $(LINK2
-        http://wiki.dlang.org/Curl_on_Windows#Using_the_static_lib, wiki) for
-        more info on the latter).
     )
 )
 
@@ -223,6 +228,10 @@ $(LI $(BUGZILLA 15138): [REG2.068.2] ICE with basic use of stdx.data.json)
 $(LI $(BUGZILLA 15149): [REG2.068.1] Linker error with separate compilation)
 $(LI $(BUGZILLA 15150): [REG2.068.1] Public selective import causes conflict)
 $(LI $(BUGZILLA 15152): [REG2.069.0-devel] template fails to instantiate if argument is itself a template)
+$(LI $(BUGZILLA 15176): [REG2.069.0-b1] ICE$(LPAREN)glue.c$(RPAREN):separate compilation with -inline crash in glue.c)
+$(LI $(BUGZILLA 15177): [REG2.069.0-b1] mixin + traits issue with 2.069 beta 1)
+$(LI $(BUGZILLA 15181): SYSCONFDIR is broken)
+$(LI $(BUGZILLA 15200): [REG2.068.2] ICE$(LPAREN)glue.c$(RPAREN) when compiling with -inline)
 )
 )
 $(BUGSTITLE DMD Compiler bugs,
@@ -347,6 +356,7 @@ $(P
 $(LI $(BUGZILLA 14750): druntime/test/coverage was added to druntime, but not to the MANIFEST - zip file broken again)
 $(LI $(BUGZILLA 14882): [REG] MANIFEST is missing test/common.mak)
 $(LI $(BUGZILLA 14990): No rule to make target `src/core/sys/windows/stdio_msvc12.d', needed by 'druntime.zip'.)
+$(LI $(BUGZILLA 14993): Allocating in a destructor segfaults instead of throwing InvalidMemoryOperationError)
 $(LI $(BUGZILLA 15012): Druntime Makefile whitelists compilers)
 )
 )
