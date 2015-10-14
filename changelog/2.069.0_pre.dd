@@ -13,20 +13,23 @@ $(LI $(RELATIVE_LINK2 backend-improvements, DMD's codegen has improved.))
 )
 
 $(BUGSTITLE Library Changes,
-$(LI $(RELATIVE_LINK2 backtraces-with-line-numbers, Backtraces now include file name and line number.))
-$(LI $(RELATIVE_LINK2 more-rangified-functions, More phobos functions were rangified.))
-$(LI $(RELATIVE_LINK2 std-algorithm-moveEmplace, `moveEmplace` was added))
-$(LI $(RELATIVE_LINK2 std-algorithm-isPermutation, `isPermutation` was added))
-$(LI $(RELATIVE_LINK2 std-algorithm-isSameLength, `isSameLength` was added))
-$(LI $(RELATIVE_LINK2 curl-dynamic-loading, libcurl is now loaded dynamically))
-$(LI $(XREF traits, getUDAs) was added to help get
-	user-defined attributes of specific types from symbols.)
-$(LI $(XREF traits, getSymbolsByUDA) was
-	added to find symbols with specific user-defined attributes.)
-$(LI $(XREF math, cmp) was added, defining total ordering on
-	floating-point numbers, including NaN.)
-$(LI FreeBSD now also ships with a shared libphobos2.so library ($(LINK2 http://dlang.org/dll-linux.html, usage info)).)
 $(LI The package $(STDMODREF experimental_allocator, std.experimental.allocator) was added.)
+$(LI $(RELATIVE_LINK2 more-rangified-functions, More phobos functions were rangified.))
+$(LI $(RELATIVE_LINK2 curl-dynamic-loading, libcurl is now loaded dynamically))
+$(LI $(RELATIVE_LINK2 backtraces-with-line-numbers, Backtraces now include file name and line number.))
+$(LI $(RELATIVE_LINK2 std-algorithm-moveEmplace, `moveEmplace` was added))
+$(LI Use $(XREF algorithm_comparison, isPermutation) to test
+    whether two ranges are permutations of each other.)
+$(LI The new $(XREF algorithm_comparison, isSameLength) can be more
+     efficient than comparing the $(XREF range_primitives, walkLength) of two
+     ranges.)
+$(LI $(XREF traits, getUDAs) was added to help get
+    user-defined attributes of specific types from symbols.)
+$(LI $(XREF traits, getSymbolsByUDA) was
+    added to find symbols with specific user-defined attributes.)
+$(LI $(XREF math, cmp) was added, defining total ordering on
+    floating-point numbers, including NaN.)
+$(LI FreeBSD now also ships with a shared libphobos2.so library ($(LINK2 http://dlang.org/dll-linux.html, usage info)).)
 )
 
 $(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D 2.069.0.))
@@ -80,29 +83,6 @@ $(LI $(LNAME2 backend-improvements, DMD's codegen has improved.)
 
 $(BUGSTITLE Library Changes,
 
-$(LI $(LNAME2 backtraces-with-line-numbers, Backtraces now include file name and line number.)
-
-    $(P The default tracehandler on linux and FreeBSD now parses DWARF
-        debug info to add file names and line numbers to backtraces.
-    )
-
-    $(PRE
-std.conv.ConvException@DPL/dmd/src/../../phobos/std/conv.d(1720): Unexpected 'a' when converting from type string to type ulong
-
-DPL/dmd/src/../../phobos/std/conv.d:1720 pure @safe ulong std.conv.toImpl!(ulong, immutable(char)[]).toImpl(immutable(char)[]) [0x43b339]
-DPL/dmd/src/../../phobos/std/conv.d:298 pure @safe ulong std.conv.to!(ulong).to!(immutable(char)[]).to(immutable(char)[]) [0x437717]
-example.d:5 ulong example.foo(immutable(char)[]) [0x4376c7]
-example.d:10 _Dmain [0x4376e5]
-??:? _D2rt6dmain211_d_run_mainUiPPaPUAAaZiZ6runAllMFZ9__lambda1MFZv [0x444576]
-??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).tryExec(scope void delegate()) [0x4444cc]
-??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).runAll() [0x444532]
-??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).tryExec(scope void delegate()) [0x4444cc]
-??:? _d_run_main [0x444429]
-??:? main [0x44039f]
-??:? __libc_start_main [0xc3ae96ff]
-    )
-)
-
 $(LI $(LNAME2 more-rangified-functions, More phobos functions were rangified.)
 
     $(P Following the work released with $(LINK2 2.068.0.html#rangified-functions,
@@ -146,6 +126,49 @@ $(LI $(LNAME2 more-rangified-functions, More phobos functions were rangified.)
     )
 )
 
+$(LI $(LNAME2 curl-dynamic-loading, libcurl is now loaded dynamically)
+
+    $(P $(STDMODREF net_curl, std.net.curl) was changed to load curl as shared
+        library at runtime.  This simplifies the usage as it's no longer
+        necessary to link against libcurl or to install any development
+        libraries.
+    )
+
+    $(P The implementation will also try to get the needed curl symbols from the
+        executable itself. So it remains possible to link with a specific
+        version of libcurl or with a static libcurl library.
+    )
+
+    $(P To make this work you have to link with $(I --export-dynamic) respectively
+        use a $(I .DEF) file on Windows (see $(LINK2
+        http://wiki.dlang.org/Curl_on_Windows#Using_the_static_lib, wiki) for
+        more info on the latter).
+    )
+)
+
+$(LI $(LNAME2 backtraces-with-line-numbers, Backtraces now include file name and line number.)
+
+    $(P The default tracehandler on linux and FreeBSD now parses DWARF
+        debug info to add file names and line numbers to backtraces.
+    )
+
+    $(PRE
+std.conv.ConvException@DPL/dmd/src/../../phobos/std/conv.d(1720): Unexpected 'a' when converting from type string to type ulong
+
+DPL/dmd/src/../../phobos/std/conv.d:1720 pure @safe ulong std.conv.toImpl!(ulong, immutable(char)[]).toImpl(immutable(char)[]) [0x43b339]
+DPL/dmd/src/../../phobos/std/conv.d:298 pure @safe ulong std.conv.to!(ulong).to!(immutable(char)[]).to(immutable(char)[]) [0x437717]
+example.d:5 ulong example.foo(immutable(char)[]) [0x4376c7]
+example.d:10 _Dmain [0x4376e5]
+??:? _D2rt6dmain211_d_run_mainUiPPaPUAAaZiZ6runAllMFZ9__lambda1MFZv [0x444576]
+??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).tryExec(scope void delegate()) [0x4444cc]
+??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).runAll() [0x444532]
+??:? void rt.dmain2._d_run_main(int, char**, extern (C) int function(char[][])*).tryExec(scope void delegate()) [0x4444cc]
+??:? _d_run_main [0x444429]
+??:? main [0x44039f]
+??:? __libc_start_main [0xc3ae96ff]
+    )
+)
+
 $(LI $(LNAME2 std-algorithm-moveEmplace, A combined `moveEmplace` was added.)
 
     $(P $(XREF algorithm_mutation, moveEmplace) efficiently combines $(XREF
@@ -167,56 +190,6 @@ $(LI $(LNAME2 std-algorithm-moveEmplace, A combined `moveEmplace` was added.)
     $(P There are also $(XREF algorithm_mutation, moveEmplaceAll)
         and $(XREF algorithm_mutation, moveEmplaceSome) as counterparts of
         $(XREF algorithm_mutation, moveAll) and $(XREF algorithm_mutation, moveSome).
-    )
-)
-
-$(LI $(LNAME2 std-algorithm-isPermutation, `isPermutation` was added.)
-
-    $(P $(XREF algorithm_comparison, isPermuatation) compares two forward ranges to
-        determine if they are permuations of each other.
-    )
-
-    ------
-    auto r1 = [10, 15, 7, 12, 30];
-    auto r2 = [7, 10, 12, 15, 30];
-
-    assert(r1.isPermutation(r2));
-    ------
-)
-
-$(LI $(LNAME2 std-algorithm-isSameLength, `isSameLength` was added.)
-
-    $(P $(XREF algorithm_comparison, isSameLength) compares two input ranges to
-        determine if they have the same length. This algorithm always takes advantage
-        of the `length` range primitive if it exists. Otherwise, this algorithm will
-        walk the ranges to find their length.
-    )
-
-    ------
-    auto r1 = [1, 10, 100, 1000, 10000];
-    auto r2 = [1, 2, 3, 4, 5];
-
-    assert(r1.isSameLength(r2));
-    ------
-)
-
-$(LI $(LNAME2 curl-dynamic-loading, libcurl is now loaded dynamically)
-
-    $(P $(STDMODREF net_curl, std.net.curl) was changed to load curl as shared
-        library at runtime.  This simplifies the usage as it's no longer
-        necessary to link against libcurl or to install any development
-        libraries.
-    )
-
-    $(P The implementation will also try to get the needed curl symbols from the
-        executable itself. So it remains possible to link with a specific
-        version of libcurl or with a static libcurl library.
-    )
-
-    $(P To make this work you have to link with $(I --export-dynamic) respectively
-        use a $(I .DEF) file on Windows (see $(LINK2
-        http://wiki.dlang.org/Curl_on_Windows#Using_the_static_lib, wiki) for
-        more info on the latter).
     )
 )
 
