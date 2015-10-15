@@ -314,8 +314,8 @@ $(UL
 	$(LI Support for 16 bit computers.
 	No consideration is given in D for mixed near/far pointers and all the
 	machinations necessary to generate good 16 bit code. The D language
-	design assumes at least a 32 bit flat memory space. D will fit smoothly
-	into 64 bit architectures.
+	design assumes at least a 32 bit flat memory space and supports 64 bit as
+    well.
 	)
 
 	$(LI Mutual dependence of compiler passes. In C++, successfully parsing
@@ -412,15 +412,12 @@ $(SECTION3 Who D is Not For,
 
     $(UL
 	$(LI Realistically, nobody is going to convert million line C or C++
-	programs into D.
-	Since D does not compile unmodified C/C++
-	source code, D is not for
-	legacy apps.
-	(However, D supports legacy C API's very well. D can connect
-	directly to any code that exposes a C interface.)
+	programs into D. Since D does not compile unmodified C/C++ source code, D
+    is not for legacy apps. (However, D supports legacy C API's very well. D
+    can connect directly to any code that exposes a C interface.)
 	)
 
-	$(LI As a first programming language - Basic or Java is more suitable
+	$(LI As a first programming language - Python or JavaScript is more suitable
 	for beginners. D makes an excellent second language for intermediate
 	to advanced programmers.
 	)
@@ -461,6 +458,10 @@ $(SECTION3 Object Oriented Programming,
 	)
     )
 
+    $(P See the $(LINK2 http://dlang.org/class.html, Classes) page for more
+    information.
+    )
+
     $(SECTION4 Operator Overloading,
 
 	$(P Classes can be crafted that work with existing operators to extend
@@ -468,6 +469,10 @@ $(SECTION3 Object Oriented Programming,
 	a bignumber class and then overloading the +, -, * and / operators
 	to enable using ordinary algebraic syntax with them.
 	)
+    )
+
+    $(P See the $(LINK2 http://dlang.org/operatoroverloading.html, Operator Overloading)
+    page for more information.
     )
 )
 
@@ -497,6 +502,10 @@ $(SECTION3 Productivity,
 	files with $(D #ifndef/#endif) or $(D #pragma once) kludges,
 	etc.
 	)
+    )
+
+    $(P See the $(LINK2 http://dlang.org/module.html, Module)
+    page for more information.
     )
 
     $(SECTION4 Declaration vs Definition,
@@ -579,6 +588,10 @@ class Bar
 	)
     )
 
+    $(P See the $(LINK2 http://dlang.org/template.html, Templates)
+    page for more information.
+    )
+
     $(SECTION4 Associative Arrays,
 
 	$(P Associative arrays are arrays with an arbitrary data type as
@@ -589,7 +602,9 @@ class Bar
 	)
     )
 
-
+    $(P See the $(LINK2 http://dlang.org/hash-map.html, Associative Arrays)
+    page for more information.
+    )
 
     $(SECTION4 Documentation,
 
@@ -729,7 +744,7 @@ long[] func(int x); // declares a function returning an array of longs
 	arrays, and associative arrays.
 	)
 
-	$(P See $(LINK2 arrays.html, Arrays).
+	$(P See the $(LINK2 arrays.html, Arrays) page for more information.
 	)
 
     $(SECTION4 Strings,
@@ -809,6 +824,10 @@ $(SECTION3 Performance,
 	direct access to special floating point operations, etc.
 	)
     )
+
+    $(P See the $(LINK2 http://dlang.org/iasm.html, Inline Assembler)
+    page for more information.
+    )
 )
 
 
@@ -863,6 +882,10 @@ $(SECTION3 Reliability,
 	of some unknown piece of D code dropped in our laps - if it has no
 	unit tests and no contracts, it's unacceptable.
 	)
+    )
+
+    $(P See the $(LINK2 http://dlang.org/unittest.html, Unit Tests)
+    page for more information.
     )
 
 
@@ -1044,34 +1067,38 @@ $(SECTION2 Sample D Program (sieve.d),
 
 import std.stdio;
 
-bool[8191] flags;
-
-int main()
+void main()
 {
-    int i, count, prime, k, iter;
+    size_t count;
+    bool[8191] flags;
 
     writeln("10 iterations");
-    for (iter = 1; iter <= 10; iter++)
+    
+    // using iter as a throwaway variable
+    foreach(iter; 1 .. 11)
     {
         count = 0;
         flags[] = 1;
-        for (i = 0; i < flags.length; i++)
+
+        foreach(index, flag; flags)
         {
-            if (flags[i])
+            if (flag)
             {
-                prime = i + i + 3;
-                k = i + prime;
+                size_t prime = index + index + 3;
+                size_t k = index + prime;
+                
                 while (k < flags.length)
                 {
                     flags[k] = 0;
                     k += prime;
                 }
+                
                 count += 1;
             }
         }
     }
+
     writefln("%d primes", count);
-    return 0;
 }
 ----
 
