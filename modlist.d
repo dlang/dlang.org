@@ -35,10 +35,12 @@ struct Tree
 
     void dumpRoot()
     {
+        writeln();
         writefln("$(MENU_W_SUBMENU $(TT %s))", name);
         writefln("$(ITEMIZE");
         dumpChildren([name]);
         writeln(")");
+        writeln("$(MENU_W_SUBMENU_END)");
     }
 
     void dumpChildren(string[] pkgs)
