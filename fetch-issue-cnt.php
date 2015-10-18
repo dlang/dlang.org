@@ -1,5 +1,5 @@
 <html>
-<p align=right>
+<p align="right">
 <?php
 
 # Format is as follows:
