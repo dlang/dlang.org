@@ -116,6 +116,10 @@ a = s;     // a is initialized to point to the s array
 a = b;     // a points to the same array as b does
 ---------
 
+$(H2 $(LNAME2 indexing, Indexing))
+
+    $(P See also $(GLINK2 expression, IndexExpression).)
+
 $(H2 $(LNAME2 slicing, Slicing))
 
         $(P $(I Slicing) an array means to specify a subarray of it.
@@ -125,7 +129,7 @@ $(H2 $(LNAME2 slicing, Slicing))
         )
 
 ---------
-int[10] a;   // declare array of 10 ints
+int[10] a;   // declare array of 10 ints, all are initialized by zero
 int[] b;
 
 b = a[1..3]; // a[1..3] is a 2 element array consisting of
@@ -160,6 +164,8 @@ b = a[0 .. a.length];
 int* p;
 int[] b = p[0..8];
 ---------
+
+    $(P See also $(GLINK2 expression, SliceExpression).)
 
 $(H2 $(LNAME2 array-copying, Array Copying))
 
@@ -405,10 +411,10 @@ bar[0 .. $]
 bar[0 .. bar.length]
 
 
-p[0 .. $]      // '$' is not defined, since p is not an array
-bar[0]+$            // '$' is not defined, out of scope of [ ]
+p[0 .. $]   // '$' is not defined, since p is not an array
+bar[0]+$    // '$' is not defined, out of scope of [ ]
 
-bar[$-1] // retrieves last element of the array
+bar[$-1]    // retrieves last element of the array
 ---------
 
 $(H2 $(LNAME2 array-properties, Array Properties))
@@ -605,17 +611,7 @@ array.length = i;
 
 $(H3 $(LNAME2 func-as-property, Functions as Array Properties))
 
-        $(P If the first parameter to a function is an array, the
-        function can be called as if it were a property of the array:
-        )
-
----
-int[] array;
-void foo(int[] a, int x);
-
-foo(array, 3);
-array.foo(3);   // means the same thing
----
+    $(P See $(DDSUBLINK function, pseudo-member, Uniform Function Call Syntax (UFCS)).)
 
 $(H2 $(LNAME2 bounds, Array Bounds Checking))
 
@@ -659,10 +655,27 @@ int[3] foo;
 int x = foo[3]; // error, out of bounds
 ---------
 
-        $(P Insertion of array bounds checking code at runtime should be
-        turned on and off
-        with a compile time switch.
-        )
+    $(P An out of bounds memory access will cause undefined behavior,
+        therefore array bounds check is normally enabled in $(D @safe) functions.
+        The runtime behavior is part of the language semantics.
+    )
+
+    $(P See also $(DDSUBLINK function, safe-functions, Safe Functions).)
+
+$(H3 $(LNAME2 disable-bounds-check, Disabling Array Bounds Checking))
+
+    $(P Insertion of array bounds checking code at runtime may be
+        turned off with a compiler switch.
+    )
+
+    $(P If the bounds check in $(D @system) or $(D @trusted) code is disabled,
+        the code correctness must still be guaranteed by the code author.
+    )
+
+    $(P On the other hand, disabling the bounds check in $(D @safe) code will
+        break the guaranteed memory safety by compiler. It's not recommended
+        unless motivated by speed measurements.
+    )
 
 $(H2 $(LNAME2 array-initialization, Array Initialization))
 
@@ -849,7 +862,7 @@ $(H4 $(LNAME2 printf, C's printf() and Strings))
 
 ---------
 str ~= "\0";
-printf("the string is '%s'\n", cast(char*)str);
+printf("the string is '%s'\n", str.ptr);
 ---------
 
         $(P or:)
@@ -863,15 +876,15 @@ printf("the string is '%s'\n", std.string.toStringz(str));
         can be used directly:)
 
 -----------
-printf("the string is '%s'\n", cast(char*)"string literal");
+printf("the string is '%s'\n", "string literal".ptr);
 -----------
 
         $(P So, why does the first string literal to printf not need
-        the cast? The first parameter is prototyped as a const(char)*, and
-        a string literal can be implicitly cast to a const(char)*.
+        $(D .ptr)? The first parameter is prototyped as a $(D const(char)*), and
+        a string literal can be implicitly cast to a $(D const(char)*).
         The rest of the arguments to printf, however, are variadic
-        (specified by ...),
-        and a string literal is passed as a (length,pointer) combination
+        (specified by $(D ...)),
+        and a string literal typed $(D immutable(char)[]) cannot pass
         to variadic parameters.)
 
         $(P The second way is to use the precision specifier.
