@@ -76,3 +76,16 @@
 		}
 	});
 })(jQuery);
+
+// "This Week in D" integration
+// setTwid is called from http://arsdnet.net/this-week-in-d/twid-latest.js
+// which is included in index.html
+function setTwid(url, title, description) {
+	$('table.notice-table td:first-child').html(
+		$('<a>')
+		.attr('href', url)
+		.append($('<span>').text(title + ':'))
+		.append($('<br>'))
+		.append($('<span>').text(description))
+	);
+}
