@@ -256,7 +256,7 @@ var MD5 = function (string) {
 
 String.prototype.nl2br = function()
 {      
-    return this.replace(/\n/g, "<br />");     
+    return this.replace(/\n/g, "<br>");
 }
 
 function showHideAnswer(zis)
@@ -384,11 +384,11 @@ $(document).ready(function()
             '<div class="d_code"><pre class="d_code">'+orig+'</pre></div>'
             + '<div class="d_run_code">'
             + '<textarea class="d_code" style="display: none;"></textarea>'
-            + '<div class="d_code_stdin"><span class="d_code_title">Standard input</span><br />'
+            + '<div class="d_code_stdin"><span class="d_code_title">Standard input</span><br>'
             + '<textarea class="d_code_stdin">'+stdin+'</textarea></div>'
-            + '<div class="d_code_args"><span class="d_code_title">Command line arguments</span><br />'
+            + '<div class="d_code_args"><span class="d_code_title">Command line arguments</span><br>'
             + '<textarea class="d_code_args">'+args+'</textarea></div>'
-            + '<div class="d_code_output"><span class="d_code_title">Application output</span><br /><textarea class="d_code_output" readonly>Running...</textarea></div>'
+            + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><textarea class="d_code_output" readonly>Running...</textarea></div>'
             + '<input type="button" class="editButton" value="Edit">'
             + '<input type="button" class="argsButton" value="Args">'
             + '<input type="button" class="inputButton" value="Input">'
