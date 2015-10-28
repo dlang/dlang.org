@@ -122,11 +122,9 @@ int foo();
 $(H4 $(LNAME2 pure-functions, Pure Functions))
 
         $(P Pure functions are functions which cannot access global or static, mutable
-        state save through their arguments. This can enable optimizations based on the fact
-        that a pure function is guaranteed to mutate nothing which isn't passed to it,
-        and in cases where the compiler can guarantee that a pure function cannot
-        alter its arguments, it can enable full, functional purity (i.e. the guarantee
-        that the function will always return the same result for the same arguments).
+        state save through their arguments.
+	This enables optimizations based on the fact that a pure function may at most mutate state
+	reachable through its parameters.
         To that end, a pure function:
         )
 
@@ -367,115 +365,23 @@ $(H4 $(LNAME2 inout-functions, Inout Functions))
     )
 
 
-$(H4 $(LNAME2 property-functions, Property Functions))
+$(H4 $(LNAME2 optional-parenthesis, Optional Parentheses))
 
-        $(P Property functions are tagged with the $(D @property)
-        attribute. They cannot be called with parentheses (hence
-        they act like fields except in some cases) ($(B note:) dmd does not
-        enforce this currently).
-        )
-
-        $(P If a property function has no parameters, it works as a getter.
-        If has exactly one parameter, it works as a setter.
-        )
-
-        ---
-        struct S
-        {
-            int m_x;
-            @property
-            {
-                int x() { return m_x; }
-                int x(int newx) { return m_x = newx; }
-
-                int function(int, int) adder()
-                {
-                    return function int(int a, int b) { return a + b; }
-                }
-            }
-        }
-        void main()
-        {
-            S s;
-            s.x;        // lowered to s.x()
-            s.x = 3;    // lowered to s.x(3)
-
-            //s.x();    // NG: lowered to s.x()(), but the int value
-                        //     returned by s.x() is not callable
-            //s.x(3);   // NG: lowered to s.x()(3), but the int value
-                        //     returned by s.x() is not callable
-            assert(s.adder(1, 2) == 3);
-                        // OK lowered to s.adder()(1, 2)
-        }
-        ---
-
-        $(P If a getter property function returns a reference to other storage,
-        it also works as a setter.
-        )
-
-        ---
-        struct S
-        {
-            int m_x;
-            @property ref int x() { return m_x; }
-        }
-        void main()
-        {
-            S s;
-            int n = s.x;  // s.x()
-            assert(s.m_x == n);
-            s.x = 2;      // s.x() = 2;
-            assert(s.m_x == 2);
-        }
-        ---
-
-        $(P In most places, getter property functions are called immediately.
-        One exceptional case is the address operator.
-        )
-
-        ---
-        struct S
-        {
-            int m_x;
-            @property     int x1() { return m_x; }
-            @property ref int x2() { return m_x; }
-        }
-        void main()
-        {
-            S s;
-            auto x1 = &s.x1;
-            auto x2 = &s.x2;
-            static assert(is(typeof(x1) == delegate));
-            static assert(is(typeof(x2) == delegate));
-            // Both x1 and x2 are delegate, not int pointer.
-
-            int n = x1();
-            assert(s.m_x == n);
-            x2() = 1;
-            assert(s.m_x == 1);
-        }
-        ---
-
-        $(P Even if the given operand is a property function, the address operator
-        returns the address of the property function rather than the address of
-        its return value.
-        )
-
-
-$(H4 $(LNAME2 optional-parenthesis, Optional parenthesis))
-
-        $(P If a function call does not take any arguments syntactically,
-        it is callable without parenthesis, like a getter $(RELATIVE_LINK2 property-functions, property functions).
+	$(P If a function call passes no explicit argument, i.e. it would syntactically use $(D ()), then these parentheses
+	may be omitted, similar to a getter invocation of a
+        $(RELATIVE_LINK2 property-functions, property function).
         )
 
         ---
         void foo() {}   // no arguments
+	void fun(int x = 10) { }
         void bar(int[] arr) {}  // for UFCS
 
         void main()
         {
             foo();      // OK
             foo;        // also OK
+	    fun;	// OK
 
             int[] arr;
             arr.bar();  // OK
@@ -483,30 +389,143 @@ $(H4 $(LNAME2 optional-parenthesis, Optional parenthesis))
         }
         ---
 
-        $(P However, assignment syntax is disallowed unlike with property functions.
+	$(P Optional parentheses are not applied to delegates or function pointers.)
+
+	---
+	void main()
+	{
+	    int function() fp;
+
+	    assert(fp == 6);	// Error, incompatible types int function() and int
+	    assert(*fp == 6);	// Error, incompatible types int() and int
+
+	    int delegate() dg;
+	    assert(dg == 6);	// Error, incompatible types int delegate() and int
+	}
+	---
+
+	$(P If a function returns a delegate or function pointer, the parantheses are required if the
+	returned value is to be called.
+	)
+
+	---
+	struct S {
+	    int function() callfp() { return &numfp; }
+	    int delegate() calldg() { return &numdg; }
+	    int numdg() { return 6; }
+	}
+
+	int numfp() { return 6; }
+
+	void main()
+	{
+	    S s;
+	    int function() fp;
+
+	    fp = s.callfp;
+	    assert(fp() == 6);
+
+	    fp = s.callfp();
+	    assert(fp() == 6);
+
+	    int x = s.callfp()();
+	    assert(x == 6);
+
+	    int delegate() dg;
+
+	    dg = s.calldg;
+	    assert(dg() == 6);
+
+	    dg = s.calldg();
+	    assert(dg() == 6);
+
+	    int y = s.calldg()();
+	    assert(y == 6);
+	}
+	---
+
+$(H4 $(LNAME2 property-functions, Property Functions))
+
+	$(P Properties are functions that can be syntactically treated
+	as if they were fields or variables. Properties can be read from or written to.
+	A property is read by calling a method or function with no arguments;
+	a property is written by calling a method or function with its argument
+	being the value it is set to.
+	)
+
+	$(P Simple getter and setter properties can be written using $(LINK2 pseudo-member, UFCS).
+	These can be enhanced with the additon of the $(D @property) attribute to the function, which
+	adds the following behaviors:
+	)
+
+	$(UL
+	$(LI $(D @property) functions cannot be overloaded with non-$(D @property) functions with the same name.)
+	$(LI $(D @property) functions can only have zero, one or two parameters.)
+	$(LI $(D @property) functions cannot have variadic parameters.)
+	$(LI For the expression $(D typeof(exp)) where $(D exp) is an $(D @property) function,
+	the type is the return type of the function, rather than the type of the function.)
+	$(LI For the expression $(D __traits(compiles, exp)) where $(D exp) is an $(D @property) function,
+	a further check is made to see if the function can be called.)
+	$(LI $(D @property) are mangled differently, meaning that $(D @property) must be consistently
+	used across different compilation units.)
+	$(LI The ObjectiveC interface recognizes $(D @property) setter functions as special and modifies
+	them accordingly.)
+	)
+
+	$(P A simple property would be:)
+
+
+	---
+	struct Foo
+	{
+	    @property int data() { return m_data; } // read property
+
+	    @property int data(int value) { return m_data = value; } // write property
+
+	  private:
+	    int m_data;
+	}
+	---
+
+		$(P To use it:)
+
+	---
+	int test()
+	{
+	    Foo f;
+
+	    f.data = 3;        // same as f.data(3);
+	    return f.data + 3; // same as return f.data() + 3;
+	}
+	---
+
+	$(P The absence of a read method means that the property is write-only.
+	The absence of a write method means that the property is read-only.
+	Multiple write methods can exist; the correct one is selected using
+	the usual function overloading rules.
+	)
+
+	$(P In all the other respects, these methods are like any other methods.
+	They can be static, have different linkages,  have their address taken, etc.
+	)
+
+	$(P The built in properties $(D .sizeof), $(D .alignof), and $(D .mangleof)
+	may not be declared as fields or methods in structs, unions, classes or enums.
+	)
+
+        $(P If a property function has no parameters, it works as a getter.
+        If has exactly one parameter, it works as a setter.
         )
 
-        ---
-        struct S
-        {
-            void foo(int) {}  // one argument
-        }
-        void main()
-        {
-            S s;
-            s.foo(1);     // OK
-            //s.foo = 1;  // disallowed
-        }
-        ---
 
 $(H4 $(LNAME2 virtual-functions, Virtual Functions))
 
         $(P Virtual functions are functions that are called indirectly through a
         function pointer table, called a vtbl[], rather than directly. All
         $(D public) and $(D protected) member functions which are non-static and
-        aren't templatized are virtual unless the compiler can determine that
-        they will never be overridden (e.g. they're marked with $(D final) and
-        don't override any functions in a base class), in which case, it will
+        are not templatized are virtual unless the compiler can determine that
+        they will never be overridden (e.g. they are marked with $(D final) and
+        do not override any functions in a base class), in which case, it will
         make them non-virtual. This results in fewer bugs caused by not
         declaring a function virtual and then overriding it anyway.
         )
