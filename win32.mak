@@ -308,7 +308,7 @@ changelog\2.068.1.html : $(CHANGELOG_DDOC) changelog\2.068.1.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 changelog\2.068.2.html : $(CHANGELOG_DDOC) changelog\2.068.2.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
-changelog\2.069.0.html : $(CHANGELOG_DDOC) changelog\2.069.0_pre.dd
+changelog\2.069.0.html : $(CHANGELOG_DDOC) changelog\2.069.0.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_PRE_DDOC) $*.dd
 changelog\index.html : $(CHANGELOG_DDOC) changelog\index.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
