@@ -34,7 +34,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	changelog\2.066.0.dd changelog\2.066.1.dd \
 	changelog\2.067.0.dd changelog\2.067.1.dd \
 	changelog\2.068.0.dd changelog\2.068.1.dd \
-	changelog\2.068.2.dd changelog\2.069.0.dd \
+	changelog\2.068.2.dd changelog\2.069.0.dd changelog\2.069.1.dd \
 	changelog\index.dd changelog\upcoming.dd \
 	glossary.dd acknowledgements.dd		\
 	dcompiler.dd builtin.dd comparison.dd rationale.dd code_coverage.dd	\
