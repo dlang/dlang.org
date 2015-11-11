@@ -100,7 +100,7 @@ TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.
 	changelog\2.066.0.html changelog\2.066.1.html \
 	changelog\2.067.0.html changelog\2.067.1.html \
 	changelog\2.068.0.html changelog\2.068.1.html \
-	changelog\2.068.2.html changelog\2.069.0.html \
+	changelog\2.068.2.html changelog\2.069.0.html changelog\2.069.1.html \
 	changelog\index.html changelog\upcoming.html \
 	glossary.html acknowledgements.html builtin.html interfaceToC.html	\
 	comparison.html rationale.html ddoc.html code_coverage.html		\
@@ -309,6 +309,8 @@ changelog\2.068.1.html : $(CHANGELOG_DDOC) changelog\2.068.1.dd
 changelog\2.068.2.html : $(CHANGELOG_DDOC) changelog\2.068.2.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 changelog\2.069.0.html : $(CHANGELOG_DDOC) changelog\2.069.0.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_PRE_DDOC) $*.dd
+changelog\2.069.1.html : $(CHANGELOG_DDOC) changelog\2.069.1.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_PRE_DDOC) $*.dd
 changelog\index.html : $(CHANGELOG_DDOC) changelog\index.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
