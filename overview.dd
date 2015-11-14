@@ -757,6 +757,213 @@ long[] func(int x); // declares a function returning an array of longs
     )
 )
 
+
+$(SECTION3 Ranges,
+    $(P D uses the concept of a range in lieu of iterators or generators found in
+    other languages. A range is any type that provides a common interface to a
+    sequence of values. The purpose of a range is to allow for a simpler way to
+    write code that works on arbitrary data, thereby making it reusable.
+    )
+
+    $(P The most basic type of range is called an input range,
+    which provides three methods.
+    )
+
+-----------------------
+struct MyRange
+{
+    auto front()
+    {
+        // return the next value in the sequence
+    }
+
+    void popFront()
+    {
+        // move the front of the sequence to the next value
+    }
+
+    bool empty()
+    {
+        // true if the range has no more values to return
+    }
+}
+-----------------------
+
+    $(P To understand the power of this simple interface, let's run through an
+    example. Say we wanted to write a program that took all of the employees in
+    a company, took out the ones younger than 40, and grouped the remaining into
+    an array of arrays by their organization.
+    )
+
+-----------------------
+struct Employee
+{
+    uint id;
+    uint organization_id;
+    string name;
+    uint age;
+}
+
+struct Employees
+{
+    Employee[] data;
+
+    this(Employee[] employees)
+    {
+        employees = data;
+    }
+
+    Employee front()
+    {
+        return data[0];
+    }
+
+    void popFront()
+    {
+        data = data[1 .. $];
+    }
+
+    bool empty()
+    {
+        return data.length == 0;
+    }
+}
+-----------------------
+
+    $(P Here the data is coming from a constructor as a simple example, but it
+    could come from any source, like a CSV or a database.
+    )
+
+    $(P Please note that this code should not be used in actual code, because In D,
+    the basic dynamic array also acts as a range, so any algorithm that accepts
+    ranges also accepts arrays. However, static arrays are not considered ranges,
+    as the operation $(D popFront) is based on mutating the length of the range,
+    which is impossible with static arrays. To get a range out of a static array,
+    create a slice containing all of its elements, like so:
+    )
+
+-----------------------
+int[4] array = [1, 2, 3, 4]; // not a range
+array[]; // valid range
+-----------------------
+
+
+    $(P Now that the range is defined, we can populate it and write the filtering code.
+    )
+
+-----------------------
+void main()
+{
+    import std.algorithm.iteration : filter, chunkBy;
+
+    Employees employees = Employees([
+        Employee(1, 1, "George", 50),
+        Employee(2, 3, "John", 65),
+        Employee(3, 2, "David", 40),
+        Employee(4, 1, "Eli", 40),
+        Employee(5, 2, "Hal", 35)
+    ]);
+
+    auto older_employees = employees
+        .filter!(a => a.age > 40) // lambdas in D use the => syntax
+        .chunkBy!((a,b) => a.organization_id == b.organization_id);
+}
+-----------------------
+
+    $(P All of the algorithms in std.algorithm work with ranges to avoid the
+    problem of rewriting common functionality for every project. std.algorithm
+    implements sorts, filters, maps, reductions, and more. 
+    )
+
+    $(P Because our Employees struct conforms to the input range definition,
+    it can also be used in $(D foreach) loops, which automatically detects if the
+    value passed is an input range.
+    )
+
+-----------------------
+foreach(employee; employees)
+{
+    writeln(employee);
+}
+-----------------------
+
+    $(P which is equivalent to)
+
+-----------------------
+for(; !employees.empty; employees.popFront())
+{
+    writeln(employees.front);
+}
+-----------------------
+
+    $(SECTION4 Types of Ranges,
+        $(P The input range is just the most basic form of range, there are also
+        )
+
+        $(UL
+        $(LI forward ranges)
+        $(LI bidirectional ranges)
+        $(LI random access ranges)
+        $(LI output ranges)
+        )
+
+        $(P Each of these ranges represents a distinct way of accessing the
+        underlying data. Or, in the case of the output range, a way to send data
+        to another source. To learn more about each type of range, see the 
+        $(LINK2 http://dlang.org/phobos/std_range_primitives.html, range primitives)
+        page in the standard library documentation.
+        )
+
+        $(P Each of these types of ranges give you access to different algorithms
+        in the standard library. For example, a filter can be run on an input
+        range, but not a sort, which requires a random access range with the
+        slice operator overload defined. The requirements for each function can
+        be seen in the function signature in the documentation in the template
+        constraints. See the $(LINK2 http://dlang.org/template.html, template)
+        page and the range primitives link above for more details on template
+        constraints.
+        )
+
+        $(P As stated before, dynamic arrays and associative arrays in D act
+        as ranges. Specifically, they are random access ranges, so any of the
+        functions in std.algorithm work with these basic types.
+        )
+    )
+
+    $(SECTION4 Advanced Range Code,
+        $(P The following example uses input ranges and an output range to take
+        data from stdin, take only the unique lines, sort them, and then print
+        the result to stdout.
+        )
+
+-----------------------
+// Sort lines
+import std.stdio;
+import std.array;
+import std.algorithm;
+
+void main()
+{
+    stdin
+        .byLine(KeepTerminator.yes)
+        .uniq
+        .map!(a => a.idup)
+        .array
+        .sort
+        .copy(stdout.lockingTextWriter());
+-----------------------
+)
+
+        $(P For more examples of range based code, see the
+        $(LINK2 http://ddili.org/ders/d.en/ranges.html, Ranges) chapter in Ali
+        Çehreli's book "Programming In D". Also, see the article 
+        $(LINK2 http://wiki.dlang.org/Component_programming_with_ranges,
+        Component programming with ranges) by H. S. Teoh.
+        )
+    )
+
+)
+
 $(SECTION3 Resource Management,
 
     $(SECTION4 Automatic Memory Management,
