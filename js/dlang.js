@@ -74,6 +74,23 @@
 			if (n)
 				$('#your-code-here-default > pre').replaceWith($examples[n-1]);
 		}
+
+		// Insert the show/hide button if the contents section exists
+		$('.page-contents-header').append('<span><a href="javascript:void(0);">[hide]</a></span>');
+
+		// Event to hide or show the "contents" section when the hide button
+		// is clicked
+		$(".page-contents-header a").click(function () {
+			var elem = $('.page-contents > ol');
+
+			if (elem.is(':visible')) {
+				$(this).text("[show]");
+				elem.hide();
+			} else {
+				$(this).text("[hide]");
+				elem.show();
+			}
+		});
 	});
 })(jQuery);
 
