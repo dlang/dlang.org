@@ -493,7 +493,7 @@ modlist-release.ddoc : modlist.d
 ################ Ebook ########################
 
 dlangspec.d : $(SPECSRC) win32.mak
-	catdoc -o=dlangspec.d $(SPECSRC)
+	catdoc -odlangspec.d $(SPECSRC)
 
 dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d
 	$(DMD) $(DDOC) ebook.ddoc dlangspec.d
