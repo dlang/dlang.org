@@ -4,6 +4,9 @@ html(lang='en-US')
     | Copyright (c) 1999-2015 by Digital Mars
     | All Rights Reserved Written by Walter Bright
     | http://digitalmars.com
+  - import std.process : environment;
+  - string version_id = environment["GIT_TARGET"];
+  - string version_name = version_id.startsWith("v") ? version_id[1 .. $] : "Prerelease";
   - string root_dir = info.linkTo(null) ~ (req is null ? "../" : "");
       
   head
@@ -61,7 +64,7 @@ html(lang='en-US')
         ul
           li
             a(href='#{root_dir}index.html')
-              span D Lib 2.067.1
+              span D Lib #{version_name}
           | &#x9;
           li
             a(href='#{root_dir}library-prerelease/index.html')
@@ -78,9 +81,7 @@ html(lang='en-US')
     #content.hyphenate
       - if( auto modname = info.node.moduleName )
         #tools
-          - import std.process;
           - string project, path_prefix, line_suffix;
-          - string target = environment["GIT_TARGET"];
           - if( modname.startsWith("core.") )
             - project = "druntime", path_prefix = "src/";
           - else
@@ -88,7 +89,7 @@ html(lang='en-US')
           - if( auto decl = cast(Declaration)info.node ) line_suffix = "#L"~to!string(decl.line);
           - string filename = replace(modname, ".", "/") ~ ".d";
 
-          a.tip.button(href='https://github.com/D-Programming-Language/#{project}/blob/#{target}/#{path_prefix}#{filename}#{line_suffix}')
+          a.tip.button(href='https://github.com/D-Programming-Language/#{project}/blob/#{version_id}/#{path_prefix}#{filename}#{line_suffix}')
             | View source code
             span
               | Display the source code in #{filename} from which this page was generated on
