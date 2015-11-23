@@ -148,11 +148,13 @@ void main(string[] args)
         `Phobos documentation not present. Please place Phobos documentation HTML files into the "phobos" subdirectory.`);
 
     string[] files = chain(
-        dirEntries(docRoot ~ `/`       , "*.html", SpanMode.shallow),
-        dirEntries(docRoot ~ `/phobos/`, "*.html", SpanMode.shallow),
-    //  dirEntries(docRoot ~ `/js/`              , SpanMode.shallow),
-        dirEntries(docRoot ~ `/css/`             , SpanMode.shallow),
-        dirEntries(docRoot ~ `/images/`, "*.*"   , SpanMode.shallow),
+        dirEntries(docRoot ~ `/`          , "*.html", SpanMode.shallow),
+        dirEntries(docRoot ~ `/phobos/`   , "*.html", SpanMode.shallow),
+        dirEntries(docRoot ~ `/spec/`     , "*.html", SpanMode.shallow),
+        dirEntries(docRoot ~ `/changelog/`, "*.html", SpanMode.shallow),
+    //  dirEntries(docRoot ~ `/js/`                 , SpanMode.shallow),
+        dirEntries(docRoot ~ `/css/`                , SpanMode.shallow),
+        dirEntries(docRoot ~ `/images/`   , "*.*"   , SpanMode.shallow),
         only(docRoot ~ `/favicon.ico`)
     ).array();
 
