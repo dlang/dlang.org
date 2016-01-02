@@ -38,7 +38,7 @@ STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODE
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
 	std.c. std.algorithm.internal std.internal. std.regex.internal. std.typelist		\
 	std.windows. etc.linux.memoryerror std.stream std.cstream std.socketstream		\
-	std.metastrings)
+	std.metastrings std.experimental.ndslice.internal)
 
 MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE) --ex=core.stdc.
 
