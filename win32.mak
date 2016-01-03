@@ -140,7 +140,8 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html inde
 MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
 	--ex=std.c. --ex=std.algorithm.internal --ex=std.internal. --ex=std.regex.internal. \
 	--ex=std.typelist --ex=std.windows. --ex=etc.linux.memoryerror \
-	--ex=core.stdc. --ex=std.stream --ex=std.cstream --ex=socketstream
+	--ex=core.stdc. --ex=std.stream --ex=std.cstream --ex=socketstream \
+	--ex=std.experimental.ndslice.internal
 
 CHMTARGETS=d.hhp d.hhc d.hhk d.chm
 
