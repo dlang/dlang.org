@@ -1,0 +1,198 @@
+Ddoc
+
+$(CHANGELOG_NAV_LAST 2.069.2)
+
+$(VERSION Jan 14, 2016, =================================================,
+
+$(BUGSTITLE Language Changes,
+$(LI $(RELATIVE_LINK2 alias-funclit, Add syntactic support to make an alias to a function literal.))
+)
+
+$(BUGSTITLE Library Changes,
+$(LI $(RELATIVE_LINK2 TypeInfo.initializer, `TypeInfo.init` has been renamed to `TypeInfo.initializer`.))
+$(LI $(RELATIVE_LINK2 json-encode-control-characters, `std.json` encodes string control characters.))
+)
+
+$(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D $(VER).))
+
+$(HR)
+
+$(BUGSTITLE Language Changes,
+
+$(LI $(LNAME2 alias-funclit, Add syntactic support to make an alias to a function literal.)
+
+    $(P Example:)
+
+        ---
+        alias less1 = (a, b) => a < b;
+        alias less2 = (a, b) => a > b;
+
+        import std.algorithm : sort, equal;
+
+        int[] arr = [4, 1, 3, 2];
+        assert(equal(sort!less1(arr), [1, 2, 3, 4]));
+        assert(equal(sort!less2(arr), [4, 3, 2, 1]));
+        ---
+)
+)
+
+$(BUGSTITLE Library Changes,
+
+$(LI $(LNAME2 TypeInfo.initializer, `TypeInfo.init` has been renamed to
+    `TypeInfo.initializer`.)
+
+    $(P The method `TypeInfo.init` has been renamed to
+        $(A ../phobos-prerelease/object.html#.TypeInfo.initializer,
+        `TypeInfo.initializer`).
+        This is necessary because the method clashes with the
+        $(A ../property.html#init, type property of the same name).
+    )
+    $(P An alias with the old name has been added, and it's supposed to stay
+        around through version 2.071.0. It's scheduled to be deprecated with the
+        2.072.0 release, and is going to be `@disable`d with the 2.073.0
+        release. Finally, the special casing is going to be removed with the
+        2.074.0 release, so that the type property `init` takes over.
+    )
+)
+
+$(LI $(LNAME2 json-encode-control-characters, `std.json` encodes string control characters.)
+
+    $(P Instead of throwing a $(XREF json, JSONException), $(XREF json, toJSON)
+        encodes now the control characters of a string.
+    )
+
+    ------
+    assert(toJSON(JSONValue("foo\u007fbar")) == `"foo\u007Fbar"`);
+    ------
+)
+)
+
+$(BR)$(BIG $(LNAME2 bugfix-list, List of all bug fixes and enhancements in D $(VER):))
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(P
+$(LI $(BUGZILLA 13009): [REG2.064] inout overload conflicts with non-inout when used via alias this)
+$(LI $(BUGZILLA 14782): Internal error: backend/cod1.c)
+$(LI $(BUGZILLA 15369): [REG master] id.d$(LPAREN)369$(RPAREN): Error: Outside Unicode code space)
+)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(P
+$(LI $(BUGZILLA 3438): struct ctor with defaulted parameters should be rejected)
+$(LI $(BUGZILLA 3913): Bad error message with wrong enum)
+$(LI $(BUGZILLA 4350): $(LPAREN)mixin$(RPAREN) mixed in template identifier is not accessible by "with" statement)
+$(LI $(BUGZILLA 7903): [TDPL] public member variables are supposed to be illegal in synchronized classes)
+$(LI $(BUGZILLA 14040): Doesn't use assignment in slice)
+$(LI $(BUGZILLA 14778): ddoc doesnt generate code for enum in template struct)
+$(LI $(BUGZILLA 15133): Error message is incomprehensible)
+$(LI $(BUGZILLA 15141): Object.factory allows the creation of derived abstract classes)
+$(LI $(BUGZILLA 15156): overload set in eponymous template)
+$(LI $(BUGZILLA 15163): Parser bug on double function call)
+$(LI $(BUGZILLA 15172): ICE$(LPAREN)interpret.c ctfeCompile$(RPAREN) Assertion `!fd->semantic3Errors' failed.)
+$(LI $(BUGZILLA 15209): redundant error message on invalid field access)
+$(LI $(BUGZILLA 15233): TypeTuple causes segfault in dmd 2.68.2)
+$(LI $(BUGZILLA 15239): ICE $(LPAREN)assertion failure$(RPAREN) in ctfeInterpret$(LPAREN)$(RPAREN) — opDispatch & inline asm)
+$(LI $(BUGZILLA 15260): [dmd-internal] StringExp.compare may cause invalid memory access)
+$(LI $(BUGZILLA 15261): [dmd-internal] Trivial problem in BinExp.checkOpAssignTypes)
+$(LI $(BUGZILLA 15262): [dmd-internal] Duplicated initialization in Token struct static constructor)
+$(LI $(BUGZILLA 15309): [dmd-internal] ScopeExp.semantic$(LPAREN)$(RPAREN) should set its type always)
+$(LI $(BUGZILLA 15317): Segfault in Type::kind$(LPAREN)$(RPAREN) with DMD v2.069.0)
+$(LI $(BUGZILLA 15340): Spurious "overlapped default initialization" errors with auto fields)
+$(LI $(BUGZILLA 15352): template arguments matching error with delegates)
+$(LI $(BUGZILLA 15366): Enum typed as bool behaves as bool even when cast)
+$(LI $(BUGZILLA 15394): [internal] CompileExp and FileExp has same op TOKmixin)
+$(LI $(BUGZILLA 15396): static immutable not recognized as constant within switch statement)
+$(LI $(BUGZILLA 15403): [internal] FileExp represents ImportExpression, the AST class naming is not intuitive)
+$(LI $(BUGZILLA 15404): [internal] DotIdExp$(LPAREN)TOKdot$(RPAREN) and DotExp$(LPAREN)TOKdotexp$(RPAREN))
+$(LI $(BUGZILLA 15417): Wrong parameter passing for variadic nested functions within aggregate)
+)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(P
+$(LI $(BUGZILLA 12421): Allow simpler syntax for lambda template declarations)
+$(LI $(BUGZILLA 15015): Win64: interop with C/C++ fails if function return value is a struct of size 8)
+$(LI $(BUGZILLA 15186): Emit better diagnostic for C++ member lookup operators)
+$(LI $(BUGZILLA 15464): Template parameter-dependent attributes)
+)
+)
+$(BUGSTITLE Phobos regressions,
+
+$(P
+$(LI $(BUGZILLA 14861): Error in stdio.d in LockingTextReader.readFront$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 15319): [REG2.069] module map is in file std/map.d which cannot be read)
+)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(P
+$(LI $(BUGZILLA 3764): Remove Phobos workarounds for fixed bugs)
+$(LI $(BUGZILLA 14786): The built-in exponentiation operator ^^ sometimes returns a value with the wrong sign.)
+$(LI $(BUGZILLA 15187): dispose for allocators is broken)
+$(LI $(BUGZILLA 15188): `deallocate` cause memory leaks)
+$(LI $(BUGZILLA 15220): [REG2.065] std.getopt parses -o=value as "=value")
+$(LI $(BUGZILLA 15238): Heisenbug running std.random unittests)
+$(LI $(BUGZILLA 15313): std.conv.emplace cannot initialize const objects)
+$(LI $(BUGZILLA 15336): std.json: opIn undocumented for JSONValue)
+$(LI $(BUGZILLA 15364): BitArray.len should be private)
+$(LI $(BUGZILLA 15409): Mallocator cant be used in @nogc code)
+$(LI $(BUGZILLA 15420): topN$(LPAREN)Range, Range$(RPAREN) does not respect its less predicate)
+$(LI $(BUGZILLA 15429): [std.stdio] Broken link in documentation)
+)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(P
+$(LI $(BUGZILLA 12987): topN should return the top portion of the range)
+$(LI $(BUGZILLA 15128): "IP_ADD_MEMBERSHIP" error in winsock2.d)
+$(LI $(BUGZILLA 15146): std.file.dirEntries$(LPAREN)""$(RPAREN) only works on Windows)
+$(LI $(BUGZILLA 15198): evenChunks - std.range.chunks variant which slices range into N evenly-sized chunks)
+$(LI $(BUGZILLA 15208): Eradicate all uses of "Enforcement failed" in Phobos)
+$(LI $(BUGZILLA 15212): BigInt should implement opCast!long and opCast!int)
+$(LI $(BUGZILLA 15320): static assert$(LPAREN)__traits$(LPAREN)compiles, xyz$(RPAREN)$(RPAREN) considered harmful in unittests)
+)
+)
+$(BUGSTITLE Druntime bugs,
+
+$(P
+$(LI $(BUGZILLA 15270): use TLS to store Thread.getThis $(LPAREN)pthread_getspecific causes heavy lock contention$(RPAREN))
+$(LI $(BUGZILLA 15367): array of delegates comparison fails)
+)
+)
+$(BUGSTITLE Druntime enhancements,
+
+$(P
+$(LI $(BUGZILLA 15053): Runtime.cArgs not @nogc)
+$(LI $(BUGZILLA 15268): possible deadlock for Thread.getAll/Thread.opApply w/ GC.collect)
+)
+)
+$(BUGSTITLE dlang.org bugs,
+
+$(P
+$(LI $(BUGZILLA 8846): Specs for Inline Assembler don't include cmpxchg16b)
+$(LI $(BUGZILLA 15250): Grammar does not contain rules for multiple slices in an index expression)
+)
+)
+$(BUGSTITLE dlang.org enhancements,
+
+$(P
+$(LI $(BUGZILLA 13624): Parts of the Overview page is very out of date)
+$(LI $(BUGZILLA 15078): GC documentation should reflect 2.067 changes)
+)
+)
+$(BUGSTITLE Tools bugs,
+
+$(P
+$(LI $(BUGZILLA 15173): rdmd man page incorrect/outdated)
+$(LI $(BUGZILLA 15174): Add or undocument --tmpdir switch)
+$(LI $(BUGZILLA 15175): rdmd --loop and --eval now complain about std.stream deprecation warnings)
+)
+)
+
+)
+
+Macros:
+	VER=2.070.0
+	TITLE=Change Log: $(VER)
