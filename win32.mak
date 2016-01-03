@@ -36,7 +36,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	changelog\2.068.0.dd changelog\2.068.1.dd \
 	changelog\2.068.2.dd changelog\2.069.0.dd changelog\2.069.1.dd \
 	changelog\2.069.2.dd \
-	changelog\index.dd changelog\upcoming.dd \
+	changelog\index.dd \
 	glossary.dd acknowledgements.dd		\
 	dcompiler.dd builtin.dd comparison.dd rationale.dd code_coverage.dd	\
 	exception-safe.dd rdmd.dd templates-revisited.dd warnings.dd		\
@@ -48,15 +48,23 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	32-64-portability.dd dll-linux.dd bugstats.php.dd getstarted.dd \
 	css\cssmenu.css.dd ctarguments.dd
 
-SPECSRC=spec.dd intro.dd lex.dd grammar.dd module.dd declaration.dd type.dd property.dd	\
-	attribute.dd pragma.dd expression.dd statement.dd arrays.dd			\
-	hash-map.dd struct.dd class.dd interface.dd enum.dd const3.dd		\
-	function.dd operatoroverloading.dd template.dd template-mixin.dd	\
-	contracts.dd version.dd traits.dd errors.dd unittest.dd garbage.dd		\
-	float.dd iasm.dd ddoc.dd interfaceToC.dd cpp_interface.dd objc_interface.dd			\
-	portability.dd entity.dd memory-safe-d.dd abi.dd simd.dd
+SPECSRC=spec\spec.dd spec\intro.dd spec\lex.dd \
+	spec\grammar.dd spec\module.dd spec\declaration.dd \
+	spec\type.dd spec\property.dd spec\attribute.dd \
+	spec\pragma.dd spec\expression.dd spec\statement.dd \
+	spec\arrays.dd spec\hash-map.dd spec\struct.dd \
+	spec\class.dd spec\interface.dd spec\enum.dd \
+	spec\const3.dd spec\function.dd \
+	spec\operatoroverloading.dd spec\template.dd \
+	spec\template-mixin.dd spec\contracts.dd spec\version.dd \
+	spec\traits.dd spec\errors.dd spec\unittest.dd \
+	spec\garbage.dd spec\float.dd spec\iasm.dd \
+	spec\ddoc.dd spec\interfaceToC.dd spec\cpp_interface.dd \
+	spec\objc_interface.dd spec\portability.dd spec\entity.dd \
+	spec\memory-safe-d.dd spec\abi.dd spec\simd.dd
 
 DDOC=macros.ddoc html.ddoc dlang.org.ddoc windows.ddoc doc.ddoc $(NODATETIME)
+LANGUAGE_DDOC=$(DDOC) spec\spec.ddoc
 
 DDOC_STD=std.ddoc std_navbar-release.ddoc modlist-release.ddoc
 
@@ -68,13 +76,23 @@ IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 
 PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html d-keyring.gpg
 
-TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.html	\
-	intro.html spec.html lex.html grammar.html module.html declaration.html type.html	\
-	property.html attribute.html pragma.html expression.html statement.html	\
-	arrays.html struct.html class.html enum.html function.html		\
-	operatoroverloading.html template.html mixin.html contracts.html version.html	\
-	errors.html garbage.html memory.html float.html iasm.html		\
-	interface.html portability.html entity.html abi.html windows.html	\
+SPECTARGETS=spec\spec.html spec\intro.html spec\lex.html \
+	spec\grammar.html spec\module.html spec\declaration.html \
+	spec\type.html spec\property.html spec\attribute.html \
+	spec\pragma.html spec\expression.html spec\statement.html \
+	spec\arrays.html spec\hash-map.html spec\struct.html \
+	spec\class.html spec\interface.html spec\enum.html \
+	spec\const3.html spec\function.html \
+	spec\operatoroverloading.html spec\template.html \
+	spec\template-mixin.html spec\contracts.html spec\version.html \
+	spec\traits.html spec\errors.html spec\unittest.html \
+	spec\garbage.html spec\float.html spec\iasm.html \
+	spec\ddoc.html spec\interfaceToC.html spec\cpp_interface.html \
+	spec\objc_interface.html spec\portability.html spec\entity.html \
+	spec\memory-safe-d.html spec\abi.html spec\simd.html
+
+TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.html	\
+	mixin.html memory.html windows.html \
 	dll.html htomodule.html faq.html dstyle.html wc.html \
 	changelog\2.000.html changelog\2.001.html changelog\2.002.html \
 	changelog\2.003.html changelog\2.004.html changelog\2.005.html \
@@ -102,28 +120,28 @@ TARGETS=cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.
 	changelog\2.067.0.html changelog\2.067.1.html \
 	changelog\2.068.0.html changelog\2.068.1.html \
 	changelog\2.068.2.html changelog\2.069.0.html changelog\2.069.1.html \
-	changelog\index.html changelog\upcoming.html \
-	glossary.html acknowledgements.html builtin.html interfaceToC.html	\
-	comparison.html rationale.html ddoc.html code_coverage.html		\
+	changelog\index.html \
+	glossary.html acknowledgements.html builtin.html \
+	comparison.html rationale.html code_coverage.html \
 	exception-safe.html rdmd.html templates-revisited.html warnings.html	\
 	ascii-table.html windbg.html htod.html regular-expression.html		\
 	lazy-evaluation.html variadic-function-templates.html			\
 	howto-promote.html tuple.html template-comparison.html			\
-	template-mixin.html traits.html COM.html cpp_interface.html hijack.html	\
-	const3.html features2.html safed.html const-faq.html dmd-windows.html	\
+	COM.html hijack.html \
+	features2.html safed.html const-faq.html dmd-windows.html \
 	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html		\
-	memory-safe-d.html d-floating-point.html migrate-to-shared.html		\
-	D1toD2.html unittest.html hash-map.html intro-to-datetime.html		\
-	simd.html deprecate.html download.html 32-64-portability.html		\
+	d-floating-point.html migrate-to-shared.html \
+	D1toD2.html intro-to-datetime.html \
+	deprecate.html download.html 32-64-portability.html \
 	d-array-article.html dll-linux.html bugstats.php.html getstarted.html \
-	gpg_keys.html forum-template.html css/cssmenu.css ctarguments.html \
-	objc_interface.html
+	gpg_keys.html forum-template.html css/cssmenu.css ctarguments.html
 
 # exclude list
 MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
 	--ex=std.c. --ex=std.algorithm.internal --ex=std.internal. --ex=std.regex.internal. \
 	--ex=std.typelist --ex=std.windows. --ex=etc.linux.memoryerror \
-	--ex=core.stdc. --ex=std.stream --ex=std.cstream --ex=socketstream
+	--ex=core.stdc. --ex=std.stream --ex=std.cstream --ex=socketstream \
+	--ex=std.experimental.ndslice.internal
 
 CHMTARGETS=d.hhp d.hhc d.hhk d.chm
 
@@ -151,15 +169,9 @@ dmd-windows.html : $(DDOC) windows.ddoc dcompiler.dd
 
 32-64-portability.html : $(DDOC) 32-64-portability.dd
 
-abi.html : $(DDOC) abi.dd
-
 acknowledgements.html : $(DDOC) acknowledgements.dd
 
-arrays.html : $(DDOC) arrays.dd
-
 ascii-table.html : $(DDOC) ascii-table.dd
-
-attribute.html : $(DDOC) attribute.dd
 
 bug-stats.php.html : $(DDOC) bug-stats.php.dd
 
@@ -317,10 +329,6 @@ changelog\2.069.2.html : $(CHANGELOG_DDOC) changelog\2.069.2.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 changelog\index.html : $(CHANGELOG_DDOC) changelog\index.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
-changelog\upcoming.html : $(CHANGELOG_DDOC) changelog\upcoming.dd
-	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
-
-class.html : $(DDOC) class.dd
 
 code_coverage.html : $(DDOC) code_coverage.dd
 
@@ -330,11 +338,7 @@ comparison.html : $(DDOC) comparison.dd
 
 concepts.html : $(DDOC) concepts.dd
 
-const3.html : $(DDOC) const3.dd
-
 const-faq.html : $(DDOC) const-faq.dd
-
-cpp_interface.html : $(DDOC) cpp_interface.dd
 
 cppcontracts.html : $(DDOC) cppcontracts.dd
 
@@ -348,12 +352,6 @@ D1toD2.html : $(DDOC) D1toD2.dd
 
 d-floating-point.html : $(DDOC) d-floating-point.dd
 
-contracts.html : $(DDOC) contracts.dd
-
-ddoc.html : $(DDOC) ddoc.dd
-
-declaration.html : $(DDOC) declaration.dd
-
 deprecate.html : $(DDOC) deprecate.dd
 
 dll.html : $(DDOC) dll.dd
@@ -364,33 +362,15 @@ download.html : $(DDOC) download.dd
 
 dstyle.html : $(DDOC) dstyle.dd
 
-entity.html : $(DDOC) entity.dd
-
-enum.html : $(DDOC) enum.dd
-
-errors.html : $(DDOC) errors.dd
-
-exception-safe.html : $(DDOC) exception-safe.dd
-
-expression.html : $(DDOC) expression.dd
-
 faq.html : $(DDOC) faq.dd
 
 features2.html : $(DDOC) features2.dd
-
-float.html : $(DDOC) float.dd
-
-function.html : $(DDOC) function.dd
-
-garbage.html : $(DDOC) garbage.dd
 
 getstarted.html : $(DDOC) getstarted.dd
 
 glossary.html : $(DDOC) glossary.dd
 
-gpg_keys.html : $(DDOC) gpg_keys.dd
-
-hash-map.html : $(DDOC) hash-map.dd
+exception-safe.html : $(DDOC) exception-safe.dd
 
 hijack.html : $(DDOC) hijack.dd
 
@@ -400,49 +380,144 @@ htod.html : $(DDOC) htod.dd
 
 htomodule.html : $(DDOC) htomodule.dd
 
-iasm.html : $(DDOC) iasm.dd
-
-interface.html : $(DDOC) interface.dd
-
-interfaceToC.html : $(DDOC) interfaceToC.dd
-
 index.html : $(DDOC) index.dd
-
-intro.html : $(DDOC) intro.dd
 
 intro-to-datetime.html : $(DDOC) intro-to-datetime.dd
 
+gpg_keys.html : $(DDOC) gpg_keys.dd
+
+spec\abi.html : $(LANGUAGE_DDOC) spec\abi.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\arrays.html : $(LANGUAGE_DDOC) spec\arrays.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+
+spec\attribute.html : $(LANGUAGE_DDOC) spec\attribute.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\class.html : $(LANGUAGE_DDOC) spec\class.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\const3.html : $(LANGUAGE_DDOC) spec\const3.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\contracts.html : $(LANGUAGE_DDOC) spec\contracts.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\cpp_interface.html : $(LANGUAGE_DDOC) spec\cpp_interface.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\ddoc.html : $(LANGUAGE_DDOC) spec\ddoc.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\declaration.html : $(LANGUAGE_DDOC) spec\declaration.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\entity.html : $(LANGUAGE_DDOC) spec\entity.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\enum.html : $(LANGUAGE_DDOC) spec\enum.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\errors.html : $(LANGUAGE_DDOC) spec\errors.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\expression.html : $(LANGUAGE_DDOC) spec\expression.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\float.html : $(LANGUAGE_DDOC) spec\float.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\function.html : $(LANGUAGE_DDOC) spec\function.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\garbage.html : $(LANGUAGE_DDOC) spec\garbage.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\grammar.html : $(LANGUAGE_DDOC) spec\grammar.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\hash-map.html : $(LANGUAGE_DDOC) spec\hash-map.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\iasm.html : $(LANGUAGE_DDOC) spec\iasm.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\interface.html : $(LANGUAGE_DDOC) spec\interface.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\interfaceToC.html : $(LANGUAGE_DDOC) spec\interfaceToC.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\intro.html : $(LANGUAGE_DDOC) spec\intro.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\objc_interface.html : $(LANGUAGE_DDOC) spec\objc_interface.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\lex.html : $(LANGUAGE_DDOC) spec\lex.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\memory-safe-d.html : $(LANGUAGE_DDOC) spec\memory-safe-d.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\module.html : $(LANGUAGE_DDOC) spec\module.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\operatoroverloading.html : $(LANGUAGE_DDOC) spec\operatoroverloading.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\portability.html : $(LANGUAGE_LANGUAGE_DDOC) spec\portability.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\pragma.html : $(LANGUAGE_DDOC) spec\pragma.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\property.html : $(LANGUAGE_DDOC) spec\property.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\simd.html : $(LANGUAGE_DDOC) spec\simd.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\spec.html : $(LANGUAGE_DDOC) spec\spec.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\statement.html : $(LANGUAGE_DDOC) spec\statement.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\struct.html : $(LANGUAGE_DDOC) spec\struct.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\template-mixin.html : $(LANGUAGE_DDOC) spec\template-mixin.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\template.html : $(LANGUAGE_DDOC) spec\template.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\traits.html : $(LANGUAGE_DDOC) spec\traits.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\type.html : $(LANGUAGE_DDOC) spec\type.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\unittest.html : $(LANGUAGE_DDOC) spec\unittest.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
+spec\version.html : $(LANGUAGE_DDOC) spec\version.dd
+	$(DMD) -o- -c -D -Df$*.html $(LANGUAGE_DDOC) $*.dd
+
 lazy-evaluation.html : $(DDOC) lazy-evaluation.dd
 
-spec.html : $(DDOC) spec.dd
-
-lex.html : $(DDOC) lex.dd
-
-grammar.html : $(DDOC) grammar.dd
-
 memory.html : $(DDOC) memory.dd
-
-memory-safe-d.html : $(DDOC) memory-safe-d.dd
 
 migrate-to-shared.html : $(DDOC) migrate-to-shared.dd
 
 mixin.html : $(DDOC) mixin.dd
 
-module.html : $(DDOC) module.dd
-
-objc_interface.html : $(DDOC) objc_interface.dd
-
-operatoroverloading.html : $(DDOC) operatoroverloading.dd
-
 overview.html : $(DDOC) overview.dd
 
-portability.html : $(DDOC) portability.dd
-
-pragma.html : $(DDOC) pragma.dd
-
 pretod.html : $(DDOC) pretod.dd
-
-property.html : $(DDOC) property.dd
 
 rationale.html : $(DDOC) rationale.dd
 
@@ -452,31 +527,13 @@ regular-expression.html : $(DDOC) regular-expression.dd
 
 safed.html : $(DDOC) safed.dd
 
-simd.html : $(DDOC) simd.dd
-
-statement.html : $(DDOC) statement.dd
-
-struct.html : $(DDOC) struct.dd
-
-template.html : $(DDOC) template.dd
-
 template-comparison.html : $(DDOC) template-comparison.dd
-
-template-mixin.html : $(DDOC) template-mixin.dd
 
 templates-revisited.html : $(DDOC) templates-revisited.dd
 
-traits.html : $(DDOC) traits.dd
-
 tuple.html : $(DDOC) tuple.dd
 
-type.html : $(DDOC) type.dd
-
-unittest.html : $(DDOC) unittest.dd
-
 variadic-function-templates.html : $(DDOC) variadic-function-templates.dd
-
-version.html : $(DDOC) version.dd
 
 warnings.html : $(DDOC) warnings.dd
 
@@ -498,10 +555,10 @@ modlist-release.ddoc : modlist.d
 ################ Ebook ########################
 
 dlangspec.d : $(SPECSRC) win32.mak
-	catdoc -o=dlangspec.d $(SPECSRC)
+	catdoc -odlangspec.d $(SPECSRC)
 
-dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d
-	$(DMD) $(DDOC) ebook.ddoc dlangspec.d
+dlangspec.html : $(LANGUAGE_DDOC) ebook.ddoc dlangspec.d
+	$(DMD) $(LANGUAGE_DDOC) ebook.ddoc dlangspec.d
 
 dlangspec.zip : dlangspec.html ebook.css win32.mak
 	del dlangspec.zip
@@ -538,7 +595,7 @@ d.tag : chmgen.exe $(TARGETS)
 
 zip:
 	del doc.zip
-	zip32 doc win32.mak $(DDOC) windows.ddoc linux.ddoc osx.ddoc freebsd.ddoc ebook.ddoc
+	zip32 doc win32.mak $(LANGUAGE_DDOC) windows.ddoc linux.ddoc osx.ddoc freebsd.ddoc ebook.ddoc
 	zip32 doc $(SRC) $(PREMADE)
 	zip32 doc $(ASSETS)
 	zip32 doc ebook.css dlangspec.opf dlangspec.ncx dlangspec.png
@@ -563,10 +620,7 @@ apidocs-serve: docs.json
 docs.json:
 	mkdir .tmp
 	dir /s /b /a-d ..\druntime\src\*.d | findstr /V "unittest.d gcstub" > .tmp/files.txt
-	dir /s /b /a-d ..\phobos\*.d | findstr /V "unittest.d linux osx format.d" >> .tmp/files.txt
+	dir /s /b /a-d ..\phobos\*.d | findstr /V "unittest.d linux osx" >> .tmp/files.txt
 	dmd -c -o- -version=CoreDdoc -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
-	# WORKAROUND FOR DEPENDECY TRACKING BUG IN DUB (issue #331)
-	dub build --nodeps --force --root $(DPL_DOCS_PATH)
-	#
 	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented $(MOD_EXCLUDES_RELEASE)
 	rmdir /s /q .tmp

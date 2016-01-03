@@ -38,7 +38,7 @@ STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODE
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
 	std.c. std.algorithm.internal std.internal. std.regex.internal. std.typelist		\
 	std.windows. etc.linux.memoryerror std.stream std.cstream std.socketstream		\
-	std.metastrings)
+	std.metastrings std.experimental.ndslice.internal)
 
 MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE) --ex=core.stdc.
 
@@ -113,6 +113,7 @@ endif
 
 DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
 STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
+SPEC_DDOC=${DDOC} spec/spec.ddoc
 STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
@@ -146,12 +147,13 @@ d-keyring.gpg
 # Language spec root filenames. They have extension .dd in the source
 # and .html in the generated HTML. These are also used for the mobi
 # book generation, for which reason the list is sorted by chapter.
-SPEC_ROOT=spec intro lex grammar module declaration type property attribute pragma	\
+SPEC_ROOT=$(addprefix spec/, \
+	spec intro lex grammar module declaration type property attribute pragma	\
 	expression statement arrays hash-map struct class interface enum	\
 	const3 function operatoroverloading template template-mixin contracts		\
 	version traits errors unittest garbage float iasm ddoc				\
 	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
-	abi simd
+	abi simd)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
@@ -164,7 +166,7 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements ascii-table		\
 	comparison cpptod ctarguments ctod D1toD2 d-array-article d-floating-point		\
 	deprecate dll dll-linux dmd-freebsd dmd-linux dmd-osx dmd-windows	\
 	download dstyle exception-safe faq features2 forum-template gpg_keys getstarted glossary gsoc2011 \
-	gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index intro \
+	gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index \
 	intro-to-datetime lazy-evaluation memory migrate-to-shared mixin	\
 	overview pretod rationale rdmd regular-expression safed			\
 	template-comparison templates-revisited tuple				\
@@ -179,11 +181,17 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
 # Pattern rulez
 
+# NOTE: Depending on the version of make, order matters here. Therefore, put
+# sub-directories before their parents.
+
 $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
 $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+
+$(DOC_OUTPUT_DIR)/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
+	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
 
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
@@ -240,7 +248,7 @@ $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	(true $(foreach F, $(TARGETS), \
 	  && echo \
 	    "$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`")) \
-	  | sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\(.*\)/<a href="\1">\2<\/a><p>/' >> sitemap.dd
+	  | sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\(.*\)/<a href="\1">\2<\/a><br>/' >> sitemap.dd
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) sitemap.dd
 	rm sitemap.dd
 

@@ -182,7 +182,8 @@ $(P $(B Note): Using $(D .stringof) for code generation is not recommended,
     as the internal representation of a type or expression can change between
     different compiler versions.)
 
-$(P Instead you should prefer to use the $(DDSUBLINK traits, identifier, identifier) trait,
+$(P Instead you should prefer to use the
+    $(DDSUBLINK spec/traits, identifier, identifier) trait,
     or one of the Phobos helper functions such as $(PHOBOS traits, fullyQualifiedName, fullyQualifiedName).)
 )
 
@@ -240,81 +241,7 @@ $(SECTION3 $(LNAME2 classinfo, .classinfo) Property,
 
 $(SECTION3 $(LNAME2 classproperties, User Defined Properties),
 
-	$(P Properties are functions that can be syntactically treated
-	as if they were fields or variables. Properties can be read from or written to.
-	A property is read by calling a method or function with no arguments;
-	a property is written by calling a method or function with its argument
-	being the value it is set to.
-	)
-
-	$(P A simple property would be:)
-
-
-----------------
-struct Foo
-{
-    @property int data() { return m_data; } // read property
-
-    @property int data(int value) { return m_data = value; } // write property
-
-  private:
-    int m_data;
-}
-----------------
-
-	$(P Properties are marked with the $(CODE @property) attribute.
-	Properties may only have zero or one parameter, and may not be variadic.
-	Property functions may not be overloaded with non-property functions.
-	)
-
-	$(P To use it:)
-
-----------------
-int test()
-{
-    Foo f;
-
-    f.data = 3;        // same as f.data(3);
-    return f.data + 3; // same as return f.data() + 3;
-}
-----------------
-
-	$(P The absence of a read method means that the property is write-only.
-	The absence of a write method means that the property is read-only.
-	Multiple write methods can exist; the correct one is selected using
-	the usual function overloading rules.
-	)
-
-	$(P In all the other respects, these methods are like any other methods.
-	They can be static, have different linkages,  have their address taken, etc.
-	)
-
-
-	$(P $(B Note:) A property can be the left-hand side of an
-	$(I op)=, ++, or -- operator if it returns a ref.
-	)
-
-	$(P The built in properties $(CODE .sizeof), $(CODE .alignof), and $(CODE .mangleof)
-	may not be declared as fields or methods in structs, unions, classes or enums.
-	)
-
-	$(P If a .property is applied to a user-defined property, the .property is applied
-	to the result of the function call.
-	)
-
----
-void main()
-{
-    @property int[] delegate() bar1 = { return [1, 2]; };
-    auto x1 = bar1.ptr; // points to array data
-
-    struct Foo { int* ptr; }
-    @property Foo delegate() bar2 = { return Foo(); };
-    auto x2 = bar2.ptr; // gets value of Foo.ptr
-}
----
-
-
+	$(P User defined properties can be created using $(LINK2 function.html#property-functions, Property Functions).)
 )
 
 )

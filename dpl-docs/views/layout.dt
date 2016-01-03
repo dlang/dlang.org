@@ -4,6 +4,9 @@ html(lang='en-US')
     | Copyright (c) 1999-2015 by Digital Mars
     | All Rights Reserved Written by Walter Bright
     | http://digitalmars.com
+  - import std.process : environment;
+  - string version_id = environment["GIT_TARGET"];
+  - string version_name = version_id.startsWith("v") ? version_id[1 .. $] : "Prerelease";
   - string root_dir = info.linkTo(null) ~ (req is null ? "../" : "");
       
   head
@@ -61,7 +64,7 @@ html(lang='en-US')
         ul
           li
             a(href='#{root_dir}index.html')
-              span D Lib 2.067.1
+              span D Lib #{version_name}
           | &#x9;
           li
             a(href='#{root_dir}library-prerelease/index.html')
@@ -78,9 +81,7 @@ html(lang='en-US')
     #content.hyphenate
       - if( auto modname = info.node.moduleName )
         #tools
-          - import std.process;
           - string project, path_prefix, line_suffix;
-          - string target = environment["GIT_TARGET"];
           - if( modname.startsWith("core.") )
             - project = "druntime", path_prefix = "src/";
           - else
@@ -88,7 +89,7 @@ html(lang='en-US')
           - if( auto decl = cast(Declaration)info.node ) line_suffix = "#L"~to!string(decl.line);
           - string filename = replace(modname, ".", "/") ~ ".d";
 
-          a.tip.button(href='https://github.com/D-Programming-Language/#{project}/blob/#{target}/#{path_prefix}#{filename}#{line_suffix}')
+          a.tip.button(href='https://github.com/D-Programming-Language/#{project}/blob/#{version_id}/#{path_prefix}#{filename}#{line_suffix}')
             | View source code
             span
               | Display the source code in #{filename} from which this page was generated on
@@ -108,11 +109,12 @@ html(lang='en-US')
             span
               | View or edit the community-maintained wiki page associated with this page.
 
-      - auto hidx = std.string.indexOf(title, ' ');
-      - if (title.endsWith(" - multiple declarations"))
+      - auto hidx = std.string.lastIndexOf(title, ' ');
+      - auto node = info.docGroups.length ? info.docGroups[0].members[0] : null;
+      - if (title.endsWith(" - multiple declarations") && node)
         h1 <code><a href="#{info.linkTo(info.mod)}">#{info.mod.qualifiedName}</a>.#{title[0 .. $-24]}</code> #{title[$-24 ..$]}
-      - else if (hidx > 0 && !title.startsWith("Module ") && info.mod)
-        h1 #{title[0 .. hidx]} <code><a href="#{info.linkTo(info.mod)}">#{info.mod.qualifiedName}</a>.#{title[hidx+1 .. $]}</code>
+      - else if (hidx > 0 && !title.startsWith("Module ") && node)
+        h1 #{title[0 .. hidx]} <code><a href="#{info.linkTo(node.parent)}">#{node.parent.qualifiedName}</a>.#{node.name}</code>
       - else if (hidx > 0 && title.startsWith("Module ") && info.mod)
         h1 Module <code>#{info.mod.qualifiedName}</code>
       - else
@@ -129,7 +131,7 @@ html(lang='en-US')
     script(type='text/javascript', src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js')
     |     
     script(type='text/javascript').
-      window.jQuery || document.write('<script src="#{root_dir}js/jquery-1.7.2.min.js">\\x3C/script>')
+      window.jQuery || document.write('\\x3Cscript src="#{root_dir}js/jquery-1.7.2.min.js">\\x3C/script>')
     |     
     script(type='text/javascript', src='#{root_dir}js/codemirror-compressed.js')
     |     
