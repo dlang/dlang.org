@@ -35,7 +35,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	changelog\2.067.0.dd changelog\2.067.1.dd \
 	changelog\2.068.0.dd changelog\2.068.1.dd \
 	changelog\2.068.2.dd changelog\2.069.0.dd changelog\2.069.1.dd \
-	changelog\2.069.2.dd \
+	changelog\2.069.2.dd changelog\2.070.0_pre.dd \
 	changelog\index.dd \
 	glossary.dd acknowledgements.dd		\
 	dcompiler.dd builtin.dd comparison.dd rationale.dd code_coverage.dd	\
@@ -327,6 +327,8 @@ changelog\2.069.1.html : $(CHANGELOG_DDOC) changelog\2.069.1.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 changelog\2.069.2.html : $(CHANGELOG_DDOC) changelog\2.069.2.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.070.0.html : $(CHANGELOG_DDOC) changelog\2.070.0_pre.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_PRE_DDOC) $*.dd
 changelog\index.html : $(CHANGELOG_DDOC) changelog\index.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 
