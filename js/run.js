@@ -353,7 +353,7 @@ $(document).ready(function()
 
     var currentPage = $(location).attr('pathname');
     
-    if (currentPage != "/" && currentPage != "/index.html")
+    if ($('body')[0].id != "Home")
         return;
 
     $('pre[class~=d_code]').each(function(index)
