@@ -59,7 +59,7 @@ function listanchors()
             var a = arr[i];
             var text = lastName(a);
             if (i != 0) newText += " &middot;"; 
-            newText += ' <a href="#' + a +
+            newText += ' <a href="#' + a.slice(1) + // Skip dot
                 '">' + text + '</a>';
         }
         if (newText != "")
