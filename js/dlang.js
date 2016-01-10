@@ -1,16 +1,17 @@
 (function($) {
     $(function() {
         if (typeof cssmenu_no_js === 'undefined') {
-            // add subnav toggle
-            $('.subnav').addClass('expand-container');
-            $('.subnav').prepend(
-                $('.subnav h2').clone().addClass('expand-toggle')
-            );
+            var menu_ul = $('#cssmenu > ul > li > ul');
+            menu_ul.hide();
+
+            function baseName(str) {
+                return str.split('/').pop();
+            }
 
             // highlight menu entry of the current page
             var href = window.location.href.split('#')[0];
             var current;
-            var res = $('#top a, .subnav a').each(function (_, a) {
+            var res = $('#cssmenu a').each(function (_, a) {
                 if (a.href == href) {
                     current = a;
                     return false;
@@ -20,42 +21,50 @@
             // direct li parent containing the link
             current.parent('li').addClass('active');
             // topmost li parent, e.g. 'std'
-            current.parents('#top .expand-container').addClass('active');
-            current.parents('.subnav .expand-container')
-                .addClass('open');
+            current.parents('#cssmenu li.has-sub').addClass('active')
+            // show menu tree
+                .children('ul').show();
 
-            var open_main_item = null;
-            $('.expand-toggle').click(function(e) {
-                var container = $(this).parent('.expand-container');
-                container.toggleClass('open');
 
-                /* In the main menu, let only one dropdown be open at a
-                time. Also close any open main menu dropdown when clicking
-                elsewhere. */
-                if (open_main_item !== container && open_main_item !== null) {
-                    open_main_item.removeClass("open");
+            $('#cssmenu > ul > li > a').click(function() {
+                $li = $(this).closest('li');
+                if (!$li.hasClass('has-sub')) {
+                    $('#cssmenu li').removeClass('active');
                 }
-                var clicking_main_bar = container.parents("#top").length > 0;
-                var clicking_hamburger = this === $('.hamburger')[0];
-                if (clicking_main_bar && !clicking_hamburger) {
-                    open_main_item = container.hasClass('open')
-                        ? container : null;
+                $li.addClass('active');
+                var checkElement = $(this).next();
+                if((checkElement.is('ul')) && (checkElement.is(':visible'))) {
+                    $(this).closest('li').removeClass('active');
+                    checkElement.slideUp('normal');
                 }
-                return false;
-            });
-
-            $('html').click(function(e) {
-                var clicking_main_bar = $(e.target).parents("#top").length > 0;
-                if (clicking_main_bar) return;
-                if (open_main_item !== null) {
-                    open_main_item.removeClass('open');
+                if((checkElement.is('ul')) && (!checkElement.is(':visible'))) {
+                    /* $('#cssmenu ul ul:visible').slideUp('normal'); */
+                    checkElement.slideDown('normal');
                 }
-                open_main_item = null;
+                if($(this).closest('li').find('ul').children().length == 0) {
+                    return true;
+                } else {
+                    return false;
+                }
             });
         }
 
-        $('.search-container .expand-toggle').click(function() {
-            $('#search-query input').focus();
+        $('#mobile-hamburger').click(function() {
+            var duration = 500;
+            $("#navigation").addClass('open');
+            var $cancel = $('<div>')
+                .attr('id', 'navigation-cancel')
+                .click(function() {
+                    $("#navigation").removeClass('open');
+                    $cancel.fadeOut(duration, function() {
+                        $cancel.remove();
+                    });
+                    $cancel.off();
+                })
+                .hide()
+                .appendTo('body')
+                .fadeIn(500)
+            ;
         });
 
         // [your code here] rotation for index.html
@@ -89,10 +98,11 @@
 // setTwid is called from http://arsdnet.net/this-week-in-d/twid-latest.js
 // which is included in index.html
 function setTwid(url, title, description) {
-    var twid = $('body#Home .boxes .twid');
-    twid
-        .empty()
-        .append($('<a>').attr('href', url).text(title))
-        .append(': ')
-        .append(description);
+    $('table.notice-table td:first-child').html(
+        $('<a>')
+        .attr('href', url)
+        .append($('<span>').text(title + ':'))
+        .append($('<br>'))
+        .append($('<span>').text(description))
+    );
 }
