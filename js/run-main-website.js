@@ -13,7 +13,7 @@ var mainPage = new Array();
 mainPage["9635bcb50e3d443aebde04bf65385a26"] = ["Mercury\nVenus\nEarth\nMars\nJupiter\nSaturn\nUranus\nNeptune"];
 
 // Top rotation - round floating point numbers
-mainPage["992f782e613253a4227c5c13fc81eef9"] = ["2.4 plus 2.4 equals 5 for sufficiently large values of 2."];
+mainPage["c308dda4f09440aa35d857241991f55e"] = ["2.4 plus 2.4 equals 5 for sufficiently large values of 2."];
 
 // Automatic memory management makes for safe...
 mainPage["54f2095e83f8ef851a711db0a29b0e26"] = null;
