@@ -266,12 +266,14 @@ function showHideAnswer(zis)
 
     if (obj.css('display') == 'none')
     {
-        $(zis).html('<span class="nobr">Hide example.</span>');
+        $(zis).html('<span class="nobr">Hide example' +
+            ' <i class="fa fa-caret-up"></i></span>');
         obj.css('display', 'block');
     }
     else
     {
-        $(zis).html('<span class="nobr">See example.</span>');
+        $(zis).html('<span class="nobr">Show example' +
+            ' <i class="fa fa-caret-down"></i></span>');
         obj.css('display', 'none');
     }
 }
