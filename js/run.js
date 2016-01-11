@@ -266,14 +266,12 @@ function showHideAnswer(zis)
 
     if (obj.css('display') == 'none')
     {
-        $(zis).html('<span class="nobr">Hide example' +
-            ' <i class="fa fa-caret-up"></i></span>');
+        $(zis).html('<span class="nobr">Hide example.</span>');
         obj.css('display', 'block');
     }
     else
     {
-        $(zis).html('<span class="nobr">Show example' +
-            ' <i class="fa fa-caret-down"></i></span>');
+        $(zis).html('<span class="nobr">See example.</span>');
         obj.css('display', 'none');
     }
 }
@@ -355,7 +353,7 @@ $(document).ready(function()
 
     var currentPage = $(location).attr('pathname');
     
-    if ($('body')[0].id != "Home")
+    if (currentPage != "/" && currentPage != "/index.html")
         return;
 
     $('pre[class~=d_code]').each(function(index)

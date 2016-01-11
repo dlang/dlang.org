@@ -2,152 +2,126 @@ Ddoc
 
 $(D_S D Programming Language,
 
-$(SECTION1 ,
+$(SECTION1 The D Programming Language$(BR) $(SPANC slogan, Modern convenience. Modeling power. Native efficiency.),
 
-$(DIVC intro, $(DIV, $(DIV,
-    $(DIV,
-        $(TC p, pitch, $(B D) is a systems programming language with C-like
-        syntax and static typing. It combines efficiency, control and modeling
-        power with safety and programmer productivity.)
+$(NOTICE DMD $(LATEST) Released$(BR)<a href="download.html">Download</a> &middot; <a href="changelog/$(LATEST).html">Changelog</a>)
+$(TABLEC notice-table, $(TR $(TD
+$(WEB arsdnet.net/this-week-in-d/, This Week in D)
+)$(TD)$(TD
+$(WEB dconf.org/2015/schedule/index.html, Videos and Slides from DConf 2015)
+)))
+<br>
 
-        $(TC p, download,
-            <a href="download.html" class="btn">Download</a>
-            $(BR)
-            $(SPANC smallprint, Latest version: $(LATEST)
-                &ndash; $(LINK2 changelog/$(LATEST).html, Changelog))
-        )
-    )
-    $(DIVID your-code-here,
-        $(DIVC tip,
-            $(LINK2 http://forum.dlang.org/newpost/general, your code here)
-            $(DIV,
-                $(P Got a brief example illustrating D?)
-                $(P Submit your code to the digitalmars.D forum specifying
-                    "[your code here]" in the subject.)
-                $(P Upon approval it will be showcased here on a random schedule.)
-            )
-        )
-        $(DIVID your-code-here-default,
+<div style="text-align: right; font-size: 11px; margin-bottom: -35px; margin-right: 5px; position: relative; z-index: 10000">
+<span class="tip">
+    <a href="http://forum.dlang.org/group/digitalmars.D" target="_blank" class="button">[your code here]</a>
+    <span>
+        Got a brief example illustrating D? Submit your code to the digitalmars.D forum specifying "[your code here]" in the title. Upon approval it will be showcased on a random schedule on D's homepage.
+    </span>
+</span>
+</div>
+$(DIVID your-code-here,
+$(DIVID your-code-here-default,
 ----
 // Round floating point numbers
-import std.algorithm, std.conv, std.functional,
-    std.math, std.regex, std.stdio;
+import std.algorithm,
+    std.conv,
+    std.functional,
+    std.math,
+    std.regex,
+    std.stdio;
 
+// Transforms input into a real number,
+// rounds it, then to a string
 alias round = pipe!(to!real, std.math.round, to!string);
+
+// Matches numbers that look like they need rounding
 static reFloatingPoint = ctRegex!`[0-9]+\.[0-9]+`;
 
-void main()
+void main(string[] args)
 {
     // Replace anything that looks like a real
-    // number with the rounded equivalent.
-    stdin
-        .byLine
-        .map!(l => l.replaceAll!(c => c.hit.round)
-                                (reFloatingPoint))
-        .each!writeln;
+	// number with the rounded equivalent.
+	stdin.byLine(KeepTerminator.yes)
+		.map!(l => l.replaceAll!(c => c.hit.round)
+			  (reFloatingPoint))
+		.copy(stdout.lockingTextWriter());
 }
 ----
 )
 $(EXTRA_EXAMPLE
 ----
 // Sort lines
-import std.stdio, std.array, std.algorithm;
+import std.stdio;
+import std.array;
+import std.algorithm;
 
 void main()
 {
     stdin
-        .byLineCopy
+        .byLine(KeepTerminator.yes)
+        .map!(a => a.idup)
         .array
         .sort
-        .each!writeln;
+        .copy(
+            stdout.lockingTextWriter());
+}
+----
+)
+$(EXTRA_EXAMPLE
+----
+// RPN calculator
+import std.algorithm, std.container.array,
+    std.conv, std.stdio, std.meta;
+
+void main()
+{
+    Array!int stack;
+
+    void binop(string op)()
+    {
+        stack[$ - 2] = mixin("stack[$ - 2] " ~
+                             op ~ " stack[$ - 1]");
+        stack.removeBack();
+        writeln(stack[$ - 1]);
+    }
+
+    void process(in char[] token)
+    {
+        alias Ops = AliasSeq!(
+            "+", "-", "*", "/", "%", "^^");
+    Lswitch:
+        switch (token)
+        {
+            foreach (op; Ops)
+            {
+        case op:
+                binop!op();
+                break Lswitch;
+            }
+
+        case "=":
+            writeln(stack[$ - 1]);
+            stack.removeBack();
+            break;
+
+        default:
+            stack.insertBack(token.to!int);
+            break;
+        }
+    }
+
+    stdin.byLine.map!splitter.joiner.each!process;
 }
 ----
 )
 
 )
-)))
 
-$(DIVC more,
+D is a language with C-like syntax and static typing. It pragmatically combines
+efficiency, control, and modeling power, with safety and programmer productivity.
 
-$(DIVID news,
-    $(DIVID forum-summary,
-    <iframe src="http://forum.dlang.org/frame-announcements"></iframe>
-    <iframe src="http://forum.dlang.org/frame-discussions"></iframe>
-    )
-    $(DIVID twitter,
-    <a class="twitter-timeline"  href="https://twitter.com/hashtag/dlang" data-widget-id="684452777939058688">#dlang Tweets</a>
-    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-    )
-)
-
-$(DIVC boxes,
-    $(DIVC row,
-        $(TOUR newspaper-o, News,
-            $(P $(LINK2 http://dconf.org/2016, DConf 2016) is coming up: May 4-6
-                in Berlin, Germany.
-                $(LINK2 http://dconf.org/2016/registration.html,
-                    Secure your seat)
-                before it's sold out!
-            )
-            $(P Stay updated with
-                $(LINK2 http://arsdnet.net/this-week-in-d,
-                    <cite>This Week in D</cite>),
-                Adam D. Ruppe's weekly newsletter. $(SPANC twid)
-            )
-        )
-        $(TOUR comments, Community,
-            $(P Discuss D on the $(LINK2 http://forum.dlang.org/, forums), join
-                the $(LINK2 irc://irc.freenode.net/d, IRC channel), or follow
-                us on $(LINK2 https://twitter.com/D_Programming, Twitter).)
-            $(P Browse the $(LINK2 http://wiki.dlang.org, wiki) where among
-                other things you can find the
-                $(LINK2 http://wiki.dlang.org/Review_Queue, review queue) for
-                major additions to the D project.)
-        )
-    )
-    $(DIVC row,
-        $(TOUR graduation-cap, Learn,
-            $(P Check out Ali Çehreli's great textbook
-                $(LINK2 http://ddili.org/ders/d.en/index.html,
-                <cite>Programming in D</cite>), ask questions in the
-                $(LINK2 http://forum.dlang.org/group/digitalmars.D.learn,
-                    Learn forum),
-                see the
-                $(LINK2 $(ROOT_DIR)getstarted.html, Getting Started) page for
-                more.
-            )
-        )
-        $(TOUR book, Documentation,
-            $(P Refer to the documentation for the
-                $(LINK2 $(ROOT_DIR)spec/intro.html, language) and for
-                $(LINK2 $(ROOT_DIR)phobos/index.html, phobos), D's standard
-                library. The
-                $(LINK2 $(ROOT_DIR)dmd-windows.html, DMD manual) tells you how
-                to use the compiler. Read
-                $(LINK2 $(ROOT_DIR)articles.html, various articles) to deepen
-                your understanding.
-            )
-        )
-    )
-    $(DIVC row,
-        $(TOUR cubes, Packages,
-            $(P DUB is the package manager for D.
-                $(LINK2 https://code.dlang.org/getting_started,
-                    Get started with DUB), and check out the
-                $(LINK2 https://code.dlang.org/, available packages).
-            )
-        )
-        $(TOUR wrench, Contribute,
-            $(P Report any bugs you find to our $(LINK2 $(ROOT_DIR)bugstats.php,
-                bug tracker). If you can fix an issue, make a pull request on
-                $(LINK2 https://github.com/D-Programming-Language, GitHub).)
-        )
-    )
-)
-
-$(DIVC whyd, $(SECTION2 Why D?,
-
-$(DIVC section, $(DIV, $(SECTION3 Convenience,
+$(SECTION3 Convenience,
 
 $(P D allows writing large code fragments without redundantly specifying types,
 like dynamic languages do. On the other hand, static inference deduces types and other
@@ -228,9 +202,9 @@ void main()
 ----
 ))
 
-)))
+)
 
-$(DIVC section, $(DIV, $(SECTION3 Power,
+$(SECTION3 Power,
 
 $(P The best paradigm is to not impose something at the expense of others.
 D offers classic polymorphism, value semantics, functional
@@ -298,9 +272,9 @@ information hiding, refined modularity, fast compilation, precise
 interfaces. $(HTTP drdobbs.com/high-performance-computing/217801225,
 Read more).)
 
-)))
+)
 
-$(DIVC section, $(DIV, $(SECTION3 Efficiency,
+$(SECTION3 Efficiency,
 
 $(P D compiles naturally to efficient native code.)
 
@@ -362,14 +336,290 @@ void main()
 $(P The $(D @safe), $(D @trusted), and $(D @system) function
 attributes allow the programmer to best decide the safety-efficiency
 tradeoffs of an application, and have the compiler check for
-consistency. $(LINK2 spec/memory-safe-d.html, Read more).)
+consistency. $(LINK2 spec/memory-safe-d.html, Read more.))
 
-)))
+))
 
-)) $(COMMENT SECTION2 Why D?, DIVC whyd)
-) $(COMMENT more)
-) $(COMMENT SECTION1)
-) $(COMMENT D_S)
+$(COMMENT Community,
+
+$(P D is the center of a growing, vibrant community. Get D-related
+news from the $(D digitalmars.D.announce) forum $(TAG2 span,
+style="font-size:80%", $(HTTP
+digitalmars.com/pnews/indexing.php?server=news.digitalmars.com$(AMP)group=digitalmars.D.announce,
+[browse]) $(LINK2 news://news.digitalmars.com/digitalmars.D.announce,
+[usenet]) $(HTTP
+lists.puremagic.com/cgi-bin/mailman/listinfo/digitalmars-d-announce,
+[mailing list])). On Twitter, subscribe to D's official announcements
+channel, $(HTTP twitter.com/#!/D_Programming,@D_Programming), and
+search for (and disseminate) news using tag $(HTTP
+twitter.com/#!/search/%23dlang, #dlang).)
+
+$(P Learning D and have a question about the best way to do X? The $(D
+digitalmars.D.learn) forum $(TAG2 span, style="font-size:80%", $(HTTP
+digitalmars.com/pnews/indexing.php?server=news.digitalmars.com$(AMP)group=digitalmars.D.learn,
+[browse]) $(LINK2 news://news.digitalmars.com/digitalmars.D.learn,
+[usenet]) $(HTTP
+lists.puremagic.com/cgi-bin/mailman/listinfo/digitalmars-d-learn,
+[mailing list])) is the hangout place where many D experts are ready
+to help fellow hackers.)
+
+$(P The $(D digitalmars.D) forum $(TAG2 span, style="font-size:80%",
+$(HTTP
+digitalmars.com/pnews/indexing.php?server=news.digitalmars.com$(AMP)group=digitalmars.D,
+[browse]) $(LINK2 news://news.digitalmars.com/digitalmars.D, [usenet])
+$(HTTP lists.puremagic.com/cgi-bin/mailman/listinfo/digitalmars-d,
+[mailing list])) is the best place to discuss anything and everything
+related to D: language design ideas, suggestions, status and future,
+contributions to the language and its standard library. Reach and
+engage all major D contributors, including the very creator of D,
+$(HTTP walterbright.com, Walter Bright). For real-time conversation, use #d IRC channel on freenode.)
+
+$(SECTION3 To contribute,
+
+$(P Many D enthusiasts are not only using, but also contributing to
+the language, its implementation, and its standard library. The main
+hub of D development is $(HTTP github.com/D-Programming-Language,
+D-Programming-Language on github). The project has been awash in
+contributions ever since creating the github repository on January 23,
+2011, with an average of over 3 pull requests per day. (That doesn't
+mean there's not a lot more to do!) You are welcome to fork any
+subproject ($(HTTP github.com/D-Programming-Language/dmd, compiler),
+$(HTTP github.com/D-Programming-Language/druntime, runtime), $(HTTP
+github.com/D-Programming-Language/phobos, standard library), $(HTTP
+github.com/D-Programming-Language/dlang.org,
+website), $(HTTP github.com/D-Programming-Language/tools, tools), or
+$(HTTP github.com/D-Programming-Language/installer, installer)), change
+it in useful ways, and propose your changes back to the community.
+
+$(P The reference compiler $(LINK2 download.html, dmd) has inspired
+work on alternate implementations that add value by using distinct
+back-ends:)
+
+$(UL
+
+$(LI GNU D compiler $(LINK2 http://bitbucket.org/goshawk/gdc/wiki/Home, gdc).)
+
+$(LI LLVM D Compiler $(HTTP dsource.org/projects/ldc, ldc).)
+
+)
+
+$(P The gdc compiler is of particular interest because it taps into
+gcc's extremely portable back-end and large installation base. The D
+development team has signed the appropriate documents with FSF and is
+pursuing integration of gdc with gcc version 4.8 starting March 2012.
+$(HTTPS launchpad.net/~ibuclaw, Iain Buclaw) is leading that
+effort.)
+
+)
+
+)
+)
+)
+
+
+
+
+$(COMMENT
+
+$(COMMENT $(AMAZONLINK 0321635361, <img style="float:right;
+padding-left:1.5em; padding-bottom:1.5em; border-width: 0;"
+src="images/tdpl.jpg" alt="The D Programming Language book" />))
+
+$(P The K&amp;R of D  is here! Get $(AMAZONLINK 0321635361, The D
+Programming  Language) by Andrei  Alexandrescu&mdash;the authoritative
+source on everything D. From the book's introduction:
+
+$(BLOCKQUOTE_BY $(AMAZONLINK 0321635361, The D Programming Language) by
+Andrei Alexandrescu, D is a language that attempts to consistently do
+the right thing within the constraints it chose: system-level access
+to computing resources, high performance, and syntactic similarity
+with C-derived languages.  In trying to do the right thing, D
+sometimes stays with tradition and does what other languages do, and
+other times it breaks tradition with a fresh, innovative solution.  On
+occasion that meant revisiting the very constraints that D ostensibly
+embraced.  For example, large program fragments or indeed entire
+programs can be written in a well-defined memory-safe subset of D,
+which entails giving away a small amount of system-level access for a
+large gain in program debuggability.))
+
+$(P  D  is  a  multi-paradigm  programming language  that  combines  a
+principled approach  with a  focus on practicality.   In D you  get to
+harness  the power  and high  performance of  C and  C++ and  also the
+safety and  programmer productivity of  modern languages such  as Ruby
+and  Python.  Special  attention  is  given to  the  needs of  quality
+assurance, documentation, portability, and reliability.)
+
+$(P The D language is statically typed and compiles directly to machine code.
+It&rsquo;s multiparadigm, supporting many programming styles:
+imperative, object oriented, and metaprogramming. It&rsquo;s a member of the C
+syntax family, and its appearance is very similar to that of C++.
+Here&rsquo;s a quick list of $(LINK2 comparison.html, features).
+)
+
+$(P This site does not refer to the first edition of the language,
+known as "D version 1" or "D1". Currently, D1 is in maintenance mode
+and has documentation available $(LINK2
+http://www.digitalmars.com/d/1.0/index.html,here). We recommend the
+current edition of the D programming language (formerly known as "D2")
+for new projects. )
+
+$(P There are currently three implementations:
+$(OL
+    $(LI Digital Mars dmd for
+    $(LINK2 dmd-windows.html, Windows),
+    $(LINK2 dmd-linux.html, x86 Linux),
+    $(LINK2 dmd-osx.html, Mac OS X), and
+    $(LINK2 dmd-freebsd.html, x86 FreeBSD).
+    )
+
+    $(LI LLVM D Compiler $(LINK2 http://www.dsource.org/projects/ldc, ldc).
+    )
+
+$(COMMENT
+    $(LI Gnu D compiler $(LINK2 http://dgcc.sourceforge.net/, gdc)
+    for several platforms, including
+    $(LINK2 http://gdcwin.sourceforge.net/, Windows) and
+    $(LINK2 http://gdcmac.sourceforge.net/, Mac OS X)
+    for D versions 1.030 and 2.014.
+    )
+)
+    $(LI Gnu D compiler $(LINK2 http://bitbucket.org/goshawk/gdc/wiki/Home, gdc).
+    )
+
+    $(COMMENT $(LINK2 http://dnet.codeplex.com/, D.NET compiler)
+    alpha for .NET for D version 2.)
+)
+)
+
+$(P A large and growing collection of D source code and projects
+are at $(LINK2 http://www.dsource.org, dsource).
+More links to innumerable D wikis, libraries, tools, media articles,
+etc. are at $(LINK2 http://www.digitalmars.com/d/dlinks.html, dlinks).
+)
+
+$(COMMENT $(P
+This document is available as a
+$(LINK2 http://www.prowiki.org/wiki4d/wiki.cgi?LanguageSpecification/PDFArchive, pdf),
+as well as in
+$(LINK2 http://www.kmonos.net/alang/d/, Japanese)
+and
+$(LINK2 http://elderane.50webs.com/tuto/d/, Portugese)
+translations.
+A German book
+$(LINK2 http://www.amazon.de/Programmieren-D-Einf%C3%BChrung-neue-Programmiersprache/dp/3939084697/, Programming in D: Introduction to the new Programming Language)
+is available, as well as
+a Japanese book
+$(LINK2 http://www.gihyo.co.jp/books/syoseki-contents.php/4-7741-2208-4, D Language Perfect Guide),
+and a Turkish book
+$(LINK2 http://ddili.org/ders/d/, D Programlama Dili Dersleri).
+))
+
+$(COMMENT: Japanese by Kazuhiro Inaba, Portugese by Christian Hartung)
+
+$(P This is an example D program illustrating some of the capabilities:)
+----
+#!/usr/bin/env rdmd
+/* shebang is supported */
+
+/* Hello World in D
+   To compile:
+     dmd hello.d (or on Unix just make hello.d executable and run it)
+   or to optimize:
+     dmd -O -inline -release hello.d
+*/
+
+import std.stdio;
+
+void main(string[] args)
+{
+     writeln("Hello World, Reloaded");
+
+    // auto type inference and built-in foreach
+    foreach (argc, argv; args)
+    {
+        // Object Oriented Programming
+        auto cl = new CmdLin(argc, argv);
+        // Improved typesafe printf
+        writeln(cl.argnum, cl.suffix, " arg: ", cl.argv);
+        // Automatic or explicit memory management
+        delete cl;
+    }
+
+    // Nested structs and classes
+    struct specs
+    {
+        // all members automatically initialized
+        size_t count, allocated;
+    }
+
+    // Nested functions can refer to outer
+    // variables like args
+    specs argspecs()
+    {
+        specs* s = new specs;
+        // no need for '->'
+        s.count = args.length;         // get length of array with .length
+        s.allocated = typeof(args).sizeof; // built-in native type properties
+        foreach (argv; args)
+            s.allocated += argv.length * typeof(argv[0]).sizeof;
+        return *s;
+    }
+
+    // built-in string and common string operations
+    writefln("argc = %d, " ~ "allocated = %d",
+    argspecs().count, argspecs().allocated);
+}
+
+class CmdLin
+{
+    private size_t _argc;
+    private string _argv;
+
+public:
+    this(size_t argc, string argv) // constructor
+    {
+        _argc = argc;
+        _argv = argv;
+    }
+
+    size_t argnum()
+    {
+        return _argc + 1;
+    }
+
+    string argv()
+    {
+        return _argv;
+    }
+
+    string suffix()
+    {
+        string suffix = "th";
+        switch (_argc)
+        {
+          case 0:
+            suffix = "st";
+            break;
+          case 1:
+            suffix = "nd";
+            break;
+          case 2:
+            suffix = "rd";
+            break;
+          default:
+        break;
+        }
+        return suffix;
+    }
+}
+----
+
+$(P $(B Notice:) We welcome feedback about the D compiler or language, but please be explicit about
+any claims to intellectual property rights with a copyright or patent notice if you have such for
+your contributions.  We want D to remain open and free to use, and do not wish to be caught by
+someone posting a patch to the compiler, and then later claim compensation for that work.)
+
+)
 
 Macros:
     TITLE=Home
@@ -379,15 +629,24 @@ Macros:
     D=<span class="d_inlinecode">$0</span>
     EXAMPLE=
     <script>
-      document.write('$(TAG2 span, id="q$1" class="question" onclick="showHideAnswer(this);", <span class="nobr">Show example <i class="fa fa-caret-down"></i></span>)');
+      document.write('$(TAG2 span, id="q$1" class="question" onclick="showHideAnswer(this);", <span class="nobr">See example.</span>)');
     </script>
+    <noscript><span class="nobr">See example.</span></noscript>
     $(TAG2 div, id="a$1" class="answer-nojs", $2)
     EXTRA_EXAMPLE=<div class="your-code-here-extra" style="display:none">$0</div>
     LAYOUT_PREFIX=
+    $(DIVID news,
+      $(DIVID forum-summary,
+        <iframe src="http://forum.dlang.org/frame-announcements"></iframe>
+        <iframe src="http://forum.dlang.org/frame-discussions"></iframe>
+      )
+      $(DIVID twitter,
+        <a class="twitter-timeline" data-dnt="true" href="https://twitter.com/D_Programming" data-widget-id="358057551562162176">Tweets by @D_Programming</a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+      )
+    )
     LAYOUT_SUFFIX=
     $(SCRIPTLOAD $(ROOT_DIR)js/run-main-website.js)
     $(SCRIPTLOAD http://arsdnet.net/this-week-in-d/twid-latest.js)
     LAYOUT_TITLE=
-    TOUR=$(DIVC item, $(SECTION4 $(LINK2 $1, $(TC i, fa fa-$2 big-icon)$3), $4))
-    TOUR=$(DIVC item, $(SECTION4 $(TC i, fa fa-$1 big-icon)$2, $3))
     _=
