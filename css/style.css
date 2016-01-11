@@ -1,39 +1,562 @@
-@import url(https://fonts.googleapis.com/css?family=Inconsolata:400,700);
+/*
 
-html
+-- Colors --
+
+Greys:
+
+white
+#FCFCFC
+#F5F5F5
+#E6E6E6
+#CCC
+#ADADAD
+#999
+#555
+#333 - main text
+
+Reds:
+
+#B03931 - our main red
+#742620 - focus/hover
+
+#D8645E - on dark background
+#F47069 - focus/hover on dark background
+
+#98312A
+#943029
+
+-- Font Sizes --
+
+Keep the number of different font sizes low. The different heading levels
+(h1, ... h6) get specific sizes. Other than that, try to use 'small' and
+'large'.
+
+-- Misc --
+
+border-radius: always 4px
+
+*/
+
+@import url(https://fonts.googleapis.com/css?family=Roboto+Slab:300,400|Droid+Sans+Mono|Source+Code+Pro:300,400,500,600,700);
+
+body, .d_decl .quickindex
 {
-    height: 100%; /* of the viewport */
+    font-family: "Roboto Slab", sans-serif;
+}
+
+pre, code, .tt, .d_inlinecode, td.param_id, .CodeMirror pre, .d_decl
+{
+    font-family: Consolas, "Bitstream Vera Sans Mono", "Andale Mono", Monaco, "DejaVu Sans Mono", "Lucida Console", monospace;
+}
+pre, .CodeMirror pre
+{
+    font-size: small;
 }
 
 body
 {
+    background: white;
+    color: #333;
+    font-size: 93.75%;
+    line-height: 1.4;
+    margin: 0;
     padding: 0;
-    border: 0;
-    color: black;
-    background-color: #1f252b;
-    background-repeat: no-repeat;
-    font-size: 100%;
-    font-family: Verdana, "Deja Vu", "Bitstream Vera Sans", sans-serif;
-    margin: 0 auto;
-    position: relative; /* So that absolute/fixed positions cling to this. */
-    min-height: 100%;
 }
 
-/* Pseudo-padding. Can't use padding-top, because that's added to height.
-Can't use margin-top on children, because it collapses with body's, and
-consequently is added to height. */
-body::before
+#top > .helper,
+body > .container,
+body#Home #content #tools > div,
+body#Home #content > .intro > div,
+body#Home #content > .more
 {
-    content: "";
+    margin: auto;
+    max-width: 76em;
+    padding: 0 1em;
+}
+
+body > .container
+{
+    position: relative;
+}
+
+/* top nav bar */
+
+#top
+{
+    background: #B03931;
+    border-bottom: 1px #98312A solid;
+    position: relative;
+}
+
+#top > .helper > .helper
+{
+    display: table;
+    width: 100%;
+}
+
+#top #cssmenu,
+#top .search-container
+{
+    display: table-cell;
+    vertical-align: middle;
+}
+
+#top .search-container
+{
+    width: 0; /* shrink to content size */
+}
+
+#top .logo
+{
     display: block;
+    float: left;
+    margin-right: 1em;
+    padding-top: 1px;
+}
+
+#top img#logo
+{
+    height: 2.5em;
+    vertical-align: middle;
+    width: auto;
+}
+
+#top #d-language
+{
+    display: none;
+}
+
+#top a.hamburger
+{
+    display: none;
+}
+
+#top a
+{
+    color: white;
+    text-decoration: none;
+}
+
+#top a:hover,
+#top #cssmenu li.open > a,
+#top #cssmenu li.active > a
+{
+    background: #98312A;
+}
+
+#top .expand-container
+{
+    position: relative;
+}
+
+/* main menu */
+
+#top #cssmenu
+{
+    width: 100%; /* take all available space */
+}
+
+/* Hide expandable sections by default in #cssmenu. They have fallback URLs. */
+#top #cssmenu .expand-container > *
+{
+    display: none;
+}
+#top #cssmenu .expand-container.open > *,
+#top #cssmenu .expand-container > .expand-toggle
+{
+    display: block;
+}
+
+#top #cssmenu ul
+{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#top #cssmenu a, #top .search-container a
+{
+    display: block;
+    height: 1.4em; /* Not sure why, but without this the expandable items would
+        get half a pixel taller than the others. */
+    padding: 0.6em 1em;
+    position: relative;
+    white-space: nowrap;
+}
+
+#top #cssmenu > ul > li
+{
+    float: left;
+}
+
+#top #cssmenu > ul > li > ul
+{
+    background: #B03931;
+    border: 1px solid #98312A;
+
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+
+    -moz-box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.176);
+    -webkit-box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.176);
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.176);
+
+    position: absolute;
+    z-index: 5;
+}
+
+#top #cssmenu > ul > li > ul > li > a
+{
+    font-size: small;
+    padding-top: 0.3em;
+    padding-bottom: 0.3em;
+    padding-right: 2em;
+}
+
+#top #cssmenu > ul > li > ul > li:first-child > a
+{
+    padding-top: 0.6em;
+}
+
+#top #cssmenu > ul > li > ul > li:last-child > a
+{
+    padding-bottom: 0.6em;
+}
+
+/* search box */
+
+#top .search-container.expand-container .expand-toggle
+{
+    display: none;
+}
+#top .search-container.expand-container .expand-toggle::after
+{
+    content: "\f002  \f0d7"; /* f002 = search; f0d7 = caret down */
+    font-family: FontAwesome;
+}
+
+#top .search-container.expand-container .expand-toggle span
+{
+    display: none;
+}
+
+#top #search-box
+{
+    display: block; /* Don't hide even though it's in a .expand-container. */
+    padding-left: 1em;
+}
+
+div#search-box form, span#search-query, span#search-dropdown, span#search-submit
+{
+    border: 1px none #CCC;
+}
+
+div#search-box form
+{
+    background: white;
+
+    border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+
+    border-style: solid;
+    display: inline-block;
+    font-size: small;
+    margin: 0;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+span#search-query,
+span#search-dropdown, span#search-dropdown > .helper,
+span#search-submit
+{
+    display: inline-block;
+    height: 2em;
+    line-height: 1.3;
+    vertical-align: top;
+}
+
+span#search-query
+{
+    width: 8em;
+}
+
+span#search-query input, span#search-dropdown select, span#search-submit button
+{
+    background: transparent;
+    color: #333;
+    border: none;
+    font-size: small;
+    margin: 0;
+    padding: 0 0.5em;
+    width: 100%;
+    height: 100%;
+    outline: none;
+}
+
+span#search-dropdown > .helper
+{
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    width: 8em;
+}
+
+span#search-dropdown > .helper::after
+{
+    content: "\f0d7"; /* caret down */
+    font-family: FontAwesome;
+    position: absolute;
+    width: 1em;
+    line-height: 1em;
+    top: 0.5em;
+    right: 0.2em;
+}
+
+span#search-dropdown select
+{
+    position: relative;
+    width: 14em; /* Pushing the native dropdown arrow into invisibility. */
+    z-index: 1;
+    -webkit-appearance: none;
+}
+
+span#search-submit
+{
+    background: #E6E6E6;
+    border-left-style: solid;
+    line-height: 1.2em;
+    width: 3em;
+}
+
+span#search-submit button
+{
+    color: #555;
+}
+
+span#search-submit button:active
+{
+    position: relative;
+    top: 0.1em;
+}
+
+span#search-submit span /* hide 'go' */
+{
+    display: none;
+}
+
+/* subnav */
+
+.subnav, .subnav-helper
+{
+    background: #F5F5F5;
+    border: 0 solid #CCC;
+    border-right-width: 1px;
+    padding-left: 1em;
+    padding-right: 1em;
+    width: 15em;
+}
+
+.subnav
+{
+    float: left;
+    margin-right: 2em;
+    padding-bottom: 2em;
+    position: relative;
+}
+
+.subnav a
+{
+    text-decoration: none;
+}
+
+.subnav a:hover, .subnav .expand-toggle:hover
+{
+    text-decoration: underline;
+}
+
+.subnav .smallprint a
+{
+    text-decoration: underline;
+}
+
+.subnav h2
+{
+    border-bottom: 1px solid #CCC;
+    font-size: 1em;
+    margin-right: -1em;
+}
+
+/* Hide JS toggle. It's only displayed in the narrow layouts. */
+body.have-javascript .subnav.expand-container > h2.expand-toggle
+{
+    display: none;
+}
+
+/* Hide links that just duplicate the subnav contents. They're only displayed
+in the narrow layouts without JS. */
+.subnav .subnav-duplicate
+{
+    display: none;
+}
+
+.subnav ul
+{
+    list-style: none;
+    margin: 0;
+    padding-left: 1em;
+}
+.subnav > ul
+{
+    padding-left: 0;
+}
+
+.subnav li a
+{
+    display: block;
+    position: relative;
+    white-space: nowrap;
+}
+
+.subnav li.active > a
+{
+    color: #742620;
+    text-decoration: underline;
+}
+
+/* hierarchy tree lines */
+
+body.std .subnav ul ul ul
+{
+    border-left: 1px solid #CCC;
+}
+
+body.std .subnav .d_inlinecode
+{
+    display: block;
+    font-weight: normal;
+}
+
+body.std .subnav li li > a > span,
+body.std .subnav li li > h7 > span
+{
+    border-left: 1px solid #CCC;
+}
+
+body.std .subnav ul ul li > a > span::before,
+body.std .subnav ul ul li > h7 > span::before
+{
+    border-bottom: 1px solid #CCC;
+    content: "";
+    display: inline-block;
+    width: 0.5ex;
+    margin-right: 0.5ex;
+
     height: 1em;
+    position: relative;
+    bottom: 0.5ex;
+}
+
+body.std .subnav ul ul li:last-child > ul
+{
+    border-left: none;
+}
+
+body.std .subnav ul ul li:last-child > a > span,
+body.std .subnav ul ul li:last-child > h7 > span
+{
+    border-left: none;
+}
+
+body.std .subnav ul ul li:last-child > a > span::before,
+body.std .subnav ul ul li:last-child > h7 > span::before
+{
+    border-left: 1px solid #CCC;
+}
+
+/* Don't show ddox package symbols in the subnav. */
+body.std .subnav a.package
+{
+    background: none;
+    padding-left: 0;
+    font-style: normal;
+}
+
+.subnav-helper
+{
+    bottom: 0;
+    content: "";
+    position: absolute;
+    top: 0;
+}
+
+#content
+{
+    padding-bottom: 2em;
+    text-align: justify;
+}
+
+/*  This is a CSS hack to only target Blink based browsers
+    Targets Chrome 28 and later and Opera 14 and later
+*/
+@media all and (-webkit-min-device-pixel-ratio:0) and (min-resolution: .001dpcm) {
+    #content
+    {
+        /* because Blink based browsers don't support hyphens */
+        text-align: left;
+    }
+}
+
+.subnav + #content
+{
+    margin-left: 19em;
+}
+
+#content #tools
+{
+    padding: 0.3em 0 0.6em 0;
+    text-align: right;
+    word-spacing: 0.5em;
+}
+
+#content #tools .tip
+{
+    display: inline-block;
+    word-spacing: 0;
+}
+
+.expand-container > .expand-toggle::after
+{
+    content: " \f0d7"; /* caret down */
+    font-family: FontAwesome;
+}
+body.have-javascript .expand-container.open > .expand-toggle::after
+{
+    content: " \f0d8"; /* caret up */
+}
+
+body.have-javascript .expand-container > *
+{
+    display: none;
+}
+
+/* Not hiding .subnav by default; only in the narrow layouts. */
+body .subnav.expand-container > *
+{
+    display: block;
+}
+
+body.have-javascript .expand-container.open > *,
+body.have-javascript .expand-container > .expand-toggle
+{
+    display: block;
 }
 
 /* show signature download on hover */
 span.sig_btn
 {
     display: inline-block;
-    line-height: 2.4em;
 }
 
 span.sig_btn > a:last-child
@@ -48,16 +571,20 @@ span.sig_btn:hover > a:last-child
 
 a.btn
 {
-    color: black !important; /*override a:visited color*/
-    border: 1px solid gray;
-    border-radius: 20px;
+    color: #333;
+    background: white;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    padding: 0.3em 0.6em;
+    display: inline-block;
     text-decoration: none;
-    padding: 6px 12px;
 }
 
 a.btn:hover
 {
-    background-color: lightgray;
+    background-color: #E6E6E6;
+    border-color: #ADADAD;
+    color: #333;
 }
 
 /* replaces <big> tag */
@@ -71,7 +598,6 @@ em.big
 em.tt
 {
     font-style: normal;
-    font-family: Consolas, "Bitstream Vera Sans Mono", "Andale Mono", Monaco, "DejaVu Sans Mono", "Lucida Console", monospace;
 }
 
 /* replaces <u> tag */
@@ -83,7 +609,7 @@ em.u
 
 table.params
 {
-    border: 1px dotted black;
+    border: 1px dotted #333;
 }
 
 tr.param
@@ -100,9 +626,7 @@ tr:last-child
 td.param_id
 {
     border: inherit;
-    font-family: monospace;
     font-weight: bold;
-    font-size: 120%;
     padding-right: 1em;
     white-space: nowrap;
     vertical-align: top;
@@ -264,9 +788,7 @@ div.summary, div.description, div.keyval
 
 h1, h2, h3, h4, h5, h6
 {
-    font-family: Georgia, "Times New Roman", Times, serif;
     font-weight: normal;
-    color: #633;
     line-height: normal;
     text-align: left;
     margin: 2em 0 1em;
@@ -278,29 +800,19 @@ h1
     margin-top: 0;
 }
 
-body#Home h1 span.slogan
-{
-    font-size: 0.75em;
-}
-
 h2
 {
     font-size: 1.5em;
-    margin-top: 1em;
-    margin-bottom: 0.5em;
 }
 
 h3
 {
     font-size: 1.35em;
-    margin-bottom: 0.5em;
 }
 
 h4
 {
     font-size: 1.15em;
-    font-style: italic;
-    margin-bottom: 0;
 }
 
 form
@@ -310,7 +822,6 @@ form
 
 blockquote
 {
-    font-family: Georgia, "Times New Roman", Times, serif;
     background-color: #e5e5e5;
     display: block;
     padding: 0.25em 1em;
@@ -320,7 +831,6 @@ blockquote
 blockquote p:before
 {
     content: "\201C";
-    font-family: Georgia, "Times New Roman", Times, serif;
     color: #bacaca;
     display: block;
     font-size: 700%;
@@ -342,16 +852,19 @@ blockquote cite
     text-align: right;
 }
 
-pre
+/* pre.prettyprint and div.prototype come from prettyprint.js */
+pre, pre.prettyprint, div.prototype
 {
     background: white;
+    border-radius: 4px;
     padding: 1ex;
     margin: 1em 0 1em 0;
-    font-family: 'Inconsolata', monospace;
-    font-size: 1em;
     line-height: normal;
     border: 1px solid #ccc;
     width: auto;
+}
+pre
+{
     white-space: pre-wrap;       /* css-3 */
     white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
     white-space: -pre-wrap;      /* Opera 4-6 */
@@ -361,9 +874,10 @@ pre
 
 dd, .d_decl_dd
 {
+    margin: 0;
+    margin-bottom: 2em;
     padding: 1ex;
-    margin-left: 3em;
-    margin-bottom: 1em;
+    padding-left: 2em;
 }
 
 .template_param_list
@@ -391,7 +905,7 @@ dd, .d_decl_dd
 
 table
 {
-    border: solid black;
+    border: solid #333;
     border-width: 2px 0;
     border-collapse: collapse;
 }
@@ -411,14 +925,14 @@ table td, table th, table caption
 table td
 {
     border: none;
-    border-bottom: 1px solid #E4E9EF;
+    border-bottom: 1px solid #E6E6E6;
     text-align: justify;
 }
 
 table th
 {
     border: none;
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid #333;
 }
 
 table td:not(:last-child), table th:not(:last-child)
@@ -431,14 +945,15 @@ hr
     margin: 2em 0;
 }
 
-a
+a, .question, .expand-toggle
 {
-    color: #006;
+    color: #B03931;
+    cursor: pointer;
 }
 
-a:visited
+a:hover, .question:hover, .expand-toggle:hover
 {
-    color: #606;
+    color: #742620;
 }
 
 /*
@@ -458,16 +973,16 @@ a.anchor:hover
     text-decoration: underline; /* See above */
 }
 
-a.anchor:hover:after
+a.anchor:hover::after
 {
     content: " \00B6"; /* Unicode pilcrow symbol */
-    color: black; /* Pilcrow should not use the regular header text color */
+    color: #333; /* Pilcrow should not use the regular header text color */
     font-style: normal; /* ... and should not be italic */
 }
 
 /* Avoid inserting the pilcrow in the middle of the line on the compiler pages */
 
-body.dcompiler dt a.anchor:hover:after
+body.dcompiler dt a.anchor:hover::after
 {
     display: none;
 }
@@ -480,76 +995,36 @@ body.dcompiler dt a.anchor:hover
 body.dcompiler dt a.anchor:hover:before
 {
     content: " \00B6";
-    color: black;
+    color: #333;
     font-style: normal;
     position: absolute;
     left: -1em;
-}
-
-.notice
-{
-    margin-bottom: 0.5em;
-}
-
-a.notice:hover
-{
-    background: inherit; /* $(menu_bg_hover) */
-}
-
-.notice, table.notice-table td
-{
-    background-color: white;
-    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-    border: 1px dotted #633;
-    text-align: center;
-    padding: 0.5em;
-}
-
-.notice, table.notice-table td a
-{
-    text-decoration: none;
-    font-weight: bold;
-    display: block;
-}
-
-table.notice-table
-{
-    border: none;
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 0;
-}
-
-table.notice-table td
-{
-    vertical-align: middle;
-}
-
-/* padding between left and right cell */
-table.notice-table td:nth-child(2)
-{
-    visibility: hidden;
-    border: 0;
-    padding: 0.25em;
 }
 
 /* These are different kinds of <pre> sections */
 .bnf /* grammar */
 {
     background-color: white;
-    color: #000066;
 }
 
 .ddoccode
 {
     background-color: #f3eeee;
-    color: #000066;
 }
 
 .console /* command line console */
 {
-    background-color: #f7f7f7;
-    color: #181818;
+    background-color: #333;
+    border-color: #333;
+    color: #F5F5F5;
+}
+.console a
+{
+    color: #D8645E;
+}
+.console a:hover
+{
+    color: #F47069;
 }
 
 .moddeffile /* module definition file */
@@ -564,40 +1039,20 @@ table.notice-table td:nth-child(2)
     color: #111199;
 }
 
-.d_code /* D code */
+.d_code, .d_code2 /* D code */
 {
     background-color: #fcfcfc;
-    color: #000066;
-}
-
-.d_code2 /* D code */
-{
-    background-color: #fcfcfc;
-    color: #000066;
 }
 
 .asmcode /* Asm code */
 {
     background-color: #afcbde;
-    color: #000066;
+    border-color: #afcbde;
 }
 
-.ccode /* C code */
+.ccode, .cppcode, .cppcode2 /* C/C++ code */
 {
     background-color: #f6ecf0;
-    color: #000066;
-}
-
-.cppcode /* C++ code */
-{
-    background-color: #f6ecf0;
-    color: #000066;
-}
-
-.cppcode2 /* C++ code */
-{
-    background-color: #f6ecf0;
-    color: #000066;
 }
 
 td .d_code2, td .cppcode2, td .cppcode
@@ -608,227 +1063,136 @@ td .d_code2, td .cppcode2, td .cppcode
 
 .d_inlinecode
 {
-    font-family: monospace;
-    /* font-size: 1.2em; */
     font-weight: bold;
 }
 
-/* Elements of D source code text */
-.d_comment { color: green; }
-.d_string { color: red; }
-.d_keyword { color: blue; }
-.d_psymbol { text-decoration: underline; }
-.d_param { font-style: italic; }
+/* syntax highlighting
+
+d_* classes come from Ddoc.
+cm-* classes come from CodeMirror.
+
+These classes come from prettify.js:
+.pln - plain text
+.str - string content
+.kwd - keyword
+.com - comment
+.typ - type name
+.lit - literal value
+.pun - punctuation
+.opn - lisp open bracket
+.clo - lisp close bracket
+.tag - markup tag name
+.atn - markup attribute name
+.atv - markup attribute value
+.dec - declaration
+.var - variable name
+.fun - function name
+
+*/
+
+.d_comment,
+.cm-s-eclipse span.cm-comment,
+.com
+{
+    color: #999;
+}
+
+.d_string,
+.cm-s-eclipse span.cm-string, .cm-s-eclipse span.cm-string-2,
+.str, .atv
+{
+    color: #DC4040;
+}
+
+.d_keyword,
+.cm-s-eclipse span.cm-keyword, .cm-s-eclipse span.cm-builtin,
+.kwd
+{
+    color: #4040DC;
+}
+
+.d_param
+{
+    font-style: italic;
+}
+
+/* .cm-meta is here because it and .lit both match @-attributes */
+.cm-s-eclipse span.cm-number, .cm-s-eclipse span.cm-meta,
+.lit
+{
+    color: #8E00DC;
+}
+
+{
+    color: #333;
+}
+
+.cm-s-eclipse span.cm-attribute,
+.atn
+{
+    color: #9ad452;
+}
+
+.cm-s-eclipse span.cm-tag,
+.tag
+{
+    color: #ffaa00;
+}
+
+.cm-s-eclipse span.cm-error
+{
+    color: #f00;
+}
+
+.cm-s-eclipse span.cm-def, .cm-s-eclipse span.cm-operator,
+.cm-s-eclipse span.cm-property, .cm-s-eclipse span.cm-variable,
+.cm-s-eclipse span.cm-variable-2, .cm-s-eclipse span.cm-variable-3,
+.pln, .fun
+.dec, .var
+{
+    color: #333;
+}
+
+.cm-s-eclipse span.cm-word {color: #006;}
+.cm-s-eclipse span.cm-atom {color: #219;}
+.cm-s-eclipse span.cm-qualifier {color: #555;}
+.cm-s-eclipse span.cm-bracket {color: #cc7;}
+.cm-s-eclipse span.cm-link {color: #219;}
+
 
 /* Focal symbol that is being documented */
-.ddoc_psymbol { color: #336600; }
-
-div#top, div#navigation
+.d_psymbol, .ddoc_psymbol
 {
-    width: 16em;
-    background: #333; /*hsl(0, 0%, 20%)*/
-    border: 0.25em none #191919; /*hsl(0, 0%, 10%)*/
-    border-right-style: solid;
-}
-div#top
-{
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 0.875em;
-    min-height: 100%;
+/*     color: #B03931; */
+    font-weight: bold;
 }
 
-div#header
+.d_decl
 {
-    position: relative;
-    z-index: 1; /* i.e. higher than #navigation's */
+    background: #F5F5F5;
+    border-left: 5px solid #B03931;
+    text-align: left;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+.d_decl > div
+{
+    border: 1px solid #E6E6E6;
+    border-top-right-radius: 4px;
+    padding: 0.6em 1em;
+}
+
+.d_decl + dd
+{
+    border: 1px solid #E6E6E6;
+    border-top: none;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
 }
 
 img
 {
     border: 0;
-}
-
-div#header a.logo
-{
-    display: block;
-    text-align: center;
-    padding: 1em 0;
-}
-
-img#logo
-{
-    vertical-align: text-bottom;
-}
-
-div#header a#d-language
-{
-    display: block;
-    font-variant: small-caps;
-    text-align: center;
-    color: white;
-    text-decoration: none;
-    line-height: 1.4em;
-}
-
-img#github-ribbon
-{
-  position: absolute;
-  top: -15px;
-  right: 0;
-  border: 0;
-  z-index: 1;
-}
-
-div#search-box, span#search-query, span#search-dropdown, span#search-submit
-{
-    border: 0.1em none #aaa;
-}
-
-div#search-box
-{
-    white-space: nowrap;
-    margin: 3em 1em;
-    -webkit-border-radius: 0.3em 0.3em 0.3em 0.3em;
-    -moz-border-radius: 0.3em 0.3em 0.3em 0.3em;
-    border-radius: 0.3em 0.3em 0.3em 0.3em;
-    background: #F6F6F6;
-    border-style: solid;
-}
-
-span#search-query, span#search-dropdown, span#search-submit
-{
-    vertical-align: top;
-    line-height: 1.3em;
-    height: 1.8em;
-}
-span#search-dropdown, span#search-submit
-{
-    display: inline-block;
-}
-
-span#search-query input, span#search-dropdown select, span#search-submit button
-{
-    background: transparent;
-    color: black;
-    border: none;
-    margin: 0;
-    padding: 0 0.5em;
-    width: 100%;
-    height: 100%;
-    outline: none;
-}
-
-span#search-query
-{
-    display: block;
-    border-bottom-style: solid;
-}
-
-span#search-dropdown
-{
-    position: relative;
-    border-right: none;
-    overflow: hidden;
-    width: 11em;
-    /*
-        = 16em [#navigation's width]
-        - 2 * 1em [#search-box's margin-{left,right}]
-        - 3em [#search-submit's width]
-    */
-}
-
-span#search-dropdown select
-{
-    position: relative;
-    width: 14em; /* Pushing the native dropdown arrow into invisibility. */
-    z-index: 1;
-}
-
-span#search-dropdown:after
-{
-    content: "\f107"; /* angle down */
-    font-family: FontAwesome;
-    position: absolute;
-    height: 10px;
-    width: 1em;
-    top: 50%;
-    margin-top: -0.5em;
-    right: 0.2em;
-}
-
-span#search-submit
-{
-    line-height: 1.2em;
-    width: 3em;
-    /*
-        = 16em [#navigation's width]
-        - 2 * 1em [#search-box's margin-{left,right}]
-        - 11em [#search-submit's width]
-    */
-    border-left-style: solid;
-    margin-left: -0.1em; /* = border-width */
-}
-
-span#search-submit span /* hide 'go' */
-{
-    display: none;
-}
-
-
-div#navigation
-{
-    position: relative;
-    font-size: 0.875em;
-    float: left;
-    margin-top: 2.4em;
-    /*
-        = - 1em [body::before pseudo-padding]
-        + 2 * 1em [div#header a.logo's padding-{top,bottom}]
-        + 1.4em [#d-language's line-height]
-    */
-    padding-top: 95px; /* = #logo's height */
-}
-
-div#content
-{
-    text-align: justify;
-    min-height: 440px;
-    margin-left: 18em;
-    /*
-        = 16em [#navigation's width]
-        + 2em [inter-column space]
-    */
-    margin-right: 1em;
-    padding: 1.6em;
-    padding-top: 1.3em;
-    padding-bottom: 1em;
-    background-color: #f6f6f6;
-    font-size: 0.875em;
-    line-height: 1.4em;
-    border: 0.25em solid #ccd5d5;
-}
-
-/*  This is a CSS hack to only target Blink based browsers
-    Targets Chrome 28 and later and Opera 14 and later
-*/
-@media all and (-webkit-min-device-pixel-ratio:0) and (min-resolution: .001dpcm) {
-    div#content
-    {
-        /* because Blink based browsers don't support hyphens */
-        text-align: left;
-    }
-}
-
-body#Home div#content
-{
-    margin-right: 21em;
-    /*
-        = 1em [#news's margin-right]
-        + 18em [#news's width]
-        + 2em [inter-column space]
-    */
 }
 
 body.chm div#news,
@@ -861,290 +1225,245 @@ body.chm dt.d_decl
     width: 100%;
 }
 
-span#wiki
+body#Home > .container
 {
+    max-width: none;
+    padding: 0;
+}
+
+body#Home #content #tools,
+body#Home #content > .intro
+{
+    background: #F5F5F5;
+}
+
+body#Home #content > h1
+{
+    margin: 0;
+}
+
+body#Home #content > .intro
+{
+    padding-bottom: 1em;
+    border-bottom: 1px solid #E6E6E6;
+}
+
+body#Home #content > .intro > div > div
+{
+    display: table;
+    width: 100%;
+}
+
+body#Home #content > .intro > div > div > *
+{
+    display: table-cell;
+}
+
+body#Home #content > .intro .pitch
+{
+    font-size: large;
+    font-weight: 300;
+    margin: auto;
+    width: 21em;
+}
+
+body#Home #content > .intro .download
+{
+    margin-top: 3em;
+    text-align: center;
+}
+
+body#Home #content > .intro .download .btn
+{
+    margin-bottom: 0.3em;
+}
+
+body#Home #content > .intro #your-code-here
+{
+    padding-left: 1em;
     position: relative;
-    right: 0;
-    z-index: 2;
+    width: 32em;
 }
 
-body#Home #content {
-    margin-right:20em;
-}
-
-div#news
+body#Home #content > .intro #your-code-here .tip
 {
-    font-size: 0.875em;
+    position: absolute;
+    top: 0.1em;
+    right: 0.3em;
+    z-index: 1;
+}
+
+body#Home #content > .intro #your-code-here pre
+{
+    margin: 0;
+}
+
+body#Home div#news
+{
     float: right;
-    width: 18em;
-    margin-right: 1em;
+    width: 252px;
 }
 
-div#twitter
-{
-    color: white;
-}
-
-div#forum-summary
+body#Home div#forum-summary
 {
     color: white;
     width: 100%;
     margin-right: 1em;
 }
 
-div#forum-summary > iframe
+body#Home div#forum-summary > iframe
 {
     border: 0;
     width: 100%;
     height: 210px;
 }
 
-div.navblock
+body#Home .more .boxes, body#Home .more .whyd
+{
+    margin-right: 252px; /* prevent overlapping with #news */
+    padding-right: 4em;
+}
+
+body#Home .boxes .item .big-icon
+{
+    padding-right: 0.5em;
+}
+
+body#Home .whyd .section
+{
+    margin-bottom: 1.5em;
+    border-left: 5px solid #B03931;
+    border-radius: 4px;
+}
+body#Home .whyd .section > div
+{
+    border: 1px solid #E6E6E6;
+    border-left: none;
+    border-radius: 4px;
+    padding: 1.5em;
+}
+body#Home .whyd .section > div > *:first-child
 {
     margin-top: 0;
-    margin-bottom: 1em;
 }
-
-div#navigation .navblock h2
+body#Home .whyd .section > div > *:last-child
 {
-    font-family: Verdana, "Deja Vu", "Bitstream Vera Sans", sans-serif;
-    font-size: 1.35em;
-    color: #ccc;
-    margin: 0;
+    margin-bottom: 0;
 }
 
-div#navigation .navblock ul
+body#Menu #content li.expand-container a::after
 {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
+    content: "";
 }
 
-div#navigation .navblock li
-{
-    margin: 0 0 0 0.8em;
-    padding: 0;
-}
-
-#navigation .navblock a
+body#Menu #content li.expand-container ul
 {
     display: block;
-    color: #ccc;
-    text-decoration: none;
-    padding: 0.1em 0;
-    border-bottom: 1px dotted #494949;
 }
 
-#navigation .navblock a:hover
+.boxes
 {
-    color: #eee;
+    margin: 2em 0;
 }
 
-#navigation .navblock a.active
+.boxes .row
 {
-    color: white;
-    border-color: white;
+    display: table-row;
 }
 
-
-div#translate
+.boxes .item
 {
-    margin-top: 3em;
-    margin-left: 0;
-    color: #ccc;
+    display: table-cell;
+    width: 50%;
 }
 
-
-div#tools
+.boxes > .row > .item
 {
-    display: inline;
-    float: right;
-    margin:
-        -1.1em /* = -(1.3em [#content's padding-top] - 0.2em) */
-        -1.4em /* = -(1.6em [#content's padding-right] - 0.2em) */
-        1em 1em;
-    text-align: right;
+    padding: 1em 2em;
 }
 
-body#Downloads div#tools
+.boxes > .row > .item > h4:first-child
 {
-    padding-right: 149px; /* = width of github-ribbon.png */
+    margin-top: 0;
 }
 
-div#tools a.button
+.boxes > .row:first-child > .item
 {
-    -moz-box-shadow:inset 0 1px 0 0 #ffffff;
-    -webkit-box-shadow:inset 0 1px 0 0 #ffffff;
-    box-shadow:inset 0 1px 0 0 #ffffff;
-    background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #dfdfdf) );
-    background:-moz-linear-gradient( center top, #ededed 5%, #dfdfdf 100% );
-    background:-o-linear-gradient(top, #ededed, #dfdfdf);
-    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#dfdfdf');
-    background-color:#ededed;
-    border:1px solid #aaa;
-    display:inline-block;
-    color:#555;
-    font-family:arial;
-    font-size:72%;
-    font-weight:bold;
-    padding:0 6px;
-    text-decoration:none;
-    text-shadow:1px 1px 0 #ffffff;
+    padding-top: 0;
 }
 
-div#tools a.button:hover
+.boxes > .row:last-child > .item
 {
-    background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #dfdfdf), color-stop(1, #ededed) );
-    background:-moz-linear-gradient( center top, #dfdfdf 5%, #ededed 100% );
-    background:-o-linear-gradient(top, #dfdfdf, #ededed);
-    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#dfdfdf', endColorstr='#ededed');
-    background-color:#dfdfdf;
+    padding-bottom: 0;
 }
 
-div#tools a.button:active
+.boxes > .row > .item:first-child
 {
-    position: relative;
-    top: 1px;
+    padding-left: 0;
 }
 
-div#tools img
+.boxes > .row > .item:last-child
 {
-    vertical-align: middle;
+    padding-right: 0;
 }
 
-.tip {
+.tip
+{
+    font-size: small;
     position: relative;
 }
 
-.tip span {
+.tip > div
+{
     display: none;
     position: absolute;
     top: 25px;
     left: auto;
     right: 0;
-    width: 200px;
-    padding: 8px !important;
+    width: 19em;
+    padding: 8px;
     z-index: 100;
-    background: #000;
-    color: #eee !important;
-    font-style: normal !important;
-    font-size: 72%;
+    background: #555;
+    color: white;
+    font-style: normal;
     text-align: left;
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
-    border-radius: 5px;
-
-    /* undo inherited attributes */
-    text-shadow: none;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
 }
 
-.tip:hover span {
+.tip:hover > div
+{
     display: block;
 }
 
-
-div#content li
+.tip > div > *:first-child
 {
-    padding-bottom: .7ex;
+    margin-top: 0;
 }
-
-
-div#footernav
+.tip > div > *:last-child
 {
-    clear: both;
-    padding: 1em 2em 0 2em;
-    color: #666;
-    text-align: center;
-    font-size: 80%;
+    margin-bottom: 0;
 }
-
-div#footernav a
-{
-    color: #ccc;
-}
-
-div#footernav a:hover
-{
-    color: white;
-}
-
 
 div#copyright
 {
     padding: 1em 2em;
-    color: #ccc;
-    font-size: 50%;
+    clear: both;
     text-align: center;
 }
 
-div#copyright a
+.smallprint, .smallprint a
 {
-    color: #ccc;
+    color: #999;
+    font-size: small;
 }
 
+.smallprint a:hover
+{
+    color: #555;
+}
 
-/* These are for the newsgroup archives */
-div#newsnav
-{
-    margin-top: -1.5em;
-    margin-bottom: -1em;
-}
-div#Posting
-{
-    border: 1px solid #cccccc;
-    margin-bottom: 1em;
-}
-div#PostingHeading
-{
-    font-family: Georgia, "Times New Roman", Times, serif;
-    font-size: larger;
-    color: #633;
-    background-color: #eeeeee;
-}
-div#PostingHeading img
-{
-    vertical-align: middle;
-}
-div#PostingHeading a
-{
-    text-decoration: none;
-}
-div#PostingFooting
-{
-    font-size: smaller;
-    background-color: #eeeeee;
-}
-div#PostingTOC
-{
-    font-size: smaller;
-}
-div#PostingTOC li
-{
-    margin-left: 0;
-}
-div#PostingTOC a
-{
-    font-family: Georgia, "Times New Roman", Times, serif;
-}
-.PostingBody /* newsgroup posting */
-{
-    border: 0;
-    margin: 0;
-    background-color: #fcfcfc;
-    color: #000066;
-    margin-left: 0;
-    min-width: 15em;
-    padding-bottom: 0.5em;
-}
-.PostingQuote /* quote inside newsgroup posting */
-{
-    border: 1px solid #666666;
-    font-size: 90%;
-    background-color: inherit;
-    color: #666666;
-    margin-left: 0;
-    min-width: 15em;
-}
 
 /* These are for the changelogs */
 div.version
@@ -1153,7 +1472,6 @@ div.version
 }
 div.version font
 {
-    font-family: Georgia, "Times New Roman", Times, serif;
     color: #633;
 }
 div.version li
@@ -1168,56 +1486,14 @@ div.changelog-nav
 }
 
 
-/* These are for comparison.html */
-table.comp /* "comparison with D": table */
-{
-    background-color:#e9e6dd;
-}
-table.comp a
-{
-    color: black;
-}
-td.compNo  /* comparison with D: "NO" */
-{
-    background-color:red;
-    text-align:center;
-}
-td.compYes  /* comparison with D: "YES" */
-{
-    background-color:#00FF00;
-    text-align:center;
-}
-
-
 .leadingrow {
     background-color: #E4E9EF;
     font-size: 110%;
 }
 
-.d_inlinecode
-{
-    font-family: "Consolas",
-        "Bitstream Vera Sans Mono",
-        "Andale Mono",
-        "Monaco",
-        "DejaVu Sans Mono",
-        "Lucida Console",
-        monospace;
-}
-
-.d_decl {
-    font-weight: bold;
-    background-color: #E4E9EF;
-    font-family: 'Inconsolata', monospace;
-    font-size: 16px;
-    border-bottom: solid 2px #336600;
-    padding: 2px 0 2px 2px;
-    text-align: left;
-}
-
 .quickindex {
     font-weight: normal;
-    background-color: #E4E9EF;
+    background-color: #F5F5F5;
 }
 
 .quickindex a {
@@ -1228,10 +1504,9 @@ td.compYes  /* comparison with D: "YES" */
     text-decoration: underline;
 }
 
-.question
+.question, .question *
 {
     display: inline;
-    color: #006;
     text-decoration: underline;
     cursor:pointer;     /* Cursor is like a hand when someone rolls the mouse over the question */
 }
@@ -1255,8 +1530,6 @@ textarea.d_code_output, textarea.d_code_stdin, textarea.d_code_args
     text-align: left;
     border: none;
     width: 98%;
-    font-size: 1.09em;
-    font-family: monospace;
     padding: 5px;
     margin: 1px;
     word-wrap: break-word;
@@ -1266,8 +1539,8 @@ textarea.d_code_output, textarea.d_code_stdin, textarea.d_code_args
     outline: none;
 }
 
-div.d_code {margin: 0; padding: 0; font-size: 100%; margin-bottom: -14px; background: #F6F6F6;}
-div.d_run_code {display: none; margin: 1em 0 1em 3.1em;}
+div.d_code {margin: 0; padding: 0; background: #F5F5F5;}
+div.d_run_code {display: none;}
 div.d_code_output, div.d_code_stdin, div.d_code_args, div.d_code_unittest
 {
     border: 1px solid #CCC;
@@ -1277,31 +1550,10 @@ div.d_code_output, div.d_code_stdin, div.d_code_args, div.d_code_unittest
     width: 100%;
 }
 
-.d_code_title {font-weight: bold;font-size: 100%;padding: 5px;}
+.d_code_title {font-weight: bold;padding: 5px;}
 
 .CodeMirror-wrap {padding: 3px;}
-.CodeMirror {line-height: normal; font-size: 117%;border: 1px solid #CCC;background: white; }
-.cm-s-eclipse span.cm-word {color: #006;}
-.cm-s-eclipse span.cm-meta {color: #FF1717;}
-.cm-s-eclipse span.cm-keyword { color: blue; }
-.cm-s-eclipse span.cm-atom {color: #219;}
-.cm-s-eclipse span.cm-number {color: #006;}
-.cm-s-eclipse span.cm-def {color: #006;}
-.cm-s-eclipse span.cm-variable {color: #006;}
-.cm-s-eclipse span.cm-variable-2 {color: #006;}
-.cm-s-eclipse span.cm-variable-3 {color:#006;}
-.cm-s-eclipse span.cm-property {color: black;}
-.cm-s-eclipse span.cm-operator {color: black;}
-.cm-s-eclipse span.cm-comment {color: green;}
-.cm-s-eclipse span.cm-string {color: red;}
-.cm-s-eclipse span.cm-string-2 {color: red;}
-.cm-s-eclipse span.cm-error {color: #f00;}
-.cm-s-eclipse span.cm-qualifier {color: #555;}
-.cm-s-eclipse span.cm-builtin {color: #30a;}
-.cm-s-eclipse span.cm-bracket {color: #cc7;}
-.cm-s-eclipse span.cm-tag {color: #170;}
-.cm-s-eclipse span.cm-attribute {color: #00c;}
-.cm-s-eclipse span.cm-link {color: #219;}
+.CodeMirror {line-height: normal; border: 1px solid #CCC; background: #FCFCFC; }
 .cm-s-eclipse .CodeMirror-matchingbracket {border:1px solid grey;color:black !important;}
 
 input.runButton, input.resetButton, input.argsButton, input.inputButton, input.editButton
@@ -1346,18 +1598,13 @@ input.editButton:active
 input.resetButton{display: none}
 /* Runnable-examples css -end */
 
-div#mobile-top, div#mobile-search, img#mobile-hamburger
-{
-    display: none;
-}
-
 .page-contents
 {
     width: 300px;
     padding-right: 10px;
-    border: solid black;
+    border: solid #333;
     border-width: 2px 0;
-    font-size: 12px;
+    font-size: small;
     text-align: left;
     margin: 0 0 2em 2em;
 }
@@ -1375,13 +1622,14 @@ div#mobile-top, div#mobile-search, img#mobile-hamburger
     margin-top: 0;
 }
 
-div#content .page-contents li
+.page-contents li
 {
     line-height: 1.3;
     padding-bottom: 0;
 }
 
-@media only screen and (min-width: 64em) { /* 1024px for default font-size 16 */
+@media only screen and (min-width: 66em)
+{
     pre
     {
         overflow: auto;
@@ -1393,159 +1641,340 @@ div#content .page-contents li
     }
 }
 
-@media only screen and (max-width: 64em) { /* 1024px for default font-size 16 */
-    div#news{
+/* Narrow layout stage 1: dropdown search, dropdown subnav */
+@media only screen and (max-width: 66em)
+{
+    #top .search-container.expand-container .expand-toggle
+    {
+        display: block;
+    }
+
+    #top .expand-container > #search-box
+    {
+        background: #B03931;
+        border: 1px solid #98312A;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+        display: none;
+        padding: 0.6em;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        width: auto;
+        z-index: 5;
+    }
+
+    #top .expand-container.open > #search-box
+    {
+        display: block;
+    }
+
+    body#Home #content > .intro .pitch
+    {
+        width: 15em;
+    }
+
+    .subnav
+    {
+        float: none;
+        border-bottom-width: 1px;
+        border-right-width: 0;
+        margin: 0 -1em;
+        padding: 0.6em 1em;
+        width: auto;
+    }
+
+    body .subnav.expand-container > *
+    {
         display: none;
     }
 
-    div#content{
-        margin-right: 1em !important;
+    .subnav.open
+    {
+        padding-bottom: 1em;
+    }
+
+    body.doc .subnav > ul,
+    body.std .subnav > ul > li > ul
+    {
+        -moz-column-width: 17em;
+        -webkit-column-width: 17em;
+        column-width: 17em;
+    }
+
+    body.doc .subnav > ul > li,
+    body.std .subnav > ul > li > ul > li
+    {
+        overflow: auto; /* avoid column breaks inside li */
+    }
+
+    .subnav h2
+    {
+        border-bottom-style: none;
+        margin-right: 0;
+        margin-top: 0;
+        padding-top: 1em;
+    }
+
+    /* Without JS, display the head section (h2, subhome link, ...) on one line.
+    With JS, display the toggle, and hide the other h2. */
+    .subnav > *
+    {
+        display: none;
+    }
+    .subnav > .head
+    {
+        display: block;
+        word-spacing: 1em;
+    }
+    .subnav > .head > *
+    {
+        display: inline;
+        word-spacing: 0;
+    }
+    .subnav > .head br
+    {
+        display: none;
+    }
+    .sunbav .subnav-duplicate
+    {
+        display: block;
+    }
+    .subnav > .head .separator::after
+    {
+        content: "\2013"; /* U+2013 EN DASH */
+    }
+    body.have-javascript .subnav.expand-container > .head > *,
+    body.have-javascript .subnav.expand-container.open > .head > h2,
+    body.have-javascript .subnav.expand-container.open > .head > .subnav-duplicate
+    {
+        display: none;
+    }
+
+    body.have-javascript .subnav.expand-container > h2.expand-toggle,
+    body.have-javascript .subnav.expand-container.open > .head > *,
+    body.have-javascript .subnav.expand-container > .head br
+    {
+        display: block;
+    }
+    body.have-javascript .subnav > h2.expand-toggle
+    {
+        margin: 0;
+        padding: 0;
+    }
+    body.have-javascript .head .separator::after
+    {
+        content: none;
+    }
+    body.have-javascript .subnav.open > h2
+    {
+        border-bottom-style: solid;
+        margin-bottom: 1em;
+    }
+
+    .subnav + #content
+    {
+        margin-left: 0;
+    }
+
+    .subnav-helper
+    {
+        display: none;
     }
 }
 
-@media only screen and (max-width: 50em) { /* 800px for default font-size 16 */
-
-    /* Disable desktop-size UI elements */
-
-    div#news {
-        display: none;
-    }
-
-    /* Header */
-
-    div#top {
-        position: relative;
-        width: auto;
-        display: block;
-        border-right-style: none;
-        border-bottom-style: solid;
-        overflow: hidden;
-        text-align: center;
-        font-size: 1em;
-    }
-
-    img#mobile-hamburger {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 3.2em;
-        height: 3.2em;
-        line-height: 3.3em;
-        text-align: center;
-        display: block;
-        cursor: pointer;
-    }
-
-    img#mobile-hamburger:hover {
-        background: #444; /* menu_active_bg */
-    }
-
-    div#header {
-        position: static;
-        margin: 0 3.2em; /* = #mobile-hamburger's width */
-    }
-
-    div#header a.logo {
-        display: none;
-    }
-
-    span#d-language-mobilehelper {
-        display: inline-block;
-        vertical-align: middle;
-        line-height: 1.0;
-    }
-
-    div#header a#d-language {
-        position: static;
-        display: table-cell;
-        vertical-align: middle;
-        color: white;
-        text-align: center;
-        height: 3.2em;
-        padding: 0;
-        line-height: 1.2em;
-        background: url(../images/dlogo.png) left no-repeat;
-        background-size: 50px auto;
-        padding-left: 60px;
-        /*
-            = 50px [background image width]
-            + 10px [some space between image and text]
-        */
-    }
-
-    /* Search */
-
-    div#search-box
+/* Narrow layout stage 2: hamburger menu, forum/twitter widgets disappear from
+the home page, intro pitch and your-code-here layed out vertically */
+@media only screen and (max-width:54em)
+{
+    body#Home #content > .intro > div > div
     {
-        position: static;
-        text-align: center;
-        overflow: hidden;
-        margin-top: 1em;
-
-        -moz-transition: height 0.5s;
-        -o-transition: left 0.5s;
-        -webkit-transition: height 0.5s;
-        transition: height 0.5s;
-    }
-
-    div#search-query {
-        width: 40%;
-    }
-
-    /* Navigation */
-
-    div#navigation {
         display: block;
-        position: absolute;
-        top: 0;
-        left: -20em;
-        min-height: 100%;
+        width: auto;
+    }
+
+    body#Home #content > .intro > div > div > *
+    {
+        display: block;
+    }
+
+    body#Home #content > .intro .pitch
+    {
+        max-width: 21em;
+        width: auto;
+    }
+
+    body#Home #content > .intro #your-code-here
+    {
         padding: 0;
-        margin: 0;
-        -moz-box-shadow: 10px 0px 20px black;
-        -webkit-box-shadow: 10px 0px 20px black;
-        box-shadow: 10px 0px 20px black;
-        z-index: 10001;
-        -moz-transition: left 0.5s;
-        -o-transition: left 0.5s;
-        -webkit-transition: left 0.5s;
-        transition: left 0.5s;
+        margin: auto;
+        margin-top: 2em;
     }
 
-    div#navigation.open{
-        left: 0;
-    }
-
-    div#navigation-cancel {
-        position: fixed;
-        left: 0; top: 0; right: 0; bottom: 0;
-        background-color: rgba(255,255,255,0.5);
-        z-index: 10000;
-    }
-
-    /* Content */
-
-    div#content {
-        -moz-border-radius: 0;
-        -webkit-border-radius: 0;
-        border-radius: 0;
-        margin-left: 0;
-        margin-right: 0 !important; /* override inline style! */
-    }
-
-    body::before { /* Disable pseudo-padding. */
+    body#Home #news
+    {
         display: none;
     }
 
-    pre {
-        font-size: 1em;
-    }
-
-    img#github-ribbon {
-        display: none;
-    }
-
-    body#Downloads div#tools {
+    body#Home .more .boxes, body#Home .more .whyd
+    {
+        margin-right: 0;
         padding-right: 0;
+    }
+
+    #top > .helper
+    {
+        padding: 0;
+    }
+
+    /* lay out navigation vertically */
+
+    #top #cssmenu, #top #search-box
+    {
+        display: block;
+    }
+
+    #top .logo
+    {
+        width: auto;
+    }
+
+    #top .logo > a
+    {
+        background: transparent; /* override :hover background change */
+        margin-left: 1em;
+    }
+
+    #top #cssmenu, #top .search-container
+    {
+        display: none;
+    }
+
+    #top .expand-container.open #cssmenu,
+    #top .expand-container .search-container
+    {
+        display: block;
+    }
+
+    #top #cssmenu
+    {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: 1px solid #943029;
+        clear: both;
+    }
+    #top #cssmenu > ul
+    {
+        border-bottom: 1px solid #943029;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #top .search-container
+    {
+        padding: 0.6em 1em;
+        width: auto;
+    }
+
+    #top .search-container.expand-container .expand-toggle
+    {
+        display: none;
+    }
+
+    #top .expand-container > #search-box
+    {
+        border: 0;
+        display: block;
+        padding: 0;
+        position: static;
+    }
+
+    #top .expand-container .search-container
+    {
+        display: none;
+    }
+
+    #top .expand-container.open .search-container
+    {
+        display: block;
+    }
+
+    #top #search-box form
+    {
+        display: table;
+        width: 100%;
+    }
+
+    #top #search-query, #top #search-dropdown, #top #search-submit
+    {
+        display: table-cell;
+    }
+
+    #top #search-query
+    {
+        width: auto;
+    }
+
+    #top #search-dropdown
+    {
+        width: 0; /* shrink to content size */
+    }
+
+    #top #cssmenu > ul > li
+    {
+        float: none;
+    }
+
+    #top #cssmenu > ul > li.expand-container.open > ul
+    {
+        border: none;
+
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+
+        position: static;
+    }
+
+    #top #cssmenu > ul > li.expand-container.open > ul > li > a
+    {
+        padding-left: 2em;
+    }
+
+    /* menu button */
+
+    #top a.hamburger
+    {
+        display: inline;
+        float: right;
+        font-size: 2em;
+        height: 1em;
+        line-height: 1;
+        padding: 0.15em 1em;
+    }
+    #top a.hamburger span
+    {
+        display: none;
+    }
+    #top a.hamburger::after
+    {
+        content: "\f0c9"; /* bars */
+        font-family: FontAwesome;
+    }
+}
+
+/* Narrow layout stage 3: no more two column boxes */
+@media only screen and (max-width: 40em)
+{
+    .boxes .row, .boxes .row .item
+    {
+        display: block;
+        padding: 0;
+        width: auto;
+    }
+
+    body#Home #content > .intro #your-code-here
+    {
+        /* change width to max-width */
+        width: auto;
+        max-width: 32em;
     }
 }

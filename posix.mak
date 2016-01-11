@@ -113,8 +113,8 @@ endif
 
 DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
 STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
-SPEC_DDOC=${DDOC} spec/spec.ddoc
 STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
+SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 
@@ -136,7 +136,7 @@ JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed dlang ddox listanchors run run-main-website jquery-1.7.2.min))
 
 STYLES=$(addsuffix .css, $(addprefix css/, \
-	style print codemirror ddox cssmenu))
+	style print codemirror ddox))
 
 PRETTIFY=prettify/prettify.css prettify/prettify.js
 
@@ -161,15 +161,17 @@ CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements ascii-table		\
-	bugstats.php builtin $(CHANGELOG_FILES) code_coverage concepts const-faq COM	\
-	comparison cpptod ctarguments ctod D1toD2 d-array-article d-floating-point		\
-	deprecate dll dll-linux dmd-freebsd dmd-linux dmd-osx dmd-windows	\
-	download dstyle exception-safe faq features2 forum-template gpg_keys getstarted glossary gsoc2011 \
+PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements articles ascii-table	\
+	bugstats.php builtin \
+	$(CHANGELOG_FILES) code_coverage COM community comparison concepts \
+	const-faq cpptod ctarguments ctod \
+	D1toD2 d-array-article d-floating-point deprecate dll dll-linux \
+	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
+	exception-safe faq features2 forum-template gpg_keys getstarted glossary gsoc2011 \
 	gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index \
-	intro-to-datetime lazy-evaluation memory migrate-to-shared mixin	\
-	overview pretod rationale rdmd regular-expression safed			\
-	template-comparison templates-revisited tuple				\
+	intro-to-datetime lazy-evaluation memory menu migrate-to-shared mixin	\
+	overview pretod rationale rdmd regular-expression resources safed search \
+	template-comparison templates-revisited tools tuple				\
 	variadic-function-templates warnings wc windbg windows
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))

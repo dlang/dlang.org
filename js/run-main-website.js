@@ -10,13 +10,10 @@ Authors:   Damian Ziemba
 var mainPage = new Array();
 
 // Top rotation - sort lines
-mainPage["eaed85820b01767abc1e1da8a35ebd12"] = ["Mercury\nVenus\nEarth\nMars\nJupiter\nSaturn\nUranus\nNeptune"];
-
-// Top rotation - RPN calculator
-mainPage["651b6c20f520426a1b5bb77eca67ce44"] = ["2 3 ^^ 5 * 1 +\n3 4 +\n1 2 + 4 * 5 + 3 -\n2 3 7 * *"];
+mainPage["9635bcb50e3d443aebde04bf65385a26"] = ["Mercury\nVenus\nEarth\nMars\nJupiter\nSaturn\nUranus\nNeptune"];
 
 // Top rotation - round floating point numbers
-mainPage["3d41a91e2b9e27835ab8d6c73367a909"] = ["2.4 plus 2.4 equals 5 for sufficiently large values of 2."];
+mainPage["992f782e613253a4227c5c13fc81eef9"] = ["2.4 plus 2.4 equals 5 for sufficiently large values of 2."];
 
 // Automatic memory management makes for safe...
 mainPage["54f2095e83f8ef851a711db0a29b0e26"] = null;
