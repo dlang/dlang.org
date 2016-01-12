@@ -5,7 +5,8 @@ $(CONTENT)
 Macros:
 
 STATIC = <?static:/dlang.org/$1?>
-ROOT = /
+ROOT=http://dlang.org
+ROOT_DIR=http://dlang.org/
 BODYCLASS = forum <?bodyclass?>
 SEARCHDEFAULT_FORUM = selected
 LAYOUT_SUFFIX=
@@ -13,7 +14,7 @@ LAYOUT_SUFFIX=
 _=
 TITLE=
 FULL_TITLE=<?title?> - D Programming Language Discussion Forum
-PAGE_TOOLS=$(DIVID forum-tools,<?tools?>)
+PAGE_TOOLS=$(DIVCID smallprint, tools,<?tools?>)
 EXTRA_HEADERS=
 <?extraheaders?>
 <link rel="stylesheet" href="<?static:/css/dfeed.css?>">
@@ -28,29 +29,30 @@ _=
 FOOTER=
 $(DIVID footernav,
 	<a href="#top" title="Jump to the top of the page">Top</a> |
-	$(A /, Discussion index) |
-	$(A /help#about, About this forum) |
-	$(A http://dlang.org/, D home)
+	$(A /, Forum index) |
+	$(A /help#about, About this forum)
 )
-$(DIVID copyright, $(COPYRIGHT))
+$(DIVCID smallprint, copyright, $(COPYRIGHT))
 _=
 
-NAVIGATION=
-$(DIVID cssmenu, $(UL
-    $(MENU /, Forum Index)
-    $(MENU_W_SUBMENU <?category1?>)
-      $(SUBMENU
-        <?url1?>, <?title1?>,
-        <?url2?>, <?title2?>
-      )
-    $(MENU_W_SUBMENU <?category2?>)
-      $(SUBMENU
-        <?url1?>, <?title1?>,
-        <?url2?>, <?title2?>
-      )
-    $(MENU /help, About this forum)
-    $(MENU http://dlang.org, D Home)
-))
+SUBNAV=
+$(SUBNAV_TEMPLATE
+    $(DIVC head,
+        $(H2 Forums)
+        $(P $(LINK2 /, Forum Index))
+    )
+    $(UL
+        $(LI <?category1?> $(UL
+            $(LI $(LINK2 <?url1?>, <?title1?>))
+            $(LI $(LINK2 <?url2?>, <?title2?>))
+        ))
+        $(LI <?category2?> $(UL
+            $(LI $(LINK2 <?url1?>, <?title1?>))
+            $(LI $(LINK2 <?url2?>, <?title2?>))
+        ))
+    )
+    $(P $(LINK2 /help, About this forum))
+)
 _=
 
 LAYOUT=$3
@@ -62,12 +64,14 @@ _=
 SEARCH_BOX=
     $(DIVID search-box,
         <form method="get" action="/search">
-            $(SPANID search-query, <input id="q" name="q" placeholder="Search" tabindex="1000">)$(SPANID search-dropdown,
+            $(SPANID search-query, <input id="q" name="q" placeholder="Search">)$(SPANID search-dropdown, $(SPANC helper,
                 <select id="search-scope" name="scope" size="1">
-                    <option value="site">Entire D Site</option>
+                    <option value="dlang.org">Entire Site</option>
+                    <option $(SEARCHDEFAULT_SPEC) value="dlang.org/spec">Language</option>
+                    <option $(SEARCHDEFAULT_PHOBOS) value="dlang.org/phobos">Library</option>
                     <?search-options?>
                 </select>
-            )$(SPANID search-submit, <button type="submit"><i class="fa fa-search"></i><span>go</span></button>)
+            ))$(SPANID search-submit, <button type="submit"><i class="fa fa-search"></i><span>go</span></button>)
         </form>
     )
 _=
