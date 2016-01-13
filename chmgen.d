@@ -17,79 +17,6 @@ string docRoot = `.`;
 
 // ********************************************************************
 
-class Nav
-{
-    string title, url;
-    Nav[] children;
-}
-
-Nav loadNav(string fileName, string base, bool warn)
-{
-    import std.json;
-    auto text = fileName
-        .readText()
-        .replace("\r", "")
-        .replace("\n", "")
-    //    .replaceAll(re!`/\*.*?\*/`, "")
-        .replaceAll(re!`,\s*\]`, `]`)
-    ;
-    scope(failure) std.file.write("error.json", text);
-    auto json = text.parseJSON();
-
-    Nav parseNav(JSONValue json)
-    {
-        if (json.type == JSON_TYPE.ARRAY)
-        {
-            auto nodes = json.array;
-            auto parsedNodes = nodes.map!parseNav.array().filter!`a`.array();
-            if (!parsedNodes.length)
-            {
-                if (warn)
-                    stderr.writeln("Warning: Empty navigation group");
-                return null;
-            }
-
-            auto root = parsedNodes[0];
-            root.children = parsedNodes[1..$];
-            return root;
-        }
-        else
-        {
-            auto obj = json.object;
-            auto nav = new Nav;
-            nav.title = obj["t"].str.strip();
-            if ("a" in obj)
-            {
-                auto url = absoluteUrl(base, obj["a"].str.strip());
-                if (url.canFind(`://`))
-                {
-                    stderr.writeln("Skipping external navigation item: " ~ url);
-                    return null;
-                }
-                else
-                if (!exists(`chm/files/` ~ url))
-                {
-                    if (warn)
-                        stderr.writeln("Warning: Item in navigation does not exist: " ~ url);
-                    else
-                        stderr.writeln("Skipping non-existent navigation item: " ~ url);
-                    //url = "http://dlang.org/" ~ url;
-                    return null;
-                }
-                else
-                    nav.url = `files\` ~ url.backSlashes();
-            }
-            return nav;
-        }
-    }
-
-    return parseNav(json);
-}
-
-Nav nav;
-
-// ********************************************************************
-
 struct KeyLink { string anchor; int confidence; bool sawAnchor; }
 KeyLink[string][string] keywords;   // keywords[keyword][original url w/o anchor] = anchor/confidence
 string[] keywordList; // Sorted alphabetically, case-insensitive
@@ -101,6 +28,11 @@ void addKeyword(string keyword, string link, int confidence, bool isAnchor = tru
     if (!keyword.length)
         return;
     link = link.strip();
+
+    while (link.skipOver("./")) {}
+    if (link.endsWith("/"))
+        link ~= "index.html";
+
     string file = link.stripAnchor();
     string anchor = link.getAnchor();
 
@@ -204,7 +136,7 @@ void main(string[] args)
 
             foreach (m; src.matchAll(re!(`<a `~attrs~`href="([^"]*)"`~attrs~`>(.*?)</a>`)))
                 if (!m.captures[1].canFind("://"))
-                    addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), absoluteUrl(fileName, m.captures[1]), 4, false);
+                    addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), absoluteUrl(fileName, m.captures[1].strip()), 4, false);
 
             // Disable scripts
 
@@ -246,15 +178,98 @@ void main(string[] args)
 
 // ************************************************************
 
+class Nav
+{
+    string title, url;
+    Nav[] children;
+}
+
+Nav nav;
+
 void loadNavigation()
 {
     stderr.writeln("Loading navigation");
 
-    nav = loadNav("chm-nav-doc.json", ``, false);
-    auto phobosIndex = `files\phobos\index.html`;
-    auto navPhobos = nav.children.find!(child => child.url == phobosIndex).front;
-    auto phobos = loadNav("chm-nav-std.json", `phobos/`, true);
-    navPhobos.children = phobos.children.filter!(child => child.url != phobosIndex).array();
+    import std.json;
+    auto text = "chm-nav.json"
+        .readText()
+        .replace("\r", "")
+        .replace("\n", "")
+    //  .replaceAll(re!`/\*.*?\*/`, "")
+        .replaceAll(re!`,\s*\]`, `]`)
+    ;
+    scope(failure) std.file.write("error.json", text);
+    auto json = text.parseJSON();
+
+    Nav[string] subNavs;
+
+    foreach_reverse (node; json.array)
+    {
+        auto hook = node["hook"].str;
+        auto root = node["root"].str;
+
+        Nav parseNav(JSONValue json)
+        {
+            if (json.type == JSON_TYPE.ARRAY)
+            {
+                auto nodes = json.array;
+                auto parsedNodes = nodes.map!parseNav.array().filter!`a`.array();
+                if (!parsedNodes.length)
+                {
+                    if (/*warn*/true)
+                        stderr.writeln("Warning: Empty navigation group");
+                    return null;
+                }
+
+                auto root = parsedNodes[0];
+                root.children = parsedNodes[1..$];
+                return root;
+            }
+            else
+            {
+                auto obj = json.object;
+                auto nav = new Nav;
+                nav.title = obj["t"].str.strip();
+                if ("a" in obj)
+                {
+                    auto url = absoluteUrl(root, obj["a"].str.strip());
+                    if (url.canFind(`://`))
+                    {
+                        stderr.writeln("Skipping external navigation item: " ~ url);
+                        return null;
+                    }
+                    else
+                    if (!exists(`chm/files/` ~ url))
+                    {
+                        if (/*warn*/true)
+                            stderr.writeln("Warning: Item in navigation does not exist: " ~ url);
+                        else
+                            stderr.writeln("Skipping non-existent navigation item: " ~ url);
+                        //url = "http://dlang.org/" ~ url;
+                        return null;
+                    }
+                    else
+                        nav.url = `files\` ~ url.backSlashes();
+                }
+                auto psubNav = nav.title in subNavs;
+                if (psubNav)
+                {
+                //  if (nav.title != psubNav.title)
+                //      stderr.writefln("Warning: Sub-navigation title mismatch: %s / %s", nav.title, psubNav.title);
+                //  if (nav.url != psubNav.url)
+                //      stderr.writefln("Warning: Sub-navigation url mismatch: %s / %s", nav.url, psubNav.url);
+                    nav.url = psubNav.url;
+                    nav.children = psubNav.children;
+                }
+                return nav;
+            }
+        }
+
+        auto nav = parseNav(node["nav"]);
+        subNavs[hook] = nav;
+    }
+
+    .nav = subNavs[""];
 }
 
 // ************************************************************
