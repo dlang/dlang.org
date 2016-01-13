@@ -119,8 +119,8 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html inde
 	changelog\2.064.html changelog\2.065.0.html \
 	changelog\2.066.0.html changelog\2.066.1.html \
 	changelog\2.067.0.html changelog\2.067.1.html \
-	changelog\2.068.0.html changelog\2.068.1.html \
-	changelog\2.068.2.html changelog\2.069.0.html changelog\2.069.1.html \
+	changelog\2.068.0.html changelog\2.068.1.html changelog\2.068.2.html \
+	changelog\2.069.0.html changelog\2.069.1.html changelog\2.069.2.html \
 	changelog\index.html \
 	glossary.html acknowledgements.html builtin.html \
 	comparison.html rationale.html code_coverage.html \
@@ -600,7 +600,7 @@ chm\d.chm : chm\d.hhp chm\d.hhc chm\d.hhk
 d.chm : chm\d.chm
 	copy /Y chm\d.chm d.chm
 
-chm-nav.json : $(DDOC) std.ddoc spec\spec.ddoc modlist-release.ddoc chm-nav.dd
+chm-nav.json : $(DDOC) std.ddoc spec\spec.ddoc modlist-release.ddoc changelog\changelog.ddoc chm-nav.dd
 	$(DMD) -o- -c -Df$@ $**
 
 d.tag : chmgen.exe $(TARGETS)
