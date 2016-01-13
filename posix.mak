@@ -446,6 +446,7 @@ ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess : dpl_prerelease_htaccess
 	cp $< $@
 
 docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST} \
+		${DPL_DOCS_PATH}/menu-fragment.html \
 		${PHOBOS_DIR}-${LATEST} | dpl-docs
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
@@ -458,6 +459,7 @@ docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST} \
 	rm .release-files.txt .release-dummy.html
 
 docs-prerelease.json : ${DMD} ${DRUNTIME_DIR} \
+		${DPL_DOCS_PATH}/menu-fragment.html \
 		${PHOBOS_DIR} | dpl-docs
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 	  -e /unittest/d > .prerelease-files.txt
@@ -468,6 +470,10 @@ docs-prerelease.json : ${DMD} ${DRUNTIME_DIR} \
 	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_RELEASE)
 	rm .prerelease-files.txt .prerelease-dummy.html
+
+${DPL_DOCS_PATH}/menu-fragment.html: ${DPL_DOCS_PATH}/menu-fragment.dd ${DMD} \
+		${DDOC}
+	${DMD} -c -o- -Df$@ ${DDOC} $<
 
 ################################################################################
 # binary targets for DDOX

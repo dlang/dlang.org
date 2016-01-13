@@ -632,10 +632,14 @@ apidocs: docs.json
 apidocs-serve: docs.json
 	$(DPL_DOCS) serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc --override-macros=std-ddox-override.ddoc --package-order=std --git-target=master --web-file-dir=. docs.json
 
-docs.json:
+docs.json: $(DPL_DOCS_PATH)/menu-fragment.html
 	mkdir .tmp
 	dir /s /b /a-d ..\druntime\src\*.d | findstr /V "unittest.d gcstub" > .tmp/files.txt
 	dir /s /b /a-d ..\phobos\*.d | findstr /V "unittest.d linux osx" >> .tmp/files.txt
 	dmd -c -o- -version=CoreDdoc -version=StdDdoc -Df.tmp/dummy.html -Xfdocs.json @.tmp/files.txt
 	$(DPL_DOCS) filter docs.json --min-protection=Protected --only-documented $(MOD_EXCLUDES_RELEASE)
 	rmdir /s /q .tmp
+
+$(DPL_DOCS_PATH)/menu-fragment.html: $(DPL_DOCS_PATH)/menu-fragment.dd $(DMD) \
+		$(DDOC)
+	$(DMD) -c -o- -Df$@ $(DDOC) $(DPL_DOCS_PATH)/menu-fragment.dd
