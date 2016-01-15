@@ -357,6 +357,11 @@ $(DMD) : ${DMD_DIR}
 $(DMD_REL) : ${DMD_DIR}-${LATEST}
 	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak -j 4
 
+dmddoc-prerelease : ${DMD_DIR} $(DMD)
+	${MAKE} --directory=${DMD_DIR} -f posix.mak html \
+		DOCDIR=${DOC_OUTPUT_DIR}/dmd-prerelease \
+		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
+
 ################################################################################
 # druntime, latest released build and current build
 ################################################################################
