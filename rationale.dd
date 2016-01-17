@@ -14,10 +14,32 @@ $(H3 Why not name them operator+(), operator*(), etc.?)
 	to refer to overloading $(SINGLEQUOTE +) with $(SINGLEQUOTE operator+). The trouble is
 	things don't quite fit. For example, there are the
 	comparison operators <, <=, >, and >=. In C++, all four must
-	be overloaded to get complete coverage. In D, only a cmp()
+	be overloaded to get complete coverage. In D, only an opCmp()
 	function must be defined, and the comparison operations are
 	derived from that by semantic analysis.
 	)
+
+	$(P Further, binary operators on number-based types are largely uniformly
+	implemented so a single opBinary template allows one to just mixin the
+	operator the user used, whereas in C++ each operator will need to be separately
+	defined. For example:)
+
+------
+import std.stdio;
+struct MyInt
+{
+    int i;
+    MyInt opBinary(string op)(in MyInt other) if(op == "+" || op == "-")
+    {
+        mixin ("return MyInt(i " ~ op ~ "other.i);");
+    }
+}
+void main()
+{
+    MyInt a = MyInt(3), b = MyInt(1), c = a + b, d = a - b;
+    writeln(a.i, ' ', b.i, ' ', c.i, ' ', d.i); // prints 3 1 4 2
+}
+------
 
 	$(P Overloading operator/() also provides no symmetric way, as a member
 	function, to overload the reverse operation. For example,
