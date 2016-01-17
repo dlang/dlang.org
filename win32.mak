@@ -46,7 +46,8 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
 	32-64-portability.dd dll-linux.dd bugstats.php.dd getstarted.dd \
-	css\cssmenu.css.dd ctarguments.dd
+	ctarguments.dd articles.dd community.dd documentation.dd menu.dd \
+	resources.dd search.dd tools.dd
 
 SPECSRC=spec\spec.dd spec\intro.dd spec\lex.dd \
 	spec\grammar.dd spec\module.dd spec\declaration.dd \
@@ -74,7 +75,7 @@ CHANGELOG_PRE_DDOC=$(CHANGELOG_DDOC) changelog/prerelease.ddoc
 ASSETS=images\*.* css\*.*
 IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
 
-PREMADE=dcompiler.html language-reference.html appendices.html howtos.html articles.html d-keyring.gpg
+PREMADE=dcompiler.html language-reference.html appendices.html howtos.html d-keyring.gpg
 
 SPECTARGETS=spec\spec.html spec\intro.html spec\lex.html \
 	spec\grammar.html spec\module.html spec\declaration.html \
@@ -118,8 +119,8 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html inde
 	changelog\2.064.html changelog\2.065.0.html \
 	changelog\2.066.0.html changelog\2.066.1.html \
 	changelog\2.067.0.html changelog\2.067.1.html \
-	changelog\2.068.0.html changelog\2.068.1.html \
-	changelog\2.068.2.html changelog\2.069.0.html changelog\2.069.1.html \
+	changelog\2.068.0.html changelog\2.068.1.html changelog\2.068.2.html \
+	changelog\2.069.0.html changelog\2.069.1.html changelog\2.069.2.html \
 	changelog\index.html \
 	glossary.html acknowledgements.html builtin.html \
 	comparison.html rationale.html code_coverage.html \
@@ -134,7 +135,9 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html inde
 	D1toD2.html intro-to-datetime.html \
 	deprecate.html download.html 32-64-portability.html \
 	d-array-article.html dll-linux.html bugstats.php.html getstarted.html \
-	gpg_keys.html forum-template.html css/cssmenu.css ctarguments.html
+	gpg_keys.html forum-template.html ctarguments.html articles.html \
+	community.html documentation.html menu.html resources.html search.html \
+	tools.html
 
 # exclude list
 MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
@@ -170,6 +173,8 @@ dmd-windows.html : $(DDOC) windows.ddoc dcompiler.dd
 32-64-portability.html : $(DDOC) 32-64-portability.dd
 
 acknowledgements.html : $(DDOC) acknowledgements.dd
+
+articles.html : $(DDOC) articles.dd
 
 ascii-table.html : $(DDOC) ascii-table.dd
 
@@ -336,6 +341,8 @@ code_coverage.html : $(DDOC) code_coverage.dd
 
 COM.html : $(DDOC) COM.dd
 
+community.html : $(DDOC) community.dd
+
 comparison.html : $(DDOC) comparison.dd
 
 concepts.html : $(DDOC) concepts.dd
@@ -359,6 +366,8 @@ deprecate.html : $(DDOC) deprecate.dd
 dll.html : $(DDOC) dll.dd
 
 dll-linux.html : $(DDOC) dll-linux.dd
+
+documentation.html : $(DDOC) documentation.dd
 
 download.html : $(DDOC) download.dd
 
@@ -513,6 +522,8 @@ lazy-evaluation.html : $(DDOC) lazy-evaluation.dd
 
 memory.html : $(DDOC) memory.dd
 
+menu.html : $(DDOC) menu.dd
+
 migrate-to-shared.html : $(DDOC) migrate-to-shared.dd
 
 mixin.html : $(DDOC) mixin.dd
@@ -527,11 +538,17 @@ rdmd.html : $(DDOC) rdmd.dd
 
 regular-expression.html : $(DDOC) regular-expression.dd
 
+resources.html : $(DDOC) resources.dd
+
 safed.html : $(DDOC) safed.dd
+
+search.html : $(DDOC) search.dd
 
 template-comparison.html : $(DDOC) template-comparison.dd
 
 templates-revisited.html : $(DDOC) templates-revisited.dd
+
+tools.html : $(DDOC) tools.dd
 
 tuple.html : $(DDOC) tuple.dd
 
@@ -546,9 +563,6 @@ windbg.html : $(DDOC) windows.ddoc windbg.dd
 windows.html : $(DDOC) windows.ddoc windows.dd
 
 forum-template.html : $(DDOC) forum-template.dd
-
-css/cssmenu.css : $(DDOC) css/cssmenu.css.dd
-	$(DMD) -o- -c -Df$@ $(DDOC) css/cssmenu.css.dd
 
 modlist-release.ddoc : modlist.d
 # need + to run as sub-cmd, redirect doesn't work otherwise
@@ -577,18 +591,17 @@ chm : d.chm
 chmgen.exe : chmgen.d
 	$(DMD) -g chmgen
 
-chm\d.hhp chm\d.hhc chm\d.hhk : chmgen.exe chm-nav-doc.json chm-nav-std.json $(TARGETS)
+chm\d.hhp chm\d.hhc chm\d.hhk : chmgen.exe chm-nav.json $(TARGETS)
 	chmgen
 
-d.chm : chm\d.hhp chm\d.hhc chm\d.hhk
+chm\d.chm : chm\d.hhp chm\d.hhc chm\d.hhk
 	-cmd /C "cd chm && "$(HHC)" d.hhp"
+
+d.chm : chm\d.chm
 	copy /Y chm\d.chm d.chm
 
-chm-nav-doc.json : $(DDOC) chm-nav.dd
-	$(DMD) -o- -c -Df$@ $(DDOC) chm-nav.dd
-
-chm-nav-std.json : $(DDOC) $(DDOC_STD) chm-nav.dd
-	$(DMD) -o- -c -Df$@ $(DDOC) $(DDOC_STD) chm-nav.dd
+chm-nav.json : $(DDOC) std.ddoc spec\spec.ddoc modlist-release.ddoc changelog\changelog.ddoc chm-nav.dd
+	$(DMD) -o- -c -Df$@ $**
 
 d.tag : chmgen.exe $(TARGETS)
 	chmgen --only-tags

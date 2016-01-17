@@ -1,14 +1,16 @@
 - import ddox.entities;
 
 - void moduleNavTree(Package pack)
-	- string pack_class = pack is info.rootPackage ? "has-sub" : "tree-view";
+	- string pack_class = "expand-container";
 	- foreach(i, p; pack.packages)
-		li(class='#{!pack.parent && i == 0 && !info.node.parent || p.isAncestorOf(info.node) ? pack_class : pack_class ~ " collapsed"}')
-			a.package(href="#")= p !is info.rootPackage ? p.name : null
+		li(class='#{p.isAncestorOf(info.node) ? pack_class ~ " open" : pack_class}')
+			a.package(href="#", class="expand-toggle")
+				span= p !is info.rootPackage ? p.name : null
 			ul.tree-view
 				- moduleNavTree(p);
 	- foreach(m; pack.modules)
 		li
-			a.module(href="#{info.linkTo(m)}", class='#{info.node is m || m.isAncestorOf(info.node) ? "selected" : ""}')= m.name
+			a.module(href="#{info.linkTo(m)}", class='#{info.node is m || m.isAncestorOf(info.node) ? "selected" : ""}')
+				span= m.name
 
 - moduleNavTree(info.rootPackage);

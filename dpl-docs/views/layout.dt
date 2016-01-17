@@ -6,8 +6,10 @@ html(lang='en-US')
     | http://digitalmars.com
   - import std.process : environment;
   - string version_id = environment["GIT_TARGET"];
-  - string version_name = version_id.startsWith("v") ? version_id[1 .. $] : "Prerelease";
+  - bool haveVersion = version_id.startsWith("v");
+  - string version_name = haveVersion ? version_id[1 .. $] : "Prerelease";
   - string root_dir = info.linkTo(null) ~ (req is null ? "../" : "");
+  - string ddox_dir = haveVersion ? "library/" : "library-prerelease/";
       
   head
     meta(charset='utf-8')
@@ -18,7 +20,6 @@ html(lang='en-US')
     link(rel='stylesheet', href='#{root_dir}css/codemirror.css')
     link(rel='stylesheet', href='#{root_dir}css/style.css')
     link(rel='stylesheet', href='#{root_dir}css/print.css', media='print')
-    link(rel='stylesheet', href='#{root_dir}css/cssmenu.css')
     link(rel='stylesheet', href='#{root_dir}css/ddox.css')
     link(rel="stylesheet", href="#{root_dir}prettify/prettify.css", type="text/css")
     link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css')
@@ -32,97 +33,182 @@ html(lang='en-US')
     script(type='text/javascript').
       document.body.className += ' have-javascript';
     #top
-      #header
-        a.logo(href='#{root_dir}')
-          img#logo(width='125', height='95', alt='D Logo', src='#{root_dir}images/dlogo.svg')
-        | &#x9;&#x9;
-        span#d-language-mobilehelper
-          a#d-language(href='#{root_dir}') D Programming Language
-    #navigation
-      #search-box
-        form(method='get', action='http://google.com/search')
-          input#domains(type='hidden', name='domains', value='dlang.org')
-          |             
-          input#sourceid(type='hidden', name='sourceid', value='google-search')
-          |             
-          span#search-query
-            input#q(name='q', placeholder='Search')
-            input#symbolSearch(style="display: none", type="text", name="symbolSearch", placeholder="API Search", onchange="performSymbolSearch(80);", onkeypress="this.onchange();", onpaste="this.onchange();", oninput="this.onchange();", autofocus)
-          span#search-dropdown
-            select#sitesearch(name='sitesearch', size='1')
-              option(value='dlang.org') Entire D Site
-              |                     
-              option(selected='', value='dlang.org/library') Library Reference
-              |                     
-              option(value='digitalmars.com/d/archives') Newsgroup Archives
-          span#search-submit
-            button(type='submit')
-              i.fa.fa-search
-              span go
+      .helper
+        .helper.expand-container
+          a.logo(href='#{root_dir}')
+            img#logo(width='125', height='95', alt='D Logo', src='#{root_dir}images/dlogo.svg')
+          a.hamburger.expand-toggle(href="#{root_dir}menu.html", title="Menu")
+            span Menu
+          #cssmenu
+            ul
+              li
+                a(href="#{root_dir}getstarted.html")
+                  span Learn
+              li.expand-container
+                a.expand-toggle(href="#{root_dir}documentation.html")
+                  span Documentation
+                ul
+                  li
+                    a(href="#{root_dir}spec/intro.html")Language Reference
+                  li
+                    a(href="#{root_dir}phobos/index.html") Library Reference
+                  li
+                    a(href="#{root_dir}comparison.html") Feature Overview
+                  li
+                    a(href="#{root_dir}dmd-windows.html") DMD Manual
+                  li
+                    a(href="#{root_dir}articles.html") Articles
+              li
+                a(href="#{root_dir}download.html")
+                  span Downloads
+              li
+                a(href="http://code.dlang.org")
+                  span Packages
+              li.expand-container
+                a.expand-toggle(href="#{root_dir}community.html")
+                  span Community
+                ul
+                  li
+                    a(href="#{root_dir}bugstats.php") Bug Tracker
+                  li
+                    a(href="http://forum.dlang.org") Forums
+                  li
+                    a(href="irc://irc.freenode.net/d") IRC
+                  li
+                    a(href="http://github.com/D-Programming-Language") D on GitHub
+                  li
+                    a(href="http://wiki.dlang.org") Wiki
+                  li
+                    a(href="http://wiki.dlang.org/Review_Queue") Review Queue
+                  li
+                    a(href="http://twitter.com/search?q=%23dlang") Twitter
+                  li
+                    a(href="http://digitalmars.com/d/dlinks.html") More Links
+              li.expand-container
+                a.expand-toggle(href="#{root_dir}resources.html")
+                  span Resources
+                ul
+                  li
+                    a(href="#{root_dir}library/index.html") NEW Library Reference Preview
+                  li
+                    a(href="#{root_dir}tools.html") D-Specific Tools
+                  li
+                    a(href="http://rainers.github.io/visuald/visuald/StartPage.html") Visual D
+                  li
+                    a(href="http://wiki.dlang.org/Editors") Editors
+                  li
+                    a(href="http://wiki.dlang.org/IDEs") IDEs
+                  li
+                    a(href="http://wiki.dlang.org/Tutorials") Tutorials
+                  li
+                    a(href="http://wiki.dlang.org/Books") Books
+                  li
+                    a(href="#{root_dir}dstyle.html") The D Style
+                  li
+                    a(href="#{root_dir}glossary.html") Glossary
+                  li
+                    a(href="#{root_dir}acknowledgements.html") Acknowledgments
+                  li
+                    a(href="#{root_dir}sitemap.html") Sitemap
+          .search-container.expand-container
+            a.expand-toggle(href="#{root_dir}search.html", title="Search")
+              span Search
+            #search-box
+              form(method='get', action='http://google.com/search')
+                input#domains(type='hidden', name='domains', value='dlang.org')
+                |             
+                input#sourceid(type='hidden', name='sourceid', value='google-search')
+                |             
+                span#search-query
+                  input#q(name='q', placeholder='Search')
+                  input#symbolSearch(style="display: none", type="text", name="symbolSearch", placeholder="API Search", onchange="performSymbolSearch(80);", onkeypress="this.onchange();", onpaste="this.onchange();", oninput="this.onchange();", autofocus)
+                span#search-dropdown
+                  .helper
+                    select#sitesearch(name='sitesearch', size='1')
+                      option(value='dlang.org') Entire D Site
+                      |                     
+                      option(selected='', value='dlang.org/spec') Language
+                      |                     
+                      option(selected='', value='dlang.org/library') Library
+                      |                     
+                      option(value='forum.dlang.org') Forums
+                span#search-submit
+                  button(type='submit')
+                    i.fa.fa-search
+                    span go
+              include ddox.inc.symbol-search.results
 
-      #cssmenu
+    .container
+      .subnav-helper
+      .subnav
+        h2 API Documentation
+        p
+          span.smallprint
+            - if( haveVersion )
+              | version #{version_name}
+              br
+              a(href='#{root_dir}library-prerelease/index.html') switch to pre-release version
+            - else
+              | pre-release version
+              br
+              a(href='#{root_dir}library/index.html') switch to latest release version
+        p
+          a(href="#{root_dir}#{ddox_dir}index.html") overview
         ul
-          li
-            a(href='#{root_dir}index.html')
-              span D Lib #{version_name}
-          | &#x9;
-          li
-            a(href='#{root_dir}library-prerelease/index.html')
-              span Prerelease Version
-          | &#x9;
           block navigation
-          li
-            a(href='http://code.dlang.org')
-              span 3rd Party Packages
-
-    div(style="position: absolute; height: 0;")
-      include ddox.inc.symbol-search.results
-
-    #content.hyphenate
-      - if( auto modname = info.node.moduleName )
+      #content.hyphenate
         #tools
-          - string project, path_prefix, line_suffix;
-          - if( modname.startsWith("core.") )
-            - project = "druntime", path_prefix = "src/";
-          - else
-            - project = "phobos", path_prefix = "";
-          - if( auto decl = cast(Declaration)info.node ) line_suffix = "#L"~to!string(decl.line);
-          - string filename = replace(modname, ".", "/") ~ ".d";
+          div
+            - auto modname = info.node.moduleName;
+            - string project = "dlang.org";
+            - string path_prefix, line_suffix, filename;
+            - if( modname )
+              - if( modname.startsWith("core.") )
+                - project = "druntime", path_prefix = "src/";
+              - else
+                - project = "phobos", path_prefix = "";
+              - if( auto decl = cast(Declaration)info.node ) line_suffix = "#L"~to!string(decl.line);
+              - filename = replace(modname, ".", "/");
 
-          a.tip.button(href='https://github.com/D-Programming-Language/#{project}/blob/#{version_id}/#{path_prefix}#{filename}#{line_suffix}')
-            | View source code
-            span
-              | Display the source code in #{filename} from which this page was generated on
-              | github.
+            - if( modname )
+              .tip.smallprint
+                a(href='https://github.com/D-Programming-Language/#{project}/blob/#{version_id}/#{path_prefix}#{filename}.d#{line_suffix}')
+                  | View source code
+                div
+                  | Display the source code in #{filename}.d from which this
+                  | page was generated on github.
 
-          a.tip.button(href='https://github.com/D-Programming-Language/#{project}/edit/master/#{path_prefix}#{filename}')
-            | Improve this page
-            span
-              | Quickly fork, edit online, and submit a pull request for this page.
-              | Requires a signed-in GitHub account. This works well for small changes.
-              | If you'd like to make larger changes you may want to consider using
-              | local clone.
+            .tip.smallprint
+              - auto pagename = modname ? path_prefix ~ filename : "index" ;
+                a(href="https://issues.dlang.org/enter_bug.cgi?bug_file_loc=http%3A%2F%2Fdlang.org/library/#{pagename}.html&bug_severity=enhancement&component=#{project}&op_sys=All&priority=P3&product=D&rep_platform=All&short_desc=%5B#{title}%5D&version=D2") Report a bug
+              div
+                | If you spot a problem with this page, click here to create a
+                | Bugzilla issue.
 
-          //- a.tip.button(href='http://www.prowiki.org/wiki4d/wiki.cgi?DocComments/Phobos/#{info.node.qualifiedName}')
-          a.tip.button(href='http://wiki.dlang.org/DocComments/Phobos/#{info.node.qualifiedName}')
-            | Page wiki
-            span
-              | View or edit the community-maintained wiki page associated with this page.
+            - if( modname )
+              .tip.smallprint
+                a(href='https://github.com/D-Programming-Language/#{project}/edit/master/#{path_prefix}#{filename}.d')
+                  | Improve this page
+                div
+                  | Quickly fork, edit online, and submit a pull request for this page.
+                  | Requires a signed-in GitHub account. This works well for small changes.
+                  | If you'd like to make larger changes you may want to consider using
+                  | local clone.
 
-      - auto hidx = std.string.lastIndexOf(title, ' ');
-      - auto node = info.docGroups.length ? info.docGroups[0].members[0] : null;
-      - if (title.endsWith(" - multiple declarations") && node)
-        h1 <code><a href="#{info.linkTo(info.mod)}">#{info.mod.qualifiedName}</a>.#{title[0 .. $-24]}</code> #{title[$-24 ..$]}
-      - else if (hidx > 0 && !title.startsWith("Module ") && node)
-        h1 #{title[0 .. hidx]} <code><a href="#{info.linkTo(node.parent)}">#{node.parent.qualifiedName}</a>.#{node.name}</code>
-      - else if (hidx > 0 && title.startsWith("Module ") && info.mod)
-        h1 Module <code>#{info.mod.qualifiedName}</code>
-      - else
-        h1= title
-      block body
+        - auto hidx = std.string.lastIndexOf(title, ' ');
+        - auto node = info.docGroups.length ? info.docGroups[0].members[0] : null;
+        - if (title.endsWith(" - multiple declarations") && node)
+          h1 <code><a href="#{info.linkTo(info.mod)}">#{info.mod.qualifiedName}</a>.#{title[0 .. $-24]}</code> #{title[$-24 ..$]}
+        - else if (hidx > 0 && !title.startsWith("Module ") && node)
+          h1 #{title[0 .. hidx]} <code><a href="#{info.linkTo(node.parent)}">#{node.parent.qualifiedName}</a>.#{node.name}</code>
+        - else if (hidx > 0 && title.startsWith("Module ") && info.mod)
+          h1 Module <code>#{info.mod.qualifiedName}</code>
+        - else
+          h1= title
+        block body
 
-      |     
-      #quickindex.quickindex
+        |     
+        #quickindex.quickindex
 
     #copyright
       block copyright
