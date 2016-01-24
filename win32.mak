@@ -42,7 +42,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	exception-safe.dd rdmd.dd templates-revisited.dd warnings.dd		\
 	ascii-table.dd windbg.dd htod.dd regular-expression.dd			\
 	lazy-evaluation.dd variadic-function-templates.dd howto-promote.dd	\
-	tuple.dd template-comparison.dd COM.dd hijack.dd features2.dd safed.dd	\
+	tuple.dd template-comparison.dd COM.dd hijack.dd safed.dd	\
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
 	32-64-portability.dd dll-linux.dd bugstats.php.dd getstarted.dd \
@@ -129,7 +129,7 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html inde
 	lazy-evaluation.html variadic-function-templates.html			\
 	howto-promote.html tuple.html template-comparison.html			\
 	COM.html hijack.html \
-	features2.html safed.html const-faq.html dmd-windows.html \
+	safed.html const-faq.html dmd-windows.html \
 	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html		\
 	d-floating-point.html migrate-to-shared.html \
 	D1toD2.html intro-to-datetime.html \
@@ -374,8 +374,6 @@ download.html : $(DDOC) download.dd
 dstyle.html : $(DDOC) dstyle.dd
 
 faq.html : $(DDOC) faq.dd
-
-features2.html : $(DDOC) features2.dd
 
 getstarted.html : $(DDOC) getstarted.dd
 
