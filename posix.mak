@@ -482,10 +482,7 @@ endif
 
 .PHONY: dpl-docs
 dpl-docs: ${DUB} ${STABLE_DMD}
-	# the "dub upgrade" and "--missing-only" parts are required only as a
-	# workaround for DUB issue #564 (0.9.23)
-	${DUB} upgrade --missing-only --root=${DPL_DOCS_PATH}
-	DFLAGS="$(DPL_DOCS_DFLAGS)" ${DUB} build --nodeps --root=${DPL_DOCS_PATH} \
+	DFLAGS="$(DPL_DOCS_DFLAGS)" ${DUB} build --root=${DPL_DOCS_PATH} \
 		--compiler=${STABLE_DMD}
 
 ${STABLE_DMD}:
