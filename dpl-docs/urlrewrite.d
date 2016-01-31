@@ -10,8 +10,8 @@
 	BoyerMooreFinder).
 
 	Full example:
-	  OLD: http://dlang.org/library/std/algorithm/BoyerMooreFinder.html
-	  NEW: http://dlang.org/library/std/algorithm/boyer_moore_finder.html
+	  OLD: https://dlang.org/library/std/algorithm/BoyerMooreFinder.html
+	  NEW: https://dlang.org/library/std/algorithm/boyer_moore_finder.html
 
 	This script expects the URLs to be passed on STDIN line-by-line without the
 	server/schema part:
