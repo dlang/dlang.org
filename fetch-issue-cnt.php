@@ -13,7 +13,7 @@
 #"trivial",17
 #"enhancement",707
 
-$url = 'http://issues.dlang.org/report.cgi?' . $_SERVER["QUERY_STRING"];
+$url = 'https://issues.dlang.org/report.cgi?' . $_SERVER["QUERY_STRING"];
 $data = file_get_contents($url);
 $lines = explode("\n", $data);
 unset($lines[0]);
