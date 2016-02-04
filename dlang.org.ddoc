@@ -295,8 +295,46 @@ PHOBOSSRC=$(SPANC phobos_src, $(AHTTPS github.com/D-Programming-Language/phobos/
 _=
 
 RED=$(SPANC red, $0)
+_=
+
+$(COMMENT
+    The REF macro generates a link to a phobos symbol.
+
+    The first argument is the symbol name inside its module, without any
+    module/package parts, in usual dotted format.
+
+    Arguments 2 and higher form the module name. The segments are passed
+    as individual arguments.
+
+    The weird order is due to the format of the generated link, and Ddoc being
+    simplistic.
+
+    Example:
+
+    $(REF Array.back, std,container,array) generates a link to
+    std.container.array.Array.back
+
+    To clarify, std.container.array is a module, Array is a struct in that
+    module, and back is a method of that struct.
+
+    The generated href will be "phobos/std_container_array.html#.Array.back"
+    (the phobos path can be different, of course).
+)
 REF=<a href="$(PHOBOS_PATH)$2$(UNDERSCORE_PREFIXED_SKIP $+).html#.$1">$(D $2$(DOT_PREFIXED_SKIP $+, $1))</a>
+_=
+
+$(COMMENT
+    The REF_ALTTEXT macro works the same as the REF macro, but it has another
+    parameter in front of the others that specifies the link text.
+
+    Example:
+    $(REF_ALTTEXT the 'back' method, Array.back, std,container,array)
+    generates a link like this:
+    <a href="phobos/std_container_array.html#.Array.back">the 'back' method</a>
+)
 REF_ALTTEXT=<a href="$(PHOBOS_PATH)$3$(UNDERSCORE_PREFIXED_SKIP2 $+).html#.$2">$1</a>
+_=
+
 RELATIVE_LINK2=$(ALOCAL $1, $+)
 _=
 
