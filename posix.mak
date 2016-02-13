@@ -21,6 +21,8 @@ DOC_OUTPUT_DIR:=$(shell pwd)/web
 GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
+HTML_POSTPROCESSOR_PATH=html-postprocessor
+HTML_POSTPROCESSOR=$(HTML_POSTPROCESSOR_PATH)/html-postprocessor
 REMOTE_DIR=d-programming@digitalmars.com:data
 GENERATED=.generated
 
@@ -232,7 +234,7 @@ $(DOC_OUTPUT_DIR)/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 # Rulez
 ################################################################################
 
-all : docs html
+all : docs html postprocess-html
 
 docs : dmd-prerelease phobos-prerelease druntime-prerelease druntime-release \
   phobos-release apidocs-release apidocs-prerelease
@@ -244,6 +246,8 @@ verbatim : $(addprefix $(DOC_OUTPUT_DIR)/, $(addsuffix .verbatim,$(PAGES_ROOT)))
 kindle : ${DOC_OUTPUT_DIR}/dlangspec.mobi
 
 pdf : ${DOC_OUTPUT_DIR}/dlangspec.pdf
+
+postprocess-html : ${HTML_POSTPROCESSOR_PATH}/.done
 
 $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	cp -f sitemap-template.dd sitemap.dd
@@ -274,7 +278,7 @@ rebase-druntime: ; cd $(DRUNTIME_DIR) && $(call REBASE,druntime)
 rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
-	rm -rf $(DOC_OUTPUT_DIR) ${GENERATED} dpl-docs/.dub
+	rm -rf $(DOC_OUTPUT_DIR) ${GENERATED} ${DPL_DOCS_PATH}/.dub ${HTML_POSTPROCESSOR_PATH}/.done ${HTML_POSTPROCESSOR_PATH}/.dub
 	rm -rf auto dlangspec-consolidated.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex .txt .verbatim.txt)
 	rm -f docs.json docs-prerelease.json dpl-docs/dpl-docs
 	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} ${STABLE_DMD_ROOT} ${DUB_DIR}
@@ -427,19 +431,19 @@ apidocs-prerelease : ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml ${DOC_OUTP
 apidocs-release : ${DOC_OUTPUT_DIR}/library/sitemap.xml ${DOC_OUTPUT_DIR}/library/.htaccess
 apidocs-serve : docs-prerelease.json
 	${DPL_DOCS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
-	  --override-macros=std-ddox-override.ddoc --package-order=std \
+	  --override-macros=std-ddox-override.ddoc --package-order=std --hyphenate \
 	  --git-target=master --web-file-dir=. docs-prerelease.json
 
 ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml : docs-prerelease.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
-	  --override-macros=std-ddox-override.ddoc --package-order=std \
+	  --override-macros=std-ddox-override.ddoc --package-order=std --hyphenate \
 	  --git-target=master docs-prerelease.json ${DOC_OUTPUT_DIR}/library-prerelease
 
 ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
-	  --override-macros=std-ddox-override.ddoc --package-order=std \
+	  --override-macros=std-ddox-override.ddoc --package-order=std --hyphenate \
 	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
 
 ${DOC_OUTPUT_DIR}/library/.htaccess : dpl_release_htaccess
@@ -505,6 +509,26 @@ ${DUB}: ${DUB_DIR} ${STABLE_DMD}
 # testing menu generation
 chm-nav.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+
+################################################################################
+# HTML post-processing
+################################################################################
+
+# binary
+.PHONY: html-postprocessor
+html-postprocessor: ${DUB} ${STABLE_DMD}
+	DFLAGS="$(DPL_DOCS_DFLAGS)" ${DUB} build --root=${HTML_POSTPROCESSOR_PATH} \
+		--compiler=${STABLE_DMD}
+
+# post process html output (currently hyphenation)
+# process any html file that is newer than the rule's .done dummy file
+${HTML_POSTPROCESSOR_PATH}/.done: ${ALL_FILES} html-postprocessor \
+		html phobos-prerelease druntime-prerelease druntime-release phobos-release
+	if [ ! -f $@ ]; then touch -t 197001010000 $@; fi
+	find ${DOC_OUTPUT_DIR} -newer $@ -name '*.html' \
+	  -not \( -path '${DOC_OUTPUT_DIR}/library/*' -or -path '${DOC_OUTPUT_DIR}/library-prerelease/*' \) \
+	  | xargs ${HTML_POSTPROCESSOR}
+	touch $@
 
 ################################################################################
 # Dman tags
