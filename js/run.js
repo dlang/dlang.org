@@ -259,25 +259,6 @@ String.prototype.nl2br = function()
     return this.replace(/\n/g, "<br>");
 }
 
-function showHideAnswer(zis)
-{
-    var id = $(zis).attr('id').replace(/[^\d]/g,'');
-    var obj= $("#a"+id);
-
-    if (obj.css('display') == 'none')
-    {
-        $(zis).html('<span class="nobr">Hide example' +
-            ' <i class="fa fa-caret-up"></i></span>');
-        obj.css('display', 'block');
-    }
-    else
-    {
-        $(zis).html('<span class="nobr">Show example' +
-            ' <i class="fa fa-caret-down"></i></span>');
-        obj.css('display', 'none');
-    }
-}
-
 function safeVar(data, path)
 {
     var p = path.split(".");
@@ -349,9 +330,7 @@ function parseOutput(data, o, oTitle)
 
 $(document).ready(function() 
 {
-    $("div.answer-nojs").each(function(index) {
-        $(this).css("display", "none");
-    });
+    setUpExamples();
 
     var currentPage = $(location).attr('pathname');
     
@@ -539,3 +518,38 @@ $(document).ready(function()
         });
     });
 });
+
+function setUpExamples()
+{
+    /* Sets up expandable example boxes.
+     * max-height and CSS transitions are used to animate the closing and opening for smooth animations even on less powerful devices
+     */
+    $('.example-box').each(function() {
+        var $box = $(this);
+        var boxId = $box.attr('id');
+        // A little juggling here because the content needs to be a block element and the control needs to be an inline
+        // element in the previous paragraph.
+        var $control = $('#' + boxId + '-control');
+        $control.attr('aria-controls', boxId);
+        var $showLabel = $('<span>Show example <i class="fa fa-caret-down"></i></span>');
+        var $hideLabel = $('<span>Hide example <i class="fa fa-caret-up"></i></span>');
+        function toggle() {
+            if ($box.attr('aria-hidden') === 'true') {
+                $box.attr('aria-hidden', false);
+                $control.attr('aria-expanded', true);
+                $control.empty().append($hideLabel);
+                $box.css('max-height', $box[0].scrollHeight);
+            } else {
+                $box.attr('aria-hidden', true);
+                $control.attr('aria-expanded', false);
+                $control.empty().append($showLabel);
+                $box.css('max-height', 0);
+            }
+            return false;
+        }
+        $control.on('click', toggle);
+        toggle();
+    });
+    // NB: href needed for browsers to include the controls in the (keyboard) tab order
+    $('.example-control').attr('href', '#');
+}
