@@ -794,6 +794,29 @@ $(H2 $(GNAME getVirtualIndex))
   a virtual function, $(D -1) is returned instead.
   )
 
+---
+class Bar
+{
+    @disable string vmethod(){return "dont call me";}
+}
+
+void main()
+{
+    // get index of the method
+    ptrdiff_t index = __traits(getVirtualIndex, Bar.vmethod);
+
+    Bar bar = new Bar;
+    //bar.vmethod; // not allowed
+
+    // setup a delegate using the vtbl
+    string delegate() dg;
+    dg.funcptr = cast(string function()) bar.__vptr[index];
+    dg.ptr = cast(void*) bar;
+
+    assert(dg() == "dont call me");
+}
+---
+
 $(H2 $(GNAME allMembers))
 
 	$(P Takes a single argument, which must evaluate to either
