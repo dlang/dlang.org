@@ -383,6 +383,14 @@ $(WINDOWS
 		with the hash symbol ($(CODE #)).
 	  )
 
+	  $(SWITCH $(SWNAME -allinst),
+		generate code for all template instantiations
+	  )
+
+	  $(SWITCH $(SWNAME -betterC),
+		omit generating some runtime information and helper functions
+	  )
+
 	  $(SWITCH $(SWNAME -boundscheck)=[$(I on|safeonly|off)],
 		controls if bounds checking is enabled.
 		$(UL
@@ -406,6 +414,10 @@ $(WINDOWS
 			$(LI $(B on): always use colored output. Same as $(B -color))
 			$(LI $(B off): never use colored output.)
 		)
+	  )
+
+	  $(SWITCH $(SWNAME -conf)=$(I path)
+		use config file at $(I path)
 	  )
 
 	  $(SWITCH $(SWNAME -cov),
@@ -471,8 +483,15 @@ dmd -cov -unittest myprog.d
 		not compiling for symbolic debugging instead of $(B $(LIB)).
 		If $(I libname) is not supplied, then no default library is linked in.
 	  )
-	  $(SWITCH $(SWNAME -deps)=$(I filename),
-		write module dependencies as text to $(I filename)
+	  $(SWITCH $(SWNAME -deps)[=$(I filename)],
+		Without $(I filename), print module dependencies
+		(imports/file/version/debug/lib).
+		With $(I filename), write module dependencies as text to $(I filename)
+		(only imports).
+	  )
+
+	  $(SWITCH $(SWNAME -dip25),
+		implement http://wiki.dlang.org/DIP25 (experimental)
 	  )
 
     $(UNIX
@@ -511,6 +530,10 @@ dmd -cov -unittest myprog.d
 
 	  $(SWITCH $(SWNAME -gs),
 		always generate standard stack frame
+	  )
+
+	  $(SWITCH $(SWNAME -gx),
+		add stack stomp code
 	  )
 
 	  $(SWITCH $(SWNAME -H),
@@ -593,6 +616,10 @@ dmd -cov -unittest myprog.d
 		Compile a 32 bit executable. This is the default.
 		The generated object code is in OMF and is meant to be used with the
 		$(LINK2 http://www.digitalmars.com/download/freecompiler.html, Digital Mars C/C++ compiler).
+	  )
+
+	  $(SWITCH $(SWNAME -m32mscoff),
+	    generate 32 bit code and write MS-COFF object files
 	  )
 
 	  $(SWITCH $(SWNAME -m64),
@@ -709,6 +736,14 @@ $(COMMENT
                 generate DLL library
           )
     )
+
+	  $(SWITCH $(SWNAME -transition)=$(I id),
+		show additional info about language change identified by $(I id)
+	  )
+	  $(SWITCH $(B -transition)=?,
+		list all language changes
+	  )
+
 	  $(SWITCH $(SWNAME -unittest),
 		compile in $(LINK2 spec/unittest.html, unittest) code, turns on asserts, and sets the
 		$(D unittest) $(LINK2 spec/version.html#PredefinedVersions, version identifier)
@@ -716,11 +751,20 @@ $(COMMENT
 	  $(SWITCH $(SWNAME -v),
 		verbose
 	  )
+	  $(SWITCH $(SWNAME -vcolumns),
+		print character (column) numbers in diagnostics
+	  )
+	  $(SWITCH $(SWNAME -verrors)=$(I num),
+		limit the number of error messages (0 means unlimited)
+	  )
 	  $(SWITCH $(SWNAME -version)=$(I level),
 		compile in $(LINK2 spec/version.html#version, version level) >= $(I level)
 	  )
 	  $(SWITCH $(B -version)=$(I ident),
 		compile in $(LINK2 spec/version.html#version, version identifier) $(I ident)
+	  )
+	  $(SWITCH $(SWNAME -vgc),
+		list all gc allocations including hidden ones
 	  )
 	  $(SWITCH $(SWNAME -vtls),
 		print informational messages identifying variables defaulting
