@@ -40,7 +40,7 @@ MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.conf
 	std.windows.iunknown std.windows.registry etc.linux.memoryerror std.stream std.cstream	\
 	std.socketstream std.metastrings std.experimental.ndslice.internal)
 
-MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE) $(addprefix --ex=, core.stdc. std.windows.)
+MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE) $(addprefix --ex=, std.windows.)
 
 # rdmd must fetch the model, imports, and libs from the specified version
 DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)
