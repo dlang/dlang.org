@@ -1,0 +1,381 @@
+Ddoc
+
+$(CHANGELOG_NAV_LAST 2.070.2)
+
+$(VERSION Apr 4, 2016, =================================================,
+
+$(BUGSTITLE Compiler Changes,
+    $(LI $(RELATIVE_LINK2 imports-313, Import access checks for fully qualified names were fixed.))
+    $(LI $(RELATIVE_LINK2 imports-314, Protection for selective and renamed imports were fixed.))
+)
+
+$(BUGSTITLE Language Changes,
+    $(LI $(RELATIVE_LINK2 import-lookup, Imports no longer hide locals declared in outer scopes.))
+    $(LI $(RELATIVE_LINK2 dip22, Private symbols are no longer visible in other modules.))
+    $(LI $(RELATIVE_LINK2 extended-deprecated, Manifest constant can now be used for deprecation message.))
+)
+
+$(BUGSTITLE Library Changes,
+    $(LI $(RELATIVE_LINK2 aa-clear, A `clear` method has been added to associative
+        arrays to remove all elements.))
+    $(LI $(RELATIVE_LINK2 spinlock, The GC now uses a spinlock instead of a recursive mutex.))
+    $(LI Calls to $(NCXREF memory, GC.free) are now ignored during finalization instead of throwing an InvalidMemoryOperationError, see $(BUGZILLA 15353).)
+    $(LI $(NCXREF memory, GC.addRoot) and $(NCXREF memory, GC.addRange) now use a separate lock.)
+    $(LI $(NXREF experimental_allocator_gc_allocator, GCAllocator.goodAllocSize)
+        was added.)
+    $(LI High-level API of $(STDMODREF net_curl, std.net.curl) now uses $(XREF array, Appender)
+        for received content. Which generally makes all calls slightly faster. Up to 200ms for large
+        amounts of data.)
+    $(LI $(XREF meta, Repeat) was added to obtain a repeating
+    $(XREF meta, AliasSeq) consisting of template arguments.)
+    $(LI $(XREF algorithm_iteration, fold) was added as an alternative to $(XREF algorithm_iteration, reduce)
+        with argument order swapped.)
+    $(LI $(RELATIVE_LINK2 nextPow2, Added nextPow2 and truncPow2 to std.math.))
+    $(LI $(CXREF bitop, bsf), $(CXREF bitop, bsr), and $(CXREF bitop, popcnt) now
+        work with ulongs on 32 bit systems.)
+    $(LI $(XREF algorithm_sorting, topN) is now 5% - 7% faster.)
+    $(LI $(RELATIVE_LINK2 unary, Unary overloads of `startsWith` and `endsWith` were added.))
+    $(LI $(RELATIVE_LINK2 maxCount, $(XREF algorithm_searching, maxCount) and
+        $(XREF algorithm_searching, maxPos) were added.))
+    $(LI Range support for the convenience wrapper $(XREF container_rbtree, redBlackTree)
+        was added.)
+)
+
+$(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D $(VER).))
+
+$(HR)
+
+$(BUGSTITLE Compiler Changes,
+    $(LI $(LNAME2 imports-313, Import access checks for fully qualified names were fixed.)
+
+    $(P It is no longer possible to bypass private imports by using fully qualified names, e.g.
+        the following example will fail with `package std.range is not accessible here`.
+    )
+
+    ---
+    import std.algorithm;
+
+    static assert(std.range.isForwardRange!string);
+    ---
+
+    $(P To ease updating existing code, the old behavior was retained but deprecated.
+    )
+    )
+
+    $(LI $(LNAME2 imports-314, Protection for selective and renamed imports were fixed.)
+
+    $(P It is no longer possible to use private selective or renamed imports in another module, e.g.
+        the following example will fail with `a.File is not visible from module b`.
+    )
+
+    ---
+    module a;
+    import std.stdio : File; // imports are private by default
+    ---
+    ---
+    module b;
+    import a;
+
+    File f; // File is private
+    ---
+
+    $(P To ease updating existing code, the old behavior was retained but deprecated.
+        This fix relies on the visibility changes introduced with $(RELATIVE_LINK2 dip22, DIP22).
+    )
+    )
+)
+
+$(BUGSTITLE Language Changes,
+    $(LI $(LNAME2 import-lookup, Imports no longer hide locals declared in outer scopes.)
+
+    $(P These changes were made to the name lookup algorithm:
+
+        $(OL
+            $(LI Lookup for unqualified names is change from one pass to two pass. The first
+            pass goes through the scopes but does not check import declarations. If not found,
+            the second pass goes through the scopes and only looks at import declarations.
+            )
+            $(LI Qualified name lookups, base class lookups, and WithStatement lookups no longer
+            search import declarations, unless a module is the subject of the lookup, where the
+            behavior remains as before.
+            )
+        )
+    )
+
+    $(P This can break existing code, although reliance on the previous behavior tends to be
+        unintended, and fixing it improves the comprehensibility of the code. Breakage tends
+        to take the form of a symbol now being flagged as undefined. Fixing the breakage can
+        be done by fully qualifying the name, or adding an alias to the import declaration.
+    )
+
+    $(P The old lookup behavior can be restored using the -transition=import
+        compiler switch.  With -transition=checkimports the compiler will issue
+        deprecation warnings when the old and new lookup find different
+        symbols.
+        You can combine both switches to use the old lookup and still get
+        deprecation warnings.
+    )
+
+    $(P See also $(BUGZILLA 10378))
+    )
+
+    $(LI $(LNAME2 dip22, Private symbols are no longer visible in other modules.)
+
+    $(P Protection (private, package, protected) is now already enforced during
+        symbol lookup in order to resolve any conflicts between private and
+        public symbols that could occur with the old access check scheme.
+    )
+
+    $(P The visibility of overloaded symbols with mixed protection is determined
+        by the most visibile member, but additional access check against the exact
+        symbol is performed after overload resolution.
+    )
+
+    $(P To ease updating existing code, a deprecated search for invisible symbols will be performed.
+        For the the old lookup behavior (using the -transition=import or -transition=checkimports compiler switch)
+        symbol visibility is ignored.
+        All existing access checks remain active during the deprecation phase.
+    )
+
+    $(P See also $(LINK2 http://wiki.dlang.org/DIP22, DIP22))
+    )
+
+    $(LI $(LNAME2 extended-deprecated, Manifest constant can now be used for deprecation message.)
+
+    $(P Manifest constants (enum, static immutable) can now be used for deprecation message, as well as concatenated strings.)
+    $(P Example:)
+    ---
+    string generateMessage() { return "Some deprecation message"; }
+    enum DepMsg = generateMessage();
+
+    deprecated(DepMsg) class Foo {}
+    deprecated("Some long deprecation " ~ "message") class Bar {}
+    ---
+    )
+)
+
+$(BUGSTITLE Library Changes,
+
+$(LI $(LNAME2 aa-clear, A `clear` method has been added to associative
+    arrays to remove all elements.)
+
+    $(P One can now use `aa.clear()` to remove all elements from an
+        associative array. This allows removing all elements from all
+        references to the same array (setting to `null` just reset the
+        reference, but did not removed the elements from other references).
+    )
+
+-------
+auto aa = ["first" : "entry", "second": "entry"];
+auto aa2 = aa1; // reference to the same AA
+aa.clear(); // still retains its current capacity for faster imports
+assert(aa2.length == 0); // other references affected
+-------
+)
+
+$(LI $(LNAME2 spinlock, The GC is no longer wrapped in a pthread_mutex, it
+    now uses a spinlock.)
+
+    $(P This results in a 5% faster GC on average, with the most benefits going
+        to multi-threaded programs that use the GC. See $(DRUNTIMEPR 1447) for
+        more details.
+    )
+)
+
+$(LI $(LNAME2 nextPow2, Added nextPow2 and truncPow2 to std.math.)
+    $(P $(XREF math, nextPow2) and $(XREF math, truncPow2) are functions for
+        rounding numbers to powers of two.
+    )
+------
+import std.math;
+
+assert(nextPow2(10) == 16);
+assert(nextPow2(4000) == 4096);
+
+assert(truncPow2(10) == 8);
+assert(truncPow2(4000) == 2048);
+------
+)
+
+$(LI $(LNAME2 unary, Unary overloads of `startsWith` and `endsWith` were added.)
+    $(P $(XREF algorithm_searching, startsWith) and $(XREF algorithm_searching, endsWith)
+        can now be used just with a predicate.
+    )
+------
+import std.algorithm.searching;
+import std.ascii : isAlpha;
+
+assert("abc".endsWith!isAlpha);
+assert(!"ab1".endsWith!(a => a.isAlpha));
+
+assert("abc".startsWith!isAlpha);
+assert(!"1ab".startsWith!isAlpha);
+------
+)
+
+$(LI $(LNAME2 maxPos, $(XREF algorithm_searching, maxCount) and
+     $(XREF algorithm_searching, maxPos) were added.)
+$(P Previous to this addition, in order to get the number of the greatest
+    elements, you had to use `minCount!"a > b"`, which was very confusing.
+    This change adds convenience functions to fix this issue.)
+)
+)
+
+$(BR)$(BIG $(LNAME2 bugfix-list, List of all bug fixes and enhancements in D $(VER):))
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(P
+$(LI $(BUGZILLA 14965): [REG2.031] Forward reference to inferred return type of function call when using auto return type)
+$(LI $(BUGZILLA 14973): [REG2.068] compiler inference of contexts for nested map seems broken)
+$(LI $(BUGZILLA 15296): [REG2.069] cannot inline simple function that calls use non-inlinable statements)
+$(LI $(BUGZILLA 15422): [REG2.066] associative array of nested struct - crash on usage)
+$(LI $(BUGZILLA 15455): [REG v2.065] Compiler segfault for simple nested structure)
+$(LI $(BUGZILLA 15618): [REG-master] Class member layout has been changed, ABI needs to be updated?)
+$(LI $(BUGZILLA 15713): [REG-master] ctfe string concatenation is templates is broken)
+$(LI $(BUGZILLA 15729): [REG$(LPAREN)master$(RPAREN)] broken debug info for libraries)
+$(LI $(BUGZILLA 15733): [REG2.066] Forward reference issue involving inheritance)
+$(LI $(BUGZILLA 15744): [REG2.067] $(LPAREN)SIGABRT$(RPAREN) Error: overloadset t.Bar.__ctor is aliased to a function)
+$(LI $(BUGZILLA 15778): [REG2.064] polysemous string type doesn't work in array operation)
+$(LI $(BUGZILLA 15781): [REG2.069] Template type deduction failure with same-type variables with different constness)
+$(LI $(BUGZILLA 15785): [DMD HEAD] Spurious warning when calling protected super)
+$(LI $(BUGZILLA 15788): [REG2.069] ICE assert triggered on overloaded function)
+$(LI $(BUGZILLA 15814): [REG-master] Custom deprecation message is not shown)
+$(LI $(BUGZILLA 15815): [REG2.071-devel] deprecation for aliased template instance not shown)
+$(LI $(BUGZILLA 15817): [REG2.068] ICE $(LPAREN)with no stacktrace$(RPAREN) instead of 'cannot index null array counts' with CTFE AA)
+)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(P
+$(LI $(BUGZILLA 143): 'package' does not work at all)
+$(LI $(BUGZILLA 313): [module] Fully qualified names bypass private imports)
+$(LI $(BUGZILLA 314): [module] Static, renamed, and selective imports are always public)
+$(LI $(BUGZILLA 1754): module member visibility does not affect conflicts)
+$(LI $(BUGZILLA 2991): [module] Import within aggregate causes conflicts with private identifiers)
+$(LI $(BUGZILLA 3254): [module] Module member visibility depends on declaration order)
+$(LI $(BUGZILLA 6907): ice$(LPAREN)interpret.d$(RPAREN) delete expressions crash interpreter)
+$(LI $(BUGZILLA 7516): Postblit not called for structs returned from a ternary operator)
+$(LI $(BUGZILLA 7517): Interface contracts broken)
+$(LI $(BUGZILLA 11581): Given T..., new T[0] does not work)
+$(LI $(BUGZILLA 12748): ICE: Using typeof$(LPAREN)S.init[0]$(RPAREN) in type name specialization.)
+$(LI $(BUGZILLA 12829): Wrong error line number for closure allocation in @nogc function)
+$(LI $(BUGZILLA 13702): One missed 'may cause GC allocation' error message)
+$(LI $(BUGZILLA 14442): Wrong this.outer reference in nested classes)
+$(LI $(BUGZILLA 14486): delete on classes ignores @nogc)
+$(LI $(BUGZILLA 14603): "cannot alias an expression" when opDispatch results in a template)
+$(LI $(BUGZILLA 14604): "cannot resolve forward reference" when opDispatch results in a template)
+$(LI $(BUGZILLA 14686): Postblit isn't sometimes called on concatenation)
+$(LI $(BUGZILLA 14730): Wrong closure var access with -inline)
+$(LI $(BUGZILLA 14788): Incorrect rejection of inout function call)
+$(LI $(BUGZILLA 14895): ICE on array operation when its result is concatenated)
+$(LI $(BUGZILLA 14989): Overload merge sometimes doesn't work)
+$(LI $(BUGZILLA 14992): static array local variables always require .init)
+$(LI $(BUGZILLA 15309): [dmd-internal] ScopeExp.semantic$(LPAREN)$(RPAREN) should set its type always)
+$(LI $(BUGZILLA 15310): [dmd-internal] TemplateDeclaration should be converted to TemplateExp always)
+$(LI $(BUGZILLA 15332): ICE in e2ir.c: assert$(LPAREN)irs->sthis$(RPAREN) in visit$(LPAREN)ThisExp$(RPAREN), function literal with keyword 'function' calls method)
+$(LI $(BUGZILLA 15353): std.experimental.allocator cannot free memory in its destructor if the GC is an ancestor)
+$(LI $(BUGZILLA 15384): assignment is sometimes still accepted as a condition)
+$(LI $(BUGZILLA 15389): extern$(LPAREN)C++$(RPAREN) forward referencing problem)
+$(LI $(BUGZILLA 15407): Assert hit in toElem e2ir.c:1962)
+$(LI $(BUGZILLA 15411): Function literal accessing variable in declaration scope produces bad error message with inline call)
+$(LI $(BUGZILLA 15441): dmd segfaults using std.experimental.ndslice)
+$(LI $(BUGZILLA 15450): ICE during CTFE of legit function)
+$(LI $(BUGZILLA 15519): Circular imports leads to fwd ref error with aliased imports)
+$(LI $(BUGZILLA 15535): Emit error on "goto default" in final switch)
+$(LI $(BUGZILLA 15565): Forward reference error with namespaces)
+$(LI $(BUGZILLA 15578): Should have access to namespace private symbols from same module)
+$(LI $(BUGZILLA 15579): extern$(LPAREN)C++$(RPAREN) interfaces/multiple-inheritance)
+$(LI $(BUGZILLA 15610): extern$(LPAREN)C++$(RPAREN) multiple inheritance - calling with wrong 'this' ptr)
+$(LI $(BUGZILLA 15623): is$(LPAREN)M!N$(RPAREN) evaluates to true for M!N that fails to instantiate.)
+$(LI $(BUGZILLA 15626): extern$(LPAREN)C++$(RPAREN) calling crash)
+$(LI $(BUGZILLA 15638): no common type for const classes)
+$(LI $(BUGZILLA 15647): Casting from one C++ interface in a hierarchy to another is a noop)
+$(LI $(BUGZILLA 15665): Templated scope class with constructor don't compile)
+$(LI $(BUGZILLA 15667): dmd infinite loop on invalid syntax.)
+$(LI $(BUGZILLA 15669): Wrong line number in error message)
+$(LI $(BUGZILLA 15688): dmd segfault with an integer call through comma expression)
+$(LI $(BUGZILLA 15784): Overload set constructor call should be supported from inside a constructor)
+$(LI $(BUGZILLA 15789): ICE Assert in TemplateInstance semanticTiargs)
+$(LI $(BUGZILLA 15794): Lambda cannot get a chance to run its codegen)
+$(LI $(BUGZILLA 15811): -transition=import and -transition=checkimport have oddly behaviors)
+)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(P
+$(LI $(BUGZILLA 10378): Prevent local imports from hiding local symbols)
+$(LI $(BUGZILLA 12954): deprecated doesn't work with concatenated strings or anything else but a string literal)
+$(LI $(BUGZILLA 14383): [ddoc] documented unittests don't work for module declaration)
+$(LI $(BUGZILLA 15644): Change object layout ABI to MI style)
+)
+)
+$(BUGSTITLE Phobos regressions,
+
+$(P
+$(LI $(BUGZILLA 15222): std.experimental omitted from phobos zip file)
+$(LI $(BUGZILLA 15782): [Reg 2.071-devel] Alias no longer strips qualifiers from user defined types)
+$(LI $(BUGZILLA 15807): Array!bool insertBack is broken)
+)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(P
+$(LI $(BUGZILLA 1238): Private identifiers in imported modules create conflicts with public ones)
+$(LI $(BUGZILLA 15543): [ndslice] assumeSameStructure has useless flag)
+$(LI $(BUGZILLA 15545): csv Reader line feed '\r' failure)
+$(LI $(BUGZILLA 15549): [ndslice] byElement is broken for packed slices)
+$(LI $(BUGZILLA 15553): topN very inefficient [slower than sort, even for topN$(LPAREN)0$(RPAREN)] but should be O$(LPAREN)n$(RPAREN))
+$(LI $(BUGZILLA 15561): std.typecons.Proxy gets NaN comparisons wrong)
+$(LI $(BUGZILLA 15639): std.experimental.allocator enables abstract class instantiation)
+$(LI $(BUGZILLA 15654): SysTime.toISOString formats the time zones incorrectly)
+$(LI $(BUGZILLA 15655): SysTime.from*String incorrectly accept single digit time zones and minutes > 59)
+$(LI $(BUGZILLA 15659): SList: clear$(LPAREN)$(RPAREN) can cause crash)
+$(LI $(BUGZILLA 15663): writefln$(LPAREN)"%#o", 0$(RPAREN) should yield "0" instead of "00")
+$(LI $(BUGZILLA 15677): std.experimental.allocators.expandArray overload with init should take the array by ref.)
+$(LI $(BUGZILLA 15683): broken link in DDoc)
+$(LI $(BUGZILLA 15686): std.uni overloads documentation)
+$(LI $(BUGZILLA 15715): [ndslice] rangeHasMutableElements is not defined)
+$(LI $(BUGZILLA 15721): free error when calling Mallocator.dispose on interfaces)
+$(LI $(BUGZILLA 15772): emplace works with abstract classes but it shouldn't)
+)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(P
+$(LI $(BUGZILLA 15377): std.stdio: Use MSVCRT's _fseeki64 / _ftelli64 on Windows COFF)
+$(LI $(BUGZILLA 15532): [ndslice] iota$(LPAREN)5$(RPAREN).sliced$(LPAREN)2,2$(RPAREN) should throw error)
+$(LI $(BUGZILLA 15596): strip with delimiter?)
+$(LI $(BUGZILLA 15714): [ndslice] byElement seems to be missing some slicing primitives)
+)
+)
+$(BUGSTITLE Druntime regressions,
+
+$(P
+$(LI $(BUGZILLA 15224): making 'clean' results in garbage commands)
+$(LI $(BUGZILLA 15822): InvalidMemoryOperationError when calling GC.removeRange/Root from a finalizer)
+)
+)
+$(BUGSTITLE Druntime enhancements,
+
+$(P
+$(LI $(BUGZILLA 15628): Exceptions in fibers never caught with /SAFESEH)
+)
+)
+$(BUGSTITLE dlang.org bugs,
+
+$(P
+$(LI $(BUGZILLA 10987): Add documentation for 'extern $(LPAREN)C++$(RPAREN)' classes)
+$(LI $(BUGZILLA 15344): m32mscoff switch missing from documentation.)
+$(LI $(BUGZILLA 15666): Grammar does not allow member function attributes on static constructors)
+$(LI $(BUGZILLA 15696): The website logo overlaps the Learn tab when using Microsoft Edge)
+$(LI $(BUGZILLA 15697): The script for This Week in D is served over HTTP even when accessing the website over HTTPs.)
+)
+)
+
+)
+$(CHANGELOG_NAV_LAST 2.070.2)
+
+Macros:
+	VER=2.070.0
+	TITLE=Change Log: $(VER)
