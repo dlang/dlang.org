@@ -1,7 +1,7 @@
 /**
 Generates 'Jump to' links.
 
-Copyright: 1999-2014 by Digital Mars
+Copyright: 1999-2016 by Digital Mars
 
 License:   http://boost.org/LICENSE_1_0.txt, Boost License 1.0
 
