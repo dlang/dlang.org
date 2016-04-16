@@ -18,7 +18,7 @@ DMD=$(DMD_DIR)/src/dmd
 DMD_REL=$(DMD_DIR)-${LATEST}/src/dmd
 DUB=${DUB_DIR}/bin/dub
 DOC_OUTPUT_DIR:=$(shell pwd)/web
-GIT_HOME=https://github.com/D-Programming-Language
+GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
@@ -49,7 +49,7 @@ RDMD=rdmd --compiler=$(DMD) $(DFLAGS)
 # Tools
 REBASE = MYBRANCH=`git rev-parse --abbrev-ref HEAD` &&\
  git checkout master &&\
- git pull --ff-only git@github.com:D-Programming-Language/$1.git master &&\
+ git pull --ff-only git@github.com:dlang/$1.git master &&\
  git checkout $$MYBRANCH &&\
  git rebase master
 
