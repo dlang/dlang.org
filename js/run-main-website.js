@@ -10,7 +10,7 @@ Authors:   Damian Ziemba
 var mainPage = new Array();
 
 // Top rotation - sort lines
-mainPage["9635bcb50e3d443aebde04bf65385a26"] = ["Mercury\nVenus\nEarth\nMars\nJupiter\nSaturn\nUranus\nNeptune"];
+mainPage["f34e2dd1777620887b1899e48463d82b"] = ["Mercury\nVenus\nEarth\nMars\nJupiter\nSaturn\nUranus\nNeptune"];
 
 // Top rotation - round floating point numbers
 mainPage["c308dda4f09440aa35d857241991f55e"] = ["2.4 plus 2.4 equals 5 for sufficiently large values of 2."];
