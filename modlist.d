@@ -122,6 +122,7 @@ int main(string[] args)
     writeln("MODULE_MENU=");
     writeln("$(MENU object.html, $(TT object))");
     tree["std"].dumpRoot();
+    tree["sci"].dumpRoot();
     tree["etc"].dumpRoot();
     tree["core"].dumpRoot();
     writeln("_=");

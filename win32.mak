@@ -145,7 +145,7 @@ MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config
 	--ex=std.c. --ex=std.algorithm.internal --ex=std.internal. --ex=std.regex.internal. \
 	--ex=std.typelist --ex=std.windows. --ex=etc.linux.memoryerror \
 	--ex=std.stream --ex=std.cstream --ex=socketstream \
-	--ex=std.experimental.ndslice.internal
+	--ex=sci.ndslice.internal
 
 CHMTARGETS=d.hhp d.hhc d.hhk d.chm
 
