@@ -138,8 +138,6 @@ JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox))
 
-PRETTIFY=prettify/prettify.css prettify/prettify.js
-
 PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
 language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
 d-keyring.gpg
@@ -177,7 +175,7 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements articles ascii-table	
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
-$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT) $(PRETTIFY))
+$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
