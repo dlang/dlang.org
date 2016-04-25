@@ -421,7 +421,7 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
 # phobos and druntime, latest released build and current build (DDOX version)
 ################################################################################
 
-apidocs-prerelease : ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess
+apidocs-prerelease : ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess ${DOC_OUTPUT_DIR}/library-prerelease/upcoming.html
 apidocs-release : ${DOC_OUTPUT_DIR}/library/sitemap.xml ${DOC_OUTPUT_DIR}/library/.htaccess
 apidocs-serve : docs-prerelease.json
 	${DPL_DOCS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
@@ -471,6 +471,15 @@ docs-prerelease.json : ${DMD} ${DRUNTIME_DIR} \
 	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_RELEASE)
 	rm .prerelease-files.txt .prerelease-dummy.html
+
+${GENERATED}/upcoming.dd: | ${GENERATED}
+	$(STABLE_RDMD) ../tools/build_changelog.d ../phobos/changelog --without-macros > $@
+	$(STABLE_RDMD) ../tools/changed.d v2.071.0..upstream/master -o ${GENERATED}/changlog.tmp
+	cat ${GENERATED}/changlog.tmp >> $@
+	rm ${GENERATED}/changlog.tmp
+
+$(DOC_OUTPUT_DIR)/library-prerelease/upcoming.html: ${GENERATED}/upcoming.dd $(CHANGELOG_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
 ################################################################################
 # binary targets for DDOX
