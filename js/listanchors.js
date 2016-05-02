@@ -13,6 +13,23 @@ function lastName(a) {
     return a.slice(pos + 1);
 }
 
+// adds a anchor link to every documented declaration
+function addAnchors()
+{
+    var items = document.getElementsByClassName('d_decl');
+    if(!items) return;
+    for (var i = 0; i < items.length; i++)
+    {
+        // we link to the first children
+        var a = items[i].querySelector('a');
+        if(!a) continue;
+        var permLink = document.createElement("a");
+        permLink.setAttribute('href', '#' + a.name);
+        permLink.className = "fa fa-anchor decl_anchor";
+        items[i].insertBefore(permLink, items[i].firstChild);
+    }
+}
+
 function listanchors()
 {
     var hideTop = (typeof inhibitQuickIndex !== 'undefined');
@@ -72,4 +89,5 @@ function listanchors()
         var e = document.getElementById(id);
         e.innerHTML = newText;
     }
+    addAnchors();
 }
