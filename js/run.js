@@ -491,7 +491,7 @@ $(document).ready(function()
            
             $.ajax({
                 type: 'POST',
-                url: "http://dpaste.dzfl.pl/request/",
+                url: "//dpaste.dzfl.pl/request/",
                 dataType: "json",
                 data: 
                 {
