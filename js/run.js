@@ -254,7 +254,7 @@ var MD5 = function (string) {
     return temp.toLowerCase();
 }
 
-String.prototype.nl2br = function()
+var nl2br = function()
 {      
     return this.replace(/\n/g, "<br>");
 }
@@ -301,7 +301,7 @@ function parseOutput(data, o, oTitle)
     {
         oTitle.text("Compilation output ("+cstatus+": "+cerr+")");
         if ($.browser.msie)
-            o.html(cout.nl2br());
+            o.html(nl2br(cout));
         else
             o.text(cout);
         
@@ -323,7 +323,7 @@ function parseOutput(data, o, oTitle)
     }
 
     if ($.browser.msie)
-        o.html(output.nl2br());
+        o.html(nl2br(cout));
     else
         o.text(output);
 }
