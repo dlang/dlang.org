@@ -165,8 +165,8 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements articles ascii-table	
 	const-faq cpptod ctarguments ctod \
 	D1toD2 d-array-article d-floating-point deprecate dll dll-linux \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
-	exception-safe faq forum-template gpg_keys getstarted glossary gsoc2011 \
-	gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index \
+	exception-safe faq forum-template foundation gpg_keys getstarted glossary \
+	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index \
 	intro-to-datetime lazy-evaluation memory menu migrate-to-shared mixin	\
 	overview pretod rationale rdmd regular-expression resources safed search \
 	template-comparison templates-revisited tools tuple				\
