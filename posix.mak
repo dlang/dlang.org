@@ -138,6 +138,11 @@ JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox))
 
+rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
+SINGLE_CSS_FILES=$(call rwildcard, css/style, *.css)
+$(DOC_OUTPUT_DIR)/css/style.css: $(SINGLE_CSS_FILES)
+	cat $^ > $@
+
 PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
 language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
 d-keyring.gpg
