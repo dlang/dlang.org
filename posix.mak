@@ -25,7 +25,7 @@ REMOTE_DIR=d-programming@digitalmars.com:data
 GENERATED=.generated
 
 # stable dub and dmd versions used to build dpl-docs
-DUB_VER=0.9.25-alpha.1
+DUB_VER=0.9.25
 STABLE_DMD_VER=2.069.2
 STABLE_DMD_ROOT=/tmp/.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
