@@ -166,27 +166,31 @@ html(lang='en-US')
                 - project = "druntime", path_prefix = "src/";
               - else
                 - project = "phobos", path_prefix = "";
-              - if( auto decl = cast(Declaration)info.node ) line_suffix = "#L"~to!string(decl.line);
-              - filename = replace(modname, ".", "/");
+              - if (info.docGroups.length == 1)
+                - if (auto decl = cast(Declaration)info.docGroups[0].members[0]) line_suffix = "#L"~to!string(decl.line);
+              - if (info.node.module_.isPackageModule)
+                - filename = replace(modname, ".", "/") ~ "/package.d";
+              - else
+                - filename = replace(modname, ".", "/") ~ ".d";
 
             - if( modname )
               .tip.smallprint
-                a(href='https://github.com/dlang/#{project}/blob/#{version_id}/#{path_prefix}#{filename}.d#{line_suffix}')
+                a(href='https://github.com/dlang/#{project}/blob/#{version_id}/#{path_prefix}#{filename}#{line_suffix}')
                   | View source code
                 div
-                  | Display the source code in #{filename}.d from which this
+                  | Display the source code in #{filename} from which this
                   | page was generated on github.
 
             .tip.smallprint
-              - auto pagename = modname ? path_prefix ~ filename : "index" ;
-                a(href="https://issues.dlang.org/enter_bug.cgi?bug_file_loc=http%3A%2F%2Fdlang.org/library/#{pagename}.html&bug_severity=enhancement&component=#{project}&op_sys=All&priority=P3&product=D&rep_platform=All&short_desc=%5B#{title}%5D&version=D2") Report a bug
+              - auto pagename = modname ? path_prefix ~ replace(modname, ".", "/") : "index";
+              a(href="https://issues.dlang.org/enter_bug.cgi?bug_file_loc=http%3A%2F%2Fdlang.org/#{ddox_dir}#{pagename}.html&bug_severity=enhancement&component=#{project}&op_sys=All&priority=P3&product=D&rep_platform=All&short_desc=%5B#{title}%5D&version=D2") Report a bug
               div
                 | If you spot a problem with this page, click here to create a
                 | Bugzilla issue.
 
             - if( modname )
               .tip.smallprint
-                a(href='https://github.com/dlang/#{project}/edit/master/#{path_prefix}#{filename}.d')
+                a(href='https://github.com/dlang/#{project}/edit/master/#{path_prefix}#{filename}#{line_suffix}')
                   | Improve this page
                 div
                   | Quickly fork, edit online, and submit a pull request for this page.
