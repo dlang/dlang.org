@@ -118,7 +118,8 @@ SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 
-IMAGES=favicon.ico $(addprefix images/, \
+ORGS_USING_D=$(wildcard images/orgs-using-d/*)
+IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 	d002.ico \
 	$(addprefix compiler-, dmd.png gdc.svg ldc.png) \
 	$(addsuffix .svg, icon_minus icon_plus hamburger dlogo faster-aa-1 faster-gc-1) \
@@ -168,8 +169,8 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements articles ascii-table	
 	exception-safe faq forum-template foundation gpg_keys getstarted glossary \
 	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index \
 	intro-to-datetime lazy-evaluation memory menu migrate-to-shared mixin	\
-	overview pretod rationale rdmd regular-expression resources safed search \
-	template-comparison templates-revisited tools tuple				\
+	orgs-using-d overview pretod rationale rdmd regular-expression resources safed \
+	search template-comparison templates-revisited tools tuple	\
 	variadic-function-templates warnings wc windbg windows
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
