@@ -13,6 +13,39 @@ function lastName(a) {
     return a.slice(pos + 1);
 }
 
+function createClipboard(a, symbolName)
+{
+    // copy-to-clipboard
+    var el = document.createElement("i");
+    // name start with .
+    var symbol = a.name.split(".")[1];
+    var text = "import " + document.body.id + " : " + symbol + ";";
+    el.setAttribute("data-clipboard-text", text);
+    el.setAttribute("aria-hidden", true);
+    el.className = "fa fa-clipboard";
+
+    var container =  document.createElement("span");
+    container.className = "tip smallprint decl_relement";
+    container.setAttribute("width", "auto");
+    var tooltip = document.createElement("div");
+
+    var copyToText = "Copy to clipboard";
+    tooltip.textContent = copyToText;
+
+    // instantiate clipboard
+    var clipboard = new Clipboard(el);
+    clipboard.on('success', function(e){
+        tooltip.textContent = "Copied!";
+        $(container).one('mouseleave',function(e){
+            tooltip.textContent = copyToText;
+        });
+    });
+
+    container.appendChild(el);
+    container.appendChild(tooltip);
+    return container;
+}
+
 // adds a anchor link to every documented declaration
 function addAnchors()
 {
@@ -23,14 +56,18 @@ function addAnchors()
         // we link to the first children
         var a = items[i].querySelector('a');
         if(!a) continue;
+
+        items[i].insertBefore(createClipboard(a), items[i].firstChild);
+
+        // create anchor
         var permLink = document.createElement("a");
         permLink.setAttribute('href', '#' + a.name);
-        permLink.className = "fa fa-anchor decl_anchor";
+        permLink.className = "fa fa-anchor decl_relement";
         items[i].insertBefore(permLink, items[i].firstChild);
     }
 }
 
-function listanchors()
+function listAnchors()
 {
     var hideTop = (typeof inhibitQuickIndex !== 'undefined');
     var a = document.getElementById("quickindex");
@@ -89,5 +126,9 @@ function listanchors()
         var e = document.getElementById(id);
         e.innerHTML = newText;
     }
-    addAnchors();
 }
+
+jQuery(document).ready(function(){
+    listAnchors();
+    addAnchors();
+});
