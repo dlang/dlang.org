@@ -39,7 +39,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	changelog\2.070.2.dd changelog\2.071.0.dd changelog\2.071.1_pre.dd \
 	changelog\index.dd \
 	glossary.dd acknowledgements.dd		\
-	dcompiler.dd builtin.dd comparison.dd rationale.dd code_coverage.dd	\
+	dcompiler.dd builtin.dd ci.d comparison.dd rationale.dd code_coverage.dd	\
 	exception-safe.dd rdmd.dd templates-revisited.dd warnings.dd		\
 	ascii-table.dd windbg.dd htod.dd regular-expression.dd			\
 	lazy-evaluation.dd variadic-function-templates.dd howto-promote.dd	\
@@ -125,7 +125,7 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html inde
 	changelog\2.070.0.html changelog\2.070.1.html changelog\2.070.2.html \
 	changelog\2.071.0.html changelog\2.071.1.html \
 	changelog\index.html \
-	glossary.html acknowledgements.html builtin.html \
+	glossary.html acknowledgements.html builtin.html ci.html \
 	comparison.html rationale.html code_coverage.html \
 	exception-safe.html rdmd.html templates-revisited.html warnings.html	\
 	ascii-table.html windbg.html htod.html regular-expression.html		\
@@ -184,6 +184,8 @@ ascii-table.html : $(DDOC) ascii-table.dd
 bug-stats.php.html : $(DDOC) bug-stats.php.dd
 
 builtin.html : $(DDOC) builtin.dd
+
+ci.html: $(DDOC) ci.d
 
 changelog\2.000.html : $(CHANGELOG_DDOC) changelog\2.000.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd

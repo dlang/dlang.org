@@ -1,0 +1,192 @@
+Ddoc
+
+$(D_S $(TITLE),
+
+Continuously testing your project is ensures a conflict-free shipping.
+For all the listed Continuous Integration provides, you will need a free account
+to enable building.
+
+$(H3 Travis)
+
+Travis has built-in support for D and building your project with D is as easy as
+adding to your `.travis.yml` the compilers to be tested :
+
+----
+# latest dmd, gdc and ldc
+d:
+  - dmd
+  - gdc
+  - ldc
+----
+
+You can also choose specific versions:
+
+----
+d:
+  - dmd-2.071.0
+  - ldc-1.0.0
+----
+
+Travis also offers $(LINK2 https://docs.travis-ci.com/user/osx-ci-environment/,
+OS X build environment), which you can enable by adding:
+
+----
+os:
+ - linux
+ - osx
+----
+
+More information is also available at $(LINK2 https://docs.travis-ci.com/user/languages/d, Travis's documentation).
+
+$(H4 Testing 32-bit)
+
+All Travis containers use 64-bit, so if you want to test 32-bit is a bit tricky.
+One common trick is to use Travis build matrix feature to individually toggle
+extra builds as Mac OS X ix x86-64 only since 10.7.
+
+---
+env:
+ - ARCH="x86_64"
+matrix:
+  include:
+    - {os: linux, d: dmd-2.071.0, env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
+    - {os: linux, d: ldc-1.0.0, env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
+script:
+ - dub test --arch "$ARCH"
+---
+
+$(H3 CircleCi)
+
+CircleCi doesn't support D out-of-the-box yet, but it is easy to install dmd and
+dub with a single line in your `circle.yml`:
+
+----
+dependencies:
+  override:
+    - source "$(curl -fsS  --retry 3 https://dlang.org/install.sh | bash -s dmd --activate)"
+test:
+  override:
+    - dub test
+----
+
+$(H3 AppVeyor (Windows))
+
+Testing your project on Windows is currently a bit more complicated, but we are
+working on simplifying this integration. At the moment the best way to go is to
+extend your setup from this `appveyor.yml`:
+
+---
+platform: x64
+environment:
+ matrix:
+  - DC: dmd
+    DVersion: 2.071.0
+    arch: x64
+  - DC: dmd
+    DVersion: 2.071.0
+    arch: x86
+  - DC: dmd
+    DVersion: 2.070.0
+    arch: x64
+  - DC: dmd
+    DVersion: 2.070.0
+    arch: x86
+  - DC: ldc
+    DVersion: '1.0.0-alpha1'
+    arch: x64
+  - DC: ldc
+    DVersion: 0.17.0
+    arch: x64
+
+matrix:
+  allow_failures:
+    # See https://github.com/dlang/dub/issues/618
+    # Should be removed once dub 0.9.26 is available
+    - DC: ldc
+
+skip_tags: true
+branches:
+  only:
+    - master
+    - stable
+
+install:
+  - ps: function SetUpDCompiler
+        {
+            if($env:DC -eq "dmd"){
+              if($env:arch -eq "x86"){
+                $env:DConf = "m32";
+              }
+              elseif($env:arch -eq "x64"){
+                $env:DConf = "m64";
+              }
+              echo "downloading ...";
+              $env:toolchain = "msvc";
+              $version = $env:DVersion;
+              Invoke-WebRequest "http://downloads.dlang.org/releases/2.x/$($version)/dmd.$($version).windows.7z" -OutFile "c:\dmd.7z";
+              echo "finished.";
+              pushd c:\\;
+              7z x dmd.7z > $null;
+              popd;
+            }
+            elseif($env:DC -eq "ldc"){
+              echo "downloading ...";
+              if($env:arch -eq "x86"){
+                $env:DConf = "m32";
+              }
+              elseif($env:arch -eq "x64"){
+                $env:DConf = "m64";
+              }
+              $env:toolchain = "msvc";
+              $version = $env:DVersion;
+              Invoke-WebRequest "https://github.com/ldc-developers/ldc/releases/download/v$($version)/ldc2-$($version)-win64-msvc.zip" -OutFile "c:\ldc.zip";
+              echo "finished.";
+              pushd c:\\;
+              7z x ldc.zip > $null;
+              popd;
+            }
+        }
+  - ps: SetUpDCompiler
+  - powershell -Command Invoke-WebRequest https://code.dlang.org/files/dub-0.9.25-windows-x86.zip -OutFile dub.zip
+  - 7z x dub.zip -odub > nul
+  - set PATH=%CD%\%binpath%;%CD%\dub;%PATH%
+  - dub --version
+
+before_build:
+  - ps: if($env:arch -eq "x86"){
+            $env:compilersetupargs = "x86";
+            $env:Darch = "x86";
+          }
+        elseif($env:arch -eq "x64"){
+            $env:compilersetupargs = "amd64";
+            $env:Darch = "x86_64";
+        }
+  - ps : if($env:DC -eq "dmd"){
+           $env:PATH += ";C:\dmd2\windows\bin;";
+         }
+         elseif($env:DC -eq "ldc"){
+           $version = $env:DVersion;
+           $env:PATH += ";C:\ldc2-$($version)-win64-msvc\bin";
+           $env:DC = "ldc2";
+         }
+  - ps: $env:compilersetup = "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall";
+  - '"%compilersetup%" %compilersetupargs%'
+
+build_script:
+ - echo dummy build script - dont remove me
+
+test_script:
+ - echo %PLATFORM%
+ - echo %Darch%
+ - echo %DC%
+ - echo %PATH%
+ - '%DC% --version'
+ - dub test --arch=%Darch% --compiler=%DC%
+---
+
+If your favorite Continuous Integration service is missing from this list, please
+submit a
+$(LINK2 https://github.com/dlang/$(PROJECT)/edit/master/$(SRCFILENAME), pull request).
+
+Macros:
+	TITLE=Continuous Integration with D
