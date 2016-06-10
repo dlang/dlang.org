@@ -170,7 +170,7 @@ PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements articles ascii-table	
 	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index \
 	intro-to-datetime lazy-evaluation memory menu migrate-to-shared mixin	\
 	orgs-using-d overview pretod rationale rdmd regular-expression resources safed \
-	search template-comparison templates-revisited tools tuple	\
+	search template-comparison templates-revisited tuple	\
 	variadic-function-templates warnings wc windbg windows
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
