@@ -48,7 +48,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
 	32-64-portability.dd dll-linux.dd bugstats.php.dd \
 	ctarguments.dd articles.dd community.dd documentation.dd menu.dd \
-	resources.dd search.dd tools.dd
+	resources.dd search.dd
 
 SPECSRC=spec\spec.dd spec\intro.dd spec\lex.dd \
 	spec\grammar.dd spec\module.dd spec\declaration.dd \
@@ -140,7 +140,6 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html inde
 	d-array-article.html dll-linux.html bugstats.php.html \
 	gpg_keys.html forum-template.html ctarguments.html articles.html \
 	community.html documentation.html menu.html resources.html search.html \
-	tools.html
 
 # exclude list
 MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
@@ -554,8 +553,6 @@ search.html : $(DDOC) search.dd
 template-comparison.html : $(DDOC) template-comparison.dd
 
 templates-revisited.html : $(DDOC) templates-revisited.dd
-
-tools.html : $(DDOC) tools.dd
 
 tuple.html : $(DDOC) tuple.dd
 
