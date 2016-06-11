@@ -7,7 +7,7 @@ DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=dub run --root $(DPL_DOCS_PATH) --
 
 SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd	\
-	mixin.dd memory.dd interface.dd windows.dd dll.dd htomodule.dd faq.dd	\
+	mixin.dd faq.dd	\
 	dstyle.dd wc.dd \
 	changelog\2.000.dd changelog\2.001.dd changelog\2.002.dd \
 	changelog\2.003.dd changelog\2.004.dd changelog\2.005.dd \
@@ -43,10 +43,10 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	exception-safe.dd rdmd.dd templates-revisited.dd warnings.dd		\
 	ascii-table.dd windbg.dd htod.dd regular-expression.dd			\
 	lazy-evaluation.dd variadic-function-templates.dd howto-promote.dd	\
-	tuple.dd template-comparison.dd COM.dd hijack.dd safed.dd	\
+	tuple.dd template-comparison.dd hijack.dd safed.dd	\
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
-	32-64-portability.dd dll-linux.dd bugstats.php.dd \
+	dll-linux.dd bugstats.php.dd \
 	ctarguments.dd articles.dd community.dd documentation.dd menu.dd \
 	resources.dd search.dd
 
@@ -94,8 +94,8 @@ SPECTARGETS=spec\spec.html spec\intro.html spec\lex.html \
 	spec\memory-safe-d.html spec\abi.html spec\simd.html
 
 TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.html	\
-	mixin.html memory.html windows.html \
-	dll.html htomodule.html faq.html dstyle.html wc.html \
+	mixin.html \
+	faq.html dstyle.html wc.html \
 	changelog\2.000.html changelog\2.001.html changelog\2.002.html \
 	changelog\2.003.html changelog\2.004.html changelog\2.005.html \
 	changelog\2.006.html changelog\2.007.html changelog\2.008.html \
@@ -131,12 +131,12 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html inde
 	ascii-table.html windbg.html htod.html regular-expression.html		\
 	lazy-evaluation.html variadic-function-templates.html			\
 	howto-promote.html tuple.html template-comparison.html			\
-	COM.html hijack.html \
+	hijack.html \
 	safed.html const-faq.html dmd-windows.html \
 	dmd-linux.html dmd-osx.html dmd-freebsd.html concepts.html		\
 	d-floating-point.html migrate-to-shared.html \
 	D1toD2.html intro-to-datetime.html \
-	deprecate.html download.html 32-64-portability.html \
+	deprecate.html download.html \
 	d-array-article.html dll-linux.html bugstats.php.html \
 	gpg_keys.html forum-template.html ctarguments.html articles.html \
 	community.html documentation.html menu.html resources.html search.html \
@@ -171,8 +171,6 @@ dmd-osx.html : $(DDOC) osx.ddoc dcompiler.dd
 
 dmd-windows.html : $(DDOC) windows.ddoc dcompiler.dd
 	$(DMD) -o- -c -D $(DDOC) windows.ddoc dcompiler.dd -Dfdmd-windows.html
-
-32-64-portability.html : $(DDOC) 32-64-portability.dd
 
 acknowledgements.html : $(DDOC) acknowledgements.dd
 
@@ -349,8 +347,6 @@ changelog\index.html : $(CHANGELOG_DDOC) changelog\index.dd
 
 code_coverage.html : $(DDOC) code_coverage.dd
 
-COM.html : $(DDOC) COM.dd
-
 community.html : $(DDOC) community.dd
 
 comparison.html : $(DDOC) comparison.dd
@@ -373,8 +369,6 @@ d-floating-point.html : $(DDOC) d-floating-point.dd
 
 deprecate.html : $(DDOC) deprecate.dd
 
-dll.html : $(DDOC) dll.dd
-
 dll-linux.html : $(DDOC) dll-linux.dd
 
 documentation.html : $(DDOC) documentation.dd
@@ -394,8 +388,6 @@ hijack.html : $(DDOC) hijack.dd
 howto-promote.html : $(DDOC) howto-promote.dd
 
 htod.html : $(DDOC) htod.dd
-
-htomodule.html : $(DDOC) htomodule.dd
 
 index.html : $(DDOC) index.dd
 
@@ -526,8 +518,6 @@ spec\version.html : $(LANGUAGE_DDOC) spec\version.dd
 
 lazy-evaluation.html : $(DDOC) lazy-evaluation.dd
 
-memory.html : $(DDOC) memory.dd
-
 menu.html : $(DDOC) menu.dd
 
 migrate-to-shared.html : $(DDOC) migrate-to-shared.dd
@@ -563,8 +553,6 @@ warnings.html : $(DDOC) warnings.dd
 wc.html : $(DDOC) wc.dd
 
 windbg.html : $(DDOC) windows.ddoc windbg.dd
-
-windows.html : $(DDOC) windows.ddoc windows.dd
 
 forum-template.html : $(DDOC) forum-template.dd
 
