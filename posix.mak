@@ -499,6 +499,14 @@ ${DUB}: ${DUB_DIR} ${STABLE_DMD}
 	cd ${DUB_DIR} && DC="$(abspath ${STABLE_DMD}) -conf=$(abspath ${STABLE_DMD_CONF})" ./build.sh
 
 ################################################################################
+# chm help files
+################################################################################
+
+# testing menu generation
+chm-nav.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+
+################################################################################
 # Dman tags
 ################################################################################
 
