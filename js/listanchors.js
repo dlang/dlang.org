@@ -21,10 +21,10 @@ function addAnchors()
     for (var i = 0; i < items.length; i++)
     {
         // we link to the first children
-        var a = items[i].querySelector('a');
-        if(!a) continue;
+        var da = items[i].querySelector('span.def-anchor');
+        if(!da) continue;
         var permLink = document.createElement("a");
-        permLink.setAttribute('href', '#' + a.name);
+        permLink.setAttribute('href', '#' + da.id);
         permLink.className = "fa fa-anchor decl_anchor";
         items[i].insertBefore(permLink, items[i].firstChild);
     }
