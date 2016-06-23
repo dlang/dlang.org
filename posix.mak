@@ -129,7 +129,7 @@ IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 		$(addprefix ddox/, alias class enum enummember function \
 			inherited interface module package private property protected \
 			struct template variable)) \
-	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe \
+	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe style3 \
 		pen) \
 	$(addsuffix .jpg, tdpl))
 

@@ -74,7 +74,7 @@ CHANGELOG_DDOC=$(DDOC) changelog/changelog.ddoc
 CHANGELOG_PRE_DDOC=$(CHANGELOG_DDOC) changelog/prerelease.ddoc
 
 ASSETS=images\*.* css\*.*
-IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif
+IMG=dmlogo.gif cpp1.gif d002.ico c1.gif d3.png d4.gif d5.gif favicon.gif style3.gif
 
 PREMADE=dcompiler.html language-reference.html appendices.html howtos.html d-keyring.gpg
 
