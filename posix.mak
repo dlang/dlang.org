@@ -131,7 +131,7 @@ IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 			struct template variable)) \
 	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe style3 \
 		pen) \
-	$(addsuffix .jpg, dman-error dman-rain tdpl))
+	$(addsuffix .jpg, dman-error dman-rain dman-time tdpl))
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed dlang ddox listanchors run run-main-website \
