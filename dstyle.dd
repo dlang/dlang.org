@@ -229,7 +229,8 @@ $(H3 Documentation)
 
 $(P
     All public declarations will be documented in
-    $(LINK2 spec/ddoc.html, Ddoc) format.
+    $(LINK2 spec/ddoc.html, Ddoc) format and should have at least `Params` and
+    `Returns` sections.
 )
 
 $(H3 Unit Tests)
@@ -296,9 +297,31 @@ else if (…)
     …
 }
 -------------------------------
-    $(LI Selective imports should have a space before and after the colon (`:`) like
-    `import std.range : zip`)
- )
+    $(LI `unittest` blocks should be avoided in templates. They will generate
+        a new `unittest` for each instance, hence tests should be put
+        outside of the template.)
+  )
+    $(SUBLIST Imports,
+        $(LI Local, selective imports should be preferred over global imports)
+        $(LI Selective imports should have a space before and after the colon (`:`) like
+        `import std.range : zip`)
+    )
+    $(SUBLIST Return type,
+        $(LI The return type should be stated $(I explicitly) wherever possible,
+             as it makes the documentation and source code easier to read.)
+        $(LI $(LINK2 https://dlang.org/spec/struct.html#nested, Function-nested) structs
+            (aka $(LINK2 https://wiki.dlang.org/Voldemort_types, Voldemort types))
+            should be preferred over public `struct`s.)
+    )
+    $(SUBLIST Attributes,
+        $(LI $(I Non-templated) functions should be annotated with
+             matching attributes (`@nogc`, `@safe`, `pure`, `nothrow`).)
+        $(LI $(I Templated) functions should $(B not) be annotated with attributes
+             as the compiler can infer them.)
+        $(LI $(B Every) $(I unittest) should be annotated
+             (e.g. `pure nothrow @nogc @safe unittest { ... }`)
+             to ensure the existence of attributes on the templated function.)
+    )
 
 $(P
     We are not necessarily recommending that all code follow these rules.
@@ -310,4 +333,5 @@ $(P
 
 Macros:
     TITLE=The D Style
+    SUBLIST=$(H4 $1) $(UL $+)
 
