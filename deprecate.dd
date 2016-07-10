@@ -14,6 +14,7 @@ $(SPEC_S Deprecated Features,
         $(TROW $(DEPLINK delete),                                                 future, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK scope for allocating classes on the stack),              future, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Imaginary and complex types),                            future, &nbsp;, &nbsp;, &nbsp;)
+        $(TROW $(DEPLINK Implicit catch statement),                               2.072, 2.072,  future, future )
         $(TROW $(DEPLINK .sort and .reverse properties for arrays),               ?,     2.072;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK C-style array pointers),                                 ?,     2.072;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Floating point NCEG operators),                          ?,     2.066,  2.072,  &nbsp;)
@@ -202,6 +203,32 @@ $(H4 Rationale)
     $(P These types are too specialized to be a part of the core language.
     )
 
+
+$(H3 $(DEPNAME Implicit catch statement))
+    $(P One can catch everything by using $(D catch) without specifying a type.)
+        ---
+        int[] arr = new int[](10);
+        // This will throw a RangeError
+        try { arr[42]++; }
+        catch { writeln("An error was caught and ignored"); }
+        ---
+
+$(H4 Corrective Action)
+    $(P Either don't catch `Throwable` or replace `catch {}` with `catch (Throwable) {}`)
+        ---
+        int[] arr = new int[](10);
+        // This will throw a RangeError
+        try { arr[42]++; }
+        catch (Throwable) { writeln("An error was caught and ignored"); }
+        ---
+
+$(H4 Rationale)
+    $(P Catching `Throwable` should not be encouraged by the language,
+    because certain core guarantee cannot be satisfied, e.g. the stack might not get cleaned
+    up and destructors might not get run.
+    This change helps ensure catching `Throwable` is always a conscious and visible decision
+    on the programmer's side.
+    )
 
 
 $(H3 $(DEPNAME .sort and .reverse properties for arrays))
