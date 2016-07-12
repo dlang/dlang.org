@@ -96,9 +96,37 @@ $(H4 Assignment Operator Expressions)
     $(P except that:)
 
     $(UL
-        $(LI operand $(D a) is only evaluated once)
+        $(LI operand $(D a) is only evaluated once, see below.)
         $(LI overloading $(I op) uses a different function than overloading $(I op)= does)
         $(LI the left operand of $(D >>>=) does not undergo integral promotions before shifting)
+    )
+    
+    $(P The expression evaluates according to
+
+        --------------
+        void doOpAssignment(ref int x, int y)
+        {
+            x = x op y;
+        }
+        doOpAssignment(a, b);
+        --------------
+
+        thus the following unittest passes
+
+        --------------
+        int sum;
+        int add7tosum_return1() { sum += 7; return 1; }
+        unittest
+        {
+            sum = 0;
+            sum += add7tosum_return1();
+            assert(sum == 8); // "eight" !
+        
+            sum = 0;
+            sum = cast(typeof(sum))(sum + add7tosum_return1());
+            assert(sum == 1); // "one" !
+        }
+        --------------
     )
 
 $(H3 Conditional Expressions)
