@@ -513,4 +513,12 @@ chm-nav.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.dd
 d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags
 
+################################################################################
+# Style tests
+################################################################################
+
+test:
+	@echo "Searching for trailing whitespace"
+	if [[ $$(find . -type f -name "*.dd" -exec egrep -l " +$$" {} \;) ]] ;  then $$(exit 1); fi
+
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
