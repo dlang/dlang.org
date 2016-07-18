@@ -16,7 +16,7 @@ function isPackage()
 
 $(document).ready(function()
 {
-    // only for std at the moment
+    // only for library documentation
     if (!$('body').hasClass("std"))
         return;
 
@@ -25,16 +25,38 @@ $(document).ready(function()
     if (!isPackage())
        modulePath += '.d';
 
-    $.getJSON( "https://contribs.dlang.io/contributors/file/dlang/phobos?file=" + modulePath, function(contributors) {
+    // enable only for std, etc and core
+    var repo;
+    if (modulePath.indexOf("core") == 0 || modulePath.indexOf("object") == 0)
+    {
+        repo = "druntime";
+        modulePath = "src/" + modulePath;
+    }
+    else if (modulePath.indexOf("std") == 0 || modulePath.indexOf("etc") == 0)
+    {
+        repo = "phobos";
+    }
+    else
+    {
+        return;
+    }
+
+    $.getJSON( "https://contribs.dlang.io/contributors/file/dlang/" + repo + "?file=" + modulePath, function(contributors)
+    {
 
         var posToInsert = $('#copyright');
         var contentNode = $("<div id='contributors-github'></div>");
 
         var totalContributors = contributors.length;
+        // ignore invalid files
+        if (totalContributors == 0)
+            return;
+
         contentNode.append("<h3>" + totalContributors + " Contributors</h3>");
 
         // list contributors with github avatar
-        $.each(contributors, function(i, contributor){
+        $.each(contributors, function(i, contributor)
+        {
             var contributorDiv = '<a href=' + contributor.html_url +' target="_blank">';
             contributorDiv += '<img src="'+ contributor.avatar_url +'&size=40" height="40" width=40" alt="' + contributor.login + '"/>';
             contributorDiv += "</a>";
