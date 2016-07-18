@@ -16,7 +16,7 @@ function isPackage()
 
 $(document).ready(function()
 {
-    // only for std at the moment
+    // only for library documentation
     if (!$('body').hasClass("std"))
         return;
 
@@ -25,12 +25,20 @@ $(document).ready(function()
     if (!isPackage())
        modulePath += '.d';
 
+   // enable only for std and etc
+   if (!(modulePath.indexOf("std") == 0 || modulePath.indexOf("etc") == 0))
+      return;
+
     $.getJSON( "https://contribs.dlang.io/contributors/file/dlang/phobos?file=" + modulePath, function(contributors) {
 
         var posToInsert = $('#copyright');
         var contentNode = $("<div id='contributors-github'></div>");
 
         var totalContributors = contributors.length;
+        // ignore invalid files
+        if (totalContributors == 0)
+            return;
+
         contentNode.append("<h3>" + totalContributors + " Contributors</h3>");
 
         // list contributors with github avatar
