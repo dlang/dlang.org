@@ -342,6 +342,8 @@ changelog\2.071.0.html : $(CHANGELOG_DDOC) changelog\2.071.0.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 changelog\2.071.1.html : $(CHANGELOG_DDOC) changelog\2.071.1.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.071.2.html : $(CHANGELOG_PRE_DDOC) changelog\2.071.1_pre.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_PRE_DDOC) $*.dd
 changelog\index.html : $(CHANGELOG_DDOC) changelog\index.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 
