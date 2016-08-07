@@ -7,10 +7,8 @@
     var latest = script.dataset.latest,
         platform = navigator.platform.toLowerCase();
 
-    var model = null;
-    if (platform.indexOf('x86_64') != -1 || platform.indexOf('amd64') != -1)
-        model = 64;
-    else if (platform.match('i.86'))
+    var model = 64;
+    if (platform.match('i.86'))
         model = 32;
 
     var files;
