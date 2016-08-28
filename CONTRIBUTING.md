@@ -99,14 +99,3 @@ make -f posix.mak apidocs-prerelease
 
 The output is in `$R/dlang.org/web/phobos-prerelease` and
 `$R/dlang.org/web/library-prerelease`.
-
-
-### Writing style guide
-
-* Use the _present_ tense (except for historic facts)
-* Use a _neutral_ tone (No strong narrator = no first-person ("I", "we") nor second-person ("you"))
-* Use a _formal_ style (No slang)
-* Use the [American English spelling](https://en.wikipedia.org/wiki/American_and_British_English_spelling_differences)
-* Use the [Oxford comma](https://en.wikipedia.org/wiki/Serial_comma) for coordinating conjunctions (C, C++__,__ and D)
-
-See also the [Wikipedia guide on writing better articles](https://en.wikipedia.org/wiki/Wikipedia:Writing_better_articles).
