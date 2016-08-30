@@ -70,42 +70,20 @@ $(SECTION2 $(LNAME2 why_d, Why D?),
     $(P Why, indeed. Who needs another programming language?
     )
 
-    $(P The software industry has come a long way since the C language was
-    invented.
-    Many new concepts were added to the language with C++, but backwards
-    compatibility with C was maintained, including compatibility with
-    nearly all the weaknesses of the original design.
-    There have been many attempts to fix those weaknesses, but the
-    compatibility issue frustrates it.
-    Meanwhile, both C and C++ undergo a constant accretion of new
-    features. These new features must be carefully fitted into the
-    existing structure without requiring rewriting old code.
+    $(P The software industry is continuously evolving at a breakneck pace.
+    New ideas appear, and older ideas are either validated or discarded.
+    What programmers need and want out of a programming language changes.
+    Available memory and computing power have increased by orders of
+    magnitude, as well as the scale of programs being developed.
     )
 
-    $(P C++ implements things like resizable arrays and string
-    concatenation as part of the standard library, not as part of the
-    core language.)
-
-    $(P Can the power and capability of C++ be extracted, redesigned,
-    and recast into a language that is simple, orthogonal,
-    and practical?
-    Can it all be put into a package
-    that is easy for compiler
-    writers to correctly implement, and
-    which enables compilers to efficiently generate aggressively
-    optimized code?
+    $(P Compilers are no longer terribly constrained by available computing
+    resources, and so are able to do much more for the programmer.
+    Much more powerful language features have become practical.
+    These features can be difficult to retrofit into existing languages,
+    and when there are enough of these, a new language is justified.
     )
 
-    $(P Modern compiler technology has progressed to the point where language
-    features for the purpose of compensating for primitive compiler
-    technology can be omitted. (An
-    example of this would be the $(SINGLEQUOTE register) keyword in C, a more
-    subtle example is the macro
-    preprocessor in C.)
-    We can rely on modern compiler optimization technology to not
-    need language features necessary to get acceptable code quality out of
-    primitive compilers.
-    )
 
 $(SECTION3 $(LNAME2 goals, Major Design Goals of D),
 
@@ -113,6 +91,9 @@ $(SECTION3 $(LNAME2 goals, Major Design Goals of D),
     principles in mind will help to make the right decisions.)
 
     $(OL
+
+    $(LI Enable writing fast, effective code in a straightforward manner.)
+
     $(LI Make it easier to write code that is portable from compiler
     to compiler, machine to machine, and operating system to operating
     system. Eliminate undefined and implementation defined behaviors
@@ -144,7 +125,7 @@ $(SECTION3 $(LNAME2 goals, Major Design Goals of D),
     $(LI Have a context-free grammar. Successful parsing must not require
     semantic analysis.)
 
-    $(LI Easily support writing internationalized applications.)
+    $(LI Easily support writing internationalized applications - Unicode everywhere.)
 
     $(LI Incorporate Contract Programming and unit testing methodology.)
 
@@ -159,10 +140,11 @@ $(SECTION3 $(LNAME2 goals, Major Design Goals of D),
 
     $(LI Obviously, sometimes these goals will conflict. Resolution will be
     in favor of usability.)
+
     )
 )
 
-$(SECTION3 $(LNAME2 features_to_keep, Features To Keep From C++),
+$(SECTION3 $(LNAME2 features_to_keep, Transitioning to D),
 
     $(P The general look of D is like C and C++. This makes it easier to learn
     and port code to D. Transitioning from C/C++ to D should feel natural.
@@ -181,34 +163,32 @@ $(SECTION3 $(LNAME2 features_to_keep, Features To Keep From C++),
     )
 
     $(UL
-    $(LI The general $(B look and feel) of C/C++ is maintained.
+    $(LI The general $(B look and feel) of C/C++ is adopted.
     It uses the same algebraic syntax, most of the same expression
     and statement forms, and the general layout.
     )
 
-    $(LI D programs can be written either in
-    C style $(B function-and-data),
-    C++ style $(B object-oriented),
-    C++ style $(B template metaprogramming),
-    or any mix of the three.
+    $(LI D programs can be written in familiar paradigms,
+    $(B function-and-data),
+    $(B object-oriented),
+    $(B template metaprogramming),
+    $(B funtional),
+    or any mix of them.
     )
 
     $(LI The $(B compile/link/debug) development model is
-    carried forward,
+    carried forward from languages like C,
     although nothing precludes D from being compiled into bytecode
     and interpreted.
     )
 
     $(LI $(B Exception handling).
     More and more experience with exception handling shows it to be a
-    superior way to handle errors than the C traditional method of using
-    error codes and errno globals.
+    superior way to handle errors than error codes.
     )
 
     $(LI $(B Runtime Type Identification).
-    This is partially implemented in C++;
-    in D it is taken to its
-    next logical step. Fully supporting it enables better garbage
+    Fully supporting RTTI it enables better garbage
     collection, better debugger support, more automated persistence, etc.
     )
 
@@ -219,20 +199,19 @@ $(SECTION3 $(LNAME2 features_to_keep, Features To Keep From C++),
     and paradigms can be carried forward to D with minimal effort.
     )
 
+    $(LI Limited support for function link compatibility with $(B C++
+    calling conventions). In particular, there is compatibility with
+    C++ name mangling, namespaces, templates, and exceptions.
+    )
+
     $(LI $(B Operator overloading).
     D programs can overload operators enabling
     extension of the basic types with user defined types.
     )
 
     $(LI $(B Template Metaprogramming).
-    Templates are a way to implement generic programming.
-    Other ways include using macros or having a variant data type.
-    Using macros is out. Variants are straightforward, but
-    inefficient and lack type checking.
-    The difficulties with C++ templates are their
-    complexity, they don't fit well into the syntax of the language,
-    all the various rules for conversions and overloading fitted on top of
-    it, etc. D offers a much simpler way of doing templates.
+    Parametric polymorphism (aka template metaprogramming) is straightforward
+    in D.
     )
 
     $(LI <acronym title="Resource Acquisition Is Initialization">$(B RAII)</acronym>
@@ -259,29 +238,33 @@ $(SECTION3 $(LNAME2 features_to_keep, Features To Keep From C++),
     )
 )
 
-$(SECTION3 $(LNAME2 features_to_drop, Features To Drop From C++),
+$(SECTION3 $(LNAME2 features_to_drop, Features To Leave Behind),
 $(UL
-    $(LI C source code compatibility. Extensions to C that maintain
-    source compatibility
-    have already been done (C++ and ObjectiveC). Further work in this
-    area is hampered by so much legacy code it is unlikely that significant
-    improvements can be made.
+
+    $(LI Support for 16 bit computers.
+    No consideration is given in D for mixed near/far pointers and all the
+    machinations necessary to generate good 16 bit code. The D language
+    design assumes at least a 32 bit flat memory space and supports 64 bit as
+    well.
     )
 
-    $(LI Link compatibility with C++. The C++ runtime object model is just
-    too complicated - properly supporting it would essentially imply
-    making D a full C++ compiler too.
+    $(LI Mutual dependence of compiler passes.
+    Having a clean separation between the lexer, parser, and semantic
+    passes makes for an easier to implement and understand language.
+    This means no user-defined tokens and no user-defined syntax.
     )
 
-    $(LI The C preprocessor. Macro processing is an easy way to extend
-    a language, adding in faux features that aren't really there (invisible
-    to the symbolic debugger). Conditional compilation, layered with
-    #include text, macros, token concatenation, etc., essentially forms
-    not one language but two merged together with no obvious distinction
-    between them. Even worse (or perhaps for the best) the C preprocessor
-    is a very primitive macro language. It's time to step back, look at
-    what the preprocessor is used for, and design support for those
-    capabilities directly into the language.
+    $(LI Macro systems.
+    Macros are an easy way for users to add very powerful features.
+    Unfortunately, the complexity is pushed off on to the user trying
+    to understand the macro usage, and the result is rarely worth
+    it and not justifiable.
+    )
+
+    $(LI C/C++ source code compatibility.
+    The use of the preprocessor has made this difficult to achieve without
+    inevitably requiring manual touch up. It's best to leave this
+    to external tools.
     )
 
     $(LI Multiple inheritance. It's a complex
@@ -292,86 +275,6 @@ $(UL
     single inheritance
     coupled with interfaces and aggregation. What's left does not
     justify the weight of MI implementation.
-    )
-
-    $(LI Namespaces. An attempt to deal with the problems resulting from
-    linking together independently developed pieces of code that
-    have conflicting names. The idea of modules is simpler and works
-    much better.
-    )
-
-    $(LI Tag name space. This misfeature of C is where the tag names
-    of structs are in a separate but parallel symbol table. C++
-    attempted to merge the tag name space with the regular name space,
-    while retaining backward compatibility with legacy C code. The
-    result is needlessly confusing.
-    )
-
-    $(LI Forward declarations. C compilers semantically only know
-    about what has lexically preceded the current state. C++ extends this
-    a little, in that class members can rely on forward referenced class
-    members. D takes this to its logical conclusion, forward declarations
-    are no longer necessary at the module level.
-    Functions can be defined in a natural
-    order rather than the typical inside-out order commonly used in C
-    programs to avoid writing forward declarations.
-    )
-
-    $(LI Include files. A major cause of slow compiles as each
-    compilation unit
-    must reparse enormous quantities of header files. Include files
-    should be done as importing a symbol table.
-    )
-
-    $(LI Trigraphs and digraphs. Unicode is the future.
-    )
-
-    $(LI Non-virtual member functions. In C++, a class designer decides
-    in advance if a function is to be virtual or not. Forgetting to retrofit
-    the base class member function to be virtual when the function gets
-    overridden is a common (and very hard to find) coding error.
-    Making all member functions virtual, and letting the compiler decide
-    if there are no overrides and hence can be converted to non-virtual,
-    is much more reliable.
-    )
-
-    $(LI Bit fields of arbitrary size.
-    Bit fields are a complex, inefficient feature rarely used.
-    )
-
-    $(LI Support for 16 bit computers.
-    No consideration is given in D for mixed near/far pointers and all the
-    machinations necessary to generate good 16 bit code. The D language
-    design assumes at least a 32 bit flat memory space and supports 64 bit as
-    well.
-    )
-
-    $(LI Mutual dependence of compiler passes. In C++, successfully parsing
-    the source text relies on having a symbol table, and on the various
-    preprocessor commands. This makes it
-    impossible to preparse C++ source, and makes writing code analyzers
-    and syntax directed editors painfully difficult to do correctly.
-    )
-
-    $(LI Compiler complexity. Reducing the complexity of an implementation
-    makes it more likely that multiple, $(I correct) implementations
-    are available.
-    )
-
-    $(LI Dumbed down floating point. If one is using hardware that
-    implements modern floating point, it should be available to the
-    programmer rather than having floating point support dumbed down
-    to the lowest common denominator among machines. In particular,
-    a D implementation must support IEEE 754 arithmetic and if
-    extended precision is available it must be supported.)
-
-    $(LI Template overloading of &lt; and &gt; symbols.
-    This choice has caused years of bugs, grief, and confusion
-    for programmers, C++ implementors, and C++ source parsing tool
-    vendors. It makes it
-    impossible to parse C++ code correctly without doing a nearly complete
-    C++ compiler. D uses !( and ) which fit neatly and
-    unambiguously into the grammar.
     )
 )
 )
@@ -388,17 +291,7 @@ $(UL
     )
 
     $(LI Programming managers who are forced to rely on programming style
-    guidelines to avoid common C bugs.
-    )
-
-    $(LI Those who decide the promise of C++ object oriented
-    programming is not fulfilled due to the complexity of it.
-    )
-
-    $(LI Programmers who enjoy the expressive power of C++ but are
-    frustrated by
-    the need to expend much effort explicitly managing memory and finding
-    pointer bugs.
+    guidelines to avoid common bugs.
     )
 
     $(LI Projects that need built-in testing and verification.
@@ -412,21 +305,12 @@ $(UL
     the continual necessity to manipulate pointers directly.
     )
 
-    $(LI Numerical programmers. D has many features to directly
-    support features needed by numerics programmers, like
-    extended floating point precision,
-    core support for complex and imaginary floating types
-    and defined behavior for
-    <acronym title="Not A Number">NaN</acronym>'s and infinities.
-    (These are added in the new
-    C99 standard, but not in C++.)
-    )
-
     $(LI Programmers who write half their application in scripting
-    languages like Ruby and Python, and the other half in C++ to
-    speed up the bottlenecks. D has many of the productivity features
-    of Ruby and Python, making it possible to write the entire app
-    in one language.)
+    languages the other half in native langauges to
+    speed up the bottlenecks.
+    D has productivity features that make using such hybrid approaches
+    unnecessary.
+    )
 
     $(LI D's lexical analyzer and parser are totally independent of each other and of the
     semantic analyzer. This means it is easy to write simple tools to manipulate D source
@@ -439,10 +323,10 @@ $(UL
 $(SECTION3 $(LNAME2 not_for_d, Who D is Not For?),
 
     $(UL
-    $(LI Realistically, nobody is going to convert million line C or C++
-    programs into D. Since D does not compile unmodified C/C++ source code, D
-    is not for legacy apps. (However, D supports legacy C API's very well. D
-    can connect directly to any code that exposes a C interface.)
+    $(LI Realistically, nobody is going to convert million line legacy
+    programs into D.
+    D, however, can connect directly to any code that exposes a C ABI interface
+    or (to a limited extent) a C++ ABI interface.
     )
 
     $(LI As a first programming language - Python or JavaScript is more suitable
@@ -646,18 +530,18 @@ class Bar
     documentation generator. This page was generated by Ddoc, too.
     )
 
-    $(P Although third party tools exist to do this for C++, they have some
-    serious shortcomings:
+    $(P Although third party tools exist to do this for other languages.
+    they have some serious shortcomings:
 
     $(UL
 
-    $(LI It is spectacularly difficult to parse C++ 100% correctly. To
-    do so really requires a full C++ compiler. Third party tools tend to
-    parse only a subset of C++ correctly, so their use will constrain
+    $(LI It is difficult to parse the language correctly.
+    Third party tools tend to
+    parse only a subset of a language correctly, so their use will constrain
     the source code to that subset.)
 
-    $(LI Different compilers support different versions of C++ and have
-    different extensions to C++. Third party tools have a problem matching
+    $(LI Different compilers support different versions of a language and have
+    different extensions to it. Third party tools have a problem matching
     all these variations.)
 
     $(LI Third party tools may not be available for all the desired
@@ -774,8 +658,8 @@ long[] func(int x); // declares a function returning an array of longs
 
     $(SECTION4 Strings,
 
-    $(P String manipulation is so common, and so clumsy in C and C++, that
-    it needs direct support in the language. Modern languages handle
+    $(P String manipulation
+    needs direct support in the language. Modern languages handle
     string concatenation, copying, etc., and so does D. Strings are
     a direct consequence of improved array handling.
     )
@@ -1099,9 +983,9 @@ $(SECTION3 $(LNAME2 reliability, Reliability),
     actually work and to illustrate how to use the functions.
     )
 
-    $(P Consider the many C++ library and application code bases out there for
+    $(P Consider the many library and application code bases out there for
     download on the web. How much of it comes with *any* verification
-    tests at all, let alone unit testing? Less than 1%? The usual practice
+    tests at all, let alone unit testing? The usual practice
     is if it compiles, we assume it works. And we wonder if the warnings
     the compiler spits out in the process are real bugs or just nattering
     about nits.
