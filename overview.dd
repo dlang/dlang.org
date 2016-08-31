@@ -10,8 +10,8 @@ $(DIVC page-contents quickindex,
         $(LI $(RELATIVE_LINK2 what_is_d, What is D?))
         $(LI $(RELATIVE_LINK2 why_d, Why D?)$(OL
             $(LI $(RELATIVE_LINK2 goals, Major Design Goals of D))
-            $(LI $(RELATIVE_LINK2 features_to_keep, Features To Keep From C++))
-            $(LI $(RELATIVE_LINK2 features_to_drop, Features To Drop From C++))
+            $(LI $(RELATIVE_LINK2 features_to_keep, Transitioning To D))
+            $(LI $(RELATIVE_LINK2 features_to_drop, Features To Leave Behind))
             $(LI $(RELATIVE_LINK2 for_d, Who D is For?))
             $(LI $(RELATIVE_LINK2 not_for_d, Who D is Not For?))
         ))
@@ -405,11 +405,6 @@ $(SECTION3 $(LNAME2 productivity, Productivity),
     $(SECTION4 Modules,
 
     $(P Source files have a one-to-one correspondence with modules.
-    Instead of #include'ing the text of a file of declarations,
-    just import the module. There is no need to worry about
-    multiple imports of the same module, no need to wrapper header
-    files with $(D #ifndef/#endif) or $(D #pragma once) kludges,
-    etc.
     )
     )
 
@@ -419,12 +414,10 @@ $(SECTION3 $(LNAME2 productivity, Productivity),
 
     $(SECTION4 Declaration vs Definition,
 
-    $(P C++ usually requires that functions and classes be declared twice - the declaration
-    that goes in the .h header file, and the definition that goes in the .c source
-    file. This is an error prone and tedious process. Obviously, the programmer
-    should only need to write it once, and the compiler should then extract the
-    declaration information and make it available for symbolic importing. This is
-    exactly how D works.
+    $(P Functions and classes are defined once. There is no need
+    for declarations when they are forward referenced.
+    A module can be imported, and all its public declarations
+    become available to the importer.
     )
 
     $(P Example:
@@ -439,36 +432,7 @@ class ABC
 int q;
 -----------------------
 
-    $(P There is no longer a need for a separate definition of member functions, static
-    members, externs, nor for clumsy syntaxes like:
-    )
-
-$(CCODE
-int ABC::func() { return 7; }
-int ABC::z = 7;
-extern int q;
-)
-
-    $(P Note: Of course, in C++, trivial functions like $(D { return 7; })
-    are written inline too, but complex ones are not. In addition, if
-    there are any forward references, the functions need to be prototyped.
-    The following will not work in C++:
-    )
-
-$(CCODE
-class Foo
-{
-    int foo(Bar *c) { return c->bar(); }
-};
-
-class Bar
-{
-  public:
-    int bar() { return 3; }
-};
-)
-
-    $(P But the equivalent D code will work:
+    $(P All members are defined in the class or struct, not separately.
     )
 
 -----------------------
@@ -876,15 +840,10 @@ $(SECTION3 $(LNAME2 resource, Resource Management),
 
     $(SECTION4 Automatic Memory Management,
 
-    $(P D memory allocation is fully garbage collected. Empirical experience
-    suggests that a lot of the complicated features of C++ are necessary
-    in order to manage memory deallocation. With garbage collection, the
-    language gets much simpler.
-    )
-
-    $(P Garbage collection eliminates the tedious, error prone memory
-    allocation
-    tracking code necessary in C and C++. This not only means much
+    $(P D memory allocation is fully garbage collected.
+    With garbage collection, programming gets much simpler.
+    Garbage collection eliminates the need for tedious, error prone memory
+    allocation tracking code. This not only means much
     faster development time and lower maintenance costs,
     but the resulting program frequently runs
     faster.
