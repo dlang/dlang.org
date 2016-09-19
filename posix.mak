@@ -354,10 +354,10 @@ ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} :
 ################################################################################
 
 $(DMD) : ${DMD_DIR}
-	${MAKE} --directory=${DMD_DIR}/src -f posix.mak -j 4
+	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
 
 $(DMD_REL) : ${DMD_DIR}-${LATEST}
-	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak -j 4
+	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
 	$(MAKE) --directory=$(DMD_DIR) -f posix.mak html \
