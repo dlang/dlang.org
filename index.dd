@@ -10,16 +10,17 @@ $(DIVC intro, $(DIV, $(DIV,
         syntax and static typing. It combines efficiency, control and modeling
         power with safety and programmer productivity.)
 
-        $(TC p, download,
-            <a href="download.html" class="btn">Download</a>
-            $(BR)
-            $(SPANC smallprint, Latest version: $(LATEST)
-                &ndash; $(LINK2 changelog/$(LATEST).html, Changelog))
+        $(DIVC download,
+            $(DIVC btn-group-vertical,
+              <a href="download.html" class="btn">Downloads</a>
+              $(SPANC smallprint, Latest version: $(LATEST)
+                  &ndash; $(LINK2 changelog/$(LATEST).html, Changelog))
+            )
         )
     )
     $(DIVID your-code-here,
         $(DIVC tip,
-            $(LINK2 https://forum.dlang.org/newpost/general, your code here)
+            $(LINK2 https://forum.dlang.org/newpost/general?subject=%5Byour+code+here%5D, your code here)
             $(DIV,
                 $(P Got a brief example illustrating D?)
                 $(P Submit your code to the digitalmars.D forum specifying
@@ -58,7 +59,7 @@ void main()
     stdin
         .byLineCopy
         .array
-        .sort
+        .sort!((a, b) => a > b) // descending order
         .each!writeln;
 }
 ----
@@ -83,43 +84,51 @@ $(DIVID news,
 $(DIVC boxes,
     $(DIVC row,
         $(TOUR newspaper-o, News,
-            $(P $(LINK2 http://dconf.org/2016, DConf 2016) is coming up: May 4-6
-                in Berlin, Germany.
-                $(LINK2 http://dconf.org/2016/registration.html,
-                    Secure your seat)
-                before it's sold out!
+            $(P $(LINK2 http://dconf.org/2016/index.html, DConf 2016) was a
+                $(LINK2 https://vimeo.com/167235872, big and bright week) -
+                we are looking forward to seeing you next year.
             )
             $(P Stay updated with
                 $(LINK2 http://arsdnet.net/this-week-in-d,
-                    <cite>This Week in D</cite>),
-                Adam D. Ruppe's weekly newsletter. $(SPANC twid)
+                    <cite>This Week in D</cite>) -
+                $(SPANC twid)
             )
         )
-        $(TOUR comments, Community,
-            $(P Discuss D on the $(LINK2 https://forum.dlang.org/, forums), join
-                the $(LINK2 irc://irc.freenode.net/d, IRC channel), or follow
-                us on $(LINK2 https://twitter.com/D_Programming, Twitter).)
-            $(P Browse the $(LINK2 https://wiki.dlang.org, wiki) where among
-                other things you can find the
-                $(LINK2 https://wiki.dlang.org/Review_Queue, review queue) for
-                major additions to the D project.)
+        $(TOUR graduation-cap, Learn,
+            $(P Take the $(LINK2 https://tour.dlang.org,
+                Tour), explore
+                $(LINK2 $(ROOT_DIR)overview.html, major features) in D,
+                quick start with $(LINK2 $(ROOT_DIR)ctod.html, C) or
+                $(LINK2 $(ROOT_DIR)cpptod.html, C++) background,
+                setup your $(LINK2 https://wiki.dlang.org/IDEs, IDE) or
+                $(LINK2 https://wiki.dlang.org/Editors, editor),
+                and ask questions in the
+                $(LINK2 https://forum.dlang.org/group/digitalmars.D.learn,
+                    Learn forum).
+            )
+            $(P For a deeper dive into D
+            	check out $(LINK2 https://wiki.dlang.org/Books, books) about D,
+            	among others Ali Çehreli's
+                $(LINK2 http://ddili.org/ders/d.en/index.html,
+                <cite>Programming in D</cite>).
+            )
         )
     )
     $(DIVC row,
-        $(TOUR graduation-cap, Learn,
-            $(P Check out Ali Çehreli's great textbook
-                $(LINK2 http://ddili.org/ders/d.en/index.html,
-                <cite>Programming in D</cite>), ask questions in the
-                $(LINK2 https://forum.dlang.org/group/digitalmars.D.learn,
-                    Learn forum),
-                see the
-                $(LINK2 $(ROOT_DIR)getstarted.html, Getting Started) page for
-                more.
+        $(TOUR comments, Community,
+            $(P Discuss D on the $(LINK2 https://forum.dlang.org/, forums), join
+                the $(LINK2 irc://irc.freenode.net/d, IRC channel), read our
+                $(LINK2 https://dlang.org/blog, official Blog), or follow us
+                on $(LINK2 https://twitter.com/D_Programming, Twitter).
+                Browse the $(LINK2 https://wiki.dlang.org/, wiki) where among
+                other things you can find the
+                $(LINK2 https://wiki.dlang.org/Vision/2016H2, high-level vision)
+                of the D foundation.
             )
         )
         $(TOUR book, Documentation,
             $(P Refer to the documentation for the
-                $(LINK2 $(ROOT_DIR)spec/intro.html, language) and for
+                $(LINK2 $(ROOT_DIR)spec/spec.html, language) and for
                 $(LINK2 $(ROOT_DIR)phobos/index.html, phobos), D's standard
                 library. The
                 $(LINK2 $(ROOT_DIR)dmd-windows.html, DMD manual) tells you how
@@ -130,6 +139,11 @@ $(DIVC boxes,
         )
     )
     $(DIVC row,
+        $(TOUR code-fork, Contribute,
+            $(P Report any bugs you find to our $(LINK2 $(ROOT_DIR)bugstats.php,
+                bug tracker). If you can fix an issue, make a pull request on
+                $(LINK2 https://github.com/dlang, GitHub).)
+        )
         $(TOUR cubes, Packages,
             $(P DUB is the package manager for D.
                 $(LINK2 https://code.dlang.org/getting_started,
@@ -137,17 +151,13 @@ $(DIVC boxes,
                 $(LINK2 https://code.dlang.org/, available packages).
             )
         )
-        $(TOUR wrench, Contribute,
-            $(P Report any bugs you find to our $(LINK2 $(ROOT_DIR)bugstats.php,
-                bug tracker). If you can fix an issue, make a pull request on
-                $(LINK2 https://github.com/D-Programming-Language, GitHub).)
-        )
     )
 )
 
 $(DIVC whyd, $(SECTION2 Why D?,
 
-$(DIVC section, $(DIV, $(SECTION3 Convenience,
+$(DIVC section,
+$(DIV, $(SECTION3 $(WHY_D_ICON magic) Convenience,
 
 $(P D allows writing large code fragments without redundantly specifying types,
 like dynamic languages do. On the other hand, static inference deduces types and other
@@ -230,7 +240,7 @@ void main()
 
 )))
 
-$(DIVC section, $(DIV, $(SECTION3 Power,
+$(DIVC section, $(DIV, $(SECTION3 $(WHY_D_ICON rocket) Power,
 
 $(P The best paradigm is to not impose something at the expense of others.
 D offers classic polymorphism, value semantics, functional
@@ -300,7 +310,7 @@ Read more).)
 
 )))
 
-$(DIVC section, $(DIV, $(SECTION3 Efficiency,
+$(DIVC section, $(DIV, $(SECTION3 $(WHY_D_ICON bolt) Efficiency,
 
 $(P D compiles naturally to efficient native code.)
 
@@ -366,6 +376,32 @@ consistency. $(LINK2 spec/memory-safe-d.html, Read more).)
 
 )))
 
+$(DIVC section, $(DIV, $(SECTION3 $(WHY_D_ICON industry) Industry-proven,
+$(DIVC frontpage-orgs center,
+    $(FRONTPAGE_ORG Facebook, https://www.facebook.com, facebook.svg,
+        Online social networking service
+    )
+    $(FRONTPAGE_ORG eBay, https://www.ebay.com, ebay.jpg,
+        One of the world’s largest marketplaces
+    )
+    $(FRONTPAGE_ORG Sociomantic, https://www.sociomantic.com, sociomantic.png,
+        Real-time personalized advertising
+    )
+    $(FRONTPAGE_ORG Remedy Games, http://www.remedygames.com, remedy.png,
+        Triple-A game development
+    )
+)
+    <div id="frontpage-orgs-more">
+        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+        $(LINK2 $(ROOT_DIR)areas-of-d-usage.html, Current D use)
+        $(BR)
+        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+        $(LINK2 $(ROOT_DIR)orgs-using-d.html, More organizations using D)
+    </div>
+)))
+
+
+
 )) $(COMMENT SECTION2 Why D?, DIVC whyd)
 ) $(COMMENT more)
 ) $(COMMENT SECTION1)
@@ -373,7 +409,6 @@ consistency. $(LINK2 spec/memory-safe-d.html, Read more).)
 
 Macros:
     TITLE=Home
-    WIKI=Intro
     TAG=<$1>$+</$1>
     TAG2=<$1 $2>$3</$1>
     D=<span class="d_inlinecode">$0</span>
@@ -381,9 +416,48 @@ Macros:
     EXTRA_EXAMPLE=<div class="your-code-here-extra" style="display:none">$0</div>
     LAYOUT_PREFIX=
     LAYOUT_SUFFIX=
+    $(SCRIPTLOAD $(ROOT_DIR)js/platform-downloads.js,  data-latest="$(LATEST)")
     $(SCRIPTLOAD $(ROOT_DIR)js/run-main-website.js)
     $(SCRIPTLOAD //arsdnet.net/this-week-in-d/twid-latest.js)
     LAYOUT_TITLE=
     TOUR=$(DIVC item, $(SECTION4 $(LINK2 $1, $(TC i, fa fa-$2 big-icon)$3), $4))
     TOUR=$(DIVC item, $(SECTION4 $(TC i, fa fa-$1 big-icon)$2, $3))
+    WHY_D_ICON=$(TC i, fa fa-$1 why-d-icon)
     _=
+	FRONTPAGE_ORG_IMG=$(DIVC frontpage-orgs-img-wrapper vcontainer-box, <img class="vcontainer-element" src="$(ROOT_DIR)images/orgs-using-d/$0" />)
+    FRONTPAGE_ORG=$(DIVC frontpage-orgs-cell dont-highlight-link donthyphenate, $(LINK2 $2, $(FRONTPAGE_ORG_IMG $3)) $(H3 $1) $(P $(I $4 )))
+    _= Single word inline CSS needs to be escaped _=
+    C_A=$1:$2;
+    EXTRA_HEADERS=$(T style,
+        .why-d-icon {
+            padding-right: 0.2em;
+        }
+        .frontpage-orgs h3 {
+           $(C_A margin, 0.4em)
+           margin-left: 0;
+           margin-right: 0;
+           text-align: center;
+        }
+        .frontpage-orgs-img-wrapper {
+            $(C_A width, 175px)
+            $(C_A height, 75px)
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        .frontpage-orgs img {
+            max-width: 150px;
+            max-height: 75px;
+        }
+        .frontpage-orgs-cell {
+            $(C_A width, 175px)
+            $(C_A display, inline-block)
+            vertical-align: top;
+            margin-bottom: 0.5em;
+            padding-right: 15px;
+        }
+        #frontpage-orgs-more {
+            text-align: right;
+            padding-right: 0.7em;
+            margin-bottom: -0.5em;
+        }
+    )

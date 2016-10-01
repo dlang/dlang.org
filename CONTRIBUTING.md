@@ -21,8 +21,8 @@ code:
 
 ```
 cd $R
-git clone https://github.com/D-Programming-Language/dlang.org
-git clone https://github.com/D-Programming-Language/dmd
+git clone https://github.com/dlang/dlang.org
+git clone https://github.com/dlang/dmd
 ```
 
 The `dmd` compiler is needed for processing the documentation.
@@ -84,8 +84,8 @@ and `phobos`:
 
 ```
 cd $R
-git clone https://github.com/D-Programming-Language/druntime
-git clone https://github.com/D-Programming-Language/phobos
+git clone https://github.com/dlang/druntime
+git clone https://github.com/dlang/phobos
 ```
 
 With the new repos in tow this builds the prerelease libraries:

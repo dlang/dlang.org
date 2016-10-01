@@ -18,14 +18,14 @@ DMD=$(DMD_DIR)/src/dmd
 DMD_REL=$(DMD_DIR)-${LATEST}/src/dmd
 DUB=${DUB_DIR}/bin/dub
 DOC_OUTPUT_DIR:=$(shell pwd)/web
-GIT_HOME=https://github.com/D-Programming-Language
+GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
 GENERATED=.generated
 
 # stable dub and dmd versions used to build dpl-docs
-DUB_VER=0.9.24
+DUB_VER=0.9.25
 STABLE_DMD_VER=2.069.2
 STABLE_DMD_ROOT=/tmp/.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
@@ -36,11 +36,11 @@ STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODE
 
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
-	std.c. std.algorithm.internal std.internal. std.regex.internal. std.typelist		\
+	std.c. std.algorithm.internal std.internal. std.regex.internal. 			\
 	std.windows.iunknown std.windows.registry etc.linux.memoryerror std.stream std.cstream	\
-	std.socketstream std.metastrings std.experimental.ndslice.internal)
+	std.socketstream std.experimental.ndslice.internal)
 
-MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE) $(addprefix --ex=, std.windows.)
+MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE)
 
 # rdmd must fetch the model, imports, and libs from the specified version
 DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)
@@ -49,7 +49,7 @@ RDMD=rdmd --compiler=$(DMD) $(DFLAGS)
 # Tools
 REBASE = MYBRANCH=`git rev-parse --abbrev-ref HEAD` &&\
  git checkout master &&\
- git pull --ff-only git@github.com:D-Programming-Language/$1.git master &&\
+ git pull --ff-only git@github.com:dlang/$1.git master &&\
  git checkout $$MYBRANCH &&\
  git rebase master
 
@@ -118,27 +118,27 @@ SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 
-IMAGES=favicon.ico $(addprefix images/, \
+ORGS_USING_D=$(wildcard images/orgs-using-d/*)
+IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 	d002.ico \
 	$(addprefix compiler-, dmd.png gdc.svg ldc.png) \
 	$(addsuffix .svg, icon_minus icon_plus hamburger dlogo faster-aa-1 faster-gc-1) \
-	$(addsuffix .png, apple_logo centos_logo d3 debian_logo dlogo \
-		fedora_logo freebsd_logo opensuse_logo ubuntu_logo windows_logo \
-		pattern github-ribbon \
+	$(addsuffix .png, archlinux_logo apple_logo centos_logo chocolatey_logo \
+		d3 debian_logo dlogo fedora_logo freebsd_logo gentoo_logo homebrew_logo \
+		opensuse_logo ubuntu_logo windows_logo pattern github-ribbon \
 		$(addprefix ddox/, alias class enum enummember function \
 			inherited interface module package private property protected \
 			struct template variable)) \
-	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe \
+	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe style3 \
 		pen) \
-	$(addsuffix .jpg, tdpl))
+	$(addsuffix .jpg, dman-error dman-rain dman-time tdpl))
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
-	codemirror-compressed dlang ddox listanchors run run-main-website jquery-1.7.2.min))
+	codemirror-compressed dlang ddox listanchors platform-downloads run \
+	run-main-website show_contributors jquery-1.7.2.min))
 
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox))
-
-PRETTIFY=prettify/prettify.css prettify/prettify.js
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
 language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
@@ -161,23 +161,23 @@ CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) 32-64-portability acknowledgements articles ascii-table	\
-	bugstats.php builtin \
-	$(CHANGELOG_FILES) code_coverage COM community comparison concepts \
+PAGES_ROOT=$(SPEC_ROOT) acknowledgements areas-of-d-usage \
+	articles ascii-table bugstats.php builtin \
+	$(CHANGELOG_FILES) code_coverage community comparison concepts \
 	const-faq cpptod ctarguments ctod \
-	D1toD2 d-array-article d-floating-point deprecate dll dll-linux \
+	D1toD2 d-array-article d-floating-point deprecate dll-linux dmd \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
-	exception-safe faq forum-template gpg_keys getstarted glossary gsoc2011 \
-	gsoc2012 gsoc2012-template hijack howto-promote htod htomodule index \
-	intro-to-datetime lazy-evaluation memory menu migrate-to-shared mixin	\
-	overview pretod rationale rdmd regular-expression resources safed search \
-	template-comparison templates-revisited tools tuple				\
-	variadic-function-templates warnings wc windbg windows
+	exception-safe faq forum-template foundation gpg_keys glossary \
+	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod index \
+	intro-to-datetime lazy-evaluation menu migrate-to-shared mixin	\
+	orgs-using-d overview pretod rationale rdmd regular-expression resources safed \
+	search template-comparison templates-revisited tuple	\
+	variadic-function-templates warnings wc windbg
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
-$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT) $(PRETTIFY))
+$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
@@ -234,8 +234,8 @@ $(DOC_OUTPUT_DIR)/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 
 all : docs html
 
-docs : phobos-prerelease druntime-prerelease druntime-release phobos-release	\
-	apidocs-release apidocs-prerelease
+docs : dmd-prerelease phobos-prerelease druntime-prerelease druntime-release \
+  phobos-release apidocs-release apidocs-prerelease
 
 html : $(ALL_FILES)
 
@@ -250,7 +250,7 @@ $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	(true $(foreach F, $(TARGETS), \
 	  && echo \
 	    "$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`")) \
-	  | sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\(.*\)/<a href="\1">\2<\/a><br>/' >> sitemap.dd
+	  | sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\([^\n\r]*\)/<a href="\1">\2<\/a><br>/' >> sitemap.dd
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) sitemap.dd
 	rm sitemap.dd
 
@@ -354,10 +354,15 @@ ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} :
 ################################################################################
 
 $(DMD) : ${DMD_DIR}
-	${MAKE} --directory=${DMD_DIR}/src -f posix.mak -j 4
+	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
 
 $(DMD_REL) : ${DMD_DIR}-${LATEST}
-	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak -j 4
+	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
+
+dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
+	$(MAKE) --directory=$(DMD_DIR) -f posix.mak html \
+		DOCDIR=${DOC_OUTPUT_DIR}/dmd-prerelease \
+		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
 ################################################################################
 # druntime, latest released build and current build
@@ -450,7 +455,7 @@ docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST} \
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
-	  sed -e /unittest.d/d -e /format/d -e /windows/d >> .release-files.txt
+	  sed -e /unittest.d/d -e /windows/d >> .release-files.txt
 	${DMD_REL} -c -o- -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
 	  -Xfdocs.json -I${PHOBOS_DIR}-${LATEST} @.release-files.txt
 	${DPL_DOCS} filter docs.json --min-protection=Protected \
@@ -461,7 +466,7 @@ docs-prerelease.json : ${DMD} ${DRUNTIME_DIR} \
 		${PHOBOS_DIR} | dpl-docs
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 	  -e /unittest/d > .prerelease-files.txt
-	find ${PHOBOS_DIR} -name '*.d' | sed -e /unittest.d/d -e /format/d \
+	find ${PHOBOS_DIR} -name '*.d' | sed -e /unittest.d/d \
 	  -e /windows/d >> .prerelease-files.txt
 	${DMD} -c -o- -version=CoreDdoc -version=StdDdoc -Df.prerelease-dummy.html \
 	  -Xfdocs-prerelease.json -I${PHOBOS_DIR} @.prerelease-files.txt
@@ -494,10 +499,26 @@ ${DUB}: ${DUB_DIR} ${STABLE_DMD}
 	cd ${DUB_DIR} && DC="$(abspath ${STABLE_DMD}) -conf=$(abspath ${STABLE_DMD_CONF})" ./build.sh
 
 ################################################################################
+# chm help files
+################################################################################
+
+# testing menu generation
+chm-nav.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+
+################################################################################
 # Dman tags
 ################################################################################
 
 d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags
+
+################################################################################
+# Style tests
+################################################################################
+
+test:
+	@echo "Searching for trailing whitespace"
+	if [[ $$(find . -type f -name "*.dd" -exec egrep -l " +$$" {} \;) ]] ;  then $$(exit 1); fi
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)

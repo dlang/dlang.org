@@ -1,8 +1,8 @@
 #!/usr/bin/env rdmd
 /**
  * Copyright: Martin Nowak 2015-.
- * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
- * Authors: $(WEB code.dawg.eu, Martin Nowak)
+ * License: $(HTTP boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: $(HTTP code.dawg.eu, Martin Nowak)
  */
 import std.algorithm, std.file, std.path, std.stdio, std.string, std.range;
 

@@ -1,7 +1,7 @@
 /**
 Generates 'Jump to' links.
 
-Copyright: 1999-2014 by Digital Mars
+Copyright: 1999-2016 by Digital Mars
 
 License:   http://boost.org/LICENSE_1_0.txt, Boost License 1.0
 
@@ -11,6 +11,23 @@ Authors:   Andrei Alexandrescu, Nick Treleaven
 function lastName(a) {
     var pos = a.lastIndexOf('.');
     return a.slice(pos + 1);
+}
+
+// adds a anchor link to every documented declaration
+function addAnchors()
+{
+    var items = document.getElementsByClassName('d_decl');
+    if(!items) return;
+    for (var i = 0; i < items.length; i++)
+    {
+        // we link to the first children
+        var da = items[i].querySelector('span.def-anchor');
+        if(!da) continue;
+        var permLink = document.createElement("a");
+        permLink.setAttribute('href', '#' + da.id);
+        permLink.className = "fa fa-anchor decl_anchor";
+        items[i].insertBefore(permLink, items[i].firstChild);
+    }
 }
 
 function listanchors()
@@ -72,4 +89,5 @@ function listanchors()
         var e = document.getElementById(id);
         e.innerHTML = newText;
     }
+    addAnchors();
 }
