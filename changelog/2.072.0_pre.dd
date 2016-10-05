@@ -108,6 +108,8 @@ $(BUGSTITLE Library Changes,
     $(LI $(RELATIVE_LINK2 emplace-inner-class, `std.conv.emplace` no longer allows
     to emplace classes directly nested inside other classes without specifying a
     suitable `outer` pointer))
+    $(LI $(RELATIVE_LINK2 drt-oncycle, New druntime switch `--DRT-oncycle`
+    allows specifying what to do on cycle detection in modules.))
 )
 
 $(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D $(VER).))
@@ -729,6 +731,16 @@ $(BUGSTITLE Library Changes,
     auto x = inner.getX();  // this used to cause a segmentation fault;
                             // now it works as expected
     -------
+    )
+
+    $(LI $(LNAME2 drt-oncycle, New druntime switch `--DRT-oncycle` allows
+        specifying what to do on cycle detection in modules.)
+        $(P When module cycles are detected, the default behavior is to print the cycle, and abort execution. However, in many cases, the cycles are not harmful. With the new `--DRT-oncycle` switch, you can effect a different behavior when cycles are detected:
+        $(OL
+            $(LI `--DRT-oncycle=abort` This is the default behavior, and will abort, printing the cycle to `stderr` when the first cycle is detected)
+            $(LI `--DRT-oncycle=print` Print all cycles that are detected to `stderr`, but do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
+            $(LI `--DRT-oncycle=ignore` Do not print anything, and do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
+        ))
     )
 )
 )
