@@ -28,6 +28,7 @@ $(BUGSTITLE Compiler Changes,
     $(LI $(RELATIVE_LINK2 __FILE_FULL_PATH__, Special keyword replaced by the source file's absolute file name.))
     $(LI $(RELATIVE_LINK2 dash_safe, Add -transition=safe switch.))
     $(LI $(RELATIVE_LINK2 dash_verrors_spec, Add `-verrors=spec` switch.))
+    $(LI $(RELATIVE_LINK2 iteration_closure, Assumes opApply delegate parameter escapes unless marked `scope`))
 )
 
 $(BUGSTITLE Library Changes,
@@ -303,6 +304,33 @@ $(BUGSTITLE Compiler Changes,
         {
           string[] arr = [ "Hello", "buggy" "World" ];
           assert(arr.length = 3); // Fail, the length of the array is 2 and the content is [ "Hello", "buggyWorld" ]
+        }
+        ---
+    )
+
+    $(LI $(LNAME2 iteration_closure, Assumes opApply delegate parameter escapes unless marked `scope`)
+
+    $(P This breaking change was required to fix bug with `@safe` violation: $(BUGZILLA 16193).)
+
+    $(P To list all places where closure may be allocated after the change, use `-transition=safe`
+        compiler switch.)
+
+    $(P Example:)
+
+        ---
+        struct S1 {
+            int opApply(int delegate(int) dg);
+        }
+
+        struct S2 {
+            int opApply(scope int delegate(int) dg);
+        }
+
+        void foo() {
+            foreach(i; S1.init) { // will allocate closure
+            }
+            foreach(i; S2.init) { // won't allocate closure
+            }
         }
         ---
     )
