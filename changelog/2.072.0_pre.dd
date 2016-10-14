@@ -33,6 +33,8 @@ $(BUGSTITLE Compiler Changes,
 
 $(BUGSTITLE Library Changes,
     $(LI $(RELATIVE_LINK2 TypeInfo.init-deprecated, `TypeInfo.init` has been deprecated.))
+    $(LI $(RELATIVE_LINK2 drt-oncycle, New druntime switch `--DRT-oncycle`
+    allows specifying what to do on cycle detection in modules.))
     $(LI $(RELATIVE_LINK2 std-digest-murmurhash, Implementation of MurmurHash
         digest.))
     $(LI $(RELATIVE_LINK2 process, Process creation in `std.process` was sped up
@@ -109,8 +111,6 @@ $(BUGSTITLE Library Changes,
     $(LI $(RELATIVE_LINK2 emplace-inner-class, `std.conv.emplace` no longer allows
     to emplace classes directly nested inside other classes without specifying a
     suitable `outer` pointer))
-    $(LI $(RELATIVE_LINK2 drt-oncycle, New druntime switch `--DRT-oncycle`
-    allows specifying what to do on cycle detection in modules.))
     $(LI $(RELATIVE_LINK2 gc-runtimeswitch-added, A switch for selecting
     the GC implementation at runtime was added.))
     $(LI $(RELATIVE_LINK2 manualgc-added, A GC implementation allowing manual
@@ -348,6 +348,19 @@ $(BUGSTITLE Library Changes,
         )
 
         $(P Use $(REF_OBJECT_SHORT TypeInfo.initializer) instead.)
+    )
+
+    $(LI $(LNAME2 drt-oncycle, New druntime switch `--DRT-oncycle` allows
+        specifying what to do on cycle detection in modules.)
+        $(P When module cycles are detected, the default behavior is to print the cycle, and abort execution. However, in many cases, the cycles are not harmful. With the new `--DRT-oncycle` switch, you can effect a different behavior when cycles are detected:)
+        $(DL
+            $(DT `--DRT-oncycle=abort`)
+            $(DD This is the default behavior, and will abort, printing the cycle to `stderr` when the first cycle is detected)
+            $(DT `--DRT-oncycle=print`)
+            $(DD Print all cycles that are detected to `stderr`, but do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
+            $(DT `--DRT-oncycle=ignore`)
+            $(DD Do not print anything, and do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
+        )
     )
 
     $(LI $(LNAME2 std-digest-murmurhash, Implementation of `std.digest.murmurhash`).
@@ -761,19 +774,6 @@ $(BUGSTITLE Library Changes,
     auto x = inner.getX();  // this used to cause a segmentation fault;
                             // now it works as expected
     -------
-    )
-
-    $(LI $(LNAME2 drt-oncycle, New druntime switch `--DRT-oncycle` allows
-        specifying what to do on cycle detection in modules.)
-        $(P When module cycles are detected, the default behavior is to print the cycle, and abort execution. However, in many cases, the cycles are not harmful. With the new `--DRT-oncycle` switch, you can effect a different behavior when cycles are detected:)
-        $(DL
-            $(DT `--DRT-oncycle=abort`)
-            $(DD This is the default behavior, and will abort, printing the cycle to `stderr` when the first cycle is detected)
-            $(DT `--DRT-oncycle=print`)
-            $(DD Print all cycles that are detected to `stderr`, but do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
-            $(DT `--DRT-oncycle=ignore`)
-            $(DD Do not print anything, and do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
-        )
     )
 
     $(LI $(LNAME2 gc-runtimeswitch-added, A runtime switch for selecting
