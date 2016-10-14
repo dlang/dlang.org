@@ -23,12 +23,12 @@ $(BUGSTITLE Language Changes,
 )
 
 $(BUGSTITLE Compiler Changes,
+    $(LI $(RELATIVE_LINK2 iteration_closure, OpApply now conservatively allocates a closure unless marked `scope`))
     $(LI $(RELATIVE_LINK2 deferred_alias, Analysis for aliases in imported modules is deferred.))
     $(LI $(RELATIVE_LINK2 native_tls_osx, Native TLS on OS X 64 bit.))
     $(LI $(RELATIVE_LINK2 __FILE_FULL_PATH__, Special keyword replaced by the source file's absolute file name.))
     $(LI $(RELATIVE_LINK2 dash_safe, Add -transition=safe switch.))
     $(LI $(RELATIVE_LINK2 dash_verrors_spec, Add `-verrors=spec` switch.))
-    $(LI $(RELATIVE_LINK2 iteration_closure, Assumes opApply delegate parameter escapes unless marked `scope`))
 )
 
 $(BUGSTITLE Library Changes,
@@ -210,6 +210,33 @@ $(BUGSTITLE Language Changes,
 )
 
 $(BUGSTITLE Compiler Changes,
+    $(LI $(LNAME2 iteration_closure, OpApply now conservatively allocates a closure unless marked `scope`)
+
+    $(P This breaking change was required to fix bug with `@safe` violation: $(BUGZILLA 16193).)
+
+    $(P To list all places where closure may be allocated after the change, use `-transition=safe`
+        compiler switch.)
+
+    $(P Example:)
+
+        ---
+        struct S1 {
+            int opApply(int delegate(int) dg);
+        }
+
+        struct S2 {
+            int opApply(scope int delegate(int) dg);
+        }
+
+        void foo() {
+            foreach(i; S1.init) { // will allocate closure
+            }
+            foreach(i; S2.init) { // won't allocate closure
+            }
+        }
+        ---
+    )
+
     $(LI $(LNAME2 deferred_alias, Analysis for aliases in imported modules is deferred.)
 
     $(P Example:)
@@ -309,33 +336,6 @@ $(BUGSTITLE Compiler Changes,
         (spec:1) test.d(13): Error: cannot implicitly convert expression (& i) of type int* to int
         ---
         $(P The number after `spec:` is the nesting of the speculative compiles.)
-    )
-
-    $(LI $(LNAME2 iteration_closure, Assumes opApply delegate parameter escapes unless marked `scope`)
-
-    $(P This breaking change was required to fix bug with `@safe` violation: $(BUGZILLA 16193).)
-
-    $(P To list all places where closure may be allocated after the change, use `-transition=safe`
-        compiler switch.)
-
-    $(P Example:)
-
-        ---
-        struct S1 {
-            int opApply(int delegate(int) dg);
-        }
-
-        struct S2 {
-            int opApply(scope int delegate(int) dg);
-        }
-
-        void foo() {
-            foreach(i; S1.init) { // will allocate closure
-            }
-            foreach(i; S2.init) { // won't allocate closure
-            }
-        }
-        ---
     )
 )
 
