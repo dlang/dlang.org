@@ -9,6 +9,8 @@ $(BUGSTITLE Language Changes,
 
     $(LI $(RELATIVE_LINK2 deprecated_implicit_catch, Implicit catch statement are deprecated.))
 
+    $(LI $(RELATIVE_LINK2 deprecated_implicit_cat, Implicit string concatenation is deprecated.))
+
     $(LI $(LNAME2 unrestricted_unions, Add Unrestricted Unions.)
 
         $(P
@@ -18,21 +20,29 @@ $(BUGSTITLE Language Changes,
     )
 
     $(LI $(RELATIVE_LINK2 align_by_ctfe, Align attribute can be used with CTFEable expression.))
-
-    $(LI $(RELATIVE_LINK2 deprecated_implicit_cat, Implicit string concatenation is deprecated.))
 )
 
 $(BUGSTITLE Compiler Changes,
-    $(LI $(RELATIVE_LINK2 deferred_alias, Analysis for aliases in imported modules is deferred.))
+    $(LI $(RELATIVE_LINK2 iteration_closure, `opApply` now conservatively allocates a closure unless marked `scope`))
+    $(LI $(RELATIVE_LINK2 dash_safe, Add `-transition=safe` switch to enable additional `@safe` checks.))
     $(LI $(RELATIVE_LINK2 native_tls_osx, Native TLS on OS X 64 bit.))
+    $(LI $(RELATIVE_LINK2 deferred_alias, Analysis for aliases in imported modules is deferred.))
     $(LI $(RELATIVE_LINK2 __FILE_FULL_PATH__, Special keyword replaced by the source file's absolute file name.))
-    $(LI $(RELATIVE_LINK2 dash_safe, Add -transition=safe switch.))
     $(LI $(RELATIVE_LINK2 dash_verrors_spec, Add `-verrors=spec` switch.))
-    $(LI $(RELATIVE_LINK2 iteration_closure, Assumes opApply delegate parameter escapes unless marked `scope`))
 )
 
 $(BUGSTITLE Library Changes,
     $(LI $(RELATIVE_LINK2 TypeInfo.init-deprecated, `TypeInfo.init` has been deprecated.))
+    $(LI $(RELATIVE_LINK2 drt-oncycle, New druntime switch `--DRT-oncycle`
+    allows specifying what to do on cycle detection in modules.))
+    $(LI Wrong
+        $(LINK2 $(ROOT_DIR)spec/function.html#trusted-functions, `@trusted`)
+        attributes have been
+        removed from  $(MREF etc,c,curl) functions
+        $(REF_ALTTEXT `curl_easy_escape`, curl_easy_escape, etc,c,curl),
+        $(REF_ALTTEXT `curl_escape`, curl_escape, etc,c,curl),
+        $(REF_ALTTEXT `curl_easy_unescape`, curl_easy_unescape, etc,c,curl), and
+        $(REF_ALTTEXT `curl_unescape`, curl_unescape, etc,c,curl).)
     $(LI $(RELATIVE_LINK2 std-digest-murmurhash, Implementation of MurmurHash
         digest.))
     $(LI $(RELATIVE_LINK2 process, Process creation in `std.process` was sped up
@@ -90,14 +100,6 @@ $(BUGSTITLE Library Changes,
     $(LI $(RELATIVE_LINK2 quantize, Added `std.math.quantize`, for rounding to
         the nearest multiple of some number.))
     $(LI $(RELATIVE_LINK2 traits, Three new traits were added to `std.traits`.))
-    $(LI Wrong
-        $(LINK2 $(ROOT_DIR)spec/function.html#trusted-functions, `@trusted`)
-        attributes have been
-        removed from  $(MREF etc,c,curl) functions
-        $(REF_ALTTEXT `curl_easy_escape`, curl_easy_escape, etc,c,curl),
-        $(REF_ALTTEXT `curl_escape`, curl_escape, etc,c,curl),
-        $(REF_ALTTEXT `curl_easy_unescape`, curl_easy_unescape, etc,c,curl), and
-        $(REF_ALTTEXT `curl_unescape`, curl_unescape, etc,c,curl).)
     $(LI $(RELATIVE_LINK2 generate, `std.range.generate` fixed to be a proper
         range.))
     $(LI $(MREF std,numeric) no longer uses `enforce` for verifying
@@ -109,8 +111,10 @@ $(BUGSTITLE Library Changes,
     $(LI $(RELATIVE_LINK2 emplace-inner-class, `std.conv.emplace` no longer allows
     to emplace classes directly nested inside other classes without specifying a
     suitable `outer` pointer))
-    $(LI $(RELATIVE_LINK2 drt-oncycle, New druntime switch `--DRT-oncycle`
-    allows specifying what to do on cycle detection in modules.))
+    $(LI $(RELATIVE_LINK2 gc-runtimeswitch-added, A switch for selecting
+    the GC implementation at runtime was added.))
+    $(LI $(RELATIVE_LINK2 manualgc-added, A GC implementation allowing manual
+    memory management was added.))
 )
 
 $(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D $(VER).))
@@ -165,6 +169,21 @@ $(BUGSTITLE Language Changes,
         ---
     )
 
+    $(LI $(LNAME2 deprecated_implicit_cat, Implicit string concatenation is deprecated.)
+
+    $(P Implicit concatenation of string literal is a very early feature that is now supplanted
+        by the concatenation operator ('~'), the later being more explicit.)
+
+    $(P It could result in hard to spot bug, where one missed a comma in an array expression:)
+
+        ---
+        void foo ()
+        {
+          string[] arr = [ "Hello", "buggy" "World" ];
+          assert(arr.length == 3); // Fail, the length of the array is 2 and the content is [ "Hello", "buggyWorld" ]
+        }
+        ---
+    )
 
     $(LI $(LNAME2 align_by_ctfe, Align attribute can be used with CTFEable expression.)
 
@@ -191,6 +210,62 @@ $(BUGSTITLE Language Changes,
 )
 
 $(BUGSTITLE Compiler Changes,
+    $(LI $(LNAME2 iteration_closure, `opApply` now conservatively allocates a closure unless marked `scope`)
+
+    $(P This breaking change was required to fix bug with `@safe` violation: $(BUGZILLA 16193).)
+
+    $(P To list all places where closure may be allocated after the change, use `-transition=safe`
+        compiler switch.)
+
+    $(P Example:)
+
+        ---
+        struct S1 {
+            int opApply(int delegate(int) dg);
+        }
+
+        struct S2 {
+            int opApply(scope int delegate(int) dg);
+        }
+
+        void foo() {
+            foreach(i; S1.init) { // will allocate closure
+            }
+            foreach(i; S2.init) { // won't allocate closure
+            }
+        }
+        ---
+    )
+
+    $(LI $(LNAME2 dash_safe, Add `-transition=safe` switch to enable additional `@safe` checks.)
+	$(P Enables enhanced `@safe` checking, which will break some existing code.)
+	$(UL
+	$(LI Prevents dereferencing `array.ptr` because that bypasses array bounds check.)
+	$(LI Assumes opApply delegate parameter escapes unless marked `scope`. Escaping
+          delegates often require a GC allocated closure.)
+	)
+    )
+
+    $(LI $(LNAME2 native_tls_osx, Native TLS on OS X 64 bit.)
+
+        $(P
+            The compiler has been updated to use native thread local storage
+            (TLS) on OS X when compiling for 64 bit. This means that it's
+            possible to to link with C/C++ TLS variables. This change is an ABI
+            breaking change and requires recompiling libraries.
+        )
+
+        $(P
+            The minimum required version of running the compiler and any
+            produced binary is now Mac OS X Lion (10.7).
+        )
+
+        $(P
+            Xcode 7.3 has a bug causing linker errors for some TLS variables.
+            Xcode 7.3.1 fixes this bug. Any version older than 7.3 works as well.
+        )
+    )
+
     $(LI $(LNAME2 deferred_alias, Analysis for aliases in imported modules is deferred.)
 
     $(P Example:)
@@ -220,27 +295,6 @@ $(BUGSTITLE Compiler Changes,
         ---
     )
 
-    $(LI
-        $(LNAME2 native_tls_osx, Native TLS on OS X 64 bit.)
-
-        $(P
-            The compiler has been updated to use native thread local storage
-            (TLS) on OS X when compiling for 64 bit. This means that it's
-            possible to to link with C/C++ TLS variables. This change is an ABI
-            breaking change and requires recompiling libraries.
-        )
-
-        $(P
-            The minimum required version of running the compiler and any
-            produced binary is now Mac OS X Lion (10.7).
-        )
-
-        $(P
-            Xcode 7.3 has a bug causing linker errors for some TLS variables.
-            Xcode 7.3.1 fixes this bug. Any version older than 7.3 works as well.
-        )
-    )
-
     $(LI $(LNAME2 __FILE_FULL_PATH__, Special keyword replaced by the source file's absolute file name.)
         $(P
             The __FILE_FULL_PATH__ special keyword is replaced by the absolute path
@@ -267,15 +321,6 @@ $(BUGSTITLE Compiler Changes,
         ---
     )
 
-    $(LI $(LNAME2 dash_safe, Add -transition=safe switch.)
-	$(P Enables enhanced `@safe` checking, which will break some existing code.)
-	$(UL
-	$(LI Prevents dereferencing `array.ptr` because that bypasses array bounds check.)
-	$(LI Assumes opApply delegate parameter escapes unless marked `scope`. Escaping
-          delegates often require a GC allocated closure.)
-	)
-    )
-
     $(LI $(LNAME2 dash_verrors_spec, Add `-verrors=spec` switch.)
         $(P Shows errors from speculative compiles such as:)
         ---
@@ -291,49 +336,6 @@ $(BUGSTITLE Compiler Changes,
         ---
         $(P The number after `spec:` is the nesting of the speculative compiles.)
     )
-
-    $(LI $(LNAME2 deprecated_implicit_cat, Implicit string concatenation is deprecated.)
-
-    $(P Implicit concatenation of string literal is a very early feature that is now supplanted
-        by the concatenation operator ('~'), the later being more explicit.)
-
-    $(P It could result in hard to spot bug, where one missed a coma in an array expression:)
-
-        ---
-        void foo ()
-        {
-          string[] arr = [ "Hello", "buggy" "World" ];
-          assert(arr.length = 3); // Fail, the length of the array is 2 and the content is [ "Hello", "buggyWorld" ]
-        }
-        ---
-    )
-
-    $(LI $(LNAME2 iteration_closure, Assumes opApply delegate parameter escapes unless marked `scope`)
-
-    $(P This breaking change was required to fix bug with `@safe` violation: $(BUGZILLA 16193).)
-
-    $(P To list all places where closure may be allocated after the change, use `-transition=safe`
-        compiler switch.)
-
-    $(P Example:)
-
-        ---
-        struct S1 {
-            int opApply(int delegate(int) dg);
-        }
-
-        struct S2 {
-            int opApply(scope int delegate(int) dg);
-        }
-
-        void foo() {
-            foreach(i; S1.init) { // will allocate closure
-            }
-            foreach(i; S2.init) { // won't allocate closure
-            }
-        }
-        ---
-    )
 )
 
 $(BUGSTITLE Library Changes,
@@ -346,6 +348,22 @@ $(BUGSTITLE Library Changes,
         )
 
         $(P Use $(REF_OBJECT_SHORT TypeInfo.initializer) instead.)
+    )
+
+    $(LI $(LNAME2 drt-oncycle, New druntime switch `--DRT-oncycle` allows
+        specifying what to do on cycle detection in modules.)
+        $(P When module cycles are detected, the default behavior is to print
+            the cycle, and abort execution. However, in many cases, the cycles
+            are not harmful. With the new `--DRT-oncycle` switch, you can effect
+            a different behavior when cycles are detected:)
+        $(DL
+            $(DT `--DRT-oncycle=abort`)
+            $(DD This is the default behavior, and will abort, printing the cycle to `stderr` when the first cycle is detected)
+            $(DT `--DRT-oncycle=print`)
+            $(DD Print all cycles that are detected to `stderr`, but do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
+            $(DT `--DRT-oncycle=ignore`)
+            $(DD Do not print anything, and do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
+        )
     )
 
     $(LI $(LNAME2 std-digest-murmurhash, Implementation of `std.digest.murmurhash`).
@@ -761,17 +779,34 @@ $(BUGSTITLE Library Changes,
     -------
     )
 
-    $(LI $(LNAME2 drt-oncycle, New druntime switch `--DRT-oncycle` allows
-        specifying what to do on cycle detection in modules.)
-        $(P When module cycles are detected, the default behavior is to print the cycle, and abort execution. However, in many cases, the cycles are not harmful. With the new `--DRT-oncycle` switch, you can effect a different behavior when cycles are detected:)
-        $(DL
-            $(DT `--DRT-oncycle=abort`)
-            $(DD This is the default behavior, and will abort, printing the cycle to `stderr` when the first cycle is detected)
-            $(DT `--DRT-oncycle=print`)
-            $(DD Print all cycles that are detected to `stderr`, but do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
-            $(DT `--DRT-oncycle=ignore`)
-            $(DD Do not print anything, and do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
+    $(LI $(LNAME2 gc-runtimeswitch-added, A runtime switch for selecting
+         the GC implementation was added.)
+
+        $(P This allows to select a GC at program startup.)
+        -------
+        ./my_d_exe --DRT-gcopt=gc:conservative # use conservative GC (default)
+        ./my_d_exe --DRT-gcopt=help # list available GC options
+        -------
+        $(P See $(LINK2 $(ROOT_DIR)spec/garbage.html#gc_config, gc_config) for more information about gcopt.)
+        $(P In a future release it should be possible to extend the list
+            of GCs by linking with an alternative one.
         )
+    )
+
+    $(LI $(LNAME2 manualgc-added, A manual GC was added.)
+
+        $(P Use the `--DRT-gc=gc:manual` option to select the manual GC.)
+
+        $(P This GC is a thin wrapper around malloc and free and does not collect
+            any garbage. It only releases memory explicity freed using $(REF_SHORT GC.free, core,memory).
+            Builtin language constructs such as arrays or delegates that might
+            allocate GC memory can leak.  It supersedes the gcstub implementation.
+        )
+
+        $(P The manual GC is useful for applications that deterministically control memory.
+            Use dmd's `-vgc` switch to keep track of hidden allocations that might leak.
+        )
+        $(P It can also be helpful to find memory corruptions with tools like valgrind.)
     )
 )
 )
