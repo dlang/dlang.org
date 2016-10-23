@@ -11,13 +11,7 @@ $(BUGSTITLE Language Changes,
 
     $(LI $(RELATIVE_LINK2 deprecated_implicit_cat, Implicit string concatenation is deprecated.))
 
-    $(LI $(LNAME2 unrestricted_unions, Add Unrestricted Unions.)
-
-        $(P
-             Unrestricted unions may have postblits, destructors, and invariants.
-             It is up to the programmer to call them appropriately.
-        )
-    )
+    $(LI $(RELATIVE_LINK2 unrestricted_unions, Restrictions of postblits and destructors in union fields have been lifted.))
 
     $(LI $(RELATIVE_LINK2 align_by_ctfe, Align attribute can be used with CTFEable expression.))
 
@@ -183,6 +177,33 @@ $(BUGSTITLE Language Changes,
         {
           string[] arr = [ "Hello", "buggy" "World" ];
           assert(arr.length == 3); // Fail, the length of the array is 2 and the content is [ "Hello", "buggyWorld" ]
+        }
+        ---
+    )
+
+    $(LI $(LNAME2 unrestricted_unions, Restrictions of postblits and destructors in union fields have been lifted.)
+
+    $(P It is now allowed to have fields with postblits (`this(this)`),
+         destructors (`~this()`), or invariants (`invariant()`) in unions.
+         Actually destructing or blitting the correct field is the duty of the
+         programmer.)
+
+    $(P Example:)
+
+        ---
+        struct S { this(this) {} ~this() {} }
+        union U
+        {
+            int var;
+            S s;
+        }
+
+        unittest
+        {
+            U u; // won't call s.~this when u goes out of scope
+            u = U(); // only copies the memory, use fieldwise assignment instead
+            u.s = S(); // works like normal struct assignment
+            destroy(u.s); // destroy currently used field
         }
         ---
     )
