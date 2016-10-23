@@ -20,6 +20,8 @@ $(BUGSTITLE Language Changes,
     )
 
     $(LI $(RELATIVE_LINK2 align_by_ctfe, Align attribute can be used with CTFEable expression.))
+
+    $(LI $(RELATIVE_LINK2 scope_value_parameters, `scope` is ignored for value parameters without indirections.))
 )
 
 $(BUGSTITLE Compiler Changes,
@@ -205,6 +207,21 @@ $(BUGSTITLE Language Changes,
             static assert(Data.flags.offsetof == 4);
         else
             static assert(Data.flags.offsetof == 3);
+        ---
+    )
+
+    $(LI $(LNAME2 scope_value_parameters, `scope` is now ignored for value parameters without indirections.)
+
+    $(P The `scope` storage class is now ignored for copied value parameters that don't have any indirections.)
+
+    $(P Example:)
+
+        ---
+        import std.traits;
+        void valueParam(scope int param);
+        static assert(ParameterStorageClassTuple!valueParam[0] == ParameterStorageClass.none);
+        void scopeParam(scope int* param);
+        static assert(ParameterStorageClassTuple!scopeParam[0] == ParameterStorageClass.scope_);
         ---
     )
 )
