@@ -48,7 +48,7 @@ SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
 	dll-linux.dd bugstats.php.dd \
 	ctarguments.dd articles.dd community.dd documentation.dd menu.dd \
-	resources.dd search.dd dlangupb-scholarship.dd.dd
+	resources.dd search.dd dlangupb-scholarship.dd
 
 SPECSRC=spec\spec.dd spec\intro.dd spec\lex.dd \
 	spec\grammar.dd spec\module.dd spec\declaration.dd \
@@ -371,7 +371,7 @@ d-floating-point.html : $(DDOC) d-floating-point.dd
 
 deprecate.html : $(DDOC) deprecate.dd
 
-dlangupb-scholarship.dd.html : $(DDOC) dlangupb-scholarship.dd.dd
+dlangupb-scholarship.dd.html : $(DDOC) dlangupb-scholarship.dd
 
 dll-linux.html : $(DDOC) dll-linux.dd
 
