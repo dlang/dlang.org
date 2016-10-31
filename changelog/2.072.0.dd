@@ -2,7 +2,7 @@ Ddoc
 
 $(CHANGELOG_NAV_LAST 2.071.2)
 
-$(VERSION Oct 13, 2016, =================================================,
+$(VERSION Oct 30, 2016, =================================================,
 
 $(BUGSTITLE Language Changes,
     $(LI $(RELATIVE_LINK2 deprecated_commaexp, Using the result of a comma expression is deprecated.))
@@ -11,15 +11,11 @@ $(BUGSTITLE Language Changes,
 
     $(LI $(RELATIVE_LINK2 deprecated_implicit_cat, Implicit string concatenation is deprecated.))
 
-    $(LI $(LNAME2 unrestricted_unions, Add Unrestricted Unions.)
-
-        $(P
-             Unrestricted unions may have postblits, destructors, and invariants.
-             It is up to the programmer to call them appropriately.
-        )
-    )
+    $(LI $(RELATIVE_LINK2 unrestricted_unions, Restrictions of postblits and destructors in union fields have been lifted.))
 
     $(LI $(RELATIVE_LINK2 align_by_ctfe, Align attribute can be used with CTFEable expression.))
+
+    $(LI $(RELATIVE_LINK2 scope_value_parameters, `scope` is ignored for value parameters without indirections.))
 )
 
 $(BUGSTITLE Compiler Changes,
@@ -185,6 +181,33 @@ $(BUGSTITLE Language Changes,
         ---
     )
 
+    $(LI $(LNAME2 unrestricted_unions, Restrictions of postblits and destructors in union fields have been lifted.)
+
+    $(P It is now allowed to have fields with postblits (`this(this)`),
+         destructors (`~this()`), or invariants (`invariant()`) in unions.
+         Actually destructing or blitting the correct field is the duty of the
+         programmer.)
+
+    $(P Example:)
+
+        ---
+        struct S { this(this) {} ~this() {} }
+        union U
+        {
+            int var;
+            S s;
+        }
+
+        unittest
+        {
+            U u; // won't call s.~this when u goes out of scope
+            u = U(); // only copies the memory, use fieldwise assignment instead
+            u.s = S(); // works like normal struct assignment
+            destroy(u.s); // destroy currently used field
+        }
+        ---
+    )
+
     $(LI $(LNAME2 align_by_ctfe, Align attribute can be used with CTFEable expression.)
 
     $(P Example:)
@@ -205,6 +228,21 @@ $(BUGSTITLE Language Changes,
             static assert(Data.flags.offsetof == 4);
         else
             static assert(Data.flags.offsetof == 3);
+        ---
+    )
+
+    $(LI $(LNAME2 scope_value_parameters, `scope` is now ignored for value parameters without indirections.)
+
+    $(P The `scope` storage class is now ignored for copied value parameters that don't have any indirections.)
+
+    $(P Example:)
+
+        ---
+        import std.traits;
+        void valueParam(scope int param);
+        static assert(ParameterStorageClassTuple!valueParam[0] == ParameterStorageClass.none);
+        void scopeParam(scope int* param);
+        static assert(ParameterStorageClassTuple!scopeParam[0] == ParameterStorageClass.scope_);
         ---
     )
 )
