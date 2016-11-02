@@ -120,30 +120,32 @@ $(HR)
 $(BUGSTITLE Language Changes,
     $(LI $(LNAME2 deprecated_commaexp, Using the result of a comma expression is deprecated.)
 
-    $(P Comma expressions expressions have proven to be a frequent source of confusion, and bug.
-        Using their result will now trigger a deprecation message.)
+    $(P Comma expressions have proven to be a frequent source of confusion, and bugs -
+    see $(HTTPS issues.dlang.org/show_bug.cgi?id=2659#c2, here) for examples.)
+
+    $(P Using the result of a comma expression will now trigger a deprecation message.)
 
     $(P Example:)
 
         ---
-        module comma;
-
         void main () {
-          size_t aggr;
-          MyContainerClass mc;
+          // OK, result of increment not directly used
+          for (int i, j; i != 3; i++, j++) {...}
+
           auto r1 = getRange!int, r2 = getRange!int;
-          // This is okay
-          for (; !r1.empty && r2.empty; r1.popFront, r2.popFront)
-            aggr += compute(r1.front, r2.front);
-          // This is not, as only the 3rd part (increment) allows commas
-          for (; !r1.empty, r2.empty; r1.popFront, r2.popFront)
-            aggr += compute(r1.front, r2.front);
-          // This is okay, the result is not used.
+          // OK
+          for (; !r1.empty && !r2.empty; r1.popFront, r2.popFront) {...}
+          // Deprecated - the loop condition is always used
+          for (; !r1.empty, !r2.empty; r1.popFront, r2.popFront) {...}
+
+          MyContainerClass mc;
+          // OK - expression statement, result not used
           if (!mc)
-            mc = new MyContainerClass, mc.append(new Entry);
-          // But this is not
-          if (!mc)
-            mc = (aggr++, new MyContainerClass);
+            (mc = new MyContainerClass), mc.append(new Entry);
+
+          int i;
+          // Deprecated
+          mc = (i++, new MyContainerClass);
         }
         ---
     )
