@@ -6,7 +6,7 @@ DMD=dmd
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=dub run --root $(DPL_DOCS_PATH) --
 
-SRC= $(SPECSRC) cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd	\
+SRC= $(SPECSRC) 404.dd cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd overview.dd	\
 	mixin.dd faq.dd	\
 	dstyle.dd wc.dd \
 	changelog\2.000.dd changelog\2.001.dd changelog\2.002.dd \
@@ -94,7 +94,7 @@ SPECTARGETS=spec\spec.html spec\intro.html spec\lex.html \
 	spec\objc_interface.html spec\portability.html spec\entity.html \
 	spec\memory-safe-d.html spec\abi.html spec\simd.html
 
-TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html index.html overview.html	\
+TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html 404.html index.html overview.html	\
 	mixin.html \
 	faq.html dstyle.html wc.html \
 	changelog\2.000.html changelog\2.001.html changelog\2.002.html \
@@ -173,6 +173,8 @@ dmd-osx.html : $(DDOC) osx.ddoc dcompiler.dd
 
 dmd-windows.html : $(DDOC) windows.ddoc dcompiler.dd
 	$(DMD) -o- -c -D $(DDOC) windows.ddoc dcompiler.dd -Dfdmd-windows.html
+
+404.html : $(DDOC) 404.dd
 
 acknowledgements.html : $(DDOC) acknowledgements.dd
 

@@ -161,7 +161,7 @@ CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) acknowledgements areas-of-d-usage \
+PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	articles ascii-table bugstats.php builtin \
 	$(CHANGELOG_FILES) code_coverage community comparison concepts \
 	const-faq cpptod ctarguments ctod \
