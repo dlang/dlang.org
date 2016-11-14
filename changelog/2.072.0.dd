@@ -404,6 +404,18 @@ $(BUGSTITLE Library Changes,
             $(DT `--DRT-oncycle=ignore`)
             $(DD Do not print anything, and do not halt execution. Order of initialization is arbitrarily chosen based on the order the modules are in the binary)
         )
+        ($P As there were improvements of the cycle detection algorithm implemented within the scope of this release,
+            previously undetected (even harmless) module dependency cycles may start to abort program execution
+            or program may malfunction due to changed call order of module static construction/destruction.
+            In order to preserve the program behaviour without the need to specify `--DRT-oncycle` command line argument,
+            it is possible to instruct the linker by declaring the following array in the source code:)
+            
+            ---
+            extern(C) __gshared string[] rt_options = [ "oncycle=ignore" ];
+            ---
+            
+        ($P For more information, please consult the D language specification, section Overriding Cycle Detection Abort in chapter 4
+            and chapter 28.7 Configuring the Garbage Collector.)        
     )
 
     $(LI $(LNAME2 std-digest-murmurhash, Implementation of `std.digest.murmurhash`).
