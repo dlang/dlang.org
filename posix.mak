@@ -164,7 +164,7 @@ CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	articles ascii-table bugstats.php builtin \
 	$(CHANGELOG_FILES) code_coverage community comparison concepts \
-	const-faq cpptod ctarguments ctod \
+	const-faq cpptod ctarguments ctod donate \
 	D1toD2 d-array-article d-floating-point deprecate dlangupb-scholarship dll-linux dmd \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
 	exception-safe faq forum-template foundation gpg_keys glossary \
