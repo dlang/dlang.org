@@ -542,7 +542,7 @@ function setupTextarea(el, opts)
         }
         $.ajax({
             type: 'POST',
-            url: "//dpaste.dzfl.pl/request/",
+            url: "https://dpaste.dzfl.pl/request/",
             dataType: "json",
             data: data,
             success: function(data)
