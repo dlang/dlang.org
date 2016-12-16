@@ -649,24 +649,33 @@ dmd -cov -unittest myprog.d
         generate a $(TT .map) file
       )
 
-      $(SWITCH $(SWNAME -mavx),
+      $(SWITCH $(SWNAME -mcpu)=[$(B ?)|$(B baseline)|$(B avx)|$(B native)],
+        Set the target architecture for code generation,
+        where:
+        $(DL
+        $(DT ?)$(DD list alternatives)
+        $(DT baseline)$(DD the minimum architecture for the target platform (default))
+        $(DT avx)$(DD
         generate $(LINK2 https://en.wikipedia.org/wiki/Advanced_Vector_Extensions, AVX)
         instructions instead of $(LINK2 https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions, SSE)
         instructions for vector and floating point operations.
         Not available for 32 bit memory models other than OSX32.
+        )
+        $(DT native)$(DD use the architecture the compiler is running on)
+        )
       )
 
     $(WINDOWS
       $(SWITCH $(SWNAME -mscrt)=$(I libname),
         if building MS-COFF object files with -m64 or -m32mscoff, embed a reference to
         the given C runtime library $(I libname) into the object file containing `main`,
-        `DllMain` or `WinMain` for automatic linking. The default is $(TT libcmt) 
-        (release version with static linkage), the other usual alternatives are 
+        `DllMain` or `WinMain` for automatic linking. The default is $(TT libcmt)
+        (release version with static linkage), the other usual alternatives are
         $(TT libcmtd), $(TT msvcrt) and $(TT msvcrtd).
         If $(I libname) is empty, no C runtime library is automatically linked in.
       )
     )
-    
+
       $(SWITCH $(SWNAME -noboundscheck),
         turns off all array bounds checking, even for safe functions. $(RED Deprecated
         (use $(TT $(SWLINK -boundscheck)=off) instead).)
@@ -1194,4 +1203,4 @@ Macros:
     DMC=$(LINK2 http://www.digitalmars.com/ctg/sc.html, dmc)
     LIB=$(LINK2 http://www.digitalmars.com/ctg/lib.html, lib)
     OPTLINK=$(LINK2 http://www.digitalmars.com/ctg/optlink.html, link.exe)
-	SUBNAV=$(SUBNAV_CLI_REFERENCE)
+        SUBNAV=$(SUBNAV_CLI_REFERENCE)
