@@ -49,7 +49,7 @@ SRC= $(SPECSRC) 404.dd cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd over
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
 	dll-linux.dd bugstats.php.dd \
 	ctarguments.dd articles.dd community.dd documentation.dd menu.dd \
-	resources.dd search.dd dlangupb-scholarship.dd
+	resources.dd search.dd dlangupb-scholarship.dd donate
 
 SPECSRC=spec\spec.dd spec\intro.dd spec\lex.dd \
 	spec\grammar.dd spec\module.dd spec\declaration.dd \
@@ -142,6 +142,7 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html 404.
 	d-array-article.html dll-linux.html bugstats.php.html \
 	gpg_keys.html forum-template.html ctarguments.html articles.html \
 	community.html documentation.html menu.html resources.html search.html \
+	donate.html \
 
 # exclude list
 MOD_EXCLUDES_RELEASE=--ex=gc. --ex=rt. --ex=core.internal. --ex=core.stdc.config --ex=core.sys. \
@@ -372,6 +373,8 @@ cpptod.html : $(DDOC) cpptod.dd
 ctarguments.html : $(DDOC) ctarguments.dd
 
 ctod.html : $(DDOC) ctod.dd
+
+donate: $(DDOC) donate.dd
 
 D1toD2.html : $(DDOC) D1toD2.dd
 
