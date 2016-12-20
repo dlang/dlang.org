@@ -25,10 +25,8 @@ Preview changes
 ---------------
 
 If you have cloned the [tools](https://github.com/dlang/tools) and [dlang.org](https://github.com/dlang/dlang.org) repo),
-you can preview the changelog:
+you can preview the changelog with:
 
 ```
-../tools/changed.d -o ../dlang.org/changelog/pending.dd && make -C ../dlang.org -f posix.mak html
+make -C ../dlang.org -f posix.mak pending_changelog
 ```
-
-and then open `../dlang.org/web/changelog/pending.html` with your favorite browser.
