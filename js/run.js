@@ -478,7 +478,10 @@ function setupTextarea(el, opts)
             argsDiv.css('display', 'none');
         }
         outputDiv.css('display', 'none');
-        parent.parent().children("div.d_code").css('display', 'none');
+        if (!opts.keepCode)
+        {
+          parent.parent().children("div.d_code").css('display', 'none');
+        }
         code.css('display', 'none');
     };
 
@@ -525,7 +528,7 @@ function setupTextarea(el, opts)
         resetBtn.css('display', 'inline-block');
         $(this).attr("disabled", true);
         hideAllWindows();
-        output.css('height', height(31));
+        output.css('height', opts.outputHeight || height(31));
         outputDiv.css('display', 'block');
         outputTitle.text("Application output");
         output.html("Running...");
@@ -547,6 +550,7 @@ function setupTextarea(el, opts)
             data: data,
             success: function(data)
             {
+                data.defaultOutput = opts.defaultOutput;
                 parseOutput(data, output, outputTitle);
                 runBtn.attr("disabled", false);
             },

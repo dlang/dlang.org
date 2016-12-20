@@ -80,8 +80,8 @@ $(document).ready(function()
                     + '</div>'
                     + '<div class="d_run_code" style="display: block">'
                         + '<textarea class="d_code" style="display: none;"></textarea>'
-                        + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><textarea class="d_code_output" readonly>Running...</textarea>'
                     + '</div>'
+                    + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><textarea class="d_code_output" readonly>Running...</textarea>'
                 + '</div>'
         );
     });
@@ -89,8 +89,16 @@ $(document).ready(function()
     $('textarea[class=d_code]').each(function(index) {
         var parent = $(this).parent();
         var btnParent = parent.parent().children(".d_example_buttons");
-        var outputDiv = parent.children("div.d_code_output");
-        setupTextarea(this,  {parent: btnParent, outputDiv: outputDiv,
-            stdin: false, args: false, transformOutput: wrapIntoMain});
+        var outputDiv = parent.parent().children(".d_code_output");
+      setupTextarea(this,  {
+        parent: btnParent,
+        outputDiv: outputDiv,
+        stdin: false,
+        args: false,
+        transformOutput: wrapIntoMain,
+        defaultOutput: "All tests passed",
+        keepCode: true,
+        outputHeight: "auto"
+      });
     });
 });
