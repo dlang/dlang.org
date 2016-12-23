@@ -10,7 +10,8 @@ $(SPEC_S Deprecated Features,
 
     $(TABLE2 Deprecated Features,
         $(THEAD Feature,                                                          Spec,  Dep,    Error,  Gone)
-        $(TROW $(DEPLINK Using the result of a comma expression),                 future, &nbsp;, &nbsp;, &nbsp;)
+        $(TROW $(DEPLINK Implicit string concatenation),                          2.072,  2.072, &nbsp;, &nbsp;)
+        $(TROW $(DEPLINK Using the result of a comma expression),                 2.072,  2.072,  &nbsp;, &nbsp;)
         $(TROW $(DEPLINK delete),                                                 future, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK scope for allocating classes on the stack),              future, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Imaginary and complex types),                            future, &nbsp;, &nbsp;, &nbsp;)
@@ -56,6 +57,42 @@ $(SPEC_S Deprecated Features,
         $(DD The feature is completely gone)
     )
 
+
+$(H3 $(DEPNAME Implicit string concatenation))
+    $(P Currently, two adjacent strings are implicitly concatenated:
+
+        ---
+        string foo = "Hello" "World";
+        ---
+
+        This feature is handy for a long string that spans multiple lines,
+        however it is possible to get the same behaviour explicitly by
+        using the concatenation operator ('~'):
+
+        ---
+        string foo = "Hello" ~ "World"; // No allocation is performed
+        ---
+    )
+$(H4 Corrective Action)
+    $(P Replace implicit string concatenation by explicit one, using '~'.)
+$(H4 Rationale)
+    $(P This is a very early feature of the language, which is nowadays totally
+        covered by the concatenation operator: it is performed at compile time
+        for constants and doesn't result in memory allocation.)
+
+    $(P However, having implicit concatenation can and did result in hard
+        to spot bugs, for example:)
+
+        ---
+        string[] names =
+        [
+            "Anna",
+            "Michael"
+            "Emma",
+            "David"
+        ];
+        // The content of arr is [ "Anna", "MichaelEmma", "David" ]
+        ---
 
 $(H3 $(DEPNAME Using the result of a comma expression))
     $(P The comma operator (`,`) allows executing multiple expressions and

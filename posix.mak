@@ -135,7 +135,7 @@ IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed dlang ddox listanchors platform-downloads run \
-	run-main-website show_contributors jquery-1.7.2.min))
+	run_examples run-main-website show_contributors jquery-1.7.2.min))
 
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox))
@@ -161,11 +161,11 @@ CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) acknowledgements areas-of-d-usage \
+PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	articles ascii-table bugstats.php builtin \
 	$(CHANGELOG_FILES) code_coverage community comparison concepts \
-	const-faq cpptod ctarguments ctod \
-	D1toD2 d-array-article d-floating-point deprecate dll-linux dmd \
+	const-faq cpptod ctarguments ctod donate \
+	D1toD2 d-array-article d-floating-point deprecate dlangupb-scholarship dll-linux dmd \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
 	exception-safe faq forum-template foundation gpg_keys glossary \
 	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod index \
@@ -360,7 +360,7 @@ $(DMD_REL) : ${DMD_DIR}-${LATEST}
 	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
-	$(MAKE) --directory=$(DMD_DIR) -f posix.mak html \
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
 		DOCDIR=${DOC_OUTPUT_DIR}/dmd-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
