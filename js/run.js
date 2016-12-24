@@ -454,6 +454,8 @@ function setupTextarea(el, opts)
     var code = $(editor.getWrapperElement());
     code.css('display', 'none');
 
+    var plainSourceCode = parent.parent().children("div.d_code");
+
     var output = outputDiv.children("textarea.d_code_output");
     var outputTitle = outputDiv.children("span.d_code_title");
     if (opts.args) {
@@ -469,8 +471,9 @@ function setupTextarea(el, opts)
         var orgStdin = stdin.val();
     }
 
-    var hideAllWindows = function()
+    var hideAllWindows = function(args)
     {
+        args = args || {};
         if (opts.stdin) {
             stdinDiv.css('display', 'none');
         }
@@ -478,11 +481,12 @@ function setupTextarea(el, opts)
             argsDiv.css('display', 'none');
         }
         outputDiv.css('display', 'none');
-        if (!opts.keepCode)
-        {
-          parent.parent().children("div.d_code").css('display', 'none');
+        if (!args.keepPlainSourceCode) {
+          plainSourceCode.css('display', 'none');
         }
-        code.css('display', 'none');
+        if (!args.keepCode) {
+          code.css('display', 'none');
+        }
     };
 
     if (opts.args) {
@@ -522,12 +526,18 @@ function setupTextarea(el, opts)
             stdin.val(orgStdin);
         }
         hideAllWindows();
-        parent.parent().children("div.d_code").css('display', 'block');
+        plainSourceCode.css('display', 'block');
     });
     runBtn.click(function(){
         resetBtn.css('display', 'inline-block');
         $(this).attr("disabled", true);
-        hideAllWindows();
+        var args = {};
+        // check what boxes are currently open
+        if (opts.keepCode) {
+          args.keepCode = code.is(":visible");
+          args.keepPlainSourceCode = plainSourceCode.is(":visible");
+        }
+        hideAllWindows(args);
         output.css('height', opts.outputHeight || height(31));
         outputDiv.css('display', 'block');
         outputTitle.text("Application output");
