@@ -51,12 +51,14 @@ $(document).ready(function()
     // ignore not yet compatible modules
     // copied from Phobos posix.mak
     var ignoredModulesList = "allocator/allocator_list.d,allocator/building_blocks/allocator_list.d,allocator/building_blocks/free_list.d,allocator/building_blocks/quantizer,allocator/building_blocks/quantizer,allocator/building_blocks/stats_collector.d,base64.d,bitmanip.d,concurrency.d,conv.d,csv.d,datetime.d,digest/hmac.d,digest/sha.d,file.d,index.d,isemail.d,logger/core.d,logger/nulllogger.d,math.d,ndslice/selection.d,ndslice/slice.d,numeric.d,stdio.d,traits.d,typecons.d,uni.d,utf.d,uuid.d".split(",")
-    var currentModulePath = $('body')[0].id.replace('.', '/') + '.d';
-    if (ignoredModulesList.filter(function(x) { currentModulePath.indexOf(x) >= 0 }).length > 0) {
+    var currentModulePath = $('body')[0].id.split('.').join('/') + '.d';
+    if (ignoredModulesList.filter(function(x) { return currentModulePath.indexOf(x) >= 0 }).length > 0) {
         return;
     }
 
-    $('pre[class~=d_code]').each(function(index)
+    // first selector is for ddoc - second for ddox
+    var codeBlocks = $('pre[class~=d_code]').add('pre[class~=code]');
+    codeBlocks.each(function(index)
     {
         var currentExample = $(this);
         var orig = currentExample.html();
@@ -64,8 +66,10 @@ $(document).ready(function()
         orig = reformatExample(orig);
 
         // check whether it is from a ddoced unittest
+        // 1) check is for ddoc, 2) for ddox
         // manual created tests most likely can't be run without modifications
-        if (!$(this).parent().parent().prev().hasClass("dlang_runnable"))
+        if (!($(this).parent().parent().prev().hasClass("dlang_runnable") ||
+              $(this).prev().children(":first").hasClass("dlang_runnable")))
             return;
 
         currentExample.replaceWith(
