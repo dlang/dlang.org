@@ -9,6 +9,11 @@
 # make -f posix.mak rsync
 #
 
+# Latest released version
+ifeq (,${LATEST})
+LATEST:=$(shell cat VERSION)
+endif
+
 # Externals
 DMD_DIR=../dmd
 PHOBOS_DIR=../phobos
@@ -59,17 +64,6 @@ CHANGE_SUFFIX = \
 
 # Set to 1 in the command line to minify css files
 CSS_MINIFY=
-
-# Latest released version
-ifeq (,${LATEST})
-LATEST:=$(shell cd ${DMD_DIR} && \
-  git fetch --tags ${GIT_HOME}/dmd && \
-  git tag | grep '^v[0-9][0-9.]*$$' | sed 's/^v//' | sort -nr | head -n 1)
-$(info LATEST=${LATEST} <-- place in the command line to skip network traffic.)
-endif
-ifeq (,${LATEST})
-  $(error Could not fetch latest version, place LATEST=2.xxx.y in the command line)
-endif
 
 # OS and MODEL
 OS:=
