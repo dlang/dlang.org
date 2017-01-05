@@ -66,19 +66,19 @@ make -f posix.mak phobos-release
 make -f posix.mak apidocs-release
 ```
 
-These commands tell you the release being build in their first line of output.
+These commands tell you the release being built in their first line of output.
 Then they proceed and clone the appropriate release for `dmd`, `druntime`, and
-`phobos`. At the end of the command the following directories will be present in
-`$R` (actual release number may be different from `2.083.2` but is the same  for
-all three directories): `dlang.org`, `dmd`, `dmd-2.083.2`, `druntime-2.083.2`,
-and `phobos-2.083.2`.
+`phobos`. After all commands have been executed, the following directories will
+be present in `$R`: `dlang.org`, `dmd`, `dmd-2.083.2`, `druntime-2.083.2`, and
+`phobos-2.083.2`. Note that the actual release number may not be `2.083.2`, but
+should be the same for all three directories.
 
 The output is in `$R/dlang.org/web/phobos` and `$R/dlang.org/web/library`.
 
 ### Building the prerelease libraries
 
 The more interesting stuff to build is the prerelease libraries because in all
-likelihood that's what need looking at and testing. To do that two more
+likelihood that's what needs looking at and testing. To do that two more
 repositories containing the core and standard libraries are needed: `druntime`
 and `phobos`:
 
