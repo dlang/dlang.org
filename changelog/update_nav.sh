@@ -21,6 +21,11 @@ for ver in "${all_vers[@]}"; do
     fi
 done
 
+# update VER=2.012.3 macros
+for ver in "${all_vers[@]}"; do
+    sed -i "s|VER=[0-9\.][0-9\.]*|VER=${ver%.dd}|" "$ver"
+done
+
 # reverse sort versions array, http://stackoverflow.com/a/11789688/2371032
 IFS=$'\n'
 rev_vers=($(sort --reverse <<<"${all_vers[*]}"))
