@@ -515,4 +515,11 @@ test:
 	@echo "Searching for trailing whitespace"
 	if [[ $$(find . -type f -name "*.dd" -exec egrep -l " +$$" {} \;) ]] ;  then $$(exit 1); fi
 
+################################################################################
+# Changelog generation
+################################################################################
+
+pending_changelog:
+	@echo "This command will be available soon."
+
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
