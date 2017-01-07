@@ -90,15 +90,15 @@ $(document).ready(function()
         var parent = $(this).parent();
         var btnParent = parent.parent().children(".d_example_buttons");
         var outputDiv = parent.parent().children(".d_code_output");
-      setupTextarea(this,  {
-        parent: btnParent,
-        outputDiv: outputDiv,
-        stdin: false,
-        args: false,
-        transformOutput: wrapIntoMain,
-        defaultOutput: "All tests passed",
-        keepCode: true,
-        outputHeight: "auto"
-      });
+        var editor = setupTextarea(this,  {
+          parent: btnParent,
+          outputDiv: outputDiv,
+          stdin: false,
+          args: false,
+          transformOutput: wrapIntoMain,
+          defaultOutput: "All tests passed",
+          keepCode: true,
+          outputHeight: "auto"
+        });
     });
 });
