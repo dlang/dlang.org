@@ -9,6 +9,11 @@
 # make -f posix.mak rsync
 #
 
+# Latest released version
+ifeq (,${LATEST})
+LATEST:=$(shell cat VERSION)
+endif
+
 # Externals
 DMD_DIR=../dmd
 PHOBOS_DIR=../phobos
@@ -59,17 +64,6 @@ CHANGE_SUFFIX = \
 
 # Set to 1 in the command line to minify css files
 CSS_MINIFY=
-
-# Latest released version
-ifeq (,${LATEST})
-LATEST:=$(shell cd ${DMD_DIR} && \
-  git fetch --tags ${GIT_HOME}/dmd && \
-  git tag | grep '^v[0-9][0-9.]*$$' | sed 's/^v//' | sort -nr | head -n 1)
-$(info LATEST=${LATEST} <-- place in the command line to skip network traffic.)
-endif
-ifeq (,${LATEST})
-  $(error Could not fetch latest version, place LATEST=2.xxx.y in the command line)
-endif
 
 # OS and MODEL
 OS:=
@@ -135,7 +129,7 @@ IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed dlang ddox listanchors platform-downloads run \
-	run-main-website show_contributors jquery-1.7.2.min))
+	run_examples run-main-website show_contributors jquery-1.7.2.min))
 
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox))
@@ -161,11 +155,11 @@ CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) acknowledgements areas-of-d-usage \
+PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	articles ascii-table bugstats.php builtin \
 	$(CHANGELOG_FILES) code_coverage community comparison concepts \
-	const-faq cpptod ctarguments ctod \
-	D1toD2 d-array-article d-floating-point deprecate dll-linux dmd \
+	const-faq cpptod ctarguments ctod donate \
+	D1toD2 d-array-article d-floating-point deprecate dlangupb-scholarship dll-linux dmd \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
 	exception-safe faq forum-template foundation gpg_keys glossary \
 	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod index \
@@ -360,7 +354,7 @@ $(DMD_REL) : ${DMD_DIR}-${LATEST}
 	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
-	$(MAKE) --directory=$(DMD_DIR) -f posix.mak html \
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
 		DOCDIR=${DOC_OUTPUT_DIR}/dmd-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
@@ -520,5 +514,12 @@ d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 test:
 	@echo "Searching for trailing whitespace"
 	if [[ $$(find . -type f -name "*.dd" -exec egrep -l " +$$" {} \;) ]] ;  then $$(exit 1); fi
+
+################################################################################
+# Changelog generation
+################################################################################
+
+pending_changelog:
+	@echo "This command will be available soon."
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)

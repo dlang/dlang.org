@@ -45,7 +45,7 @@ mainPage["yourMd5Sum"] = ["standard input is has 0 position", "standard args has
 Save, reload website and see if standard input and/or standard arguments are displayed in your example form.
 
 TL;DR
-All examples are replaced with custom form by default. You need to do additional work only if you wan't 
+All examples are replaced with custom form by default. You need to do additional work only if you wan't
 your example to have deafault standard input or default standard arguments.
 
 */
@@ -54,11 +54,11 @@ your example to have deafault standard input or default standard arguments.
 Taken from http://www.webtoolkit.info/javascript-md5.html
 */
 var MD5 = function (string) {
- 
+
     function RotateLeft(lValue, iShiftBits) {
         return (lValue<<iShiftBits) | (lValue>>>(32-iShiftBits));
     }
- 
+
     function AddUnsigned(lX,lY) {
         var lX4,lY4,lX8,lY8,lResult;
         lX8 = (lX & 0x80000000);
@@ -79,32 +79,32 @@ var MD5 = function (string) {
             return (lResult ^ lX8 ^ lY8);
         }
     }
- 
+
     function F(x,y,z) { return (x & y) | ((~x) & z); }
     function G(x,y,z) { return (x & z) | (y & (~z)); }
     function H(x,y,z) { return (x ^ y ^ z); }
     function I(x,y,z) { return (y ^ (x | (~z))); }
- 
+
     function FF(a,b,c,d,x,s,ac) {
         a = AddUnsigned(a, AddUnsigned(AddUnsigned(F(b, c, d), x), ac));
         return AddUnsigned(RotateLeft(a, s), b);
     };
- 
+
     function GG(a,b,c,d,x,s,ac) {
         a = AddUnsigned(a, AddUnsigned(AddUnsigned(G(b, c, d), x), ac));
         return AddUnsigned(RotateLeft(a, s), b);
     };
- 
+
     function HH(a,b,c,d,x,s,ac) {
         a = AddUnsigned(a, AddUnsigned(AddUnsigned(H(b, c, d), x), ac));
         return AddUnsigned(RotateLeft(a, s), b);
     };
- 
+
     function II(a,b,c,d,x,s,ac) {
         a = AddUnsigned(a, AddUnsigned(AddUnsigned(I(b, c, d), x), ac));
         return AddUnsigned(RotateLeft(a, s), b);
     };
- 
+
     function ConvertToWordArray(string) {
         var lWordCount;
         var lMessageLength = string.length;
@@ -127,7 +127,7 @@ var MD5 = function (string) {
         lWordArray[lNumberOfWords-1] = lMessageLength>>>29;
         return lWordArray;
     };
- 
+
     function WordToHex(lValue) {
         var WordToHexValue="",WordToHexValue_temp="",lByte,lCount;
         for (lCount = 0;lCount<=3;lCount++) {
@@ -137,15 +137,15 @@ var MD5 = function (string) {
         }
         return WordToHexValue;
     };
- 
+
     function Utf8Encode(string) {
         string = string.replace(/\r\n/g,"\n");
         var utftext = "";
- 
+
         for (var n = 0; n < string.length; n++) {
- 
+
             var c = string.charCodeAt(n);
- 
+
             if (c < 128) {
                 utftext += String.fromCharCode(c);
             }
@@ -158,25 +158,25 @@ var MD5 = function (string) {
                 utftext += String.fromCharCode(((c >> 6) & 63) | 128);
                 utftext += String.fromCharCode((c & 63) | 128);
             }
- 
+
         }
- 
+
         return utftext;
     };
- 
+
     var x=Array();
     var k,AA,BB,CC,DD,a,b,c,d;
     var S11=7, S12=12, S13=17, S14=22;
     var S21=5, S22=9 , S23=14, S24=20;
     var S31=4, S32=11, S33=16, S34=23;
     var S41=6, S42=10, S43=15, S44=21;
- 
+
     string = Utf8Encode(string);
- 
+
     x = ConvertToWordArray(string);
- 
+
     a = 0x67452301; b = 0xEFCDAB89; c = 0x98BADCFE; d = 0x10325476;
- 
+
     for (k=0;k<x.length;k+=16) {
         AA=a; BB=b; CC=c; DD=d;
         a=FF(a,b,c,d,x[k+0], S11,0xD76AA478);
@@ -248,14 +248,14 @@ var MD5 = function (string) {
         c=AddUnsigned(c,CC);
         d=AddUnsigned(d,DD);
     }
- 
+
     var temp = WordToHex(a)+WordToHex(b)+WordToHex(c)+WordToHex(d);
- 
+
     return temp.toLowerCase();
 }
 
-String.prototype.nl2br = function()
-{      
+var nl2br = function()
+{
     return this.replace(/\n/g, "<br>");
 }
 
@@ -282,7 +282,7 @@ function parseOutput(data, o, oTitle)
 {
     if (typeof data.compilation == "undefined")
     {
-        o.text("Temporarily unavaible");
+        o.text("Temporarily unavailable");
         return;
     }
 
@@ -296,15 +296,16 @@ function parseOutput(data, o, oTitle)
     var rstatus = parseInt(safeVar(data, "runtime.status"));
     var cerr = safeVar(data, "compilation.err");
     var rerr = safeVar(data, "runtime.err");
+    var defaultOutput = data.defaultOutput || '-- No output --';
 
     if (cstatus != 0)
     {
         oTitle.text("Compilation output ("+cstatus+": "+cerr+")");
         if ($.browser.msie)
-            o.html(cout.nl2br());
+            o.html(nl2br(cout));
         else
             o.text(cout);
-        
+
         return;
     }
     else
@@ -312,10 +313,10 @@ function parseOutput(data, o, oTitle)
         oTitle.text("Application output");// (compile "+ctime+"ms, run "+rtime+"ms)");
         if ( cout != "")
             output = 'Compilation output: \n' + cout + "\n";
-        
-        output += (stdout == "" && stderr == "" ? '-- No output --' : stdout);
 
-        if (stderr != "") 
+        output += (stdout == "" && stderr == "" ? defaultOutput : stdout);
+
+        if (stderr != "")
             output += stderr;
 
         if (rstatus != 0)
@@ -323,17 +324,17 @@ function parseOutput(data, o, oTitle)
     }
 
     if ($.browser.msie)
-        o.html(output.nl2br());
+        o.html(nl2br(cout));
     else
         o.text(output);
 }
 
-$(document).ready(function() 
+$(document).ready(function()
 {
     setUpExamples();
 
     var currentPage = $(location).attr('pathname');
-    
+
     if ($('body')[0].id != "Home")
         return;
 
@@ -358,7 +359,7 @@ $(document).ready(function()
                 stdin = elements[0];
 
             if (elements[1] != null)
-                args = elements[1];                
+                args = elements[1];
         }
 
         currentExample.replaceWith(
@@ -377,78 +378,118 @@ $(document).ready(function()
             + '<input type="button" class="resetButton" value="Reset"></div>'
         );
     });
-    
+
     $('textarea[class=d_code]').each(function(index) {
-        var thisObj = $(this);
-
-        var parent = thisObj.parent();
-        parent.css("display", "block");
-        var orgSrc = parent.parent().children("div.d_code").children("pre.d_code");
-
-        var prepareForMain = function()
-        {
-            var src = $.browser.msie && $.browser.version < 9.0 ? orgSrc[0].innerText : orgSrc.text();
-            var arr = src.split("\n");
-            var str = "";
-            for ( i = 0; i < arr.length; i++)
-            {
-                str += arr[i]+"\n";
-            }
-            if ($.browser.msie && $.browser.version < 9.0)
-                str = str.substr(0, str.length - 1);
-            else
-                str = str.substr(0, str.length - 2);
-
-            return str;
-        };
-
-        var editor = CodeMirror.fromTextArea(thisObj[0], {
-            lineNumbers: true,
-            tabSize: 4,
-            indentUnit: 4,
-            indentWithTabs: true,
-            mode: "text/x-d",
-            lineWrapping: true,
-            theme: "eclipse",
-            readOnly: false,
-            matchBrackets: true
-        });
-
-        editor.setValue(prepareForMain());
-
-        var height = function(diff) {
-            var par = code != null ? code : parent.parent().children("div.d_code");
-            return (parseInt(par.css('height')) - diff) + 'px';
-        };
-
-        var runBtn = parent.children("input.runButton");
-        var editBtn = parent.children("input.editButton");
-        var inputBtn = parent.children("input.inputButton");
-        var resetBtn = parent.children("input.resetButton");
-        var argsBtn = parent.children("input.argsButton");
-        var stdinDiv = parent.children("div.d_code_stdin");
-        var argsDiv = parent.children("div.d_code_args");
+        var parent = $(this).parent();
         var outputDiv = parent.children("div.d_code_output");
+        setupTextarea(this, {parent: parent, outputDiv: outputDiv,
+                        stdin: true, args: true});
+    });
+});
 
-        var code = $(editor.getWrapperElement());
-        code.css('display', 'none');
+function setupTextarea(el, opts)
+{
+    opts = opts || {};
+    // set default opts
+    opts = jQuery.extend({}, {
+        stdin: false,
+        args: false,
+        transformOutput: function(out) { return out }
+    }, opts);
 
-        var output = outputDiv.children("textarea.d_code_output");
-        var outputTitle = outputDiv.children("span.d_code_title");
-        var stdin = stdinDiv.children("textarea.d_code_stdin");
+    if (!!opts.parent)
+        var parent = opts.parent;
+    else
+        console.error("parent node node not found");
+
+    if (!!opts.outputDiv)
+        var outputDiv = opts.outputDiv;
+    else
+        console.error("outputDiv node not found");
+
+    var thisObj = $(el);
+    parent.css("display", "block");
+    var orgSrc = parent.parent().children("div.d_code").children("pre.d_code");
+
+    var prepareForMain = function()
+    {
+        var src = $.browser.msie && $.browser.version < 9.0 ? orgSrc[0].innerText : orgSrc.text();
+        var arr = src.split("\n");
+        var str = "";
+        for ( i = 0; i < arr.length; i++)
+        {
+            str += arr[i]+"\n";
+        }
+        if ($.browser.msie && $.browser.version < 9.0)
+            str = str.substr(0, str.length - 1);
+        else
+            str = str.substr(0, str.length - 2);
+
+        return str;
+    };
+
+    var editor = CodeMirror.fromTextArea(thisObj[0], {
+        lineNumbers: true,
+        tabSize: 4,
+        indentUnit: 4,
+        indentWithTabs: true,
+        mode: "text/x-d",
+        lineWrapping: true,
+        theme: "eclipse",
+        readOnly: false,
+        matchBrackets: true
+    });
+
+    editor.setValue(prepareForMain());
+
+    var height = function(diff) {
+        var par = code != null ? code : parent.parent().children("div.d_code");
+        return (parseInt(par.css('height')) - diff) + 'px';
+    };
+
+    var runBtn = parent.children("input.runButton");
+    var editBtn = parent.children("input.editButton");
+    var resetBtn = parent.children("input.resetButton");
+
+    var code = $(editor.getWrapperElement());
+    code.css('display', 'none');
+
+    var plainSourceCode = parent.parent().children("div.d_code");
+
+    var output = outputDiv.children("textarea.d_code_output");
+    var outputTitle = outputDiv.children("span.d_code_title");
+    if (opts.args) {
+        var argsBtn = parent.children("input.argsButton");
+        var argsDiv = parent.children("div.d_code_args");
         var args = argsDiv.children("textarea.d_code_args");
         var orgArgs = args.val();
+    }
+    if (opts.stdin) {
+        var inputBtn = parent.children("input.inputButton");
+        var stdinDiv = parent.children("div.d_code_stdin");
+        var stdin = stdinDiv.children("textarea.d_code_stdin");
         var orgStdin = stdin.val();
+    }
 
-        var hideAllWindows = function()
-        {
+    var hideAllWindows = function(args)
+    {
+        args = args || {};
+        if (opts.stdin) {
             stdinDiv.css('display', 'none');
+        }
+        if (opts.args) {
             argsDiv.css('display', 'none');
-            outputDiv.css('display', 'none');
-            parent.parent().children("div.d_code").css('display', 'none');
-            code.css('display', 'none');
-        };
+        }
+        outputDiv.css('display', 'none');
+        if (!args.keepPlainSourceCode) {
+          plainSourceCode.css('display', 'none');
+        }
+        if (!args.keepCode) {
+          code.css('display', 'none');
+        }
+    };
 
+    if (opts.args) {
         argsBtn.click(function(){
             resetBtn.css('display', 'inline-block');
             args.css('height', height(31));
@@ -456,7 +497,9 @@ $(document).ready(function()
             argsDiv.css('display', 'block');
             args.focus();
         });
+    }
 
+    if (opts.stdin) {
         inputBtn.click(function(){
             resetBtn.css('display', 'inline-block');
             stdin.css('height', height(31));
@@ -464,60 +507,77 @@ $(document).ready(function()
             stdinDiv.css('display', 'block');
             stdin.focus();
         });
-        editBtn.click(function(){
-            resetBtn.css('display', 'inline-block');
-            hideAllWindows();
-            code.css('display', 'block');
-            editor.refresh();
-            editor.focus();
-        });
-        resetBtn.click(function(){
-            resetBtn.css('display', 'none');
-            editor.setValue(prepareForMain());
-            args.val(orgArgs);
-            stdin.val(orgStdin);
-            hideAllWindows();
-            parent.parent().children("div.d_code").css('display', 'block');
-        });
-        runBtn.click(function(){
-            resetBtn.css('display', 'inline-block');
-            $(this).attr("disabled", true);
-            hideAllWindows();
-            output.css('height', height(31));
-            outputDiv.css('display', 'block');
-            outputTitle.text("Application output");
-            output.html("Running...");
-            output.focus();
-           
-            $.ajax({
-                type: 'POST',
-                url: "//dpaste.dzfl.pl/request/",
-                dataType: "json",
-                data: 
-                {
-                    'code' : editor.getValue(),
-                    'stdin' : stdin.val(),
-                    'args': args.val()
-                },
-                success: function(data) 
-                {
-                    parseOutput(data, output, outputTitle);
-                    runBtn.attr("disabled", false);
-                },
-                error: function(jqXHR, textStatus, errorThrown )
-                {
-                    output.html("Temporarily unavailable");
-                    if (typeof console != "undefined")
-                    {
-                        console.log(textStatus + ": " + errorThrown);
-                    }
+    }
 
-                    runBtn.attr("disabled", false);
+    editBtn.click(function(){
+        resetBtn.css('display', 'inline-block');
+        hideAllWindows();
+        code.css('display', 'block');
+        editor.refresh();
+        editor.focus();
+    });
+    resetBtn.click(function(){
+        resetBtn.css('display', 'none');
+        editor.setValue(prepareForMain());
+        if (opts.args) {
+            args.val(orgArgs);
+        }
+        if (opts.stdin) {
+            stdin.val(orgStdin);
+        }
+        hideAllWindows();
+        plainSourceCode.css('display', 'block');
+    });
+    runBtn.click(function(){
+        resetBtn.css('display', 'inline-block');
+        $(this).attr("disabled", true);
+        var args = {};
+        // check what boxes are currently open
+        if (opts.keepCode) {
+          args.keepCode = code.is(":visible");
+          args.keepPlainSourceCode = plainSourceCode.is(":visible");
+        }
+        hideAllWindows(args);
+        output.css('height', opts.outputHeight || height(31));
+        outputDiv.css('display', 'block');
+        outputTitle.text("Application output");
+        output.html("Running...");
+        output.focus();
+
+        var data = {
+                'code' : opts.transformOutput(editor.getValue()),
+        }
+        if (opts.stdin) {
+            data.stdin = stdin.val();
+        }
+        if (opts.args) {
+            data.args = args.val();
+        }
+        $.ajax({
+            type: 'POST',
+            url: "https://dpaste.dzfl.pl/request/",
+            dataType: "json",
+            data: data,
+            success: function(data)
+            {
+                data.defaultOutput = opts.defaultOutput;
+                parseOutput(data, output, outputTitle);
+                runBtn.attr("disabled", false);
+            },
+            error: function(jqXHR, textStatus, errorThrown )
+            {
+                output.html("Temporarily unavailable");
+                if (typeof console != "undefined")
+                {
+                    console.log(textStatus + ": " + errorThrown);
                 }
-            });
+
+                runBtn.attr("disabled", false);
+            }
         });
     });
-});
+};
+
 
 function setUpExamples()
 {
