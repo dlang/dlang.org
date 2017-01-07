@@ -8,7 +8,7 @@
 
 // turns asserts into writeln
 function reformatExample(code) {
-    return code.replace(/(<span class="d_keyword">assert<\/span>\((.*)==(.*)\);)+/g, function(match, text, left, right) {
+    return code.replace(/(<span class="(?:d_keyword|kwd)">assert<\/span>(?:<span class="pun">)?\((.*)==(.*)\);)+/g, function(match, text, left, right) {
         return "writeln(" + left.trim() + "); "
             + "<span class='d_comment'>// " + right.trim() + "</span>";
     });
