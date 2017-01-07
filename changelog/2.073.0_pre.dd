@@ -1,0 +1,278 @@
+Ddoc
+
+$(CHANGELOG_NAV_LAST 2.072.2)
+
+$(VERSION Jan 18, 2017, =================================================,
+
+$(BUGSTITLE Library changes,
+
+$(LI $(RELATIVE_LINK2 std-meta-statisissorted,Added `std.meta.staticIsSorted` to check if an `AliasSeq` is sorted according to some template predicate.))
+$(LI $(RELATIVE_LINK2 std-traits-promoted,Added `std.traits.Promoted` to get the result of scalar type promotion in multi-term arithmetic expressions))
+$(LI $(RELATIVE_LINK2 std-algorithm-searching-maxindex,Added `std.algorithm.searching.maxIndex` to get the index of the maximum element of a range.))
+$(LI $(RELATIVE_LINK2 std-algorithm-searching-minindex,Added `std.algorithm.searching.minIndex` to get the index of the minimum element of a range.))
+$(LI $(RELATIVE_LINK2 std-traits-hasFunctionAttributes,`std.traits.hasFunctionAttributes` has been added))
+$(LI $(RELATIVE_LINK2 ndslice-removal,`std.experimental.ndslice` has been deprecated.))
+
+)
+
+$(BUGSTITLE Language changes,
+
+$(LI $(RELATIVE_LINK2 mcpu_avx,Add `D_AVX` predefined version when $(TT -mcpu=avx) is used.))
+
+)
+
+$(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D $(VER).))
+
+$(HR)
+
+$(BUGSTITLE Library changes,
+
+$(LI $(LNAME2 std-meta-statisissorted,Added `std.meta.staticIsSorted` to check if an `AliasSeq` is sorted according to some template predicate.)
+    $(P
+        `std.meta.staticIsSorted` checks whether an `AliasSeq` is
+        sorted according to some template predicate.
+    )
+    ------
+    enum Comp(T1, T2) = T1.sizeof < T2.sizeof;
+
+    import std.meta : staticIsSorted;
+    static assert( staticIsSorted!(Comp, byte, uint, double));
+    static assert(!staticIsSorted!(Comp, bool, long, dchar));
+    ------
+
+    $(P
+        Additionally, the compile-time performance of `std.meta.staticSort` has been
+        greatly improved. Nevertheless, due to compiler limitations it is still an
+        extraordinarily expensive operation to perform on longer sequences; strive to
+        minimize such use.
+    )
+)
+
+$(LI $(LNAME2 std-traits-promoted,Added `std.traits.Promoted` to get the result of scalar type promotion in multi-term arithmetic expressions)
+    $(P
+        `std.traits.Promoted` gets the type to which a scalar type will be promoted
+        in multi-term arithmetic expressions
+    )
+    -------
+    import std.traits : Promoted;
+    static assert(is(typeof(ubyte(3) * ubyte(5)) == Promoted!ubyte));
+    static assert(is(Promoted!ubyte == int));
+    -------
+
+    $(P
+        See the D specification on $(LINK2 $(ROOT_DIR)spec/type.html#integer-promotions,
+        scalar type promotions) for more information.
+    )
+)
+
+$(LI $(LNAME2 std-algorithm-searching-maxindex,Added `std.algorithm.searching.maxIndex` to get the index of the maximum element of a range.)
+    $(P
+        `std.algorithm.searching.maxIndex` gets the index of the maximum element of a range,
+        according to a specified predicate. The default predicate is "a > b".
+    )
+
+    -------
+    import std.algorithm.searching : maxIndex;
+    int[] a = [5, 4, 2, 1, 9, 10];
+    assert(a.minIndex == 5);
+
+    int[] a;
+    assert(a.minIndex == -1);
+    -------
+)
+
+$(LI $(LNAME2 std-algorithm-searching-minindex,Added `std.algorithm.searching.minIndex` to get the index of the minimum element of a range.)
+    $(P
+        `std.algorithm.searching.minIndex` gets the index of the minimum element of a range,
+        according to a specified predicate. The default predicate is "a < b".
+    )
+
+    -------
+    import std.algorithm.searching : minIndex;
+    int[] a = [5, 4, 2, 1, 9, 10];
+    assert(a.minIndex == 3);
+
+    int[] a;
+    assert(a.minIndex == -1);
+    -------
+)
+
+$(LI $(LNAME2 std-traits-hasFunctionAttributes,`std.traits.hasFunctionAttributes` has been added)
+    $(P
+        It exposes a user-friendly way to query for function attributes:
+    )
+    -------
+    import std.traits : hasFunctionAttributes;
+
+    // manually annotated function
+    real func(real x) pure nothrow @safe
+    {
+        return x;
+    }
+    static assert(hasFunctionAttributes!(func, "@safe", "pure"));
+    static assert(!hasFunctionAttributes!(func, "@trusted"));
+
+    // for templated function types are automatically inferred
+    bool myFunc(T)(T b)
+    {
+        return !b;
+    }
+    static assert(hasFunctionAttributes!(myFunc!bool, "@safe", "pure", "@nogc", "nothrow"));
+    static assert(!hasFunctionAttributes!(myFunc!bool, "shared"));
+    -------
+)
+
+$(LI $(LNAME2 ndslice-removal,`std.experimental.ndslice` has been deprecated.)
+    $(P
+        The synchronization between Phobos and Mir turned out to be a lot of work
+        with litte gain. Users of `std.experimental.ndslice` are advised to
+        switch to the upstream $(LINK2 https://github.com/libmir/mir-algorithm, mir package).
+    )
+)
+
+
+)
+
+$(BUGSTITLE Language changes,
+
+$(LI $(LNAME2 mcpu_avx,Add `D_AVX` predefined version when $(TT -mcpu=avx) is used.)
+)
+
+
+)
+
+$(BR)$(BIG $(LNAME2 bugfix-list, List of all bug fixes and enhancements in D $(VER):))
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(LI $(BUGZILLA 16102): [REG2.070] struct dtor replace value on stack)
+$(LI $(BUGZILLA 16574): [REG 2.072.0-b1] Unexplained errors about functions that overridde anything)
+$(LI $(BUGZILLA 16678): [REG] Fix for issue 16193 creates major breakage)
+$(LI $(BUGZILLA 16699): [REG 2.070] stack corruption with scope$(LPAREN)exit$(RPAREN))
+$(LI $(BUGZILLA 16747): [Reg 2.072] Cannot have stack allocated classes in @safe code)
+$(LI $(BUGZILLA 16980): [REG2.072.0] wrong interface called)
+$(LI $(BUGZILLA 17029): [Reg 2.072] scope variable may not be returned)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(LI $(BUGZILLA 922): export keyword causes undefined references on linux)
+$(LI $(BUGZILLA 1761): TypeInfo.toString for function types always indicates no-parameter function)
+$(LI $(BUGZILLA 5995): string append negative integer causes segfault)
+$(LI $(BUGZILLA 10447): Refused increment of double2 with a immutable$(LPAREN)double2$(RPAREN))
+$(LI $(BUGZILLA 11118): undefined identifier in template structs functions)
+$(LI $(BUGZILLA 11961): Can't select CRT to link against)
+$(LI $(BUGZILLA 12430): non compile-time __simd opcode causes ICE)
+$(LI $(BUGZILLA 13927): optimizer hangs in optelem with SIMD initialization)
+$(LI $(BUGZILLA 14613): DMD: Internal error: backend/cod1.c 1567 on '-O' switch)
+$(LI $(BUGZILLA 15576): extern$(LPAREN)C++, namespace$(RPAREN) wrong mangling of variables $(LPAREN)Windows$(RPAREN))
+$(LI $(BUGZILLA 15862): Functions that return types with mutable indirections should be weakly pure, not strongly pure)
+$(LI $(BUGZILLA 15989): Initializing manifest constants with CTFE allocated data)
+$(LI $(BUGZILLA 16116): Infinite loop on $(LPAREN)somewhat complex$(RPAREN) simd math)
+$(LI $(BUGZILLA 16146): postblit is not called on struct creation with "{field:value}" syntax)
+$(LI $(BUGZILLA 16381): Wrapping a float4 array leads to segfault.)
+$(LI $(BUGZILLA 16488): [spec][optimization] broadcast scalar to simd vector)
+$(LI $(BUGZILLA 16499): Misleading error message for 'in' operator with wrong argument)
+$(LI $(BUGZILLA 16523): [ICE] Internal error: backend/symbol.c 1031)
+$(LI $(BUGZILLA 16589): Taking address of stack variables in @safe code is allowed in some cases)
+$(LI $(BUGZILLA 16679): prefetch on old pentium d results in an illegal instruction)
+$(LI $(BUGZILLA 16743): Intrinsic recognition sometimes fails if a software implementation is available)
+$(LI $(BUGZILLA 16854): Inline assembler has VMOVLHPS and VMOVHLPS swapped)
+$(LI $(BUGZILLA 16967): No switch case fallthrough warnings in in/out contracts)
+$(LI $(BUGZILLA 16977): bad debug info for function default arguments)
+$(LI $(BUGZILLA 17034): DMD 32 bit PIC wrong code)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 768): A switch to print predefined version identifiers)
+$(LI $(BUGZILLA 13474): Discard excess precision for float and double $(LPAREN)x87$(RPAREN))
+$(LI $(BUGZILLA 16449): add support for RDTSCP in iasm)
+$(LI $(BUGZILLA 16558): [Mir] Generic unaligned load/store like $(LPAREN)like LDC loadUnaligned and storeUnaligned$(RPAREN))
+$(LI $(BUGZILLA 16560): [Mir] Prefetch intrinsics like in LDC)
+$(LI $(BUGZILLA 16703): Support indexing of SIMD vector types)
+$(LI $(BUGZILLA 16798): Extend -Ipath switch to -Imodule=path so path heirarchy doesn't have to match package heirarchy)
+$(LI $(BUGZILLA 16958): replace -mavx switch with -mcpu=id)
+)
+$(BUGSTITLE Phobos regressions,
+
+$(LI $(BUGZILLA 16609): std.experimental.ndslice.slice issues warnings when building Phobos)
+$(LI $(BUGZILLA 16661): [REG2.072] std/format.d$(LPAREN)1070$(RPAREN): Incorrect format specifier: .2f for wstring and dstring)
+$(LI $(BUGZILLA 16663): [REG 2.072] std.unit.toUpper rejects an alias this to a string)
+$(LI $(BUGZILLA 16667): [REG] dub test fails on std.conv after upgrade to dmd 2.072.0)
+$(LI $(BUGZILLA 16682): [REG 2.072] "privatization" of symbols in std.stdio breaks DFMT)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(LI $(BUGZILLA 6716): Linking a C program with D library causes DEH errors)
+$(LI $(BUGZILLA 8087): Improve clarity of std.algorithm documentation)
+$(LI $(BUGZILLA 9378): std.internal.digest.sha_SSE3 breaks if compiled with PIC)
+$(LI $(BUGZILLA 9391): Constant std.regex.regex)
+$(LI $(BUGZILLA 13314): BinaryHeap assumes Store has dup property)
+$(LI $(BUGZILLA 16048): std.getopt: duplicated options are not detected)
+$(LI $(BUGZILLA 16135): missing std.format import in std.algorithm.comparison)
+$(LI $(BUGZILLA 16255): std.algorithm.iteration.each on opApply doesn't support ref)
+$(LI $(BUGZILLA 16352): dead-lock in std.allocator.free_list unittest)
+$(LI $(BUGZILLA 16419): issue with ndslice.slice toHash)
+$(LI $(BUGZILLA 16478): Don't allow to!T$(LPAREN)$(RPAREN) in constraint)
+$(LI $(BUGZILLA 16588): uniq's BidirectionalRange behavior is inconsistent with its InputRange behavior)
+$(LI $(BUGZILLA 16611): std.traits.fullyQualifiedName fails with error 'Unrecognized type const$(LPAREN)void$(RPAREN)')
+$(LI $(BUGZILLA 16624): std.path.setExtension ddoc comment is strangely formated)
+$(LI $(BUGZILLA 16634): std.math exposes yl2x and yl2xp1 publicly)
+$(LI $(BUGZILLA 16653): ParameterDefaultValueTuple fails to compile when function has lazy param)
+$(LI $(BUGZILLA 16724): RandomCover.popFront is a no-op for the first call)
+$(LI $(BUGZILLA 16758): Variant.opIndex result not modified after opAssign)
+$(LI $(BUGZILLA 16794): dmd not working on Ubuntu 16.10 because of default PIE linking)
+$(LI $(BUGZILLA 16955): std.process.spawnProcessImpl can crash due to alloca)
+$(LI $(BUGZILLA 16959): bringToFront fails on char arrays)
+$(LI $(BUGZILLA 16970): Fix deprecations and warnings when compiling Phobos)
+$(LI $(BUGZILLA 16996): std.algorithm.remove with SwapStrategy.unstable removes more entries)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(LI $(BUGZILLA 4125): std.numeric.gcd can use a binary GCD)
+$(LI $(BUGZILLA 16249): std.signals: disconnect$(LPAREN)$(RPAREN) is unsafe during emit$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 16571): Unittests should not list /tmp/ recursively)
+$(LI $(BUGZILLA 16628): Special case std.algorithm.equal for known empty or infinite ranges)
+)
+$(BUGSTITLE Druntime regressions,
+
+$(LI $(BUGZILLA 16974): [REG2.068] Equal associative arrays with associative array keys are considered unequal)
+)
+$(BUGSTITLE Druntime bugs,
+
+$(LI $(BUGZILLA 16651): atomicOp!"-="$(LPAREN)ulong, uint$(RPAREN) = wrong result/codegen)
+$(LI $(BUGZILLA 16654): hashOf returns different hashes for the same string value)
+$(LI $(BUGZILLA 16764): `hashOf` is misleading, error-prone, and useless)
+)
+$(BUGSTITLE Druntime enhancements,
+
+$(LI $(BUGZILLA 16797): Zero clock resolution lead to division by zero)
+)
+$(BUGSTITLE dlang.org bugs,
+
+$(LI $(BUGZILLA 16592): Building dlang.org does not work without a preexisting dmd installation)
+$(LI $(BUGZILLA 16948): broken links in std.stdio due to inccorrect use of WEB macro)
+)
+$(BUGSTITLE dlang.org enhancements,
+
+$(LI $(BUGZILLA 8799): Give example of Tuple mapped to a function)
+$(LI $(BUGZILLA 16147): Provide shiny 404 error pages)
+)
+$(BUGSTITLE Tools regressions,
+
+$(LI $(BUGZILLA 14296): RDMD fails at building a lib when the source is in a subdir)
+$(LI $(BUGZILLA 16962): rdmd --build-only --force -c main.d fails: ./main: No such file or directory)
+$(LI $(BUGZILLA 16978): [REG2.072.0] pragma$(LPAREN)lib$(RPAREN) is broken with rdmd)
+)
+$(BUGSTITLE Tools bugs,
+
+$(LI $(BUGZILLA 16966): rdmd: AssertError@rdmd.d$(LPAREN)489$(RPAREN): should have been created by compileRootAndGetDeps)
+)
+$(BUGSTITLE Tools enhancements,
+
+$(LI $(BUGZILLA 16593): Building "tools" produces deprecation warnings)
+)
+)
+$(CHANGELOG_NAV_LAST 2.072.2)
+Macros:
+    VER=2.073.0
+    TITLE=Change Log: $(VER)
