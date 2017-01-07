@@ -69,7 +69,7 @@ $(document).ready(function()
         // 1) check is for ddoc, 2) for ddox
         // manual created tests most likely can't be run without modifications
         if (!($(this).parent().parent().prev().hasClass("dlang_runnable") ||
-              $(this).prev().children(":first").hasClass("dlang_runnable")))
+              $(this).prev().children(":last").hasClass("dlang_runnable")))
             return;
 
         currentExample.replaceWith(
