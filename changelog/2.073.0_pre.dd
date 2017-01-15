@@ -6,9 +6,9 @@ $(VERSION Jan 18, 2017, =================================================,
 
 $(BUGSTITLE Library changes,
 
-$(LI $(RELATIVE_LINK2 std-meta-statisissorted,Added `std.meta.staticIsSorted` to check if an `AliasSeq` is sorted according to some template predicate.))
 $(LI $(RELATIVE_LINK2 std-traits-promoted,Added `std.traits.Promoted` to get the result of scalar type promotion in multi-term arithmetic expressions))
 $(LI $(RELATIVE_LINK2 std-algorithm-searching-maxindex,Added `std.algorithm.searching.maxIndex` to get the index of the maximum element of a range.))
+$(LI $(RELATIVE_LINK2 std-meta-staticissorted,Added `std.meta.staticIsSorted` to check if an `AliasSeq` is sorted according to some template predicate.))
 $(LI $(RELATIVE_LINK2 std-algorithm-searching-minindex,Added `std.algorithm.searching.minIndex` to get the index of the minimum element of a range.))
 $(LI $(RELATIVE_LINK2 std-traits-hasFunctionAttributes,`std.traits.hasFunctionAttributes` has been added))
 $(LI $(RELATIVE_LINK2 ndslice-removal,`std.experimental.ndslice` has been deprecated.))
@@ -26,27 +26,6 @@ $(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements 
 $(HR)
 
 $(BUGSTITLE Library changes,
-
-$(LI $(LNAME2 std-meta-statisissorted,Added `std.meta.staticIsSorted` to check if an `AliasSeq` is sorted according to some template predicate.)
-    $(P
-        `std.meta.staticIsSorted` checks whether an `AliasSeq` is
-        sorted according to some template predicate.
-    )
-    ------
-    enum Comp(T1, T2) = T1.sizeof < T2.sizeof;
-
-    import std.meta : staticIsSorted;
-    static assert( staticIsSorted!(Comp, byte, uint, double));
-    static assert(!staticIsSorted!(Comp, bool, long, dchar));
-    ------
-
-    $(P
-        Additionally, the compile-time performance of `std.meta.staticSort` has been
-        greatly improved. Nevertheless, due to compiler limitations it is still an
-        extraordinarily expensive operation to perform on longer sequences; strive to
-        minimize such use.
-    )
-)
 
 $(LI $(LNAME2 std-traits-promoted,Added `std.traits.Promoted` to get the result of scalar type promotion in multi-term arithmetic expressions)
     $(P
@@ -79,6 +58,27 @@ $(LI $(LNAME2 std-algorithm-searching-maxindex,Added `std.algorithm.searching.ma
     int[] a;
     assert(a.maxIndex == -1);
     -------
+)
+
+$(LI $(LNAME2 std-meta-staticissorted,Added `std.meta.staticIsSorted` to check if an `AliasSeq` is sorted according to some template predicate.)
+    $(P
+        `std.meta.staticIsSorted` checks whether an `AliasSeq` is
+        sorted according to some template predicate.
+    )
+    ------
+    enum Comp(T1, T2) = T1.sizeof < T2.sizeof;
+
+    import std.meta : staticIsSorted;
+    static assert( staticIsSorted!(Comp, byte, uint, double));
+    static assert(!staticIsSorted!(Comp, bool, long, dchar));
+    ------
+
+    $(P
+        Additionally, the compile-time performance of `std.meta.staticSort` has been
+        greatly improved. Nevertheless, due to compiler limitations it is still an
+        extraordinarily expensive operation to perform on longer sequences; strive to
+        minimize such use.
+    )
 )
 
 $(LI $(LNAME2 std-algorithm-searching-minindex,Added `std.algorithm.searching.minIndex` to get the index of the minimum element of a range.)
@@ -147,11 +147,15 @@ $(BUGSTITLE DMD Compiler regressions,
 
 $(LI $(BUGZILLA 16102): [REG2.070] struct dtor replace value on stack)
 $(LI $(BUGZILLA 16574): [REG 2.072.0-b1] Unexplained errors about functions that overridde anything)
+$(LI $(BUGZILLA 16598): [REG2.069] ICE with void ternary + finalizers)
 $(LI $(BUGZILLA 16678): [REG] Fix for issue 16193 creates major breakage)
 $(LI $(BUGZILLA 16699): [REG 2.070] stack corruption with scope$(LPAREN)exit$(RPAREN))
 $(LI $(BUGZILLA 16747): [Reg 2.072] Cannot have stack allocated classes in @safe code)
 $(LI $(BUGZILLA 16980): [REG2.072.0] wrong interface called)
 $(LI $(BUGZILLA 17029): [Reg 2.072] scope variable may not be returned)
+$(LI $(BUGZILLA 17059): [REG 2.072.2] incorrect circular reference with `is$(LPAREN)Klass : Interface$(RPAREN)`)
+$(LI $(BUGZILLA 17073): [Reg 2.071.0] Priority clash with `void` default initialization of struct fields)
+$(LI $(BUGZILLA 17074): extern$(LPAREN)C++, keyword$(RPAREN) crashes compiler)
 )
 $(BUGSTITLE DMD Compiler bugs,
 
