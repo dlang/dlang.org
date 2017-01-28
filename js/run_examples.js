@@ -44,10 +44,6 @@ $(document).ready(function()
     if (!$('body').hasClass("std"))
         return;
 
-    // only enable for pre-release version
-    if (location.pathname.indexOf("prerelease") < 0)
-        return;
-
     // ignore not yet compatible modules
     // copied from Phobos posix.mak
     var ignoredModulesList = "allocator/allocator_list.d,allocator/building_blocks/allocator_list.d,allocator/building_blocks/free_list.d,allocator/building_blocks/quantizer,allocator/building_blocks/quantizer,allocator/building_blocks/stats_collector.d,base64.d,bitmanip.d,concurrency.d,conv.d,csv.d,datetime.d,digest/hmac.d,digest/sha.d,file.d,index.d,isemail.d,logger/core.d,logger/nulllogger.d,math.d,ndslice/selection.d,ndslice/slice.d,numeric.d,stdio.d,traits.d,typecons.d,uni.d,utf.d,uuid.d".split(",")
