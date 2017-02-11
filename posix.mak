@@ -449,7 +449,7 @@ docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST} \
 	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
-	  sed -e /unittest.d/d -e /windows/d >> .release-files.txt
+	  sed -e /unittest.d/d -e /windows/d | sort >> .release-files.txt
 	${DMD_REL} -c -o- -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
 	  -Xfdocs.json -I${PHOBOS_DIR}-${LATEST} @.release-files.txt
 	${DPL_DOCS} filter docs.json --min-protection=Protected \
