@@ -46,7 +46,7 @@ $(document).ready(function()
 
     // ignore not yet compatible modules
     // copied from Phobos posix.mak
-    var ignoredModulesList = "allocator/allocator_list.d,allocator/building_blocks/allocator_list.d,allocator/building_blocks/free_list.d,allocator/building_blocks/quantizer,allocator/building_blocks/quantizer,allocator/building_blocks/stats_collector.d,base64.d,bitmanip.d,concurrency.d,conv.d,csv.d,datetime.d,digest/hmac.d,digest/sha.d,file.d,index.d,isemail.d,logger/core.d,logger/nulllogger.d,math.d,ndslice/selection.d,ndslice/slice.d,numeric.d,stdio.d,traits.d,typecons.d,uni.d,utf.d,uuid.d".split(",")
+  var ignoredModulesList = "base64.d,building_blocks/free_list,building_blocks/quantizer,digest/hmac.d,file.d,index.d,math.d,ndslice/selection.d,stdio.d,traits.d,typecons.d,uuid.d".split(",")
     var currentModulePath = $('body')[0].id.split('.').join('/') + '.d';
     if (ignoredModulesList.filter(function(x) { return currentModulePath.indexOf(x) >= 0 }).length > 0) {
         return;
