@@ -38,7 +38,8 @@ SRC= $(SPECSRC) 404.dd cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd over
 	changelog\2.069.2.dd changelog\2.070.0.dd changelog\2.070.1.dd \
 	changelog\2.070.2.dd changelog\2.071.0.dd changelog\2.071.1.dd \
 	changelog\2.071.2.dd changelog\2.072.0.dd changelog\2.072.1.dd \
-	changelog\2.072.2.dd changelog\2.073.0.dd changelog\index.dd \
+	changelog\2.072.2.dd changelog\2.073.0.dd changelog\2.073.1.dd \
+	changelog\index.dd \
 	glossary.dd acknowledgements.dd		\
 	dcompiler.dd builtin.dd comparison.dd rationale.dd code_coverage.dd	\
 	exception-safe.dd rdmd.dd templates-revisited.dd warnings.dd		\
@@ -126,7 +127,7 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html 404.
 	changelog\2.070.0.html changelog\2.070.1.html changelog\2.070.2.html \
 	changelog\2.071.0.html changelog\2.071.1.html changelog\2.071.2.html \
 	changelog\2.072.0.html changelog\2.072.1.html changelog\2.072.2.html \
-	changelog\2.073.0.html changelog\index.html \
+	changelog\2.073.0.html changelog\2.073.1.html changelog\index.html \
 	glossary.html acknowledgements.html builtin.html \
 	comparison.html rationale.html code_coverage.html \
 	exception-safe.html rdmd.html templates-revisited.html warnings.html	\
@@ -356,6 +357,8 @@ changelog\2.072.1.html : $(CHANGELOG_DDOC) changelog\2.072.1.dd
 changelog\2.072.2.html : $(CHANGELOG_DDOC) changelog\2.072.2.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 changelog\2.073.0.html : $(CHANGELOG_DDOC) changelog\2.073.0.dd
+	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
+changelog\2.073.1.html : $(CHANGELOG_DDOC) changelog\2.073.1.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
 changelog\index.html : $(CHANGELOG_DDOC) changelog\index.dd
 	$(DMD) -o- -c -D -Df$*.html $(CHANGELOG_DDOC) $*.dd
