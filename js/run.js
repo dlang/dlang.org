@@ -576,6 +576,7 @@ function setupTextarea(el, opts)
             }
         });
     });
+    return editor;
 };
 
 

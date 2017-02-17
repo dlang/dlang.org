@@ -8,7 +8,7 @@
 
 // turns asserts into writeln
 function reformatExample(code) {
-    return code.replace(/(<span class="d_keyword">assert<\/span>\((.*)==(.*)\);)+/g, function(match, text, left, right) {
+    return code.replace(/(<span class="(?:d_keyword|kwd)">assert<\/span>(?:<span class="pun">)?\((.*)==(.*)\);)+/g, function(match, text, left, right) {
         return "writeln(" + left.trim() + "); "
             + "<span class='d_comment'>// " + right.trim() + "</span>";
     });
@@ -90,15 +90,15 @@ $(document).ready(function()
         var parent = $(this).parent();
         var btnParent = parent.parent().children(".d_example_buttons");
         var outputDiv = parent.parent().children(".d_code_output");
-      setupTextarea(this,  {
-        parent: btnParent,
-        outputDiv: outputDiv,
-        stdin: false,
-        args: false,
-        transformOutput: wrapIntoMain,
-        defaultOutput: "All tests passed",
-        keepCode: true,
-        outputHeight: "auto"
-      });
+        var editor = setupTextarea(this,  {
+          parent: btnParent,
+          outputDiv: outputDiv,
+          stdin: false,
+          args: false,
+          transformOutput: wrapIntoMain,
+          defaultOutput: "All tests passed",
+          keepCode: true,
+          outputHeight: "auto"
+        });
     });
 });
