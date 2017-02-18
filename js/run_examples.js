@@ -82,7 +82,7 @@ $(document).ready(function()
                     + '<div class="d_run_code" style="display: block">'
                         + '<textarea class="d_code" style="display: none;"></textarea>'
                     + '</div>'
-                    + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><textarea class="d_code_output" readonly>Running...</textarea>'
+                    + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><pre class="d_code_output" readonly>Running...</pre>'
                 + '</div>'
         );
     });
