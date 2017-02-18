@@ -59,7 +59,8 @@ $(document).ready(function()
         var currentExample = $(this);
         var orig = currentExample.html();
 
-        orig = reformatExample(orig);
+        // disable regex assert -> writeln rewrite logic (for now)
+        //orig = reformatExample(orig);
 
         // check whether it is from a ddoced unittest
         // 1) check is for ddoc, 2) for ddox
