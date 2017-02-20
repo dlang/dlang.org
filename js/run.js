@@ -370,7 +370,7 @@ $(document).ready(function()
             + '<textarea class="d_code_stdin">'+stdin+'</textarea></div>'
             + '<div class="d_code_args"><span class="d_code_title">Command line arguments</span><br>'
             + '<textarea class="d_code_args">'+args+'</textarea></div>'
-            + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><textarea class="d_code_output" readonly>Running...</textarea></div>'
+            + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><pre class="d_code_output" readonly>Running...</pre></div>'
             + '<input type="button" class="editButton" value="Edit">'
             + '<input type="button" class="argsButton" value="Args">'
             + '<input type="button" class="inputButton" value="Input">'
@@ -456,7 +456,7 @@ function setupTextarea(el, opts)
 
     var plainSourceCode = parent.parent().children("div.d_code");
 
-    var output = outputDiv.children("textarea.d_code_output");
+    var output = outputDiv.children("pre.d_code_output");
     var outputTitle = outputDiv.children("span.d_code_title");
     if (opts.args) {
         var argsBtn = parent.children("input.argsButton");

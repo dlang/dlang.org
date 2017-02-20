@@ -59,7 +59,8 @@ $(document).ready(function()
         var currentExample = $(this);
         var orig = currentExample.html();
 
-        orig = reformatExample(orig);
+        // disable regex assert -> writeln rewrite logic (for now)
+        //orig = reformatExample(orig);
 
         // check whether it is from a ddoced unittest
         // 1) check is for ddoc, 2) for ddox
@@ -81,7 +82,7 @@ $(document).ready(function()
                     + '<div class="d_run_code" style="display: block">'
                         + '<textarea class="d_code" style="display: none;"></textarea>'
                     + '</div>'
-                    + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><textarea class="d_code_output" readonly>Running...</textarea>'
+                    + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><pre class="d_code_output" readonly>Running...</pre>'
                 + '</div>'
         );
     });
