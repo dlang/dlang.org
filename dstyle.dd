@@ -252,10 +252,10 @@ $(P
     Phobos and other official D source code, there are additional requirements:
  )
 
-$(UL
-    $(LI Braces should be on their own line. There are a few exceptions to this
-         (such as when declaring lambda functions), but with any normal function
-         block or type definition, the braces should be on their own line.)
+$(H4 Brackets)
+    $(P Braces should be on their own line. There are a few exceptions to this
+        (such as when declaring lambda functions), but with any normal function
+        block or type definition, the braces should be on their own line.)
 
 -------------------------------
 void func(int param)
@@ -270,12 +270,17 @@ void func(int param)
     }
 }
 -------------------------------
-
-    $(LI Lines have a soft limit of 80 characters and a hard limit of 120
+    $(P Avoid unnecessary parentheses:)
+-------------------------------
+(a == b) ? "foo" : "bar"; // NO
+a == b ? "foo" : "bar"; // OK
+-------------------------------
+$(H4 Line length)
+    $(P Lines have a soft limit of 80 characters and a hard limit of 120
          characters. This means that most lines of code should be no longer than
          80 characters long but that they $(I can) exceed 80 characters when
          appropriate. However, they can $(I never) exceed 120 characters.)
-
+$(LISTSECTION Whitespace,
     $(LI Put a space after `for`, `foreach`, `if`, and `while`: )
 -------------------------------
 for (…) { … }
@@ -286,7 +291,7 @@ while (…) { … }
 do { … } while (…);
 -------------------------------
     $(LI Chains containing `else if (…)` or `else static if (…)` should set the
-         keywords on the same line:)
+        keywords on the same line:)
 -------------------------------
 if (…)
 {
@@ -297,38 +302,65 @@ else if (…)
     …
 }
 -------------------------------
+    $(LI Put a space between binary operators, assignments, `cast`, and lambdas:)
+-------------------------------
+a + b
+a / b
+a == b
+a && b
+arr[1 .. 2]
+int a = 100;
+b += 1;
+short c = cast(short) a;
+filter!(a => a == 42);
+-------------------------------
+    $(LI Put no space between unary operators, after `assert`, function calls:)
+-------------------------------
+a = !a && !(2 == -1);
+bool b = ~a;
+auto d = &c;
+e++;
+assert(*d == 42);
+callMyFancyFunction("hello world");
+-------------------------------
+)
+$(LISTSECTION Imports,
+    $(LI Local, selective imports should be preferred over global imports)
+    $(LI Selective imports should have a space before and after the colon (`:`) like
+    `import std.range : zip`)
+    $(LI Imports should be sorted lexiographically.)
+)
+$(LISTSECTION Return type,
+    $(LI The return type should be stated $(I explicitly) wherever possible,
+         as it makes the documentation and source code easier to read.)
+    $(LI $(LINK2 https://dlang.org/spec/struct.html#nested, Function-nested) structs
+        (aka $(LINK2 https://wiki.dlang.org/Voldemort_types, Voldemort types))
+        should be preferred over public `struct`s.)
+)
+$(LISTSECTION Attributes,
+    $(LI $(I Non-templated) functions should be annotated with
+         matching attributes (`@nogc`, `@safe`, `pure`, `nothrow`).)
+    $(LI $(I Templated) functions should $(B not) be annotated with attributes
+         as the compiler can infer them.)
+    $(LI $(B Every) $(I unittest) should be annotated
+         (e.g. `pure nothrow @nogc @safe unittest { ... }`)
+         to ensure the existence of attributes on the templated function.)
+)
+$(LISTSECTION Templates,
     $(LI `unittest` blocks should be avoided in templates. They will generate
         a new `unittest` for each instance, hence tests should be put
         outside of the template.)
-  )
-    $(SUBLIST Imports,
-        $(LI Local, selective imports should be preferred over global imports)
-        $(LI Selective imports should have a space before and after the colon (`:`) like
-        `import std.range : zip`)
-    )
-    $(SUBLIST Return type,
-        $(LI The return type should be stated $(I explicitly) wherever possible,
-             as it makes the documentation and source code easier to read.)
-        $(LI $(LINK2 https://dlang.org/spec/struct.html#nested, Function-nested) structs
-            (aka $(LINK2 https://wiki.dlang.org/Voldemort_types, Voldemort types))
-            should be preferred over public `struct`s.)
-    )
-    $(SUBLIST Attributes,
-        $(LI $(I Non-templated) functions should be annotated with
-             matching attributes (`@nogc`, `@safe`, `pure`, `nothrow`).)
-        $(LI $(I Templated) functions should $(B not) be annotated with attributes
-             as the compiler can infer them.)
-        $(LI $(B Every) $(I unittest) should be annotated
-             (e.g. `pure nothrow @nogc @safe unittest { ... }`)
-             to ensure the existence of attributes on the templated function.)
-    )
+)
+$(LISTSECTION Declarations,
     $(LI Constraints on declarations should have the same indentation level as
          their declaration:)
 -------------------------------
-void foo(R)
+void foo(R)(R r)
 if (R == 1)
 -------------------------------
+)
 
+$(BR)
 $(P
     We are not necessarily recommending that all code follow these rules.
     They're likely to be controversial in any discussion on coding standards.
@@ -339,5 +371,5 @@ $(P
 
 Macros:
     TITLE=The D Style
-    SUBLIST=$(H4 $1) $(UL $+)
+    LISTSECTION=$(H4 $1) $(UL $+)
 
