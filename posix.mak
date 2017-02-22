@@ -73,7 +73,8 @@ STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODE
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
 	std.algorithm.internal std.c. std.concurrencybase std.internal. std.regex.internal.  \
 	std.windows.iunknown std.windows.registry etc.linux.memoryerror	\
-	std.experimental.ndslice.internal std.stdiobase)
+	std.experimental.ndslice.internal std.stdiobase \
+	tk. msvc_dmc msvc_lib)
 
 MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE)
 
@@ -91,6 +92,8 @@ REBASE = MYBRANCH=`git rev-parse --abbrev-ref HEAD` &&\
 CHANGE_SUFFIX = \
  for f in `find "$3" -iname '*.$1'`; do\
   mv $$f `dirname $$f`/`basename $$f .$1`.$2; done
+
+DMD_GEN=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)
 
 # Disable all dynamic content that could potentially have an unrelated impact
 # on a diff
@@ -238,8 +241,8 @@ $(DOC_OUTPUT_DIR)/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 
 all : docs html
 
-docs : dmd-prerelease phobos-prerelease druntime-prerelease druntime-release \
-  phobos-release apidocs-release apidocs-prerelease
+docs : dmd-release dmd-prerelease phobos-prerelease druntime-prerelease \
+	   druntime-release phobos-release apidocs-release apidocs-prerelease
 
 html : $(ALL_FILES)
 
@@ -270,7 +273,7 @@ ${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_STABLE_
 ${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(MOD_EXCLUDES_PRERELEASE) \
-		$(addprefix --dump , object std etc core) >$@
+		$(addprefix --dump , object std etc core ddmd) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
@@ -364,6 +367,11 @@ $(DMD) : ${DMD_DIR}
 
 $(DMD_REL) : ${DMD_STABLE_DIR}
 	${MAKE} --directory=${DMD_STABLE_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
+
+dmd-release : $(STD_DDOC) $(DMD_DIR) $(DMD)
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
+		DOCDIR=${DOC_OUTPUT_DIR}/dmd-release \
+		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC))"
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
@@ -472,6 +480,13 @@ ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess : dpl_prerelease_htaccess
 	@mkdir -p $(dir $@)
 	cp $< $@
 
+DMD_EXCLUDE =
+ifeq (osx,$(OS))
+	DMD_EXCLUDE += -e /scanelf/d -e /libelf/d
+else
+	DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
+endif
+
 docs.json : ${DMD_REL} ${DRUNTIME_STABLE_DIR} \
 		${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
 	find ${DRUNTIME_STABLE_DIR}/src -name '*.d' | \
@@ -484,13 +499,18 @@ docs.json : ${DMD_REL} ${DRUNTIME_STABLE_DIR} \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
 	rm .release-files.txt .release-dummy.html
 
-docs-prerelease.json : ${DMD} ${DRUNTIME_DIR} \
+docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		${PHOBOS_FILES_GENERATED} | dpl-docs
+	find ${DMD_DIR}/src -name '*.d' | \
+		sed -e /objc.d/d -e /mscoff/d -e '/dmd\/src\/id.d/d' \
+			-e /objc_glue.d/d ${DMD_EXCLUDE}  \
+		> .prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
-	  -e /unittest/d > .prerelease-files.txt
+	  -e /unittest/d >> .prerelease-files.txt
 	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
 	  -e /windows/d >> .prerelease-files.txt
-	${DMD} -c -o- -version=CoreDdoc -version=StdDdoc -Df.prerelease-dummy.html \
+	${DMD} -J$(DMD_DIR)/res -J$(DMD_GEN) -c -o- -version=MARS -version=CoreDdoc \
+	  -version=StdDdoc -Df.prerelease-dummy.html \
 	  -Xfdocs-prerelease.json -I${PHOBOS_DIR_GENERATED} @.prerelease-files.txt
 	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_RELEASE)
