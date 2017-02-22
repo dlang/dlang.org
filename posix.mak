@@ -389,7 +389,7 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_DIR} $(STD_DDOC_PRE) druntime-prerelease
+phobos-prerelease : ${PHOBOS_DIR} $(STD_DDOC_PRE) druntime-prerelease assert_writeln_magic
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
@@ -506,6 +506,13 @@ chm-nav.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.dd
 
 d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags
+
+################################################################################
+# Assert -> writeln magic
+################################################################################
+
+assert_writeln_magic: $(DUB)
+	$(DUB) run --single ./assert_writeln_magic.d -- -i $(PHOBOS_DIR)
 
 ################################################################################
 # Style tests
