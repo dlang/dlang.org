@@ -296,7 +296,7 @@ struct FileLines
         // within the docs we automatically inject std.stdio (hence we need to do the same here)
         // writeln needs to be @nogc, @safe, pure and nothrow (we just fake it)
         if (hasWrittenChanges)
-            outFile.writeln("void writeln(T)(T l) { }");
+            outFile.writeln("private void writeln(T)(T l) { }");
         outFile.flush;
 
         return s;
