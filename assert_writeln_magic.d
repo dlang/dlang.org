@@ -275,6 +275,9 @@ struct FileLines
     // dumps all changes
     ~this()
     {
+        if (!hasWrittenChanges)
+            return;
+
         auto tmpFile = writeLinesToFile;
         tmpFile.copy(destFile);
         tmpFile.remove;
@@ -297,8 +300,8 @@ struct FileLines
         // writeln needs to be @nogc, @safe, pure and nothrow (we just fake it)
         if (hasWrittenChanges)
             outFile.writeln("// \nprivate void writeln(T)(T l) { }");
-        outFile.flush;
 
+        outFile.flush;
         return s;
     }
 

@@ -28,6 +28,7 @@ DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
 GENERATED=.generated
+PHOBOS_DIR_GENERATED=../phobos.ddoc.tmp
 
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=1.1.0
@@ -389,8 +390,8 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_DIR} $(STD_DDOC_PRE) druntime-prerelease assert_writeln_magic
-	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
+phobos-prerelease : ${PHOBOS_DIR_GENERATED} $(STD_DDOC_PRE) druntime-prerelease
+	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
 
@@ -457,10 +458,10 @@ docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST} \
 	rm .release-files.txt .release-dummy.html
 
 docs-prerelease.json : ${DMD} ${DRUNTIME_DIR} \
-		${PHOBOS_DIR} | dpl-docs
+		${PHOBOS_DIR_GENERATED} | dpl-docs
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 	  -e /unittest/d > .prerelease-files.txt
-	find ${PHOBOS_DIR} -name '*.d' | sed -e /unittest.d/d \
+	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
 	  -e /windows/d >> .prerelease-files.txt
 	${DMD} -c -o- -version=CoreDdoc -version=StdDdoc -Df.prerelease-dummy.html \
 	  -Xfdocs-prerelease.json -I${PHOBOS_DIR} @.prerelease-files.txt
@@ -511,8 +512,9 @@ d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 # Assert -> writeln magic
 ################################################################################
 
-assert_writeln_magic: $(DUB)
-	$(DUB) run --single ./assert_writeln_magic.d -- -i $(PHOBOS_DIR)
+${PHOBOS_DIR_GENERATED}: $(wildcard ${PHOBOS_DIR}/**/*) $(DUB)
+	rsync --update $(PHOBOS_DIR) $@
+	$(DUB) run --single ./assert_writeln_magic.d -- -i $@
 
 ################################################################################
 # Style tests
