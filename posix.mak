@@ -510,10 +510,22 @@ d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 
 ################################################################################
 # Assert -> writeln magic
+# -----------------------
+#
+# - This transforms assert(a = b) to writeln(a); // b
+# - It creates a copy of Phobos to apply the transformations
 ################################################################################
 
+# --update allows to copy only the newer files and thus only propagate these
+#  changes
+HAS_RSYNC := $(shell command -v rsync22 2> /dev/null)
+
 ${PHOBOS_DIR_GENERATED}: $(wildcard ${PHOBOS_DIR}/**/*) $(DUB)
-	rsync --update $(PHOBOS_DIR) $@
+ifdef HAS_RSYNC
+	rsync -a --exclude='.git/' --exclude='generated/' --update -v $(PHOBOS_DIR)/ $@
+else
+	cp -r -T -f $(PHOBOS_DIR) $@
+endif
 	$(DUB) run --single ./assert_writeln_magic.d -- -i $@
 
 ################################################################################
