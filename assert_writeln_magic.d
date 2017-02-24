@@ -108,7 +108,7 @@ class TestVisitor : ASTVisitor
     /// A single line
     override void visit(const DeclarationOrStatement expr)
     {
-    processLastAssert();
+        processLastAssert();
         expr.accept(this);
     }
 
@@ -118,7 +118,7 @@ class TestVisitor : ASTVisitor
         import std.format : format;
 
         if (fromAssert && !fromStaticAssert &&
-        lastEqualExpression !is null && lastAssert !is null)
+            lastEqualExpression !is null && lastAssert !is null)
         {
             auto e = lastEqualExpression;
             if (e.left !is null && e.right !is null)
@@ -154,7 +154,6 @@ private:
 
     void resetTestState()
     {
-
         fromAssert = false;
         fromStaticAssert = false;
         lastEqualExpression = null;
