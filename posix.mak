@@ -35,8 +35,8 @@ PHOBOS_STABLE_DIR=${PHOBOS_DIR}-${LATEST}
 
 # Automatically generated directories
 GENERATED=.generated
-PHOBOS_DIR_GENERATED=../phobos.ddoc.tmp
-PHOBOS_STABLE_DIR_GENERATED=${PHOBOS_STABLE_DIR}.ddoc.tmp
+PHOBOS_DIR_GENERATED=$(GENERATED)/phobos-prerelease
+PHOBOS_STABLE_DIR_GENERATED=$(GENERATED)/phobos-release
 
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=1.1.0
@@ -278,7 +278,6 @@ rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${GENERATED} dpl-docs/.dub
-	rm -rf $(PHOBOS_DIR_GENERATED) $(PHOBOS_STABLE_DIR_GENERATED)
 	rm -rf auto dlangspec-consolidated.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex .txt .verbatim.txt)
 	rm -f docs.json docs-prerelease.json dpl-docs/dpl-docs
 	@echo You should issue manually: rm -rf ${DMD_STABLE_DIR} ${DRUNTIME_STABLE_DIR} ${PHOBOS_STABLE_DIR} ${STABLE_DMD_ROOT} ${DUB_DIR}
@@ -402,23 +401,37 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 phobos-prerelease : ${PHOBOS_DIR_GENERATED} $(STD_DDOC_PRE) druntime-prerelease
 	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
-	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
+	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease" \
+	  DRUNTIME_PATH="$(realpath ${DRUNTIME_DIR})" \
+	  DMD="$(realpath ${DMD})" \
+	  DOCSRC="$(realpath .)" \
+	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
+	  html -j4
 
 phobos-release : ${PHOBOS_STABLE_DIR_GENERATED} $(DMD_REL) $(STD_DDOC) \
 		druntime-release
-	${MAKE} --directory=${PHOBOS_STABLE_DIR_GENERATED} -f posix.mak -j 4 \
-	  html \
+	${MAKE} --directory=${PHOBOS_STABLE_DIR_GENERATED} -f posix.mak \
 	  DMD=$(DMD_REL) \
 	  DRUNTIME_PATH=${DRUNTIME_STABLE_DIR} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
-	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC))"
+	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC))" \
+	  DRUNTIME_PATH="$(realpath ${DRUNTIME_DIR})" \
+	  DMD="$(realpath ${DMD})" \
+	  DOCSRC="$(realpath .)" \
+	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
+	  html -j4
 
 phobos-prerelease-verbatim : ${PHOBOS_DIR_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
 	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak \
 	    STDDOC="`pwd`/verbatim.ddoc" \
-	    DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim html -j 4
+	    DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim \
+	  	DRUNTIME_PATH="$(realpath ${DRUNTIME_DIR})" \
+	  	DMD="$(realpath ${DMD})" \
+	  	DOCSRC="$(realpath .)" \
+	  	VERSION="$(realpath ${DMD_DIR}/VERSION)" \
+	  	html -j4
 	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
 	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
@@ -525,11 +538,14 @@ d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 # - It creates a copy of Phobos to apply the transformations
 ################################################################################
 
+$(GENERATED):
+	mkdir -p $@
+
 # --update allows to copy only the newer files and thus only propagate these
 #  changes
-HAS_RSYNC := $(shell command -v rsync22 2> /dev/null)
+HAS_RSYNC := $(shell command -v rsync 2> /dev/null)
 
-${PHOBOS_DIR_GENERATED}: $(wildcard ${PHOBOS_DIR}/**/*) $(DUB)
+${PHOBOS_DIR_GENERATED}: $(wildcard ${PHOBOS_DIR}/**/*) $(DUB) | $(GENERATED)
 ifdef HAS_RSYNC
 	rsync -a --exclude='.git/' --exclude='generated/' --update -v $(PHOBOS_DIR)/ $@
 else
@@ -537,7 +553,7 @@ else
 endif
 	$(DUB) run --single ./assert_writeln_magic.d -- -i $@
 
-${PHOBOS_STABLE_DIR_GENERATED}: $(wildcard ${PHOBOS_STABLE_DIR_GENERATED}/**/*) $(DUB)
+${PHOBOS_STABLE_DIR_GENERATED}: $(wildcard ${PHOBOS_STABLE_DIR_GENERATED}/**/*) $(DUB) | $(GENERATED)
 ifdef HAS_RSYNC
 	rsync -a --exclude='.git/' --exclude='generated/' --update -v $(PHOBOS_STABLE_DIR)/ $@
 else
