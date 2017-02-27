@@ -30,10 +30,19 @@ GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
+
+# Last released versions
+DMD_STABLE_DIR=${DMD_DIR}-${LATEST}
+DRUNTIME_STABLE_DIR=${DRUNTIME_DIR}-${LATEST}
+PHOBOS_STABLE_DIR=${PHOBOS_DIR}-${LATEST}
+
+# Automatically generated directories
 GENERATED=.generated
+PHOBOS_DIR_GENERATED=$(GENERATED)/phobos-prerelease
+PHOBOS_STABLE_DIR_GENERATED=$(GENERATED)/phobos-release
 
 # stable dub and dmd versions used to build dpl-docs
-DUB_VER=0.9.25
+DUB_VER=1.1.0
 STABLE_DMD_VER=2.069.2
 STABLE_DMD_ROOT=/tmp/.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
@@ -265,9 +274,9 @@ ${GENERATED}/${LATEST}.ddoc :
 	mkdir -p $(dir $@)
 	echo "LATEST=${LATEST}" >$@
 
-${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR)-$(LATEST) $(PHOBOS_DIR)-$(LATEST)
+${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR)-$(LATEST) $(PHOBOS_DIR)-$(LATEST) $(MOD_EXCLUDES_RELEASE) >$@
+	$(STABLE_RDMD) modlist.d $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR) $(MOD_EXCLUDES_RELEASE) >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR)
 	mkdir -p $(dir $@)
@@ -284,7 +293,7 @@ clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${GENERATED} dpl-docs/.dub
 	rm -rf auto dlangspec-consolidated.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex .txt .verbatim.txt)
 	rm -f docs.json docs-prerelease.json dpl-docs/dpl-docs
-	@echo You should issue manually: rm -rf ${DMD_DIR}-${LATEST} ${DRUNTIME_DIR}-${LATEST} ${PHOBOS_DIR}-${LATEST} ${STABLE_DMD_ROOT} ${DUB_DIR}
+	@echo You should issue manually: rm -rf ${DMD_STABLE_DIR} ${DRUNTIME_STABLE_DIR} ${PHOBOS_STABLE_DIR} ${STABLE_DMD_ROOT} ${DUB_DIR}
 
 RSYNC_FILTER=-f 'P /Usage' -f 'P /.dpl_rewrite*' -f 'P /install.sh*'
 
@@ -363,8 +372,8 @@ ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} :
 $(DMD) : ${DMD_DIR}
 	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
 
-$(DMD_REL) : ${DMD_DIR}-${LATEST}
-	${MAKE} --directory=${DMD_DIR}-${LATEST}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
+$(DMD_REL) : ${DMD_STABLE_DIR}
+	${MAKE} --directory=${DMD_STABLE_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
@@ -380,8 +389,8 @@ druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRE)
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
-druntime-release : ${DRUNTIME_DIR}-${LATEST} $(DMD_REL) $(STD_DDOC)
-	${MAKE} --directory=${DRUNTIME_DIR}-${LATEST} -f posix.mak target doc \
+druntime-release : ${DRUNTIME_STABLE_DIR} $(DMD_REL) $(STD_DDOC)
+	${MAKE} --directory=${DRUNTIME_STABLE_DIR} -f posix.mak target doc \
 	  DMD=$(DMD_REL) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC))"
@@ -402,26 +411,40 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_DIR} $(STD_DDOC_PRE) druntime-prerelease
-	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
+phobos-prerelease : ${PHOBOS_DIR_GENERATED} $(STD_DDOC_PRE) druntime-prerelease
+	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
-	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease html -j 4
+	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease" \
+	  DRUNTIME_PATH="$(realpath ${DRUNTIME_DIR})" \
+	  DMD="$(realpath ${DMD})" \
+	  DOCSRC="$(realpath .)" \
+	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
+	  html -j4
 
-phobos-release : ${PHOBOS_DIR}-${LATEST} $(DMD_REL) $(STD_DDOC) \
+phobos-release : ${PHOBOS_STABLE_DIR_GENERATED} $(DMD_REL) $(STD_DDOC) \
 		druntime-release
-	${MAKE} --directory=${PHOBOS_DIR}-${LATEST} -f posix.mak -j 4 \
-	  html \
+	${MAKE} --directory=${PHOBOS_STABLE_DIR_GENERATED} -f posix.mak \
 	  DMD=$(DMD_REL) \
-	  DRUNTIME_PATH=${DRUNTIME_DIR}-${LATEST} \
+	  DRUNTIME_PATH=${DRUNTIME_STABLE_DIR} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
-	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC))"
+	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC))" \
+	  DRUNTIME_PATH="$(realpath ${DRUNTIME_DIR})" \
+	  DMD="$(realpath ${DMD})" \
+	  DOCSRC="$(realpath .)" \
+	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
+	  html -j4
 
-phobos-prerelease-verbatim : ${PHOBOS_DIR} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
+phobos-prerelease-verbatim : ${PHOBOS_DIR_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
-	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak \
+	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak \
 	    STDDOC="`pwd`/verbatim.ddoc" \
-	    DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim html -j 4
+	    DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim \
+	  	DRUNTIME_PATH="$(realpath ${DRUNTIME_DIR})" \
+	  	DMD="$(realpath ${DMD})" \
+	  	DOCSRC="$(realpath .)" \
+	  	VERSION="$(realpath ${DMD_DIR}/VERSION)" \
+	  	html -j4
 	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
 	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
@@ -459,26 +482,26 @@ ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess : dpl_prerelease_htaccess
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-docs.json : ${DMD_REL} ${DRUNTIME_DIR}-${LATEST} \
-		${PHOBOS_DIR}-${LATEST} | dpl-docs
-	find ${DRUNTIME_DIR}-${LATEST}/src -name '*.d' | \
+docs.json : ${DMD_REL} ${DRUNTIME_STABLE_DIR} \
+		${PHOBOS_STABLE_DIR_GENERATED} | dpl-docs
+	find ${DRUNTIME_STABLE_DIR}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
-	find ${PHOBOS_DIR}-${LATEST} -name '*.d' | \
+	find ${PHOBOS_STABLE_DIR_GENERATED} -name '*.d' | \
 	  sed -e /unittest.d/d -e /windows/d | sort >> .release-files.txt
 	${DMD_REL} -c -o- -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
-	  -Xfdocs.json -I${PHOBOS_DIR}-${LATEST} @.release-files.txt
+	  -Xfdocs.json -I${PHOBOS_STABLE_DIR_GENERATED} @.release-files.txt
 	${DPL_DOCS} filter docs.json --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
 	rm .release-files.txt .release-dummy.html
 
 docs-prerelease.json : ${DMD} ${DRUNTIME_DIR} \
-		${PHOBOS_DIR} | dpl-docs
+		${PHOBOS_DIR_GENERATED} | dpl-docs
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 	  -e /unittest/d > .prerelease-files.txt
-	find ${PHOBOS_DIR} -name '*.d' | sed -e /unittest.d/d \
+	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
 	  -e /windows/d >> .prerelease-files.txt
 	${DMD} -c -o- -version=CoreDdoc -version=StdDdoc -Df.prerelease-dummy.html \
-	  -Xfdocs-prerelease.json -I${PHOBOS_DIR} @.prerelease-files.txt
+	  -Xfdocs-prerelease.json -I${PHOBOS_DIR_GENERATED} @.prerelease-files.txt
 	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_RELEASE)
 	rm .prerelease-files.txt .prerelease-dummy.html
@@ -521,6 +544,37 @@ chm-nav.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.dd
 
 d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags
+
+################################################################################
+# Assert -> writeln magic
+# -----------------------
+#
+# - This transforms assert(a = b) to writeln(a); // b
+# - It creates a copy of Phobos to apply the transformations
+################################################################################
+
+$(GENERATED):
+	mkdir -p $@
+
+# --update allows to copy only the newer files and thus only propagate these
+#  changes
+HAS_RSYNC := $(shell command -v rsync 2> /dev/null)
+
+${PHOBOS_DIR_GENERATED}: $(wildcard ${PHOBOS_DIR}/**/*) $(DUB) | $(GENERATED)
+ifdef HAS_RSYNC
+	rsync -a --exclude='.git/' --exclude='generated/' --update -v $(PHOBOS_DIR)/ $@
+else
+	cp -r -T -f $(PHOBOS_DIR) $@
+endif
+	$(DUB) run --single ./assert_writeln_magic.d -- -i $@
+
+${PHOBOS_STABLE_DIR_GENERATED}: $(wildcard ${PHOBOS_STABLE_DIR_GENERATED}/**/*) $(DUB) | $(GENERATED)
+ifdef HAS_RSYNC
+	rsync -a --exclude='.git/' --exclude='generated/' --update -v $(PHOBOS_STABLE_DIR)/ $@
+else
+	cp -r -T -f $(PHOBOS_STABLE_DIR) $@
+endif
+	$(DUB) run --single ./assert_writeln_magic.d -- -i $@
 
 ################################################################################
 # Style tests
