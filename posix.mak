@@ -276,11 +276,13 @@ ${GENERATED}/${LATEST}.ddoc :
 
 ${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR) $(MOD_EXCLUDES_RELEASE) >$@
+	$(STABLE_RDMD) modlist.d $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR) $(MOD_EXCLUDES_RELEASE) \
+		$(addprefix --dump , object std etc core) >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(MOD_EXCLUDES_PRERELEASE) >$@
+	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(MOD_EXCLUDES_PRERELEASE) \
+		$(addprefix --dump , object std etc core) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
