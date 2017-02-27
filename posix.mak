@@ -30,6 +30,7 @@ GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
+TMP?=/tmp
 
 # Last released versions
 DMD_STABLE_DIR=${DMD_DIR}-${LATEST}
@@ -44,7 +45,7 @@ PHOBOS_STABLE_DIR_GENERATED=$(GENERATED)/phobos-release
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=1.1.0
 STABLE_DMD_VER=2.069.2
-STABLE_DMD_ROOT=/tmp/.stable_dmd-$(STABLE_DMD_VER)
+STABLE_DMD_ROOT=$(TMP)/.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
 STABLE_DMD_CONF=$(STABLE_DMD).conf
