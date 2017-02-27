@@ -13,11 +13,14 @@
 ifeq (,${LATEST})
 LATEST:=$(shell cat VERSION)
 endif
+# Next major DMD release
+NEXT_VERSION:=$(shell bash -c 'version=$$(cat VERSION);a=($${version//./ });a[1]="10\#$${a[1]}";((a[1]++)); a[2]=0; echo $${a[0]}.0$${a[1]}.$${a[2]};' )
 
 # Externals
 DMD_DIR=../dmd
 PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
+TOOLS_DIR=../tools
 DUB_DIR=../dub-${DUB_VER}
 DMD=$(DMD_DIR)/src/dmd
 DMD_REL=$(DMD_DIR)-${LATEST}/src/dmd
@@ -150,7 +153,8 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
+CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) \
+				changelog/${NEXT_VERSION}
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
@@ -519,7 +523,17 @@ test:
 # Changelog generation
 ################################################################################
 
-pending_changelog:
-	@echo "This command will be available soon."
+changelog/${NEXT_VERSION}.dd: ${STABLE_DMD} ../tools ../installer
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d "v${LATEST}..upstream/stable" -o changelog/${NEXT_VERSION}.dd \
+		--version "${NEXT_VERSION}"
+
+pending_changelog: changelog/${NEXT_VERSION}.dd html
+	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}.html in your browser"
+
+../tools:
+	git clone https://github.com/dlang/tools ../tools
+
+../installer:
+	git clone https://github.com/dlang/installer ../installer
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
