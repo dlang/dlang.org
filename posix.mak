@@ -14,7 +14,8 @@ ifeq (,${LATEST})
 LATEST:=$(shell cat VERSION)
 endif
 # Next major DMD release
-NEXT_VERSION:=$(shell bash -c 'version=$$(cat VERSION);a=($${version//./ });a[1]="10\#$${a[1]}";((a[1]++)); a[2]=0; echo $${a[0]}.0$${a[1]}.$${a[2]};' )
+NEXT_MAJOR_VERSION:=$(shell bash -c 'version=$$(cat VERSION);a=($${version//./ });a[1]="10\#$${a[1]}";((a[1]++)); a[2]=0; echo $${a[0]}.0$${a[1]}.$${a[2]};' )
+NEXT_MINOR_VERSION:=$(shell bash -c 'version=$$(cat VERSION);a=($${version//./ });a[2]="10\#$${a[2]}";((a[2]++)); echo $${a[0]}.$${a[1]}.$${a[2]};' )
 
 # Externals
 DMD_DIR=../dmd
@@ -154,7 +155,7 @@ SPEC_ROOT=$(addprefix spec/, \
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) \
-				changelog/${NEXT_VERSION}
+				changelog/${NEXT_MAJOR_VERSION} changelog/${NEXT_MINOR_VERSION}
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
@@ -523,9 +524,13 @@ test:
 # Changelog generation
 ################################################################################
 
-changelog/${NEXT_VERSION}.dd: ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d "v${LATEST}..upstream/stable" -o changelog/${NEXT_VERSION}.dd \
-		--version "${NEXT_VERSION}"
+changelog/${NEXT_MAJOR_VERSION}.dd: ${STABLE_DMD} ../tools ../installer
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d "v${LATEST}..upstream/master" -o changelog/${NEXT_MAJOR_VERSION}.dd \
+		--version "${NEXT_MAJOR_VERSION}"
+
+changelog/${NEXT_MINOR_VERSION}.dd: ${STABLE_DMD} ../tools ../installer
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d "v${LATEST}..upstream/stable" -o changelog/${NEXT_MINOR_VERSION}.dd \
+		--version "${NEXT_MINOR_VERSION}" --no-text
 
 pending_changelog: changelog/${NEXT_VERSION}.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}.html in your browser"
