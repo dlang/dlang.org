@@ -272,7 +272,7 @@ ${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_STABLE_
 
 ${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(MOD_EXCLUDES_PRERELEASE) \
+	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
 		$(addprefix --dump , object std etc core ddmd) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
@@ -369,14 +369,25 @@ $(DMD_REL) : ${DMD_STABLE_DIR}
 	${MAKE} --directory=${DMD_STABLE_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
 
 dmd-release : $(STD_DDOC) $(DMD_DIR) $(DMD)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
-		DOCDIR=${DOC_OUTPUT_DIR}/dmd-release \
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak -j4 html \
+		DOCDIR=${DOC_OUTPUT_DIR}/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC))"
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
-		DOCDIR=${DOC_OUTPUT_DIR}/dmd-prerelease \
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak -j4 html \
+		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
+
+dmd-prerelease-verbatim : $(STD_DDOC_PRE) $(DMD_DIR) \
+		${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim
+${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim: verbatim.ddoc
+	mkdir -p $(dir $@)
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak -j4 html \
+		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim \
+		DOCFMT="`pwd`/verbatim.ddoc"
+	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
+	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
+	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
 
 ################################################################################
 # druntime, latest released build and current build
@@ -434,7 +445,8 @@ phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_REL) $(STD_DDOC) \
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
-	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
+	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim \
+	    ${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim
 	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak \
 	    STDDOC="`pwd`/verbatim.ddoc" \
 	    DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim \
