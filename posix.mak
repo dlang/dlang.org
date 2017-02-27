@@ -106,6 +106,15 @@ ifeq (,$(MODEL))
     endif
 endif
 
+# Disable all dynamic content that could potentially have an unrelated impact
+# on a diff
+ifeq (1,$(DIFFABLE))
+	NODATETIME := nodatetime.ddoc
+	DPL_DOCS_PATH_RUN_FLAGS := --no-exact-source-links
+else
+	CHANGELOG_VERSION := "v${LATEST}..upstream/stable"
+endif
+
 # Documents
 
 DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
@@ -432,13 +441,15 @@ ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml : docs-prerelease.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
-	  --git-target=master docs-prerelease.json ${DOC_OUTPUT_DIR}/library-prerelease
+	  --git-target=master $(DPL_DOCS_PATH_RUN_FLAGS) \
+		docs-prerelease.json ${DOC_OUTPUT_DIR}/library-prerelease
 
 ${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
-	  --git-target=v${LATEST} docs.json ${DOC_OUTPUT_DIR}/library
+	  --git-target=v${LATEST} $(DPL_DOCS_PATH_RUN_FLAGS) \
+	  docs.json ${DOC_OUTPUT_DIR}/library
 
 ${DOC_OUTPUT_DIR}/library/.htaccess : dpl_release_htaccess
 	@mkdir -p $(dir $@)
@@ -524,8 +535,8 @@ test:
 ################################################################################
 
 changelog/${NEXT_VERSION}.dd: ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d "v${LATEST}..upstream/stable" -o changelog/${NEXT_VERSION}.dd \
-		--version "${NEXT_VERSION}"
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION) -o changelog/${NEXT_VERSION}.dd \
+		--version "${NEXT_VERSION}" --prev-version "${LATEST}"
 
 pending_changelog: changelog/${NEXT_VERSION}.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}.html in your browser"
