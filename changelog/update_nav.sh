@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-cd changelog
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd $DIR
 all_vers=($(ls *.dd | grep '^[0-9]\.[0-9][0-9][0-9]\(\.[0-9]\)\?\(_pre\)\?\.dd$' | sort))
 # filter-out all pre-release changelogs
 rel_vers=(${all_vers[@]//*_pre.dd/})
