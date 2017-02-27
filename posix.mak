@@ -121,7 +121,8 @@ ifeq (1,$(DIFFABLE))
 	NODATETIME := nodatetime.ddoc
 	DPL_DOCS_PATH_RUN_FLAGS := --no-exact-source-links
 else
-	CHANGELOG_VERSION := "v${LATEST}..upstream/stable"
+	CHANGELOG_VERSION_MASTER := "v${LATEST}..upstream/master"
+	CHANGELOG_VERSION_STABLE := "v${LATEST}..upstream/stable"
 endif
 
 # Documents
@@ -171,8 +172,8 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) \
-				changelog/${NEXT_VERSION}
+CHANGELOG_FILES=changelog/${NEXT_VERSION}_pre \
+				$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) \
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
@@ -588,12 +589,16 @@ test:
 # Changelog generation
 ################################################################################
 
+changelog/${NEXT_VERSION}_pre.dd: ${STABLE_DMD} ../tools ../installer
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
+	--version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
+
 changelog/${NEXT_VERSION}.dd: ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION) -o changelog/${NEXT_VERSION}.dd \
-		--version "${NEXT_VERSION}" --prev-version "${LATEST}"
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_STABLE) -o $@ \
+		--version "${NEXT_VERSION}"
 
 pending_changelog: changelog/${NEXT_VERSION}.dd html
-	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}.html in your browser"
+	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pre.html in your browser"
 
 ../tools:
 	git clone https://github.com/dlang/tools ../tools
