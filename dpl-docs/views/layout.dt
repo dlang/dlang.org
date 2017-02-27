@@ -6,6 +6,7 @@ html(lang='en-US')
     | http://digitalmars.com
   - import std.process : environment;
   - string version_id = environment["GIT_TARGET"];
+  - bool noExactSourceCodeLinks = environment["NO_EXACT_SOURCE_CODE_LINKS"] == "1";
   - bool haveVersion = version_id.startsWith("v");
   - string version_name = haveVersion ? version_id[1 .. $] : "Prerelease";
   - string root_dir = info.linkTo(null) ~ (req is null ? "../" : "");
@@ -164,7 +165,7 @@ html(lang='en-US')
                 - project = "druntime", path_prefix = "src/";
               - else
                 - project = "phobos", path_prefix = "";
-              - if (info.docGroups.length >= 1)
+              - if (info.docGroups.length >= 1 && !noExactSourceCodeLinks)
                 - if (auto decl = cast(Declaration)info.docGroups[0].members[0]) line_suffix = "#L"~to!string(decl.line);
               - if (info.node.module_.isPackageModule)
                 - filename = replace(modname, ".", "/") ~ "/package.d";
