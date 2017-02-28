@@ -54,9 +54,9 @@ STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODE
 
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
-	std.c. std.algorithm.internal std.internal. std.regex.internal. 			\
-	std.windows.iunknown std.windows.registry etc.linux.memoryerror std.stream std.cstream	\
-	std.socketstream std.experimental.ndslice.internal)
+	std.algorithm.internal std.c. std.concurrencybase std.internal. std.regex.internal.  \
+	std.windows.iunknown std.windows.registry etc.linux.memoryerror	\
+	std.experimental.ndslice.internal std.stdiobase)
 
 MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE)
 
