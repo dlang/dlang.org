@@ -349,7 +349,7 @@ dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
 ../%-${DUB_VER} :
 	git clone --depth=1 -b v${DUB_VER} ${GIT_HOME}/$* $@
 
-${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} :
+${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
 	git clone --depth=1 ${GIT_HOME}/$(@F) $@
 
 ################################################################################
@@ -575,11 +575,5 @@ changelog/${NEXT_VERSION}.dd: ${STABLE_DMD} ../tools ../installer
 
 pending_changelog: changelog/${NEXT_VERSION}.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}.html in your browser"
-
-../tools:
-	git clone https://github.com/dlang/tools ../tools
-
-../installer:
-	git clone https://github.com/dlang/installer ../installer
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
