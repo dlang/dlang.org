@@ -16,15 +16,19 @@ endif
 # Next major DMD release
 NEXT_VERSION:=$(shell bash -c 'version=$$(cat VERSION);a=($${version//./ });a[1]="10\#$${a[1]}";((a[1]++)); a[2]=0; echo $${a[0]}.0$${a[1]}.$${a[2]};' )
 
-# Externals
+# DLang directories
 DMD_DIR=../dmd
 PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
 TOOLS_DIR=../tools
+INSTALLER_DIR=../installer
 DUB_DIR=../dub-${DUB_VER}
+
+# External binaries
 DMD=$(DMD_DIR)/src/dmd
-DMD_REL=$(DMD_DIR)-${LATEST}/src/dmd
 DUB=${DUB_DIR}/bin/dub
+
+# External directories
 DOC_OUTPUT_DIR:=$(shell pwd)/web
 GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
@@ -33,17 +37,24 @@ REMOTE_DIR=d-programming@digitalmars.com:data
 
 # Last released versions
 DMD_STABLE_DIR=${DMD_DIR}-${LATEST}
+DMD_REL=$(DMD_STABLE_DIR)/src/dmd
 DRUNTIME_STABLE_DIR=${DRUNTIME_DIR}-${LATEST}
 PHOBOS_STABLE_DIR=${PHOBOS_DIR}-${LATEST}
 
+################################################################################
 # Automatically generated directories
 GENERATED=.generated
 PHOBOS_DIR_GENERATED=$(GENERATED)/phobos-prerelease
 PHOBOS_STABLE_DIR_GENERATED=$(GENERATED)/phobos-release
+# The assert_writeln_magic tool transforms all source files from Phobos. Hence
+# - a temporary folder with a copy of Phobos needs to be generated
+# - a list of all files in Phobos and the temporary copy is needed to setup proper
+#   Makefile dependencies and rules
 PHOBOS_FILES := $(shell find $(PHOBOS_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
 PHOBOS_FILES_GENERATED := $(subst $(PHOBOS_DIR), $(PHOBOS_DIR_GENERATED), $(PHOBOS_FILES))
 PHOBOS_STABLE_FILES := $(shell find $(PHOBOS_STABLE_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
 PHOBOS_STABLE_FILES_GENERATED := $(subst $(PHOBOS_STABLE_DIR), $(PHOBOS_STABLE_DIR_GENERATED), $(PHOBOS_STABLE_FILES))
+################################################################################
 
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=1.1.0
@@ -128,14 +139,12 @@ else
 	CHANGELOG_VERSION := "v${LATEST}..upstream/stable"
 endif
 
-# Documents
+################################################################################
+# Resources
+################################################################################
 
-DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
-STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
-STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
-SPEC_DDOC=${DDOC} spec/spec.ddoc
-CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
-CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
+# Set to 1 in the command line to minify css files
+CSS_MINIFY=
 
 ORGS_USING_D=$(wildcard images/orgs-using-d/*)
 IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
@@ -158,6 +167,17 @@ JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox))
+
+################################################################################
+# HTML Files
+################################################################################
+
+DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
+STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
+STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
+SPEC_DDOC=${DDOC} spec/spec.ddoc
+CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
+CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
 language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
@@ -201,7 +221,9 @@ $(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
+################################################################################
 # Pattern rulez
+################################################################################
 
 # NOTE: Depending on the version of make, order matters here. Therefore, put
 # sub-directories before their parents.
