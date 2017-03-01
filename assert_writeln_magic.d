@@ -47,10 +47,10 @@ class TestVisitor : ASTVisitor
 {
     import dparse.lexer : tok, Token;
 
-    this(string fileName)
+    this(string fileName, string destFile)
     {
         this.fileName = fileName;
-        fl = FileLines(fileName);
+        fl = FileLines(fileName, destFile);
     }
 
     alias visit = ASTVisitor.visit;
@@ -176,7 +176,7 @@ private:
     FileLines fl;
 }
 
-void parseFile(string fileName)
+void parseFile(string fileName, string destFile)
 {
     import dparse.lexer;
     import dparse.parser : parseModule;
@@ -195,22 +195,31 @@ void parseFile(string fileName)
 
     RollbackAllocator rba;
     auto m = parseModule(tokens, fileName, &rba);
-    auto visitor = new TestVisitor(fileName);
+    auto visitor = new TestVisitor(fileName, destFile);
     visitor.visit(m);
     delete visitor;
+}
+
+// Modify a path under oldBase to a new path with the same subpath under newBase.
+// E.g.: `/foo/bar`.rebasePath(`/foo`, `/quux`) == `/quux/bar`
+string rebasePath(string path, string oldBase, string newBase)
+{
+    import std.path : absolutePath, buildPath, relativePath;
+    return buildPath(newBase, path.absolutePath.relativePath(oldBase.absolutePath));
 }
 
 void main(string[] args)
 {
     import std.file;
     import std.getopt;
-    import std.path : asNormalizedPath;
+    import std.path;
 
-    string inputDir;
+    string inputDir, outputDir;
     string[] ignoredFiles;
 
     auto helpInfo = getopt(args, config.required,
             "inputdir|i", "Folder to start the recursive search for unittest blocks (can be a single file)", &inputDir,
+            "outputdir|o", "Alternative folder to use as output (can be a single file)", &outputDir,
             "ignore", "List of files to exclude (partial matching is supported)", &ignoredFiles);
 
     if (helpInfo.helpWanted)
@@ -224,10 +233,14 @@ Tries to lower EqualExpression in AssertExpressions of Unittest blocks to commen
 
     DirEntry[] files;
 
+    // inputDir as default output directory
+    if (!outputDir.length)
+        outputDir = inputDir;
+
     if (inputDir.isFile)
     {
         files = [DirEntry(inputDir)];
-        inputDir = ".";
+        inputDir = "";
     }
     else
     {
@@ -236,13 +249,21 @@ Tries to lower EqualExpression in AssertExpressions of Unittest blocks to commen
     }
 
     foreach (file; files)
+    {
         if (!ignoredFiles.any!(x => file.name.canFind(x)))
-            file.name.parseFile;
+        {
+            // single files
+            if (inputDir.length == 0)
+                parseFile(file.name, outputDir);
+            else
+                parseFile(file.name, file.name.rebasePath(inputDir, outputDir));
+        }
+    }
 }
 
 /**
 A simple line-based in-memory representation of a file.
- - will automatically write all changes when the objct is destructed
+ - will automatically write all changes when the object is destructed
  - will use a temporary file to do safe, whole file swaps
 */
 struct FileLines
@@ -250,58 +271,48 @@ struct FileLines
     import std.array, std.file, std.path;
 
     string[] lines;
-    string destFile, path, tmpDir;
+    string destFile;
+    bool overwriteInputFile;
     bool hasWrittenChanges;
 
-    this(string path)
+    this(string inputFile, string destFile)
     {
-        this(path.dirName, path.baseName);
-    }
+        stderr.writefln("%s -> %s", inputFile, destFile);
+        this.overwriteInputFile = inputFile == destFile;
+        this.destFile = destFile;
+        lines = File(inputFile).byLineCopy.array;
 
-    this(string repoDir, string path)
-    {
-        writeln("opening: ", path);
-
-        this.path = path;
-        destFile = buildPath(repoDir, path);
-        lines = File(destFile).byLineCopy.array;
-
-        // it's a good practise to use a common tmp folder -> easier to look at or clean
-        tmpDir = buildPath(tempDir, "file_tester", path.stripExtension.replace("/", "_"));
-        tmpDir.mkdirRecurse;
+        destFile.dirName.mkdirRecurse;
     }
 
     // dumps all changes
     ~this()
     {
-        if (!hasWrittenChanges)
-            return;
-
-        auto tmpFile = writeLinesToFile;
-        tmpFile.copy(destFile);
-        tmpFile.remove;
-        tmpDir.rmdirRecurse;
+        if (overwriteInputFile)
+        {
+            if (hasWrittenChanges)
+            {
+                auto tmpFile = File(destFile ~ ".tmp", "w");
+                writeLinesToFile(tmpFile);
+                tmpFile.close;
+                tmpFile.name.rename(destFile);
+            }
+        }
+        else
+        {
+            writeLinesToFile(File(destFile, "w"));
+        }
     }
 
     // writes all changes to a random, temporary file
-    auto writeLinesToFile(string s = null) {
-        import std.uuid;
-
-        if (!s.length)
-            s = buildPath(tmpDir, randomUUID.to!string.replace("-", "") ~ ".d");
-
-        writeln("writing: ", path);
-        auto outFile = File(s, "w");
+    void writeLinesToFile(File outFile) {
         // dump file
         foreach (line; lines)
             outFile.writeln(line);
         // within the docs we automatically inject std.stdio (hence we need to do the same here)
         // writeln needs to be @nogc, @safe, pure and nothrow (we just fake it)
-        if (hasWrittenChanges)
-            outFile.writeln("// \nprivate void writeln(T)(T l) { }");
-
+        outFile.writeln("// \nprivate void writeln(T)(T l) { }");
         outFile.flush;
-        return s;
     }
 
     string opIndex(size_t i) { return lines[i]; }

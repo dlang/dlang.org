@@ -9,6 +9,8 @@
 # make -f posix.mak rsync
 #
 
+include osmodel.mak
+
 # Latest released version
 ifeq (,${LATEST})
 LATEST:=$(shell cat VERSION)
@@ -16,15 +18,19 @@ endif
 # Next major DMD release
 NEXT_VERSION:=$(shell bash -c 'version=$$(cat VERSION);a=($${version//./ });a[1]="10\#$${a[1]}";((a[1]++)); a[2]=0; echo $${a[0]}.0$${a[1]}.$${a[2]};' )
 
-# Externals
+# DLang directories
 DMD_DIR=../dmd
 PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
 TOOLS_DIR=../tools
+INSTALLER_DIR=../installer
 DUB_DIR=../dub-${DUB_VER}
+
+# External binaries
 DMD=$(DMD_DIR)/src/dmd
-DMD_REL=$(DMD_DIR)-${LATEST}/src/dmd
 DUB=${DUB_DIR}/bin/dub
+
+# External directories
 DOC_OUTPUT_DIR:=$(shell pwd)/web
 GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
@@ -34,13 +40,24 @@ TMP?=/tmp
 
 # Last released versions
 DMD_STABLE_DIR=${DMD_DIR}-${LATEST}
+DMD_REL=$(DMD_STABLE_DIR)/src/dmd
 DRUNTIME_STABLE_DIR=${DRUNTIME_DIR}-${LATEST}
 PHOBOS_STABLE_DIR=${PHOBOS_DIR}-${LATEST}
 
+################################################################################
 # Automatically generated directories
 GENERATED=.generated
 PHOBOS_DIR_GENERATED=$(GENERATED)/phobos-prerelease
 PHOBOS_STABLE_DIR_GENERATED=$(GENERATED)/phobos-release
+# The assert_writeln_magic tool transforms all source files from Phobos. Hence
+# - a temporary folder with a copy of Phobos needs to be generated
+# - a list of all files in Phobos and the temporary copy is needed to setup proper
+#   Makefile dependencies and rules
+PHOBOS_FILES := $(shell find $(PHOBOS_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
+PHOBOS_FILES_GENERATED := $(subst $(PHOBOS_DIR), $(PHOBOS_DIR_GENERATED), $(PHOBOS_FILES))
+PHOBOS_STABLE_FILES := $(shell find $(PHOBOS_STABLE_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
+PHOBOS_STABLE_FILES_GENERATED := $(subst $(PHOBOS_STABLE_DIR), $(PHOBOS_STABLE_DIR_GENERATED), $(PHOBOS_STABLE_FILES))
+################################################################################
 
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=1.1.0
@@ -75,47 +92,6 @@ CHANGE_SUFFIX = \
  for f in `find "$3" -iname '*.$1'`; do\
   mv $$f `dirname $$f`/`basename $$f .$1`.$2; done
 
-# Set to 1 in the command line to minify css files
-CSS_MINIFY=
-
-# OS and MODEL
-OS:=
-uname_S:=$(shell uname -s)
-ifeq (Darwin,$(uname_S))
-    OS:=osx
-endif
-ifeq (Linux,$(uname_S))
-    OS:=linux
-endif
-ifeq (FreeBSD,$(uname_S))
-    OS:=freebsd
-endif
-ifeq (OpenBSD,$(uname_S))
-    OS:=openbsd
-endif
-ifeq (Solaris,$(uname_S))
-    OS:=solaris
-endif
-ifeq (SunOS,$(uname_S))
-    OS:=solaris
-endif
-ifeq (,$(OS))
-    $(error Unrecognized or unsupported OS for uname: $(uname_S))
-endif
-
-ifeq (,$(MODEL))
-    uname_M:=$(shell uname -m)
-    ifneq (,$(findstring $(uname_M),x86_64 amd64))
-        MODEL:=64
-    endif
-    ifneq (,$(findstring $(uname_M),i386 i586 i686))
-        MODEL:=32
-    endif
-    ifeq (,$(MODEL))
-        $(error Cannot figure 32/64 model from uname -m: $(uname_M))
-    endif
-endif
-
 # Disable all dynamic content that could potentially have an unrelated impact
 # on a diff
 ifeq (1,$(DIFFABLE))
@@ -125,14 +101,12 @@ else
 	CHANGELOG_VERSION := "v${LATEST}..upstream/stable"
 endif
 
-# Documents
+################################################################################
+# Resources
+################################################################################
 
-DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
-STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
-STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
-SPEC_DDOC=${DDOC} spec/spec.ddoc
-CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
-CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
+# Set to 1 in the command line to minify css files
+CSS_MINIFY=
 
 ORGS_USING_D=$(wildcard images/orgs-using-d/*)
 IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
@@ -155,6 +129,17 @@ JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox))
+
+################################################################################
+# HTML Files
+################################################################################
+
+DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
+STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
+STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
+SPEC_DDOC=${DDOC} spec/spec.ddoc
+CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
+CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
 language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
@@ -198,7 +183,9 @@ $(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
+################################################################################
 # Pattern rulez
+################################################################################
 
 # NOTE: Depending on the version of make, order matters here. Therefore, put
 # sub-directories before their parents.
@@ -365,7 +352,7 @@ dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
 ../%-${DUB_VER} :
 	git clone --depth=1 -b v${DUB_VER} ${GIT_HOME}/$* $@
 
-${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} :
+${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
 	git clone --depth=1 ${GIT_HOME}/$(@F) $@
 
 ################################################################################
@@ -414,7 +401,7 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_DIR_GENERATED} $(STD_DDOC_PRE) druntime-prerelease
+phobos-prerelease : ${PHOBOS_FILES_GENERATED} $(STD_DDOC_PRE) druntime-prerelease
 	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
 	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease" \
@@ -424,7 +411,7 @@ phobos-prerelease : ${PHOBOS_DIR_GENERATED} $(STD_DDOC_PRE) druntime-prerelease
 	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
 	  html -j4
 
-phobos-release : ${PHOBOS_STABLE_DIR_GENERATED} $(DMD_REL) $(STD_DDOC) \
+phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_REL) $(STD_DDOC) \
 		druntime-release
 	${MAKE} --directory=${PHOBOS_STABLE_DIR_GENERATED} -f posix.mak \
 	  DMD=$(DMD_REL) \
@@ -437,7 +424,7 @@ phobos-release : ${PHOBOS_STABLE_DIR_GENERATED} $(DMD_REL) $(STD_DDOC) \
 	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
 	  html -j4
 
-phobos-prerelease-verbatim : ${PHOBOS_DIR_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
+phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
 	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak \
@@ -486,7 +473,7 @@ ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess : dpl_prerelease_htaccess
 	cp $< $@
 
 docs.json : ${DMD_REL} ${DRUNTIME_STABLE_DIR} \
-		${PHOBOS_STABLE_DIR_GENERATED} | dpl-docs
+		${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
 	find ${DRUNTIME_STABLE_DIR}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_STABLE_DIR_GENERATED} -name '*.d' | \
@@ -498,7 +485,7 @@ docs.json : ${DMD_REL} ${DRUNTIME_STABLE_DIR} \
 	rm .release-files.txt .release-dummy.html
 
 docs-prerelease.json : ${DMD} ${DRUNTIME_DIR} \
-		${PHOBOS_DIR_GENERATED} | dpl-docs
+		${PHOBOS_FILES_GENERATED} | dpl-docs
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 	  -e /unittest/d > .prerelease-files.txt
 	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
@@ -554,30 +541,28 @@ d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 #
 # - This transforms assert(a = b) to writeln(a); // b
 # - It creates a copy of Phobos to apply the transformations
+# - All "d" files are piped through the transformator,
+#   other needed files (e.g. posix.mak) get copied over
 ################################################################################
 
-$(GENERATED):
-	mkdir -p $@
+ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
 
-# --update allows to copy only the newer files and thus only propagate these
-#  changes
-HAS_RSYNC := $(shell command -v rsync 2> /dev/null)
+$(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB)
+	@mkdir -p $(dir $@)
+	$(DUB) build --single $<
+	@mv ./assert_writeln_magic $@
 
-${PHOBOS_DIR_GENERATED}: $(wildcard ${PHOBOS_DIR}/**/*) $(DUB) | $(GENERATED)
-ifdef HAS_RSYNC
-	rsync -a --exclude='.git/' --exclude='generated/' --update -v $(PHOBOS_DIR)/ $@
-else
-	cp -r -T -f $(PHOBOS_DIR) $@
-endif
-	$(DUB) run --single ./assert_writeln_magic.d -- -i $@
+$(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
+	@mkdir -p $(dir $@)
+	@if [ $(subst .,, $(suffix $@)) == "d" ] && [ "$@" != "$(PHOBOS_DIR_GENERATED)/index.d" ] ; then \
+		$(ASSERT_WRITELN_BIN) -i $< -o $@ ; \
+	else cp $< $@ ; fi
 
-${PHOBOS_STABLE_DIR_GENERATED}: $(wildcard ${PHOBOS_STABLE_DIR_GENERATED}/**/*) $(DUB) | $(GENERATED)
-ifdef HAS_RSYNC
-	rsync -a --exclude='.git/' --exclude='generated/' --update -v $(PHOBOS_STABLE_DIR)/ $@
-else
-	cp -r -T -f $(PHOBOS_STABLE_DIR) $@
-endif
-	$(DUB) run --single ./assert_writeln_magic.d -- -i $@
+$(PHOBOS_STABLE_FILES_GENERATED): $(PHOBOS_STABLE_DIR_GENERATED)/%: $(PHOBOS_STABLE_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
+	@mkdir -p $(dir $@)
+	@if [ $(subst .,, $(suffix $@)) == "d" ] && [ "$@" != "$(PHOBOS_STABLE_DIR_GENERATED)/index.d" ] ; then \
+		$(ASSERT_WRITELN_BIN) -i $< -o $@ ; \
+	else cp $< $@ ; fi
 
 ################################################################################
 # Style tests
@@ -597,11 +582,5 @@ changelog/${NEXT_VERSION}.dd: ${STABLE_DMD} ../tools ../installer
 
 pending_changelog: changelog/${NEXT_VERSION}.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}.html in your browser"
-
-../tools:
-	git clone https://github.com/dlang/tools ../tools
-
-../installer:
-	git clone https://github.com/dlang/installer ../installer
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
