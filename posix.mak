@@ -538,23 +538,27 @@ d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 #
 # - This transforms assert(a = b) to writeln(a); // b
 # - It creates a copy of Phobos to apply the transformations
+# - All "d" files are piped through the transformator,
+#   other needed files (e.g. posix.mak) get copied over
 ################################################################################
 
-# --update allows to copy only the newer files and thus only propagate these
-#  changes
-./assert_writeln_magic: assert_writeln_magic.d $(DUB)
-	$(DUB) build --single $<
+ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
 
-$(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) assert_writeln_magic
+$(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB)
+	@mkdir -p $(dir $@)
+	$(DUB) build --single $<
+	@mv ./assert_writeln_magic $@
+
+$(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
 	@mkdir -p $(dir $@)
 	@if [ $(subst .,, $(suffix $@)) == "d" ] && [ "$@" != "$(PHOBOS_DIR_GENERATED)/index.d" ] ; then \
-		./assert_writeln_magic -i $< -o $@ ; \
+		$(ASSERT_WRITELN_BIN) -i $< -o $@ ; \
 	else cp $< $@ ; fi
 
-$(PHOBOS_STABLE_FILES_GENERATED): $(PHOBOS_STABLE_DIR_GENERATED)/%: $(PHOBOS_STABLE_DIR)/% $(DUB) assert_writeln_magic
+$(PHOBOS_STABLE_FILES_GENERATED): $(PHOBOS_STABLE_DIR_GENERATED)/%: $(PHOBOS_STABLE_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
 	@mkdir -p $(dir $@)
 	@if [ $(subst .,, $(suffix $@)) == "d" ] && [ "$@" != "$(PHOBOS_STABLE_DIR_GENERATED)/index.d" ] ; then \
-		./assert_writeln_magic -i $< -o $@ ; \
+		$(ASSERT_WRITELN_BIN) -i $< -o $@ ; \
 	else cp $< $@ ; fi
 
 ################################################################################
