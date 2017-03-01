@@ -511,12 +511,14 @@ docs.json : ${DMD_REL} ${DRUNTIME_STABLE_DIR} \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
 	rm .release-files.txt .release-dummy.html
 
+# DDox tries to generate the docs for all `.d` files. However for dmd this is tricky,
+# because the `{mach, elf, mscoff}` are platform dependent.
+# Thus the need to exclude these files (and the `objc.d` files).
 docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		${PHOBOS_FILES_GENERATED} | dpl-docs
 	find ${DMD_DIR}/src -name '*.d' | \
-		sed -e /objc.d/d -e /mscoff/d -e '/dmd\/src\/id.d/d' \
-			-e /objc_glue.d/d ${DMD_EXCLUDE}  \
-		> .prerelease-files.txt
+		sed -e /objc.d/d -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE}  \
+			> .prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 	  -e /unittest/d >> .prerelease-files.txt
 	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
