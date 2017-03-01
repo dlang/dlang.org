@@ -13,4 +13,4 @@ documentation, and some articles.
 * [Wiki](https://wiki.dlang.org/)
 
 If you wish to contribute to the website or language documentation, please see
-the [CONTRIBUTING.md file] (CONTRIBUTING.md).
+the [CONTRIBUTING.md file](CONTRIBUTING.md) and [wiki entry](https://wiki.dlang.org/Contributing_to_dlang.org).
