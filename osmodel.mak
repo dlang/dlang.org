@@ -1,5 +1,6 @@
 # This Makefile snippet detects the OS and the architecture MODEL
-# Keep this file in sync between druntime, phobos, and dmd repositories!
+# Keep this file in sync between dmd, druntime, phobos, dlang.org and tools
+# repositories!
 
 ifeq (,$(OS))
   uname_S:=$(shell uname -s)
@@ -11,9 +12,6 @@ ifeq (,$(OS))
   endif
   ifeq (FreeBSD,$(uname_S))
     OS:=freebsd
-  endif
-  ifeq (NetBSD,$(uname_S))
-    OS:=netbsd
   endif
   ifeq (OpenBSD,$(uname_S))
     OS:=openbsd
