@@ -61,7 +61,7 @@ PHOBOS_STABLE_FILES_GENERATED := $(subst $(PHOBOS_STABLE_DIR), $(PHOBOS_STABLE_D
 
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=1.1.0
-STABLE_DMD_VER=2.069.2
+STABLE_DMD_VER=2.072.2
 STABLE_DMD_ROOT=$(TMP)/.stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
@@ -587,7 +587,7 @@ ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
 
 $(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB)
 	@mkdir -p $(dir $@)
-	$(DUB) build --single $<
+	$(DUB) build --single --compiler=$(STABLE_DMD) $<
 	@mv ./assert_writeln_magic $@
 
 $(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
