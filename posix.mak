@@ -27,7 +27,7 @@ INSTALLER_DIR=../installer
 DUB_DIR=../dub-${DUB_VER}
 
 # External binaries
-DMD=$(DMD_DIR)/src/dmd
+DMD=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)/dmd
 DUB=${DUB_DIR}/bin/dub
 
 # External directories
