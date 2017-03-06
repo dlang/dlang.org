@@ -93,8 +93,6 @@ CHANGE_SUFFIX = \
  for f in `find "$3" -iname '*.$1'`; do\
   mv $$f `dirname $$f`/`basename $$f .$1`.$2; done
 
-DMD_GEN=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)
-
 # Disable all dynamic content that could potentially have an unrelated impact
 # on a diff
 ifeq (1,$(DIFFABLE))
@@ -527,7 +525,7 @@ docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 	  -e /unittest/d >> .prerelease-files.txt
 	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
 	  -e /windows/d >> .prerelease-files.txt
-	${DMD} -J$(DMD_DIR)/res -J$(DMD_GEN) -c -o- -version=MARS -version=CoreDdoc \
+	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
 	  -version=StdDdoc -Df.prerelease-dummy.html \
 	  -Xfdocs-prerelease.json -I${PHOBOS_DIR_GENERATED} @.prerelease-files.txt
 	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
