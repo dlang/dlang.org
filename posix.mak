@@ -189,6 +189,9 @@ $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(
 $(DOC_OUTPUT_DIR)/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
 
+$(DOC_OUTPUT_DIR)/404.html : 404.dd $(DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
+
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
