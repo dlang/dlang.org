@@ -13,7 +13,7 @@ $(D_S SafeD&mdash;The Safe Subset of D,
 	)
 
 	$(P
-	The universal reason I've heard from the turncoats was $(DOUBLEQUOTE productivity.) The consensus seems to be that programmers are more productive using Java, C#, Ruby, or Python then they are using C++.
+	The universal reason I've heard from the turncoats was $(DOUBLEQUOTE productivity.) The consensus seems to be that programmers are more productive using Java, C#, Ruby, or Python than they are using C++.
 	)
 
 	$(P
@@ -128,7 +128,7 @@ printf (format);	)
 </td></tr></table>
 
 	$(P
-	Let's talk about pointers some more. Every memory allocation returns a valid pointer (unless the program runs out of memory). You might think that dereferencing such a pointer would be safe. That is correct as long as your program doesn't free the allocated memory thus ending the lifetime of the object. After that, you are dealing with a dangling pointer and all bets are off. Again, C Standard is pretty upfront about it.
+	Let's talk about pointers some more. Every memory allocation returns a valid pointer (unless the program runs out of memory). You might think that dereferencing such a pointer would be safe. That is correct as long as your program doesn't free the allocated memory thus ending the lifetime of the object. After that, you are dealing with a dangling pointer and all bets are off. Again, the C Standard is pretty upfront about it.
 	)
 
 <table border="1" cellpadding="4" cellspacing="0"><tr><td bgcolor="#ffffcc">
@@ -160,7 +160,7 @@ std:cout &lt;&lt; "Hello World!" &lt;&lt; std::endl;	)
 	)
 
 	$(P
-	Whereas pointers were important in C, C++ embraced them as the main vehicle for the Standard Library. STL algorithms use iterators, objects that are either pointers themselves or imitate the behavior (and the pitfalls) of pointers. Just like with pointers, a programmer's error in using iterators leads to undefined behavior (see the $(CODE swap_range) example).
+	Whereas pointers were important in C, C++ embraced them as the main vehicle for the Standard Library. STL algorithms use iterators, objects that are either pointers themselves or imitate the behavior (and the pitfalls) of pointers. Just like with pointers, a programmer's error in using iterators leads to undefined behavior (see the $(CODE swap_ranges) example).
 	)
 
 	$(P
@@ -189,14 +189,14 @@ writeln("Hello Safe World!");
 ---
 
 	$(P
-	The function $(CODE writeln) is the equivalent of the C $(CODE printf) (more precisely, it's the representative of a family of output functions including $(CODE write) and its formatting versions, $(CODE writef) and $(CODE writefln)). Just like $(CODE printf),  $(CODE writeln) accepts a variable number of arguments of arbitrary types. But here the similarity ends. As long as you pass SafeD-arguments to $(CODE writeln), you are guaranteed not to encounter any undefined behavior. Here, $(CODE writeln) is called with a single argument of the type $(CODE string). In contrast to C, D $(CODE string) is not a pointer. It is an array of $(CODE immutable char), and arrays are a built into the safe subset of D.
+	The function $(CODE writeln) is the equivalent of the C $(CODE printf) (more precisely, it's the representative of a family of output functions including $(CODE write) and its formatting versions, $(CODE writef) and $(CODE writefln)). Just like $(CODE printf),  $(CODE writeln) accepts a variable number of arguments of arbitrary types. But here the similarity ends. As long as you pass SafeD-arguments to $(CODE writeln), you are guaranteed not to encounter any undefined behavior. Here, $(CODE writeln) is called with a single argument of the type $(CODE string). In contrast to C, a D $(CODE string) is not a pointer. It is an array of $(CODE immutable char), and arrays are built into the safe subset of D.
 	)
 
 	$(P
 	You might be interested to know how the safety of $(CODE writeln) is accomplished in D. One possible approach would have been to make $(CODE writeln) a compiler intrinsic, so that correct code would be generated on a case-by-case basis. The beauty of D is that it gives a sophisticated programmer tools that allow such case-by-case code generation of code. The advanced features used in the implementation of writeln are:
 	$(UL
 	$(LI Compile-time code generation using templates, and)
-	$(LI A safe mechanism for dealing with variable number of arguments using tuples.)
+	$(LI A safe mechanism for dealing with a variable number of arguments using tuples.)
 	)
 
 )
@@ -208,11 +208,11 @@ $(SECTION2 SafeD Libraries,
 	)
 
 	$(P
-	A lot of advanced features of D are compatible with SafeD, as long as they don't force the user to use unsafe types. For instance, a library may provide the implementation of a generic list. The list can be instantiated with any type, in particular with a pointer type. A list of pointers, by definition, cannot be safe, because pointer arithmetic is unsound. However, a list of ints or class objects can and should be safe. That's why such ageneric lists  can be used in SafeD, even though their usage outside of SafeD may be unsafe.
+	A lot of advanced features of D are compatible with SafeD, as long as they don't force the user to use unsafe types. For instance, a library may provide the implementation of a generic list. The list can be instantiated with any type, in particular with a pointer type. A list of pointers, by definition, cannot be safe, because pointer arithmetic is unsound. However, a list of ints or class objects can and should be safe. That's why such generic lists can be used in SafeD, even though their usage outside of SafeD may be unsafe.
 	)
 
 	$(P
-	Moreover, it might be more efficient to base the internal implementation of a list on pointers. As long as these pointers are not exposed to the client, such an implementation might be certified to be SafeD compatible<sup>1</sup> . You can have a cake (advanced features of D) and eat it too (take advantage of them in SafeD).
+	Moreover, it might be more efficient to base the internal implementation of a list on pointers. As long as these pointers are not exposed to the client, such an implementation might be certified to be SafeD compatible<sup>1</sup>. You can have a cake (advanced features of D) and eat it too (take advantage of them in SafeD).
 	)
 )
 
