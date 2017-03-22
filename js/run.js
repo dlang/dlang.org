@@ -370,7 +370,7 @@ $(document).ready(function()
             + '<textarea class="d_code_stdin">'+stdin+'</textarea></div>'
             + '<div class="d_code_args"><span class="d_code_title">Command line arguments</span><br>'
             + '<textarea class="d_code_args">'+args+'</textarea></div>'
-            + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><textarea class="d_code_output" readonly>Running...</textarea></div>'
+            + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><pre class="d_code_output" readonly>Running...</pre></div>'
             + '<input type="button" class="editButton" value="Edit">'
             + '<input type="button" class="argsButton" value="Args">'
             + '<input type="button" class="inputButton" value="Input">'
@@ -456,7 +456,7 @@ function setupTextarea(el, opts)
 
     var plainSourceCode = parent.parent().children("div.d_code");
 
-    var output = outputDiv.children("textarea.d_code_output");
+    var output = outputDiv.children("pre.d_code_output");
     var outputTitle = outputDiv.children("span.d_code_title");
     if (opts.args) {
         var argsBtn = parent.children("input.argsButton");
@@ -471,9 +471,9 @@ function setupTextarea(el, opts)
         var orgStdin = stdin.val();
     }
 
-    var hideAllWindows = function(args)
+    var hideAllWindows = function(optArguments)
     {
-        args = args || {};
+        optArguments = optArguments || {};
         if (opts.stdin) {
             stdinDiv.css('display', 'none');
         }
@@ -481,10 +481,10 @@ function setupTextarea(el, opts)
             argsDiv.css('display', 'none');
         }
         outputDiv.css('display', 'none');
-        if (!args.keepPlainSourceCode) {
+        if (!optArguments.keepPlainSourceCode) {
           plainSourceCode.css('display', 'none');
         }
-        if (!args.keepCode) {
+        if (!optArguments.keepCode) {
           code.css('display', 'none');
         }
     };
@@ -531,13 +531,13 @@ function setupTextarea(el, opts)
     runBtn.click(function(){
         resetBtn.css('display', 'inline-block');
         $(this).attr("disabled", true);
-        var args = {};
+        var optArguments = {};
         // check what boxes are currently open
         if (opts.keepCode) {
-          args.keepCode = code.is(":visible");
-          args.keepPlainSourceCode = plainSourceCode.is(":visible");
+          optArguments.keepCode = code.is(":visible");
+          optArguments.keepPlainSourceCode = plainSourceCode.is(":visible");
         }
-        hideAllWindows(args);
+        hideAllWindows(optArguments);
         output.css('height', opts.outputHeight || height(31));
         outputDiv.css('display', 'block');
         outputTitle.text("Application output");
@@ -576,6 +576,7 @@ function setupTextarea(el, opts)
             }
         });
     });
+    return editor;
 };
 
 

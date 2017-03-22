@@ -4,7 +4,7 @@
  * License: $(HTTP boost.org/LICENSE_1_0.txt, Boost License 1.0).
  * Authors: $(HTTP code.dawg.eu, Martin Nowak)
  */
-import std.algorithm, std.file, std.path, std.stdio, std.string, std.range;
+import std.algorithm, std.file, std.getopt, std.path, std.stdio, std.string, std.range;
 
 struct Tree
 {
@@ -72,6 +72,7 @@ struct Tree
     ref Tree opIndex(string part)
     {
         auto tail = leaves.find!((tr, pkg) => tr.name == pkg)(part);
+        assert(!tail.empty, part ~ " can't be found.");
         return tail.front;
     }
 
@@ -86,17 +87,24 @@ struct Tree
     Tree[] leaves;
 }
 
+alias I(alias X) = X;
+
 int main(string[] args)
 {
-    if (args.length < 3)
+    string[] excludes, packages;
+
+    auto prog = getopt(args,
+        "ex", &excludes,
+        "dump", &packages,
+    );
+
+    if (prog.helpWanted || args.length <= 1)
     {
-        stderr.writeln("usage: ./modlist <druntime-dir> <phobos-dir> [--ex=std.internal.] [--ex=core.sys.]");
+        defaultGetoptPrinter("./modlist <dir1> <dir2> ... <dirN>", prog.options);
         return 1;
     }
 
-    auto druntime = args[1];
-    auto phobos = args[2];
-    auto excludes = args[3 .. $].map!(ex => ex.chompPrefix("--ex=")).array;
+    auto dirs = args[1 .. $];
 
     bool included(string mod)
     {
@@ -115,15 +123,28 @@ int main(string[] args)
             tree.insert(name.splitter("."));
     }
     Tree tree;
-    add(phobos, tree);
-    add(buildPath(druntime, "src"), tree);
+    foreach (dir; dirs)
+    {
+        // search for common root folders (fallback to the root directory)
+        ["source", "src", ""]
+            .map!(f => buildPath(dir, f))
+            .filter!exists
+            .front      // no UFCS for local symbols
+            .I!(name => add(name, tree));
+    }
+
     tree.sort();
 
     writeln("MODULE_MENU=");
-    writeln("$(MENU object.html, $(TT object))");
-    tree["std"].dumpRoot();
-    tree["etc"].dumpRoot();
-    tree["core"].dumpRoot();
+    foreach (part; packages)
+    {
+        // check whether it's a package or file
+        auto subTree = tree[part];
+        if (subTree.leaves.length)
+            subTree.dumpRoot;
+        else
+            writefln("$(MENU %s.html, $(TT %1$s))", part);
+    }
     writeln("_=");
     return 0;
 }

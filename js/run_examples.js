@@ -8,7 +8,7 @@
 
 // turns asserts into writeln
 function reformatExample(code) {
-    return code.replace(/(<span class="d_keyword">assert<\/span>\((.*)==(.*)\);)+/g, function(match, text, left, right) {
+    return code.replace(/(<span class="(?:d_keyword|kwd)">assert<\/span>(?:<span class="pun">)?\((.*)==(.*)\);)+/g, function(match, text, left, right) {
         return "writeln(" + left.trim() + "); "
             + "<span class='d_comment'>// " + right.trim() + "</span>";
     });
@@ -44,28 +44,29 @@ $(document).ready(function()
     if (!$('body').hasClass("std"))
         return;
 
-    // only enable for pre-release version
-    if (location.pathname.indexOf("prerelease") < 0)
-        return;
-
     // ignore not yet compatible modules
     // copied from Phobos posix.mak
-    var ignoredModulesList = "allocator/allocator_list.d,allocator/building_blocks/allocator_list.d,allocator/building_blocks/free_list.d,allocator/building_blocks/quantizer,allocator/building_blocks/quantizer,allocator/building_blocks/stats_collector.d,base64.d,bitmanip.d,concurrency.d,conv.d,csv.d,datetime.d,digest/hmac.d,digest/sha.d,file.d,index.d,isemail.d,logger/core.d,logger/nulllogger.d,math.d,ndslice/selection.d,ndslice/slice.d,numeric.d,stdio.d,traits.d,typecons.d,uni.d,utf.d,uuid.d".split(",")
-    var currentModulePath = $('body')[0].id.replace('.', '/') + '.d';
-    if (ignoredModulesList.filter(function(x) { currentModulePath.indexOf(x) >= 0 }).length > 0) {
+  var ignoredModulesList = "base64.d,building_blocks/free_list,building_blocks/quantizer,digest/hmac.d,file.d,index.d,math.d,ndslice/selection.d,stdio.d,traits.d,typecons.d,uuid.d".split(",")
+    var currentModulePath = $('body')[0].id.split('.').join('/') + '.d';
+    if (ignoredModulesList.filter(function(x) { return currentModulePath.indexOf(x) >= 0 }).length > 0) {
         return;
     }
 
-    $('pre[class~=d_code]').each(function(index)
+    // first selector is for ddoc - second for ddox
+    var codeBlocks = $('pre[class~=d_code]').add('pre[class~=code]');
+    codeBlocks.each(function(index)
     {
         var currentExample = $(this);
         var orig = currentExample.html();
 
-        orig = reformatExample(orig);
+        // disable regex assert -> writeln rewrite logic (for now)
+        //orig = reformatExample(orig);
 
         // check whether it is from a ddoced unittest
+        // 1) check is for ddoc, 2) for ddox
         // manual created tests most likely can't be run without modifications
-        if (!$(this).parent().parent().prev().hasClass("dlang_runnable"))
+        if (!($(this).parent().parent().prev().hasClass("dlang_runnable") ||
+              $(this).prev().children(":last").hasClass("dlang_runnable")))
             return;
 
         currentExample.replaceWith(
@@ -81,7 +82,7 @@ $(document).ready(function()
                     + '<div class="d_run_code" style="display: block">'
                         + '<textarea class="d_code" style="display: none;"></textarea>'
                     + '</div>'
-                    + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><textarea class="d_code_output" readonly>Running...</textarea>'
+                    + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><pre class="d_code_output" readonly>Running...</pre>'
                 + '</div>'
         );
     });
@@ -90,15 +91,15 @@ $(document).ready(function()
         var parent = $(this).parent();
         var btnParent = parent.parent().children(".d_example_buttons");
         var outputDiv = parent.parent().children(".d_code_output");
-      setupTextarea(this,  {
-        parent: btnParent,
-        outputDiv: outputDiv,
-        stdin: false,
-        args: false,
-        transformOutput: wrapIntoMain,
-        defaultOutput: "All tests passed",
-        keepCode: true,
-        outputHeight: "auto"
-      });
+        var editor = setupTextarea(this,  {
+          parent: btnParent,
+          outputDiv: outputDiv,
+          stdin: false,
+          args: false,
+          transformOutput: wrapIntoMain,
+          defaultOutput: "All tests passed",
+          keepCode: true,
+          outputHeight: "auto"
+        });
     });
 });
