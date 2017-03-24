@@ -1,0 +1,388 @@
+Ddoc
+
+$(CHANGELOG_NAV_LAST 2.073.2)
+
+$(VERSION Apr 7, 2017, =================================================,
+
+$(BUGSTITLE Runtime changes,
+
+$(LI $(RELATIVE_LINK2 disable-TypeInfo.init,`TypeInfo.init` has been `@disable`d.))
+
+)
+
+$(BUGSTITLE Library changes,
+
+$(LI $(RELATIVE_LINK2 std-range-bitwise,Added `std.range.bitwise` to create a bitwise adapter over an integral type range, consuming the range elements bit by bit.))
+$(LI $(RELATIVE_LINK2 std-variant-genericfunc,Allow a generic function for std.variant.visit.))
+$(LI $(RELATIVE_LINK2 std-utf-decodeBack,Added `std.utf.decodeBack` which decodes the last UTF code point of given character range.))
+$(LI $(RELATIVE_LINK2 std-algorithm-searching-extremum,Performance improvements for `std.algorithm.searching.{min,max}Element`))
+$(LI $(RELATIVE_LINK2 std-format-formattedWrite,`std.format.formattedWrite` now accepts a compile-time checked format string))
+$(LI $(RELATIVE_LINK2 std-experimental-checkedint,New: Checked, a lightweight and highly configurable checked integral))
+$(LI $(RELATIVE_LINK2 std-traits-hasStaticMember,Added `std.traits.hasStaticMember` to check whether a symbol is a static member of a type.))
+$(LI $(RELATIVE_LINK2 std-expertimental-ndslice-removed,`std.experimental.ndslice` has been removed))
+$(LI $(RELATIVE_LINK2 std-format-formattedRead,`std.format.formattedRead` now accepts `ref` parameters as input arguments.))
+$(LI $(RELATIVE_LINK2 std-stdio-readf-only-pointers,`std.stdio.readf` now accepts `ref` parameters as input arguments.))
+$(LI $(RELATIVE_LINK2 std-random-MersenneTwisterEngine,`MersenneTwisterEngine` has been updated so that its template signature matches the C++11 standard.))
+
+)
+
+$(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D $(VER).))
+
+$(HR)
+
+$(BUGSTITLE Runtime changes,
+
+$(LI $(LNAME2 disable-TypeInfo.init,`TypeInfo.init` has been `@disable`d.)
+$(P
+$(REF_OBJECT_SHORT TypeInfo.init) has been `@disable`d. Use
+$(REF_OBJECT_SHORT TypeInfo.initializer) instead.
+)
+
+$(P
+`TypeInfo.init` is a legacy alias of the method that is now called
+$(REF_OBJECT_SHORT TypeInfo.initializer). The name change is necessary because
+the name "init" clashes with the type property of the same name
+($(GLINK2 property, init)).
+)
+
+$(P
+The legacy alias has been deprecated since 2.072.0. It's going to be removed in
+2.075.0.
+)
+)
+
+
+)
+
+$(BUGSTITLE Library changes,
+
+$(LI $(LNAME2 std-range-bitwise,Added `std.range.bitwise` to create a bitwise adapter over an integral type range, consuming the range elements bit by bit.)
+$(P
+`std.range.bitwise` creates a bit by bit adapter over an integral type range:
+)
+-------
+import std.range : bitwise;
+ubyte[] arr = [3, 9];
+auto r = arr.bitwise;
+
+r[2] = 1;
+assert(arr[0] == 7);
+-------
+)
+
+$(LI $(LNAME2 std-variant-genericfunc,Allow a generic function for std.variant.visit.)
+$(P
+If a lambda with a single generic parameter is provided as a handler
+to std.variant.visit, it is invoked for any type contained in the
+Algebraic which does not have a handler for that type.
+)
+
+$(P
+This allows something like:
+)
+
+-------
+// Assume Circle, Square, and Triangle all define center()
+Algebraic!(Circle, Square, Triangle) someShape;
+auto center = someShape.visit!(x => x.center);
+-------
+
+$(P
+This may be combined with explicitly typed handlers and a single
+fallback handler for an empty variant:
+)
+
+-------
+Algebraic!(int, float, string) something;
+something.visit!((string s) => s.length, // called for string
+                 x          => x,        // called for int/float
+                 ()         => 0);       // called if empty
+-------
+)
+
+$(LI $(LNAME2 std-utf-decodeBack,Added `std.utf.decodeBack` which decodes the last UTF code point of given character range.)
+-------
+ import std.utf : decodeBack;
+
+ string text = "サイト";
+
+ assert(decodeBack(text) == 'ト');
+ assert(decodeBack(text) == 'イ');
+ assert(decodeBack(text) == 'サ');
+ assert(text.empty);
+-------
+)
+
+$(LI $(LNAME2 std-algorithm-searching-extremum,Performance improvements for `std.algorithm.searching.{min,max}Element`)
+$(P
+$(REF minElement, std, algorithm, searching) and $(REF maxElement, std, algorithm, searching)
+are now considerably faster (almost 2x in microbenchmarks)
+as a special path for the identity case is provided. This allows the compiler
+to make use of SSE instructions.
+)
+
+$(P
+The exact improvements are:
+)
+
+$(P
+$(CONSOLE
+% dmd -release -O test.d && ./test
+extremum.before = 54 secs, 12 ms, 347 μs, and 9 hnsecs
+extremum.after  = 29 secs, 521 ms, 896 μs, and 5 hnsecs
+)
+)
+
+$(P
+$(CONSOLE
+% ldc -release -O3 test.d && ./test
+extremum.before = 13 secs, 186 ms, 176 μs, and 4 hnsecs
+extremum.after  = 2 secs, 241 ms, 454 μs, and 9 hnsecs
+)
+)
+
+$(P
+$(LINK2 https://gist.github.com/wilzbach/9f757fa76200956aadb97059d614df34, See the benchmark code).
+)
+)
+
+$(LI $(LNAME2 std-format-formattedWrite,`std.format.formattedWrite` now accepts a compile-time checked format string)
+$(P
+$(REF formattedWrite, std, format) and related functions now have overloads to
+take the format string as a compile-time argument. This allows the format
+specifiers to be matched against the argument types passed. Any mismatch or
+orphaned specifiers/arguments will cause a compile-time error:
+)
+
+-------
+import std.format;
+
+void main() {
+    auto s = format!"%s is %s"("Pi", 3.14);
+    assert(s == "Pi is 3.14");
+
+    static assert(!__traits(compiles, {s = format!"%l"();}));     // missing arg
+    static assert(!__traits(compiles, {s = format!""(404);}));    // surplus arg
+    static assert(!__traits(compiles, {s = format!"%d"(4.03);})); // incompatible arg
+}
+-------
+)
+
+$(LI $(LNAME2 std-experimental-checkedint,New: Checked, a lightweight and highly configurable checked integral)
+$(P
+$(REF Checked, std, experimental, checkedint) is a wrapper around any integral
+type that inserts checks against common sources of bugs: overflow in operators,
+mixed-sign comparisons, and casts that lose information.
+)
+
+$(P
+The example below illustrates the basic use of the facility:
+)
+
+-------
+void main()
+{
+    import std.experimental.checkedint, std.stdio;
+    writeln((checked(5) + 7).get); // 12
+    writeln((checked(10) * 1000 * 1000 * 1000).get); // Overflow
+}
+-------
+
+$(P
+By default, all checks are enabled and the program is aborted if any check
+fails. An implementation based on hooks discoverable by using Design by
+Introspection allows unbounded customizations of both the checks to do, and the
+enforcement policy.
+)
+)
+
+$(LI $(LNAME2 std-traits-hasStaticMember,Added `std.traits.hasStaticMember` to check whether a symbol is a static member of a type.)
+-------
+import std.traits : hasStaticMember;
+
+struct S
+{
+    static int staticVar;
+    int nonstaticVar;
+}
+
+assert( hasStaticMember!(S, "staticVar"));
+assert(!hasStaticMember!(S, "nonstaticVar"));
+-------
+)
+
+$(LI $(LNAME2 std-expertimental-ndslice-removed,`std.experimental.ndslice` has been removed)
+$(P
+The synchronization between Phobos and Mir turned out to be a high amount of work with litte gain.
+Users of `std.experimental.ndslice` are advised to switch to the upstream
+$(LINK2 https://github.com/libmir/mir-algorithm, mir package).
+)
+)
+
+$(LI $(LNAME2 std-format-formattedRead,`std.format.formattedRead` now accepts `ref` parameters as input arguments.)
+$(P
+When $(REF formattedRead, std, format) is used with `ref` parameters it is `@safe`.
+For compatibility it's still possible to use $(REF formattedRead, std, format)
+with pointers:
+)
+
+-------
+import std.format;
+void main() {
+    string text = "1 2 3";
+    int a, b, c;
+    formattedRead(text, "%d %d %d", a, b, c);
+    // pointers can still be used
+    formattedRead(text, "%d %d %d", &a, &b, &c);
+    // and even combined:
+    formattedRead(text, "%d %d %d", a, &b, c);
+}
+-------
+)
+
+$(LI $(LNAME2 std-stdio-readf-only-pointers,`std.stdio.readf` now accepts `ref` parameters as input arguments.)
+-------
+import std.stdio : readf;
+void main() {
+    // assume every line from stdin is similar to "1 2 3";
+    int a, b, c;
+    readf(" %d %d %d", a, b, c);
+    // pointers can still be used
+    readf(" %d %d %d, &a, &b, &c);
+    // and even combined:
+    readf(" %d %d %d, a, &b, c);
+}
+-------
+)
+
+$(LI $(LNAME2 std-random-MersenneTwisterEngine,`MersenneTwisterEngine` has been updated so that its template signature matches the C++11 standard.)
+$(P
+`MersenneTwisterEngine` has been updated so that its template signature
+matches the C++11 standard (adding two new template parameters, an extra
+tempering parameter `d` and the initialization multiplier `f`).
+)
+
+$(P
+Handling of the word size `w` has been fixed so that the generator will
+now properly handle cases where it is less than the number of bits in
+the chosen `UIntType`.  This has been validated against the behaviour
+of a widely-used implementation of the C++11 standard.
+)
+
+$(P
+For anyone using the standard template instantiation `Mt19937` this will
+have no noticeable effect.  However, these will be breaking changes for
+anyone using the `MersenneTwisterEngine` template directly.
+)
+
+$(P
+The internal implementation has been reworked to use Ilya Yaroshenko's
+highly optimized algorithm from `mir.random`.  This should have a very
+noticeable positive effect for anyone who cares about generating a lot
+of random numbers quickly.
+)
+
+$(P
+A new `Mt19937_64` template instantiation has been added, corresponding
+to the standard 64-bit implementation of the algorithm (MT19937-64).
+This fixes $(LINK https://issues.dlang.org/show_bug.cgi?id=10900).
+)
+)
+
+
+)
+
+$(BR)$(BIG $(LNAME2 bugfix-list, List of all bug fixes and enhancements in D $(VER):))
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(LI $(BUGZILLA 16680): dmd doesn't use druntime optimized versions of subtraction array operations)
+$(LI $(BUGZILLA 17117): [REG2.073] erroneous "escaping reference to local variable")
+$(LI $(BUGZILLA 17123): [REG 2.073] Issues with return @safe inference)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(LI $(BUGZILLA 6400): opDispatch with WithStatement)
+$(LI $(BUGZILLA 15428): __traits$(LPAREN)compiles, super$(LPAREN)$(RPAREN)$(RPAREN) cause error "multiple constructor calls" later)
+$(LI $(BUGZILLA 15616): missing candidate in error message)
+$(LI $(BUGZILLA 15676): The compiler does not preserve @disable while generating .di files)
+$(LI $(BUGZILLA 16083): AliasSeq loses type of enums that have the same value)
+$(LI $(BUGZILLA 16245): the message emitted when a const function mutates members is misleading)
+$(LI $(BUGZILLA 16346): Enum used as a constructor evaluates to the underlying type, not to the enum type.)
+$(LI $(BUGZILLA 16355): __xpostblit incorrectly generated for a struct with a zero-length static array)
+$(LI $(BUGZILLA 16382): Passing &this as a CT parameter seg faults dmd)
+$(LI $(BUGZILLA 16483): ICE in expression.d from typeof)
+$(LI $(BUGZILLA 17049): [scope] member methods not escape checked like free functions)
+$(LI $(BUGZILLA 17057): trait "allMembers" incorrectly includes imports)
+$(LI $(BUGZILLA 17076): [scope] compiling identity function template with -dip1000 causes error)
+$(LI $(BUGZILLA 17086): DMD segfault with multiple template matches and invalid code)
+$(LI $(BUGZILLA 17255): Warning when compiling ddmd.backend/ptrntab.c about type-punning)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 14859): static declared array with more than 16MB size should be allowed in struct and class declaration)
+$(LI $(BUGZILLA 16513): Speed up TemplateInstance.findExistingInstance hash)
+$(LI $(BUGZILLA 16697): Extend IsExpression to accept __vector as a TypeSpecialization)
+$(LI $(BUGZILLA 17111): DMD accepts switch statement with non-const case variables)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(LI $(BUGZILLA 8260): * used three or more times on an array inside std.format.formattedRead and not guarded by template constraint)
+$(LI $(BUGZILLA 8471): std.stdio.readf should be @trusted)
+$(LI $(BUGZILLA 9615): std.conv.parse!$(LPAREN)T[]$(RPAREN) fails on trailing comma)
+$(LI $(BUGZILLA 11703): Typedef properties should not be of the original type)
+$(LI $(BUGZILLA 13619): std.container.array capacity not updated when length increases)
+$(LI $(BUGZILLA 16342): std.algorithm.fill can't fill a char[]?)
+$(LI $(BUGZILLA 16442): FrontTransversal fails with empty ranges)
+$(LI $(BUGZILLA 16564): KRRegion.empty sometimes returns Ternary.no)
+$(LI $(BUGZILLA 16642): byCodeUnit doesn't work AutodecodableStrings unless they're actually strings or alias a variable that's a string)
+$(LI $(BUGZILLA 16824): std.experimental.allocator.dispose leaks memory for arrays of more than 1 dimension)
+$(LI $(BUGZILLA 17075): ctRegex BacktrackingMatcher.prevStack: free$(LPAREN)$(RPAREN): invalid pointer)
+$(LI $(BUGZILLA 17102): std.write.file generates a segmentation fault when the file name is a string with a default value)
+$(LI $(BUGZILLA 17116): std.typecons.ReplaceType  is not able to process const delegate)
+$(LI $(BUGZILLA 17153): std.container.array.Array cannot be used in @nogc code)
+$(LI $(BUGZILLA 17154): std.conv.toChars doesn't support $ in slicing)
+$(LI $(BUGZILLA 17157): ctRegex.matchAll doesn't set last item in Captures)
+$(LI $(BUGZILLA 17177): AutoImplement fails on function overload sets with "cannot infer type from overloaded function symbol")
+$(LI $(BUGZILLA 17217): std.net.isemail.isEmail doesn't work with non char arrays)
+$(LI $(BUGZILLA 17229): File.byChunk $(LPAREN)ubyte$(RPAREN) w/ stdout.lockingTextWriter corrupts utf-8 data $(LPAREN)and is very slow$(RPAREN))
+$(LI $(BUGZILLA 17243): std.math.{FloatingPointControl,ieeeFlags} don't work on x86_64)
+$(LI $(BUGZILLA 17247): std.bitmanip.read should not assume sliceable range is assign-copyable to ubyte[].)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(LI $(BUGZILLA 10900): Mersenne Twister should have a 64-bit $(LPAREN)ulong$(RPAREN) version)
+$(LI $(BUGZILLA 13017): opEquals for null std.typecons.Nullable)
+$(LI $(BUGZILLA 16281): std.format.formattedRead should use ref instead of requiring pointers)
+$(LI $(BUGZILLA 16323): std.utf.decodeBack)
+$(LI $(BUGZILLA 16736): Retrieving cUrl time values is quite cumbersome)
+)
+$(BUGSTITLE Druntime regressions,
+
+$(LI $(BUGZILLA 17130): [Reg 2.074] ambiguous implicit super call when inheriting core.sync.mutex.Mutex)
+)
+$(BUGSTITLE Druntime bugs,
+
+$(LI $(BUGZILLA 16470): Segfault with negative array length)
+)
+$(BUGSTITLE Druntime enhancements,
+
+$(LI $(BUGZILLA 8411): core.time: No easy way to check if Duration is empty)
+)
+$(BUGSTITLE dlang.org bugs,
+
+$(LI $(BUGZILLA 17115): [404 Not Found] std.concurrencybase)
+)
+$(BUGSTITLE dlang.org enhancements,
+
+$(LI $(BUGZILLA 16991): Make writeln documentation palatable)
+)
+$(BUGSTITLE Tools bugs,
+
+$(LI $(BUGZILLA 17139): [BLOCKING] dscanner needs to handle 'scope' function attributes)
+)
+)
+$(CHANGELOG_NAV_LAST 2.073.2)
+Macros:
+    VER=2.074.0
+    TITLE=Change Log: $(VER)
