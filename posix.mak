@@ -192,11 +192,11 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 # NOTE: Depending on the version of make, order matters here. Therefore, put
 # sub-directories before their parents.
 
-$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
-
 $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+
+$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
 $(DOC_OUTPUT_DIR)/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
