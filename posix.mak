@@ -615,11 +615,11 @@ test:
 # Changelog generation
 ################################################################################
 
-changelog/${NEXT_VERSION}_pre.dd: ${STABLE_DMD} ../tools ../installer
+changelog/${NEXT_VERSION}_pre.dd: | ${STABLE_DMD} ../tools ../installer
 	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
 	--version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
 
-changelog/${NEXT_VERSION}.dd: ${STABLE_DMD} ../tools ../installer
+changelog/${NEXT_VERSION}.dd: | ${STABLE_DMD} ../tools ../installer
 	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_STABLE) -o $@ \
 		--version "${NEXT_VERSION}"
 
