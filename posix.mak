@@ -365,19 +365,19 @@ ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
 ################################################################################
 
 $(DMD) : ${DMD_DIR}
-	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
+	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
 $(DMD_REL) : ${DMD_STABLE_DIR}
-	${MAKE} --directory=${DMD_STABLE_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 -j 4
+	${MAKE} --directory=${DMD_STABLE_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
 dmd-release : $(STD_DDOC) $(DMD_DIR) $(DMD)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak -j4 html \
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
 		STDDOC="$(addprefix `pwd`/, $(STD_DDOC))" \
 		DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
 		DOCSRC="$(realpath .)"
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak -j4 html \
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
 		STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
 		DOCSRC="$(realpath .)" \
 		DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease"
@@ -386,7 +386,7 @@ dmd-prerelease-verbatim : $(STD_DDOC_PRE) $(DMD_DIR) \
 		${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim: verbatim.ddoc
 	mkdir -p $(dir $@)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak -j4 html \
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
 		DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim" \
 		STDDOC="`pwd`/verbatim.ddoc" \
 		DOCSRC="$(realpath .)"
@@ -399,7 +399,7 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim: verbatim.ddoc
 ################################################################################
 
 druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRE)
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
@@ -412,7 +412,7 @@ druntime-release : ${DRUNTIME_STABLE_DIR} $(DMD_REL) $(STD_DDOC)
 druntime-prerelease-verbatim : ${DRUNTIME_DIR} \
 		${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak -j 4 target doc \
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim \
 		DOCFMT="`pwd`/verbatim.ddoc"
 	mkdir -p $(dir $@)
@@ -433,7 +433,7 @@ phobos-prerelease : ${PHOBOS_FILES_GENERATED} $(STD_DDOC_PRE) druntime-prereleas
 	  DMD="$(realpath ${DMD})" \
 	  DOCSRC="$(realpath .)" \
 	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
-	  html -j4
+	  html
 
 phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_REL) $(STD_DDOC) \
 		druntime-release
@@ -446,7 +446,7 @@ phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_REL) $(STD_DDOC) \
 	  DMD="$(realpath ${DMD})" \
 	  DOCSRC="$(realpath .)" \
 	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
-	  html -j4
+	  html
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
@@ -459,7 +459,7 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
 	  	DMD="$(realpath ${DMD})" \
 	  	DOCSRC="$(realpath .)" \
 	  	VERSION="$(realpath ${DMD_DIR}/VERSION)" \
-	  	html -j4
+	  	html
 	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
 	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
