@@ -155,16 +155,15 @@ orphaned specifiers/arguments will cause a compile-time error:
 )
 
 -------
-import std.format;
+import std.format, std.stdio;
 
-void main() {
-    auto s = format!"%s is %s"("Pi", 3.14);
-    assert(s == "Pi is 3.14");
+auto s = format!"%s is %s"("Pi", 3.14);
+assert(s == "Pi is 3.14");
+writefln!"%c is %s"('e', 1.61);
 
-    static assert(!__traits(compiles, {s = format!"%l"();}));     // missing arg
-    static assert(!__traits(compiles, {s = format!""(404);}));    // surplus arg
-    static assert(!__traits(compiles, {s = format!"%d"(4.03);})); // incompatible arg
-}
+static assert(!__traits(compiles, {s = format!"%l"();}));     // missing arg
+static assert(!__traits(compiles, {s = format!""(404);}));    // surplus arg
+static assert(!__traits(compiles, {s = format!"%d"(4.03);})); // incompatible arg
 -------
 )
 
@@ -213,9 +212,35 @@ assert(!hasStaticMember!(S, "nonstaticVar"));
 
 $(LI $(LNAME2 std-expertimental-ndslice-removed,`std.experimental.ndslice` has been removed)
 $(P
-The synchronization between Phobos and Mir turned out to be a high amount of work with litte gain.
+The synchronization between Phobos and Mir turned out to be a high amount of work with little gain.
 Users of `std.experimental.ndslice` are advised to switch to the upstream
-$(LINK2 https://github.com/libmir/mir-algorithm, mir package).
+$(LINK2 https://github.com/libmir/mir-algorithm, mir-algorithm package).
+)
+
+$(P
+It comes with a lot of new features
+$(UL
+ $(LI $(LINK2 http://docs.algorithm.dlang.io/latest/mir_ndslice_topology.html, `mir.ndslice.topology`)
+ 	- Multidimensional `std.range` analog. Includes `bitwise`, `bitpack`, `zip`, `unzip`, `map`, `indexed` and many other features.)
+ $(LI $(LINK2 http://docs.algorithm.dlang.io/latest/mir_ndslice_concatenation.html, `mir.ndslice.concatenation`)
+ 	- Concatenation and padding)
+ $(LI $(LINK2 http://docs.algorithm.dlang.io/latest/mir_ndslice_algorithm.html, `mir.ndslice.algorithm`)
+ 	- Slim multidimensional `std.algorithm` analog)
+ $(LI $(LINK2 http://docs.algorithm.dlang.io/latest/mir_ndslice_sorting.html, `mir.ndslice.sorting`)
+ 	- Multidimensional sorting utilities)
+)
+)
+
+$(P
+`ndslice` design was changed. New ndslices can be created on top of random access iterators including pointers. There are three kinds of ndslice:
+)
+
+$(P
+$(UL
+ $(LI `Contiguous` - Contiguous in memory representation. It does not store strides and can be always flattened to 1 dimensional ndslice on top of the same iterator type. )
+ $(LI `Canonical` - BLAS like. Stride for row dimension assumed to be equal to 1.)
+ $(LI `Universal` - Numpy like. Each dimension has strides. All dimensions can be exchanged without reallocation. The old ndslice ABI corresponds to to the `Universal` ndslice.)
+)
 )
 )
 
@@ -277,7 +302,7 @@ anyone using the `MersenneTwisterEngine` template directly.
 
 $(P
 The internal implementation has been reworked to use Ilya Yaroshenko's
-highly optimized algorithm from `mir.random`.  This should have a very
+highly optimized algorithm from $(LINK2 https://github.com/libmir/mir-random, mir-random).  This should have a very
 noticeable positive effect for anyone who cares about generating a lot
 of random numbers quickly.
 )
@@ -299,6 +324,7 @@ $(BUGSTITLE DMD Compiler regressions,
 $(LI $(BUGZILLA 16680): dmd doesn't use druntime optimized versions of subtraction array operations)
 $(LI $(BUGZILLA 17117): [REG2.073] erroneous "escaping reference to local variable")
 $(LI $(BUGZILLA 17123): [REG 2.073] Issues with return @safe inference)
+$(LI $(BUGZILLA 17291): [REG 2.074-b1] windows: invalid relocation entries)
 )
 $(BUGSTITLE DMD Compiler bugs,
 
