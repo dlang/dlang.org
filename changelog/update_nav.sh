@@ -23,7 +23,11 @@ done
 
 # update VER=2.012.3 macros
 for ver in "${all_vers[@]}"; do
-    sed -i "s|VER=[0-9\.][0-9\.]*|VER=${ver%.dd}|" "$ver"
+    if [[ "$ver" = *_pre.dd ]]; then
+        sed -i "s|VER=[0-9\.][0-9\.]*|VER=${ver%_pre.dd}|" "$ver"
+    else
+        sed -i "s|VER=[0-9\.][0-9\.]*|VER=${ver%.dd}|" "$ver"
+    fi
 done
 
 # reverse sort versions array, http://stackoverflow.com/a/11789688/2371032
