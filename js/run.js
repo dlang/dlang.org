@@ -66,53 +66,96 @@ function safeVar(data, path)
     return res;
 }
 
-function parseOutput(data, o, oTitle)
+var backends = {
+  dpaste: {
+    url: "https://dpaste.dzfl.pl/request/",
+    contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+    requestTransform: function(data) {
+      return data;
+    },
+    parseOutput: function(data, opts) {
+      var r = {};
+      if (data.compilation === "undefined")
+        return null;
+      r.cout = safeVar(data, "compilation.stdout");
+      r.stdout = safeVar(data, "runtime.stdout");
+      r.stderr = safeVar(data, "runtime.stderr");
+      r.ctime = parseInt(safeVar(data, "compilation.time"));
+      r.rtime = parseInt(safeVar(data, "runtime.time"));
+      r.cstatus = parseInt(safeVar(data, "compilation.status"));
+      r.rstatus = parseInt(safeVar(data, "runtime.status"));
+      r.cerr = safeVar(data, "compilation.err");
+      r.rerr = safeVar(data, "runtime.err");
+      r.defaultOutput = data.output || opts.defaultOutput;
+      return r;
+    }
+  },
+  tour: {
+    url: "https://tour.dlang.org/api/v1/run",
+    contentType: "application/json; charset=utf-8",
+    requestTransform: function(data) {
+        return JSON.stringify({
+            source: data.code
+        });
+    },
+    parseOutput: function(data, opts) {
+      var r = {};
+      if (data.success === "undefined") {
+        return null;
+      }
+      r.cout = data.success === false ? data.output : "";
+      r.stdout = data.success === true ? data.output : "";
+      r.stderr = "";
+      r.ctime = "";
+      r.rtime = "";
+      r.cstatus = data.errors.length === 0 ? 0 : 1;
+      r.rstatus = data.success === true ? 0 : 1;
+      r.cerr = "";
+      r.rerr = "";
+      r.defaultOutput = data.output || opts.defaultOutput;
+      return r;
+    }
+  }
+};
+
+function parseOutput(res, o, oTitle)
 {
-    if (typeof data.compilation == "undefined")
+    if (!res)
     {
         o.text("Temporarily unavailable");
         return;
     }
 
     var output = "";
-    var cout = safeVar(data, "compilation.stdout");
-    var stdout = safeVar(data, "runtime.stdout");
-    var stderr = safeVar(data, "runtime.stderr");
-    var ctime = parseInt(safeVar(data, "compilation.time"));
-    var rtime = parseInt(safeVar(data, "runtime.time"));
-    var cstatus = parseInt(safeVar(data, "compilation.status"));
-    var rstatus = parseInt(safeVar(data, "runtime.status"));
-    var cerr = safeVar(data, "compilation.err");
-    var rerr = safeVar(data, "runtime.err");
-    var defaultOutput = data.defaultOutput || '-- No output --';
+    var defaultOutput = res.defaultOutput || '-- No output --';
 
-    if (cstatus != 0)
+    if (res.cstatus != 0)
     {
-        oTitle.text("Compilation output ("+cstatus+": "+cerr+")");
+        oTitle.text("Compilation output ("+res.cstatus+": "+res.cerr+")");
         if ($.browser.msie)
-            o.html(nl2br(cout));
+            o.html(nl2br(res.cout));
         else
-            o.text(cout);
+            o.text(res.cout);
 
         return;
     }
     else
     {
         oTitle.text("Application output");// (compile "+ctime+"ms, run "+rtime+"ms)");
-        if ( cout != "")
-            output = 'Compilation output: \n' + cout + "\n";
+        if ( res.cout != "")
+            output = 'Compilation output: \n' + res.cout + "\n";
 
-        output += (stdout == "" && stderr == "" ? defaultOutput : stdout);
+        output += (res.stdout == "" && res.stderr == "" ? res.defaultOutput : res.stdout);
 
-        if (stderr != "")
-            output += stderr;
+        if (res.stderr != "")
+            output += res.stderr;
 
-        if (rstatus != 0)
-            oTitle.text("Application output ("+rstatus+": "+rerr+")");
+        if (res.rstatus != 0)
+            oTitle.text("Application output ("+res.rstatus+": "+res.rerr+")");
     }
 
     if ($.browser.msie)
-        o.html(nl2br(cout));
+        o.html(nl2br(res.cout));
     else
         o.text(output);
 }
@@ -178,6 +221,8 @@ function setupTextarea(el, opts)
         args: false,
         transformOutput: function(out) { return out }
     }, opts);
+
+    var backend = backends[opts.backend || "dpaste"];
 
     if (!!opts.parent)
         var parent = opts.parent;
@@ -328,8 +373,8 @@ function setupTextarea(el, opts)
         output.focus();
 
         var data = {
-                'code' : opts.transformOutput(editor.getValue()),
-        }
+          code: opts.transformOutput(editor.getValue())
+        };
         if (opts.stdin) {
             data.stdin = stdin.val();
         }
@@ -338,13 +383,13 @@ function setupTextarea(el, opts)
         }
         $.ajax({
             type: 'POST',
-            url: "https://dpaste.dzfl.pl/request/",
+            url: backend.url,
+            contentType: backend.contentType,
             dataType: "json",
-            data: data,
+            data: backend.requestTransform(data),
             success: function(data)
             {
-                data.defaultOutput = opts.defaultOutput;
-                parseOutput(data, output, outputTitle);
+                parseOutput(backend.parseOutput(data, opts), output, outputTitle);
                 runBtn.attr("disabled", false);
             },
             error: function(jqXHR, textStatus, errorThrown )
