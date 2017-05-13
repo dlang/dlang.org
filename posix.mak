@@ -186,58 +186,6 @@ $(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
 ################################################################################
-# Pattern rulez
-################################################################################
-
-# NOTE: Depending on the version of make, order matters here. Therefore, put
-# sub-directories before their parents.
-
-$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
-
-$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
-
-$(DOC_OUTPUT_DIR)/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
-	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
-
-$(DOC_OUTPUT_DIR)/404.html : 404.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
-
-$(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
-
-$(DOC_OUTPUT_DIR)/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
-
-$(DOC_OUTPUT_DIR)/%.verbatim : %.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
-
-$(DOC_OUTPUT_DIR)/%.php : %.php.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
-
-$(DOC_OUTPUT_DIR)/css/% : css/%
-	@mkdir -p $(dir $@)
-ifeq (1,$(CSS_MINIFY))
-	curl -X POST -fsS --data-urlencode 'input@$<' http://cssminifier.com/raw >$@
-else
-	cp $< $@
-endif
-
-$(DOC_OUTPUT_DIR)/%.css : %.css.dd $(DMD)
-	$(DMD) -c -o- -Df$@ $<
-
-$(DOC_OUTPUT_DIR)/% : %
-	@mkdir -p $(dir $@)
-	cp $< $@
-
-$(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) dcompiler.dd $<
-
-$(DOC_OUTPUT_DIR)/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
-
-################################################################################
 # Rulez
 ################################################################################
 
@@ -297,6 +245,58 @@ rsync : all kindle pdf
 
 rsync-only :
 	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
+
+################################################################################
+# Pattern rulez
+################################################################################
+
+# NOTE: Depending on the version of make, order matters here. Therefore, put
+# sub-directories before their parents.
+
+$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+
+$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
+
+$(DOC_OUTPUT_DIR)/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
+	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
+
+$(DOC_OUTPUT_DIR)/404.html : 404.dd $(DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
+
+$(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
+
+$(DOC_OUTPUT_DIR)/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
+	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
+
+$(DOC_OUTPUT_DIR)/%.verbatim : %.dd verbatim.ddoc $(DMD)
+	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
+
+$(DOC_OUTPUT_DIR)/%.php : %.php.dd $(DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
+
+$(DOC_OUTPUT_DIR)/css/% : css/%
+	@mkdir -p $(dir $@)
+ifeq (1,$(CSS_MINIFY))
+	curl -X POST -fsS --data-urlencode 'input@$<' http://cssminifier.com/raw >$@
+else
+	cp $< $@
+endif
+
+$(DOC_OUTPUT_DIR)/%.css : %.css.dd $(DMD)
+	$(DMD) -c -o- -Df$@ $<
+
+$(DOC_OUTPUT_DIR)/% : %
+	@mkdir -p $(dir $@)
+	cp $< $@
+
+$(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) dcompiler.dd $<
+
+$(DOC_OUTPUT_DIR)/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
+	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
 
 ################################################################################
 # Ebook
