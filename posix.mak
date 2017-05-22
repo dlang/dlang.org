@@ -55,7 +55,7 @@ PHOBOS_STABLE_DIR_GENERATED=$(GENERATED)/phobos-release
 #   Makefile dependencies and rules
 PHOBOS_FILES := $(shell find $(PHOBOS_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
 PHOBOS_FILES_GENERATED := $(subst $(PHOBOS_DIR), $(PHOBOS_DIR_GENERATED), $(PHOBOS_FILES))
-PHOBOS_STABLE_FILES := $(shell find $(PHOBOS_STABLE_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
+PHOBOS_STABLE_FILES := $(shell find $(PHOBOS_STABLE_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc' 2>/dev/null)
 PHOBOS_STABLE_FILES_GENERATED := $(subst $(PHOBOS_STABLE_DIR), $(PHOBOS_STABLE_DIR_GENERATED), $(PHOBOS_STABLE_FILES))
 ################################################################################
 
@@ -201,9 +201,6 @@ $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 $(DOC_OUTPUT_DIR)/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
 
-$(DOC_OUTPUT_DIR)/404.html : 404.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
-
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
@@ -297,6 +294,9 @@ rsync : all kindle pdf
 
 rsync-only :
 	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
+
+$(DOC_OUTPUT_DIR)/404.html : 404.dd $(DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
 
 ################################################################################
 # Ebook
