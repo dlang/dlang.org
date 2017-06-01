@@ -508,14 +508,14 @@ endif
 docs.json : ${DMD_REL} ${DRUNTIME_STABLE_DIR} \
 		${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
 	find ${DRUNTIME_STABLE_DIR}/src -name '*.d' | \
-	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
+	  sed -e /unittest.d/d -e /gcstub/d > .generated/release-files.txt
 	find ${PHOBOS_STABLE_DIR_GENERATED} -name '*.d' | \
-	  sed -e /unittest.d/d -e /windows/d | sort >> .release-files.txt
+	  sed -e /unittest.d/d -e /windows/d | sort >> .generated/release-files.txt
 	${DMD_REL} -c -o- -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
-	  -Xfdocs.json -I${PHOBOS_STABLE_DIR_GENERATED} @.release-files.txt
+	  -Xfdocs.json -I${PHOBOS_STABLE_DIR_GENERATED} @.generated/release-files.txt
 	${DPL_DOCS} filter docs.json --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
-	rm .release-files.txt .release-dummy.html
+	rm .generated/release-files.txt .release-dummy.html
 
 # DDox tries to generate the docs for all `.d` files. However for dmd this is tricky,
 # because the `{mach, elf, mscoff}` are platform dependent.
@@ -524,17 +524,17 @@ docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		${PHOBOS_FILES_GENERATED} | dpl-docs
 	find ${DMD_DIR}/src -name '*.d' | \
 		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE}  \
-			> .prerelease-files.txt
+			> .generated/prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
-	  -e /unittest/d >> .prerelease-files.txt
+	  -e /unittest/d >> .generated/prerelease-files.txt
 	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
-	  -e /windows/d | sort >> .prerelease-files.txt
+	  -e /windows/d | sort >> .generated/prerelease-files.txt
 	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
 	  -version=StdDdoc -Df.prerelease-dummy.html \
-	  -Xfdocs-prerelease.json -I${PHOBOS_DIR_GENERATED} @.prerelease-files.txt
+	  -Xfdocs-prerelease.json -I${PHOBOS_DIR_GENERATED} @.generated/prerelease-files.txt
 	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_RELEASE)
-	rm .prerelease-files.txt .prerelease-dummy.html
+	rm .generated/prerelease-files.txt .prerelease-dummy.html
 
 ################################################################################
 # binary targets for DDOX
