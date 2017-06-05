@@ -40,7 +40,7 @@ TMP?=/tmp
 
 # Last released versions
 DMD_STABLE_DIR=${DMD_DIR}-${LATEST}
-DMD_REL=$(DMD_STABLE_DIR)/src/dmd
+DMD_STABLE=$(DMD_STABLE_DIR)/src/dmd
 DRUNTIME_STABLE_DIR=${DRUNTIME_DIR}-${LATEST}
 PHOBOS_STABLE_DIR=${PHOBOS_DIR}-${LATEST}
 
@@ -370,7 +370,7 @@ ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
 $(DMD) : ${DMD_DIR}
 	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
-$(DMD_REL) : ${DMD_STABLE_DIR}
+$(DMD_STABLE) : ${DMD_STABLE_DIR}
 	${MAKE} --directory=${DMD_STABLE_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
 dmd-release : $(STD_DDOC) $(DMD_DIR) $(DMD)
@@ -406,9 +406,9 @@ druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRE)
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
-druntime-release : ${DRUNTIME_STABLE_DIR} $(DMD_REL) $(STD_DDOC)
+druntime-release : ${DRUNTIME_STABLE_DIR} $(DMD_STABLE) $(STD_DDOC)
 	${MAKE} --directory=${DRUNTIME_STABLE_DIR} -f posix.mak target doc \
-	  DMD=$(DMD_REL) \
+	  DMD=$(DMD_STABLE) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC))"
 
@@ -438,10 +438,10 @@ phobos-prerelease : ${PHOBOS_FILES_GENERATED} $(STD_DDOC_PRE) druntime-prereleas
 	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
 	  html
 
-phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_REL) $(STD_DDOC) \
+phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_STABLE) $(STD_DDOC) \
 		druntime-release
 	${MAKE} --directory=${PHOBOS_STABLE_DIR_GENERATED} -f posix.mak \
-	  DMD=$(DMD_REL) \
+	  DMD=$(DMD_STABLE) \
 	  DRUNTIME_PATH=${DRUNTIME_STABLE_DIR} \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
 	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC))" \
@@ -507,13 +507,13 @@ else
 	DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
 endif
 
-docs.json : ${DMD_REL} ${DRUNTIME_STABLE_DIR} \
+docs.json : ${DMD_STABLE} ${DRUNTIME_STABLE_DIR} \
 		${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
 	find ${DRUNTIME_STABLE_DIR}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d > .release-files.txt
 	find ${PHOBOS_STABLE_DIR_GENERATED} -name '*.d' | \
 	  sed -e /unittest.d/d -e /windows/d | sort >> .release-files.txt
-	${DMD_REL} -c -o- -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
+	${DMD_STABLE} -c -o- -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
 	  -Xfdocs.json -I${PHOBOS_STABLE_DIR_GENERATED} @.release-files.txt
 	${DPL_DOCS} filter docs.json --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
