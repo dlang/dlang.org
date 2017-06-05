@@ -75,6 +75,7 @@ $(document).ready(function()
                         + '<input type="button" class="editButton" value="Edit">'
                         + '<input type="button" class="runButton" value="Run">'
                         + '<input type="button" class="resetButton" value="Reset">'
+                        + '<input type="button" class="openInEditorButton" value="Open in editor" style="width: 90px">'
                     + '</div>'
                     + '<div class="d_code">'
                         + '<pre class="d_code">'+orig+'</pre>'
