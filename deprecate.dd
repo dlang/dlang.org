@@ -10,6 +10,7 @@ $(SPEC_S Deprecated Features,
 
     $(TABLE2 Deprecated Features,
         $(THEAD Feature,                                                          Spec,  Dep,    Error,  Gone)
+        $(TROW $(DEPLINK Implicit comparison of different enums),                 2.075,  2.075, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Implicit string concatenation),                          2.072,  2.072, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Using the result of a comma expression),                 2.072,  2.072,  &nbsp;, &nbsp;)
         $(TROW $(DEPLINK delete),                                                 future, &nbsp;, &nbsp;, &nbsp;)
@@ -57,6 +58,41 @@ $(SPEC_S Deprecated Features,
         $(DD The feature is completely gone)
     )
 
+$(H3 $(DEPNAME Implicit comparison of different enums))
+    $(P Currently, comparison of different enumerated type is allowed:
+        ---
+        enum Status
+        {
+            good,
+            bad
+        }
+        enum OtherStatus
+        {
+            ok
+            no,
+        }
+        static assert(Status.good == OtherStatus.ok);
+        ---
+    )
+$(H4 Corrective Action)
+    $(P Comparison between unrelated enumerated types should be done with $(REF asOriginalType, std, conv))
+        ---
+        import std.conv : asOriginalType;
+        assert(Foo.x.asOriginalType == Bar.y.asOriginalType);
+        ---
+$(H4 Rationale)
+    $(P Code correctness is improved by
+        disallowing comparison of unrelated enumerated types. Implicit comparison of
+        different `enum` types often resulted in hard to spot bugs.)
+
+        ---
+        enum { X }
+        enum { Y }
+        void main() {
+            auto b = X == Y;
+            assert(b);
+        }
+        ---
 
 $(H3 $(DEPNAME Implicit string concatenation))
     $(P Currently, two adjacent strings are implicitly concatenated:
