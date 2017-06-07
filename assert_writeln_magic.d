@@ -188,6 +188,9 @@ void parseFile(string fileName, string destFile)
         warningf("%s is empty", inFile.name);
 
     ubyte[] sourceCode = uninitializedArray!(ubyte[])(to!size_t(inFile.size));
+    if (sourceCode.length == 0)
+        return;
+
     inFile.rawRead(sourceCode);
     LexerConfig config;
     auto cache = StringCache(StringCache.defaultBucketCount);
