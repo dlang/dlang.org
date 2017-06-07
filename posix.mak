@@ -39,10 +39,18 @@ REMOTE_DIR=d-programming@digitalmars.com:data
 TMP?=/tmp
 
 # Last released versions
+# By default the master branch is built under {library,phobos}-prerelease
+# with USE_MASTER_AS_STABLE=1 you can build the master branch instead of a stable release
+ifeq (,${USE_MASTER_AS_STABLE})
 DMD_STABLE_DIR=${DMD_DIR}-${LATEST}
-DMD_REL=$(DMD_STABLE_DIR)/generated/$(OS)/release/$(MODEL)/dmd
 DRUNTIME_STABLE_DIR=${DRUNTIME_DIR}-${LATEST}
 PHOBOS_STABLE_DIR=${PHOBOS_DIR}-${LATEST}
+else
+DMD_STABLE_DIR=${DMD_DIR}
+DRUNTIME_STABLE_DIR=${DRUNTIME_DIR}
+PHOBOS_STABLE_DIR=${PHOBOS_DIR}
+endif
+DMD_REL=$(DMD_STABLE_DIR)/generated/$(OS)/release/$(MODEL)/dmd
 
 ################################################################################
 # Automatically generated directories
