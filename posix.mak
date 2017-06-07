@@ -47,7 +47,6 @@ PHOBOS_STABLE_DIR=${PHOBOS_DIR}-${LATEST}
 ################################################################################
 # Automatically generated directories
 GENERATED=.generated
-G=$(GENERATED)
 PHOBOS_DIR_GENERATED=$(GENERATED)/phobos-prerelease
 PHOBOS_STABLE_DIR_GENERATED=$(GENERATED)/phobos-release
 # The assert_writeln_magic tool transforms all source files from Phobos. Hence
@@ -473,24 +472,24 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
 
 apidocs-prerelease : ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess
 apidocs-release : ${DOC_OUTPUT_DIR}/library/sitemap.xml ${DOC_OUTPUT_DIR}/library/.htaccess
-apidocs-serve : $G/docs-prerelease.json
+apidocs-serve : docs-prerelease.json
 	${DPL_DOCS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
-	  --git-target=master --web-file-dir=. $<
+	  --git-target=master --web-file-dir=. docs-prerelease.json
 
-${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml : $G/docs-prerelease.json
+${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml : docs-prerelease.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
 	  --git-target=master $(DPL_DOCS_PATH_RUN_FLAGS) \
-		$< ${DOC_OUTPUT_DIR}/library-prerelease
+		docs-prerelease.json ${DOC_OUTPUT_DIR}/library-prerelease
 
-${DOC_OUTPUT_DIR}/library/sitemap.xml : $G/docs.json
+${DOC_OUTPUT_DIR}/library/sitemap.xml : docs.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 	  --override-macros=std-ddox-override.ddoc --package-order=std \
 	  --git-target=v${LATEST} $(DPL_DOCS_PATH_RUN_FLAGS) \
-	  $< ${DOC_OUTPUT_DIR}/library
+	  docs.json ${DOC_OUTPUT_DIR}/library
 
 ${DOC_OUTPUT_DIR}/library/.htaccess : dpl_release_htaccess
 	@mkdir -p $(dir $@)
@@ -507,40 +506,40 @@ else
 	DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
 endif
 
-$G/docs.json : ${DMD} ${DMD_REL} ${DMD_STABLE_DIR} ${DRUNTIME_STABLE_DIR} \
+docs.json : ${DMD} ${DMD_REL} ${DMD_STABLE_DIR} ${DRUNTIME_STABLE_DIR} \
 		${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
 	find ${DMD_STABLE_DIR}/src -name '*.d' | \
 		sed -e /mscoff/d -e /objc_glue.d/d -e /objc.d/d ${DMD_EXCLUDE}  \
-			> $G/.release-files.txt
+			> .release-files.txt
 	find ${DRUNTIME_STABLE_DIR}/src -name '*.d' | \
-	  sed -e /unittest.d/d -e /gcstub/d >> $G/.release-files.txt
+	  sed -e /unittest.d/d -e /gcstub/d >> .release-files.txt
 	find ${PHOBOS_STABLE_DIR_GENERATED} -name '*.d' | \
-	  sed -e /unittest.d/d -e /windows/d | sort >> $G/.release-files.txt
+	  sed -e /unittest.d/d -e /windows/d | sort >> .release-files.txt
 	${DMD_REL} -J$(DMD_STABLE_DIR)/res -J$(dir $(DMD_REL)) -c -o- -version=CoreDdoc \
-		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.release-dummy.html \
-	  -Xf$@ -I${PHOBOS_STABLE_DIR_GENERATED} @$G/.release-files.txt
-	${DPL_DOCS} filter $@ --min-protection=Protected \
+		-version=MARS -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
+	  -Xfdocs.json -I${PHOBOS_STABLE_DIR_GENERATED} @.release-files.txt
+	${DPL_DOCS} filter docs.json --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
-	rm $G/.release-files.txt $G/.release-dummy.html
+	rm .release-files.txt .release-dummy.html
 
 # DDox tries to generate the docs for all `.d` files. However for dmd this is tricky,
 # because the `{mach, elf, mscoff}` are platform dependent.
 # Thus the need to exclude these files (and the `objc_glue.d` file).
-$G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
+docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		${PHOBOS_FILES_GENERATED} | dpl-docs
 	find ${DMD_DIR}/src -name '*.d' | \
 		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE}  \
-			> $G/.prerelease-files.txt
+			> .prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
-	  -e /unittest/d >> $G/.prerelease-files.txt
+	  -e /unittest/d >> .prerelease-files.txt
 	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
-	  -e /windows/d | sort >> $G/.prerelease-files.txt
+	  -e /windows/d | sort >> .prerelease-files.txt
 	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
-	  -version=StdDdoc -Df$G/.prerelease-dummy.html \
-	  -Xf$@ -I${PHOBOS_DIR_GENERATED} @$G/.prerelease-files.txt
-	${DPL_DOCS} filter $@ --min-protection=Protected \
+	  -version=StdDdoc -Df.prerelease-dummy.html \
+	  -Xfdocs-prerelease.json -I${PHOBOS_DIR_GENERATED} @.prerelease-files.txt
+	${DPL_DOCS} filter docs-prerelease.json --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_RELEASE)
-	rm $G/.prerelease-files.txt $G/.prerelease-dummy.html
+	rm .prerelease-files.txt .prerelease-dummy.html
 
 ################################################################################
 # binary targets for DDOX
