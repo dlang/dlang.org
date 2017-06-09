@@ -401,7 +401,7 @@ $(DMD_STABLE) : ${DMD_STABLE_DIR}
 	${MAKE} --directory=${DMD_STABLE_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
 dmd-release : $(STD_DDOC) $(DMD_DIR) $(DMD)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_STABLE_DIR) -f posix.mak html $(DDOC_VARS_STABLE)
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_STABLE_DIR)/src -f posix.mak src/ddmd/id.d html $(DDOC_VARS_STABLE)
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_HTML)
@@ -505,6 +505,7 @@ endif
 
 $G/docs.json : ${DMD_STABLE} ${DMD_STABLE_DIR} \
 			${DRUNTIME_STABLE_DIR} ${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_STABLE_DIR)/src -f posix.mak src/ddmd/id.d
 	find ${DMD_STABLE_DIR}/src -name '*.d' | \
 		sed -e /mscoff/d -e /objc_glue.d/d -e /objc.d/d ${DMD_EXCLUDE}  \
 			> $G/.release-files.txt
