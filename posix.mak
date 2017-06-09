@@ -263,9 +263,6 @@ $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(
 $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
-$(DOC_OUTPUT_DIR)/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
-	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
-
 $(DOC_OUTPUT_DIR)/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
 
@@ -301,6 +298,25 @@ $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
 
 $(DOC_OUTPUT_DIR)/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
+
+################################################################################
+# Spec
+################################################################################
+
+EXTRACT_DMD_BIN = $(GENERATED)/extract_dmd
+
+SPEC_HTML=$(addprefix $(DOC_OUTPUT_DIR)/, $(SPEC_ROOT))
+
+$(EXTRACT_DMD_BIN): extract_dmd.d $(DUB)
+	@mkdir -p $(dir $@)
+	$(DUB) build --single --compiler=$(STABLE_DMD) $<
+	@mv ./$(basename $<) $@
+
+$(addprefix $G/, $(SPEC_DD)): $(SPEC_DD) $(SPEC_DDOC) $(DMD) $(EXTRACT_DMD_BIN)
+	$(EXTRACT_DMD_BIN) -i $(DMD_DIR)/src/ddmd/traits.d -o $G
+
+$(DOC_OUTPUT_DIR)/spec/%.html : $(addprefix $G/, $(SPEC_DD)) $(SPEC_DDOC) $(DMD)
+	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $G/spec/$(basename $(notdir $@)).dd
 
 ################################################################################
 # Ebook
@@ -593,7 +609,7 @@ ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
 $(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB)
 	@mkdir -p $(dir $@)
 	$(DUB) build --single --compiler=$(STABLE_DMD) $<
-	@mv ./assert_writeln_magic $@
+	@mv ./$(basename $<) $@
 
 $(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
 	@mkdir -p $(dir $@)
