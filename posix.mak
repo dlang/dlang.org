@@ -503,13 +503,17 @@ else
 	DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
 endif
 
-$G/docs.json : ${DMD_STABLE} ${DRUNTIME_STABLE_DIR} \
-		${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
+$G/docs.json : ${DMD_STABLE} ${DMD_STABLE_DIR} \
+			${DRUNTIME_STABLE_DIR} ${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
+	find ${DMD_STABLE_DIR}/src -name '*.d' | \
+		sed -e /mscoff/d -e /objc_glue.d/d -e /objc.d/d ${DMD_EXCLUDE}  \
+			> $G/.release-files.txt
 	find ${DRUNTIME_STABLE_DIR}/src -name '*.d' | \
-	  sed -e /unittest.d/d -e /gcstub/d > $G/.release-files.txt
+	  sed -e /unittest.d/d -e /gcstub/d >> $G/.release-files.txt
 	find ${PHOBOS_STABLE_DIR_GENERATED} -name '*.d' | \
 	  sed -e /unittest.d/d -e /windows/d | sort >> $G/.release-files.txt
-	${DMD_STABLE} -c -o- -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
+	${DMD_STABLE} -J$(DMD_STABLE_DIR)/res -J$(dir $(DMD_STABLE)) -c -o- -version=CoreDdoc \
+	  -version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.release-dummy.html \
 	  -Xf$@ -I${PHOBOS_STABLE_DIR_GENERATED} @$G/.release-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
