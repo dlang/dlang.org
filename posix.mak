@@ -10,6 +10,7 @@
 #
 
 include osmodel.mak
+PWD=$(shell pwd)
 
 # Latest released version
 ifeq (,${LATEST})
@@ -19,19 +20,19 @@ endif
 NEXT_VERSION:=$(shell bash -c 'version=$$(cat VERSION);a=($${version//./ });a[1]="10\#$${a[1]}";((a[1]++)); a[2]=0; echo $${a[0]}.0$${a[1]}.$${a[2]};' )
 
 # DLang directories
-DMD_DIR=../dmd
-PHOBOS_DIR=../phobos
-DRUNTIME_DIR=../druntime
-TOOLS_DIR=../tools
-INSTALLER_DIR=../installer
-DUB_DIR=../dub-${DUB_VER}
+DMD_DIR=$(PWD)/../dmd
+PHOBOS_DIR=$(PWD)/../phobos
+DRUNTIME_DIR=$(PWD)/../druntime
+TOOLS_DIR=$(PWD)/../tools
+INSTALLER_DIR=$(PWD)/../installer
+DUB_DIR=$(PWD)/../dub-${DUB_VER}
 
 # External binaries
 DMD=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)/dmd
 DUB=${DUB_DIR}/bin/dub
 
 # External directories
-DOC_OUTPUT_DIR:=$(shell pwd)/web
+DOC_OUTPUT_DIR:=$(PWD)/web
 GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
@@ -105,6 +106,31 @@ else
 	CHANGELOG_VERSION_MASTER := "v${LATEST}..upstream/master"
 	CHANGELOG_VERSION_STABLE := "v${LATEST}..upstream/stable"
 endif
+
+################################################################################
+# Ddoc build variables
+################################################################################
+DDOC_VARS_STABLE=\
+	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
+	  STDDOC="$(addprefix $(PWD)/, $(STD_DDOC))" \
+	  DMD="$(DMD_STABLE)" \
+	  DRUNTIME_PATH="${DRUNTIME_DIR}" \
+	  DOCSRC="$(PWD)" \
+	  VERSION="${DMD_DIR}/VERSION"
+
+DDOC_VARS=\
+	DMD="${DMD}" \
+	DRUNTIME_PATH="${DRUNTIME_DIR}" \
+	DOCSRC="$(PWD)" \
+	VERSION="${DMD_DIR}/VERSION"
+
+DDOC_VARS_HTML=$(DDOC_VARS) \
+	DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease" \
+	STDDOC="$(addprefix $(PWD)/, $(STD_DDOC_PRE))"
+
+DDOC_VARS_VERBATIM=$(DDOC_VARS) \
+	DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim" \
+	STDDOC="$(PWD)/verbatim.ddoc"
 
 ################################################################################
 # Resources
@@ -355,14 +381,14 @@ dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
 # Git rules
 ################################################################################
 
-../%-${LATEST} :
-	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$* $@
+$(PWD)/%-${LATEST} :
+	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
 
-../%-${DUB_VER} :
-	git clone --depth=1 -b v${DUB_VER} ${GIT_HOME}/$* $@
+$(PWD)/%-${DUB_VER} :
+	git clone --depth=1 -b v${DUB_VER} ${GIT_HOME}/$(notdir $*) $@
 
 ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
-	git clone --depth=1 ${GIT_HOME}/$(@F) $@
+	git clone --depth=1 ${GIT_HOME}/$(notdir $(@F)) $@
 
 ################################################################################
 # dmd compiler, latest released build and current build
@@ -375,48 +401,39 @@ $(DMD_STABLE) : ${DMD_STABLE_DIR}
 	${MAKE} --directory=${DMD_STABLE_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
 dmd-release : $(STD_DDOC) $(DMD_DIR) $(DMD)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
-		STDDOC="$(addprefix `pwd`/, $(STD_DDOC))" \
-		DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
-		DOCSRC="$(realpath .)"
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_STABLE)
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
-		STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
-		DOCSRC="$(realpath .)" \
-		DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease"
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_HTML)
 
 dmd-prerelease-verbatim : $(STD_DDOC_PRE) $(DMD_DIR) \
 		${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim: verbatim.ddoc
 	mkdir -p $(dir $@)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html \
-		DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim" \
-		STDDOC="`pwd`/verbatim.ddoc" \
-		DOCSRC="$(realpath .)"
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_VERBATIM)
 	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
 	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
 
 ################################################################################
 # druntime, latest released build and current build
+# TODO: remove DOCDIR and DOCFMT once they have been removed at Druntime
 ################################################################################
 
 druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRE)
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc \
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_HTML) \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
 druntime-release : ${DRUNTIME_STABLE_DIR} $(DMD_STABLE) $(STD_DDOC)
-	${MAKE} --directory=${DRUNTIME_STABLE_DIR} -f posix.mak target doc \
-	  DMD=$(DMD_STABLE) \
+	${MAKE} --directory=${DRUNTIME_STABLE_DIR} -f posix.mak target doc $(DDOC_VARS_STABLE) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
-		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC))"
+	  DOCFMT="$(addprefix `pwd`/, $(STD_DDOC))"
 
 druntime-prerelease-verbatim : ${DRUNTIME_DIR} \
 		${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc \
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_VERBATIM) \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim \
 		DOCFMT="`pwd`/verbatim.ddoc"
 	mkdir -p $(dir $@)
@@ -430,40 +447,17 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 
 .PHONY: phobos-prerelease
 phobos-prerelease : ${PHOBOS_FILES_GENERATED} $(STD_DDOC_PRE) druntime-prerelease
-	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak \
-	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC_PRE))" \
-	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease" \
-	  DRUNTIME_PATH="$(realpath ${DRUNTIME_DIR})" \
-	  DMD="$(realpath ${DMD})" \
-	  DOCSRC="$(realpath .)" \
-	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
-	  html
+	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_HTML)
 
-phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_STABLE) $(STD_DDOC) \
-		druntime-release
-	${MAKE} --directory=${PHOBOS_STABLE_DIR_GENERATED} -f posix.mak \
-	  DMD=$(DMD_STABLE) \
-	  DRUNTIME_PATH=${DRUNTIME_STABLE_DIR} \
-	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos \
-	  STDDOC="$(addprefix `pwd`/, $(STD_DDOC))" \
-	  DRUNTIME_PATH="$(realpath ${DRUNTIME_DIR})" \
-	  DMD="$(realpath ${DMD})" \
-	  DOCSRC="$(realpath .)" \
-	  VERSION="$(realpath ${DMD_DIR}/VERSION)" \
-	  html
+phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_STABLE) $(STD_DDOC) druntime-release
+	$(MAKE) --directory=$(PHOBOS_STABLE_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_STABLE)
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim \
 	    ${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim
-	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak \
-	    STDDOC="`pwd`/verbatim.ddoc" \
-	    DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim \
-	  	DRUNTIME_PATH="$(realpath ${DRUNTIME_DIR})" \
-	  	DMD="$(realpath ${DMD})" \
-	  	DOCSRC="$(realpath .)" \
-	  	VERSION="$(realpath ${DMD_DIR}/VERSION)" \
-	  	html
+	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak html $(DDOC_VARS_VERBATIM) \
+	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
 	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
 	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
