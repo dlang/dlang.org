@@ -9,8 +9,6 @@
 # make -f posix.mak rsync
 #
 
-include osmodel.mak
-
 # Latest released version
 ifeq (,${LATEST})
 LATEST:=$(shell cat VERSION)
@@ -61,6 +59,10 @@ $(shell [ ! -d $(PHOBOS_STABLE_DIR) ] && git clone -b v${LATEST} --depth=1 ${GIT
 PHOBOS_STABLE_FILES := $(shell find $(PHOBOS_STABLE_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
 PHOBOS_STABLE_FILES_GENERATED := $(subst $(PHOBOS_STABLE_DIR), $(PHOBOS_STABLE_DIR_GENERATED), $(PHOBOS_STABLE_FILES))
 ################################################################################
+
+# include global osmodel.mak
+$(shell [ ! -d $(TOOLS_DIR) ] && git clone $(GIT_HOME)/tools $(TOOLS_DIR))
+include $(TOOLS_DIR)/osmodel.mak
 
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=1.1.0
