@@ -25,11 +25,11 @@ function wrapIntoMain(code) {
         codeOut += code;
     }
     else {
-        var codeOut = "void main(){ ";
-        codeOut += "import " + currentPackage + "; ";
+        var codeOut = "void main()\n{\n";
+        codeOut += "    import " + currentPackage + ";\n";
         // writing to the stdout is probably often used
-        codeOut += "import std.stdio: write, writeln, writef, writefln; ";
-        codeOut += code;
+        codeOut += "    import std.stdio: write, writeln, writef, writefln;\n    ";
+        codeOut += code.split("\n").join("\n    ");
         codeOut += "\n}";
     }
     return codeOut;
@@ -73,9 +73,9 @@ $(document).ready(function()
                 '<div>'
                     + '<div class="d_example_buttons">'
                         + '<input type="button" class="editButton" value="Edit">'
+                        + '<input type="button" class="openInEditorButton" value="Edit (external)" style="width: 90px">'
                         + '<input type="button" class="runButton" value="Run">'
                         + '<input type="button" class="resetButton" value="Reset">'
-                        + '<input type="button" class="openInEditorButton" value="Open in editor" style="width: 90px">'
                     + '</div>'
                     + '<div class="d_code">'
                         + '<pre class="d_code">'+orig+'</pre>'
