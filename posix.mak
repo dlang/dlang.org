@@ -41,7 +41,7 @@ TMP?=/tmp
 
 # Last released versions
 DMD_STABLE_DIR=${DMD_DIR}-${LATEST}
-DMD_STABLE=$(DMD_STABLE_DIR)/src/dmd
+DMD_STABLE=$(DMD_STABLE_DIR)/generated/$(OS)/release/$(MODEL)/dmd
 DRUNTIME_STABLE_DIR=${DRUNTIME_DIR}-${LATEST}
 PHOBOS_STABLE_DIR=${PHOBOS_DIR}-${LATEST}
 
@@ -245,10 +245,10 @@ ${GENERATED}/${LATEST}.ddoc :
 	mkdir -p $(dir $@)
 	echo "LATEST=${LATEST}" >$@
 
-${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR)
+${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR) $(DMD_STABLE_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR) $(MOD_EXCLUDES_RELEASE) \
-		$(addprefix --dump , object std etc core) >$@
+	$(STABLE_RDMD) modlist.d $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR) $(DMD_STABLE_DIR) $(MOD_EXCLUDES_RELEASE) \
+		$(addprefix --dump , object std etc core ddmd) >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR)
 	mkdir -p $(dir $@)
@@ -401,7 +401,7 @@ $(DMD_STABLE) : ${DMD_STABLE_DIR}
 	${MAKE} --directory=${DMD_STABLE_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
 dmd-release : $(STD_DDOC) $(DMD_DIR) $(DMD)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_STABLE)
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_STABLE_DIR)/src -f posix.mak src/ddmd/id.d html $(DDOC_VARS_STABLE)
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_HTML)
@@ -449,7 +449,8 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 phobos-prerelease : ${PHOBOS_FILES_GENERATED} $(STD_DDOC_PRE) druntime-prerelease
 	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_HTML)
 
-phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_STABLE) $(STD_DDOC) druntime-release
+phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_STABLE) $(STD_DDOC) \
+		druntime-release dmd-release
 	$(MAKE) --directory=$(PHOBOS_STABLE_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_STABLE)
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
@@ -502,13 +503,18 @@ else
 	DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
 endif
 
-$G/docs.json : ${DMD_STABLE} ${DRUNTIME_STABLE_DIR} \
-		${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
+$G/docs.json : ${DMD_STABLE} ${DMD_STABLE_DIR} \
+			${DRUNTIME_STABLE_DIR} ${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_STABLE_DIR)/src -f posix.mak src/ddmd/id.d
+	find ${DMD_STABLE_DIR}/src -name '*.d' | \
+		sed -e /mscoff/d -e /objc_glue.d/d -e /objc.d/d ${DMD_EXCLUDE}  \
+			> $G/.release-files.txt
 	find ${DRUNTIME_STABLE_DIR}/src -name '*.d' | \
-	  sed -e /unittest.d/d -e /gcstub/d > $G/.release-files.txt
+	  sed -e /unittest.d/d -e /gcstub/d >> $G/.release-files.txt
 	find ${PHOBOS_STABLE_DIR_GENERATED} -name '*.d' | \
 	  sed -e /unittest.d/d -e /windows/d | sort >> $G/.release-files.txt
-	${DMD_STABLE} -c -o- -version=CoreDdoc -version=StdDdoc -Df.release-dummy.html \
+	${DMD_STABLE} -J$(DMD_STABLE_DIR)/res -J$(dir $(DMD_STABLE)) -c -o- -version=CoreDdoc \
+	  -version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.release-dummy.html \
 	  -Xf$@ -I${PHOBOS_STABLE_DIR_GENERATED} @$G/.release-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
