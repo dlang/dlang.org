@@ -560,7 +560,7 @@ ${STABLE_DMD}:
 		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
 
 ${DUB}: ${DUB_DIR} ${STABLE_DMD}
-	cd ${DUB_DIR} && DC="$(abspath ${STABLE_DMD}) -conf=$(abspath ${STABLE_DMD_CONF})" ./build.sh
+	cd ${DUB_DIR} && DMD="${STABLE_DMD}" ./build.sh
 
 ################################################################################
 # chm help files
@@ -589,9 +589,14 @@ d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 
 ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
 
-$(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB)
+$(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB) $(STABLE_DMD)
 	@mkdir -p $(dir $@)
 	$(DUB) build --single --compiler=$(STABLE_DMD) $<
+	@mv ./assert_writeln_magic $@
+
+$(ASSERT_WRITELN_BIN)_test: assert_writeln_magic.d $(DUB) $(STABLE_DMD)
+	@mkdir -p $(dir $@)
+	$(DUB) build --single --compiler=$(STABLE_DMD) --build=unittest $<
 	@mv ./assert_writeln_magic $@
 
 $(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
@@ -610,9 +615,12 @@ $(PHOBOS_STABLE_FILES_GENERATED): $(PHOBOS_STABLE_DIR_GENERATED)/%: $(PHOBOS_STA
 # Style tests
 ################################################################################
 
-test:
+test: $(ASSERT_WRITELN_BIN)_test
 	@echo "Searching for trailing whitespace"
-	if [[ $$(find . -type f -name "*.dd" -exec egrep -l " +$$" {} \;) ]] ;  then $$(exit 1); fi
+	@echo "Check for trailing whitespace"
+	grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
+	@echo "Executing assert_writeln_magic tests"
+	$<
 
 ################################################################################
 # Changelog generation

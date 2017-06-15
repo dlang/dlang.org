@@ -43,14 +43,13 @@ private string formatNode(T)(const T t)
     return writer.data;
 }
 
-class TestVisitor : ASTVisitor
+class TestVisitor(Out) : ASTVisitor
 {
     import dparse.lexer : tok, Token;
 
-    this(string fileName, string destFile)
+    this(Out fl)
     {
-        this.fileName = fileName;
-        fl = FileLines(fileName, destFile);
+        this.fl = fl;
     }
 
     alias visit = ASTVisitor.visit;
@@ -75,6 +74,10 @@ class TestVisitor : ASTVisitor
     override void visit(const AssertExpression expr)
     {
         if (inFunctionCall)
+            return;
+
+        // only look at `a == b` within the AssertExpression
+        if (typeid(expr.assertion) != typeid(CmpExpression))
             return;
 
         lastAssert = expr;
@@ -172,15 +175,26 @@ private:
     Rebindable!(const AssertExpression) lastAssert;
     Rebindable!(const EqualExpression) lastEqualExpression;
 
-    string fileName;
-    FileLines fl;
+    Out fl;
 }
 
-void parseFile(string fileName, string destFile)
+void parseString(Visitor)(ubyte[] sourceCode, string fileName, Visitor visitor)
 {
     import dparse.lexer;
     import dparse.parser : parseModule;
     import dparse.rollback_allocator : RollbackAllocator;
+
+    LexerConfig config;
+    auto cache = StringCache(StringCache.defaultBucketCount);
+    const(Token)[] tokens = getTokensForParser(sourceCode, config, &cache).array;
+
+    RollbackAllocator rba;
+    auto m = parseModule(tokens, fileName, &rba);
+    visitor.visit(m);
+}
+
+void parseFile(string fileName, string destFile)
+{
     import std.array : uninitializedArray;
 
     auto inFile = File(fileName);
@@ -192,14 +206,9 @@ void parseFile(string fileName, string destFile)
         return;
 
     inFile.rawRead(sourceCode);
-    LexerConfig config;
-    auto cache = StringCache(StringCache.defaultBucketCount);
-    const(Token)[] tokens = getTokensForParser(sourceCode, config, &cache).array;
-
-    RollbackAllocator rba;
-    auto m = parseModule(tokens, fileName, &rba);
-    auto visitor = new TestVisitor(fileName, destFile);
-    visitor.visit(m);
+    auto fl = FileLines(fileName, destFile);
+    auto visitor = new TestVisitor!(typeof(fl))(fl);
+    parseString(sourceCode, fileName, visitor);
     delete visitor;
 }
 
@@ -211,6 +220,7 @@ string rebasePath(string path, string oldBase, string newBase)
     return buildPath(newBase, path.absolutePath.relativePath(oldBase.absolutePath));
 }
 
+version(unittest) { void main(){} } else
 void main(string[] args)
 {
     import std.file;
@@ -323,4 +333,69 @@ struct FileLines
         hasWrittenChanges = true;
         lines[i] = line;
     }
+}
+
+version(unittest)
+{
+    struct FileLinesMock
+    {
+        string[] lines;
+        string opIndex(size_t i) { return lines[i]; }
+        void opIndexAssign(string line, size_t i) {
+            lines[i] = line;
+        }
+    }
+    auto runTest(string sourceCode)
+    {
+        import std.string : representation;
+        auto mock = FileLinesMock(sourceCode.split("\n"));
+        auto visitor = new TestVisitor!(typeof(mock))(mock);
+        parseString(sourceCode.representation.dup, "testmodule", visitor);
+        delete visitor;
+        return mock;
+    }
+}
+
+
+unittest
+{
+    "Running tests for assert_writeln_magic".writeln;
+
+    // purposefully not indented
+    string testCode = q{
+unittest
+{
+assert(equal(splitter!(a => a == ' ')("hello  world"), [ "hello", "", "world" ]));
+assert(equal(splitter!(a => a == 0)(a), w));
+}
+    };
+    auto res = runTest(testCode);
+    assert(res.lines[3 .. $ - 2] == [
+        "assert(equal(splitter!(a => a == ' ')(\"hello  world\"), [ \"hello\", \"\", \"world\" ]));",
+        "assert(equal(splitter!(a => a == 0)(a), w));"
+    ]);
+}
+
+unittest
+{
+    string testCode = q{
+unittest
+{
+assert(1 == 2);
+assert(foo() == "bar");
+assert(foo() == bar);
+assert(arr == [0, 1, 2]);
+assert(r.back == 1);
+}
+    };
+    auto res = runTest(testCode);
+    assert(res.lines[3 .. $ - 2] == [
+        "writeln(1); // 2",
+        "writeln(foo()); // \"bar\"",
+        "writeln(foo()); // bar",
+        "writeln(arr); // [0, 1, 2]",
+        "writeln(r.back); // 1",
+    ]);
+
+    "Successfully ran tests for assert_writeln_magic".writeln;
 }
