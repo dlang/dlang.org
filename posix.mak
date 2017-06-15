@@ -110,7 +110,7 @@ endif
 ################################################################################
 # Ddoc build variables
 ################################################################################
-DDOC_VARS_STABLE=\
+DDOC_VARS_STABLE_HTML=\
 	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
 	  STDDOC="$(addprefix $(PWD)/, $(STD_DDOC))" \
 	  DMD="$(DMD_STABLE)" \
@@ -401,7 +401,7 @@ $(DMD_STABLE) : ${DMD_STABLE_DIR}
 	${MAKE} --directory=${DMD_STABLE_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
 dmd-release : $(STD_DDOC) $(DMD_STABLE_DIR) $(DMD_STABLE)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_STABLE_DIR) -f posix.mak html $(DDOC_VARS_STABLE)
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_STABLE_DIR) -f posix.mak html $(DDOC_VARS_STABLE_HTML)
 
 dmd-prerelease : $(STD_DDOC_PRE) $(DMD_DIR) $(DMD)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_HTML)
@@ -426,7 +426,7 @@ druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRE)
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRE))"
 
 druntime-release : ${DRUNTIME_STABLE_DIR} $(DMD_STABLE) $(STD_DDOC)
-	${MAKE} --directory=${DRUNTIME_STABLE_DIR} -f posix.mak target doc $(DDOC_VARS_STABLE) \
+	${MAKE} --directory=${DRUNTIME_STABLE_DIR} -f posix.mak target doc $(DDOC_VARS_STABLE_HTML) \
 	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
 	  DOCFMT="$(addprefix `pwd`/, $(STD_DDOC))"
 
@@ -451,7 +451,7 @@ phobos-prerelease : ${PHOBOS_FILES_GENERATED} $(STD_DDOC_PRE) druntime-prereleas
 
 phobos-release : ${PHOBOS_STABLE_FILES_GENERATED} $(DMD_STABLE) $(STD_DDOC) \
 		druntime-release dmd-release
-	$(MAKE) --directory=$(PHOBOS_STABLE_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_STABLE)
+	$(MAKE) --directory=$(PHOBOS_STABLE_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_STABLE_HTML)
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
