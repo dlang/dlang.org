@@ -560,7 +560,7 @@ ${STABLE_DMD}:
 		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
 
 ${DUB}: ${DUB_DIR} ${STABLE_DMD}
-	cd ${DUB_DIR} && DC="$(abspath ${STABLE_DMD}) -conf=$(abspath ${STABLE_DMD_CONF})" ./build.sh
+	cd ${DUB_DIR} && DMD="${STABLE_DMD}" ./build.sh
 
 ################################################################################
 # chm help files
