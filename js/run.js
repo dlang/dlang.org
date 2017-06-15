@@ -335,17 +335,15 @@ $(document).ready(function()
 
     var currentPage = $(location).attr('pathname');
 
-    if ($('body')[0].id != "Home")
-        return;
-
-    $('pre[class~=d_code]').each(function(index)
+    $('.runnable-examples').each(function(index)
     {
-        var stripedText = $(this).text().replace(/\s/gm,'');
+        var el = $(this).children().first();
+        var stripedText = el.text().replace(/\s/gm,'');
         var md5sum = MD5(stripedText);
 
         var stdin = "";
         var args = "";
-        var currentExample = $(this);
+        var currentExample = el;
         var orig = currentExample.html();
 
         if (typeof mainPage !== 'undefined' && md5sum in mainPage)
