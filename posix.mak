@@ -157,7 +157,7 @@ IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed dlang ddox listanchors platform-downloads run \
-	run_examples run-main-website show_contributors jquery-1.7.2.min))
+	run_examples show_contributors jquery-1.7.2.min))
 
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox))
