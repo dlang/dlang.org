@@ -305,6 +305,32 @@ $(H3 $(LNAME2 construction_and_ref_semantic, Construction and Reference Semantic
         assert(aa[2] == 2);      // now both refer to the same instance
         ------
 
+$(H3 $(LNAME2 mutation_while_iteration, Mutation during Iteration))
+
+    $(P It is legal to change the value of key and remove it from the associative array during an
+        iteration. However, it it not guaranteed that a newly inserted key will be part of the current iteration.
+    )
+
+        ------
+        unittest
+        {
+            int[string] hash = ["a":5, "b":2, "c": 7, "d": 9, "e": 1];
+            foreach (key, ref value; hash)
+            {
+                if (value < 5)
+                    hash.remove(key);
+                else
+                {
+                    value++;
+                    hash["_"] = 0; // won't be seen during this iteration
+                    hash["foo"] = 0;
+                }
+                count++;
+            }
+            assert(count == 6);
+            assert(hash == ["c":8, "a":6, "d":10, "foo": 0, "_": 0]);
+        }
+        ------
 
 $(H3 $(LNAME2 properties, Properties))
 
