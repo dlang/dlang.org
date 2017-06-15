@@ -594,6 +594,11 @@ $(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB)
 	$(DUB) build --single --compiler=$(STABLE_DMD) $<
 	@mv ./assert_writeln_magic $@
 
+$(ASSERT_WRITELN_BIN)_test: assert_writeln_magic.d $(DUB)
+	@mkdir -p $(dir $@)
+	$(DUB) build --single --compiler=$(STABLE_DMD) --build=unittest $<
+	@mv ./assert_writeln_magic $@
+
 $(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
 	@mkdir -p $(dir $@)
 	@if [ $(subst .,, $(suffix $@)) == "d" ] && [ "$@" != "$(PHOBOS_DIR_GENERATED)/index.d" ] ; then \
@@ -610,9 +615,12 @@ $(PHOBOS_STABLE_FILES_GENERATED): $(PHOBOS_STABLE_DIR_GENERATED)/%: $(PHOBOS_STA
 # Style tests
 ################################################################################
 
-test:
+test: $(ASSERT_WRITELN_BIN)_test
 	@echo "Searching for trailing whitespace"
-	if [[ $$(find . -type f -name "*.dd" -exec egrep -l " +$$" {} \;) ]] ;  then $$(exit 1); fi
+	@echo "Check for trailing whitespace"
+	grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
+	@echo "Executing assert_writeln_magic tests"
+	$<
 
 ################################################################################
 # Changelog generation
