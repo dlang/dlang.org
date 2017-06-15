@@ -589,12 +589,12 @@ d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 
 ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
 
-$(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB)
+$(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB) $(STABLE_DMD)
 	@mkdir -p $(dir $@)
 	$(DUB) build --single --compiler=$(STABLE_DMD) $<
 	@mv ./assert_writeln_magic $@
 
-$(ASSERT_WRITELN_BIN)_test: assert_writeln_magic.d $(DUB)
+$(ASSERT_WRITELN_BIN)_test: assert_writeln_magic.d $(DUB) $(STABLE_DMD)
 	@mkdir -p $(dir $@)
 	$(DUB) build --single --compiler=$(STABLE_DMD) --build=unittest $<
 	@mv ./assert_writeln_magic $@
