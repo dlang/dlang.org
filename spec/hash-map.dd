@@ -307,24 +307,38 @@ $(H3 $(LNAME2 construction_and_ref_semantic, Construction and Reference Semantic
 
 $(H3 $(LNAME2 mutation_while_iteration, Mutation during Iteration))
 
-    $(P It is legal to change the value of key and remove it from the associative array during an
-        iteration. However, it it not guaranteed that a newly inserted key will be part of the current iteration.
+    $(P There's no guarantee that $(I removing) an entry doesn't
+        trigger a rehashing and that as a consequence the index variable
+        isn't invalidated and still points to the same, remaining elements
+        of the ongoing iteration. Similarly $(I inserting) a new key isn't
+        guaranteed to maintain the same iteration. $(I Modifying) a key needs to
+        be considered as a removal and insertion and thus can trigger a rehashing
+        as well.
+        However, it is legal to $(I change) the associated value during an iteration.
+        $(I Key lookup) (`key in arr`) is also guaranteed not to cause a rehashing.
     )
 
         ------
         unittest
         {
+            import std.stdio : writeln;
+            int count = 0;
+
             int[string] hash = ["a":5, "b":2, "c": 7, "d": 9, "e": 1];
             foreach (key, ref value; hash)
             {
                 if (value < 5)
-                    hash.remove(key);
+                    hash.remove(key); // DANGEROUS: removal might cause a rehashing
                 else
                 {
+                    // DANGEROUS: insertion might cause a rehashing
+                    // For example, with the current implementation
+                    // the following can be observed:
+                    hash["_"] = 0;   // _not_ seen during this iteration
+                    hash["foo"] = 0; //       seen during this iteration
                     value++;
-                    hash["_"] = 0; // won't be seen during this iteration
-                    hash["foo"] = 0;
                 }
+                hash.writeln;
                 count++;
             }
             assert(count == 6);
