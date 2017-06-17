@@ -29,6 +29,8 @@ $(DIVC intro, $(DIV, $(DIV,
             )
         )
         $(DIVID your-code-here-default,
+$(RUNNABLE_EXAMPLE
+$(RUNNABLE_EXAMPLE_STDIN 2.4 plus 2.4 equals 5 for sufficiently large values of 2.)
 ----
 // Round floating point numbers
 import std.algorithm, std.conv, std.functional,
@@ -49,7 +51,17 @@ void main()
 }
 ----
 )
+)
 $(EXTRA_EXAMPLE
+$(RUNNABLE_EXAMPLE_STDIN
+Mercury
+Venus
+Earth
+Mars
+Jupiter
+Saturn
+Uranus
+Neptune)
 ----
 // Sort lines
 import std.stdio, std.array, std.algorithm;
@@ -85,9 +97,14 @@ $(DIVC boxes,
     $(DIVC row,
         $(TOUR newspaper-o, News,
             $(P $(LINK2 http://dconf.org/2017/index.html, DConf 2017)
-                is coming up: May 4-7 in Berlin, Germany. $(BR)
-                $(LINK2 http://dconf.org/2017/registration.html, Secure your seat)
-                before it's sold out!
+                has successfully concluded!
+            )
+            $(P
+                Whether you were with us in Berlin or watching from
+                home, we thank everyone for participating. You can
+                review the conference through $(LINK2
+                http://youtube.com/playlist?list=PL3jwVPmk_PRxo23yyoc0Ip_cP3-rCm7eB,
+                this YouTube playlist).
             )
             $(P Stay updated with
                 $(LINK2 http://arsdnet.net/this-week-in-d,
@@ -124,7 +141,7 @@ $(DIVC boxes,
                 Browse the $(LINK2 https://wiki.dlang.org/, wiki) where among
                 other things you can find the
                 $(LINK2 https://wiki.dlang.org/Vision/2017H1, high-level vision)
-                of the $(LINK2 $(ROOT_DIR)foundation.html, D foundation).
+                of the $(LINK2 $(ROOT_DIR)foundation.html, D Language Foundation).
             )
         )
         $(TOUR book, Documentation,
@@ -132,7 +149,7 @@ $(DIVC boxes,
                 $(LINK2 $(ROOT_DIR)spec/spec.html, language) and for
                 $(LINK2 $(ROOT_DIR)phobos/index.html, phobos), D's standard
                 library. The
-                $(LINK2 $(ROOT_DIR)dmd-windows.html, DMD manual) tells you how
+                $(LINK2 $(ROOT_DIR)dmd.html, DMD manual) tells you how
                 to use the compiler. Read
                 $(LINK2 $(ROOT_DIR)articles.html, various articles) to deepen
                 your understanding.
@@ -220,6 +237,11 @@ void main()
 
 $(P Built-in linear and associative arrays, slices, and ranges make daily
 programming simple and pleasant for tasks, both small and large. $(EXAMPLE 3,
+$(RUNNABLE_EXAMPLE_STDIN
+The D programming language
+Modern convenience.
+Modeling power.
+Native efficiency.)
 ----
 #!/usr/bin/env rdmd
 import std.range, std.stdio;
@@ -413,12 +435,11 @@ Macros:
     TAG=<$1>$+</$1>
     TAG2=<$1 $2>$3</$1>
     D=<span class="d_inlinecode">$0</span>
-    EXAMPLE=$(TAG2 a, id="a$1-control" class="example-control", )$(TAG2 div, id="a$1" class="example-box", $2)
-    EXTRA_EXAMPLE=<div class="your-code-here-extra" style="display:none">$0</div>
+    EXAMPLE=$(TAG2 a, id="a$1-control" class="example-control", )$(TAG2 div, id="a$1" class="example-box", $(RUNNABLE_EXAMPLE $2))
+    EXTRA_EXAMPLE=<div class="your-code-here-extra" style="display:none">$(RUNNABLE_EXAMPLE $0)</div>
     LAYOUT_PREFIX=
     LAYOUT_SUFFIX=
     $(SCRIPTLOAD $(ROOT_DIR)js/platform-downloads.js,  data-latest="$(LATEST)")
-    $(SCRIPTLOAD $(ROOT_DIR)js/run-main-website.js)
     $(SCRIPTLOAD //arsdnet.net/this-week-in-d/twid-latest.js)
     LAYOUT_TITLE=
     TOUR=$(DIVC item, $(SECTION4 $(LINK2 $1, $(TC i, fa fa-$2 big-icon)$3), $4))
@@ -429,6 +450,7 @@ Macros:
     FRONTPAGE_ORG=$(DIVC frontpage-orgs-cell dont-highlight-link donthyphenate, $(LINK2 $2, $(FRONTPAGE_ORG_IMG $3)) $(H3 $1) $(P $(I $4 )))
     _= Single word inline CSS needs to be escaped _=
     C_A=$1:$2;
+    META_DESCRIPTION=D is a systems programming language with C-like syntax and static typing.
     EXTRA_HEADERS=$(T style,
         .why-d-icon {
             padding-right: 0.2em;
@@ -462,3 +484,10 @@ Macros:
             margin-bottom: -0.5em;
         }
     )
+    $(COMMENT index.html only for now, until we can figure out
+              how to generate a URL to the current page for og:url)
+    <meta property="og:title" content="$(FULL_TITLE)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dlang.org/" />
+    <meta property="og:image" content="https://dlang.org/images/dlogo_opengraph.png" />
+    <meta property="og:description" content="$(META_DESCRIPTION)" />
