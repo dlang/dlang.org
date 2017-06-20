@@ -615,10 +615,11 @@ $(PHOBOS_STABLE_FILES_GENERATED): $(PHOBOS_STABLE_DIR_GENERATED)/%: $(PHOBOS_STA
 # Style tests
 ################################################################################
 
-test: $(ASSERT_WRITELN_BIN)_test
+test: $(ASSERT_WRITELN_BIN)_test all
 	@echo "Searching for trailing whitespace"
-	@echo "Check for trailing whitespace"
-	grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
+	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
+	@echo "Searching for undefined macros"
+	@grep -n "UNDEFINED MACRO" $$(find $(DOC_OUTPUT_DIR) -type f -name "*.html" -not -path "$(DOC_OUTPUT_DIR)/phobos/*") ; test $$? -eq 1
 	@echo "Executing assert_writeln_magic tests"
 	$<
 
