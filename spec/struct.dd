@@ -167,11 +167,13 @@ $(H3 $(LNAME2 static_struct_init, Static Initialization of Structs))
         Initializers for statics must be evaluatable at compile time.
         Members not specified in the initializer list are default initialized.
 
+$(RUNNABLE_EXAMPLE
 ------
 struct S { int a; int b; int c; int d = 7;}
 static S x = { a:1, b:2};            // c is set to 0, d to 7
 static S z = { c:4, b:5, a:2 , d:5}; // z.a = 2, z.b = 5, z.c = 4, z.d = 5
 ------
+)
 
         C-style initialization, based on the order of the members in the
         struct declaration, is also supported:
@@ -203,10 +205,12 @@ $(H3 $(LNAME2 static_union_init, Static Initialization of Unions))
 
         Unions are initialized explicitly.
 
+$(RUNNABLE_EXAMPLE
 ------
 union U { int a; double b; }
 static U u = { b : 5.0 }; // u.b = 5.0
 ------
+)
 
         Other members of the union that overlay the initializer,
         but occupy more storage, have
@@ -303,6 +307,7 @@ $(SECTION3 $(LEGACY_LNAME2 ConstStruct, const-struct, Const, Immutable and Share
         $(CODE const), $(CODE immutable) or $(CODE shared).
         )
 
+        $(RUNNABLE_EXAMPLE
         ----
         const struct S { int a; int b = 2; }
 
@@ -314,6 +319,7 @@ $(SECTION3 $(LEGACY_LNAME2 ConstStruct, const-struct, Const, Immutable and Share
             t.a = 4;    // error, t.a is const
         }
         ----
+        )
 )
 
 $(SECTION3 $(LEGACY_LNAME2 Struct-Constructor, struct-constructor, Struct Constructors),
@@ -325,6 +331,7 @@ $(SECTION3 $(LEGACY_LNAME2 Struct-Constructor, struct-constructor, Struct Constr
         are default initialized to their $(CODE .init) value.
         )
 
+        $(RUNNABLE_EXAMPLE
         ------
         struct S
         {
@@ -347,6 +354,7 @@ $(SECTION3 $(LEGACY_LNAME2 Struct-Constructor, struct-constructor, Struct Constr
             auto b = S();  // same as auto b = S.init;
         }
         ------
+        )
 
 $(COMMENT
 $(P Inside a constructor, the first occurrence (in lexical order) of assignments
@@ -354,6 +362,7 @@ of the form $(CODE member = expression;) are handled differently than usual
 assignments. The first such assignment in lexical order is converted to a
 constructor call for the member's type. Example:)
 
+$(RUNNABLE_EXAMPLE
 ------
 import std.stdio;
 
@@ -380,6 +389,7 @@ void main(string[] args)
     // b.a = 10; does not compile here, A does not define opAssign(int).
 }
 ------
+)
 
 $(P The program above prints the line $(CODE "[= A.this(10) =]"). Anywhere else
 attempting to assign an integer to an object of type `A` would count as an
@@ -389,6 +399,7 @@ $(P Finding the first assignment in lexical order is flow-sensitive upon the
 `if` statement. Consider a change to struct `B` in the previous example as
 follows:)
 
+$(RUNNABLE_EXAMPLE
 ------
 struct B
 {
@@ -402,11 +413,13 @@ struct B
     }
 }
 ------
+)
 
 $(P This code issues a constructor call on each branch of the `if` statement.
 However, such flow sensitivity is limited. There is no static or dynamic
 analysis of coverage of the `if` statement. For example:)
 
+$(RUNNABLE_EXAMPLE
 ------
 struct B
 {
@@ -418,11 +431,13 @@ struct B
     }
 }
 ------
+)
 
 $(P Also, member assignments inside loops are never considered constructors,
 even if it can be determined statically that the loop executes at most once.
 Example:)
 
+$(RUNNABLE_EXAMPLE
 ------
 struct B
 {
@@ -433,6 +448,7 @@ struct B
     }
 }
 ------
+)
 
 $(P If an exception is thrown at any point from within a constructor,
 destructors are called for all members, in reverse lexical order of their
@@ -444,6 +460,7 @@ constructor will have their `.init` values upon destruction.)
         that specific qualifier.
         )
 
+        $(RUNNABLE_EXAMPLE
         ------
         struct S1
         {
@@ -482,11 +499,14 @@ constructor will have their `.init` values upon destruction.)
             immutable i2 = immutable S2(1);
         }
         ------
+        )
 
         $(P If struct constructor is annotated with $(D @disable) and has
         empty parameter, the struct is disabled construction without calling
         other constructor.
         )
+
+        $(RUNNABLE_EXAMPLE
         ------
         struct S
         {
@@ -504,6 +524,7 @@ constructor will have their `.init` values upon destruction.)
             S s = S(1);   // construction with calling constructor
         }
         ------
+        )
 )
 
 $(SECTION3 $(LEGACY_LNAME2 StructPostblit, struct-postblit, Struct Postblits),
@@ -533,6 +554,7 @@ $(GNAME Postblit):
         etc. For example:
         )
 
+        $(RUNNABLE_EXAMPLE
         ---
         struct S
         {
@@ -543,10 +565,12 @@ $(GNAME Postblit):
             }
         }
         ---
+        )
 
         $(P Disabling struct postblit makes the object not copyable.
         )
 
+        $(RUNNABLE_EXAMPLE
         ---
         struct T
         {
@@ -563,6 +587,7 @@ $(GNAME Postblit):
             S t = s; // error, S is not copyable
         }
         ---
+        )
 
         $(P Unions may not have fields that have postblits.)
 )
@@ -634,6 +659,7 @@ $(SECTION3 $(LEGACY_LNAME2 AssignOverload, assign-overload, Identity Assignment 
         is if the struct has a reference to a local buffer:
         )
 
+        $(RUNNABLE_EXAMPLE
         ---
         struct S
         {
@@ -652,6 +678,7 @@ $(SECTION3 $(LEGACY_LNAME2 AssignOverload, assign-overload, Identity Assignment 
             }
         }
         ---
+        )
 
         $(P Here, $(CODE S) has a temporary workspace $(CODE buf[]).
         The normal postblit
@@ -671,6 +698,7 @@ $(H2 $(LNAME2 nested, Nested Structs))
         It has access to the context of its enclosing scope
         (via an added hidden field).
 
+        $(RUNNABLE_EXAMPLE
         ---
         void foo()
         {
@@ -685,6 +713,7 @@ $(H2 $(LNAME2 nested, Nested Structs))
             s.bar(); // returns 11
         }
         ---
+        )
     )
 
     $(P A struct can be prevented from being nested by
@@ -692,6 +721,7 @@ $(H2 $(LNAME2 nested, Nested Structs))
         will not be able to access variables from its enclosing
         scope.
 
+        $(RUNNABLE_EXAMPLE
         ---
         void foo()
         {
@@ -706,6 +736,7 @@ $(H2 $(LNAME2 nested, Nested Structs))
             }
         }
         ---
+        )
     )
 
 $(H2 $(LNAME2 unions_and_special_memb_funct, Unions and Special Member Functions))
