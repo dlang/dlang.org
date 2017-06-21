@@ -112,6 +112,7 @@ $(H3 $(LNAME2 fields, Fields))
 	$(P Members of a base class can be accessed by prepending the name of
 	the base class followed by a dot:)
 
+$(RUNNABLE_EXAMPLE
 ---
 class A { int a; int a2;}
 class B : A { int a; }
@@ -123,6 +124,7 @@ void foo(B b)
     b.A.a = 5; // accesses field A.a
 }
 ---
+)
 
         $(P The D compiler is free to rearrange the order of fields in a class to
         optimally pack them in an implementation-defined manner.
@@ -170,6 +172,8 @@ $(H3 $(LNAME2 class_properties, Class Properties))
         in the class, excluding the hidden fields and the fields in the
         base class.
         )
+
+$(RUNNABLE_EXAMPLE
 ---
 class Foo { int x; long y; }
 void test(Foo foo)
@@ -180,6 +184,7 @@ void test(Foo foo)
         write(x);       // prints 12
 }
 ---
+)
 
         $(P The properties $(D .__vptr) and $(D .__monitor) give access
         to the class object's vtbl[] and monitor, respectively, but
@@ -204,6 +209,8 @@ $(H3 $(LNAME2 member-functions, Member Functions))
 	$(D const), $(D immutable), $(D shared), or $(D inout).
 	These attributes apply to the hidden $(I this) parameter.
 	)
+
+$(RUNNABLE_EXAMPLE
 ---
 class C
 {
@@ -218,6 +225,7 @@ class C
     }
 }
 ---
+)
 
 
 $(H3 $(LNAME2 synchronized-classes, Synchronized Classes))
@@ -304,6 +312,8 @@ $(GNAME Constructor):
         there can be a static initializer to be
         used instead of the default:
         )
+
+        $(RUNNABLE_EXAMPLE
         ------
         class Abc
         {
@@ -312,6 +322,7 @@ $(GNAME Constructor):
             float f;    // default initializer for f is NAN
         }
         ------
+        )
 
         This static initialization is done before any constructors are
         called.
@@ -686,6 +697,7 @@ $(GNAME StaticConstructor):
         having good control over exactly when the code is executed, for example:
 	)
 
+$(RUNNABLE_EXAMPLE
 ------
 class Foo
 {
@@ -693,6 +705,7 @@ class Foo
     static int b = a * 2;
 }
 ------
+)
 
         What values do a and b end up with, what order are the initializations
         executed in, what
@@ -988,6 +1001,7 @@ $(GNAME AliasThis):
         member.
         )
 
+$(RUNNABLE_EXAMPLE
 ---
 struct S
 {
@@ -997,7 +1011,7 @@ struct S
 
 int foo(int i) { return i * 2; }
 
-void test()
+void main()
 {
     S s;
     s.x = 7;
@@ -1008,11 +1022,13 @@ void test()
     i = foo(s);  // implicit conversion to int
 }
 ---
+)
 
         $(P If the member is a class or struct, undefined lookups will
         be forwarded to the $(I AliasThis) member.
         )
 
+$(RUNNABLE_EXAMPLE
 ---
 struct Foo
 {
@@ -1026,19 +1042,21 @@ class Bar
     alias foo this;
 }
 
-void test()
+void main()
 {
     auto bar = new Bar;
     int i = bar.baz; // i == 4
     i = bar.get(); // i == 7
 }
 ---
+)
 
         $(P If the $(I Identifier) refers to a property member
         function with no parameters, conversions and undefined
         lookups are forwarded to the return value of the function.
         )
 
+$(RUNNABLE_EXAMPLE
 ---
 struct S
 {
@@ -1050,13 +1068,14 @@ struct S
     alias get this;
 }
 
-void test()
+void main()
 {
     S s;
     s.x = 2;
     int i = s; // i == 4
 }
 ---
+)
 
         $(P Multiple $(I AliasThis) are allowed. For implicit conversions
         and forwarded lookups, all $(I AliasThis) declarations are attempted;
@@ -1111,6 +1130,7 @@ $(H2 $(LNAME2 nested, Nested Classes))
         A nested class has access to the variables and other symbols
         of the classes and functions it is nested inside:
 
+$(RUNNABLE_EXAMPLE
 ------
 class Outer
 {
@@ -1138,11 +1158,13 @@ void func()
     }
 }
 ------
+)
 
         If a nested class has the $(D static) attribute, then it can
         not access variables of the enclosing scope that are local to the
         stack or need a $(D this):
 
+$(RUNNABLE_EXAMPLE
 ------
 class Outer
 {
@@ -1174,6 +1196,7 @@ void func()
     }
 }
 ------
+)
 
         Non-static nested classes work by containing an extra hidden member
         (called the context pointer)
@@ -1187,6 +1210,7 @@ void func()
         A non-static nested class can only be instantiated when the necessary
         context pointer information is available:)
 
+$(RUNNABLE_EXAMPLE
 ------
 class Outer
 {
@@ -1206,6 +1230,7 @@ void func()
     Nested n = new Nested;      // Ok
 }
 ------
+)
 
 
 
@@ -1213,6 +1238,7 @@ void func()
         inner class instance by prefixing it to the $(I NewExpression):
         )
 
+$(RUNNABLE_EXAMPLE
 ---------
 class Outer
 {
@@ -1235,6 +1261,7 @@ int bar()
     return oi.foo();    // returns 3
 }
 ---------
+)
 
         $(P Here $(D o) supplies the $(I this) to the outer class
         instance of $(D Outer).
@@ -1246,6 +1273,7 @@ int bar()
         function frame with $(D void*).
         )
 
+$(RUNNABLE_EXAMPLE
 ----
 class Outer
 {
@@ -1306,6 +1334,7 @@ class Outer
     }
 }
 ----
+)
 
 $(H3 $(LNAME2 anonymous, Anonymous Nested Classes))
 
