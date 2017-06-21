@@ -41,6 +41,7 @@ $(GNAME QualifiedIdentifierList):
         template instantiations.
         )
 
+$(RUNNABLE_EXAMPLE
 ------
 mixin template Foo()
 {
@@ -54,7 +55,7 @@ struct Bar
     $(CODE_HIGHLIGHT mixin Foo;)
 }
 
-void test()
+void main()
 {
     writefln("x = %d", x);         // prints 5
     {
@@ -74,6 +75,7 @@ void test()
     writefln("x = %d", x);         // prints 5
 }
 ------
+)
 
         Mixins can be parameterized:
 
@@ -88,6 +90,7 @@ $(CODE_HIGHLIGHT mixin Foo!(int);)           // create x of type int
 
         Mixins can add virtual functions to a class:
 
+$(RUNNABLE_EXAMPLE
 ------
 mixin template Foo()
 {
@@ -104,7 +107,7 @@ class Code : Bar
     override void func() { writeln("Code.func()"); }
 }
 
-void test()
+void main()
 {
     Bar b = new Bar();
     b.func();      // calls Foo.func()
@@ -113,10 +116,12 @@ void test()
     b.func();      // calls Code.func()
 }
 ------
+)
 
         Mixins are evaluated in the scope of where they appear, not the scope
         of the template declaration:
 
+$(RUNNABLE_EXAMPLE
 ------
 int y = 3;
 
@@ -125,36 +130,42 @@ mixin template Foo()
     int abc() { return y; }
 }
 
-void test()
+void main()
 {
     int y = 8;
     $(CODE_HIGHLIGHT mixin Foo;) // local y is picked up, not global y
     assert(abc() == 8);
 }
 ------
+)
 
         Mixins can parameterize symbols using alias parameters:
 
+$(RUNNABLE_EXAMPLE
 ------
 mixin template Foo(alias b)
 {
     int abc() { return b; }
 }
 
-void test()
+void main()
 {
     int y = 8;
     $(CODE_HIGHLIGHT mixin Foo!(y);)
     assert(abc() == 8);
 }
 ------
+)
 
         This example uses a mixin to implement a generic Duff's device
         for an arbitrary statement (in this case, the arbitrary statement
         is in bold). A nested function is generated as well as a
         delegate literal, these can be inlined by the compiler:
 
+$(RUNNABLE_EXAMPLE
 ------
+import std.stdio : writeln;
+
 mixin template duffs_device(alias id1, alias id2, alias s)
 {
     void duff_loop()
@@ -181,7 +192,7 @@ mixin template duffs_device(alias id1, alias id2, alias s)
 
 void foo() { writeln("foo"); }
 
-void test()
+void main()
 {
     int i = 1;
     int j = 11;
@@ -190,6 +201,7 @@ void test()
     duff_loop();  // executes foo() 10 times
 }
 ------
+)
 
 $(H2 $(LNAME2 mixin_scope, Mixin Scope))
 
@@ -199,7 +211,10 @@ $(H2 $(LNAME2 mixin_scope, Mixin Scope))
         as a declaration in the surrounding scope, the surrounding declaration
         overrides the mixin one:
 
+$(RUNNABLE_EXAMPLE
 ------
+import std.stdio;
+
 int x = 3;
 
 mixin template Foo()
@@ -211,17 +226,19 @@ mixin template Foo()
 $(CODE_HIGHLIGHT mixin Foo;)
 int y = 3;
 
-void test()
+void main()
 {
     writefln("x = %d", x);  // prints 3
     writefln("y = %d", y);  // prints 3
 }
 ------
+)
 
         If two different mixins are put in the same scope, and each
         define a declaration with the same name, there is an ambiguity
         error when the declaration is referenced:
 
+$(RUNNABLE_EXAMPLE
 ------
 mixin template Foo()
 {
@@ -245,6 +262,7 @@ void test()
     func(1);               // error, func is ambiguous
 }
 ------
+)
         $(P The call to $(D func()) is ambiguous because
         Foo.func and Bar.func are in different scopes.
         )
@@ -252,7 +270,10 @@ void test()
         $(P If a mixin has an $(I Identifier), it can be used to
         disambiguate between conflicting symbols:
         )
+$(RUNNABLE_EXAMPLE
 ------
+import std.stdio;
+
 int x = 6;
 
 mixin template Foo()
@@ -281,9 +302,11 @@ void test()
     B.func();                  // calls Bar.func
 }
 ------
+)
         $(P Alias declarations can be used to overload together
         functions declared in different mixins:)
 
+$(RUNNABLE_EXAMPLE
 -----
 mixin template Foo()
 {
@@ -307,11 +330,13 @@ void main()
     func(1L); // calls F.func
 }
 -----
+)
 
 
         $(P A mixin has its own scope, even if a declaration is overridden
         by the enclosing one:)
 
+$(RUNNABLE_EXAMPLE
 ------
 int x = 4;
 
@@ -323,12 +348,13 @@ mixin template Foo()
 
 $(CODE_HIGHLIGHT mixin Foo;)
 
-void test()
+void main()
 {
     writefln("x = %d", x);         // prints 4
     writefln("bar() = %d", bar()); // prints 5
 }
 ------
+)
 
 $(SPEC_SUBNAV_PREV_NEXT template, Templates, contracts, Contract Programming)
 )
