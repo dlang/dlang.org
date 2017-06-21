@@ -30,6 +30,27 @@ $(DIVC intro, $(DIV, $(DIV,
         )
         $(DIVID your-code-here-default,
 $(RUNNABLE_EXAMPLE
+$(RUNNABLE_EXAMPLE_STDIN
+The D programming language
+Modern convenience.
+Modeling power.
+Native efficiency.)
+----
+// Compute average line length for stdin
+void main()
+{
+    import std.range, std.stdio;
+
+    auto sum = 0.0;
+    auto count = stdin.byLine
+        .tee!(l => sum += l.length).walkLength;
+
+    writeln("Average line length: ",
+        count ? sum / count : 0);
+}
+----
+)
+$(EXTRA_EXAMPLE
 $(RUNNABLE_EXAMPLE_STDIN 2.4 plus 2.4 equals 5 for sufficiently large values of 2.)
 ----
 // Round floating point numbers
@@ -243,20 +264,17 @@ Modern convenience.
 Modeling power.
 Native efficiency.)
 ----
-#!/usr/bin/env rdmd
-import std.range, std.stdio;
-
 // Compute average line length for stdin
 void main()
 {
-    ulong lines = 0, sumLength = 0;
-    foreach (line; stdin.byLine())
-    {
-        ++lines;
-        sumLength += line.length;
-    }
+    import std.range, std.stdio;
+
+    auto sum = 0.0;
+    auto count = stdin.byLine
+        .tee!(l => sum += l.length).walkLength;
+
     writeln("Average line length: ",
-        lines ? cast(double) sumLength / lines : 0.0);
+        count ? sum / count : 0);
 }
 ----
 ))
