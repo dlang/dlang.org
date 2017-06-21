@@ -249,6 +249,7 @@ pure int foo(int i,
     references of the result may be assumed to not refer to any object that
     existed before the function call. For example:)
 
+$(RUNNABLE_EXAMPLE
 ---
 struct List { int payload; List* next; }
 pure List* make(int a, int b)
@@ -258,6 +259,7 @@ pure List* make(int a, int b)
     return result;
 }
 ---
+)
 
     $(P Here, an implementation may assume (without having knowledge of the body
     of `make`) that all references in `make`'s result refer to other `List`
@@ -476,6 +478,7 @@ $(H4 $(LNAME2 optional-parenthesis, Optional Parentheses))
         $(RELATIVE_LINK2 property-functions, property function).
         )
 
+        $(RUNNABLE_EXAMPLE
         ---
         void foo() {}   // no arguments
     void fun(int x = 10) { }
@@ -492,9 +495,11 @@ $(H4 $(LNAME2 optional-parenthesis, Optional Parentheses))
             arr.bar;    // also OK
         }
         ---
+        )
 
     $(P Optional parentheses are not applied to delegates or function pointers.)
 
+    $(RUNNABLE_EXAMPLE
     ---
     void main()
     {
@@ -507,11 +512,13 @@ $(H4 $(LNAME2 optional-parenthesis, Optional Parentheses))
         assert(dg == 6);    // Error, incompatible types int delegate() and int
     }
     ---
+    )
 
     $(P If a function returns a delegate or function pointer, the parantheses are required if the
     returned value is to be called.
     )
 
+    $(RUNNABLE_EXAMPLE
     ---
     struct S {
         int function() callfp() { return &numfp; }
@@ -547,6 +554,7 @@ $(H4 $(LNAME2 optional-parenthesis, Optional Parentheses))
         assert(y == 6);
     }
     ---
+    )
 
 $(H4 $(LNAME2 property-functions, Property Functions))
 
@@ -651,6 +659,7 @@ $(H4 $(LNAME2 virtual-functions, Virtual Functions))
         For example:
         )
 
+$(RUNNABLE_EXAMPLE
 ------
 class A
 {
@@ -682,6 +691,7 @@ void func()
     test(b);
 }
 ------
+)
 
         $(P Covariant return types
         are supported, which means that the
@@ -689,6 +699,7 @@ void func()
         that is derived from the type returned by the overridden function:
         )
 
+$(RUNNABLE_EXAMPLE
 ------
 class A { }
 class B : A { }
@@ -703,6 +714,7 @@ class Bar : Foo
     override B test() { return null; } // overrides and is covariant with Foo.test()
 }
 ------
+)
 
         $(P Virtual functions all have a hidden parameter called the
         $(I this) reference, which refers to the class object for which
@@ -713,6 +725,7 @@ class Bar : Foo
         base class name before the member function name. For example:
         )
 
+$(RUNNABLE_EXAMPLE
 ------
 class B
 {
@@ -743,6 +756,7 @@ void main()
     d.test();
 }
 ------
+)
 
 $(H4 $(LNAME2 function-inheritance, Function Inheritance and Overriding))
 
@@ -904,6 +918,7 @@ void test()
         $(GLINK FunctionAttributes), the missing attributes will be
         automatically compensated by the compiler.)
 
+$(RUNNABLE_EXAMPLE
 ------
 class B
 {
@@ -920,6 +935,7 @@ void main()
     // prints "void delegate() pure nothrow @safe" in compile time
 }
 ------
+)
 
     $(P It's not allowed to mark an overridden method with the attributes
     $(LINK2 attribute.html#disable, $(D @disable)) or
@@ -929,6 +945,7 @@ void main()
     when it is virtual.
     )
 
+$(RUNNABLE_EXAMPLE
 ------
 class B
 {
@@ -946,6 +963,7 @@ void main()
     b.foo(); // would compiles and then the most derived would be called even if disabled.
 }
 ------
+)
 
 $(H4 $(LNAME2 inline-functions, Inline Functions))
 
@@ -1178,6 +1196,7 @@ def(z);
         a $(D lazy) argument can be executed 0 or more times. A $(D lazy) parameter
         cannot be an lvalue.)
 
+$(RUNNABLE_EXAMPLE
 ---
 void dotimes(int n, lazy void exp)
 {
@@ -1185,12 +1204,14 @@ void dotimes(int n, lazy void exp)
         exp();
 }
 
-void test()
+void main()
 {
+    import std.stdio : writeln;
     int x;
     dotimes(3, writeln(x++));
 }
 ---
+)
 
         $(P prints to the console:)
 
@@ -1313,6 +1334,7 @@ extern (C) int def(...); // error, must have at least one parameter
     module $(D core.stdc.stdarg).
     )
 
+$(RUNNABLE_EXAMPLE
 ------
 import core.stdc.stdarg;
 
@@ -1331,6 +1353,7 @@ void foo(int x, int y, ...)
     va_arg(args, z);  // z is set to 5
 }
 ------
+)
 
 
 $(H4 $(LNAME2 d_style_variadic_functions, D-style Variadic Functions))
@@ -1358,6 +1381,7 @@ import core.vararg;
         arguments. To access the arguments, $(D _argptr) must be used
     in conjuction with $(D va_arg):
 
+$(RUNNABLE_EXAMPLE
 ------
 import core.vararg;
 
@@ -1373,6 +1397,7 @@ void foo(int x, int y, ...)
     z = va_arg!int(_argptr); // z is set to 5
 }
 ------
+)
 
         An additional hidden argument
         with the name $(D _arguments) and type $(D TypeInfo[])
@@ -1380,6 +1405,7 @@ void foo(int x, int y, ...)
         $(D _arguments) gives the number of arguments and the type
         of each, enabling type safety to be checked at run time.
 
+$(RUNNABLE_EXAMPLE
 ------
 import std.stdio;
 import core.vararg;
@@ -1433,6 +1459,7 @@ void main()
     printargs(1, 2, 3L, 4.5, f, b);
 }
 ------
+)
 
         which prints:
 
@@ -1462,8 +1489,9 @@ $(H4 $(LNAME2 typesafe_variadic_functions, Typesafe Variadic Functions))
 
         $(P For arrays:)
 
+$(RUNNABLE_EXAMPLE
 ------
-int test()
+int main()
 {
     return sum(1, 2, 3) + sum(); // returns 6+0
 }
@@ -1482,11 +1510,13 @@ int sum(int[] ar ...)
     return s;
 }
 ------
+)
 
         For static arrays:
 
+$(RUNNABLE_EXAMPLE
 ------
-int test()
+int main()
 {
     return sum(2, 3);   // error, need 3 values for array
     return sum(1, 2, 3); // returns 6
@@ -1508,6 +1538,7 @@ int sum(int[3] ar ...)
     return s;
 }
 ------
+)
 
         For class objects:
 
@@ -1661,6 +1692,7 @@ void foo()
     rules, the names of them must be unique within a particular function.
     )
 
+$(RUNNABLE_EXAMPLE
 ---
 void main()
 {
@@ -1670,11 +1702,13 @@ void main()
     { int i; } // ok
 }
 ---
+)
 
 $(H3 $(LNAME2 nested, Nested Functions))
 
         $(P Functions may be nested within other functions:)
 
+$(RUNNABLE_EXAMPLE
 ------
 int bar(int a)
 {
@@ -1692,9 +1726,11 @@ void test()
     int i = bar(3); // i is assigned 4
 }
 ------
+)
 
         $(P Nested functions can be accessed only if the name is in scope.)
 
+$(RUNNABLE_EXAMPLE
 ------
 void foo()
 {
@@ -1722,9 +1758,11 @@ void foo()
     C(); // error, C undefined
 }
 ------
+)
 
         $(P and:)
 
+$(RUNNABLE_EXAMPLE
 ------
 int bar(int a)
 {
@@ -1739,12 +1777,14 @@ void test()
     int j = bar.foo(3); // error, bar.foo not visible
 }
 ------
+)
 
         $(P Nested functions have access to the variables and other symbols
         defined by the lexically enclosing function.
         This access includes both the ability to read and write them.
         )
 
+$(RUNNABLE_EXAMPLE
 ------
 int bar(int a)
 {
@@ -1766,9 +1806,11 @@ void test()
     int i = bar(3); // i is assigned 17
 }
 ------
+)
 
         $(P This access can span multiple nesting levels:)
 
+$(RUNNABLE_EXAMPLE
 ------
 int bar(int a)
 {
@@ -1785,12 +1827,14 @@ int bar(int a)
     return foo(3);
 }
 ------
+)
 
         $(P Static nested functions cannot access any stack variables of
         any lexically enclosing function, but can access static variables.
         This is analogous to how static member functions behave.
         )
 
+$(RUNNABLE_EXAMPLE
 ------
 int bar(int a)
 {
@@ -1806,9 +1850,11 @@ int bar(int a)
     return foo(a);
 }
 ------
+)
 
         $(P Functions can be nested within member functions:)
 
+$(RUNNABLE_EXAMPLE
 ------
 struct Foo
 {
@@ -1826,6 +1872,7 @@ struct Foo
     }
 }
 ------
+)
 
         $(P Nested functions always have the D function linkage type.
         )
@@ -1835,6 +1882,7 @@ struct Foo
         cannot mutually call each other:
         )
 
+$(RUNNABLE_EXAMPLE
 ------
 void test()
 {
@@ -1842,6 +1890,7 @@ void test()
     void bar() { foo(); } // ok
 }
 ------
+)
 
         $(P There are several workarounds for this limitation:)
 
@@ -1849,6 +1898,7 @@ $(UL
 
         $(LI Declare the functions to be static members of a nested struct:)
 
+$(RUNNABLE_EXAMPLE
 ------
 void test()
 {
@@ -1861,10 +1911,12 @@ void test()
     S.foo();  // compiles (but note the infinite runtime loop)
 }
 ------
+)
 
         $(LI Declare one or more of the functions to be function templates
         even if they take no specific template arguments:)
 
+$(RUNNABLE_EXAMPLE
 ------
 void test()
 {
@@ -1872,9 +1924,11 @@ void test()
     void bar()   { foo(); } // ok
 }
 ------
+)
 
         $(LI Declare the functions inside of a mixin template:)
 
+$(RUNNABLE_EXAMPLE
 ------
 mixin template T()
 {
@@ -1887,9 +1941,11 @@ void test()
     mixin T!();
 }
 ------
+)
 
         $(LI Use a delegate:)
 
+$(RUNNABLE_EXAMPLE
 ------
 void test()
 {
@@ -1899,6 +1955,7 @@ void test()
     fp = &bar;
 }
 ------
+)
 
     )
 
@@ -1908,6 +1965,7 @@ $(H4 $(LNAME2 closures, Delegates, Function Pointers, and  Closures))
 
         $(P A function pointer can point to a static nested function:)
 
+$(RUNNABLE_EXAMPLE
 ------
 int function() fp;
 
@@ -1919,12 +1977,13 @@ void test()
     fp = &foo;
 }
 
-void bar()
+void main()
 {
     test();
     int i = fp();       // i is set to 10
 }
 ------
+)
 
         $(P $(B Note:) Two functions with identical bodies, or two functions
         that compile to identical assembly code, are not guaranteed to have
@@ -1943,10 +2002,11 @@ int function() fp2 = &def;
 
         $(P A delegate can be set to a non-static nested function:)
 
+$(RUNNABLE_EXAMPLE
 ------
 int delegate() dg;
 
-void test()
+void main()
 {
     int a = 7;
     int foo() { return a + 3; }
@@ -1955,6 +2015,7 @@ void test()
     int i = dg(); // i is set to 10
 }
 ------
+)
 
 
         $(P The stack variables referenced by a nested function are
@@ -1985,6 +2046,7 @@ int* bar()
         the same type:
         )
 
+$(RUNNABLE_EXAMPLE
 ------
 struct Foo
 {
@@ -1997,7 +2059,7 @@ int foo(int delegate() dg)
     return dg() + 1;
 }
 
-void test()
+void main()
 {
     int x = 27;
     int abc() { return x; }
@@ -2008,6 +2070,7 @@ void test()
     i = foo(&f.bar); // i is set to 8
 }
 ------
+)
 
         $(P This combining of the environment and the function is called
         a $(I dynamic closure).
@@ -2053,6 +2116,7 @@ $(H3 $(LNAME2 function-templates, Function Templates))
     different parameter type, a single function template can be sufficient.
     For example:
     )
+$(RUNNABLE_EXAMPLE
 ---
 // Only one copy of func needs to be written
 void func(T)(T x)
@@ -2072,6 +2136,7 @@ void main()
     func(s);    // pass a struct
 }
 ---
+)
     $(P $(D func) takes a template parameter $(D T) and a runtime
     parameter, $(D x). $(D T) is a placeholder identifier that can accept
     any type. In this case $(D T) can be inferred from the runtime argument
@@ -2161,6 +2226,7 @@ $(H3 $(LNAME2 interpretation, Compile Time Function Execution (CTFE)))
     $(P Note that the above restrictions apply only to expressions which are
         actually executed. For example:
     )
+$(RUNNABLE_EXAMPLE
 ---
 static int y = 0;
 
@@ -2174,6 +2240,7 @@ int countTen(int x)
 static assert(countTen(6) == 6); // OK
 static assert(countTen(12) == 12);  // invalid, modifies y.
 ---
+)
     $(P The $(D __ctfe) boolean pseudo-variable, which evaluates to $(D_KEYWORD true)
         at compile time, but $(D_KEYWORD false) at run time, can be used to provide
         an alternative execution path to avoid operations which are forbidden
@@ -2193,6 +2260,7 @@ static assert(countTen(12) == 12);  // invalid, modifies y.
     $(LI argument for a template value parameter)
     )
 
+$(RUNNABLE_EXAMPLE
 ---
 template eval( A... )
 {
@@ -2212,6 +2280,7 @@ void foo()
     writeln(eval!(square(5))); // compile time
 }
 ---
+)
 
     $(P Executing functions at compile time can take considerably
     longer than executing it at run time.
@@ -2247,6 +2316,7 @@ $(H4 $(LNAME2 string-mixins, String Mixins and Compile Time Function Execution))
         run time. This means that the semantics of a function cannot
         depend on compile time values of the function. For example:)
 
+$(RUNNABLE_EXAMPLE
 ---
 int foo(char[] s)
 {
@@ -2255,6 +2325,7 @@ int foo(char[] s)
 
 const int x = foo("1");
 ---
+)
 
         $(P is illegal, because the runtime code for foo() cannot be
         generated. A function template would be the appropriate
@@ -2447,6 +2518,7 @@ $(H3 $(LNAME2 pseudo-member, Uniform Function Call Syntax (UFCS)))
         $(P The reason why local symbols are not considered by UFCS, is
         to avoid unexpected name conflicts. See below problematic examples.)
 
+        $(RUNNABLE_EXAMPLE
         ---
         int front(int[] arr) { return arr[0]; }
 
@@ -2469,6 +2541,7 @@ $(H3 $(LNAME2 pseudo-member, Uniform Function Call Syntax (UFCS)))
             }
         }
         ---
+        )
 
 $(SPEC_SUBNAV_PREV_NEXT const3, Type Qualifiers, operatoroverloading, Operator Overloading)
 )
