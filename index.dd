@@ -30,7 +30,7 @@ $(DIVC intro, $(DIV, $(DIV,
                 $(P Upon approval it will be showcased here on a random schedule.)
             )
         )
-$(EXTRA_EXAMPLE Compute average line length for stdin,
+$(EXTRA_EXAMPLE_RUNNABLE Compute average line length for stdin,
 $(RUNNABLE_EXAMPLE_STDIN
 The D programming language
 Modern convenience.
@@ -50,7 +50,7 @@ void main()
 }
 ----
 )
-$(EXTRA_EXAMPLE Round floating point numbers,
+$(EXTRA_EXAMPLE_RUNNABLE Round floating point numbers,
 $(RUNNABLE_EXAMPLE_STDIN 2.4 plus 2.4 equals 5 for sufficiently large values of 2.)
 ----
 import std.algorithm, std.conv, std.functional,
@@ -71,7 +71,7 @@ void main()
 }
 ----
 )
-$(EXTRA_EXAMPLE Sort lines,
+$(EXTRA_EXAMPLE_RUNNABLE Sort lines,
 $(RUNNABLE_EXAMPLE_STDIN
 Mercury
 Venus
@@ -120,6 +120,25 @@ void main()
     auto result = ["whoami"].execute;
     enforce(result.status == 0);
     result.output.write;
+}
+----
+)
+$(EXTRA_EXAMPLE Start a minimal web server,
+----
+#!/usr/bin/env dub
+/+ dub.sdl:
+name "hello_vibed"
+dependency "vibe-d" version="~>0.8.0"
++/
+void main()
+{
+    import vibe.d;
+    auto settings = new HTTPServerSettings;
+    settings.port = 8080;
+    listenHTTP(settings, (req, res) {
+        res.writeBody("Hello, World: " ~ req.path);
+    });
+    runApplication();
 }
 ----
 )
@@ -535,8 +554,9 @@ Macros:
     EXAMPLE=$(TAG2 a, id="a$1-control" class="example-control", )$(TAG2 div, id="a$1" class="example-box", $(RUNNABLE_EXAMPLE $2))
     EXTRA_EXAMPLE=<div class="your-code-here-extra" style="display:none">
         $(DIVC your-code-here-title, $1)
-        $(RUNNABLE_EXAMPLE $+)
+        $+
     </div>
+    EXTRA_EXAMPLE_RUNNABLE=$(EXTRA_EXAMPLE $1, $(RUNNABLE_EXAMPLE $+))
     _=
     LAYOUT_PREFIX=
     LAYOUT_SUFFIX=
