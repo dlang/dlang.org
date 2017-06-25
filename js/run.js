@@ -127,38 +127,11 @@ $(document).ready(function()
     {
         var root = $(this);
         var el = root.children("pre");
-        var stripedText = el.text().replace(/\s/gm,'');
-
-        var stdin = root.children(".runnable-examples-stdin").text();
-        var args = root.children(".runnable-examples-args").text();
-
-        // only show stdin or args if they are set
-        if (stdin.length > 0)
-        {
-            stdin = '<div class="d_code_stdin"><span class="d_code_title">Standard input</span><br>'
-                  + '<textarea class="d_code_stdin">'+stdin+'</textarea></div>';
+        // only build the example if this hasn't been done before
+        // (e.g. the front page examples are built before to avoid reflows)
+        if (el.length > 0) {
+          buildRunnableExampleLayout(el[0]);
         }
-        if (args.length > 0)
-        {
-            args = '<div class="d_code_args"><span class="d_code_title">Command line arguments</span><br>'
-                + '<textarea class="d_code_args">'+args+'</textarea></div>';
-        }
-
-        var currentExample = el;
-        var orig = currentExample.html();
-
-        currentExample.replaceWith(
-            '<div class="d_code"><pre class="d_code">'+orig+'</pre></div>'
-            + '<div class="d_run_code">'
-            + '<textarea class="d_code" style="display: none;"></textarea>'
-            + stdin + args
-            + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><pre class="d_code_output" readonly>Running...</pre></div>'
-            + '<input type="button" class="editButton" value="Edit">'
-            + (args.length > 0 ? '<input type="button" class="argsButton" value="Args">' : '')
-            + (stdin.length > 0 ? '<input type="button" class="inputButton" value="Input">' : '')
-            + '<input type="button" class="runButton" value="Run">'
-            + '<input type="button" class="resetButton" value="Reset"></div>'
-        );
     });
 
     $('textarea[class=d_code]').each(function(index) {
