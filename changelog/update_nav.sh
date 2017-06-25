@@ -44,3 +44,9 @@ for ver in "${rev_rel_vers[@]}"; do
     echo "    \$(CHANGELOG_VERSION ${ver%.dd})" >> changelog.ddoc
 done
 echo '_=END_GENERATED_CHANGELOG_VERSIONS' >> changelog.ddoc
+
+# add release dates
+(
+    IFS=$'\n'
+    sed -i changelog.ddoc $(grep '(VERSION' -- *.dd | sed -E 's/^(.*)\.dd:\$\(VERSION (.*), ==.*/-e\ns#CHANGELOG_VERSION \1)#CHANGELOG_VERSION \1, \2)#/')
+)
