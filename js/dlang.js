@@ -59,11 +59,11 @@
         });
 
         // [your code here] rotation for index.html
-        var $examples = $('.your-code-here-extra > pre');
+        var $examples = $('.your-code-here-extra .d_code');
         if ($examples.length) {
             var n = Math.floor(Math.random() * ($examples.length+1));
             if (n)
-                $('#your-code-here-default > pre').replaceWith($examples[n-1]);
+                $('#your-code-here-default .d_code').replaceWith($examples[n-1]);
         }
 
         // Insert the show/hide button if the contents section exists
