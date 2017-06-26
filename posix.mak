@@ -381,10 +381,10 @@ dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
 # Git rules
 ################################################################################
 
-$(PWD)/%-${LATEST} :
+../%-${LATEST} :
 	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
 
-$(PWD)/%-${DUB_VER} :
+../%-${DUB_VER} :
 	git clone --depth=1 -b v${DUB_VER} ${GIT_HOME}/$(notdir $*) $@
 
 ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
