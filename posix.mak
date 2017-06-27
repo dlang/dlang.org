@@ -97,6 +97,9 @@ CHANGE_SUFFIX = \
  for f in `find "$3" -iname '*.$1'`; do\
   mv $$f `dirname $$f`/`basename $$f .$1`.$2; done
 
+# Caches the latest D blog post for the front page
+DBLOG_LATEST=
+
 # Disable all dynamic content that could potentially have an unrelated impact
 # on a diff
 ifeq (1,$(DIFFABLE))
@@ -105,6 +108,7 @@ ifeq (1,$(DIFFABLE))
 else
 	CHANGELOG_VERSION_MASTER := "v${LATEST}..upstream/master"
 	CHANGELOG_VERSION_STABLE := "v${LATEST}..upstream/stable"
+	DBLOG_LATEST=$G/dblog_latest.ddoc $G/twid_latest.ddoc
 endif
 
 ################################################################################
@@ -143,7 +147,8 @@ ORGS_USING_D=$(wildcard images/orgs-using-d/*)
 IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 	d002.ico \
 	$(addprefix compiler-, dmd.png gdc.svg ldc.png) \
-	$(addsuffix .svg, icon_minus icon_plus hamburger dlogo faster-aa-1 faster-gc-1) \
+	$(addsuffix .svg, icon_minus icon_plus hamburger dlogo faster-aa-1 faster-gc-1 \
+		dconf_logo_2017) \
 	$(addsuffix .png, archlinux_logo apple_logo centos_logo chocolatey_logo \
 		d3 debian_logo dlogo fedora_logo freebsd_logo gentoo_logo homebrew_logo \
 		opensuse_logo ubuntu_logo windows_logo pattern github-ribbon \
@@ -166,7 +171,7 @@ STYLES=$(addsuffix .css, $(addprefix css/, \
 # HTML Files
 ################################################################################
 
-DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME)
+DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME) $(DBLOG_LATEST)
 STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
 STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
 SPEC_DDOC=${DDOC} spec/spec.ddoc
@@ -376,6 +381,20 @@ dlangspec.txt : $(DMD) macros.ddoc plaintext.ddoc dlangspec-consolidated.d
 
 dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
 	$(DMD) -conf= -Df$@ verbatim.ddoc dlangspec-consolidated.d
+
+################################################################################
+# Fetch the latest article from the official D blog
+################################################################################
+
+$G/dblog_latest.ddoc:
+	@echo "Receiving the latest DBlog article. Disable with DIFFABLE=1"
+	curl -s --retry 3 --retry-delay 5 http://blog.dlang.org | grep -m1 'entry-title' | \
+		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time class="updated" datetime="[^"]+">([^<]*)<\/time>.*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE=\2|DBLOG_LATEST_LINK=\1|DBLOG_LATEST_DATE=\3|DBLOG_LATEST_AUTHOR=\4/' | \
+		tr '|' '\n' > $@
+
+$G/twid_latest.ddoc:
+	@echo "Receiving the latest TWID article. Disable with DIFFABLE=1"
+	curl -s --retry 3 --retry-delay 5 http://arsdnet.net/this-week-in-d/twid_latest.dd > $@
 
 ################################################################################
 # Git rules
