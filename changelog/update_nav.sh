@@ -34,12 +34,16 @@ done
 IFS=$'\n'
 rev_all_vers=($(sort --reverse <<<"${all_vers[*]}"))
 rev_rel_vers=($(sort --reverse <<<"${rel_vers[*]}"))
+rev_pre_vers=($(ls -- *_pre.dd | sort --reverse))
 unset IFS
 
 # update index of all changlogs
 sed -i '/BEGIN_GENERATED_CHANGELOG_VERSIONS/,/END_GENERATED_CHANGELOG_VERSIONS/d' changelog.ddoc
 echo '_=BEGIN_GENERATED_CHANGELOG_VERSIONS' >> changelog.ddoc
 echo 'CHANGELOG_VERSIONS =' >> changelog.ddoc
+for ver in "${rev_pre_vers[@]}"; do
+    echo "    \$(CHANGELOG_VERSION_PRE ${ver%_pre.dd}, not yet released)" >> changelog.ddoc
+done
 for ver in "${rev_rel_vers[@]}"; do
     echo "    \$(CHANGELOG_VERSION ${ver%.dd})" >> changelog.ddoc
 done
