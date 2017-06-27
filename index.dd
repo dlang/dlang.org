@@ -19,6 +19,7 @@ $(DIVC intro, $(DIV, $(DIV,
         )
     )
     $(DIVID your-code-here,
+        $(DIVID your-code-here-select-example)
         $(DIVC tip,
             $(LINK2 https://forum.dlang.org/newpost/general?subject=%5Byour+code+here%5D, your code here)
             $(DIV,
@@ -28,14 +29,13 @@ $(DIVC intro, $(DIV, $(DIV,
                 $(P Upon approval it will be showcased here on a random schedule.)
             )
         )
-$(EXTRA_EXAMPLE
+$(EXTRA_EXAMPLE Compute average line length for stdin,
 $(RUNNABLE_EXAMPLE_STDIN
 The D programming language
 Modern convenience.
 Modeling power.
 Native efficiency.)
 ----
-// Compute average line length for stdin
 void main()
 {
     import std.range, std.stdio;
@@ -49,10 +49,9 @@ void main()
 }
 ----
 )
-$(EXTRA_EXAMPLE
+$(EXTRA_EXAMPLE Round floating point numbers,
 $(RUNNABLE_EXAMPLE_STDIN 2.4 plus 2.4 equals 5 for sufficiently large values of 2.)
 ----
-// Round floating point numbers
 import std.algorithm, std.conv, std.functional,
     std.math, std.regex, std.stdio;
 
@@ -71,7 +70,7 @@ void main()
 }
 ----
 )
-$(EXTRA_EXAMPLE
+$(EXTRA_EXAMPLE Sort lines,
 $(RUNNABLE_EXAMPLE_STDIN
 Mercury
 Venus
@@ -82,7 +81,6 @@ Saturn
 Uranus
 Neptune)
 ----
-// Sort lines
 import std.stdio, std.array, std.algorithm;
 
 void main()
@@ -110,6 +108,31 @@ $(SCRIPT
     var rouletteIndex = Math.floor(Math.random() * examples.length);
     var rouletteChild = examples[rouletteIndex];
     rouletteChild.style.display = "block";
+
+    // build a list of the titles of all examples and add an option chooser to
+    // allow switching between them
+    var titles = Array.prototype.map.call(examples, function(e) {
+        return e.getElementsByClassName("your-code-here-title")[0].innerText;
+    });
+    var sel = document.createElement("select");
+    Array.prototype.forEach.call(titles, function(title, i) {
+        var el = document.createElement("option");
+        el.value = i;
+        el.innerText = title;
+        sel.appendChild(el);
+    });
+    sel.selectedIndex = rouletteIndex;
+    sel.addEventListener("change", function(e) {
+        examples[rouletteIndex].style.display = "none";
+        rouletteIndex = sel.selectedIndex;
+        examples[rouletteIndex].style.display = "block";
+    });
+    var selEl = document.getElementById("your-code-here-select-example");
+    selEl.appendChild(sel);
+    var caret = document.createElement("i");
+    caret.className = "fa fa-caret-down";
+    caret.style.marginLeft = "-15px";
+    selEl.appendChild(caret);
     })();
 )
 
@@ -481,7 +504,11 @@ Macros:
     TAG2=<$1 $2>$3</$1>
     D=<span class="d_inlinecode">$0</span>
     EXAMPLE=$(TAG2 a, id="a$1-control" class="example-control", )$(TAG2 div, id="a$1" class="example-box", $(RUNNABLE_EXAMPLE $2))
-    EXTRA_EXAMPLE=<div class="your-code-here-extra" style="display:none">$(RUNNABLE_EXAMPLE $0)</div>
+    EXTRA_EXAMPLE=<div class="your-code-here-extra" style="display:none">
+        <div class="your-code-here-title">$1</div>
+        $(RUNNABLE_EXAMPLE $+)
+    </div>
+    _=
     LAYOUT_PREFIX=
     LAYOUT_SUFFIX=
     $(SCRIPTLOAD $(ROOT_DIR)js/platform-downloads.js,  data-latest="$(LATEST)")
