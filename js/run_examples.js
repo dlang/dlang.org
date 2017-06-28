@@ -100,7 +100,8 @@ $(document).ready(function()
           transformOutput: wrapIntoMain,
           defaultOutput: "All tests passed",
           keepCode: true,
-          outputHeight: "auto"
+          outputHeight: "auto",
+          backend: "tour"
         });
     });
 });
