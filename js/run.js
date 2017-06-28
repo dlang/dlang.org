@@ -229,10 +229,10 @@ function setupTextarea(el, opts)
         return (parseInt(par.css('height')) - diff) + 'px';
     };
 
-    var runBtn = parent.children("input.runButton");
-    var editBtn = parent.children("input.editButton");
-    var resetBtn = parent.children("input.resetButton");
-    var openInEditorBtn = parent.children("input.openInEditorButton");
+    var runBtn = parent.children(".runButton");
+    var editBtn = parent.children(".editButton");
+    var resetBtn = parent.children(".resetButton");
+    var openInEditorBtn = parent.children(".openInEditorButton");
 
     var code = $(editor.getWrapperElement());
     code.css('display', 'none');
