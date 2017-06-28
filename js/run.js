@@ -229,9 +229,10 @@ function setupTextarea(el, opts)
         return (parseInt(par.css('height')) - diff) + 'px';
     };
 
-    var runBtn = parent.children("input.runButton");
-    var editBtn = parent.children("input.editButton");
-    var resetBtn = parent.children("input.resetButton");
+    var runBtn = parent.children(".runButton");
+    var editBtn = parent.children(".editButton");
+    var resetBtn = parent.children(".resetButton");
+    var openInEditorBtn = parent.children(".openInEditorButton");
 
     var code = $(editor.getWrapperElement());
     code.css('display', 'none');
@@ -357,6 +358,10 @@ function setupTextarea(el, opts)
                 runBtn.attr("disabled", false);
             }
         });
+    });
+    openInEditorBtn.click(function(){
+      var url = "https://tour.dlang.org/editor?source=" + encodeURIComponent(opts.transformOutput(editor.getValue()));
+      window.open(url, "_blank");
     });
     return editor;
 };
