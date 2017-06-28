@@ -75,7 +75,7 @@ $(document).ready(function()
           + '<div class="editButton"><i class="fa fa-edit" aria-hidden="true"></i> Edit</div>'
           + '<div class="runButton"><i class="fa fa-play" aria-hidden="true"></i> Run</div>'
           + '<div class="resetButton"><i class="fa fa-undo " aria-hidden="true"></i> Reset</div>'
-          + '<div class="openInEditorButton"><i class="fa fa-external-link" aria-hidden="true"></i></div>'
+          + '<div class="openInEditorButton" title="Open in an external editor"><i class="fa fa-external-link" aria-hidden="true"></i></div>'
                     + '</div>'
                     + '<div class="d_code">'
                         + '<pre class="d_code">'+orig+'</pre>'
