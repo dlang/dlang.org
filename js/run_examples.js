@@ -70,7 +70,7 @@ $(document).ready(function()
             return;
 
         currentExample.replaceWith(
-                '<div>'
+                '<div class="unittest_examples">'
                     + '<div class="d_example_buttons">'
           + '<div class="editButton"><i class="fa fa-edit" aria-hidden="true"></i> Edit</div>'
           + '<div class="runButton"><i class="fa fa-play" aria-hidden="true"></i> Run</div>'
