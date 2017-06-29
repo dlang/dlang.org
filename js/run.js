@@ -92,7 +92,9 @@ var backends = {
   },
   tour: {
     url: "https://tour.dlang.org/api/v1/run",
-    contentType: "application/json; charset=utf-8",
+    // send json as text/plain to avoid an additional preflight OPTIONS request
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS#Preflighted_requests
+    contentType: "text/plain; charset=UTF-8",
     requestTransform: function(data) {
         return JSON.stringify({
             source: data.code
