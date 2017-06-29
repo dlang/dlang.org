@@ -639,6 +639,8 @@ test: $(ASSERT_WRITELN_BIN)_test all
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
 	@echo "Searching for undefined macros"
 	@grep -n "UNDEFINED MACRO" $$(find $(DOC_OUTPUT_DIR) -type f -name "*.html" -not -path "$(DOC_OUTPUT_DIR)/phobos/*") ; test $$? -eq 1
+	@echo "Searching for undefined ddoc"
+	@grep -rn '[$$](' $$(find $(DOC_OUTPUT_DIR)/phobos-prerelease -type f -name "*.html") ; test $$? -eq 1
 	@echo "Executing assert_writeln_magic tests"
 	$<
 
