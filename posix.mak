@@ -620,13 +620,13 @@ $(ASSERT_WRITELN_BIN)_test: assert_writeln_magic.d $(DUB) $(STABLE_DMD)
 
 $(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
 	@mkdir -p $(dir $@)
-	@if [ $(subst .,, $(suffix $@)) == "d" ] && [ "$@" != "$(PHOBOS_DIR_GENERATED)/index.d" ] ; then \
+	@if [ $(subst .,, $(suffix $@)) = "d" ] && [ "$@" != "$(PHOBOS_DIR_GENERATED)/index.d" ] ; then \
 		$(ASSERT_WRITELN_BIN) -i $< -o $@ ; \
 	else cp $< $@ ; fi
 
 $(PHOBOS_STABLE_FILES_GENERATED): $(PHOBOS_STABLE_DIR_GENERATED)/%: $(PHOBOS_STABLE_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
 	@mkdir -p $(dir $@)
-	@if [ $(subst .,, $(suffix $@)) == "d" ] && [ "$@" != "$(PHOBOS_STABLE_DIR_GENERATED)/index.d" ] ; then \
+	@if [ $(subst .,, $(suffix $@)) = "d" ] && [ "$@" != "$(PHOBOS_STABLE_DIR_GENERATED)/index.d" ] ; then \
 		$(ASSERT_WRITELN_BIN) -i $< -o $@ ; \
 	else cp $< $@ ; fi
 
