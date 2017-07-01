@@ -321,6 +321,7 @@ $(GNAME DeprecatedAttribute):
         $(P Calling CTFE-able functions or using manifest constants is also possible.
         )
 
+        $(RUNNABLE_EXAMPLE
         ---------------
         import std.format;
         enum Message = format("%s and all its members are obsolete", Foobar.stringof);
@@ -329,6 +330,7 @@ $(GNAME DeprecatedAttribute):
         deprecated(format("%s is also obsolete", "This class")) class BarFoo {}
         auto bf = new BarFoo();  // Deprecated: class test.BarFoo is deprecated - This class is also obsolete
         ---------------
+        )
 
         $(P $(D Implementation Note:) The compiler should have a switch
         specifying if $(D deprecated) should be ignored, cause a warning, or cause an error during compilation.
@@ -399,6 +401,7 @@ $(H3 $(LNAME2 const, $(D const) Attribute))
         where $(D T) is the type specified (or inferred) for the introduced symbol in the absence of $(D const).
         )
 
+        $(RUNNABLE_EXAMPLE
         ---------------
         const int foo = 7;
         static assert(is(typeof(foo) == const(int)));
@@ -424,6 +427,7 @@ $(H3 $(LNAME2 const, $(D const) Attribute))
         static assert(is(typeof(C.foo) == typeof(C.bar)) &&
                       is(typeof(C.bar) == typeof(C.baz)));
         ---------------
+        )
 
 $(H3 $(LNAME2 immutable, $(D immutable) Attribute))
 
@@ -459,6 +463,7 @@ $(H3 $(LNAME2 gshared, $(D __gshared) Attribute))
         except that the variable is shared by all threads rather than being
         thread local.)
 
+        $(RUNNABLE_EXAMPLE
         ---
         class Foo
         {
@@ -471,6 +476,7 @@ $(H3 $(LNAME2 gshared, $(D __gshared) Attribute))
             return bar++; // Not thread safe.
         }
         ---
+        )
 
         $(P Unlike the $(D shared) attribute, $(D __gshared) provides no
         safe-guards against data races or other multi-threaded synchronization
@@ -487,6 +493,7 @@ $(H3 $(LNAME2 disable, $(D @disable) Attribute))
         at compile time rather than relying on generating a runtime error.
         )
 
+        $(RUNNABLE_EXAMPLE
         ---
         @disable void foo() { }
 
@@ -495,6 +502,7 @@ $(H3 $(LNAME2 disable, $(D @disable) Attribute))
             foo();   // error, foo is disabled
         }
         ---
+        )
 
         $(P $(DDSUBLINK spec/struct, Struct-Constructor, Disabling struct no-arg constructor)
         disallows default construction of the struct.
@@ -513,6 +521,7 @@ $(H3 $(LNAME2 nogc, $(D @nogc) Attribute))
         such as array concatenation and dynamic closures.
         )
 
+        $(RUNNABLE_EXAMPLE
         ---
         @nogc void foo(char[] a)
         {
@@ -523,11 +532,13 @@ $(H3 $(LNAME2 nogc, $(D @nogc) Attribute))
 
         void bar() { }
         ---
+        )
 
         $(P $(D @nogc) affects the type of the function. An $(D @nogc) function is covariant
         with a non-$(D @nogc) function.
         )
 
+        $(RUNNABLE_EXAMPLE
         ---
         void function() fp;
         void function() @nogc gp;  // pointer to @nogc function
@@ -543,6 +554,7 @@ $(H3 $(LNAME2 nogc, $(D @nogc) Attribute))
             gp = &bar; // ok
         }
         ---
+        )
 
 $(H3 $(LNAME2 property, $(D @property) Attribute))
 
@@ -574,6 +586,7 @@ $(H3 $(LNAME2 override, $(D override) Attribute))
         their overriding functions updated.
         )
 
+$(RUNNABLE_EXAMPLE
 ---------------
 class Foo
 {
@@ -590,6 +603,7 @@ class Foo2 : Foo
     }
 }
 ---------------
+)
 
 $(H3 $(LNAME2 static, $(D static) Attribute))
 
@@ -758,10 +772,12 @@ struct Bar
             UDA's can be extracted into an expression tuple using $(D __traits):
         )
 
+$(RUNNABLE_EXAMPLE
 ---
 @('c') string s;
 pragma(msg, __traits(getAttributes, s)); // prints tuple('c')
 ---
+)
 )
 
         $(P
@@ -769,6 +785,7 @@ pragma(msg, __traits(getAttributes, s)); // prints tuple('c')
             The expression tuple can be turned into a manipulatable tuple:
         )
 
+$(RUNNABLE_EXAMPLE
 ---
 template Tuple (T...)
 {
@@ -784,6 +801,7 @@ alias TP = Tuple!(__traits(getAttributes, foo));
 pragma(msg, TP); // prints tuple(3, 4, 7, (SSS))
 pragma(msg, TP[2]); // prints 7
 ---
+)
 
         $(P
             Of course the tuple types can be used to declare things:

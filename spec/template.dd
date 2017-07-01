@@ -168,6 +168,7 @@ $(GNAME TemplateSingleArgument):
 
     $(P For example, a simple generic copy template would be:
 
+        $(RUNNABLE_EXAMPLE
         ------
         template TCopy(T)
         {
@@ -177,6 +178,7 @@ $(GNAME TemplateSingleArgument):
             }
         }
         ------
+        )
     )
 
     $(P To use the template, it must first be instantiated with a specific
@@ -367,6 +369,7 @@ $(GNAME TemplateThisParameter):
     $(P $(I TemplateThisParameter)s are used in member function templates
         to pick up the type of the $(I this) reference.
 
+        $(RUNNABLE_EXAMPLE
         ---
         import std.stdio;
 
@@ -388,6 +391,7 @@ $(GNAME TemplateThisParameter):
             s3.foo(3);
         }
         ---
+        )
     )
 
     $(P Prints:
@@ -404,6 +408,7 @@ immutable(S)
         class type. Typically you would return a base type, but this won't allow
         you to call or access derived properties of the type:
 
+        $(RUNNABLE_EXAMPLE
         ---
         interface Addable(T)
         {
@@ -427,11 +432,13 @@ immutable(S)
             list.add(1).remove(1);  // error: no 'remove' method for Addable!int
         }
         ---
+        )
     )
 
     $(P Here the method $(D add) returns the base type, which doesn't implement the
         $(D remove) method. The $(D template this) parameter can be used for this purpose:
 
+        $(RUNNABLE_EXAMPLE
         ---
         interface Addable(T)
         {
@@ -455,6 +462,7 @@ immutable(S)
             list.add(1).remove(1);  // ok
         }
         ---
+        )
     )
 
 $(H2 $(LNAME2 template_value_parameter, Template Value Parameters))
@@ -481,6 +489,7 @@ $(GNAME TemplateValueParameterDefault):
         associative array literals of template value arguments,
         or struct literals of template value arguments.
 
+        $(RUNNABLE_EXAMPLE
         -----
         template foo(string s)
         {
@@ -489,14 +498,17 @@ $(GNAME TemplateValueParameterDefault):
 
         void main()
         {
+            import std.stdio;
             writefln("%s", foo!("hello").bar()); // prints: hello betty
         }
         -----
+        )
     )
 
     $(P This example of template foo has a value parameter that
         is specialized for 10:
 
+        $(RUNNABLE_EXAMPLE
         ------
         template foo(U : int, int T : 10)
         {
@@ -508,6 +520,7 @@ $(GNAME TemplateValueParameterDefault):
             assert(foo!(int, 10).x == 10);
         }
         ------
+        )
     )
 
 
@@ -539,6 +552,7 @@ $(GNAME TemplateAliasParameterDefault):
     $(UL
         $(LI User-defined type names
 
+        $(RUNNABLE_EXAMPLE
         ------
         class Foo
         {
@@ -557,9 +571,11 @@ $(GNAME TemplateAliasParameterDefault):
         }
         ------
         )
+        )
 
         $(LI Global names
 
+        $(RUNNABLE_EXAMPLE
         ------
         shared int x;
 
@@ -578,9 +594,11 @@ $(GNAME TemplateAliasParameterDefault):
         }
         ------
         )
+        )
 
         $(LI Module names
 
+        $(RUNNABLE_EXAMPLE
         ------
         import std.string;
 
@@ -596,9 +614,11 @@ $(GNAME TemplateAliasParameterDefault):
         }
         ------
         )
+        )
 
         $(LI Template names
 
+        $(RUNNABLE_EXAMPLE
         ------
         shared int x;
 
@@ -619,9 +639,11 @@ $(GNAME TemplateAliasParameterDefault):
         }
         ------
         )
+        )
 
         $(LI Template instance names
 
+        $(RUNNABLE_EXAMPLE
         ------
         shared int x;
 
@@ -643,9 +665,11 @@ $(GNAME TemplateAliasParameterDefault):
         }
         ------
         )
+        )
 
         $(LI Literals
 
+        $(RUNNABLE_EXAMPLE
         ------
         template Foo(alias X, alias Y)
         {
@@ -655,10 +679,12 @@ $(GNAME TemplateAliasParameterDefault):
 
         void main()
         {
+            import std.stdio;
             alias foo = Foo!(3, "bar");
             writeln(foo.i, foo.s);  // prints 3bar
         }
         ------
+        )
         )
     )
 
@@ -667,6 +693,7 @@ $(H3 $(LNAME2 typed_alias_op, Typed alias parameters))
     $(P Alias parameters can also be typed.
         These parameters will accept symbols of that type:
 
+        $(RUNNABLE_EXAMPLE
         ------
         template Foo(alias int x) { }
         int x;
@@ -675,6 +702,7 @@ $(H3 $(LNAME2 typed_alias_op, Typed alias parameters))
         Foo!x;  // ok
         Foo!f;  // fails to instantiate
         ------
+        )
     )
 
 $(H3 $(LNAME2 alias_parameter_specialization, Specialization))
@@ -732,6 +760,7 @@ $(GNAME TemplateSequenceParameter):
     $(P An $(I AliasSeq) can be used as an argument list to instantiate
         another template, or as the list of parameters for a function.
 
+        $(RUNNABLE_EXAMPLE
         ---
         template print(args...)
         {
@@ -756,6 +785,7 @@ $(GNAME TemplateSequenceParameter):
             write!(int, char, double).write(1, 'a', 6.8); // prints: args are 1a6.8
         }
         ---
+        )
     )
 
     $(P The number of elements in an $(I AliasSeq) can be retrieved with
@@ -771,6 +801,7 @@ $(GNAME TemplateSequenceParameter):
     $(P Type sequences can be deduced from the trailing parameters
         of an implicitly instantiated function template:
 
+        $(RUNNABLE_EXAMPLE
         ---
         template print(T, Args...)
         {
@@ -787,6 +818,7 @@ $(GNAME TemplateSequenceParameter):
             print(1, 'a', 6.8);
         }
         ---
+        )
     )
 
     $(P prints:
@@ -801,6 +833,7 @@ a
     $(P Type sequences can also be deduced from the type of a delegate
         or function parameter list passed as a function argument:
 
+        $(RUNNABLE_EXAMPLE
         ----
         import std.stdio;
 
@@ -826,6 +859,7 @@ a
             writefln("%d", plus_two(6, 8)); // prints 16
         }
         ----
+        )
         See also: $(REF partial, std,functional)
     )
 
@@ -835,6 +869,7 @@ $(H3 $(LNAME2 variadic_template_specialization, Specialization))
         without a sequence parameter exactly match a template instantiation,
         the template without a $(I TemplateSequenceParameter) is selected.
 
+        $(RUNNABLE_EXAMPLE
         ----
         template Foo(T)         { pragma(msg, "1"); }   // #1
         template Foo(int n)     { pragma(msg, "2"); }   // #2
@@ -850,12 +885,14 @@ $(H3 $(LNAME2 variadic_template_specialization, Specialization))
 
         alias foo4 = Foo!(int, 3, std);  // instantiates #4
         ----
+        )
     )
 
 $(H2 $(LNAME2 template_parameter_def_values, Template Parameter Default Values))
 
     $(P Trailing template parameters can be given default values:
 
+        $(RUNNABLE_EXAMPLE
         ------
         template Foo(T, U = int) { ... }
         Foo!(uint,long); // instantiate Foo with T as uint, and U as long
@@ -864,6 +901,7 @@ $(H2 $(LNAME2 template_parameter_def_values, Template Parameter Default Values))
         template Foo(T, U = T*) { ... }
         Foo!(uint);      // instantiate Foo with T as uint, and U as uint*
         ------
+        )
     )
 
 $(H2 $(LNAME2 implicit_template_properties, Eponymous Templates))
@@ -873,6 +911,7 @@ $(H2 $(LNAME2 implicit_template_properties, Eponymous Templates))
         members include at least all the template parameters then these members
         are assumed to be referred to in a template instantiation:
 
+        $(RUNNABLE_EXAMPLE
         ------
         template foo(T)
         {
@@ -884,9 +923,11 @@ $(H2 $(LNAME2 implicit_template_properties, Eponymous Templates))
             foo!(int) = 6; // instead of foo!(int).foo
         }
         ------
+        )
 
         Using functions and more types than the template:
 
+        $(RUNNABLE_EXAMPLE
         ------
         template foo(S, T)
         {
@@ -901,11 +942,13 @@ $(H2 $(LNAME2 implicit_template_properties, Eponymous Templates))
             foo(1, 2); // foo!(int, int).foo(1, 2)
         }
         ------
+        )
 
         When the template parameters must be deduced, the eponymous members
         can't rely on a $(LINK2 version.html#StaticIfCondition, `static if`)
         condition since the deduction relies on how the in members are used:
 
+        $(RUNNABLE_EXAMPLE
         ------
         template foo(T)
         {
@@ -919,6 +962,7 @@ $(H2 $(LNAME2 implicit_template_properties, Eponymous Templates))
             foo!int(0); // Ok since no deduction necessary
         }
         ------
+        )
     )
 
 $(H2 $(LNAME2 template_ctors, Template Constructors))
@@ -1136,6 +1180,7 @@ $(H3 $(LNAME2 auto-ref-parameters, Function Templates with Auto Ref Parameters))
         if its corresponding argument is an lvalue, otherwise it becomes
         a value parameter:
 
+        $(RUNNABLE_EXAMPLE
         ---
         int foo(Args...)(auto ref Args args)
         {
@@ -1163,11 +1208,13 @@ $(H3 $(LNAME2 auto-ref-parameters, Function Templates with Auto Ref Parameters))
             r = foo(y, 6, y); // returns 26
         }
         ---
+        )
     )
 
     $(P Auto ref parameters can be combined with auto ref return
         attributes:
 
+        $(RUNNABLE_EXAMPLE
         ---
         auto ref min(T, U)(auto ref T lhs, auto ref U rhs)
         {
@@ -1186,6 +1233,7 @@ $(H3 $(LNAME2 auto-ref-parameters, Function Templates with Auto Ref Parameters))
             static assert(!__traits(compiles, min(y, 3) = 10));
         }
         ---
+        )
     )
 
 $(H2 $(LNAME2 nested-templates, Nested Templates))
@@ -1194,6 +1242,7 @@ $(H2 $(LNAME2 nested-templates, Nested Templates))
         instantiated functions will implicitly capture the context of the
         enclosing scope.
 
+        $(RUNNABLE_EXAMPLE
         ----
         class C
         {
@@ -1225,6 +1274,7 @@ $(H2 $(LNAME2 nested-templates, Nested Templates))
             assert(c.num == 10);
         }
         ----
+        )
     )
 
     $(P Above, $(D Foo!().foo) will work just the same as a member function
@@ -1236,6 +1286,7 @@ $(H2 $(LNAME2 nested-templates, Nested Templates))
         implicitly become nested in order to access runtime data of the given
         local symbol.
 
+        $(RUNNABLE_EXAMPLE
         ----
         template Foo(alias sym)
         {
@@ -1276,11 +1327,13 @@ $(H2 $(LNAME2 nested-templates, Nested Templates))
             assert(num == 10);  // OK
         }
         ----
+        )
     )
 
     $(P Not only functions, but also instantiated class and struct types can
         become nested via implicitly captured context.
 
+        $(RUNNABLE_EXAMPLE
         ----
         class C
         {
@@ -1301,7 +1354,9 @@ $(H2 $(LNAME2 nested-templates, Nested Templates))
             assert(n.foo() == 20);
         }
         ----
+        )
 
+        $(RUNNABLE_EXAMPLE
         ----
         void main()
         {
@@ -1315,11 +1370,13 @@ $(H2 $(LNAME2 nested-templates, Nested Templates))
             assert(s.foo() == 20);
         }
         ----
+        )
     )
 
     $(P A templated $(D struct) can become a nested $(D struct) if it
         is instantiated with a local symbol passed as an aliased argument:
 
+        $(RUNNABLE_EXAMPLE
         ---
         struct A(alias F)
         {
@@ -1336,6 +1393,7 @@ $(H2 $(LNAME2 nested-templates, Nested Templates))
             assert(a.fun(2) == 42);
         }
         ---
+        )
     )
 
     $(H3 $(LNAME2 nested_template_limitation, Limitation:))
@@ -1344,6 +1402,7 @@ $(H2 $(LNAME2 nested-templates, Nested Templates))
         example, non-static template member functions cannot take local symbol
         by using template alias parameter.
 
+        $(RUNNABLE_EXAMPLE
         ----
         class C
         {
@@ -1358,10 +1417,12 @@ $(H2 $(LNAME2 nested-templates, Nested Templates))
             c.foo!var();    // NG, foo!var requires two contexts, 'this' and 'main()'
         }
         ----
+        )
     )
 
     $(P But, if one context is indirectly accessible from other context, it is allowed.
 
+        $(RUNNABLE_EXAMPLE
         ----
         int sum(alias x, alias y)() { return x + y; }
 
@@ -1376,6 +1437,7 @@ $(H2 $(LNAME2 nested-templates, Nested Templates))
             nested();
         }
         ----
+        )
 
         Two local variables $(D a) and $(D b) are in different contexts, but
         outer context is indirectly accessible from innter context, so nested
@@ -1389,6 +1451,7 @@ $(H2 $(LNAME2 recursive_templates, Recursive Templates))
         effects, such as compile time evaluation of non-trivial functions.
         For example, a factorial template can be written:
 
+        $(RUNNABLE_EXAMPLE
         ------
         template factorial(int n : 1)
         {
@@ -1400,11 +1463,12 @@ $(H2 $(LNAME2 recursive_templates, Recursive Templates))
             enum { factorial = n* factorial!(n-1) }
         }
 
-        void test()
+        void main()
         {
             writefln("%s", factorial!(4)); // prints 24
         }
         ------
+        )
     )
 
 $(H2 $(LNAME2 template_constraints, Template Constraints))
@@ -1426,6 +1490,7 @@ $(GNAME Constraint):
     $(P For example, the following function template only
         matches with odd values of $(CODE N):
 
+        $(RUNNABLE_EXAMPLE
         ---
         void foo(int N)()
             if (N & 1)
@@ -1436,11 +1501,13 @@ $(GNAME Constraint):
         foo!(3)();  // OK, matches
         foo!(4)();  // Error, no match
         ---
+        )
     )
 
     $(P Template constraints can be used with aggregate types (structs, classes, unions).
         Constraints are effectively used with library module "std.traits":
 
+        $(RUNNABLE_EXAMPLE
         ---
         import std.traits;
 
@@ -1453,6 +1520,7 @@ $(GNAME Constraint):
         auto x = Bar!int;       // OK, int is an integral type
         auto y = Bar!double;    // Error, double does not satisfy constraint
         ---
+        )
     )
 
 $(H2 $(LNAME2 limitations, Limitations))
@@ -1461,6 +1529,7 @@ $(H2 $(LNAME2 limitations, Limitations))
         virtual functions to classes or interfaces.
         For example:
 
+        $(RUNNABLE_EXAMPLE
         ------
         class Foo
         {
@@ -1474,6 +1543,7 @@ $(H2 $(LNAME2 limitations, Limitations))
             }
         }
         ------
+        )
     )
 $(SPEC_SUBNAV_PREV_NEXT operatoroverloading, Operator Overloading, template-mixin, Template Mixins)
 )
