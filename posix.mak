@@ -148,7 +148,7 @@ IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 	d002.ico \
 	$(addprefix compiler-, dmd.png gdc.svg ldc.png) \
 	$(addsuffix .svg, icon_minus icon_plus hamburger dlogo faster-aa-1 faster-gc-1 \
-		dconf_logo_2017) \
+		dconf_logo_2017 qualifier-combinations qualifier-conversions) \
 	$(addsuffix .png, archlinux_logo apple_logo centos_logo chocolatey_logo \
 		d3 debian_logo dlogo fedora_logo freebsd_logo gentoo_logo homebrew_logo \
 		opensuse_logo ubuntu_logo windows_logo pattern github-ribbon \
