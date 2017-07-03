@@ -9,7 +9,6 @@
 # make -f posix.mak rsync
 #
 
-include osmodel.mak
 PWD=$(shell pwd)
 
 # Latest released version
@@ -26,6 +25,8 @@ DRUNTIME_DIR=$(PWD)/../druntime
 TOOLS_DIR=$(PWD)/../tools
 INSTALLER_DIR=$(PWD)/../installer
 DUB_DIR=$(PWD)/../dub-${DUB_VER}
+
+include $(DMD_DIR)/src/osmodel.mak
 
 # External binaries
 DMD=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)/dmd
