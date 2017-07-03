@@ -365,9 +365,9 @@ main="D Programming Language","d.hhc","d.hhk","files\index.html","files\index.ht
         {
             auto t = "\t".replicate(level);
             f.writeln(t,
-                `<LI><OBJECT type="text/sitemap">`
-                `<param name="Name" value="`, nav.title, `">`
-                `<param name="Local" value="`, nav.url, `">`
+                `<LI><OBJECT type="text/sitemap">` ~
+                `<param name="Name" value="`, nav.title, `">` ~
+                `<param name="Local" value="`, nav.url, `">` ~
                 `</OBJECT>`);
             if (nav.children.length)
             {
