@@ -203,7 +203,7 @@ CHANGELOG_FILES=changelog/${NEXT_VERSION}_pre \
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
-	articles ascii-table bugstats.php builtin \
+	articles ascii-table bugstats builtin \
 	$(CHANGELOG_FILES) code_coverage community comparison concepts \
 	const-faq cpptod ctarguments ctod donate \
 	D1toD2 d-array-article d-floating-point deprecate dlangupb-scholarship dll-linux dmd \
