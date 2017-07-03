@@ -407,7 +407,7 @@ function setupTextarea(el, opts)
         });
     });
     openInEditorBtn.click(function(){
-      var url = "https://tour.dlang.org/editor?source=" + encodeURIComponent(opts.transformOutput(editor.getValue()));
+      var url = "https://run.dlang.io?source=" + encodeURIComponent(opts.transformOutput(editor.getValue()));
       window.open(url, "_blank");
     });
     return editor;
