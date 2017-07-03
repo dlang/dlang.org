@@ -136,7 +136,7 @@ void main(string[] args)
                 addKeyword(m.captures[2], fileName ~ "#" ~ m.captures[1], 1);
 
             foreach (m; src.matchAll(re!(`<a `~attrs~`href="([^"]*)"`~attrs~`>(.*?)</a>`)))
-                if (!m.captures[1].canFind("://"))
+                if (!m.captures[1].canFind("://") && !m.captures[1].startsWith("//"))
                     addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), absoluteUrl(fileName, m.captures[1].strip()), 4, false);
 
             // Disable scripts
