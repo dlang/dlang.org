@@ -99,7 +99,8 @@ void main(string[] args)
         pages[fileName] = page;
 
         auto outPath = `chm/files/` ~ fileName;
-        outPath.dirName().mkdirRecurse();
+        if (chm)
+            outPath.dirName().mkdirRecurse();
 
         if (fileName.endsWith(`.html`))
         {
