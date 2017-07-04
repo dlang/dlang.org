@@ -79,11 +79,11 @@ void addKeyword(string keyword, string link, int confidence, bool isAnchor = tru
     }
 }
 
-class Page
+struct Page
 {
-    string fileName, title;
+    string title;
 }
-Page[string] pages;
+Page*[string] pages;
 
 // ********************************************************************
 
@@ -124,7 +124,8 @@ void main(string[] args)
         scope(failure) stderr.writeln("Error while processing file: ", filePath);
 
         auto page = new Page;
-        auto fileName = page.fileName = filePath[docRoot.length+1 .. $].forwardSlashes();
+        auto fileName = filePath[docRoot.length+1 .. $].forwardSlashes();
+
         pages[fileName] = page;
 
         auto outPath = `chm/files/` ~ fileName;
@@ -375,9 +376,9 @@ main="D Programming Language","d.hhc","d.hhk","files\index.html","files\index.ht
 
 [FILES]`);
     string[] htmlList;
-    foreach (page; pages)
-        if (page.fileName.endsWith(`.html`))
-            htmlList ~= `files\` ~ page.fileName.backSlashes();
+    foreach (fileName, page; pages)
+        if (fileName.endsWith(`.html`))
+            htmlList ~= `files\` ~ fileName.backSlashes();
     htmlList.sort();
     foreach (s; htmlList)
         f.writeln(s);
