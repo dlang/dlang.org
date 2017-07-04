@@ -653,10 +653,12 @@ test: $(ASSERT_WRITELN_BIN)_test all
 changelog/${NEXT_VERSION}_pre.dd: | ${STABLE_DMD} ../tools ../installer
 	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
 	--version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
+	changelog/update_nav.sh
 
 changelog/${NEXT_VERSION}.dd: | ${STABLE_DMD} ../tools ../installer
 	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_STABLE) -o $@ \
 		--version "${NEXT_VERSION}"
+	changelog/update_nav.sh
 
 pending_changelog: changelog/${NEXT_VERSION}.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pre.html in your browser"
