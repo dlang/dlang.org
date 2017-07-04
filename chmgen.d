@@ -157,7 +157,10 @@ void main(string[] args)
 
         if (fileName.endsWith(`.html`))
         {
-            if (fileName == "404.html")
+            if (fileName.among(
+                    "404.html",
+                    "forum-template.html",
+                ))
                 continue;
 
             stderr.writeln("Processing ", fileName);
