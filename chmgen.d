@@ -17,7 +17,7 @@ string docRoot = `.`;
 
 // ********************************************************************
 
-struct KeyLink { string anchor; int confidence; bool sawAnchor; }
+struct KeyLink { string anchor; int confidence; }
 KeyLink[string][string] keywords;   // keywords[keyword][original url w/o anchor] = anchor/confidence
 string[] keywordList; // Sorted alphabetically, case-insensitive
 bool[string] sawAnchor;
