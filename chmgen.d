@@ -17,11 +17,40 @@ string docRoot = `.`;
 
 // ********************************************************************
 
-struct KeyLink { string anchor; int confidence; }
-KeyLink[string][string] keywords;   // keywords[keyword][original url w/o anchor] = anchor/confidence
-string[] keywordList; // Sorted alphabetically, case-insensitive
+struct KeyLink
+{
+    /// Anchor identifier (fragment part of URL)
+    string anchor;
+
+    /// Same as the addKeyword parameter.
+    int confidence;
+}
+
+/// Hashmap of keywords (for the CHM keyword tab);
+/// for each keyword, a hashmap of pages it appears on.
+/// Keys are: keywords[keyword][original url w/o anchor] = anchor/confidence
+KeyLink[string][string] keywords;
+
+/// List of all keywords, sorted alphabetically, case-insensitive
+string[] keywordList;
+
+/// Index of all seen anchors.
+/// Key is the file name and fragment part.
+/// Value is true if we saw a definition of the anchor,
+/// false if we only saw a link to it (so far).
 bool[string] sawAnchor;
 
+/**
+   Register an anchor.
+   Params:
+     keyword    = Some human-readable text associated with the anchor
+                  (section title, link text)
+     link       = The URL including the filename and any fragment part
+     confidence = A number indicating the preference of using the given anchor text
+                  (higher numbers take preference over lower ones)
+     isAnchor   = true (default) if this is the definition of an anchor,
+                  false if it is a link to it
+*/
 void addKeyword(string keyword, string link, int confidence, bool isAnchor = true)
 {
     keyword = keyword.strip();
