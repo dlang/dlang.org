@@ -13,6 +13,24 @@ import std.string;
 import std.regex;
 import std.path;
 
+// ********************************************************************
+
+// List of files to completely exclude from parsing.
+string[] excludes = [
+    "404.html",
+    "forum-template.html",
+];
+
+// List of broken links to ignore.
+string[] brokenLinks = [
+    "d-keyring.gpg",
+    "dlangspec.mobi",
+    "dlangspec.pdf",
+    "library-prerelease/index.html",
+];
+
+// ********************************************************************
+
 string docRoot = `.`;
 string chmDir = "chm";
 bool prerelease;
@@ -157,10 +175,7 @@ void main(string[] args)
 
         if (fileName.endsWith(`.html`))
         {
-            if (fileName.among(
-                    "404.html",
-                    "forum-template.html",
-                ))
+            if (excludes.canFind(fileName))
                 continue;
 
             stderr.writeln("Processing ", fileName);
@@ -195,7 +210,7 @@ void main(string[] args)
                 addKeyword(m.captures[2], fileName ~ "#" ~ m.captures[1], fileName, 1);
 
             foreach (m; src.matchAll(re!(`<a `~attrs~`href="([^"]*)"`~attrs~`>(.*?)</a>`)))
-                if (!m.captures[1].canFind("://") && !m.captures[1].startsWith("//"))
+                if (!m.captures[1].isAbsoluteURL())
                     addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), absoluteUrl(fileName, m.captures[1].strip()), fileName, 4, false);
 
             // Disable scripts
@@ -351,6 +366,8 @@ void lint()
                     unknownPages[page] = link.sources;
         foreach (url; unknownPages.keys.sort())
         {
+            if (brokenLinks.canFind(url))
+                continue;
             stderr.writeln("Warning: Unknown page: " ~ url);
             stderr.writefln("  (linked from %d pages e.g. %s)", unknownPages[url].length, unknownPages[url][0]);
         }
@@ -557,6 +574,13 @@ string absoluteUrl(string base, string url)
         pathSegments = pathSegments[0..$-1];
     }
     return (pathSegments ~ urlSegments).join(`/`);
+}
+
+bool isAbsoluteURL(string s)
+{
+    return s.canFind("://")
+        || s.startsWith("//")
+        || s.startsWith("mailto:");
 }
 
 Regex!char re(string pattern, alias flags = [])()
