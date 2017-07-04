@@ -590,6 +590,8 @@ ${DUB}: ${DUB_DIR} ${STABLE_DMD}
 # testing menu generation
 chm-nav.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+chm-nav-pre.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
 
 ################################################################################
 # Dman tags
