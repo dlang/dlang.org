@@ -26,6 +26,9 @@ struct KeyLink
 
     /// Same as the addKeyword parameter.
     int confidence;
+
+    /// Source files that the link was observed from.
+    string[] sources;
 }
 
 /// Hashmap of keywords (for the CHM keyword tab);
@@ -48,12 +51,13 @@ bool[string] sawAnchor;
      keyword    = Some human-readable text associated with the anchor
                   (section title, link text)
      link       = The URL including the filename and any fragment part
+     source     = The source file the link was observed from
      confidence = A number indicating the preference of using the given anchor text
                   (higher numbers take preference over lower ones)
      isAnchor   = true (default) if this is the definition of an anchor,
                   false if it is a link to it
 */
-void addKeyword(string keyword, string link, int confidence, bool isAnchor = true)
+void addKeyword(string keyword, string link, string source, int confidence, bool isAnchor = true)
 {
     keyword = keyword.strip();
     if (!keyword.length)
@@ -71,9 +75,16 @@ void addKeyword(string keyword, string link, int confidence, bool isAnchor = tru
     string anchor = link.getAnchor();
 
     if (keyword !in keywords
-     || file !in keywords[keyword]
-     || keywords[keyword][file].confidence < confidence)
-        keywords[keyword][file] = KeyLink(anchor, confidence);
+     || file !in keywords[keyword])
+        keywords[keyword][file] = KeyLink.init;
+
+    auto pkeyLink = file in keywords[keyword];
+    if (pkeyLink.confidence < confidence)
+    {
+        pkeyLink.anchor = anchor;
+        pkeyLink.confidence = confidence;
+    }
+    pkeyLink.sources ~= source;
 
     if (anchor.length)
     {
@@ -172,17 +183,17 @@ void main(string[] args)
             enum name = `(?:name|id)`;
 
             foreach (m; src.matchAll(re!(`<a `~attrs~name~`="(\.?[^"]*)"`~attrs~`>(.*?)</a>`)))
-                addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), fileName ~ "#" ~ m.captures[1], 5);
+                addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), fileName ~ "#" ~ m.captures[1], fileName, 5);
 
             foreach (m; src.matchAll(re!(`<a `~attrs~name~`="(\.?([^"]*?)(\.\d+)?)"`~attrs~`>`)))
-                addKeyword(m.captures[2], fileName ~ "#" ~ m.captures[1], 1);
+                addKeyword(m.captures[2], fileName ~ "#" ~ m.captures[1], fileName, 1);
 
             foreach (m; src.matchAll(re!(`<div class="quickindex" id="(quickindex\.(.+?))"></div>`)))
-                addKeyword(m.captures[2], fileName ~ "#" ~ m.captures[1], 1);
+                addKeyword(m.captures[2], fileName ~ "#" ~ m.captures[1], fileName, 1);
 
             foreach (m; src.matchAll(re!(`<a `~attrs~`href="([^"]*)"`~attrs~`>(.*?)</a>`)))
                 if (!m.captures[1].canFind("://") && !m.captures[1].startsWith("//"))
-                    addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), absoluteUrl(fileName, m.captures[1].strip()), 4, false);
+                    addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), absoluteUrl(fileName, m.captures[1].strip()), fileName, 4, false);
 
             // Disable scripts
 
@@ -330,13 +341,16 @@ void lint()
 {
     // Unknown URLs (links to pages we did not see)
     {
-        bool[string] unknownPages;
+        string[][string] unknownPages;
         foreach (keyword; keywordList)
             foreach (page, link; keywords[keyword])
                 if (page !in pages)
-                    unknownPages[page] = true;
+                    unknownPages[page] = link.sources;
         foreach (url; unknownPages.keys.sort())
+        {
             stderr.writeln("Warning: Unknown page: " ~ url);
+            stderr.writefln("  (linked from %d pages e.g. %s)", unknownPages[url].length, unknownPages[url][0]);
+        }
     }
 
     // Unknown anchors
