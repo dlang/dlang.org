@@ -79,10 +79,13 @@ void addKeyword(string keyword, string link, int confidence, bool isAnchor = tru
     }
 }
 
+/// Information about a particular page.
 struct Page
 {
+    /// Page title (as in HTML).
     string title;
 }
+/// Mapping of page file names to page information (title).
 Page*[string] pages;
 
 // ********************************************************************
