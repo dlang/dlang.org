@@ -146,6 +146,9 @@ void main(string[] args)
 
         if (fileName.endsWith(`.html`))
         {
+            if (fileName == "404.html")
+                continue;
+
             stderr.writeln("Processing ", fileName);
             auto src = filePath.readText();
 
