@@ -15,6 +15,7 @@ import std.path;
 
 string docRoot = `.`;
 string chmDir = "chm";
+bool prerelease;
 
 // ********************************************************************
 
@@ -63,6 +64,9 @@ void addKeyword(string keyword, string link, int confidence, bool isAnchor = tru
     if (link.endsWith("/"))
         link ~= "index.html";
 
+    if (prerelease && link.skipOver("phobos/"))
+        link = "phobos-prerelease/" ~ link;
+
     string file = link.stripAnchor();
     string anchor = link.getAnchor();
 
@@ -99,6 +103,7 @@ void main(string[] args)
         "only-tags", &onlyTags,
         "root", &docRoot,
         "dir", &chmDir,
+        "pre", &prerelease,
     );
 
     bool chm = !onlyTags;
@@ -110,12 +115,14 @@ void main(string[] args)
         mkdirRecurse(chmDir ~ `/files`);
     }
 
-    enforce(exists(docRoot ~ `/phobos/index.html`),
+    string phobosDir = prerelease ? "/phobos-prerelease/" : "/phobos/";
+
+    enforce(exists(docRoot ~ phobosDir ~ `index.html`),
         `Phobos documentation not present. Please place Phobos documentation HTML files into the "phobos" subdirectory.`);
 
     string[] files = chain(
         dirEntries(docRoot ~ `/`          , "*.html", SpanMode.shallow),
-        dirEntries(docRoot ~ `/phobos/`   , "*.html", SpanMode.shallow),
+        dirEntries(docRoot ~ phobosDir    , "*.html", SpanMode.shallow),
         dirEntries(docRoot ~ `/spec/`     , "*.html", SpanMode.shallow),
         dirEntries(docRoot ~ `/changelog/`, "*.html", SpanMode.shallow),
     //  dirEntries(docRoot ~ `/js/`                 , SpanMode.shallow),
@@ -227,7 +234,7 @@ void loadNavigation()
     stderr.writeln("Loading navigation");
 
     import std.json;
-    auto text = "chm-nav.json"
+    auto text = (prerelease ? "chm-nav-pre.json" : "chm-nav.json")
         .readText()
         .replace("\r", "")
         .replace("\n", "")
@@ -243,6 +250,8 @@ void loadNavigation()
     {
         auto hook = node["hook"].str;
         auto root = node["root"].str;
+        if (prerelease && root == "phobos/")
+            root = "phobos-prerelease/";
 
         Nav parseNav(JSONValue json)
         {
@@ -268,7 +277,11 @@ void loadNavigation()
                 nav.title = obj["t"].str.strip();
                 if ("a" in obj)
                 {
-                    auto url = absoluteUrl(root, obj["a"].str.strip());
+                    auto a = obj["a"].str.strip();
+                    if (prerelease && a == "phobos/index.html")
+                        a = "phobos-prerelease/index.html";
+
+                    auto url = absoluteUrl(root, a);
                     if (url.canFind(`://`))
                     {
                         stderr.writeln("Skipping external navigation item: " ~ url);
