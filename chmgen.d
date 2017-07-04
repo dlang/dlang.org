@@ -14,6 +14,7 @@ import std.regex;
 import std.path;
 
 string docRoot = `.`;
+string chmDir = "chm";
 
 // ********************************************************************
 
@@ -97,15 +98,16 @@ void main(string[] args)
     getopt(args,
         "only-tags", &onlyTags,
         "root", &docRoot,
+        "dir", &chmDir,
     );
 
     bool chm = !onlyTags;
 
     if (chm)
     {
-        if (exists(`chm`))
-            rmdirRecurse(`chm`);
-        mkdirRecurse(`chm/files`);
+        if (exists(chmDir))
+            rmdirRecurse(chmDir);
+        mkdirRecurse(chmDir ~ `/files`);
     }
 
     enforce(exists(docRoot ~ `/phobos/index.html`),
@@ -131,7 +133,7 @@ void main(string[] args)
 
         pages[fileName] = page;
 
-        auto outPath = `chm/files/` ~ fileName;
+        auto outPath = chmDir ~ `/files/` ~ fileName;
         if (chm)
             outPath.dirName().mkdirRecurse();
 
@@ -273,7 +275,7 @@ void loadNavigation()
                         return null;
                     }
                     else
-                    if (!exists(`chm/files/` ~ url))
+                    if (!exists(chmDir ~ `/files/` ~ url))
                     {
                         if (/*warn*/true)
                             stderr.writeln("Warning: Item in navigation does not exist: " ~ url);
@@ -359,7 +361,7 @@ void writeCHM()
 {
     stderr.writeln("Writing project file");
 
-    auto f = File(`chm\d.hhp`, "wt");
+    auto f = File(chmDir ~ `/d.hhp`, "wt");
     f.writeln(
 `[OPTIONS]
 Binary Index=No
@@ -416,7 +418,7 @@ main="D Programming Language","d.hhc","d.hhk","files\index.html","files\index.ht
             dumpNav(child, level);
     }
 
-    f.open(`chm\d.hhc`, "wt");
+    f.open(chmDir ~ `/d.hhc`, "wt");
     f.writeln(
 `<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><HTML><BODY>
 <OBJECT type="text/site properties"><param name="Window Styles" value="0x800025"></OBJECT>
@@ -430,7 +432,7 @@ main="D Programming Language","d.hhc","d.hhk","files\index.html","files\index.ht
 
     stderr.writeln("Writing index file");
 
-    f.open(`chm\d.hhk`, "wt");
+    f.open(chmDir ~ `/d.hhk`, "wt");
     f.writeln(
 `<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><HTML><BODY>
 <UL>`);
