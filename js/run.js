@@ -209,8 +209,10 @@ $(document).ready(function()
     $('textarea[class=d_code]').each(function(index) {
         var parent = $(this).parent();
         var outputDiv = parent.children("div.d_code_output");
+        var hasStdin = parent.children(".inputButton").length > 0;
+        var hasArgs  = parent.children(".argsButton").length > 0;
         setupTextarea(this, {parent: parent, outputDiv: outputDiv,
-                        stdin: true, args: true});
+                        stdin: hasStdin, args: hasArgs});
     });
 });
 
@@ -224,7 +226,12 @@ function setupTextarea(el, opts)
         transformOutput: function(out) { return out }
     }, opts);
 
-    var backend = backends[opts.backend || "dpaste"];
+    var backend = backends[opts.backend || "tour"];
+    // only use DPaste if absolutely necessary (stdin or args provided)
+    // DPaste is very restrictive compared to the Dockerized DLang Tour backend
+    if (opts.args || opts.stdin) {
+      backend = backends.dpaste;
+    }
 
     if (!!opts.parent)
         var parent = opts.parent;
