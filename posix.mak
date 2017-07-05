@@ -19,12 +19,12 @@ endif
 NEXT_VERSION:=$(shell bash -c 'version=$$(cat VERSION);a=($${version//./ });a[1]="10\#$${a[1]}";((a[1]++)); a[2]=0; echo $${a[0]}.0$${a[1]}.$${a[2]};' )
 
 # DLang directories
-DMD_DIR=$(PWD)/../dmd
-PHOBOS_DIR=$(PWD)/../phobos
-DRUNTIME_DIR=$(PWD)/../druntime
-TOOLS_DIR=$(PWD)/../tools
-INSTALLER_DIR=$(PWD)/../installer
-DUB_DIR=$(PWD)/../dub-${DUB_VER}
+DMD_DIR=../dmd
+PHOBOS_DIR=../phobos
+DRUNTIME_DIR=../druntime
+TOOLS_DIR=../tools
+INSTALLER_DIR=../installer
+DUB_DIR=../dub-${DUB_VER}
 
 include $(DMD_DIR)/src/osmodel.mak
 
@@ -118,17 +118,17 @@ endif
 DDOC_VARS_STABLE_HTML=\
 	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
 	  STDDOC="$(addprefix $(PWD)/, $(STD_DDOC))" \
-	  DMD="$(DMD_STABLE)" \
-	  DRUNTIME_PATH="${DRUNTIME_DIR}" \
+	  DMD="$(abspath $(DMD_STABLE))" \
+	  DRUNTIME_PATH="$(abspath ${DRUNTIME_DIR})" \
 	  DOCSRC="$(PWD)" \
-	  VERSION="${DMD_DIR}/VERSION"
+	  VERSION="$(abspath ${DMD_DIR}/VERSION)"
 
 DDOC_VARS=\
-	DMD="${DMD}" \
-	DMD_DIR="${DMD_DIR}" \
-	DRUNTIME_PATH="${DRUNTIME_DIR}" \
+	DMD="$(abspath ${DMD})" \
+	DMD_DIR="$(abspath ${DMD_DIR})" \
+	DRUNTIME_PATH="$(abspath ${DRUNTIME_DIR})" \
 	DOCSRC="$(PWD)" \
-	VERSION="${DMD_DIR}/VERSION"
+	VERSION="$(abspath ${DMD_DIR}/VERSION)"
 
 DDOC_VARS_HTML=$(DDOC_VARS) \
 	DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease" \
@@ -402,10 +402,10 @@ $G/twid_latest.ddoc:
 # Git rules
 ################################################################################
 
-$(PWD)/%-${LATEST} :
+../%-${LATEST} :
 	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
 
-$(PWD)/%-${DUB_VER} :
+../%-${DUB_VER} :
 	git clone --depth=1 -b v${DUB_VER} ${GIT_HOME}/$(notdir $*) $@
 
 ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
