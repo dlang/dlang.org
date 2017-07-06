@@ -13,16 +13,69 @@ import std.string;
 import std.regex;
 import std.path;
 
-string docRoot = `.`;
+// ********************************************************************
+
+// List of files to completely exclude from parsing.
+string[] excludes = [
+    "404.html",
+    "forum-template.html",
+];
+
+// List of broken links to ignore.
+string[] brokenLinks = [
+    "d-keyring.gpg",
+    "dlangspec.mobi",
+    "dlangspec.pdf",
+    "library-prerelease/index.html",
+];
 
 // ********************************************************************
 
-struct KeyLink { string anchor; int confidence; bool sawAnchor; }
-KeyLink[string][string] keywords;   // keywords[keyword][original url w/o anchor] = anchor/confidence
-string[] keywordList; // Sorted alphabetically, case-insensitive
+string docRoot = `.`;
+string chmDir = "chm";
+bool prerelease;
+
+// ********************************************************************
+
+struct KeyLink
+{
+    /// Anchor identifier (fragment part of URL)
+    string anchor;
+
+    /// Same as the addKeyword parameter.
+    int confidence;
+
+    /// Source files that the link was observed from.
+    string[] sources;
+}
+
+/// Hashmap of keywords (for the CHM keyword tab);
+/// for each keyword, a hashmap of pages it appears on.
+/// Keys are: keywords[keyword][original url w/o anchor] = anchor/confidence
+KeyLink[string][string] keywords;
+
+/// List of all keywords, sorted alphabetically, case-insensitive
+string[] keywordList;
+
+/// Index of all seen anchors.
+/// Key is the file name and fragment part.
+/// Value is true if we saw a definition of the anchor,
+/// false if we only saw a link to it (so far).
 bool[string] sawAnchor;
 
-void addKeyword(string keyword, string link, int confidence, bool isAnchor = true)
+/**
+   Register an anchor.
+   Params:
+     keyword    = Some human-readable text associated with the anchor
+                  (section title, link text)
+     link       = The URL including the filename and any fragment part
+     source     = The source file the link was observed from
+     confidence = A number indicating the preference of using the given anchor text
+                  (higher numbers take preference over lower ones)
+     isAnchor   = true (default) if this is the definition of an anchor,
+                  false if it is a link to it
+*/
+void addKeyword(string keyword, string link, string source, int confidence, bool isAnchor = true)
 {
     keyword = keyword.strip();
     if (!keyword.length)
@@ -33,13 +86,23 @@ void addKeyword(string keyword, string link, int confidence, bool isAnchor = tru
     if (link.endsWith("/"))
         link ~= "index.html";
 
+    if (prerelease && link.skipOver("phobos/"))
+        link = "phobos-prerelease/" ~ link;
+
     string file = link.stripAnchor();
     string anchor = link.getAnchor();
 
     if (keyword !in keywords
-     || file !in keywords[keyword]
-     || keywords[keyword][file].confidence < confidence)
-        keywords[keyword][file] = KeyLink(anchor, confidence);
+     || file !in keywords[keyword])
+        keywords[keyword][file] = KeyLink.init;
+
+    auto pkeyLink = file in keywords[keyword];
+    if (pkeyLink.confidence < confidence)
+    {
+        pkeyLink.anchor = anchor;
+        pkeyLink.confidence = confidence;
+    }
+    pkeyLink.sources ~= source;
 
     if (anchor.length)
     {
@@ -50,11 +113,14 @@ void addKeyword(string keyword, string link, int confidence, bool isAnchor = tru
     }
 }
 
-class Page
+/// Information about a particular page.
+struct Page
 {
-    string fileName, title;
+    /// Page title (as in HTML).
+    string title;
 }
-Page[string] pages;
+/// Mapping of page file names to page information (title).
+Page*[string] pages;
 
 // ********************************************************************
 
@@ -65,23 +131,27 @@ void main(string[] args)
     getopt(args,
         "only-tags", &onlyTags,
         "root", &docRoot,
+        "dir", &chmDir,
+        "pre", &prerelease,
     );
 
     bool chm = !onlyTags;
 
     if (chm)
     {
-        if (exists(`chm`))
-            rmdirRecurse(`chm`);
-        mkdirRecurse(`chm/files`);
+        if (exists(chmDir))
+            rmdirRecurse(chmDir);
+        mkdirRecurse(chmDir ~ `/files`);
     }
 
-    enforce(exists(docRoot ~ `/phobos/index.html`),
+    string phobosDir = prerelease ? "/phobos-prerelease/" : "/phobos/";
+
+    enforce(exists(docRoot ~ phobosDir ~ `index.html`),
         `Phobos documentation not present. Please place Phobos documentation HTML files into the "phobos" subdirectory.`);
 
     string[] files = chain(
         dirEntries(docRoot ~ `/`          , "*.html", SpanMode.shallow),
-        dirEntries(docRoot ~ `/phobos/`   , "*.html", SpanMode.shallow),
+        dirEntries(docRoot ~ phobosDir    , "*.html", SpanMode.shallow),
         dirEntries(docRoot ~ `/spec/`     , "*.html", SpanMode.shallow),
         dirEntries(docRoot ~ `/changelog/`, "*.html", SpanMode.shallow),
     //  dirEntries(docRoot ~ `/js/`                 , SpanMode.shallow),
@@ -95,14 +165,19 @@ void main(string[] args)
         scope(failure) stderr.writeln("Error while processing file: ", filePath);
 
         auto page = new Page;
-        auto fileName = page.fileName = filePath[docRoot.length+1 .. $].forwardSlashes();
+        auto fileName = filePath[docRoot.length+1 .. $].forwardSlashes();
+
         pages[fileName] = page;
 
-        auto outPath = `chm/files/` ~ fileName;
-        outPath.dirName().mkdirRecurse();
+        auto outPath = chmDir ~ `/files/` ~ fileName;
+        if (chm)
+            outPath.dirName().mkdirRecurse();
 
         if (fileName.endsWith(`.html`))
         {
+            if (excludes.canFind(fileName))
+                continue;
+
             stderr.writeln("Processing ", fileName);
             auto src = filePath.readText();
 
@@ -126,17 +201,17 @@ void main(string[] args)
             enum name = `(?:name|id)`;
 
             foreach (m; src.matchAll(re!(`<a `~attrs~name~`="(\.?[^"]*)"`~attrs~`>(.*?)</a>`)))
-                addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), fileName ~ "#" ~ m.captures[1], 5);
+                addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), fileName ~ "#" ~ m.captures[1], fileName, 5);
 
             foreach (m; src.matchAll(re!(`<a `~attrs~name~`="(\.?([^"]*?)(\.\d+)?)"`~attrs~`>`)))
-                addKeyword(m.captures[2], fileName ~ "#" ~ m.captures[1], 1);
+                addKeyword(m.captures[2], fileName ~ "#" ~ m.captures[1], fileName, 1);
 
             foreach (m; src.matchAll(re!(`<div class="quickindex" id="(quickindex\.(.+?))"></div>`)))
-                addKeyword(m.captures[2], fileName ~ "#" ~ m.captures[1], 1);
+                addKeyword(m.captures[2], fileName ~ "#" ~ m.captures[1], fileName, 1);
 
             foreach (m; src.matchAll(re!(`<a `~attrs~`href="([^"]*)"`~attrs~`>(.*?)</a>`)))
-                if (!m.captures[1].canFind("://"))
-                    addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), absoluteUrl(fileName, m.captures[1].strip()), 4, false);
+                if (!m.captures[1].isAbsoluteURL())
+                    addKeyword(m.captures[2].replaceAll(re!`<.*?>`, ``), absoluteUrl(fileName, m.captures[1].strip()), fileName, 4, false);
 
             // Disable scripts
 
@@ -191,7 +266,7 @@ void loadNavigation()
     stderr.writeln("Loading navigation");
 
     import std.json;
-    auto text = "chm-nav.json"
+    auto text = (prerelease ? "chm-nav-pre.json" : "chm-nav.json")
         .readText()
         .replace("\r", "")
         .replace("\n", "")
@@ -207,6 +282,8 @@ void loadNavigation()
     {
         auto hook = node["hook"].str;
         auto root = node["root"].str;
+        if (prerelease && root == "phobos/")
+            root = "phobos-prerelease/";
 
         Nav parseNav(JSONValue json)
         {
@@ -232,14 +309,18 @@ void loadNavigation()
                 nav.title = obj["t"].str.strip();
                 if ("a" in obj)
                 {
-                    auto url = absoluteUrl(root, obj["a"].str.strip());
+                    auto a = obj["a"].str.strip();
+                    if (prerelease && a == "phobos/index.html")
+                        a = "phobos-prerelease/index.html";
+
+                    auto url = absoluteUrl(root, a);
                     if (url.canFind(`://`))
                     {
                         stderr.writeln("Skipping external navigation item: " ~ url);
                         return null;
                     }
                     else
-                    if (!exists(`chm/files/` ~ url))
+                    if (!exists(chmDir ~ `/files/` ~ url))
                     {
                         if (/*warn*/true)
                             stderr.writeln("Warning: Item in navigation does not exist: " ~ url);
@@ -278,13 +359,18 @@ void lint()
 {
     // Unknown URLs (links to pages we did not see)
     {
-        bool[string] unknownPages;
+        string[][string] unknownPages;
         foreach (keyword; keywordList)
             foreach (page, link; keywords[keyword])
                 if (page !in pages)
-                    unknownPages[page] = true;
+                    unknownPages[page] = link.sources;
         foreach (url; unknownPages.keys.sort())
+        {
+            if (brokenLinks.canFind(url))
+                continue;
             stderr.writeln("Warning: Unknown page: " ~ url);
+            stderr.writefln("  (linked from %d pages e.g. %s)", unknownPages[url].length, unknownPages[url][0]);
+        }
     }
 
     // Unknown anchors
@@ -325,7 +411,7 @@ void writeCHM()
 {
     stderr.writeln("Writing project file");
 
-    auto f = File(`chm\d.hhp`, "wt");
+    auto f = File(chmDir ~ `/d.hhp`, "wt");
     f.writeln(
 `[OPTIONS]
 Binary Index=No
@@ -345,9 +431,9 @@ main="D Programming Language","d.hhc","d.hhk","files\index.html","files\index.ht
 
 [FILES]`);
     string[] htmlList;
-    foreach (page; pages)
-        if (page.fileName.endsWith(`.html`))
-            htmlList ~= `files\` ~ page.fileName.backSlashes();
+    foreach (fileName, page; pages)
+        if (fileName.endsWith(`.html`))
+            htmlList ~= `files\` ~ fileName.backSlashes();
     htmlList.sort();
     foreach (s; htmlList)
         f.writeln(s);
@@ -365,9 +451,9 @@ main="D Programming Language","d.hhc","d.hhk","files\index.html","files\index.ht
         {
             auto t = "\t".replicate(level);
             f.writeln(t,
-                `<LI><OBJECT type="text/sitemap">`
-                `<param name="Name" value="`, nav.title, `">`
-                `<param name="Local" value="`, nav.url, `">`
+                `<LI><OBJECT type="text/sitemap">` ~
+                `<param name="Name" value="`, nav.title, `">` ~
+                `<param name="Local" value="`, nav.url, `">` ~
                 `</OBJECT>`);
             if (nav.children.length)
             {
@@ -382,7 +468,7 @@ main="D Programming Language","d.hhc","d.hhk","files\index.html","files\index.ht
             dumpNav(child, level);
     }
 
-    f.open(`chm\d.hhc`, "wt");
+    f.open(chmDir ~ `/d.hhc`, "wt");
     f.writeln(
 `<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><HTML><BODY>
 <OBJECT type="text/site properties"><param name="Window Styles" value="0x800025"></OBJECT>
@@ -396,7 +482,7 @@ main="D Programming Language","d.hhc","d.hhk","files\index.html","files\index.ht
 
     stderr.writeln("Writing index file");
 
-    f.open(`chm\d.hhk`, "wt");
+    f.open(chmDir ~ `/d.hhk`, "wt");
     f.writeln(
 `<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><HTML><BODY>
 <UL>`);
@@ -488,6 +574,13 @@ string absoluteUrl(string base, string url)
         pathSegments = pathSegments[0..$-1];
     }
     return (pathSegments ~ urlSegments).join(`/`);
+}
+
+bool isAbsoluteURL(string s)
+{
+    return s.canFind("://")
+        || s.startsWith("//")
+        || s.startsWith("mailto:");
 }
 
 Regex!char re(string pattern, alias flags = [])()
