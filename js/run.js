@@ -66,6 +66,9 @@ function safeVar(data, path)
     return res;
 }
 
+// compile the examples on the prerelease pages with dmd-nightly
+var dmdCompilerBranch = location.href.indexOf("-prerelease/") >= 0 ? "dmd-nightly" : "dmd";
+
 var backends = {
   dpaste: {
     url: "https://dpaste.dzfl.pl/request/",
@@ -97,7 +100,8 @@ var backends = {
     contentType: "text/plain; charset=UTF-8",
     requestTransform: function(data) {
         return JSON.stringify({
-            source: data.code
+            source: data.code,
+            compiler: dmdCompilerBranch
         });
     },
     parseOutput: function(data, opts) {
@@ -414,7 +418,7 @@ function setupTextarea(el, opts)
         });
     });
     openInEditorBtn.click(function(){
-      var url = "https://run.dlang.io?source=" + encodeURIComponent(opts.transformOutput(editor.getValue()));
+      var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&source=" + encodeURIComponent(opts.transformOutput(editor.getValue()));
       window.open(url, "_blank");
     });
     return editor;
