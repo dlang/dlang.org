@@ -25,6 +25,8 @@ done
 for ver in "${all_vers[@]}"; do
     if [[ "$ver" = *_pre.dd ]]; then
         sed -i "s|VER=[0-9\.][0-9\.]*|VER=${ver%_pre.dd}|" "$ver"
+    elif [[ "$ver" = *_pending.dd ]]; then
+        sed -i "s|VER=[0-9\.][0-9\.]*|VER=${ver%_pending.dd}|" "$ver"
     else
         sed -i "s|VER=[0-9\.][0-9\.]*|VER=${ver%.dd}|" "$ver"
     fi
@@ -35,14 +37,18 @@ IFS=$'\n'
 rev_all_vers=($(sort --reverse <<<"${all_vers[*]}"))
 rev_rel_vers=($(sort --reverse <<<"${rel_vers[*]}"))
 rev_pre_vers=($(ls -- *_pre.dd | sort --reverse))
+rev_pending_vers=($(ls -- *_pending.dd | sort --reverse))
 unset IFS
 
 # update index of all changlogs
 sed -i '/BEGIN_GENERATED_CHANGELOG_VERSIONS/,/END_GENERATED_CHANGELOG_VERSIONS/d' changelog.ddoc
 echo '_=BEGIN_GENERATED_CHANGELOG_VERSIONS' >> changelog.ddoc
 echo 'CHANGELOG_VERSIONS =' >> changelog.ddoc
+for ver in "${rev_pending_vers[@]}"; do
+    echo "    \$(CHANGELOG_VERSION_PENDING ${ver%_pending.dd}, not yet released)" >> changelog.ddoc
+done
 for ver in "${rev_pre_vers[@]}"; do
-    echo "    \$(CHANGELOG_VERSION_PRE ${ver%_pre.dd}, not yet released)" >> changelog.ddoc
+    echo "    \$(CHANGELOG_VERSION_PRE ${ver%_pre.dd}, to be released)" >> changelog.ddoc
 done
 for ver in "${rev_rel_vers[@]}"; do
     echo "    \$(CHANGELOG_VERSION ${ver%.dd})" >> changelog.ddoc
