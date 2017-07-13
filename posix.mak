@@ -656,7 +656,7 @@ test: $(ASSERT_WRITELN_BIN)_test all
 
 changelog/${NEXT_VERSION}_pending.dd: | ${STABLE_DMD} ../tools ../installer
 	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
-	--version "${NEXT_VERSION} (pending)" --date "Pending" --nightly
+	--version "${NEXT_VERSION} (Nightly)" --date "To be released" --release-type "nightly"
 
 changelog/${NEXT_VERSION}_pre.dd: | ${STABLE_DMD} ../tools ../installer
 	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_STABLE) -o $@ \
