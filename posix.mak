@@ -652,17 +652,35 @@ test: $(ASSERT_WRITELN_BIN)_test all
 
 ################################################################################
 # Changelog generation
+#
+# pending:		$(LATEST)..upstream/master		(all changes of the next _major_ release)
+# pre:			$(LATEST)..upstream/stable 		(all changes of the next release)
+# release:		$(PREVIOUS_LATEST)..$(LATEST)   (used by the release maintainer after updating $(LATEST))
 ################################################################################
 
 changelog/${NEXT_VERSION}_pending.dd: | ${STABLE_DMD} ../tools ../installer
 	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
 	--version "${NEXT_VERSION} (pending)" --date "Pending" --nightly
 
-changelog/${NEXT_VERSION}_pre.dd: | ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_STABLE) -o $@ \
-		--version "${NEXT_VERSION}"
-
 pending_changelog: changelog/${NEXT_VERSION}_pending.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pending.html in your browser"
+
+changelog/${NEXT_VERSION}_pre.dd: | ${STABLE_DMD} ../tools ../installer
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_STABLE) -o $@ \
+		--version "${NEXT_VERSION} (beta)"  --date "To be released"
+
+pre_changelog: changelog/${NEXT_VERSION}_pre.dd html
+	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pre.html in your browser"
+
+# --no-text is used for point-releases like 2.074.1 to exclude plain-text files in changelog/* folders
+#  which are intended for major releases only.
+changelog/${LATEST}.dd: | ${STABLE_DMD} ../tools ../installer
+	previous_latest=$$(git tag | grep -vE "(b|rc)" | tail -n2 | head -n1) && \
+	changelog_flags=$$(LATEST=$(LATEST) && [ "$${LATEST: -1}" -gt 0 ] && echo "--no-text") && \
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d "$$(echo $${previous_latest}..v$(LATEST))" $$changelog_flags \
+		-o "changelog/$(LATEST).dd" --version "$(LATEST)" --date "$$(date +'%B %d, %Y')"
+
+release_changelog: changelog/${LATEST}.dd html $(DOC_OUTPUT_DIR)/changelog/$(LATEST).html
+	@echo "Please open file:///$(shell pwd)/web/changelog/${LATEST}.html in your browser"
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
