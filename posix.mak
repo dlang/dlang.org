@@ -198,8 +198,8 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES=changelog/${NEXT_VERSION}_pending \
-				$(basename $(wildcard changelog/*.dd))
+CHANGELOG_FILES=changelog/${NEXT_VERSION}_pre \
+				$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) \
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
@@ -654,15 +654,15 @@ test: $(ASSERT_WRITELN_BIN)_test all
 # Changelog generation
 ################################################################################
 
-changelog/${NEXT_VERSION}_pending.dd: | ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
-	--version "${NEXT_VERSION} (pending)" --date "Pending" --nightly
-
 changelog/${NEXT_VERSION}_pre.dd: | ${STABLE_DMD} ../tools ../installer
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
+	--version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
+
+changelog/${NEXT_VERSION}.dd: | ${STABLE_DMD} ../tools ../installer
 	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_STABLE) -o $@ \
 		--version "${NEXT_VERSION}"
 
-pending_changelog: changelog/${NEXT_VERSION}_pending.dd html
-	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pending.html in your browser"
+pending_changelog: changelog/${NEXT_VERSION}.dd html
+	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pre.html in your browser"
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
