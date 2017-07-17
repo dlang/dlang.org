@@ -230,8 +230,10 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
 all : docs html
 
-docs : dmd-release dmd-prerelease phobos-prerelease druntime-prerelease \
-	   druntime-release phobos-release apidocs-release apidocs-prerelease
+docs-release: dmd-release druntime-release phobos-release apidocs-release
+docs-prerelease: dmd-prerelease druntime-prerelease phobos-prerelease apidocs-prerelease
+
+docs : docs-release docs-prerelease
 
 html : $(ALL_FILES)
 
