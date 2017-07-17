@@ -44,6 +44,10 @@ DMD_STABLE=$(DMD_STABLE_DIR)/generated/$(OS)/release/$(MODEL)/dmd
 DRUNTIME_STABLE_DIR=${DRUNTIME_DIR}-${LATEST}
 PHOBOS_STABLE_DIR=${PHOBOS_DIR}-${LATEST}
 
+# Auto-cloning missing directories
+$(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
+$(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(DRUNTIME_DIR))
+
 ################################################################################
 # Automatically generated directories
 GENERATED=.generated
