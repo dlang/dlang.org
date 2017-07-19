@@ -240,6 +240,29 @@ void main()
 }
 ----
 )
+$(EXTRA_EXAMPLE_RUNNABLE Subtyping with alias this,
+----
+struct Point
+{
+    private double[2] p;
+    // Forward all undefined symbols to p
+    alias p this;
+    double dot(Point rhs)
+    {
+        return p[0] * rhs.p[0] + p[1] * rhs.p[1];
+    }
+}
+void main()
+{
+    import std.stdio : writeln;
+    // Point behaves like a `double[2]` ...
+    Point p1, p2; p1 = [2, 1], p2 = [1, 1];
+    assert(p1[$ - 1] == 1);
+    // ... but with extended functionality
+    writeln("p1 dot p2 = ", p1.dot(p2));
+}
+----
+)
 
 ) $(COMMENT your-code-here)
 ))) $(COMMENT intro, div, div)
