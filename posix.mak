@@ -529,7 +529,7 @@ endif
 $G/docs.json : ${DMD_STABLE} ${DMD_STABLE_DIR} \
 			${DRUNTIME_STABLE_DIR} ${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
 	find ${DMD_STABLE_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d -e /objc_glue.d/d -e /objc.d/d ${DMD_EXCLUDE}  \
+		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE}  \
 			> $G/.release-files.txt
 	find ${DRUNTIME_STABLE_DIR}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d >> $G/.release-files.txt
