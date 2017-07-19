@@ -2,7 +2,7 @@ Ddoc
 
 $(CHANGELOG_NAV_LAST 2.074.1)
 
-$(VERSION Jul 16, 2017, =================================================,
+$(VERSION Jul 19, 2017, =================================================,
 
 $(BUGSTITLE Compiler changes,
 
@@ -27,7 +27,6 @@ $(BUGSTITLE Library changes,
 
 $(LI $(RELATIVE_LINK2 std-range-has-length,`hasLength` now enforces that `length` has type `size_t`))
 $(LI $(RELATIVE_LINK2 split-std-datetime,std.datetime has been split into a package.))
-$(LI $(RELATIVE_LINK2 std-range-slides,`std.range.slide` (a fixed-size sliding window range) was added))
 $(LI $(RELATIVE_LINK2 pattern-deprecate,Several functions in `std.string` have been deprecated))
 $(LI $(RELATIVE_LINK2 std-digest-digest-secureCompare,Added a constant time comparison function for cryptographic hashes))
 $(LI $(RELATIVE_LINK2 std-digest-crc64,Added support for 64 bit CRC))
@@ -269,42 +268,6 @@ importing std.datetime will not have to worry about symbol conflicts.
 )
 )
 
-$(LI $(LNAME2 std-range-slides,`std.range.slide` (a fixed-size sliding window range) was added)
-$(P
-$(REF slide, std, range) allows to iterate a range in sliding windows:
-)
-
----
-import std.array : array;
-import std.algorithm.comparison : equal;
-
-assert([0, 1, 2, 3].slide(2).equal!equal(
-    [[0, 1], [1, 2], [2, 3]]
-));
-assert(5.iota.slide(3).equal!equal(
-    [[0, 1, 2], [1, 2, 3], [2, 3, 4]]
-));
-
-assert(iota(7).slide(2, 2).equal!equal([[0, 1], [2, 3], [4, 5]]));
-assert(iota(12).slide(2, 4).equal!equal([[0, 1], [4, 5], [8, 9]]));
-
-// set a custom stepsize (default 1)
-assert(6.iota.slide(1, 2).equal!equal(
-    [[0], [2], [4]]
-));
-
-assert(6.iota.slide(2, 4).equal!equal(
-    [[0, 1], [4, 5]]
-));
-
-// allow slide with less elements than the window size
-assert(3.iota.slide!(No.withFewerElements)(4).empty);
-assert(3.iota.slide!(Yes.withFewerElements)(4).equal!equal(
-    [[0, 1, 2]]
-));
----
-)
-
 $(LI $(LNAME2 pattern-deprecate,Several functions in `std.string` have been deprecated)
 $(P
 The functions $(REF inPattern, std, string), $(REF countchars, std, string),
@@ -504,6 +467,7 @@ $(LI $(BUGZILLA 17472): [Reg 2.075] typeof$(LPAREN)stdin$(RPAREN) is no longer a
 $(LI $(BUGZILLA 17482): [REG 2.074] comile error: Comparing Nullable!Variant with basic type)
 $(LI $(BUGZILLA 17511): [REG 2.075a] std.xml puts grand-children into items)
 $(LI $(BUGZILLA 17555): [REG2.070.0] Control characters in JSON data are invalid and should cause an exception)
+$(LI $(BUGZILLA 17650): [REG v2.075.0 b1-b4] std.getopt range violation)
 )
 $(BUGSTITLE Phobos bugs,
 
