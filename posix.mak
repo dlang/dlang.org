@@ -79,6 +79,7 @@ MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.conf
 	std.algorithm.internal std.c. std.concurrencybase std.internal. std.regex.internal.  \
 	std.windows.iunknown std.windows.registry etc.linux.memoryerror	\
 	std.experimental.ndslice.internal std.stdiobase \
+	std.typetuple \
 	tk. msvc_dmc msvc_lib \
 	ddmd.libmach ddmd.libmscoff ddmd.objc_glue \
 	ddmd.scanmach ddmd.scanmscoff)
