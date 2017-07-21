@@ -664,8 +664,13 @@ test: $(ASSERT_WRITELN_BIN)_test all
 ################################################################################
 # Changelog generation
 ################################################################################
+CHANGELOG_FILES=$(wildcard $(DMD_DIR)/changelog/*.dd) \
+				$(wildcard $(DRUNTIME_DIR)/changelog/*.dd) \
+				$(wildcard $(PHOBOS_DIR)/changelog/*.dd) \
+				$(wildcard $(TOOLS_DIR)/changelog/*.dd) \
+				$(wildcard $(INSTALLER_DIR)/changelog/*.dd)
 
-changelog/${NEXT_VERSION}_pre.dd: | ${STABLE_DMD} ../tools ../installer
+changelog/${NEXT_VERSION}_pre.dd: $(CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
 	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
 	--version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
 
@@ -673,7 +678,7 @@ changelog/${NEXT_VERSION}.dd: | ${STABLE_DMD} ../tools ../installer
 	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_LATEST) -o $@ \
 		--version "${NEXT_VERSION}"
 
-pending_changelog: changelog/${NEXT_VERSION}.dd html
+pending_changelog: changelog/${NEXT_VERSION}_pre.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pre.html in your browser"
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
