@@ -211,6 +211,7 @@ STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATE
 SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
+CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
 language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
@@ -337,6 +338,9 @@ rsync-only :
 
 $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+
+$(DOC_OUTPUT_DIR)/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
 
 $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
