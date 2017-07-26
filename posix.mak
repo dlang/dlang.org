@@ -67,7 +67,7 @@ PHOBOS_STABLE_FILES_GENERATED := $(subst $(PHOBOS_STABLE_DIR), $(PHOBOS_STABLE_D
 # stable dub and dmd versions used to build dpl-docs
 DUB_VER=1.1.0
 STABLE_DMD_VER=2.072.2
-STABLE_DMD_ROOT=$(TMP)/.stable_dmd-$(STABLE_DMD_VER)
+STABLE_DMD_ROOT=$(GENERATED)/stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
 STABLE_DMD_CONF=$(STABLE_DMD).conf
@@ -580,11 +580,11 @@ dpl-docs: ${DUB} ${STABLE_DMD}
 
 ${STABLE_DMD}:
 	mkdir -p ${STABLE_DMD_ROOT}
-	TMPFILE=$$(mktemp deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > $${TMPFILE}.zip && \
-		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
+	TMPFILE=$$(mktemp deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > ${TMP}/$${TMPFILE}.zip && \
+		unzip -qd ${STABLE_DMD_ROOT} ${TMP}/$${TMPFILE}.zip && rm ${TMP}/$${TMPFILE}.zip
 
-${DUB}: ${DUB_DIR} ${STABLE_DMD}
-	cd ${DUB_DIR} && DMD="${STABLE_DMD}" ./build.sh
+${DUB}: | ${DUB_DIR} ${STABLE_DMD}
+	cd ${DUB_DIR} && DMD="$(abspath ${STABLE_DMD})" ./build.sh
 
 ################################################################################
 # chm help files
