@@ -205,7 +205,8 @@ $(RUNNABLE_EXAMPLE_STDIN 2 3 3 4 + * *)
 ----
 void main()
 {
-    import std.stdio, std.string, std.algorithm, std.conv;
+    import std.stdio, std.string,
+        std.algorithm, std.conv, std.meta;
 
     // Reduce the RPN expression using a stack
     readln.split.fold!((stack, op)
@@ -213,7 +214,7 @@ void main()
         switch (op)
         {
             // Generate operator switch cases statically
-            static foreach (c; "+-*/")
+            foreach (c; AliasSeq!('+', '-', '*', '/'))
                 case [c]:
                     return stack[0 .. $-2] ~
                         mixin("stack[$ - 2] " ~ c ~
