@@ -268,19 +268,27 @@ function setupTextarea(el, opts)
         return str;
     };
 
-    var editor = CodeMirror.fromTextArea(thisObj[0], {
-        lineNumbers: true,
-        tabSize: 4,
-        indentUnit: 4,
-        indentWithTabs: true,
-        mode: "text/x-d",
-        lineWrapping: true,
-        theme: "eclipse",
-        readOnly: false,
-        matchBrackets: true
-    });
+    var editor;
+    var code;
+    function initializeEditor(){
+      if (typeof editor !== "undefined")
+        return;
+      editor = CodeMirror.fromTextArea(thisObj[0], {
+          lineNumbers: true,
+          tabSize: 4,
+          indentUnit: 4,
+          indentWithTabs: true,
+          mode: "text/x-d",
+          lineWrapping: true,
+          theme: "eclipse",
+          readOnly: false,
+          matchBrackets: true
+      });
+      editor.setValue(prepareForMain());
+      code = $(editor.getWrapperElement());
+      code.css('display', 'none');
 
-    editor.setValue(prepareForMain());
+    }
 
     var height = function(diff) {
         var par = code != null ? code : parent.parent().children("div.d_code");
@@ -291,9 +299,6 @@ function setupTextarea(el, opts)
     var editBtn = parent.children(".editButton");
     var resetBtn = parent.children(".resetButton");
     var openInEditorBtn = parent.children(".openInEditorButton");
-
-    var code = $(editor.getWrapperElement());
-    code.css('display', 'none');
 
     var plainSourceCode = parent.parent().children("div.d_code");
 
@@ -351,6 +356,7 @@ function setupTextarea(el, opts)
     }
 
     editBtn.click(function(){
+        initializeEditor();
         resetBtn.css('display', 'inline-block');
         hideAllWindows();
         code.css('display', 'block');
@@ -370,6 +376,7 @@ function setupTextarea(el, opts)
         plainSourceCode.css('display', 'block');
     });
     runBtn.click(function(){
+        initializeEditor();
         resetBtn.css('display', 'inline-block');
         $(this).attr("disabled", true);
         var optArguments = {};
