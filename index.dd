@@ -200,6 +200,31 @@ void main()
 }
 ----
 )
+$(EXTRA_EXAMPLE_RUNNABLE Tiny RPN calculator,
+$(RUNNABLE_EXAMPLE_STDIN 2 3 3 4 + * *)
+----
+void main()
+{
+    import std.stdio, std.string,
+        std.algorithm, std.conv, std.meta;
+
+    // Reduce the RPN expression using a stack
+    readln.split.fold!((stack, op)
+    {
+        switch (op)
+        {
+            // Generate operator switch cases statically
+            foreach (c; AliasSeq!('+', '-', '*', '/'))
+                case [c]:
+                    return stack[0 .. $ - 2] ~
+                        mixin("stack[$ - 2] " ~ c ~
+                            " stack[$ - 1]");
+            default: return stack ~ op.to!real;
+        }
+    })((real[]).init).writeln;
+}
+----
+)
 
 ) $(COMMENT your-code-here)
 ))) $(COMMENT intro, div, div)
