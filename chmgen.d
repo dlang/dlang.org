@@ -513,6 +513,7 @@ void writeTags()
 {
     stderr.writeln("Writing tags file");
 
+    // D syntax
     File f;
     f.open(`d.tag`, "wt");
     f.writeln("[");
@@ -528,6 +529,16 @@ void writeTags()
     }
     f.writeln("]");
     f.close();
+
+    // JSON syntax
+    import std.json;
+    auto j = JSONValue((JSONValue[string]).init);
+    foreach (keyword; keywordList)
+        j[keyword] = JSONValue(keywords[keyword]
+            .byKeyValue
+            .map!(kv => JSONValue(`http://dlang.org/` ~ kv.key ~ kv.value.anchor))
+            .array);
+    std.file.write("d-tags.json", j.toString());
 }
 
 // ********************************************************************

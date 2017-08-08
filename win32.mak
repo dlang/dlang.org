@@ -620,6 +620,8 @@ chm-nav.json : $(DDOC) std.ddoc spec\spec.ddoc modlist-release.ddoc changelog\ch
 d.tag : chmgen.exe $(TARGETS)
 	chmgen --only-tags
 
+d-tags.json : d.tag
+
 ################# Other #########################
 
 zip:

@@ -600,7 +600,7 @@ chm-nav-pre.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelea
 # Dman tags
 ################################################################################
 
-d.tag : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
+d.tag d-tags.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release
 	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags
 
 ################################################################################
