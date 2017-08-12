@@ -181,6 +181,50 @@ void main()
 }
 ----
 )
+$(EXTRA_EXAMPLE_RUNNABLE Count frequencies of all 2-tuples,
+----
+void main()
+{
+    import std.stdio : writefln;
+    int[char[2]] aa;
+    auto arr = "ABBBA";
+
+    // Iterate over all pairs in the string and observe each pair
+    // ('A', 'B'), ('B', 'B'), ('B', 'A'), ...
+    // String slicing doesn't allocate a copy
+    foreach (i; 0 .. arr.length - 1)
+        aa[arr[i .. $][0 .. 2]]++;
+
+    foreach (key, value; aa)
+        writefln("key: %s, value: %d", key, value);
+}
+----
+)
+$(EXTRA_EXAMPLE_RUNNABLE Tiny RPN calculator,
+$(RUNNABLE_EXAMPLE_STDIN 2 3 3 4 + * *)
+----
+void main()
+{
+    import std.stdio, std.string,
+        std.algorithm, std.conv, std.meta;
+
+    // Reduce the RPN expression using a stack
+    readln.split.fold!((stack, op)
+    {
+        switch (op)
+        {
+            // Generate operator switch cases statically
+            foreach (c; AliasSeq!('+', '-', '*', '/'))
+                case [c]:
+                    return stack[0 .. $ - 2] ~
+                        mixin("stack[$ - 2] " ~ c ~
+                            " stack[$ - 1]");
+            default: return stack ~ op.to!real;
+        }
+    })((real[]).init).writeln;
+}
+----
+)
 
 ) $(COMMENT your-code-here)
 ))) $(COMMENT intro, div, div)
@@ -295,7 +339,7 @@ $(DIVC boxes,
                 on $(LINK2 https://twitter.com/D_Programming, Twitter).
                 Browse the $(LINK2 https://wiki.dlang.org/, wiki) where among
                 other things you can find the
-                $(LINK2 https://wiki.dlang.org/Vision/2017H1, high-level vision)
+                $(LINK2 https://wiki.dlang.org/Vision/2017H2, high-level vision)
                 of the $(LINK2 $(ROOT_DIR)foundation.html, D Language Foundation).
             )
         )
