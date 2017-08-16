@@ -25,11 +25,11 @@ function wrapIntoMain(code) {
         codeOut += code;
     }
     else {
-        var codeOut = "void main(){ ";
-        codeOut += "import " + currentPackage + "; ";
+        var codeOut = "void main()\n{\n";
+        codeOut += "    import " + currentPackage + ";\n";
         // writing to the stdout is probably often used
-        codeOut += "import std.stdio: write, writeln, writef, writefln; ";
-        codeOut += code;
+        codeOut += "    import std.stdio: write, writeln, writef, writefln;\n    ";
+        codeOut += code.split("\n").join("\n    ");
         codeOut += "\n}";
     }
     return codeOut;
@@ -70,17 +70,18 @@ $(document).ready(function()
             return;
 
         currentExample.replaceWith(
-                '<div>'
-                    + '<div class="d_example_buttons">'
-                        + '<input type="button" class="editButton" value="Edit">'
-                        + '<input type="button" class="runButton" value="Run">'
-                        + '<input type="button" class="resetButton" value="Reset">'
-                    + '</div>'
+                '<div class="unittest_examples">'
                     + '<div class="d_code">'
                         + '<pre class="d_code">'+orig+'</pre>'
                     + '</div>'
                     + '<div class="d_run_code" style="display: block">'
                         + '<textarea class="d_code" style="display: none;"></textarea>'
+                    + '</div>'
+                    + '<div class="d_example_buttons">'
+          + '<div class="editButton"><i class="fa fa-edit" aria-hidden="true"></i> Edit</div>'
+          + '<div class="runButton"><i class="fa fa-play" aria-hidden="true"></i> Run</div>'
+          + '<div class="resetButton" style="display:none"><i class="fa fa-undo " aria-hidden="true"></i> Reset</div>'
+          + '<div class="openInEditorButton" title="Open in an external editor"><i class="fa fa-external-link" aria-hidden="true"></i></div>'
                     + '</div>'
                     + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><pre class="d_code_output" readonly>Running...</pre>'
                 + '</div>'
@@ -99,7 +100,8 @@ $(document).ready(function()
           transformOutput: wrapIntoMain,
           defaultOutput: "All tests passed",
           keepCode: true,
-          outputHeight: "auto"
+          outputHeight: "auto",
+          backend: "tour"
         });
     });
 });

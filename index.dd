@@ -6,9 +6,10 @@ $(SECTION1 ,
 
 $(DIVC intro, $(DIV, $(DIV,
     $(DIV,
-        $(TC p, pitch, $(B D) is a systems programming language with C-like
-        syntax and static typing. It combines efficiency, control and modeling
-        power with safety and programmer productivity.)
+        $(TC p, pitch, $(B D) is a general-purpose programming language with
+        static typing, systems-level access, and C-like syntax.
+        It combines efficiency, control and modeling power with safety
+        and programmer productivity.)
 
         $(DIVC download,
             $(DIVC btn-group-vertical,
@@ -19,6 +20,7 @@ $(DIVC intro, $(DIV, $(DIV,
         )
     )
     $(DIVID your-code-here,
+        $(DIVCID fa-select, your-code-here-select-example,)
         $(DIVC tip,
             $(LINK2 https://forum.dlang.org/newpost/general?subject=%5Byour+code+here%5D, your code here)
             $(DIV,
@@ -28,11 +30,29 @@ $(DIVC intro, $(DIV, $(DIV,
                 $(P Upon approval it will be showcased here on a random schedule.)
             )
         )
-        $(DIVID your-code-here-default,
-$(RUNNABLE_EXAMPLE
+$(EXTRA_EXAMPLE_RUNNABLE Compute average line length for stdin,
+$(RUNNABLE_EXAMPLE_STDIN
+The D programming language
+Modern convenience.
+Modeling power.
+Native efficiency.)
+----
+void main()
+{
+    import std.range, std.stdio;
+
+    auto sum = 0.0;
+    auto count = stdin.byLine
+        .tee!(l => sum += l.length).walkLength;
+
+    writeln("Average line length: ",
+        count ? sum / count : 0);
+}
+----
+)
+$(EXTRA_EXAMPLE_RUNNABLE Round floating point numbers,
 $(RUNNABLE_EXAMPLE_STDIN 2.4 plus 2.4 equals 5 for sufficiently large values of 2.)
 ----
-// Round floating point numbers
 import std.algorithm, std.conv, std.functional,
     std.math, std.regex, std.stdio;
 
@@ -51,8 +71,7 @@ void main()
 }
 ----
 )
-)
-$(EXTRA_EXAMPLE
+$(EXTRA_EXAMPLE_RUNNABLE Sort lines,
 $(RUNNABLE_EXAMPLE_STDIN
 Mercury
 Venus
@@ -63,7 +82,6 @@ Saturn
 Uranus
 Neptune)
 ----
-// Sort lines
 import std.stdio, std.array, std.algorithm;
 
 void main()
@@ -76,9 +94,175 @@ void main()
 }
 ----
 )
+$(EXTRA_EXAMPLE_RUNNABLE Sort an Array at Compile-Time,
+----
+void main()
+{
+    import std.algorithm, std.conv, std.stdio;
 
+    "Starting program".writeln;
+
+    // Sort a constant declaration at Compile-Time
+    enum a = [ 3, 1, 2, 4, 0 ];
+    static immutable b = sort(a);
+
+    // Print the result _during_ compilation
+    pragma(msg, text("Finished compilation: ", b));
+}
+----
 )
-)))
+$(EXTRA_EXAMPLE_RUNNABLE Invoke external programs,
+----
+void main()
+{
+    import std.exception, std.stdio, std.process;
+
+    auto result = ["whoami"].execute;
+    enforce(result.status == 0);
+    result.output.write;
+}
+----
+)
+$(EXTRA_EXAMPLE Start a minimal web server,
+----
+#!/usr/bin/env dub
+/+ dub.sdl:
+name "hello_vibed"
+dependency "vibe-d" version="~>0.8.0"
++/
+void main()
+{
+    import vibe.d;
+    auto settings = new HTTPServerSettings;
+    settings.port = 8080;
+    listenHTTP(settings, (req, res) {
+        res.writeBody("Hello, World: " ~ req.path);
+    });
+    runApplication();
+}
+----
+)
+$(EXTRA_EXAMPLE_RUNNABLE Initialize an Array in parallel,
+----
+void main()
+{
+    import std.datetime, std.math, std.parallelism, std.stdio;
+
+    auto logs = new double[100_000];
+    auto bm = benchmark!({
+        foreach (i, ref elem; logs)
+            elem = log(1.0 + i);
+    }, {
+        foreach (i, ref elem; logs.parallel)
+            elem = log(1.0 + i);
+    })(100); // number of executions of each tested function
+    writefln("Linear init: %s msecs", bm[0].msecs);
+    writefln("Parallel init: %s msecs", bm[1].msecs);
+}
+----
+)
+$(EXTRA_EXAMPLE_RUNNABLE Sort in-place across multiple arrays,
+----
+void main()
+{
+    import std.stdio : writefln;
+    import std.algorithm.sorting : sort;
+    import std.range : chain;
+
+    int[] arr1 = [4, 9, 7];
+    int[] arr2 = [5, 2, 1, 10];
+    int[] arr3 = [6, 8, 3];
+    // @nogc functions are guaranteed by the compiler
+    // to be without any GC allocation
+    () @nogc {
+        sort(chain(arr1, arr2, arr3));
+    }();
+    writefln("%s\n%s\n%s\n", arr1, arr2, arr3);
+}
+----
+)
+$(EXTRA_EXAMPLE_RUNNABLE Count frequencies of all 2-tuples,
+----
+void main()
+{
+    import std.stdio : writefln;
+    int[char[2]] aa;
+    auto arr = "ABBBA";
+
+    // Iterate over all pairs in the string and observe each pair
+    // ('A', 'B'), ('B', 'B'), ('B', 'A'), ...
+    // String slicing doesn't allocate a copy
+    foreach (i; 0 .. arr.length - 1)
+        aa[arr[i .. $][0 .. 2]]++;
+
+    foreach (key, value; aa)
+        writefln("key: %s, value: %d", key, value);
+}
+----
+)
+$(EXTRA_EXAMPLE_RUNNABLE Tiny RPN calculator,
+$(RUNNABLE_EXAMPLE_STDIN 2 3 3 4 + * *)
+----
+void main()
+{
+    import std.stdio, std.string,
+        std.algorithm, std.conv, std.meta;
+
+    // Reduce the RPN expression using a stack
+    readln.split.fold!((stack, op)
+    {
+        switch (op)
+        {
+            // Generate operator switch cases statically
+            foreach (c; AliasSeq!('+', '-', '*', '/'))
+                case [c]:
+                    return stack[0 .. $ - 2] ~
+                        mixin("stack[$ - 2] " ~ c ~
+                            " stack[$ - 1]");
+            default: return stack ~ op.to!real;
+        }
+    })((real[]).init).writeln;
+}
+----
+)
+
+) $(COMMENT your-code-here)
+))) $(COMMENT intro, div, div)
+
+$(COMMENT
+Picking the frontpage example after the page has loaded leads to reflows
+and re-rendering. Hence, we pick the example as soon as possible
+)
+$(SCRIPT
+    (function() {
+    // randomly pick one example and bootstrap the runnable editor
+    var examples = document.getElementsByClassName('your-code-here-extra');
+    var rouletteIndex = Math.floor(Math.random() * examples.length);
+    var rouletteChild = examples[rouletteIndex];
+    rouletteChild.style.display = "block";
+
+    // build a list of the titles of all examples and add an option chooser to
+    // allow switching between them
+    var titles = Array.prototype.map.call(examples, function(e) {
+        return e.getElementsByClassName("your-code-here-title")[0].innerText;
+    });
+    var sel = document.createElement("select");
+    Array.prototype.forEach.call(titles, function(title, i) {
+        var el = document.createElement("option");
+        el.value = i;
+        el.innerText = title;
+        sel.appendChild(el);
+    });
+    sel.selectedIndex = rouletteIndex;
+    sel.addEventListener("change", function(e) {
+        examples[rouletteIndex].style.display = "none";
+        rouletteIndex = sel.selectedIndex;
+        examples[rouletteIndex].style.display = "block";
+    });
+    var selEl = document.getElementById("your-code-here-select-example");
+    selEl.appendChild(sel);
+    })();
+)
 
 $(DIVC more,
 
@@ -90,26 +274,41 @@ $(DIVID news,
     $(DIVID twitter,
     <a class="twitter-timeline"  href="https://twitter.com/hashtag/dlang" data-widget-id="684452777939058688">#dlang Tweets</a>
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+    )
+    $(DIVID dconf,
+        $(LINK2 http://dconf.org/2017/index.html,
+            <img src="$(ROOT_DIR)images/dconf_logo_2017.svg" style="max-width:100%; padding-top: 1.5em" />
+        )
+        <div style="font-size: 12px">
+        $(P $(LINK2 http://dconf.org/2017/index.html, DConf 2017)
+            has successfully concluded!
+        )
+        $(P
+            Whether you were with us in Berlin or watching from
+            home, we thank everyone for participating. You can
+            review the conference through $(LINK2
+            http://youtube.com/playlist?list=PL3jwVPmk_PRxo23yyoc0Ip_cP3-rCm7eB,
+            this YouTube playlist).
+        )
+        </div>
     )
 )
 
 $(DIVC boxes,
     $(DIVC row,
         $(TOUR newspaper-o, News,
-            $(P $(LINK2 http://dconf.org/2017/index.html, DConf 2017)
-                has successfully concluded!
+            $(P Stay updated with lastest article in the
+                $(LINK2 http://blog.dlang.org,
+                    <cite>Official D Blog</cite>) from $(DBLOG_LATEST_DATE):
+                $(LINK2 $(DBLOG_LATEST_LINK), $(DBLOG_LATEST_TITLE)) by
+                $(DBLOG_LATEST_AUTHOR).
             )
-            $(P
-                Whether you were with us in Berlin or watching from
-                home, we thank everyone for participating. You can
-                review the conference through $(LINK2
-                http://youtube.com/playlist?list=PL3jwVPmk_PRxo23yyoc0Ip_cP3-rCm7eB,
-                this YouTube playlist).
-            )
-            $(P Stay updated with
-                $(LINK2 http://arsdnet.net/this-week-in-d,
-                    <cite>This Week in D</cite>) -
-                $(SPANC twid)
+           $(P Browse weekly summaries in
+               $(LINK2 http://arsdnet.net/this-week-in-d,
+                   <cite>This Week in D</cite>) -
+                $(LINK2 $(TWID_LATEST_LINK), $(TWID_LATEST_DATE)):
+                $(TWID_LATEST_TITLE)
             )
         )
         $(TOUR graduation-cap, Learn,
@@ -140,7 +339,7 @@ $(DIVC boxes,
                 on $(LINK2 https://twitter.com/D_Programming, Twitter).
                 Browse the $(LINK2 https://wiki.dlang.org/, wiki) where among
                 other things you can find the
-                $(LINK2 https://wiki.dlang.org/Vision/2017H1, high-level vision)
+                $(LINK2 https://wiki.dlang.org/Vision/2017H2, high-level vision)
                 of the $(LINK2 $(ROOT_DIR)foundation.html, D Language Foundation).
             )
         )
@@ -158,9 +357,12 @@ $(DIVC boxes,
     )
     $(DIVC row,
         $(TOUR code-fork, Contribute,
-            $(P Report any bugs you find to our $(LINK2 $(ROOT_DIR)bugstats.php,
+            $(P Report any bugs you find to our $(LINK2 $(ROOT_DIR)bugstats.html,
                 bug tracker). If you can fix an issue, make a pull request on
-                $(LINK2 https://github.com/dlang, GitHub).)
+                $(LINK2 https://github.com/dlang, GitHub).
+                There are $(LINK2 https://wiki.dlang.org/Get_involved, many other ways)
+                to help, too!
+            )
         )
         $(TOUR cubes, Packages,
             $(P DUB is the package manager for D.
@@ -243,20 +445,17 @@ Modern convenience.
 Modeling power.
 Native efficiency.)
 ----
-#!/usr/bin/env rdmd
-import std.range, std.stdio;
-
 // Compute average line length for stdin
 void main()
 {
-    ulong lines = 0, sumLength = 0;
-    foreach (line; stdin.byLine())
-    {
-        ++lines;
-        sumLength += line.length;
-    }
+    import std.range, std.stdio;
+
+    auto sum = 0.0;
+    auto count = stdin.byLine
+        .tee!(l => sum += l.length).walkLength;
+
     writeln("Average line length: ",
-        lines ? cast(double) sumLength / lines : 0.0);
+        count ? sum / count : 0);
 }
 ----
 ))
@@ -436,11 +635,15 @@ Macros:
     TAG2=<$1 $2>$3</$1>
     D=<span class="d_inlinecode">$0</span>
     EXAMPLE=$(TAG2 a, id="a$1-control" class="example-control", )$(TAG2 div, id="a$1" class="example-box", $(RUNNABLE_EXAMPLE $2))
-    EXTRA_EXAMPLE=<div class="your-code-here-extra" style="display:none">$(RUNNABLE_EXAMPLE $0)</div>
+    EXTRA_EXAMPLE=<div class="your-code-here-extra" style="display:none">
+        $(DIVC your-code-here-title, $1)
+        $+
+    </div>
+    EXTRA_EXAMPLE_RUNNABLE=$(EXTRA_EXAMPLE $1, $(RUNNABLE_EXAMPLE $+))
+    _=
     LAYOUT_PREFIX=
     LAYOUT_SUFFIX=
     $(SCRIPTLOAD $(ROOT_DIR)js/platform-downloads.js,  data-latest="$(LATEST)")
-    $(SCRIPTLOAD //arsdnet.net/this-week-in-d/twid-latest.js)
     LAYOUT_TITLE=
     TOUR=$(DIVC item, $(SECTION4 $(LINK2 $1, $(TC i, fa fa-$2 big-icon)$3), $4))
     TOUR=$(DIVC item, $(SECTION4 $(TC i, fa fa-$1 big-icon)$2, $3))
@@ -450,7 +653,7 @@ Macros:
     FRONTPAGE_ORG=$(DIVC frontpage-orgs-cell dont-highlight-link donthyphenate, $(LINK2 $2, $(FRONTPAGE_ORG_IMG $3)) $(H3 $1) $(P $(I $4 )))
     _= Single word inline CSS needs to be escaped _=
     C_A=$1:$2;
-    META_DESCRIPTION=D is a systems programming language with C-like syntax and static typing.
+    META_DESCRIPTION=D is a general-purpose programming language with static typing, systems-level access, and C-like syntax.
     EXTRA_HEADERS=$(T style,
         .why-d-icon {
             padding-right: 0.2em;

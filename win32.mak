@@ -48,7 +48,7 @@ SRC= $(SPECSRC) 404.dd cpptod.dd ctod.dd pretod.dd cppcontracts.dd index.dd over
 	tuple.dd template-comparison.dd hijack.dd safed.dd	\
 	const-faq.dd concepts.dd d-floating-point.dd migrate-to-shared.dd	\
 	D1toD2.dd intro-to-datetime.dd simd.dd deprecate.dd download.dd		\
-	dll-linux.dd bugstats.php.dd \
+	dll-linux.dd bugstats.dd \
 	ctarguments.dd articles.dd community.dd documentation.dd menu.dd \
 	resources.dd search.dd dlangupb-scholarship.dd donate
 
@@ -140,7 +140,7 @@ TARGETS= $(SPECTARGETS) cpptod.html ctod.html pretod.html cppcontracts.html 404.
 	d-floating-point.html migrate-to-shared.html \
 	D1toD2.html intro-to-datetime.html \
 	deprecate.html download.html dlangupb-scholarship.dd.html \
-	d-array-article.html dll-linux.html bugstats.php.html \
+	d-array-article.html dll-linux.html bugstats.html \
 	gpg_keys.html forum-template.html ctarguments.html articles.html \
 	community.html documentation.html menu.html resources.html search.html \
 	donate.html \
@@ -619,6 +619,8 @@ chm-nav.json : $(DDOC) std.ddoc spec\spec.ddoc modlist-release.ddoc changelog\ch
 
 d.tag : chmgen.exe $(TARGETS)
 	chmgen --only-tags
+
+d-tags.json : d.tag
 
 ################# Other #########################
 
