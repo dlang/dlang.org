@@ -1,0 +1,374 @@
+Ddoc
+
+$(CHANGELOG_NAV_LAST 2.075.1)
+
+$(VERSION Aug 16, 2017, =================================================,
+
+$(BUGSTITLE Compiler changes,
+
+$(LI $(RELATIVE_LINK2 avx2,AVX2 was added as $(TT -mcpu=avx2) architecture.))
+$(LI $(RELATIVE_LINK2 fix17697,Fix Issue 17697 - Ddoc: automatically highlight URLs outside of macro arguments))
+
+)
+
+$(BUGSTITLE Runtime changes,
+
+$(LI $(RELATIVE_LINK2 unhandled,Print unhandled exception's trace and abort if rt_trapExceptions is false))
+
+)
+
+$(BUGSTITLE Library changes,
+
+$(LI $(RELATIVE_LINK2 std-base64-base64urlnopadding,`Base64URLNoPadding` (URL-safe Base64 without padding) was added))
+$(LI $(RELATIVE_LINK2 std-digest-package,`std.digest.digest` was renamed to `std.digest`.))
+$(LI $(RELATIVE_LINK2 std-meta-stride,`std.meta.Stride` was added))
+$(LI $(RELATIVE_LINK2 std-process-config-detached,`Config.detached` flag for `spawnProcess` has been added))
+$(LI $(RELATIVE_LINK2 std-range-input-chunks,`std.range.chunks` was extended to support non-forward input ranges.))
+$(LI $(RELATIVE_LINK2 std-socket-abstract,`std.socket.UnixAddress` now supports abstract addresses.))
+$(LI $(RELATIVE_LINK2 std-typecons-AutoImplement,Added possibility to use a baseclass when auto-implementing an interface))
+
+)
+
+$(BUGSTITLE Tools changes,
+
+$(LI $(RELATIVE_LINK2 b11997,rdmd now checks for a D compiler binary in the directory it's in first))
+
+)
+
+$(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D $(VER).))
+
+$(HR)
+
+$(BUGSTITLE Compiler changes,
+
+$(LI $(LNAME2 avx2,AVX2 was added as $(TT -mcpu=avx2) architecture.)
+$(P
+This allows the backend to emit AVX2 instructions. The compiler will
+add the predefined version $(LINK2 $(ROOT_DIR)spec/version.html#predefined-versions, `D_AVX2`).
+AVX2 support is automatically detected with -mcpu=native.
+)
+)
+
+$(LI $(LNAME2 fix17697,Fix Issue 17697 - Ddoc: automatically highlight URLs outside of macro arguments)
+$(P
+URLs which appear in Ddoc text:
+)
+
+---
+/****
+ * http://www.fooa.com/test1
+ */
+---
+
+$(P
+will be treated as if they were written:
+)
+
+---
+/****
+ * $(LINK http://www.fooa.com/test1)
+ */
+---
+
+$(P
+and a clickable hyperlink will be emitted to the resulting .html file.
+)
+
+$(P
+This detection does not happen if the URL is part of a macro argument:
+)
+
+---
+/****
+ * $(DOLLAR)$(LPAREN)ABC http://www.fooa.com/test1$(RPAREN)
+ */
+---
+
+$(P
+The behavior of that is unchanged. URLs can start with `http://` or `https://`
+)
+
+$(P
+`http:` and `https:` at the beginning of the line are no longer treated
+as section headings.
+)
+)
+
+
+)
+
+$(BUGSTITLE Runtime changes,
+
+$(LI $(LNAME2 unhandled,Print unhandled exception's trace and abort if rt_trapExceptions is false)
+$(P
+D exception handling was assuming the top level exception handler,
+so all exceptions would be handled somewhere. In case rt_trapExceptions
+is cleared, this handler would not be enabled, and this assertion
+would fail, aborting the program, but without any information
+about the exception. This is now changed, so the exception information
+will be printed to the stderr, followed by abort.
+)
+)
+
+
+)
+
+$(BUGSTITLE Library changes,
+
+$(LI $(LNAME2 std-base64-base64urlnopadding,`Base64URLNoPadding` (URL-safe Base64 without padding) was added)
+$(P
+$(REF Base64URLNoPadding, std, base64) allows encoding/decoding without padding:
+)
+
+---
+import std.base64 : Base64URLNoPadding;
+
+ubyte[] data = [0x83, 0xd7, 0x30, 0x7b, 0xef];
+assert(Base64URLNoPadding.encode(data) == "g9cwe-8");
+assert(Base64URLNoPadding.decode("g9cwe-8") == data);
+---
+)
+
+$(LI $(LNAME2 std-digest-package,`std.digest.digest` was renamed to `std.digest`.)
+$(P
+$(B Motivation):
+)
+
+$(P
+The fully qualified name of the digest function template was `std.digest.digest.digest`.
+This is because `std.digest` is a package, with a module named `digest` in it, and the function `digest` inside that.
+)
+
+$(P
+$(MREF std, digest) contains the former `std.digest.digest` package.
+)
+)
+
+$(LI $(LNAME2 std-meta-stride,`std.meta.Stride` was added)
+$(P
+$(REF Stride, std,meta) allows selecting a subset of template by a step size and offset:
+)
+
+---
+alias attribs = AliasSeq!(short, int, long, ushort, uint, ulong);
+static assert(is(Stride!(3, attribs) == AliasSeq!(short, ushort)));
+static assert(is(Stride!(3, attribs[1 .. $]) == AliasSeq!(int, uint)));
+---
+)
+
+$(LI $(LNAME2 std-process-config-detached,`Config.detached` flag for `spawnProcess` has been added)
+$(P
+`Config.detached` allows $(REF_ALTTEXT spawning processes, spawnProcess, std, process) which run independently from the current process. There is no need to wait on the processes created with this flag, and no $(HTTPS en.wikipedia.org/wiki/Zombie_process, zombie process) will be left after they exit.
+Attempts to call $(REF wait, std, process) or $(REF kill, std, process) on detached processes will throw.
+)
+)
+
+$(LI $(LNAME2 std-range-input-chunks,`std.range.chunks` was extended to support non-forward input ranges.)
+$(P
+Now `std.range.chunks` can be used with input ranges that are not forward
+ranges, albeit with limited semantics as imposed by the underlying range.
+)
+
+---
+import std.algorithm.comparison : equal;
+
+int i;
+
+// The generator doesn't save state, so it cannot be a forward range.
+auto inputRange = generate!(() => ++i).take(10);
+
+// We can still process it in chunks, but it will be single-pass only.
+auto chunked = inputRange.chunks(2);
+
+assert(chunked.front.equal([1, 2]));
+assert(chunked.front.empty); // Iterating the chunk has consumed it
+chunked.popFront;
+assert(chunked.front.equal([3, 4]));
+---
+)
+
+$(LI $(LNAME2 std-socket-abstract,`std.socket.UnixAddress` now supports abstract addresses.)
+$(P
+UNIX domain sockets are usually identified by pathnames. Linux offers a
+non-portable extension to this scheme, known as abstract socket addresses,
+which are independent of the filesystem. An abstract socket address starts with
+a null byte (`'\0'`), e.g.:
+)
+
+---
+auto addr = new UnixAddress("\0/tmp/dbus-OtHLWmCLPR");
+---
+)
+
+$(LI $(LNAME2 std-typecons-AutoImplement,Added possibility to use a baseclass when auto-implementing an interface)
+$(P
+A second $(REF AutoImplement, std, typecons) template has been added, which
+differs from the existing one in accepting an extra type parameter. The extra
+parameter specifies a class to derive from while auto-implementing an interface.
+)
+
+$(P
+The base class used may contain non-default constructors. Matching constructors
+will be created in the auto-implemented class and be implemented as just a call
+to super with all arguments.
+)
+)
+
+
+)
+
+$(BUGSTITLE Tools changes,
+
+$(LI $(LNAME2 b11997,rdmd now checks for a D compiler binary in the directory it's in first)
+$(P
+If you downloaded a zip/tar file with the compiler before
+and ran `rdmd`, it would invoke the D compiler from the system
+`PATH` rather than the compiler right next to it, failing if
+there wasn't one in the `PATH`. `rdmd` will now try to use
+the D compiler next to it first, and only fall back to the
+`PATH` if there isn't one adjacent. If you want rdmd to run a
+specific compiler, add the `--compiler` flag to force it, as
+always.
+)
+
+$(P
+To restore the old behaviour of only using the compiler from
+your `PATH`, add `--compiler=dmd` (or `ldmd2` or `gdmd`).
+)
+)
+
+
+)
+
+$(BR)$(BIG $(LNAME2 bugfix-list, List of all bug fixes and enhancements in D $(VER):))
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(LI $(BUGZILLA 16680): dmd doesn't use druntime optimized versions of subtraction array operations)
+$(LI $(BUGZILLA 17522): win64.mak broken)
+$(LI $(BUGZILLA 17582): [REG2.059] Applying const to struct declaration should make the struct type const)
+$(LI $(BUGZILLA 17612): [REG2.063] Segmentation fault with bad object.d)
+$(LI $(BUGZILLA 17690): [REG2.066.0] scope guards leak declarations)
+$(LI $(BUGZILLA 17695): [Reg 2.076] ICE with vector negation)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(LI $(BUGZILLA 4014): CodeView debug type info not linked in from library)
+$(LI $(BUGZILLA 11881): -betterC switch suffers from bit rot)
+$(LI $(BUGZILLA 11997): rdmd should search its binary path for the compiler)
+$(LI $(BUGZILLA 13512): Allow non-UTF-8 encoding in shebang line)
+$(LI $(BUGZILLA 15432): Win64: bad code offset in debug line number info)
+$(LI $(BUGZILLA 16640): void fun$(LPAREN)string file=__FILE_FULL_PATH__$(RPAREN) returns relative path)
+$(LI $(BUGZILLA 17380): Compiler segfaults on undefined symbol)
+$(LI $(BUGZILLA 17388): [scope] e[] should be treated like &e as far as scope goes)
+$(LI $(BUGZILLA 17430): [scope] delegate can escape context ptr)
+$(LI $(BUGZILLA 17484): high penalty for vbroadcastsd with -mcpu=avx)
+$(LI $(BUGZILLA 17489): ICE in ddmd/argtypes.d)
+$(LI $(BUGZILLA 17551): VC build: bad mangling of real template argument)
+$(LI $(BUGZILLA 17629): package.di files cannot be used)
+$(LI $(BUGZILLA 17660): ICE with `static foreach`: AssertError@ddmd/visitor.d$(LPAREN)39$(RPAREN))
+$(LI $(BUGZILLA 17688): ICE with static foreach directly inside switch)
+$(LI $(BUGZILLA 17689): finally clause leaks declarations)
+$(LI $(BUGZILLA 17721): Wrong expression type using vector extensions with shift operands)
+$(LI $(BUGZILLA 17722): Wrong diagnostic using __traits$(LPAREN)compiles, e1 && e2$(RPAREN) expressions.)
+$(LI $(BUGZILLA 17735): AssertError@ddmd/target.d$(LPAREN)357$(RPAREN): unhandled op using fish operators)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 9287): DMD should read from stdin when an input file is "-")
+$(LI $(BUGZILLA 9731): Ddoc should output per-paragraph macro instead of $$(LPAREN)DDOC_BLANKLINE$(RPAREN))
+$(LI $(BUGZILLA 17392): Add Dub file for the lexer and parser)
+$(LI $(BUGZILLA 17428): [scope] class field assignment allows to escape scope parameters)
+$(LI $(BUGZILLA 17499): with -betterC switch, call C's assert failure function rather than druntime's)
+$(LI $(BUGZILLA 17521): -betterC programs should not link in Phobos runtime library by default)
+$(LI $(BUGZILLA 17590): Unnecessary GC alloc on returning static local struct)
+$(LI $(BUGZILLA 17697): Ddoc: automatically highlight URLs outside of macro arguments)
+)
+$(BUGSTITLE Phobos regressions,
+
+$(LI $(BUGZILLA 17650): [REG v2.075.0 b1-b4] std.getopt range violation)
+$(LI $(BUGZILLA 17661): New isInputRange rejects valid input range)
+$(LI $(BUGZILLA 17724): digest is not a template declaration, it is a module)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(LI $(BUGZILLA 6718): "nWayUnion" => "nWayMerge", plus true nWayUnion)
+$(LI $(BUGZILLA 12260): Improve error of std.stdio.readf when involving whitespace)
+$(LI $(BUGZILLA 12866): Append to std.container.Array of fixed size arrays)
+$(LI $(BUGZILLA 16079): memoize should cache objects too)
+$(LI $(BUGZILLA 16191): std/digest/digest.d should be renamed to package.d)
+$(LI $(BUGZILLA 17389): std.traits.hasNested fails for class with member of same type)
+$(LI $(BUGZILLA 17458): [std.regex] Assertion failure in package.d)
+$(LI $(BUGZILLA 17539): std.parallellism.parallel triggers 'statement not reachable' warnings in the rdmd_test suite)
+$(LI $(BUGZILLA 17562): Tangent function returns NaN for abs$(LPAREN)input$(RPAREN) >= 2^63)
+$(LI $(BUGZILLA 17574): Range violation in std.getopt:getopt AA parsing)
+$(LI $(BUGZILLA 17616): makeIndex cannot fully use range of index type)
+$(LI $(BUGZILLA 17640): std.concurrenct writeln conflicts with std.stdio writeln in unittests)
+$(LI $(BUGZILLA 17711): std.array.byPair should be usable with const AA)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(LI $(BUGZILLA 2137): Data not compressed on fly when adding to zip archive)
+$(LI $(BUGZILLA 6384): std.traits.isComparable)
+$(LI $(BUGZILLA 15759): chunks should work with only an input range)
+$(LI $(BUGZILLA 15771): FileLogger should create the output directory if it does not exist)
+$(LI $(BUGZILLA 16062): Add 'clear' method to OutBuffer $(LPAREN)std.outbuffer$(RPAREN))
+$(LI $(BUGZILLA 16744): We should have a TypeOf template so that typeof can be used with templates like staticMap)
+$(LI $(BUGZILLA 16993): Documentation for toSimpleString and toString does not explain how they differ)
+$(LI $(BUGZILLA 17250): ProcessPipes $(LPAREN)std.process$(RPAREN) should provide a test for a null pid)
+$(LI $(BUGZILLA 17365): https://dlang.org/phobos/std_experimental_checkedint.html is missing the Throw hook description)
+$(LI $(BUGZILLA 17369): [Module std.traits] Documentation lists ditto in table)
+$(LI $(BUGZILLA 17525): std.algorithm.searching.skipOver should have a single argument with pred version)
+$(LI $(BUGZILLA 17540): std.net.curl: HTTP no possibillity to set CURLOPT_NOPROXY)
+$(LI $(BUGZILLA 17587): JSONOptions: No forward slash encoding)
+)
+$(BUGSTITLE Druntime regressions,
+
+$(LI $(BUGZILLA 15619): [REG 2.066] Floating-point x86_64 codegen regression, when involving array ops)
+)
+$(BUGSTITLE Druntime bugs,
+
+$(LI $(BUGZILLA 11594): synchronized causing segfault instead of Error.)
+$(LI $(BUGZILLA 14319): core.demangle does not support member function attributes)
+$(LI $(BUGZILLA 14563): core.demangle: Does not demangle type modifers)
+$(LI $(BUGZILLA 14576): [ddemangle] core.demangle unable to handle ambiguity in symbols)
+$(LI $(BUGZILLA 16856): D does not work on FreeBSD current $(LPAREN)what will eventually be 12$(RPAREN) due to libunwind)
+$(LI $(BUGZILLA 17609): core.demangle demangles delegate variables as functions)
+$(LI $(BUGZILLA 17610): core.demangle shows return type of template alias parameter)
+$(LI $(BUGZILLA 17611): core.demangle cannot demangle delegates with function attributes)
+$(LI $(BUGZILLA 17624): typo in Fields documentation section of https://dlang.org/library/object/exception.html)
+$(LI $(BUGZILLA 17665): Win64 atomicLoad for T[] cannot be cast from size_t[2])
+)
+$(BUGSTITLE Druntime enhancements,
+
+$(LI $(BUGZILLA 16664): core.demangle functions are not callable from @safe or pure code)
+)
+$(BUGSTITLE dlang.org bugs,
+
+$(LI $(BUGZILLA 17159): Behavior of unions at compile time is not documented)
+$(LI $(BUGZILLA 17224): Foreach documentation still refers to TypeTuples, rather than AliasSequences)
+$(LI $(BUGZILLA 17305): [SPEC] ABI page still has references to D1 Phobos)
+$(LI $(BUGZILLA 17509): [typo] "refered to" $(LPAREN)"referred to"$(RPAREN))
+$(LI $(BUGZILLA 17510): How could 509 be a byte value?)
+$(LI $(BUGZILLA 17513): [english] "a enum" -> "an enum")
+$(LI $(BUGZILLA 17702): codemirror hangs firefox for several seconds)
+)
+$(BUGSTITLE dlang.org enhancements,
+
+$(LI $(BUGZILLA 13153): dlang.org: provide version-specific documentation of the language and stdlib)
+$(LI $(BUGZILLA 17262): Better docs for rdmd)
+$(LI $(BUGZILLA 17322): Add Magikcraft to organizations using D)
+$(LI $(BUGZILLA 17480): [Downloads])
+$(LI $(BUGZILLA 17524): [The C Preprocessor vs D] "need to worry about"?)
+$(LI $(BUGZILLA 17560): Enhancement: view and copy full code example for offline compile/play)
+$(LI $(BUGZILLA 17594): Define DDOC_BLANKLINE as an empty HTML paragraph, thus obviating the need to wrap text in $$(LPAREN)P ...$(RPAREN))
+)
+$(BUGSTITLE Tools bugs,
+
+$(LI $(BUGZILLA 17731): dman fails to build due to more than 32767 symbols)
+)
+)
+$(CHANGELOG_NAV_LAST 2.075.1)
+Macros:
+    VER=2.076.0
+    TITLE=Change Log: $(VER)
