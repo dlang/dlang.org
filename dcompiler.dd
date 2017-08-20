@@ -469,7 +469,39 @@ $(WINDOWS
       )
 
       $(SWITCH $(SWNAME -betterC),
-        omit generating some runtime information and helper functions
+        Adjusts the compiler to implement D as a $(LINK2 spec/betterc.html, better C):
+
+	$(UL
+	$(LI $(LINK2 spec/expression.html#AssertExpression, Assert Expressions), when they fail,
+	call the C runtime library assert failure function
+	rather than a function in the D runtime.)
+
+	$(LI $(LINK2 https://dlang.org/spec/arrays.html#bounds, Array overflows)
+	call the C runtime library assert failure function
+	rather than a function in the D runtime.)
+
+	$(LI $(LINK2 spec/statement.html#final-switch-statement/, Final switch errors)
+	call the C runtime library assert failure function
+	rather than a function in the D runtime.)
+
+	$(LI Does not automatically link with phobos runtime library.)
+
+	$(UNIX
+	$(LI Does not generate Dwarf `eh_frame` with full unwinding information, i.e. exception tables
+	are not inserted into `eh_frame`.)
+	)
+
+	$(LI Module constructors and destructors are not generated meaning that
+	$(LINK2 spec/class.html#StaticConstructor, static) and
+	$(LINK2 spec/class.html#SharedStaticConstructor, shared static constructors) and
+	$(LINK2 spec/class.html#StaticDestructor, destructors)
+	will not get called.)
+
+	$(LI `ModuleInfo` is not generated.)
+
+	$(LI $(LINK2 http://dlang.org/phobos/object.html#.TypeInfo, `TypeInfo`)
+	instances will not be generated for structs.)
+	)
       )
 
       $(SWITCH $(SWNAME -boundscheck)=[$(I on|safeonly|off)],
