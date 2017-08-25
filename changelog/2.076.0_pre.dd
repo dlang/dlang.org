@@ -2,12 +2,13 @@ Ddoc
 
 $(CHANGELOG_NAV_LAST 2.075.1)
 
-$(VERSION Aug 16, 2017, =================================================,
+$(VERSION Sep 1, 2017, =================================================,
 
 $(BUGSTITLE Compiler changes,
 
 $(LI $(RELATIVE_LINK2 avx2,AVX2 was added as $(TT -mcpu=avx2) architecture.))
 $(LI $(RELATIVE_LINK2 fix17697,Fix Issue 17697 - Ddoc: automatically highlight URLs outside of macro arguments))
+$(LI $(RELATIVE_LINK2 staticforeach,Implement DIP 1010 - $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/DIP1010.md, Static foreach)))
 
 )
 
@@ -92,6 +93,65 @@ $(P
 `http:` and `https:` at the beginning of the line are no longer treated
 as section headings.
 )
+)
+
+$(LI $(LNAME2 staticforeach,Implement DIP 1010 - $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/DIP1010.md, Static foreach))
+$(P
+Support for `static foreach` has been added.
+)
+
+$(P
+`static foreach` is a conditional compilation construct that is to `foreach` what `static if` is to `if`.
+It is a convenient way to generate declarations and statements by iteration.
+)
+
+---
+import std.conv: to;
+
+static foreach(i; 0 .. 10)
+{
+
+    // a `static foreach` body does not introduce a nested scope
+    // (similar to `static if`).
+
+    // The following mixin declaration is at module scope:
+    mixin(`enum x` ~ to!string(i) ~ ` = i;`); // declares 10 variables x0, x1, ..., x9
+}
+
+import std.range: iota;
+// all aggregate types that can be iterated with a standard `foreach`
+// loop are also supported by static foreach:
+static foreach(i; iota(10))
+{
+    // we access the declarations generated in the first `static foreach`
+    pragma(msg, "x", i, ": ", mixin(`x` ~ to!string(i)));
+    static assert(mixin(`x` ~ to!string(i)) == i);
+}
+
+void main()
+{
+    import std.conv: text;
+    import std.typecons: tuple;
+    import std.algorithm: map;
+    import std.stdio: writeln;
+
+    // `static foreach` has both declaration and statement forms
+    // (similar to `static if`).
+
+    static foreach(x; iota(3).map!(i => tuple(text("x", i), i)))
+    {
+        // generates three local variables x0, x1 and x2.
+        mixin(text(`int `,x[0],` = x[1];`));
+
+        scope(exit) // this is within the scope of `main`
+        {
+            writeln(mixin(x[0]));
+        }
+    }
+
+    writeln(x0," ",x1," ",x2); // first runtime output
+}
+---
 )
 
 
@@ -250,6 +310,7 @@ $(LI $(BUGZILLA 17582): [REG2.059] Applying const to struct declaration should m
 $(LI $(BUGZILLA 17612): [REG2.063] Segmentation fault with bad object.d)
 $(LI $(BUGZILLA 17690): [REG2.066.0] scope guards leak declarations)
 $(LI $(BUGZILLA 17695): [Reg 2.076] ICE with vector negation)
+$(LI $(BUGZILLA 17761): [REG2.075] dmd 2.075.1 creates object files that can't be linked by ld.bfd)
 )
 $(BUGSTITLE DMD Compiler bugs,
 
@@ -304,6 +365,7 @@ $(LI $(BUGZILLA 17562): Tangent function returns NaN for abs$(LPAREN)input$(RPAR
 $(LI $(BUGZILLA 17574): Range violation in std.getopt:getopt AA parsing)
 $(LI $(BUGZILLA 17616): makeIndex cannot fully use range of index type)
 $(LI $(BUGZILLA 17640): std.concurrenct writeln conflicts with std.stdio writeln in unittests)
+$(LI $(BUGZILLA 17673): wrong whichPattern in multi-regex with alteration)
 $(LI $(BUGZILLA 17711): std.array.byPair should be usable with const AA)
 )
 $(BUGSTITLE Phobos enhancements,
@@ -313,7 +375,6 @@ $(LI $(BUGZILLA 6384): std.traits.isComparable)
 $(LI $(BUGZILLA 15759): chunks should work with only an input range)
 $(LI $(BUGZILLA 15771): FileLogger should create the output directory if it does not exist)
 $(LI $(BUGZILLA 16062): Add 'clear' method to OutBuffer $(LPAREN)std.outbuffer$(RPAREN))
-$(LI $(BUGZILLA 16744): We should have a TypeOf template so that typeof can be used with templates like staticMap)
 $(LI $(BUGZILLA 16993): Documentation for toSimpleString and toString does not explain how they differ)
 $(LI $(BUGZILLA 17250): ProcessPipes $(LPAREN)std.process$(RPAREN) should provide a test for a null pid)
 $(LI $(BUGZILLA 17365): https://dlang.org/phobos/std_experimental_checkedint.html is missing the Throw hook description)
