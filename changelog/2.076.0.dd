@@ -2,11 +2,14 @@ Ddoc
 
 $(CHANGELOG_NAV_LAST 2.075.1)
 
-$(VERSION Sep 1, 2017, =================================================,
+$(VERSION Sep 01, 2017, =================================================,
 
 $(BUGSTITLE Compiler changes,
 
+$(LI $(RELATIVE_LINK2 1_staticforeach,Implement DIP 1010 - $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/DIP1010.md, Static foreach)))
+$(LI $(RELATIVE_LINK2 2_betterc,$(TT -betterC) enhancements))
 $(LI $(RELATIVE_LINK2 avx2,AVX2 was added as $(TT -mcpu=avx2) architecture.))
+$(LI $(RELATIVE_LINK2 betterc,$(TT -betterC) enhancements))
 $(LI $(RELATIVE_LINK2 fix17697,Fix Issue 17697 - Ddoc: automatically highlight URLs outside of macro arguments))
 $(LI $(RELATIVE_LINK2 staticforeach,Implement DIP 1010 - $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/DIP1010.md, Static foreach)))
 
@@ -42,11 +45,96 @@ $(HR)
 
 $(BUGSTITLE Compiler changes,
 
+$(LI $(LNAME2 1_staticforeach,Implement DIP 1010 - $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/DIP1010.md, Static foreach))
+$(P
+Support for `static foreach` has been added.
+)
+
+$(P
+`static foreach` is a conditional compilation construct that is to `foreach` what `static if` is to `if`.
+It is a convenient way to generate declarations and statements by iteration.
+)
+
+---
+import std.conv: to;
+
+static foreach(i; 0 .. 10)
+{
+
+    // a `static foreach` body does not introduce a nested scope
+    // (similar to `static if`).
+    
+    // The following mixin declaration is at module scope:
+    mixin(`enum x` ~ to!string(i) ~ ` = i;`); // declares 10 variables x0, x1, ..., x9
+}
+
+import std.range: iota;
+// all aggregate types that can be iterated with a standard `foreach`
+// loop are also supported by static foreach:
+static foreach(i; iota(10))
+{
+    // we access the declarations generated in the first `static foreach`
+    pragma(msg, "x", i, ": ", mixin(`x` ~ to!string(i)));
+    static assert(mixin(`x` ~ to!string(i)) == i);
+}
+
+void main()
+{
+    import std.conv: text;
+    import std.typecons: tuple;
+    import std.algorithm: map;
+    import std.stdio: writeln;
+
+    // `static foreach` has both declaration and statement forms
+    // (similar to `static if`).
+    
+    static foreach(x; iota(3).map!(i => tuple(text("x", i), i)))
+    {
+        // generates three local variables x0, x1 and x2.
+        mixin(text(`int `,x[0],` = x[1];`));
+
+        scope(exit) // this is within the scope of `main`
+        {
+            writeln(mixin(x[0]));
+        }
+    }
+    
+    writeln(x0," ",x1," ",x2); // first runtime output
+}
+---
+)
+
+$(LI $(LNAME2 2_betterc,$(TT -betterC) enhancements)
+$(P
+Many improvements were added to the dmd's $(TT -betterC) implementation, most
+notably programs compiled with $(TT -betterC) will no longer reference unused
+druntime symbols, asserts are implemented as C `<assert.h>` calls, and phobos is
+not linked by default.
+)
+
+$(P
+See the $(LINK2 $(ROOT_DIR)spec/betterc.html, Better C) specs for more details.
+)
+)
+
 $(LI $(LNAME2 avx2,AVX2 was added as $(TT -mcpu=avx2) architecture.)
 $(P
 This allows the backend to emit AVX2 instructions. The compiler will
 add the predefined version $(LINK2 $(ROOT_DIR)spec/version.html#predefined-versions, `D_AVX2`).
 AVX2 support is automatically detected with -mcpu=native.
+)
+)
+
+$(LI $(LNAME2 betterc,$(TT -betterC) enhancements)
+$(P
+Many improvements were added to the dmd's $(TT -betterC) implementation, most
+notably programs compiled with $(TT -betterC) will no longer reference unused
+druntime symbols, asserts are implemented as C `<assert.h>` calls, and phobos is
+not linked by default.
+)
+
+$(P
+See the $(LINK2 $(ROOT_DIR)spec/betterc.html, Better C) specs for more details.
 )
 )
 
@@ -113,7 +201,7 @@ static foreach(i; 0 .. 10)
 
     // a `static foreach` body does not introduce a nested scope
     // (similar to `static if`).
-
+    
     // The following mixin declaration is at module scope:
     mixin(`enum x` ~ to!string(i) ~ ` = i;`); // declares 10 variables x0, x1, ..., x9
 }
@@ -137,7 +225,7 @@ void main()
 
     // `static foreach` has both declaration and statement forms
     // (similar to `static if`).
-
+    
     static foreach(x; iota(3).map!(i => tuple(text("x", i), i)))
     {
         // generates three local variables x0, x1 and x2.
@@ -148,7 +236,7 @@ void main()
             writeln(mixin(x[0]));
         }
     }
-
+    
     writeln(x0," ",x1," ",x2); // first runtime output
 }
 ---
@@ -308,6 +396,7 @@ $(LI $(BUGZILLA 16680): dmd doesn't use druntime optimized versions of subtracti
 $(LI $(BUGZILLA 17522): win64.mak broken)
 $(LI $(BUGZILLA 17582): [REG2.059] Applying const to struct declaration should make the struct type const)
 $(LI $(BUGZILLA 17612): [REG2.063] Segmentation fault with bad object.d)
+$(LI $(BUGZILLA 17684): [REG 2.062] `static alias this` bug or incomplete implementation?)
 $(LI $(BUGZILLA 17690): [REG2.066.0] scope guards leak declarations)
 $(LI $(BUGZILLA 17695): [Reg 2.076] ICE with vector negation)
 $(LI $(BUGZILLA 17761): [REG2.075] dmd 2.075.1 creates object files that can't be linked by ld.bfd)
@@ -423,6 +512,7 @@ $(LI $(BUGZILLA 17322): Add Magikcraft to organizations using D)
 $(LI $(BUGZILLA 17480): [Downloads])
 $(LI $(BUGZILLA 17524): [The C Preprocessor vs D] "need to worry about"?)
 $(LI $(BUGZILLA 17560): Enhancement: view and copy full code example for offline compile/play)
+$(LI $(BUGZILLA 17581): Document behavior of -betterC)
 $(LI $(BUGZILLA 17594): Define DDOC_BLANKLINE as an empty HTML paragraph, thus obviating the need to wrap text in $$(LPAREN)P ...$(RPAREN))
 )
 $(BUGSTITLE Tools bugs,
