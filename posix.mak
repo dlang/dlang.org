@@ -122,6 +122,7 @@ DDOC_VARS_STABLE_HTML=\
 	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
 	  STDDOC="$(addprefix $(PWD)/, $(STD_DDOC))" \
 	  DMD="$(abspath $(DMD_STABLE))" \
+	  DMD_DIR="$(abspath ${DMD_STABLE_DIR})" \
 	  DRUNTIME_PATH="$(abspath ${DRUNTIME_STABLE_DIR})" \
 	  DOCSRC="$(PWD)" \
 	  VERSION="$(abspath ${DMD_DIR}/VERSION)"
