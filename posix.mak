@@ -24,13 +24,11 @@ PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
 TOOLS_DIR=../tools
 INSTALLER_DIR=../installer
-DUB_DIR=../dub-${DUB_VER}
 
 include $(DMD_DIR)/src/osmodel.mak
 
 # External binaries
 DMD=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)/dmd
-DUB=${DUB_DIR}/bin/dub
 
 # External directories
 DOC_OUTPUT_DIR:=$(PWD)/web
@@ -65,14 +63,14 @@ PHOBOS_STABLE_FILES_GENERATED := $(subst $(PHOBOS_STABLE_DIR), $(PHOBOS_STABLE_D
 ################################################################################
 
 # stable dub and dmd versions used to build dpl-docs
-DUB_VER=1.1.0
 STABLE_DMD_VER=2.072.2
 STABLE_DMD_ROOT=$(GENERATED)/stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
-STABLE_DMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/dmd
+STABLE_DMD_BIN_ROOT=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))
+STABLE_DMD=$(STABLE_DMD_BIN_ROOT)/dmd
 STABLE_DMD_CONF=$(STABLE_DMD).conf
-STABLE_RDMD=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))/rdmd \
-	--compiler=$(STABLE_DMD) -conf=$(STABLE_DMD_CONF)
+STABLE_RDMD=$(STABLE_DMD_BIN_ROOT)/rdmd --compiler=$(STABLE_DMD) -conf=$(STABLE_DMD_CONF)
+DUB=$(STABLE_DMD_BIN_ROOT)/dub
 
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
@@ -277,7 +275,7 @@ clean:
 	rm -rf $(DOC_OUTPUT_DIR) ${GENERATED} dpl-docs/.dub
 	rm -rf auto dlangspec-consolidated.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex .txt .verbatim.txt)
 	rm -f docs.json docs-prerelease.json dpl-docs/dpl-docs
-	@echo You should issue manually: rm -rf ${DMD_STABLE_DIR} ${DRUNTIME_STABLE_DIR} ${PHOBOS_STABLE_DIR} ${STABLE_DMD_ROOT} ${DUB_DIR}
+	@echo You should issue manually: rm -rf ${DMD_STABLE_DIR} ${DRUNTIME_STABLE_DIR} ${PHOBOS_STABLE_DIR} ${STABLE_DMD_ROOT}
 
 RSYNC_FILTER=-f 'P /Usage' -f 'P /.dpl_rewrite*' -f 'P /install.sh*'
 
@@ -408,9 +406,6 @@ $G/twid_latest.ddoc:
 
 ../%-${LATEST} :
 	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
-
-../%-${DUB_VER} :
-	git clone --depth=1 -b v${DUB_VER} ${GIT_HOME}/$(notdir $*) $@
 
 ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
 	git clone --depth=1 ${GIT_HOME}/$(notdir $(@F)) $@
@@ -579,13 +574,13 @@ dpl-docs: ${DUB} ${STABLE_DMD}
 	DFLAGS="$(DPL_DOCS_DFLAGS)" ${DUB} build --root=${DPL_DOCS_PATH} \
 		--compiler=${STABLE_DMD}
 
-${STABLE_DMD}:
+${STABLE_DMD_ROOT}/.downloaded:
 	mkdir -p ${STABLE_DMD_ROOT}
-	TMPFILE=$$(mktemp deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > ${TMP}/$${TMPFILE}.zip && \
-		unzip -qd ${STABLE_DMD_ROOT} ${TMP}/$${TMPFILE}.zip && rm ${TMP}/$${TMPFILE}.zip
+	TMPFILE=$$(mktemp ${TMP}/dmd-download-deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > $${TMPFILE}.zip && \
+		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
+	touch $@
 
-${DUB}: | ${DUB_DIR} ${STABLE_DMD}
-	cd ${DUB_DIR} && DMD="$(abspath ${STABLE_DMD})" ./build.sh
+${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 
 ################################################################################
 # chm help files
