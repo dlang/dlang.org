@@ -347,7 +347,7 @@ endif
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	articles ascii-table bugstats builtin \
 	$(CHANGELOG_FILES) code_coverage community comparison concepts \
-	const-faq cppcontracts cpptod ctarguments ctod donate \
+	const-faq contributors cppcontracts cpptod ctarguments ctod donate \
 	D1toD2 d-array-article d-floating-point deprecate dlangupb-scholarship dll-linux dmd \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
 	exception-safe faq forum-template foundation gpg_keys glossary \
@@ -461,6 +461,9 @@ $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
+
+$(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors.ddoc $(DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
 
 $W/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
@@ -884,5 +887,17 @@ changelog/pending.dd: changelog/next-version | ${STABLE_DMD} ../tools ../install
 
 pending_changelog: $(LOOSE_CHANGELOG_FILES) changelog/pending.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/pending.html in your browser"
+
+################################################################################
+# Contributors listing: A list of all the awesome who made D possible
+################################################################################
+
+$G/contributors.dd:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
+	@$(STABLE_RDMD) $(TOOLS_DIR)/contributors.d --format=ddoc "master" > $@
+
+$G/contributors.ddoc: $G/contributors.dd
+	@echo "NR_D_CONTRIBUTORS=$$(wc -l < $<)" > $@
+	@echo "D_CONTRIBUTORS=" >> $@
+	@cat $< >> $@
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
