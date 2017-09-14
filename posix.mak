@@ -44,6 +44,10 @@ DMD_STABLE=$(DMD_STABLE_DIR)/generated/$(OS)/release/$(MODEL)/dmd
 DRUNTIME_STABLE_DIR=${DRUNTIME_DIR}-${LATEST}
 PHOBOS_STABLE_DIR=${PHOBOS_DIR}-${LATEST}
 
+# Auto-cloning missing directories
+$(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
+$(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(DRUNTIME_DIR))
+
 ################################################################################
 # Automatically generated directories
 GENERATED=.generated
@@ -230,8 +234,10 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
 all : docs html
 
-docs : dmd-release dmd-prerelease phobos-prerelease druntime-prerelease \
-	   druntime-release phobos-release apidocs-release apidocs-prerelease
+docs-release: dmd-release druntime-release phobos-release apidocs-release
+docs-prerelease: dmd-prerelease druntime-prerelease phobos-prerelease apidocs-prerelease
+
+docs : docs-release docs-prerelease
 
 html : $(ALL_FILES)
 

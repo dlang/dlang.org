@@ -11,36 +11,34 @@ Make sure you have these prerequisites working:
 * The C++ compiler for your platform (invokable as `gcc`)
 * Optional: `latex` for building the pdf documentation
 * Optional: `kindlegen` for building the Kindle documentation
-* If you're running OSX, make sure you have some version of `libevent` installed
+* If you're running OSX, make sure you have some version of `libevent` installed (needed for Ddox)
 
 ## Getting the code
 
-Create a working directory for the D language, e.g. `~/code/d`. The remainder
-of this document calls that directory henceforth `$R` from "Root". To get the
-code:
+If you already have a [working directory for the D language](https://wiki.dlang.org/Building_under_Posix#Fetch_repositories_from_GitHub),
+e.g. `~/dlang`, change to it.
+
+To get the code, run:
 
 ```
-cd $R
 git clone https://github.com/dlang/dlang.org
-git clone https://github.com/dlang/dmd
+cd dlang.org
 ```
 
-The `dmd` compiler is needed for processing the documentation.
+The remainder of this document assumes that is your current working directory.
 
 ## Building the main site
 
-Now in `$R` there are two directories called `dmd` and `dlang.org`. To
-build the main site, run this:
+To build the main site, run:
 
 ```
-cd $R/dlang.org
 make -f posix.mak html
 ```
 
 This builds the `dmd` compiler itself first and then uses it to build the
 website pages. You may see warnings while the compiler is built. After `make`
-ended with error code 0, directory `$R/dlang.org/web` contains the produced HTML
-files. Take a moment to open `$R/dlang.org/web/index.html` in a browser.
+ended with error code 0, directory `web` contains the produced HTML
+files. Take a moment to open `web/index.html` in a browser.
 
 ## Building the standard library documentation
 
@@ -54,17 +52,41 @@ currently being worked on. The "release" version is built with the "release"
 compiler, and the current version is built with the current compiler (which we
 already have from the previous step).
 
-### Building the release libraries
+### Building the `prerelease` libraries
+
+The more interesting stuff to build is the prerelease libraries because in all
+likelihood that's what needs looking at and testing.
+
+```
+make -f posix.mak docs-prerelease
+```
+
+If you only want to build a specific part (e.g. Phobos), run:
+
+```
+make -f posix.mak phobos-prerelease
+```
+
+(`docs-prerelease` is a shorthand for `dmd-prerelease`, `druntime-prerelease`, `phobos-releas` and `apidocs-prerelease`)
+
+The output is in `web/phobos-prerelease` and `library-prerelease`.
+
+### Building the `release` libraries
 
 Fortunately there's no need to fumble with version numbers and git tags etc.;
 all is automated. Run this command:
 
 ```
-cd $R/dlang.org
-make -f posix.mak druntime-release
-make -f posix.mak phobos-release
-make -f posix.mak apidocs-release
+make -f posix.mak docs-release
 ```
+
+If you only want to build a specific part (e.g. Phobos), run:
+
+```
+make -f posix.mak phobos-release
+```
+
+(`docs-release` is a shorthand for `dmd-release`, `druntime-release`, `phobos-releas` and `apidocs-release`)
 
 These commands tell you the release being built in their first line of output.
 Then they proceed and clone the appropriate release for `dmd`, `druntime`, and
@@ -73,29 +95,4 @@ be present in `$R`: `dlang.org`, `dmd`, `dmd-2.083.2`, `druntime-2.083.2`, and
 `phobos-2.083.2`. Note that the actual release number may not be `2.083.2`, but
 should be the same for all three directories.
 
-The output is in `$R/dlang.org/web/phobos` and `$R/dlang.org/web/library`.
-
-### Building the prerelease libraries
-
-The more interesting stuff to build is the prerelease libraries because in all
-likelihood that's what needs looking at and testing. To do that two more
-repositories containing the core and standard libraries are needed: `druntime`
-and `phobos`:
-
-```
-cd $R
-git clone https://github.com/dlang/druntime
-git clone https://github.com/dlang/phobos
-```
-
-With the new repos in tow this builds the prerelease libraries:
-
-```
-cd $R/dlang.org
-make -f posix.mak druntime-prerelease
-make -f posix.mak phobos-prerelease
-make -f posix.mak apidocs-prerelease
-```
-
-The output is in `$R/dlang.org/web/phobos-prerelease` and
-`$R/dlang.org/web/library-prerelease`.
+The output is in `web/phobos` and `web/library`.
