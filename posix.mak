@@ -528,11 +528,13 @@ $G/docs.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 	find ${DMD_LATEST_DIR}/src -name '*.d' | \
 		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE}  \
 			> $G/.release-files.txt
+	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 	  sed -e /unittest.d/d -e /gcstub/d >> $G/.release-files.txt
 	find ${PHOBOS_LATEST_DIR_GENERATED} -name '*.d' | \
 	  sed -e /unittest.d/d -e /windows/d | sort >> $G/.release-files.txt
 	${DMD_LATEST} -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
 	  -version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.release-dummy.html \
+	  -Xf$@ -I${PHOBOS_LATEST_DIR_GENERATED} @$G/.release-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
 	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
 	rm -f $G/.release-files.txt $G/.release-dummy.html
