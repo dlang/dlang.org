@@ -48,6 +48,9 @@ PHOBOS_LATEST_DIR=${PHOBOS_DIR}-${LATEST}
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
 $(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(DRUNTIME_DIR))
 
+# Keep during the ddmd -> dmd transition
+DMD_SRC_NAME=$(shell if [ -d $(DMD_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi)
+
 ################################################################################
 # Automatically generated directories
 GENERATED=.generated
@@ -83,8 +86,8 @@ MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.conf
 	std.experimental.ndslice.internal std.stdiobase \
 	std.typetuple \
 	tk. msvc_dmc msvc_lib \
-	ddmd.libmach ddmd.libmscoff ddmd.objc_glue \
-	ddmd.scanmach ddmd.scanmscoff)
+	$(DMD_SRC_NAME).libmach $(DMD_SRC_NAME).libmscoff $(DMD_SRC_NAME).objc_glue \
+	$(DMD_SRC_NAME).scanmach $(DMD_SRC_NAME).scanmscoff)
 
 MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE)
 
@@ -263,12 +266,12 @@ ${GENERATED}/${LATEST}.ddoc :
 ${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_RELEASE) \
-		$(addprefix --dump , object std etc core ddmd) >$@
+		$(addprefix --dump , object std etc core $(DMD_SRC_NAME)) >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
-		$(addprefix --dump , object std etc core ddmd) >$@
+		$(addprefix --dump , object std etc core $(DMD_SRC_NAME)) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
