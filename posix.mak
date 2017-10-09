@@ -27,9 +27,17 @@ PWD=$(shell pwd)
 ifeq (,${LATEST})
 LATEST:=$(shell cat VERSION)
 endif
+
 # Next major DMD release
+define NEXT_VERSION_SH
+version=$$(cat VERSION)
+a=($${version//./ })
 # use 10#076 to read zero prefixed int as base 10
-NEXT_VERSION:=$(shell bash -c 'version=$$(cat VERSION);a=($${version//./ }); a[1]=0$$((10\#$${a[1]} + 1)); a[2]=0; echo $${a[0]}.$${a[1]}.$${a[2]};' )
+a[1]=0$$((10#$${a[1]} + 1))
+a[2]=0
+echo $${a[0]}.$${a[1]}.$${a[2]}
+endef
+NEXT_VERSION:=$(shell bash -c '${NEXT_VERSION_SH}')
 
 # DLang directories
 DMD_DIR=../dmd
