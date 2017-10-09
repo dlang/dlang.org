@@ -9,23 +9,14 @@
 # make -f posix.mak rsync
 #
 
-PWD=$(shell pwd)
+PWD:=$(shell pwd)
+# the current makefile, i.e. posix.mak
+MAKEFILE:=$(lastword $(MAKEFILE_LIST))
 
 # Latest released version
 ifeq (,${LATEST})
 LATEST:=$(shell cat VERSION)
 endif
-
-# Next major DMD release
-define NEXT_VERSION_SH
-version=$$(cat VERSION)
-a=($${version//./ })
-# use 10#076 to read zero prefixed int as base 10
-a[1]=0$$((10#$${a[1]} + 1))
-a[2]=0
-echo $${a[0]}.$${a[1]}.$${a[2]}
-endef
-NEXT_VERSION:=$(shell bash -c '${NEXT_VERSION_SH}')
 
 # DLang directories
 DMD_DIR=../dmd
@@ -54,8 +45,8 @@ DRUNTIME_LATEST_DIR=${DRUNTIME_DIR}-${LATEST}
 PHOBOS_LATEST_DIR=${PHOBOS_DIR}-${LATEST}
 
 # Auto-cloning missing directories
-$(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
-$(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(DRUNTIME_DIR))
+#$(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
+#$(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(DRUNTIME_DIR))
 
 # Keep during the ddmd -> dmd transition
 DMD_SRC_NAME=$(shell if [ -d $(DMD_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi)
@@ -72,10 +63,10 @@ PHOBOS_LATEST_DIR_GENERATED=$(GENERATED)/phobos-release
 #   Makefile dependencies and rules
 PHOBOS_FILES := $(shell find $(PHOBOS_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
 PHOBOS_FILES_GENERATED := $(subst $(PHOBOS_DIR), $(PHOBOS_DIR_GENERATED), $(PHOBOS_FILES))
-$(shell [ ! -d $(PHOBOS_DIR) ] && git clone --depth=1 ${GIT_HOME}/phobos $(PHOBOS_DIR))
-$(shell [ ! -d $(PHOBOS_LATEST_DIR) ] && git clone -b v${LATEST} --depth=1 ${GIT_HOME}/phobos $(PHOBOS_LATEST_DIR))
-PHOBOS_LATEST_FILES := $(shell find $(PHOBOS_LATEST_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
-PHOBOS_LATEST_FILES_GENERATED := $(subst $(PHOBOS_LATEST_DIR), $(PHOBOS_LATEST_DIR_GENERATED), $(PHOBOS_LATEST_FILES))
+#$(shell [ ! -d $(PHOBOS_DIR) ] && git clone --depth=1 ${GIT_HOME}/phobos $(PHOBOS_DIR))
+#$(shell [ ! -d $(PHOBOS_LATEST_DIR) ] && git clone -b v${LATEST} --depth=1 ${GIT_HOME}/phobos $(PHOBOS_LATEST_DIR))
+#PHOBOS_LATEST_FILES := $(shell find $(PHOBOS_LATEST_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
+#PHOBOS_LATEST_FILES_GENERATED := $(subst $(PHOBOS_LATEST_DIR), $(PHOBOS_LATEST_DIR_GENERATED), $(PHOBOS_LATEST_FILES))
 ################################################################################
 
 # stable dub and dmd versions used to build dpl-docs
@@ -214,8 +205,7 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd betterc)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES=changelog/${NEXT_VERSION}_pre \
-				$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) \
+CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) \
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
@@ -236,7 +226,7 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
-$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
+$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT)) changelog/pending.html
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 
@@ -253,7 +243,7 @@ docs : docs-release docs-prerelease
 
 html : $(ALL_FILES)
 
-verbatim : $(addprefix $(DOC_OUTPUT_DIR)/, $(addsuffix .verbatim,$(PAGES_ROOT))) phobos-prerelease-verbatim
+verbatim : $(addprefix $(DOC_OUTPUT_DIR)/, $(addsuffix .verbatim,$(PAGES_ROOT))) changelog/pending.verbatim phobos-prerelease-verbatim
 
 kindle : ${DOC_OUTPUT_DIR}/dlangspec.mobi
 
@@ -427,6 +417,8 @@ $G/twid_latest.ddoc:
 
 ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
 	git clone --depth=1 ${GIT_HOME}/$(notdir $(@F)) $@
+
+${DMD_DIR}/VERSION : ${DMD_DIR}
 
 ################################################################################
 # dmd compiler, latest released build and current build
@@ -669,15 +661,20 @@ test: $(ASSERT_WRITELN_BIN)_test all
 # Changelog generation
 ################################################################################
 
-changelog/${NEXT_VERSION}_pre.dd: | ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
-	--version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
+changelog/next-version: ${DMD_DIR}/VERSION
+	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
 
-changelog/${NEXT_VERSION}.dd: | ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_LATEST) -o $@ \
-		--version "${NEXT_VERSION}"
+changelog/pending: changelog/next-version | ${STABLE_DMD} ${TOOLS_DIR} ${INSTALLER_DIR}
+	[ -f changelog/${NEXT_VERSION}_pre.dd ] || $(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o changelog/${NEXT_VERSION}_pre.dd \
+	  --version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
 
-pending_changelog: changelog/${NEXT_VERSION}.dd html
-	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pre.html in your browser"
+changelog/pending.html: changelog/pending
+	$(MAKE) -f $(MAKEFILE) $(DOC_OUTPUT_DIR)/changelog/${NEXT_VERSION}.html
+
+changelog/pending.verbatim: changelog/pending
+	$(MAKE) -f $(MAKEFILE) $(DOC_OUTPUT_DIR)/changelog/${NEXT_VERSION}.verbatim
+
+pending_changelog: changelog/pending.html html
+	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}.html in your browser"
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)

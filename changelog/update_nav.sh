@@ -47,7 +47,7 @@ sed -i '/BEGIN_GENERATED_CHANGELOG_VERSIONS/,/END_GENERATED_CHANGELOG_VERSIONS/d
 echo '_=BEGIN_GENERATED_CHANGELOG_VERSIONS' >> changelog.ddoc
 echo 'CHANGELOG_VERSIONS =' >> changelog.ddoc
 for ver in "${rev_pre_vers[@]}"; do
-    echo "    \$(CHANGELOG_VERSION_PRE ${ver%_pre.dd}, not yet released)" >> changelog.ddoc
+    echo "    \$(CHANGELOG_VERSION ${ver%_pre.dd}, to be released)" >> changelog.ddoc
 done
 for ver in "${rev_rel_vers[@]}"; do
     echo "    \$(CHANGELOG_VERSION ${ver%.dd})" >> changelog.ddoc
