@@ -8,6 +8,18 @@
 #
 # make -f posix.mak rsync
 #
+#
+# This makefile supports 3 flavors of documentation, latest, prerelease, and
+# release. The first 2 are live on the website and built from the latest
+# released version and master (prerelease). The release build is used for the
+# documentation that is shipped with binary releases. For the latter the LATEST
+# version is not yet published at build time, hence a few things differ from a
+# prerelease build.
+#
+# To build latest and prerelease docs:
+#   make -f posix.mak all
+# To build release docs:
+#   make -f posix.mak RELEASE=1 release
 
 PWD=$(shell pwd)
 
@@ -63,10 +75,13 @@ PHOBOS_LATEST_DIR_GENERATED=$(GENERATED)/phobos-latest
 #   Makefile dependencies and rules
 PHOBOS_FILES := $(shell find $(PHOBOS_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
 PHOBOS_FILES_GENERATED := $(subst $(PHOBOS_DIR), $(PHOBOS_DIR_GENERATED), $(PHOBOS_FILES))
+ifndef RELEASE
+# TODO: should be replaced by make targets
 $(shell [ ! -d $(PHOBOS_DIR) ] && git clone --depth=1 ${GIT_HOME}/phobos $(PHOBOS_DIR))
 $(shell [ ! -d $(PHOBOS_LATEST_DIR) ] && git clone -b v${LATEST} --depth=1 ${GIT_HOME}/phobos $(PHOBOS_LATEST_DIR))
 PHOBOS_LATEST_FILES := $(shell find $(PHOBOS_LATEST_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
 PHOBOS_LATEST_FILES_GENERATED := $(subst $(PHOBOS_LATEST_DIR), $(PHOBOS_LATEST_DIR_GENERATED), $(PHOBOS_LATEST_FILES))
+endif
 ################################################################################
 
 # stable dub and dmd versions used to build dpl-docs
@@ -132,6 +147,15 @@ DDOC_VARS_LATEST_HTML=\
 	  DOCSRC="$(PWD)" \
 	  VERSION="$(abspath ${DMD_DIR}/VERSION)"
 
+DDOC_VARS_RELEASE_HTML=\
+	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
+	  STDDOC="$(addprefix $(PWD)/, $(STD_DDOC_RELEASE))" \
+	  DMD="$(abspath $(DMD))" \
+	  DMD_DIR="$(abspath ${DMD_DIR})" \
+	  DRUNTIME_PATH="$(abspath ${DRUNTIME_DIR})" \
+	  DOCSRC="$(PWD)" \
+	  VERSION="$(abspath ${DMD_DIR}/VERSION)"
+
 DDOC_VARS=\
 	DMD="$(abspath ${DMD})" \
 	DMD_DIR="$(abspath ${DMD_DIR})" \
@@ -184,6 +208,7 @@ STYLES=$(addsuffix .css, $(addprefix css/, \
 
 DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME) $(DBLOG_LATEST)
 STD_DDOC_LATEST=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
+STD_DDOC_RELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-release) $(NODATETIME)
 STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
 SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
@@ -205,8 +230,10 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd betterc)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES=changelog/${NEXT_VERSION}_pre \
-				$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) \
+CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
+ifndef RELEASE
+CHANGELOG_FILES+=changelog/${NEXT_VERSION}_pre
+endif
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
@@ -236,6 +263,10 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
 ################################################################################
 
 all : docs html
+
+ifdef RELEASE
+release : html dmd-release druntime-release phobos-release d-release.tag
+endif
 
 docs-latest: dmd-latest druntime-latest phobos-latest apidocs-latest
 docs-prerelease: dmd-prerelease druntime-prerelease phobos-prerelease apidocs-prerelease
@@ -268,7 +299,12 @@ ${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_LATEST) \
 		$(addprefix --dump , object std etc core $(DMD_SRC_NAME)) >$@
 
-${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR)
+${GENERATED}/modlist-release.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
+	mkdir -p $(dir $@)
+	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_RELEASE) \
+		$(addprefix --dump , object std etc core $(DMD_SRC_NAME)) >$@
+
+${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
 		$(addprefix --dump , object std etc core $(DMD_SRC_NAME)) >$@
@@ -432,6 +468,9 @@ $(DMD_LATEST) : ${DMD_LATEST_DIR}
 dmd-latest : $(STD_DDOC_LATEST) $(DMD_LATEST_DIR) $(DMD_LATEST)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
 
+dmd-release : $(STD_DDOC_RELEASE) $(DMD_DIR) #$(DMD)
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
+
 dmd-prerelease : $(STD_DDOC_PRERELEASE) $(DMD_DIR) $(DMD)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_HTML)
 
@@ -453,6 +492,11 @@ druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRERELEASE)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_HTML) \
 		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRERELEASE))"
+
+druntime-release : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_RELEASE)
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_RELEASE_HTML) \
+	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
+	  DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_RELEASE))"
 
 druntime-latest : ${DRUNTIME_LATEST_DIR} $(DMD_LATEST) $(STD_DDOC_LATEST)
 	${MAKE} --directory=${DRUNTIME_LATEST_DIR} -f posix.mak target doc $(DDOC_VARS_LATEST_HTML) \
@@ -477,6 +521,10 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
 .PHONY: phobos-prerelease
 phobos-prerelease : ${PHOBOS_FILES_GENERATED} $(STD_DDOC_PRERELEASE) druntime-prerelease
 	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_HTML)
+
+phobos-release : ${PHOBOS_FILES_GENERATED} $(DMD) $(STD_DDOC_RELEASE) \
+		druntime-release dmd-release
+	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
 
 phobos-latest : ${PHOBOS_LATEST_FILES_GENERATED} $(DMD_LATEST) $(STD_DDOC_LATEST) \
 		druntime-latest dmd-latest
@@ -596,17 +644,27 @@ ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 ################################################################################
 
 # testing menu generation
-chm-nav.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
-chm-nav-pre.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+
+chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+
+chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
 
 ################################################################################
 # Dman tags
 ################################################################################
 
-d.tag d-tags.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest
-	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags
+d-latest.tag d-tags-latest.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
+	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags --target latest
+
+d-release.tag d-tags-release.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
+	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags --target release
+
+d-prerelease.tag d-tags-prerelease.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
+	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags --target prerelease
 
 ################################################################################
 # Assert -> writeln magic

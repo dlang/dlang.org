@@ -34,6 +34,7 @@ string[] brokenLinks = [
 string docRoot = `.`;
 string chmDir = "chm";
 bool prerelease;
+string target;
 
 // ********************************************************************
 
@@ -133,7 +134,9 @@ void main(string[] args)
         "root", &docRoot,
         "dir", &chmDir,
         "pre", &prerelease,
+        "target", &target,
     );
+    prerelease = target == "prerelease";
 
     bool chm = !onlyTags;
 
@@ -266,7 +269,7 @@ void loadNavigation()
     stderr.writeln("Loading navigation");
 
     import std.json;
-    auto text = (prerelease ? "chm-nav-pre.json" : "chm-nav.json")
+    auto text = ("chm-nav-" ~ target ~ ".json")
         .readText()
         .replace("\r", "")
         .replace("\n", "")
@@ -515,7 +518,7 @@ void writeTags()
 
     // D syntax
     File f;
-    f.open(`d.tag`, "wt");
+    f.open("d-" ~ target ~ ".tag", "wt");
     f.writeln("[");
     foreach (keyword; keywordList)
     {
@@ -538,7 +541,7 @@ void writeTags()
             .byKeyValue
             .map!(kv => JSONValue(`http://dlang.org/` ~ kv.key ~ kv.value.anchor))
             .array);
-    std.file.write("d-tags.json", j.toString());
+    std.file.write("d-tags-" ~ target ~ ".json", j.toString());
 }
 
 // ********************************************************************
