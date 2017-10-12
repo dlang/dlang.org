@@ -187,7 +187,8 @@ STD_DDOC=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std
 STD_DDOC_PRE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
 SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
-CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
+CHANGELOG_BETA_DDOC=${CHANGELOG_DDOC} changelog/beta.ddoc
+CHANGELOG_NIGHTLY_DDOC=${CHANGELOG_DDOC} changelog/nightly.ddoc
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
 language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
@@ -205,7 +206,7 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd betterc)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) \
+CHANGELOG_FILES=$(basename $(subst _beta.dd,.dd,$(wildcard changelog/*.dd))) \
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
@@ -300,8 +301,11 @@ rsync-only :
 # NOTE: Depending on the version of make, order matters here. Therefore, put
 # sub-directories before their parents.
 
-$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_beta.dd $(CHANGELOG_BETA_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_BETA_DDOC) $<
+
+$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_nightly.dd $(CHANGELOG_NIGHTLY_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_NIGHTLY_DDOC) $<
 
 $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
@@ -315,7 +319,10 @@ $(DOC_OUTPUT_DIR)/404.html : 404.dd $(DDOC) $(DMD)
 $(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
-$(DOC_OUTPUT_DIR)/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
+$(DOC_OUTPUT_DIR)/%.verbatim : %_beta.dd verbatim.ddoc $(DMD)
+	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
+
+$(DOC_OUTPUT_DIR)/%.verbatim : %_nightly.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
 
 $(DOC_OUTPUT_DIR)/%.verbatim : %.dd verbatim.ddoc $(DMD)
@@ -665,8 +672,8 @@ changelog/next-version: ${DMD_DIR}/VERSION
 	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
 
 changelog/pending: changelog/next-version | ${STABLE_DMD} ${TOOLS_DIR} ${INSTALLER_DIR}
-	[ -f changelog/${NEXT_VERSION}_pre.dd ] || $(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o changelog/${NEXT_VERSION}_pre.dd \
-	  --version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
+	[ -f changelog/${NEXT_VERSION}_nightly.dd ] || $(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o changelog/${NEXT_VERSION}_nightly.dd \
+	  --version "${NEXT_VERSION} (upcoming)" --date "Apr 4, 4444"
 
 changelog/pending.html: changelog/pending
 	$(MAKE) -f $(MAKEFILE) $(DOC_OUTPUT_DIR)/changelog/${NEXT_VERSION}.html
