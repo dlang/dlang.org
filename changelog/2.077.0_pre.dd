@@ -1,0 +1,228 @@
+Ddoc
+
+$(CHANGELOG_NAV_LAST 2.076.1)
+
+$(VERSION Nov 1, 2017, =================================================,
+
+$(BUGSTITLE Compiler changes,
+
+$(LI $(RELATIVE_LINK2 mangleBackref,Mangled Symbols now back reference types and identifiers.))
+$(LI $(RELATIVE_LINK2 removePreludeAssert,Removed prelude assert for constructors & destructors))
+$(LI $(RELATIVE_LINK2 reproducible_builds,DMD builds are now reproducible))
+
+)
+
+$(BUGSTITLE Runtime changes,
+
+$(LI $(RELATIVE_LINK2 atomicLoad-return-types,`core.atomic.atomicLoad`'s returns types have changed for aggregate types that have indirections.))
+$(LI $(RELATIVE_LINK2 vectorized_array_ops,Vectorized array operations are now templated))
+
+)
+
+$(BR)$(BIG $(RELATIVE_LINK2 bugfix-list, List of all bug fixes and enhancements in D $(VER).))
+
+$(HR)
+
+$(BUGSTITLE Compiler changes,
+
+$(LI $(LNAME2 mangleBackref,Mangled Symbols now back reference types and identifiers.)
+$(P
+Symbols with extern(D) linkage are now mangled using back references
+to types and identifiers if these occur more than once in the mangled name
+as emitted before. This reduces symbol length, especially with chained expressions
+of templated functions with Voldemort return types. For example, the average
+symbol length of the 127000+ symbols created by a phobos unittest build
+is reduced by a factor of about 3, while the longest symbol
+shrinks from 416133 to 1142 characters.
+)
+
+$(P
+See details in the $(LINK2 $(ROOT_DIR)spec/abi.html#name_mangling, ABI)
+specification.
+)
+)
+
+$(LI $(LNAME2 removePreludeAssert,Removed prelude assert for constructors & destructors)
+$(P
+The compiler used to insert an `assert(this, "null this");` at the start of constructors & destructors.
+To trigger these asserts one needed to construct or destruct an aggregate at the null memory location.
+This would crash upon any data member access, which is required for a constructor or destructor to do anything useful.
+)
+)
+
+$(LI $(LNAME2 reproducible_builds,DMD builds are now reproducible)
+$(P
+The dmd reference compiler now deterministically produces identical binaries for
+a given source code and configuration, thus allowing third parties to verify
+that distributed binaries indeed originate from specified source code.
+)
+
+$(P
+This guarantee only applies when the same compiler version and configuration is
+used. Also values of the non-deterministic lexer tokens `__DATE__`, `__TIME__`,
+and `__TIMESTAMP__` must not end up in the binary.
+)
+
+$(P
+See $(LINK2 https://reproducible-builds.org/, reproducible-builds.org) for further information.
+)
+)
+
+
+)
+
+$(BUGSTITLE Runtime changes,
+
+$(LI $(LNAME2 atomicLoad-return-types,`core.atomic.atomicLoad`'s returns types have changed for aggregate types that have indirections.)
+$(P
+$(REF atomicLoad, core,atomic) used to strip the `shared` qualifier off too
+eagerly. When an aggregate type has a "head" and a "tail", connected by an
+indirection, then `atomicLoad` used to strip `shared` off the tail. That was a
+bug ($(BUGZILLA 16230)). `atomicLoad` only loads the head. The tail remains in
+shared memory, and must keep the `shared` qualifier.
+)
+
+$(P
+When loading a struct that contains indirections, `atomicLoad` now returns a
+wrapper that provides getters which return properly typed values.
+)
+
+$(P
+When loading a class reference, `atomicLoad` now leaves the `shared` qualifier
+on.
+)
+
+$(P
+Example:
+)
+----
+class C { int value; }
+shared C shc = new C;
+
+struct S { int head; int* tailPointer; }
+shared int tail = 1;
+auto shs = shared S(2, &tail);
+
+void main()
+{
+    import core.atomic : atomicLoad, atomicOp;
+
+    // Loading a class reference:
+    shared C c = atomicLoad(shc);
+    // c itself is not actually shared. It's safe to copy it non-atomically:
+    shared C c2 = c; // ok
+    // c's fields are still shared and need to be loaded atomically:
+    int v = atomicLoad(c.value);
+
+    // Loading a struct that has an indirection:
+    auto s = atomicLoad(shs);
+    // The struct's head has been copied and can be modified non-atomically:
+    ++s.head;
+    // The tail is still shared and needs to be handled atomically:
+    shared(int)* t = s.tailPointer;
+    atomicOp!"+="(*t, 1);
+}
+----
+)
+
+$(LI $(LNAME2 vectorized_array_ops,Vectorized array operations are now templated)
+$(P
+Array operations have been converted from dedicated assembly routines for $(B some) array operations to a generic template implementation for $(B all) array operations. This provides huge performance increases (2-4x higher throughput) for array operations that were not previously vectorized.
+Furthermore the implementation makes better use of vectorization even for short arrays to heavily reduce latency for some operations (up to 4x).
+)
+
+$(P
+For GDC/LDC the implementation relies on auto-vectorization, for DMD the implementation performs the vectorization itself. Support for vector operations with DMD is determined statically (`-march=native`, `-march=avx2`) to avoid binary bloat and the small test overhead. DMD enables SSE2 for 64-bit targets by default.
+)
+
+$(P
+Also see $(DRUNTIMEPR 1891)
+)
+
+$(P
+$(RED Note:) The implementation no longer weakens floating point divisions (e.g. `ary[] / scalar`) to multiplication (`ary[] * (1.0 / scalar)`) as that may reduce precision. To preserve the higher performance of float multiplication when loss of precision is acceptable, use either `-ffast-math` with GDC/LDC or manually rewrite your code to multiply by `(1.0 / scalar)` for DMD.
+)
+)
+
+
+)
+
+$(BR)$(BIG $(LNAME2 bugfix-list, List of all bug fixes and enhancements in D $(VER):))
+
+$(BUGSTITLE DMD Compiler regressions,
+
+$(LI $(BUGZILLA 15538): [REG 2.064] wrong code with switch)
+$(LI $(BUGZILLA 16013): [REG2.072a] ICE with mutually dependent structs and alias this)
+$(LI $(BUGZILLA 16273): [REG 2.072a] dmd segfault with inheritance, templates, override)
+$(LI $(BUGZILLA 17307): [REG2.072.0][ICE] TypeBasic::implicitConvTo: After error "anonymous struct can only be a part of an aggregate")
+$(LI $(BUGZILLA 17684): [REG 2.062] `static alias this` bug or incomplete implementation?)
+)
+$(BUGSTITLE DMD Compiler bugs,
+
+$(LI $(BUGZILLA 11259): __traits$(LPAREN)isSame$(RPAREN) fails on the result of __traits$(LPAREN)parent$(RPAREN) if parent is a package)
+$(LI $(BUGZILLA 17370): [scope] Escaping scope pointers possible via struct GC allocation)
+$(LI $(BUGZILLA 17568): [scope] addresses to fields can be escaped from scope method)
+$(LI $(BUGZILLA 17725): [scope] escape from nested function to enclosing local)
+$(LI $(BUGZILLA 17751): Internal error: ddmd/backend/el.c 2927)
+$(LI $(BUGZILLA 17782): The identifier delimiter of a delimited string can not begin with '_')
+$(LI $(BUGZILLA 17790): [scope] Escaping pointer possible through array of aggregates)
+$(LI $(BUGZILLA 17795): [scope] Scope errors not detected in ~= operation)
+$(LI $(BUGZILLA 17857): T.alignof ignores explicit align$(LPAREN)N$(RPAREN) type alignment)
+)
+$(BUGSTITLE DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 10523): Don't call array op functions for short vector ops)
+$(LI $(BUGZILLA 13262): Cannot send certain shared data to another thread)
+$(LI $(BUGZILLA 15831): IFTI voldemort type exploding bloat)
+$(LI $(BUGZILLA 16995): __traits$(LPAREN)getUnittests$(RPAREN) doesn't work with separate compilation)
+$(LI $(BUGZILLA 17787): Add a BetterC predefined version so libraries can adapt)
+$(LI $(BUGZILLA 17791): Add __traits$(LPAREN)isDeprecated, ...$(RPAREN))
+$(LI $(BUGZILLA 17887): Add WebAssembly reserved version identifier)
+)
+$(BUGSTITLE Phobos bugs,
+
+$(LI $(BUGZILLA 3191): std.zlib.UnCompress errors if buffer is reused)
+$(LI $(BUGZILLA 8779): std.zlib.UnCompress needs a way to detect end-of-stream)
+$(LI $(BUGZILLA 9505): std.zlib seem to be bugged)
+$(LI $(BUGZILLA 10444): writeln of a SIMD register)
+$(LI $(BUGZILLA 11389): template arity does not work with function type)
+$(LI $(BUGZILLA 12470): std.array.replace does not work with inout$(LPAREN)char$(RPAREN)[])
+$(LI $(BUGZILLA 13829): std.uni.byCodePoint for strings has length)
+$(LI $(BUGZILLA 15096): std.array.array cannot be instantiated for pointers to ranges)
+$(LI $(BUGZILLA 15735): std.algorithm.iteration.splitter returns empty range)
+$(LI $(BUGZILLA 17847): Properly sanitize seeds for Park–Miller engines)
+)
+$(BUGSTITLE Phobos enhancements,
+
+$(LI $(BUGZILLA 4582): distinct field names constraint for std.typecons.Tuple)
+$(LI $(BUGZILLA 6004): std.range.unzip$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 6409): std.array.empty for associative arrays too)
+$(LI $(BUGZILLA 9183): Add a Nullable.get$(LPAREN)x$(RPAREN) overload)
+$(LI $(BUGZILLA 9591): std.typetuple.staticApplyMap)
+$(LI $(BUGZILLA 16512): std.allocator: Nullify the argument passed to allocator.dispose)
+$(LI $(BUGZILLA 16984): Make more modules runnable on dlang.org)
+$(LI $(BUGZILLA 17803): std.typecons.Tuple: opAssign should return ref Tuple)
+$(LI $(BUGZILLA 17844): std.process.execute should allow not capturing stderr)
+)
+$(BUGSTITLE Druntime bugs,
+
+$(LI $(BUGZILLA 16230): core.atomic.atomicLoad removes shared from aggregate types too eagerly)
+$(LI $(BUGZILLA 17829): core.stdc.errno does not work with -betterC)
+)
+$(BUGSTITLE dlang.org bugs,
+
+$(LI $(BUGZILLA 9958): "Integer FloatSuffix" is not a valid FloatLiteral)
+$(LI $(BUGZILLA 17649): CONTRIBUTING.md instructions failed $(LPAREN)no ../druntime dir$(RPAREN))
+$(LI $(BUGZILLA 17798): [2.076] "static foreach" not documented)
+$(LI $(BUGZILLA 17848): Example of floating point literals in the documentation is invalid)
+$(LI $(BUGZILLA 17856): __traits$(LPAREN) identifier $(RPAREN)  could use examples in on line documentation.)
+)
+$(BUGSTITLE dlang.org enhancements,
+
+$(LI $(BUGZILLA 17581): Document behavior of -betterC)
+)
+)
+$(CHANGELOG_NAV_LAST 2.076.1)
+Macros:
+    VER=2.077.0
+    TITLE=Change Log: $(VER)
