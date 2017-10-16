@@ -123,6 +123,24 @@ void main()
 }
 ----
 )
+$(EXTRA_EXAMPLE_RUNNABLE Print hex dump,
+----
+void main()
+{
+    import std.algorithm, std.stdio, std.file;
+    enum cols = 16;
+    // Split file into 16-byte chunks per row
+    thisExePath.File("rb").byChunk(cols).each!(chunk =>
+        // Use range formatting to format the
+        // hexadecimal part and align the text part
+        writefln!"%(%02X %)%*s  %s"(
+            chunk,
+            3 * (cols - chunk.length), "", // Padding
+            chunk.map!(c => // Replace non-printable
+                c < 0x20 || c > 0x7E ? '.' : char(c))));
+}
+----
+)
 $(EXTRA_EXAMPLE Start a minimal web server,
 ----
 #!/usr/bin/env dub
@@ -205,8 +223,7 @@ $(RUNNABLE_EXAMPLE_STDIN 2 3 3 4 + * *)
 ----
 void main()
 {
-    import std.stdio, std.string,
-        std.algorithm, std.conv, std.meta;
+    import std.stdio, std.string, std.algorithm, std.conv;
 
     // Reduce the RPN expression using a stack
     readln.split.fold!((stack, op)
@@ -214,7 +231,7 @@ void main()
         switch (op)
         {
             // Generate operator switch cases statically
-            foreach (c; AliasSeq!('+', '-', '*', '/'))
+            static foreach (c; "+-*/")
                 case [c]:
                     return stack[0 .. $ - 2] ~
                         mixin("stack[$ - 2] " ~ c ~
