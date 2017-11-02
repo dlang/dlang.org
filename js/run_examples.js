@@ -44,14 +44,6 @@ $(document).ready(function()
     if (!$('body').hasClass("std"))
         return;
 
-    // ignore not yet compatible modules
-    // copied from Phobos posix.mak
-  var ignoredModulesList = "base64.d,building_blocks/free_list,building_blocks/quantizer,digest/hmac.d,file.d,index.d,math.d,ndslice/selection.d,stdio.d,traits.d,typecons.d,uuid.d".split(",")
-    var currentModulePath = $('body')[0].id.split('.').join('/') + '.d';
-    if (ignoredModulesList.filter(function(x) { return currentModulePath.indexOf(x) >= 0 }).length > 0) {
-        return;
-    }
-
     // first selector is for ddoc - second for ddox
     var codeBlocks = $('pre[class~=d_code]').add('pre[class~=code]');
     codeBlocks.each(function(index)
