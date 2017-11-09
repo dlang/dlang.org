@@ -553,7 +553,7 @@ $(H2 $(LNAME2 property-functions, Property Functions))
     )
 
     $(P Simple getter and setter properties can be written using $(RELATIVE_LINK2 pseudo-member, UFCS).
-    These can be enhanced with the additon of the $(D @property) attribute to the function, which
+    These can be enhanced with the addition of the $(D @property) attribute to the function, which
     adds the following behaviors:
     )
 
@@ -564,14 +564,13 @@ $(H2 $(LNAME2 property-functions, Property Functions))
     $(LI Binary assignments can be used with $(D @property) functions.  The binary assignment expression
     `e1.prop @= e2` is evaluated as follows:)
         $(UL
-            $(LI If the getter `@property` function returns by `ref` the binary assignment operation is applied
-            directly to the return value of the getter.)
-            $(LI If the getter `@property` function returns an aggregate that overloads the binary assignment
-            operator, the binary assignment operation is applied directly to the return value of the getter.)
-            $(LI If `e1` is a type, the binary assignment expression is lowered to `e1.prop = e1.prop @ e2`)
+            $(LI If the getter `@property` function returns an lvalue the binary assignment operator is applied
+            to the return value of the getter.)
+            $(LI If `e1` is a type, the binary assignment expression is lowered to `e1.prop(e1.prop() @ e2)`
+            ensuring the property getter and setter are each evaluated exactly once.)
             $(LI Otherwise, the binary assignment expression is lowered to
-            `((auto ref _e1) => _e1.prop = _e1.prop @ e2)(e1))`.  `e1` should only be evaluated once and never
-            copied.
+            `((auto ref _e1) => _e1.prop(_e1.prop() @ e2))(e1)`.  `e1` should only be evaluated once and never
+            copied. The property getter and setter must each be evaluated exactly once.)
         )
     $(LI For the expression $(D typeof(exp)) where $(D exp) is an $(D @property) function,
     the type is the return type of the function, rather than the type of the function.)
