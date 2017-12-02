@@ -351,7 +351,7 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	D1toD2 d-array-article d-floating-point deprecate dlangupb-scholarship dll-linux dmd \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
 	exception-safe faq forum-template foundation gpg_keys glossary \
-	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod index \
+	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod index install \
 	intro-to-datetime lazy-evaluation menu migrate-to-shared mixin \
 	orgs-using-d overview pretod rationale rdmd regular-expression resources safed \
 	search template-comparison templates-revisited tuple \
