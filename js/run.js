@@ -425,7 +425,8 @@ function setupTextarea(el, opts)
         });
     });
     openInEditorBtn.click(function(){
-      var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&source=" + encodeURIComponent(opts.transformOutput(editor.getValue()));
+      var text = (editor && editor.getValue()) || prepareForMain();
+      var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&source=" + encodeURIComponent(opts.transformOutput(text));
       window.open(url, "_blank");
     });
     return editor;
