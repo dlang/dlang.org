@@ -28,17 +28,6 @@ ifeq (,${LATEST})
 LATEST:=$(shell cat VERSION)
 endif
 
-# Next major DMD release
-define NEXT_VERSION_SH
-version=$$(cat VERSION)
-a=($${version//./ })
-# use 10#076 to read zero prefixed int as base 10
-a[1]=0$$((10#$${a[1]} + 1))
-a[2]=0
-echo $${a[0]}.$${a[1]}.$${a[2]}
-endef
-NEXT_VERSION:=$(shell bash -c '${NEXT_VERSION_SH}')
-
 # DLang directories
 DMD_DIR=../dmd
 PHOBOS_DIR=../phobos
@@ -464,6 +453,8 @@ $G/twid_latest.ddoc:
 ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
 	git clone --depth=1 ${GIT_HOME}/$(notdir $(@F)) $@
 
+${DMD_DIR}/VERSION : ${DMD_DIR}
+
 ################################################################################
 # dmd compiler, latest released build and current build
 ################################################################################
@@ -737,15 +728,14 @@ CHANGELOG_FILES=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 				$(wildcard $(TOOLS_DIR)/changelog/*.dd) \
 				$(wildcard $(INSTALLER_DIR)/changelog/*.dd)
 
-changelog/${NEXT_VERSION}_pre.dd: $(CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
-	--version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
+changelog/next-version: ${DMD_DIR}/VERSION
+	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
 
-changelog/${NEXT_VERSION}.dd: | ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_LATEST) -o $@ \
+changelog/pending: | ${STABLE_DMD} ../tools ../installer
+	[ -f changelog/${NEXT_VERSION}_pre.dd ] || $(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_LATEST) -o $@ \
 		--version "${NEXT_VERSION}"
 
-pending_changelog: changelog/${NEXT_VERSION}_pre.dd html
+pending_changelog: $(CHANGELOG_FILES) changelog/pending html
 	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pre.html in your browser"
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
