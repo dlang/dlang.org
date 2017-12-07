@@ -230,7 +230,7 @@ SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 ifndef RELEASE
-CHANGELOG_FILES+=changelog/${NEXT_VERSION}_pre
+CHANGELOG_FILES+=changelog/pending
 endif
 
 # Website root filenames. They have extension .dd in the source
@@ -731,11 +731,12 @@ CHANGELOG_FILES=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 changelog/next-version: ${DMD_DIR}/VERSION
 	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
 
-changelog/pending: | ${STABLE_DMD} ../tools ../installer
-	[ -f changelog/${NEXT_VERSION}_pre.dd ] || $(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_LATEST) -o $@ \
-		--version "${NEXT_VERSION}"
+changelog/pending.dd: changelog/next-version | ${STABLE_DMD} ../tools ../installer
+	[ -f changelog/pending.dd ] || $(STABLE_RDMD) $(TOOLS_DIR)/changed.d \
+		$(CHANGELOG_VERSION_LATEST) -o changelog/pending.dd --version "${NEXT_VERSION}" \
+		--date "To be released" --nightly
 
-pending_changelog: $(CHANGELOG_FILES) changelog/pending html
-	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pre.html in your browser"
+pending_changelog: $(CHANGELOG_FILES) changelog/pending.dd html
+	@echo "Please open file:///$(shell pwd)/web/changelog/pending.html in your browser"
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
