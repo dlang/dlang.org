@@ -2,7 +2,9 @@
 
 set -ueo pipefail
 
-VERSION=$(cat "$1")
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+VERSION=$(cat "${1:-$DIR/../../dmd/VERSION}")
 # v2.076.1-b1 -> 2.076.1
 VERSION=${VERSION:1:7}
 # 2.076.1 -> (2 076 1)
