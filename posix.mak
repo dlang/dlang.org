@@ -583,11 +583,16 @@ dpl-docs: ${DUB} ${STABLE_DMD}
 	DFLAGS="$(DPL_DOCS_DFLAGS)" ${DUB} build --root=${DPL_DOCS_PATH} \
 		--compiler=${STABLE_DMD}
 
+# .tar.xz's archives are smaller (and don't need a temporary dir) -> prefer if available
 ${STABLE_DMD_ROOT}/.downloaded:
-	mkdir -p ${STABLE_DMD_ROOT}
-	TMPFILE=$$(mktemp ${TMP}/dmd-download-deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > $${TMPFILE}.zip && \
-		unzip -qd ${STABLE_DMD_ROOT} $${TMPFILE}.zip && rm $${TMPFILE}.zip
-	touch $@
+	@mkdir -p $(dir $@)
+	@if command -v xz >/dev/null 2>&1 ; then \
+		curl -fSL --retry 3 $(subst .zip,.tar.xz,$(STABLE_DMD_URL)) | tar -Jxf - -C $(dir $@); \
+	else \
+		TMPFILE=$$(mktemp deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > ${TMP}/$${TMPFILE}.zip && \
+			unzip -qd ${STABLE_DMD_ROOT} ${TMP}/$${TMPFILE}.zip && rm ${TMP}/$${TMPFILE}.zip; \
+	fi
+	@touch $@
 
 ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 
