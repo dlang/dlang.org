@@ -2,6 +2,8 @@
 
 set -ueo pipefail
 
+# cd and pwd to account for relative paths/symlinks. See also:
+# https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 VERSION=$(cat "${1:-$DIR/../../dmd/VERSION}")
