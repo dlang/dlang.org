@@ -211,7 +211,7 @@ STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATE
 SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
-CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
+CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc changelog/contributors.ddoc $G/changelog_contributors.ddoc
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
 language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
@@ -759,12 +759,25 @@ LOOSE_CHANGELOG_FILES:=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 changelog/next-version: ${DMD_DIR}/VERSION
 	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
 
-changelog/pending.dd: changelog/next-version | ${STABLE_DMD} ../tools ../installer
-	[ -f changelog/pending.dd ] || $(STABLE_RDMD) $(TOOLS_DIR)/changed.d \
-		$(CHANGELOG_VERSION_LATEST) -o changelog/pending.dd --version "${NEXT_VERSION}" \
-		--date "To be released" --nightly
+changelog/pending.dd: $(TOOLS_DIR)/changed.d $(LOOSE_CHANGELOG_FILES) changelog/next-version | ${STABLE_DMD} $(TOOLS_DIR)
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_LATEST) -o $@ \
+	--version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
+
+$G/changelog_contributors.ddoc: $(TOOLS_DIR)/contributors.d | ${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR)
+	$(STABLE_RDMD) $< --format=ddoc "v$(LATEST)..master" > $G/contributors_ddoc
+	@echo "D_CONTRIBUTORS=" > $@
+	@cat $G/contributors_ddoc >> $@
+	@echo NR_CONTRIBUTORS="$$(cat $G/contributors_ddoc | wc -l)" >> $@
+	@rm -rf $G/contributors_ddoc
 
 pending_changelog: $(LOOSE_CHANGELOG_FILES) changelog/pending.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/pending.html in your browser"
+
+################################################################################
+# List all contributors to the upcoming release
+################################################################################
+
+contributors: $(TOOLS_DIR)/contributors.d | $(STABLE_RDMD)
+	$(STABLE_RDMD) $< --format=name "v$(LATEST)..master"
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
