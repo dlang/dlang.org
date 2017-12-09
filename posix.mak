@@ -709,7 +709,7 @@ $(PHOBOS_LATEST_FILES_GENERATED): $(PHOBOS_LATEST_DIR_GENERATED)/%: $(PHOBOS_LAT
 # Style tests
 ################################################################################
 
-test: $(ASSERT_WRITELN_BIN)_test all
+test: $(ASSERT_WRITELN_BIN)_test test/next_version.sh all
 	@echo "Searching for trailing whitespace"
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
 	@echo "Searching for undefined macros"
@@ -718,6 +718,8 @@ test: $(ASSERT_WRITELN_BIN)_test all
 	@grep -rn '[$$](' $$(find $(DOC_OUTPUT_DIR)/phobos-prerelease -type f -name "*.html") ; test $$? -eq 1
 	@echo "Executing assert_writeln_magic tests"
 	$<
+	@echo "Executing next_version tests"
+	test/next_version.sh
 
 ################################################################################
 # Changelog generation
