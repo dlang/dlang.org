@@ -27,8 +27,6 @@ PWD=$(shell pwd)
 ifeq (,${LATEST})
 LATEST:=$(shell cat VERSION)
 endif
-# Next major DMD release
-NEXT_VERSION:=$(shell bash -c 'version=$$(cat VERSION);a=($${version//./ });a[1]="10\#$${a[1]}";((a[1]++)); a[2]=0; echo $${a[0]}.0$${a[1]}.$${a[2]};' )
 
 # DLang directories
 DMD_DIR=../dmd
@@ -232,7 +230,7 @@ SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 ifndef RELEASE
-CHANGELOG_FILES+=changelog/${NEXT_VERSION}_pre
+CHANGELOG_FILES+=changelog/pending
 endif
 
 # Website root filenames. They have extension .dd in the source
@@ -454,6 +452,8 @@ $G/twid_latest.ddoc:
 
 ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
 	git clone --depth=1 ${GIT_HOME}/$(notdir $(@F)) $@
+
+${DMD_DIR}/VERSION : ${DMD_DIR}
 
 ################################################################################
 # dmd compiler, latest released build and current build
@@ -709,7 +709,7 @@ $(PHOBOS_LATEST_FILES_GENERATED): $(PHOBOS_LATEST_DIR_GENERATED)/%: $(PHOBOS_LAT
 # Style tests
 ################################################################################
 
-test: $(ASSERT_WRITELN_BIN)_test all
+test: $(ASSERT_WRITELN_BIN)_test test/next_version.sh all
 	@echo "Searching for trailing whitespace"
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
 	@echo "Searching for undefined macros"
@@ -718,6 +718,8 @@ test: $(ASSERT_WRITELN_BIN)_test all
 	@grep -rn '[$$](' $$(find $(DOC_OUTPUT_DIR)/phobos-prerelease -type f -name "*.html") ; test $$? -eq 1
 	@echo "Executing assert_writeln_magic tests"
 	$<
+	@echo "Executing next_version tests"
+	test/next_version.sh
 
 ################################################################################
 # Changelog generation
@@ -728,15 +730,15 @@ CHANGELOG_FILES=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 				$(wildcard $(TOOLS_DIR)/changelog/*.dd) \
 				$(wildcard $(INSTALLER_DIR)/changelog/*.dd)
 
-changelog/${NEXT_VERSION}_pre.dd: $(CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_MASTER) -o $@ \
-	--version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
+changelog/next-version: ${DMD_DIR}/VERSION
+	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
 
-changelog/${NEXT_VERSION}.dd: | ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_LATEST) -o $@ \
-		--version "${NEXT_VERSION}"
+changelog/pending.dd: changelog/next-version | ${STABLE_DMD} ../tools ../installer
+	[ -f changelog/pending.dd ] || $(STABLE_RDMD) $(TOOLS_DIR)/changed.d \
+		$(CHANGELOG_VERSION_LATEST) -o changelog/pending.dd --version "${NEXT_VERSION}" \
+		--date "To be released" --nightly
 
-pending_changelog: changelog/${NEXT_VERSION}_pre.dd html
-	@echo "Please open file:///$(shell pwd)/web/changelog/${NEXT_VERSION}_pre.html in your browser"
+pending_changelog: $(CHANGELOG_FILES) changelog/pending.dd html
+	@echo "Please open file:///$(shell pwd)/web/changelog/pending.html in your browser"
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
