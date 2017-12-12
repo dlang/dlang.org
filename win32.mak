@@ -605,8 +605,8 @@ chm : d.chm
 chmgen.exe : chmgen.d
 	$(DMD) -g chmgen
 
-chm\d.hhp chm\d.hhc chm\d.hhk : chmgen.exe chm-nav.json $(TARGETS)
-	chmgen
+chm\d.hhp chm\d.hhc chm\d.hhk : chmgen.exe chm-nav-release.json $(TARGETS)
+	chmgen --target release
 
 chm\d.chm : chm\d.hhp chm\d.hhc chm\d.hhk
 	-cmd /C "cd chm && "$(HHC)" d.hhp"
@@ -614,7 +614,7 @@ chm\d.chm : chm\d.hhp chm\d.hhc chm\d.hhk
 d.chm : chm\d.chm
 	copy /Y chm\d.chm d.chm
 
-chm-nav.json : $(DDOC) std.ddoc spec\spec.ddoc modlist-release.ddoc changelog\changelog.ddoc chm-nav.dd
+chm-nav-release.json : $(DDOC) std.ddoc spec\spec.ddoc modlist-release.ddoc changelog\changelog.ddoc chm-nav.dd
 	$(DMD) -o- -c -Df$@ $**
 
 d.tag : chmgen.exe $(TARGETS)
