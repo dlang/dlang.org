@@ -108,9 +108,7 @@ run_make()
     export PATH="$(pwd)/make:$PATH"
     make -v
 
-    # TODO: d-release.tag target is currently broken
-    #make -f posix.mak RELEASE=1 release -j5 html dmd-release druntime-release phobos-release d-release.tag
-    make -f posix.mak RELEASE=1 -j5 html dmd-release druntime-release phobos-release
+    make -f posix.mak RELEASE=1 release -j5 html dmd-release druntime-release phobos-release d-release.tag
 }
 
 case $1 in
