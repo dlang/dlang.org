@@ -77,6 +77,8 @@ setup_repos()
     # Merge upstream branch with changes, s.t. we check with the latest changes
     if [ -n "${CIRCLE_PR_NUMBER:-}" ]; then
         local current_branch=$(git rev-parse --abbrev-ref HEAD)
+        # work around weird CircleCi bug, see https://github.com/dlang/dlang.org/pull/1952
+        git remote remove upstream || true
         git config user.name dummyuser
         git config user.email dummyuser@dummyserver.com
         git remote add upstream https://github.com/dlang/dlang.org.git
