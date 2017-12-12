@@ -110,7 +110,7 @@ var backends = {
         if (data.args) {
           req.args = data.args;
         }
-        return JSON.stringify(data);
+        return JSON.stringify(req);
     },
     parseOutput: function(data, opts) {
       var r = {};
