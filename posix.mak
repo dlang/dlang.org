@@ -759,12 +759,25 @@ LOOSE_CHANGELOG_FILES:=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 changelog/next-version: ${DMD_DIR}/VERSION
 	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
 
-changelog/pending.dd: changelog/next-version | ${STABLE_DMD} ../tools ../installer
-	[ -f changelog/pending.dd ] || $(STABLE_RDMD) $(TOOLS_DIR)/changed.d \
-		$(CHANGELOG_VERSION_LATEST) -o changelog/pending.dd --version "${NEXT_VERSION}" \
-		--date "To be released" --nightly
+changelog/pending.dd: $(TOOLS_DIR)/contributors.d $(TOOLS_DIR)/changed.d $(LOOSE_CHANGELOG_FILES) changelog/next-version | ${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR)
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d $(CHANGELOG_VERSION_LATEST) -o $@ \
+	--version "${NEXT_VERSION} (upcoming)" --date "To be released" --nightly
+	perl -i -0pe 's/[)][^)]*\$$[(]CHANGELOG/\$$(H3 Contributors to this release (\$$(NR_CONTRIBUTORS)))\n\$$(INTRO_CONTRIBUTORS)\n\$$(UL\nCONTRIBUTORS_TAG\n)\n)\n\$$(CHANGELOG/sg' $@
+	$(STABLE_RDMD) $< --format=ddoc "v$(LATEST)..master" > $G/contributors_ddoc
+	contributors=$$(cat $G/contributors_ddoc | sed ':a;N;$$!ba;s/\n/\\n/g' | sed 's/\$$/\\$$/g') && \
+		sed "s/CONTRIBUTORS_TAG/$${contributors}/" -i $@
+	sed "s/Macros:/Macros:\n    D_CONTRIBUTOR=\$$(LI \$$1)/" -i $@
+	sed "s/Macros:/Macros:\n    NR_CONTRIBUTORS=$$(cat $G/contributors_ddoc | wc -l)/" -i $@
+	sed "s/Macros:/Macros:\n    INTRO_CONTRIBUTORS=A huge thanks goes to all the awesome people who made this release possible./" -i $@
 
 pending_changelog: $(LOOSE_CHANGELOG_FILES) changelog/pending.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/pending.html in your browser"
+
+################################################################################
+# List all contributors to the upcoming release
+################################################################################
+
+contributors: $(TOOLS_DIR)/contributors.d | $(STABLE_RDMD)
+	$(STABLE_RDMD) $< --format=name "v$(LATEST)..master"
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
