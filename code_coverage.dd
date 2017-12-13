@@ -219,6 +219,48 @@ $(P When the $(DDSUBLINK dmd,switch-cov, $(B -cov)) switch is thrown,
 the $(DDSUBLINK spec/version, PredefinedVersions, version identifier)
 $(B D_Coverage) is defined.)
 
+$(P The standard runtime option passing mechanism can also be used to control how
+code coverage reports are generated at runtime. The command-line option $(D
+--DRT-covopt) or the environment variable $(D DRT_COVOPT) can be used to pass
+options. Options are passed separated by spaces as key,value with the following
+format: $(D key:value). Current options are:)
+
+$(DL
+    $(SWITCH $(SWNAME merge),
+        Merge the current run with existing reports if `1`, or overwrite the existing reports if `0`.
+    )
+    $(SWITCH $(SWNAME srcpath),
+        Set path to where source files are located.
+    )
+    $(SWITCH $(SWNAME dstpath),
+        Set path to where listing files are to be written (must exist).
+    )
+)
+
+$(H4 Example:)
+
+$(CONSOLE
+sieve --DRT-covopt="merge:1"
+mkdir reports
+sieve --DRT-covopt="merge:1 dstpath:reports"
+)
+
+$(P Will merge the results of this run with the previous run in the $(D
+sieve.lst) file in the current directory. While:)
+
+$(CONSOLE
+mkdir reports
+sieve --DRT-covopt="dstpath:reports"
+)
+
+$(P Will create a new report in $(D reports/sieve.lst). Another run adding $(D
+merge) will add to the new report:)
+
+$(CONSOLE
+sieve --DRT-covopt="merge:1 dstpath:reports"
+)
+
+
 $(H3 References)
 
 $(LINK2 https://en.wikipedia.org/wiki/Code_coverage, Wikipedia)
