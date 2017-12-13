@@ -45,8 +45,6 @@
 #    	druntime-prerelease
 #    	phobos-prerelease
 #    	apidocs-prerelease		Ddox documentation
-#    	apidocs-serve			Starts a development Ddox webserver
-#    							(It will (re)-generate requested documentation pages on-the-fly)
 #
 #  B) `docs-latest` (aka stable)
 #
@@ -57,6 +55,17 @@
 #   	druntime-latest
 #   	phobos-latest
 #   	apidocs-latest			Ddox documentation
+#
+#   Documentation development Ddox web server
+#   -----------------------------------------
+#
+#    A development Ddox webserver can be started:
+#
+#    	make -f posix.mak apidocs-serve
+#
+#    This web server will regenerate requested documentation pages on-the-fly
+#    and has the additional advantage that it doesn't need to build any
+#    documentation pages during its startup.
 #
 #  Options
 #  -------
