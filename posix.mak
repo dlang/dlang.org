@@ -228,7 +228,7 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd betterc)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
+CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 ifndef RELEASE
 CHANGELOG_FILES+=changelog/pending
 endif
@@ -724,7 +724,7 @@ test: $(ASSERT_WRITELN_BIN)_test test/next_version.sh all
 ################################################################################
 # Changelog generation
 ################################################################################
-CHANGELOG_FILES=$(wildcard $(DMD_DIR)/changelog/*.dd) \
+LOOSE_CHANGELOG_FILES:=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 				$(wildcard $(DRUNTIME_DIR)/changelog/*.dd) \
 				$(wildcard $(PHOBOS_DIR)/changelog/*.dd) \
 				$(wildcard $(TOOLS_DIR)/changelog/*.dd) \
@@ -738,7 +738,7 @@ changelog/pending.dd: changelog/next-version | ${STABLE_DMD} ../tools ../install
 		$(CHANGELOG_VERSION_LATEST) -o changelog/pending.dd --version "${NEXT_VERSION}" \
 		--date "To be released" --nightly
 
-pending_changelog: $(CHANGELOG_FILES) changelog/pending.dd html
+pending_changelog: $(LOOSE_CHANGELOG_FILES) changelog/pending.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/pending.html in your browser"
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)

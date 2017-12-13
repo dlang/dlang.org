@@ -99,10 +99,18 @@ var backends = {
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS#Preflighted_requests
     contentType: "text/plain; charset=UTF-8",
     requestTransform: function(data) {
-        return JSON.stringify({
+        var req = {
             source: data.code,
             compiler: dmdCompilerBranch
-        });
+        }
+        // only send set attributes
+        if (data.stdin) {
+          req.stdin = data.stdin;
+        }
+        if (data.args) {
+          req.args = data.args;
+        }
+        return JSON.stringify(req);
     },
     parseOutput: function(data, opts) {
       var r = {};
@@ -231,11 +239,6 @@ function setupTextarea(el, opts)
     }, opts);
 
     var backend = backends[opts.backend || "tour"];
-    // only use DPaste if absolutely necessary (stdin or args provided)
-    // DPaste is very restrictive compared to the Dockerized DLang Tour backend
-    if (opts.args || opts.stdin) {
-      backend = backends.dpaste;
-    }
 
     if (!!opts.parent)
         var parent = opts.parent;
