@@ -106,16 +106,6 @@
 #   For more information and current blocking points of the Ddoc -> Ddox tranisition,
 #   see https://github.com/dlang/dlang.org/pull/1526
 #
-#	Building without network traffic
-#	--------------------------------
-#
-#	You can force this Makefile to use the generated DMD executable in `../dmd`
-#	instead of downloading a stable DMD compiler:
-#
-#		make -f posix.mak VERSION=2.076.0
-#
-#	Other network traffic can be omitted by using `DIFFABLE=1`.
-#
 #	Assert -> writeln magic
 #	-----------------------
 #
