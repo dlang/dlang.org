@@ -1,25 +1,127 @@
-# Makefile to build the entire dlang.org website
+# dlang.org Makefile
+# ==================
 #
-# To run:
+#  This Makefile is used to build the dlang.org website.
+#  To build the entire dlang.org website run:
 #
-# make -f posix.mak all
+#  	make -f posix.mak all
 #
-# To also upload to the website:
+#  Build flavors
+#  -------------
 #
-# make -f posix.mak rsync
+#  This makefile supports 3 flavors of documentation:
 #
+#  	latest			Latest released version (by git tag)
+#  	prerelease		Master (uses the D repositories as they exist locally)
+#  	release			Documentation build that is shipped with the binary release
 #
-# This makefile supports 3 flavors of documentation, latest, prerelease, and
-# release. The first 2 are live on the website and built from the latest
-# released version and master (prerelease). The release build is used for the
-# documentation that is shipped with binary releases. For the latter the LATEST
-# version is not yet published at build time, hence a few things differ from a
-# prerelease build.
+#  For `release` the LATEST version is not yet published at build time,
+#  hence a few things differ from a `prerelease` build.
 #
-# To build latest and prerelease docs:
-#   make -f posix.mak all
-# To build release docs:
-#   make -f posix.mak RELEASE=1 release
+#  To build `latest` and `prerelease` docs:
+#
+#    make -f posix.mak all
+#
+#  To build `release` docs:
+#
+#    make -f posix.mak RELEASE=1 release
+#
+#  Individual documentation targets
+#  --------------------------------
+#
+#  The entire documentation can be built with:
+#
+#    make -f posix.mak docs
+#
+#  This target is an alias for two targets:
+#
+#  A) `docs-prerelease` (aka master)
+#
+#    The respective local repositories are used.
+#   	This is very useful for testing local changes.
+#   	Individual targets include:
+#
+#    	dmd-prerelease
+#    	druntime-prerelease
+#    	phobos-prerelease
+#    	apidocs-prerelease		Ddox documentation
+#
+#  B) `docs-latest` (aka stable)
+#
+#  Based on the last official release (git tag), the repositories are freshly cloned from GitHub.
+#  Individual targets include:
+#
+#   	dmd-latest
+#   	druntime-latest
+#   	phobos-latest
+#   	apidocs-latest			Ddox documentation
+#
+#   Documentation development Ddox web server
+#   -----------------------------------------
+#
+#    A development Ddox webserver can be started:
+#
+#    	make -f posix.mak apidocs-serve
+#
+#    This web server will regenerate requested documentation pages on-the-fly
+#    and has the additional advantage that it doesn't need to build any
+#    documentation pages during its startup.
+#
+#  Options
+#  -------
+#
+#  Most commonly used options include:
+#
+#   	DIFFABLE=1			Removes inclusion of all dynamic content and timestamps
+#   	RELEASE=1			Release build (needs to be set for the `release` target)
+#   	CSS_MINIFY=1		Minify the CSS via an online service
+#   	DOC_OUTPUT_DIR		Folder to build the documentation (default: `web`)
+#
+#  Other targets
+#  -------------
+#
+#   	html				Builds all HTML files and static content
+#   	pending_changelog	Collects and assembles the changelog for the next version
+#   						(This is based on references Bugzilla issues and files in the `/changelog` folders)
+#   	rebase				Rebase all DLang repos to upstream/master
+#   	pdf					Generates the D specification as a PDF
+#   	mobi				Generates the D specification as an ebook (Amazon mobi)
+#   	verbatim			Copies the Ddoc plaintext files to .verbatim files (i.e. doesn't run Ddoc on them)
+#   	rsync				Publishes the built website to dlang.org
+#   	test				Runs several sanity checks
+#   	clean				Removes the .generated folder
+#
+#   Ddoc vs. Ddox
+#   --------------
+#
+#   It's a long-lasting effort to transition from the Ddoc documentation build
+#   to a Ddox documentation build of the D standard library.
+#
+#   	https://dlang.org/phobos 				Stable Ddoc build (`docs-latest`)
+#   	https://dlang.org/phobos-prerelease 	Master Ddoc build (`docs-prerelease`)
+#   	https://dlang.org/library 				Stable Ddox build (`apidocs-latest`)
+#   	https://dlang.org/library-release 		Master Ddox build (`apidocs-prerelease`)
+#
+#   For more documentation on Ddox, see https://github.com/rejectedsoftware/ddox
+#   For more information and current blocking points of the Ddoc -> Ddox tranisition,
+#   see https://github.com/dlang/dlang.org/pull/1526
+#
+#	Assert -> writeln magic
+#	-----------------------
+#
+# 	There is a toolchain in place will allows to perform source code transformation.
+# 	At the moment this is used to beautify the code examples. For example:
+#
+# 		assert(a == b)
+#
+#	Would be rewritten to:
+#
+# 		writeln(a); // b
+#
+#	For this local copies of the respective DMD, DRuntime, and Phobos are stored
+#	in the build folder `.generated`, s.t. Ddoc can be run on the modified sources.
+#
+# 	See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
 
 PWD=$(shell pwd)
 
@@ -683,10 +785,12 @@ d-prerelease.tag d-tags-prerelease.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) ph
 # Assert -> writeln magic
 # -----------------------
 #
-# - This transforms assert(a = b) to writeln(a); // b
+# - This transforms assert(a == b) to writeln(a); // b
 # - It creates a copy of Phobos to apply the transformations
 # - All "d" files are piped through the transformator,
 #   other needed files (e.g. posix.mak) get copied over
+#
+# See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
 ################################################################################
 
 ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
