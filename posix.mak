@@ -110,7 +110,7 @@
 #	--------------------------------
 #
 #	You can force this Makefile to use the generated DMD executable in `../dmd`
-#	instead of download a stable DMD compiler:
+#	instead of downloading a stable DMD compiler:
 #
 #		make -f posix.mak VERSION=2.076.0
 #
