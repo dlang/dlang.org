@@ -87,7 +87,7 @@
 #   	pdf					Generates the D specification as a PDF
 #   	mobi				Generates the D specification as an ebook (Amazon mobi)
 #   	verbatim			Copies the Ddoc plaintext files to .verbatim files (i.e. doesn't run Ddoc on them)
-#   	rsync				Publishes the website (not used anymore)
+#   	rsync				Publishes the built website to dlang.org
 #   	test				Runs several sanity checks
 #   	clean				Removes the .generated folder
 #
