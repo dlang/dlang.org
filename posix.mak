@@ -211,6 +211,7 @@ STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATE
 SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
+CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
 
 PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
 language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
@@ -341,6 +342,9 @@ rsync-only :
 
 $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+
+$(DOC_OUTPUT_DIR)/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
 
 $(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
@@ -727,6 +731,24 @@ test: $(ASSERT_WRITELN_BIN)_test test/next_version.sh all
 
 ################################################################################
 # Changelog generation
+# --------------------
+#
+#  The changelog generation consists of two parts:
+#
+#  1) Closed Bugzilla issues since the latest release
+#    - The git log messages after the ${LATEST} release are parsed
+#    - From these git commit messages, referenced Bugzilla issues are extracted
+#    - The status of these issues is checked against the Bugzilla instance (https://issues.dlang.org)
+#
+#    See also: https://github.com/dlang-bots/dlang-bot#bugzilla
+#
+#  2) Full-text messages
+#     - In all dlang repos, a `changelog` folder exists and can be used to add
+#     	small, detailed changelog messages (see e.g. https://github.com/dlang/phobos/tree/master/changelog)
+#     - The changelog generation script searches for all Ddoc files within the `changelog` folders
+#     	and adds them to the generated changelog
+#
+# The changelog script is at https://github.com/dlang/tools/blob/master/changed.d
 ################################################################################
 LOOSE_CHANGELOG_FILES:=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 				$(wildcard $(DRUNTIME_DIR)/changelog/*.dd) \
