@@ -727,6 +727,24 @@ test: $(ASSERT_WRITELN_BIN)_test test/next_version.sh all
 
 ################################################################################
 # Changelog generation
+# --------------------
+#
+#  The changelog generation consists of two parts:
+#
+#  1) Closed Bugzilla issues since the latest release
+#    - The git log messages after the ${LATEST} release are parsed
+#    - From these git commit messages, referenced Bugzilla issues are extracted
+#    - The status of these issues is checked against the Bugzilla instance (https://issues.dlang.org)
+#
+#    See also: https://github.com/dlang-bots/dlang-bot#bugzilla
+#
+#  2) Full-text messages
+#     - In all dlang repos, a `changelog` folder exists and can be used to add
+#     	small, detailed changelog messages (see e.g. https://github.com/dlang/phobos/tree/master/changelog)
+#     - The changelog generation script searches for all Ddoc files within the `changelog` folders
+#     	and adds them to the generated changelog
+#
+# The changelog script is at https://github.com/dlang/tools/blob/master/changed.d
 ################################################################################
 LOOSE_CHANGELOG_FILES:=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 				$(wildcard $(DRUNTIME_DIR)/changelog/*.dd) \
