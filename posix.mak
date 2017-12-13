@@ -74,7 +74,6 @@
 #
 #   	DIFFABLE=1			Removes inclusion of all dynamic content and timestamps
 #   	RELEASE=1			Release build (needs to be set for the `release` target)
-#   	LATEST=2.072.1		Specify the LATEST version manually. Avoids network traffic.
 #   	CSS_MINIFY=1		Minify the CSS via an online service
 #   	DOC_OUTPUT_DIR		Folder to build the documentation (default: `web`)
 #
