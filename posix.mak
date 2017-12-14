@@ -236,7 +236,7 @@ ifeq (1,$(DIFFABLE))
  DPL_DOCS_PATH_RUN_FLAGS := --no-exact-source-links
 else
  CHANGELOG_VERSION_MASTER := "v${LATEST}..upstream/master"
- CHANGELOG_VERSION_LATEST := "v${LATEST}..upstream/stable"
+ CHANGELOG_VERSION_STABLE := "v${LATEST}..upstream/stable"
  DBLOG_LATEST=$G/dblog_latest.ddoc $G/twid_latest.ddoc
 endif
 
@@ -859,22 +859,40 @@ test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
 # Changelog generation
 # --------------------
 #
-#  The changelog generation consists of two parts:
+# The changelog generation consists of two parts:
 #
-#  1) Closed Bugzilla issues since the latest release
-#    - The git log messages after the ${LATEST} release are parsed
-#    - From these git commit messages, referenced Bugzilla issues are extracted
-#    - The status of these issues is checked against the Bugzilla instance (https://issues.dlang.org)
+# 1) Closed Bugzilla issues since the latest release
+#  - The git log messages after the ${LATEST} release are parsed
+#  - From these git commit messages, referenced Bugzilla issues are extracted
+#  - The status of these issues is checked against the Bugzilla instance (https://issues.dlang.org)
 #
-#    See also: https://github.com/dlang-bots/dlang-bot#bugzilla
+#  See also: https://github.com/dlang-bots/dlang-bot#bugzilla
 #
-#  2) Full-text messages
-#     - In all dlang repos, a `changelog` folder exists and can be used to add
-#       small, detailed changelog messages (see e.g. https://github.com/dlang/phobos/tree/master/changelog)
-#     - The changelog generation script searches for all Ddoc files within the `changelog` folders
-#       and adds them to the generated changelog
+# 2) Full-text messages
+#  - In all dlang repos, a `changelog` folder exists and can be used to add
+#    small, detailed changelog messages (see e.g. https://github.com/dlang/phobos/tree/master/changelog)
+#  - The changelog generation script searches for all Ddoc files within the `changelog` folders
+#    and adds them to the generated changelog
 #
-# The changelog script is at https://github.com/dlang/tools/blob/master/changed.d
+#  The changelog script is at https://github.com/dlang/tools/blob/master/changed.d
+#
+# Changelog targets
+# -----------------
+#
+# The changelog generation has two targets:
+#
+# a) Preview upcoming changes
+#
+#     make -f posix.mak pending_changelog
+#
+#  This will look at changes up to `upstream/master` and can be used to
+#  preview the changelog locally.
+#
+# b) Generate the changelog for an upcoming release
+#
+#     make -f posix.mak prerelease_changelog
+#
+#  This will look at changes to upstream/stable and is run by the release manager.
 ################################################################################
 LOOSE_CHANGELOG_FILES:=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 				$(wildcard $(DRUNTIME_DIR)/changelog/*.dd) \
@@ -882,16 +900,27 @@ LOOSE_CHANGELOG_FILES:=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 				$(wildcard $(TOOLS_DIR)/changelog/*.dd) \
 				$(wildcard $(INSTALLER_DIR)/changelog/*.dd)
 
-changelog/next-version: ${DMD_DIR}/VERSION
+$G/changelog/next-version: ${DMD_DIR}/VERSION
 	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
+	@mkdir -p $(dir $@)
+	@echo $(NEXT_VERSION) > $@
 
-changelog/pending.dd: changelog/next-version | ${STABLE_DMD} ../tools ../installer
-	[ -f changelog/pending.dd ] || $(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
-		$(CHANGELOG_VERSION_LATEST) -o changelog/pending.dd --version "${NEXT_VERSION}" \
+changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
+	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
+		$(CHANGELOG_VERSION_STABLE) -o $@ --version "${NEXT_VERSION}" \
 		--date "To be released"
 
-pending_changelog: $(LOOSE_CHANGELOG_FILES) changelog/pending.dd html
+changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
+	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
+		$(CHANGELOG_VERSION_MASTER) -o $@ --version "${NEXT_VERSION}" \
+		--date "To be released"
+
+pending_changelog: changelog/pending.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/pending.html in your browser"
+
+prerelease_changelog: changelog/prerelease.dd html
+	@echo "Please open file:///$(shell pwd)/web/changelog/prerelease.html in your browser"
+	@echo "To proceed, rename $@ to changelog/${NEXT_VERSION}_pre.dd"
 
 ################################################################################
 # Contributors listing: A list of all the awesome who made D possible
