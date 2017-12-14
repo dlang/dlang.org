@@ -108,7 +108,7 @@ run_make()
     export PATH="$(pwd)/make:$PATH"
     make -v
 
-    make -f posix.mak RELEASE=1 release -j5 html dmd-release druntime-release phobos-release d-release.tag
+    make -f posix.mak -j$N RELEASE=1 DIFFABLE=1 release
 }
 
 case $1 in
