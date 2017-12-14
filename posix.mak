@@ -380,7 +380,14 @@ verbatim : $(addprefix $(DOC_OUTPUT_DIR)/, $(addsuffix .verbatim,$(PAGES_ROOT)))
 
 kindle : ${DOC_OUTPUT_DIR}/dlangspec.mobi
 
+ifeq (1,$(DIFFABLE))
+# Remove /dlangspec.{tex,html} once DAutoTest has been updated
+# https://github.com/dlang/dlang.org/pull/1969
+pdf : ${DOC_OUTPUT_DIR}/dlangspec.pdf ${DOC_OUTPUT_DIR}/dlangspec.tex ${DOC_OUTPUT_DIR}/dlangspec.html \
+		dlangspec.tex dlangspec.html
+else
 pdf : ${DOC_OUTPUT_DIR}/dlangspec.pdf
+endif
 
 $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	cp -f sitemap-template.dd $G/sitemap.dd
@@ -422,9 +429,7 @@ rebase-druntime: ; cd $(DRUNTIME_DIR) && $(call REBASE,druntime)
 rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
-	rm -rf $(DOC_OUTPUT_DIR) ${GENERATED} dpl-docs/.dub
-	rm -rf auto dlangspec-consolidated.d $(addprefix dlangspec,.aux .d .dvi .fdb_latexmk .fls .log .out .pdf .tex .txt .verbatim.txt)
-	rm -f docs-latest.json docs-prerelease.json dpl-docs/dpl-docs
+	rm -rf $(DOC_OUTPUT_DIR) ${GENERATED} dpl-docs/.dub dpl-docs/dpl-docs
 	@echo You should issue manually: rm -rf ${DMD_LATEST_DIR} ${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_DIR} ${STABLE_DMD_ROOT}
 
 RSYNC_FILTER=-f 'P /Usage' -f 'P /.dpl_rewrite*' -f 'P /install.sh*'
@@ -490,54 +495,69 @@ $(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
 $(DOC_OUTPUT_DIR)/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
 
+$(DOC_OUTPUT_DIR):
+	mkdir -p $@
+
 ################################################################################
 # Ebook
 ################################################################################
 
-dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
+$G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) ../tools/catdoc.d -o$@ $(SPEC_DD)
 
-dlangspec.html : $(DDOC) ebook.ddoc dlangspec.d $(DMD)
-	$(DMD) -conf= $(DDOC) ebook.ddoc dlangspec.d
+$G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD)
+	$(DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
 
-dlangspec.zip : dlangspec.html ebook.css
+$G/dlangspec.zip : $G/dlangspec.html ebook.css
 	rm -f $@
-	zip $@ dlangspec.html ebook.css
+	zip --junk-paths $@ $G/dlangspec.html ebook.css
 
 $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
-		dlangspec.opf dlangspec.html dlangspec.png dlangspec.ncx ebook.css
-	rm -f $@ dlangspec.mobi
+		$G/dlangspec.opf $G/dlangspec.html $G/dlangspec.png $G/dlangspec.ncx ebook.css
+	rm -f $@ $G/dlangspec.mobi
 # kindlegen has warnings, ignore them for now
-	-kindlegen dlangspec.opf
-	mv dlangspec.mobi $@
+	-kindlegen $G/dlangspec.opf
+	mv $G/dlangspec.mobi $@
 
 ################################################################################
 # LaTeX
 ################################################################################
 
-dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
+$G/dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) --force ../tools/catdoc.d -o$@ $(SPEC_DD)
 
-dlangspec.tex : $(DMD) $(DDOC) latex.ddoc dlangspec-consolidated.d
-	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc dlangspec-consolidated.d
+$G/dlangspec.tex : $G/dlangspec-consolidated.d $(DMD) $(DDOC) latex.ddoc
+	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc $<
 
 # Run twice to fix multipage tables and \ref uses
-$(DOC_OUTPUT_DIR)/dlangspec.pdf : dlangspec.tex
-	mkdir -p .tmp
-	pdflatex -draftmode $^
-	pdflatex -output-directory=.tmp $^
-	mv .tmp/dlangspec.pdf $@
-	rm -rf .tmp
+$(DOC_OUTPUT_DIR)/dlangspec.pdf : $G/dlangspec.tex | $(DOC_OUTPUT_DIR)
+	pdflatex -output-directory=$G -draftmode $^
+	pdflatex -output-directory=$G $^
+	mv $G/dlangspec.pdf $@
+
+$(DOC_OUTPUT_DIR)/dlangspec.tex: $G/dlangspec.tex | $(DOC_OUTPUT_DIR)
+	cp $< $@
+
+$(DOC_OUTPUT_DIR)/dlangspec.html: $G/dlangspec.html | $(DOC_OUTPUT_DIR)
+	cp $< $@
+
+# Remove once DAutoTest has been updated
+# https://github.com/dlang/dlang.org/pull/1969
+dlangspec.tex: $G/dlangspec.tex
+	cp $< $@
+
+dlangspec.html: $G/dlangspec.html
+	cp $< $@
 
 ################################################################################
 # Plaintext/verbatim generation - not part of the build, demo purposes only
 ################################################################################
 
-dlangspec.txt : $(DMD) macros.ddoc plaintext.ddoc dlangspec-consolidated.d
-	$(DMD) -conf= -Df$@ macros.ddoc plaintext.ddoc dlangspec-consolidated.d
+$G/dlangspec.txt : $G/dlangspec-consolidated.d $(DMD) macros.ddoc plaintext.ddoc
+	$(DMD) -conf= -Df$@ macros.ddoc plaintext.ddoc $<
 
-dlangspec.verbatim.txt : $(DMD) verbatim.ddoc dlangspec-consolidated.d
-	$(DMD) -conf= -Df$@ verbatim.ddoc dlangspec-consolidated.d
+$G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DMD) verbatim.ddoc
+	$(DMD) -conf= -Df$@ verbatim.ddoc $<
 
 ################################################################################
 # Fetch the latest article from the official D blog
