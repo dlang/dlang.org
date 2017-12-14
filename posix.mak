@@ -90,6 +90,7 @@
 #   	rsync				Publishes the built website to dlang.org
 #   	test				Runs several sanity checks
 #   	clean				Removes the .generated folder
+#   	diffable-intermediaries		Adds intermediary PDF/eBook files to the output, useful for diffing
 #
 #   Ddoc vs. Ddox
 #   --------------
@@ -380,14 +381,9 @@ verbatim : $(addprefix $(DOC_OUTPUT_DIR)/, $(addsuffix .verbatim,$(PAGES_ROOT)))
 
 kindle : ${DOC_OUTPUT_DIR}/dlangspec.mobi
 
-ifeq (1,$(DIFFABLE))
-# Remove /dlangspec.{tex,html} once DAutoTest has been updated
-# https://github.com/dlang/dlang.org/pull/1969
-pdf : ${DOC_OUTPUT_DIR}/dlangspec.pdf ${DOC_OUTPUT_DIR}/dlangspec.tex ${DOC_OUTPUT_DIR}/dlangspec.html \
-		dlangspec.tex dlangspec.html
-else
 pdf : ${DOC_OUTPUT_DIR}/dlangspec.pdf
-endif
+
+diffable-intermediaries : ${DOC_OUTPUT_DIR}/dlangspec.tex ${DOC_OUTPUT_DIR}/dlangspec.html
 
 $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	cp -f sitemap-template.dd $G/sitemap.dd
@@ -539,14 +535,6 @@ $(DOC_OUTPUT_DIR)/dlangspec.tex: $G/dlangspec.tex | $(DOC_OUTPUT_DIR)
 	cp $< $@
 
 $(DOC_OUTPUT_DIR)/dlangspec.html: $G/dlangspec.html | $(DOC_OUTPUT_DIR)
-	cp $< $@
-
-# Remove once DAutoTest has been updated
-# https://github.com/dlang/dlang.org/pull/1969
-dlangspec.tex: $G/dlangspec.tex
-	cp $< $@
-
-dlangspec.html: $G/dlangspec.html
 	cp $< $@
 
 ################################################################################
