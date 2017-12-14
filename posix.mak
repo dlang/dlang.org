@@ -864,7 +864,7 @@ changelog/next-version: ${DMD_DIR}/VERSION
 	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
 
 changelog/pending.dd: changelog/next-version | ${STABLE_DMD} ../tools ../installer
-	[ -f changelog/pending.dd ] || $(STABLE_RDMD) $(TOOLS_DIR)/changed.d \
+	[ -f changelog/pending.dd ] || $(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_LATEST) -o changelog/pending.dd --version "${NEXT_VERSION}" \
 		--date "To be released"
 
