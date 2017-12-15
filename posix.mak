@@ -368,7 +368,7 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 # Rulez
 ################################################################################
 
-all : docs html
+all : docs html tidy
 
 ifdef RELEASE
 release : html dmd-release druntime-release phobos-release d-release.tag
@@ -884,5 +884,21 @@ changelog/pending.dd: changelog/next-version | ${STABLE_DMD} ../tools ../install
 
 pending_changelog: $(LOOSE_CHANGELOG_FILES) changelog/pending.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/pending.html in your browser"
+
+################################################################################
+# HTML5 Tidy
+################################################################################
+
+TIDY=$G/tidy/build/cmake/tidy
+
+$G/tidy/.cloned:
+	git clone --depth 1 https://github.com/htacg/tidy-html5 $G/tidy
+	echo 1 > $@
+
+$(TIDY): $G/tidy/.cloned
+	(cd $G/tidy/build/cmake && echo "y" | ./build-me.sh)
+
+tidy: $(TIDY) docs html
+	$(TIDY) -m $$(find web -type f -name "*.html")
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
