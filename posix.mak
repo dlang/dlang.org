@@ -146,6 +146,7 @@ DMD=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)/dmd
 
 # External directories
 DOC_OUTPUT_DIR:=$(PWD)/web
+W:=$(DOC_OUTPUT_DIR)
 GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
@@ -243,7 +244,7 @@ endif
 # Ddoc build variables
 ################################################################################
 DDOC_VARS_LATEST_HTML= \
-	DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
+	DOC_OUTPUT_DIR="$W/phobos" \
 	STDDOC="$(addprefix $(PWD)/, $(STD_DDOC_LATEST))" \
 	DMD="$(abspath $(DMD_LATEST))" \
 	DMD_DIR="$(abspath ${DMD_LATEST_DIR})" \
@@ -252,7 +253,7 @@ DDOC_VARS_LATEST_HTML= \
 	VERSION="$(abspath ${DMD_DIR}/VERSION)"
 
 DDOC_VARS_RELEASE_HTML= \
-	DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
+	DOC_OUTPUT_DIR="$W/phobos" \
 	STDDOC="$(addprefix $(PWD)/, $(STD_DDOC_RELEASE))" \
 	DMD="$(abspath $(DMD))" \
 	DMD_DIR="$(abspath ${DMD_DIR})" \
@@ -268,11 +269,11 @@ DDOC_VARS= \
 	VERSION="$(abspath ${DMD_DIR}/VERSION)"
 
 DDOC_VARS_HTML=$(DDOC_VARS) \
-	DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease" \
+	DOC_OUTPUT_DIR="$W/phobos-prerelease" \
 	STDDOC="$(addprefix $(PWD)/, $(STD_DDOC_PRERELEASE))"
 
 DDOC_VARS_VERBATIM=$(DDOC_VARS) \
-	DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim" \
+	DOC_OUTPUT_DIR="$W/phobos-prerelease-verbatim" \
 	STDDOC="$(PWD)/verbatim.ddoc"
 
 ################################################################################
@@ -358,10 +359,10 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
-ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS) \
+ALL_FILES_BUT_SITEMAP = $(addprefix $W/, $(TARGETS) \
 $(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
 
-ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
+ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 
 ################################################################################
 # Rulez
@@ -380,19 +381,19 @@ docs : docs-latest docs-prerelease
 
 html : $(ALL_FILES)
 
-verbatim : $(addprefix $(DOC_OUTPUT_DIR)/, $(addsuffix .verbatim,$(PAGES_ROOT))) phobos-prerelease-verbatim
+verbatim : $(addprefix $W/, $(addsuffix .verbatim,$(PAGES_ROOT))) phobos-prerelease-verbatim
 
-kindle : ${DOC_OUTPUT_DIR}/dlangspec.mobi
+kindle : $W/dlangspec.mobi
 
-pdf : ${DOC_OUTPUT_DIR}/dlangspec.pdf
+pdf : $W/dlangspec.pdf
 
-diffable-intermediaries : ${DOC_OUTPUT_DIR}/dlangspec.tex ${DOC_OUTPUT_DIR}/dlangspec.html
+diffable-intermediaries : $W/dlangspec.tex $W/dlangspec.html
 
-$(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
+$W/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	cp -f sitemap-template.dd $G/sitemap.dd
 	(true $(foreach F, $(TARGETS), \
 		&& echo \
-			"$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`")) \
+			"$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $W/$F`")) \
 		| sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\([^\n\r]*\)/<a href="\1">\2<\/a><br>/' >> $G/sitemap.dd
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $G/sitemap.dd
 	rm $G/sitemap.dd
@@ -428,16 +429,16 @@ rebase-druntime: ; cd $(DRUNTIME_DIR) && $(call REBASE,druntime)
 rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
-	rm -rf $(DOC_OUTPUT_DIR) ${GENERATED} dpl-docs/.dub dpl-docs/dpl-docs
+	rm -rf $W ${GENERATED} dpl-docs/.dub dpl-docs/dpl-docs
 	@echo You should issue manually: rm -rf ${DMD_LATEST_DIR} ${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_DIR} ${STABLE_DMD_ROOT}
 
 RSYNC_FILTER=-f 'P /Usage' -f 'P /.dpl_rewrite*' -f 'P /install.sh*'
 
 rsync : all kindle pdf
-	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
+	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $W/ $(REMOTE_DIR)/
 
 rsync-only :
-	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $(DOC_OUTPUT_DIR)/ $(REMOTE_DIR)/
+	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $W/ $(REMOTE_DIR)/
 
 ################################################################################
 # Pattern rulez
@@ -446,34 +447,34 @@ rsync-only :
 # NOTE: Depending on the version of make, order matters here. Therefore, put
 # sub-directories before their parents.
 
-$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
+$W/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
 
-$(DOC_OUTPUT_DIR)/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DMD)
+$W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
 
-$(DOC_OUTPUT_DIR)/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
+$W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
-$(DOC_OUTPUT_DIR)/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
+$W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
 
-$(DOC_OUTPUT_DIR)/404.html : 404.dd $(DDOC) $(DMD)
+$W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
 
-$(DOC_OUTPUT_DIR)/%.html : %.dd $(DDOC) $(DMD)
+$W/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
-$(DOC_OUTPUT_DIR)/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
+$W/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
 
-$(DOC_OUTPUT_DIR)/%.verbatim : %.dd verbatim.ddoc $(DMD)
+$W/%.verbatim : %.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
 
-$(DOC_OUTPUT_DIR)/%.php : %.php.dd $(DDOC) $(DMD)
+$W/%.php : %.php.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
-$(DOC_OUTPUT_DIR)/css/% : css/%
+$W/css/% : css/%
 	@mkdir -p $(dir $@)
 ifeq (1,$(CSS_MINIFY))
 	curl -X POST -fsS --data-urlencode 'input@$<' http://cssminifier.com/raw >$@
@@ -481,20 +482,20 @@ else
 	cp $< $@
 endif
 
-$(DOC_OUTPUT_DIR)/%.css : %.css.dd $(DMD)
+$W/%.css : %.css.dd $(DMD)
 	$(DMD) -c -o- -Df$@ $<
 
-$(DOC_OUTPUT_DIR)/% : %
+$W/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-$(DOC_OUTPUT_DIR)/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
+$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) dcompiler.dd $<
 
-$(DOC_OUTPUT_DIR)/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
+$W/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
 
-$(DOC_OUTPUT_DIR):
+$W:
 	mkdir -p $@
 
 ################################################################################
@@ -511,7 +512,7 @@ $G/dlangspec.zip : $G/dlangspec.html ebook.css
 	rm -f $@
 	zip --junk-paths $@ $G/dlangspec.html ebook.css
 
-$(DOC_OUTPUT_DIR)/dlangspec.mobi : \
+$W/dlangspec.mobi : \
 		dlangspec.opf dlangspec.ncx dlangspec.png $G/dlangspec.html  ebook.css
 	rm -f $@ $G/dlangspec.mobi dlangspec.html
 	# kindlegen has warnings, ignore them for now
@@ -531,15 +532,15 @@ $G/dlangspec.tex : $G/dlangspec-consolidated.d $(DMD) $(DDOC) latex.ddoc
 	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc $<
 
 # Run twice to fix multipage tables and \ref uses
-$(DOC_OUTPUT_DIR)/dlangspec.pdf : $G/dlangspec.tex | $(DOC_OUTPUT_DIR)
+$W/dlangspec.pdf : $G/dlangspec.tex | $W
 	pdflatex -output-directory=$G -draftmode $^
 	pdflatex -output-directory=$G $^
 	mv $G/dlangspec.pdf $@
 
-$(DOC_OUTPUT_DIR)/dlangspec.tex: $G/dlangspec.tex | $(DOC_OUTPUT_DIR)
+$W/dlangspec.tex: $G/dlangspec.tex | $W
 	cp $< $@
 
-$(DOC_OUTPUT_DIR)/dlangspec.html: $G/dlangspec.html | $(DOC_OUTPUT_DIR)
+$W/dlangspec.html: $G/dlangspec.html | $W
 	cp $< $@
 
 ################################################################################
@@ -598,13 +599,13 @@ dmd-prerelease : $(STD_DDOC_PRERELEASE) $(DMD_DIR) $(DMD)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_HTML)
 
 dmd-prerelease-verbatim : $(STD_DDOC_PRERELEASE) $(DMD_DIR) \
-		${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim
-${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim: verbatim.ddoc
+		$W/phobos-prerelease/mars.verbatim
+$W/phobos-prerelease/mars.verbatim: verbatim.ddoc
 	mkdir -p $(dir $@)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_VERBATIM)
-	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
-	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
-	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
+	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
+	mv $W/phobos-prerelease-verbatim/* $(dir $@)
+	rm -r $W/phobos-prerelease-verbatim
 
 ################################################################################
 # druntime, latest released build and current build
@@ -613,29 +614,29 @@ ${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim: verbatim.ddoc
 
 druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRERELEASE)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_HTML) \
-		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease \
+		DOCDIR=$W/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRERELEASE))"
 
 druntime-release : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_RELEASE)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_RELEASE_HTML) \
-		DOCDIR=${DOC_OUTPUT_DIR}/phobos \
+		DOCDIR=$W/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_RELEASE))"
 
 druntime-latest : ${DRUNTIME_LATEST_DIR} $(DMD_LATEST) $(STD_DDOC_LATEST)
 	${MAKE} --directory=${DRUNTIME_LATEST_DIR} -f posix.mak target doc $(DDOC_VARS_LATEST_HTML) \
-		DOCDIR=${DOC_OUTPUT_DIR}/phobos \
+		DOCDIR=$W/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_LATEST))"
 
 druntime-prerelease-verbatim : ${DRUNTIME_DIR} \
-		${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
-${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim : $(DMD)
+		$W/phobos-prerelease/object.verbatim
+$W/phobos-prerelease/object.verbatim : $(DMD)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_VERBATIM) \
-		DOCDIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim \
+		DOCDIR=$W/phobos-prerelease-verbatim \
 		DOCFMT="`pwd`/verbatim.ddoc"
 	mkdir -p $(dir $@)
-	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
-	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
-	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
+	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
+	mv $W/phobos-prerelease-verbatim/* $(dir $@)
+	rm -r $W/phobos-prerelease-verbatim
 
 ################################################################################
 # phobos, latest released build and current build
@@ -653,46 +654,46 @@ phobos-latest : ${PHOBOS_LATEST_FILES_GENERATED} $(DMD_LATEST) $(STD_DDOC_LATEST
 		druntime-latest dmd-latest
 	$(MAKE) --directory=$(PHOBOS_LATEST_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
 
-phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
-${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
-		${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim \
-		${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim
+phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} $W/phobos-prerelease/index.verbatim
+$W/phobos-prerelease/index.verbatim : verbatim.ddoc \
+		$W/phobos-prerelease/object.verbatim \
+		$W/phobos-prerelease/mars.verbatim
 	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak html $(DDOC_VARS_VERBATIM) \
-	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
-	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
-	mv ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim/* $(dir $@)
-	rm -r ${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
+	  DOC_OUTPUT_DIR=$W/phobos-prerelease-verbatim
+	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
+	mv $W/phobos-prerelease-verbatim/* $(dir $@)
+	rm -r $W/phobos-prerelease-verbatim
 
 ################################################################################
 # phobos and druntime, latest released build and current build (DDOX version)
 ################################################################################
 
-apidocs-prerelease : ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess
-apidocs-latest : ${DOC_OUTPUT_DIR}/library/sitemap.xml ${DOC_OUTPUT_DIR}/library/.htaccess
+apidocs-prerelease : $W/library-prerelease/sitemap.xml $W/library-prerelease/.htaccess
+apidocs-latest : $W/library/sitemap.xml $W/library/.htaccess
 apidocs-serve : $G/docs-prerelease.json
 	${DPL_DOCS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 		--override-macros=std-ddox-override.ddoc --package-order=std \
 		--git-target=master --web-file-dir=. $<
 
-${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml : $G/docs-prerelease.json
+$W/library-prerelease/sitemap.xml : $G/docs-prerelease.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 		--override-macros=std-ddox-override.ddoc --package-order=std \
 		--git-target=master $(DPL_DOCS_PATH_RUN_FLAGS) \
-		$< ${DOC_OUTPUT_DIR}/library-prerelease
+		$< $W/library-prerelease
 
-${DOC_OUTPUT_DIR}/library/sitemap.xml : $G/docs-latest.json
+$W/library/sitemap.xml : $G/docs-latest.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 		--override-macros=std-ddox-override.ddoc --package-order=std \
 		--git-target=v${LATEST} $(DPL_DOCS_PATH_RUN_FLAGS) \
-		$< ${DOC_OUTPUT_DIR}/library
+		$< $W/library
 
-${DOC_OUTPUT_DIR}/library/.htaccess : dpl_latest_htaccess
+$W/library/.htaccess : dpl_latest_htaccess
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-${DOC_OUTPUT_DIR}/library-prerelease/.htaccess : dpl_prerelease_htaccess
+$W/library-prerelease/.htaccess : dpl_prerelease_htaccess
 	@mkdir -p $(dir $@)
 	cp $< $@
 
@@ -786,13 +787,13 @@ chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-p
 ################################################################################
 
 d-latest.tag d-tags-latest.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
-	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags --target latest
+	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target latest
 
 d-release.tag d-tags-release.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
-	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags --target release
+	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target release
 
 d-prerelease.tag d-tags-prerelease.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
-	$(STABLE_RDMD) chmgen.d --root=$(DOC_OUTPUT_DIR) --only-tags --target prerelease
+	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target prerelease
 
 ################################################################################
 # Assert -> writeln magic
@@ -838,9 +839,9 @@ test: $(ASSERT_WRITELN_BIN)_test test/next_version.sh all
 	@echo "Searching for trailing whitespace"
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
 	@echo "Searching for undefined macros"
-	@grep -n "UNDEFINED MACRO" $$(find $(DOC_OUTPUT_DIR) -type f -name "*.html" -not -path "$(DOC_OUTPUT_DIR)/phobos/*") ; test $$? -eq 1
+	@grep -n "UNDEFINED MACRO" $$(find $W -type f -name "*.html" -not -path "$W/phobos/*") ; test $$? -eq 1
 	@echo "Searching for undefined ddoc"
-	@grep -rn '[$$](' $$(find $(DOC_OUTPUT_DIR)/phobos-prerelease -type f -name "*.html") ; test $$? -eq 1
+	@grep -rn '[$$](' $$(find $W/phobos-prerelease -type f -name "*.html") ; test $$? -eq 1
 	@echo "Executing assert_writeln_magic tests"
 	$<
 	@echo "Executing next_version tests"
