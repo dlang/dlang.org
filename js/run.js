@@ -174,6 +174,24 @@ function parseOutput(res, o, oTitle)
         o.text(output);
 }
 
+// wraps a unittest into a runnable script
+function wrapIntoMain(code) {
+    var currentPackage = $('body')[0].id;
+
+    // dynamically wrap into main if needed
+    if (code.indexOf("void main") >= 0 || code.indexOf("int main") >= 0) {
+        return code;
+    }
+    else {
+        var codeOut = "void main()\n{\n";
+        // writing to the stdout is probably often used
+        codeOut += "    import std.stdio: write, writeln, writef, writefln;\n    ";
+        codeOut += code.split("\n").join("\n    ");
+        codeOut += "\n}";
+        return codeOut;
+    }
+}
+
 $(document).ready(function()
 {
     setUpExamples();
@@ -223,8 +241,14 @@ $(document).ready(function()
         var outputDiv = parent.children("div.d_code_output");
         var hasStdin = parent.children(".inputButton").length > 0;
         var hasArgs  = parent.children(".argsButton").length > 0;
-        setupTextarea(this, {parent: parent, outputDiv: outputDiv,
-                        stdin: hasStdin, args: hasArgs});
+        setupTextarea(this, {
+          parent: parent,
+          outputDiv: outputDiv,
+          stdin: hasStdin,
+          args: hasArgs,
+          defaultOutput: "Succeed without output.",
+          transformOutput: wrapIntoMain,
+        });
     });
 });
 
