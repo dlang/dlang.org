@@ -20,57 +20,57 @@
 #
 #  To build `latest` and `prerelease` docs:
 #
-#    make -f posix.mak all
+#      make -f posix.mak all
 #
 #  To build `release` docs:
 #
-#    make -f posix.mak RELEASE=1 release
+#      make -f posix.mak RELEASE=1 release
 #
 #  Individual documentation targets
 #  --------------------------------
 #
 #  The entire documentation can be built with:
 #
-#    make -f posix.mak docs
+#      make -f posix.mak docs
 #
 #  This target is an alias for two targets:
 #
 #  A) `docs-prerelease` (aka master)
 #
 #    The respective local repositories are used.
-#       This is very useful for testing local changes.
-#       Individual targets include:
+#    This is very useful for testing local changes.
+#    Individual targets include:
 #
-#       dmd-prerelease
-#       druntime-prerelease
-#       phobos-prerelease
-#       apidocs-prerelease      Ddox documentation
+#        dmd-prerelease
+#        druntime-prerelease
+#        phobos-prerelease
+#        apidocs-prerelease      Ddox documentation
 #
 #  B) `docs-latest` (aka stable)
 #
-#  Based on the last official release (git tag), the repositories are freshly cloned from GitHub.
-#  Individual targets include:
+#    Based on the last official release (git tag), the repositories are freshly cloned from GitHub.
+#    Individual targets include:
 #
-#       dmd-latest
-#       druntime-latest
-#       phobos-latest
-#       apidocs-latest          Ddox documentation
+#        dmd-latest
+#        druntime-latest
+#        phobos-latest
+#        apidocs-latest          Ddox documentation
 #
-#   Documentation development Ddox web server
-#   -----------------------------------------
+#  Documentation development Ddox web server
+#  -----------------------------------------
 #
-#    A development Ddox webserver can be started:
+#  A development Ddox webserver can be started:
 #
-#       make -f posix.mak apidocs-serve
+#      make -f posix.mak apidocs-serve
 #
-#    This web server will regenerate requested documentation pages on-the-fly
-#    and has the additional advantage that it doesn't need to build any
-#    documentation pages during its startup.
+#  This web server will regenerate requested documentation pages on-the-fly
+#  and has the additional advantage that it doesn't need to build any
+#  documentation pages during its startup.
 #
 #  Options
 #  -------
 #
-#  Most commonly used options include:
+#  Commonly used options include:
 #
 #       DIFFABLE=1          Removes inclusion of all dynamic content and timestamps
 #       RELEASE=1           Release build (needs to be set for the `release` target)
@@ -94,37 +94,37 @@
 #       clean                   Removes the .generated folder
 #       diffable-intermediaries Adds intermediary PDF/eBook files to the output, useful for diffing
 #
-#   Ddoc vs. Ddox
-#   --------------
+#  Ddoc vs. Ddox
+#  --------------
 #
-#   It's a long-lasting effort to transition from the Ddoc documentation build
-#   to a Ddox documentation build of the D standard library.
+#  It's a long-lasting effort to transition from the Ddoc documentation build
+#  to a Ddox documentation build of the D standard library.
 #
-#       https://dlang.org/phobos                Stable Ddoc build (`docs-latest`)
-#       https://dlang.org/phobos-prerelease     Master Ddoc build (`docs-prerelease`)
-#       https://dlang.org/library               Stable Ddox build (`apidocs-latest`)
-#       https://dlang.org/library-release       Master Ddox build (`apidocs-prerelease`)
+#      https://dlang.org/phobos                Stable Ddoc build (`docs-latest`)
+#      https://dlang.org/phobos-prerelease     Master Ddoc build (`docs-prerelease`)
+#      https://dlang.org/library               Stable Ddox build (`apidocs-latest`)
+#      https://dlang.org/library-release       Master Ddox build (`apidocs-prerelease`)
 #
-#   For more documentation on Ddox, see https://github.com/rejectedsoftware/ddox
-#   For more information and current blocking points of the Ddoc -> Ddox tranisition,
-#   see https://github.com/dlang/dlang.org/pull/1526
+#  For more documentation on Ddox, see https://github.com/rejectedsoftware/ddox
+#  For more information and current blocking points of the Ddoc -> Ddox tranisition,
+#  see https://github.com/dlang/dlang.org/pull/1526
 #
-#   Assert -> writeln magic
-#   -----------------------
+#  Assert -> writeln magic
+#  -----------------------
 #
-#   There is a toolchain in place will allows to perform source code transformation.
-#   At the moment this is used to beautify the code examples. For example:
+#  There is a toolchain in place will allows to perform source code transformation.
+#  At the moment this is used to beautify the code examples. For example:
 #
-#       assert(a == b)
+#      assert(a == b)
 #
-#   Would be rewritten to:
+#  Would be rewritten to:
 #
-#       writeln(a); // b
+#      writeln(a); // b
 #
-#   For this local copies of the respective DMD, DRuntime, and Phobos are stored
-#   in the build folder `.generated`, s.t. Ddoc can be run on the modified sources.
+#  For this local copies of the respective DMD, DRuntime, and Phobos are stored
+#  in the build folder `.generated`, s.t. Ddoc can be run on the modified sources.
 #
-#   See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
+#  See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
 
 PWD=$(shell pwd)
 
