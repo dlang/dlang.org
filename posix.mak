@@ -4,16 +4,16 @@
 #  This Makefile is used to build the dlang.org website.
 #  To build the entire dlang.org website run:
 #
-#  	make -f posix.mak all
+#   make -f posix.mak all
 #
 #  Build flavors
 #  -------------
 #
 #  This makefile supports 3 flavors of documentation:
 #
-#  	latest			Latest released version (by git tag)
-#  	prerelease		Master (uses the D repositories as they exist locally)
-#  	release			Documentation build that is shipped with the binary release
+#   latest          Latest released version (by git tag)
+#   prerelease      Master (uses the D repositories as they exist locally)
+#   release         Documentation build that is shipped with the binary release
 #
 #  For `release` the LATEST version is not yet published at build time,
 #  hence a few things differ from a `prerelease` build.
@@ -38,30 +38,30 @@
 #  A) `docs-prerelease` (aka master)
 #
 #    The respective local repositories are used.
-#   	This is very useful for testing local changes.
-#   	Individual targets include:
+#       This is very useful for testing local changes.
+#       Individual targets include:
 #
-#    	dmd-prerelease
-#    	druntime-prerelease
-#    	phobos-prerelease
-#    	apidocs-prerelease		Ddox documentation
+#       dmd-prerelease
+#       druntime-prerelease
+#       phobos-prerelease
+#       apidocs-prerelease      Ddox documentation
 #
 #  B) `docs-latest` (aka stable)
 #
 #  Based on the last official release (git tag), the repositories are freshly cloned from GitHub.
 #  Individual targets include:
 #
-#   	dmd-latest
-#   	druntime-latest
-#   	phobos-latest
-#   	apidocs-latest			Ddox documentation
+#       dmd-latest
+#       druntime-latest
+#       phobos-latest
+#       apidocs-latest          Ddox documentation
 #
 #   Documentation development Ddox web server
 #   -----------------------------------------
 #
 #    A development Ddox webserver can be started:
 #
-#    	make -f posix.mak apidocs-serve
+#       make -f posix.mak apidocs-serve
 #
 #    This web server will regenerate requested documentation pages on-the-fly
 #    and has the additional advantage that it doesn't need to build any
@@ -72,25 +72,27 @@
 #
 #  Most commonly used options include:
 #
-#   	DIFFABLE=1			Removes inclusion of all dynamic content and timestamps
-#   	RELEASE=1			Release build (needs to be set for the `release` target)
-#   	CSS_MINIFY=1		Minify the CSS via an online service
-#   	DOC_OUTPUT_DIR		Folder to build the documentation (default: `web`)
+#       DIFFABLE=1          Removes inclusion of all dynamic content and timestamps
+#       RELEASE=1           Release build (needs to be set for the `release` target)
+#       CSS_MINIFY=1        Minify the CSS via an online service
+#       DOC_OUTPUT_DIR      Folder to build the documentation (default: `web`)
 #
 #  Other targets
 #  -------------
 #
-#   	html				Builds all HTML files and static content
-#   	pending_changelog	Collects and assembles the changelog for the next version
-#   						(This is based on references Bugzilla issues and files in the `/changelog` folders)
-#   	rebase				Rebase all DLang repos to upstream/master
-#   	pdf					Generates the D specification as a PDF
-#   	mobi				Generates the D specification as an ebook (Amazon mobi)
-#   	verbatim			Copies the Ddoc plaintext files to .verbatim files (i.e. doesn't run Ddoc on them)
-#   	rsync				Publishes the built website to dlang.org
-#   	test				Runs several sanity checks
-#   	clean				Removes the .generated folder
-#   	diffable-intermediaries		Adds intermediary PDF/eBook files to the output, useful for diffing
+#       html                    Builds all HTML files and static content
+#       pending_changelog       Collects and assembles the changelog for the next version
+#                               (This is based on references Bugzilla issues and files
+#                               in the `/changelog` folders)
+#       rebase                  Rebase all DLang repos to upstream/master
+#       pdf                     Generates the D specification as a PDF
+#       mobi                    Generates the D specification as an ebook (Amazon mobi)
+#       verbatim                Copies the Ddoc plaintext files to .verbatim files
+#                               (i.e. doesn't run Ddoc on them)
+#       rsync                   Publishes the built website to dlang.org
+#       test                    Runs several sanity checks
+#       clean                   Removes the .generated folder
+#       diffable-intermediaries Adds intermediary PDF/eBook files to the output, useful for diffing
 #
 #   Ddoc vs. Ddox
 #   --------------
@@ -98,37 +100,37 @@
 #   It's a long-lasting effort to transition from the Ddoc documentation build
 #   to a Ddox documentation build of the D standard library.
 #
-#   	https://dlang.org/phobos 				Stable Ddoc build (`docs-latest`)
-#   	https://dlang.org/phobos-prerelease 	Master Ddoc build (`docs-prerelease`)
-#   	https://dlang.org/library 				Stable Ddox build (`apidocs-latest`)
-#   	https://dlang.org/library-release 		Master Ddox build (`apidocs-prerelease`)
+#       https://dlang.org/phobos                Stable Ddoc build (`docs-latest`)
+#       https://dlang.org/phobos-prerelease     Master Ddoc build (`docs-prerelease`)
+#       https://dlang.org/library               Stable Ddox build (`apidocs-latest`)
+#       https://dlang.org/library-release       Master Ddox build (`apidocs-prerelease`)
 #
 #   For more documentation on Ddox, see https://github.com/rejectedsoftware/ddox
 #   For more information and current blocking points of the Ddoc -> Ddox tranisition,
 #   see https://github.com/dlang/dlang.org/pull/1526
 #
-#	Assert -> writeln magic
-#	-----------------------
+#   Assert -> writeln magic
+#   -----------------------
 #
-# 	There is a toolchain in place will allows to perform source code transformation.
-# 	At the moment this is used to beautify the code examples. For example:
+#   There is a toolchain in place will allows to perform source code transformation.
+#   At the moment this is used to beautify the code examples. For example:
 #
-# 		assert(a == b)
+#       assert(a == b)
 #
-#	Would be rewritten to:
+#   Would be rewritten to:
 #
-# 		writeln(a); // b
+#       writeln(a); // b
 #
-#	For this local copies of the respective DMD, DRuntime, and Phobos are stored
-#	in the build folder `.generated`, s.t. Ddoc can be run on the modified sources.
+#   For this local copies of the respective DMD, DRuntime, and Phobos are stored
+#   in the build folder `.generated`, s.t. Ddoc can be run on the modified sources.
 #
-# 	See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
+#   See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
 
 PWD=$(shell pwd)
 
 # Latest released version
 ifeq (,${LATEST})
-LATEST:=$(shell cat VERSION)
+ LATEST:=$(shell cat VERSION)
 endif
 
 # DLang directories
@@ -174,11 +176,11 @@ PHOBOS_LATEST_DIR_GENERATED=$(GENERATED)/phobos-latest
 PHOBOS_FILES := $(shell find $(PHOBOS_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
 PHOBOS_FILES_GENERATED := $(subst $(PHOBOS_DIR), $(PHOBOS_DIR_GENERATED), $(PHOBOS_FILES))
 ifndef RELEASE
-# TODO: should be replaced by make targets
-$(shell [ ! -d $(PHOBOS_DIR) ] && git clone --depth=1 ${GIT_HOME}/phobos $(PHOBOS_DIR))
-$(shell [ ! -d $(PHOBOS_LATEST_DIR) ] && git clone -b v${LATEST} --depth=1 ${GIT_HOME}/phobos $(PHOBOS_LATEST_DIR))
-PHOBOS_LATEST_FILES := $(shell find $(PHOBOS_LATEST_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
-PHOBOS_LATEST_FILES_GENERATED := $(subst $(PHOBOS_LATEST_DIR), $(PHOBOS_LATEST_DIR_GENERATED), $(PHOBOS_LATEST_FILES))
+ # TODO: should be replaced by make targets
+ $(shell [ ! -d $(PHOBOS_DIR) ] && git clone --depth=1 ${GIT_HOME}/phobos $(PHOBOS_DIR))
+ $(shell [ ! -d $(PHOBOS_LATEST_DIR) ] && git clone -b v${LATEST} --depth=1 ${GIT_HOME}/phobos $(PHOBOS_LATEST_DIR))
+ PHOBOS_LATEST_FILES := $(shell find $(PHOBOS_LATEST_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
+ PHOBOS_LATEST_FILES_GENERATED := $(subst $(PHOBOS_LATEST_DIR), $(PHOBOS_LATEST_DIR_GENERATED), $(PHOBOS_LATEST_FILES))
 endif
 ################################################################################
 
@@ -194,9 +196,10 @@ DUB=$(STABLE_DMD_BIN_ROOT)/dub
 
 # exclude lists
 # keep the ddmd excludes during the ddmd -> dmd transition
-MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, gc. rt. core.internal. core.stdc.config core.sys.	\
-	std.algorithm.internal std.c. std.concurrencybase std.internal. std.regex.internal.  \
-	std.windows.iunknown std.windows.registry etc.linux.memoryerror	\
+MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
+	gc. rt. core.internal. core.stdc.config core.sys. \
+	std.algorithm.internal std.c. std.concurrencybase std.internal. std.regex.internal. \
+	std.windows.iunknown std.windows.registry etc.linux.memoryerror \
 	std.experimental.ndslice.internal std.stdiobase \
 	std.typetuple \
 	tk. msvc_dmc msvc_lib \
@@ -212,15 +215,16 @@ DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/gen
 RDMD=rdmd --compiler=$(DMD) $(DFLAGS)
 
 # Tools
-REBASE = MYBRANCH=`git rev-parse --abbrev-ref HEAD` &&\
- git checkout master &&\
- git pull --ff-only git@github.com:dlang/$1.git master &&\
- git checkout $$MYBRANCH &&\
- git rebase master
+REBASE=MYBRANCH=`git rev-parse --abbrev-ref HEAD` && \
+	git checkout master && \
+	git pull --ff-only git@github.com:dlang/$1.git master && \
+	git checkout $$MYBRANCH && \
+	git rebase master
 
 CHANGE_SUFFIX = \
- for f in `find "$3" -iname '*.$1'`; do\
-  mv $$f `dirname $$f`/`basename $$f .$1`.$2; done
+	for f in `find "$3" -iname '*.$1'`; do \
+		mv $$f `dirname $$f`/`basename $$f .$1`.$2 ; \
+	done
 
 # Caches the latest D blog post for the front page
 DBLOG_LATEST=
@@ -228,36 +232,36 @@ DBLOG_LATEST=
 # Disable all dynamic content that could potentially have an unrelated impact
 # on a diff
 ifeq (1,$(DIFFABLE))
-	NODATETIME := nodatetime.ddoc
-	DPL_DOCS_PATH_RUN_FLAGS := --no-exact-source-links
+ NODATETIME := nodatetime.ddoc
+ DPL_DOCS_PATH_RUN_FLAGS := --no-exact-source-links
 else
-	CHANGELOG_VERSION_MASTER := "v${LATEST}..upstream/master"
-	CHANGELOG_VERSION_LATEST := "v${LATEST}..upstream/stable"
-	DBLOG_LATEST=$G/dblog_latest.ddoc $G/twid_latest.ddoc
+ CHANGELOG_VERSION_MASTER := "v${LATEST}..upstream/master"
+ CHANGELOG_VERSION_LATEST := "v${LATEST}..upstream/stable"
+ DBLOG_LATEST=$G/dblog_latest.ddoc $G/twid_latest.ddoc
 endif
 
 ################################################################################
 # Ddoc build variables
 ################################################################################
-DDOC_VARS_LATEST_HTML=\
-	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
-	  STDDOC="$(addprefix $(PWD)/, $(STD_DDOC_LATEST))" \
-	  DMD="$(abspath $(DMD_LATEST))" \
-	  DMD_DIR="$(abspath ${DMD_LATEST_DIR})" \
-	  DRUNTIME_PATH="$(abspath ${DRUNTIME_LATEST_DIR})" \
-	  DOCSRC="$(PWD)" \
-	  VERSION="$(abspath ${DMD_DIR}/VERSION)"
+DDOC_VARS_LATEST_HTML= \
+	DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
+	STDDOC="$(addprefix $(PWD)/, $(STD_DDOC_LATEST))" \
+	DMD="$(abspath $(DMD_LATEST))" \
+	DMD_DIR="$(abspath ${DMD_LATEST_DIR})" \
+	DRUNTIME_PATH="$(abspath ${DRUNTIME_LATEST_DIR})" \
+	DOCSRC="$(PWD)" \
+	VERSION="$(abspath ${DMD_DIR}/VERSION)"
 
-DDOC_VARS_RELEASE_HTML=\
-	  DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
-	  STDDOC="$(addprefix $(PWD)/, $(STD_DDOC_RELEASE))" \
-	  DMD="$(abspath $(DMD))" \
-	  DMD_DIR="$(abspath ${DMD_DIR})" \
-	  DRUNTIME_PATH="$(abspath ${DRUNTIME_DIR})" \
-	  DOCSRC="$(PWD)" \
-	  VERSION="$(abspath ${DMD_DIR}/VERSION)"
+DDOC_VARS_RELEASE_HTML= \
+	DOC_OUTPUT_DIR="${DOC_OUTPUT_DIR}/phobos" \
+	STDDOC="$(addprefix $(PWD)/, $(STD_DDOC_RELEASE))" \
+	DMD="$(abspath $(DMD))" \
+	DMD_DIR="$(abspath ${DMD_DIR})" \
+	DRUNTIME_PATH="$(abspath ${DRUNTIME_DIR})" \
+	DOCSRC="$(PWD)" \
+	VERSION="$(abspath ${DMD_DIR}/VERSION)"
 
-DDOC_VARS=\
+DDOC_VARS= \
 	DMD="$(abspath ${DMD})" \
 	DMD_DIR="$(abspath ${DMD_DIR})" \
 	DRUNTIME_PATH="$(abspath ${DRUNTIME_DIR})" \
@@ -316,25 +320,25 @@ CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
 
-PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html	\
-language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt	\
-d-keyring.gpg
+PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html \
+	language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt \
+	d-keyring.gpg
 
 # Language spec root filenames. They have extension .dd in the source
 # and .html in the generated HTML. These are also used for the mobi
 # book generation, for which reason the list is sorted by chapter.
 SPEC_ROOT=$(addprefix spec/, \
-	spec intro lex grammar module declaration type property attribute pragma	\
-	expression statement arrays hash-map struct class interface enum	\
-	const3 function operatoroverloading template template-mixin contracts		\
-	version traits errors unittest garbage float iasm ddoc				\
+	spec intro lex grammar module declaration type property attribute pragma \
+	expression statement arrays hash-map struct class interface enum \
+	const3 function operatoroverloading template template-mixin contracts \
+	version traits errors unittest garbage float iasm ddoc \
 	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
 	abi simd betterc)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 ifndef RELEASE
-CHANGELOG_FILES+=changelog/pending
+ CHANGELOG_FILES+=changelog/pending
 endif
 
 # Website root filenames. They have extension .dd in the source
@@ -348,14 +352,14 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
 	exception-safe faq forum-template foundation gpg_keys glossary \
 	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod index \
-	intro-to-datetime lazy-evaluation menu migrate-to-shared mixin	\
+	intro-to-datetime lazy-evaluation menu migrate-to-shared mixin \
 	orgs-using-d overview pretod rationale rdmd regular-expression resources safed \
-	search template-comparison templates-revisited tuple	\
+	search template-comparison templates-revisited tuple \
 	variadic-function-templates warnings wc windbg
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
-ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS)	\
+ALL_FILES_BUT_SITEMAP = $(addprefix $(DOC_OUTPUT_DIR)/, $(TARGETS) \
 $(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $(DOC_OUTPUT_DIR)/sitemap.html
@@ -388,9 +392,9 @@ diffable-intermediaries : ${DOC_OUTPUT_DIR}/dlangspec.tex ${DOC_OUTPUT_DIR}/dlan
 $(DOC_OUTPUT_DIR)/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	cp -f sitemap-template.dd $G/sitemap.dd
 	(true $(foreach F, $(TARGETS), \
-	  && echo \
-	    "$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`")) \
-	  | sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\([^\n\r]*\)/<a href="\1">\2<\/a><br>/' >> $G/sitemap.dd
+		&& echo \
+			"$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $(DOC_OUTPUT_DIR)/$F`")) \
+		| sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\([^\n\r]*\)/<a href="\1">\2<\/a><br>/' >> $G/sitemap.dd
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $G/sitemap.dd
 	rm $G/sitemap.dd
 
@@ -613,13 +617,13 @@ druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRERELEASE)
 
 druntime-release : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_RELEASE)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_RELEASE_HTML) \
-	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
-	  DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_RELEASE))"
+		DOCDIR=${DOC_OUTPUT_DIR}/phobos \
+		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_RELEASE))"
 
 druntime-latest : ${DRUNTIME_LATEST_DIR} $(DMD_LATEST) $(STD_DDOC_LATEST)
 	${MAKE} --directory=${DRUNTIME_LATEST_DIR} -f posix.mak target doc $(DDOC_VARS_LATEST_HTML) \
-	  DOCDIR=${DOC_OUTPUT_DIR}/phobos \
-	  DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_LATEST))"
+		DOCDIR=${DOC_OUTPUT_DIR}/phobos \
+		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_LATEST))"
 
 druntime-prerelease-verbatim : ${DRUNTIME_DIR} \
 		${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim
@@ -650,8 +654,8 @@ phobos-latest : ${PHOBOS_LATEST_FILES_GENERATED} $(DMD_LATEST) $(STD_DDOC_LATEST
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim
 ${DOC_OUTPUT_DIR}/phobos-prerelease/index.verbatim : verbatim.ddoc \
-	    ${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim \
-	    ${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim
+		${DOC_OUTPUT_DIR}/phobos-prerelease/object.verbatim \
+		${DOC_OUTPUT_DIR}/phobos-prerelease/mars.verbatim
 	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak html $(DDOC_VARS_VERBATIM) \
 	  DOC_OUTPUT_DIR=${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim
 	$(call CHANGE_SUFFIX,html,verbatim,${DOC_OUTPUT_DIR}/phobos-prerelease-verbatim)
@@ -666,22 +670,22 @@ apidocs-prerelease : ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml ${DOC_OUTP
 apidocs-latest : ${DOC_OUTPUT_DIR}/library/sitemap.xml ${DOC_OUTPUT_DIR}/library/.htaccess
 apidocs-serve : $G/docs-prerelease.json
 	${DPL_DOCS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
-	  --override-macros=std-ddox-override.ddoc --package-order=std \
-	  --git-target=master --web-file-dir=. $<
+		--override-macros=std-ddox-override.ddoc --package-order=std \
+		--git-target=master --web-file-dir=. $<
 
 ${DOC_OUTPUT_DIR}/library-prerelease/sitemap.xml : $G/docs-prerelease.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
-	  --override-macros=std-ddox-override.ddoc --package-order=std \
-	  --git-target=master $(DPL_DOCS_PATH_RUN_FLAGS) \
+		--override-macros=std-ddox-override.ddoc --package-order=std \
+		--git-target=master $(DPL_DOCS_PATH_RUN_FLAGS) \
 		$< ${DOC_OUTPUT_DIR}/library-prerelease
 
 ${DOC_OUTPUT_DIR}/library/sitemap.xml : $G/docs-latest.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
-	  --override-macros=std-ddox-override.ddoc --package-order=std \
-	  --git-target=v${LATEST} $(DPL_DOCS_PATH_RUN_FLAGS) \
-	  $< ${DOC_OUTPUT_DIR}/library
+		--override-macros=std-ddox-override.ddoc --package-order=std \
+		--git-target=v${LATEST} $(DPL_DOCS_PATH_RUN_FLAGS) \
+		$< ${DOC_OUTPUT_DIR}/library
 
 ${DOC_OUTPUT_DIR}/library/.htaccess : dpl_latest_htaccess
 	@mkdir -p $(dir $@)
@@ -693,25 +697,25 @@ ${DOC_OUTPUT_DIR}/library-prerelease/.htaccess : dpl_prerelease_htaccess
 
 DMD_EXCLUDE =
 ifeq (osx,$(OS))
-	DMD_EXCLUDE += -e /scanelf/d -e /libelf/d
+ DMD_EXCLUDE += -e /scanelf/d -e /libelf/d
 else
-	DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
+ DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
 endif
 
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 			${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_FILES_GENERATED} | dpl-docs
 	find ${DMD_LATEST_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE}  \
+		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE} \
 			> $G/.latest-files.txt
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
-	  sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
+		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
 	find ${PHOBOS_LATEST_DIR_GENERATED} -name '*.d' | \
-	  sed -e /unittest.d/d -e /windows/d | sort >> $G/.latest-files.txt
+		sed -e /unittest.d/d -e /windows/d | sort >> $G/.latest-files.txt
 	${DMD_LATEST} -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
-	  -version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
-	  -Xf$@ -I${PHOBOS_LATEST_DIR_GENERATED} @$G/.latest-files.txt
+		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
+		-Xf$@ -I${PHOBOS_LATEST_DIR_GENERATED} @$G/.latest-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
-	  --only-documented $(MOD_EXCLUDES_LATEST)
+		--only-documented $(MOD_EXCLUDES_LATEST)
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
 # DDox tries to generate the docs for all `.d` files. However for dmd this is tricky,
@@ -720,17 +724,17 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		${PHOBOS_FILES_GENERATED} | dpl-docs
 	find ${DMD_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE}  \
+		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE} \
 			> $G/.prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
-	  -e /unittest/d >> $G/.prerelease-files.txt
+		-e /unittest/d >> $G/.prerelease-files.txt
 	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
-	  -e /windows/d | sort >> $G/.prerelease-files.txt
+		-e /windows/d | sort >> $G/.prerelease-files.txt
 	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
-	  -version=StdDdoc -Df$G/.prerelease-dummy.html \
-	  -Xf$@ -I${PHOBOS_DIR_GENERATED} @$G/.prerelease-files.txt
+		-version=StdDdoc -Df$G/.prerelease-dummy.html \
+		-Xf$@ -I${PHOBOS_DIR_GENERATED} @$G/.prerelease-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
-	  --only-documented $(MOD_EXCLUDES_PRERELEASE)
+		--only-documented $(MOD_EXCLUDES_PRERELEASE)
 	rm -f $G/.prerelease-files.txt $G/.prerelease-dummy.html
 
 ################################################################################
@@ -739,9 +743,9 @@ $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 
 # workardound Issue 15574
 ifneq (osx,$(OS))
-    DPL_DOCS_DFLAGS=-conf=$(abspath ${STABLE_DMD_CONF}) -L--no-as-needed
+ DPL_DOCS_DFLAGS=-conf=$(abspath ${STABLE_DMD_CONF}) -L--no-as-needed
 else
-    DPL_DOCS_DFLAGS=-conf=$(abspath ${STABLE_DMD_CONF})
+ DPL_DOCS_DFLAGS=-conf=$(abspath ${STABLE_DMD_CONF})
 endif
 
 .PHONY: dpl-docs
@@ -856,9 +860,9 @@ test: $(ASSERT_WRITELN_BIN)_test test/next_version.sh all
 #
 #  2) Full-text messages
 #     - In all dlang repos, a `changelog` folder exists and can be used to add
-#     	small, detailed changelog messages (see e.g. https://github.com/dlang/phobos/tree/master/changelog)
+#       small, detailed changelog messages (see e.g. https://github.com/dlang/phobos/tree/master/changelog)
 #     - The changelog generation script searches for all Ddoc files within the `changelog` folders
-#     	and adds them to the generated changelog
+#       and adds them to the generated changelog
 #
 # The changelog script is at https://github.com/dlang/tools/blob/master/changed.d
 ################################################################################
