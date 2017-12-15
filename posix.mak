@@ -86,7 +86,7 @@
 #                               in the `/changelog` folders)
 #       rebase                  Rebase all DLang repos to upstream/master
 #       pdf                     Generates the D specification as a PDF
-#       mobi                    Generates the D specification as an ebook (Amazon mobi)
+#       kindle                  Generates the D specification as an ebook (Amazon mobi)
 #       verbatim                Copies the Ddoc plaintext files to .verbatim files
 #                               (i.e. doesn't run Ddoc on them)
 #       rsync                   Publishes the built website to dlang.org
@@ -125,7 +125,6 @@
 #  in the build folder `.generated`, s.t. Ddoc can be run on the modified sources.
 #
 #  See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
-
 PWD=$(shell pwd)
 
 # Latest released version
@@ -513,11 +512,13 @@ $G/dlangspec.zip : $G/dlangspec.html ebook.css
 	zip --junk-paths $@ $G/dlangspec.html ebook.css
 
 $(DOC_OUTPUT_DIR)/dlangspec.mobi : \
-		$G/dlangspec.opf $G/dlangspec.html $G/dlangspec.png $G/dlangspec.ncx ebook.css
-	rm -f $@ $G/dlangspec.mobi
-# kindlegen has warnings, ignore them for now
-	-kindlegen $G/dlangspec.opf
-	mv $G/dlangspec.mobi $@
+		dlangspec.opf dlangspec.ncx dlangspec.png $G/dlangspec.html  ebook.css
+	rm -f $@ $G/dlangspec.mobi dlangspec.html
+	# kindlegen has warnings, ignore them for now
+	-cp -f $G/dlangspec.html dlangspec.html; \
+		trap "rm -f dlangspec.html" EXIT; \
+		kindlegen dlangspec.opf
+	mv dlangspec.mobi $@
 
 ################################################################################
 # LaTeX
