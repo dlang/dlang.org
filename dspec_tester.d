@@ -39,6 +39,7 @@ int main(string[] args)
     auto helpInformation = getopt(
         args,
         "l|lines", "Show the line numbers on errors", &config.printLineNumbers,
+        "compiler", "D compiler to use", &config.dmdBinPath,
     );
 
     if (helpInformation.helpWanted)
