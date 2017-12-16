@@ -835,7 +835,11 @@ $(PHOBOS_LATEST_FILES_GENERATED): $(PHOBOS_LATEST_DIR_GENERATED)/%: $(PHOBOS_LAT
 # Style tests
 ################################################################################
 
-test: $(ASSERT_WRITELN_BIN)_test test/next_version.sh all
+test_dspec: dspec_tester.d $(STABLE_DMD)
+	@echo "Test the D Language specification"
+	DMD=$(DMD_LATEST) $(STABLE_RDMD) $<
+
+test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
 	@echo "Searching for trailing whitespace"
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
 	@echo "Searching for undefined macros"
