@@ -589,7 +589,7 @@ ${DMD_DIR}/VERSION : ${DMD_DIR}
 ################################################################################
 
 $(DMD) : ${DMD_DIR}
-	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
+	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 all
 
 $(DMD_LATEST) : ${DMD_LATEST_DIR}
 	${MAKE} --directory=${DMD_LATEST_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
@@ -842,7 +842,10 @@ $(PHOBOS_LATEST_FILES_GENERATED): $(PHOBOS_LATEST_DIR_GENERATED)/%: $(PHOBOS_LAT
 
 test_dspec: dspec_tester.d $(STABLE_DMD) $(DMD)
 	@echo "Test the D Language specification"
-	$(STABLE_RDMD) $< --compiler=$(DMD)
+	env
+	cat $(DMD).conf
+	$(DMD) --version
+	$(STABLE_DMD) -run $< --compiler=$(DMD)
 
 test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
 	@echo "Searching for trailing whitespace"

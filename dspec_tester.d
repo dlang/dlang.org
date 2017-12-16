@@ -50,6 +50,8 @@ int main(string[] args)
         return 1;
     }
 
+    stderr.writefln("DMD: %s", config.dmdBinPath);
+
     // Find all examples in the specification
     auto r = regex(`SPEC_RUNNABLE_EXAMPLE\n\s*---+\n[^-]*---+\n\s*\)`, "s");
     foreach (file; specDir.dirEntries("*.dd", SpanMode.depth).parallel(1))
@@ -88,11 +90,12 @@ Returns: the exit code of the compiler invocation.
 */
 auto compileAndCheck(R)(R buffer)
 {
-    import std.process;
+    import std.process : pipeProcess, Redirect, wait;
+    import std.process : EnvConfig = Config;
     import std.uni : isWhite;
 
     auto pipes = pipeProcess([config.dmdBinPath, "-c", "-o-", "-"],
-            Redirect.stdin | Redirect.stdout | Redirect.stderr);
+            Redirect.all, null, EnvConfig.newEnv);
 
     static mainRegex = regex(`(void|int)\s+main`);
     const hasMain = !buffer.matchFirst(mainRegex).empty;
