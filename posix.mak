@@ -267,7 +267,7 @@ DDOC_VARS_PRERELEASE= \
 	DMD_DIR="$(abspath ${DMD_DIR})" \
 	DRUNTIME_PATH="$(abspath ${DRUNTIME_DIR})" \
 	DOCSRC="$(PWD)" \
-	VERSION="$(abspath ${DMD_DIR}/VERSION)"
+	VERSION="$(abspath $G/changelog/next-version)"
 
 DDOC_VARS_PRERELEASE_HTML=$(DDOC_VARS_PRERELEASE) \
 	DOC_OUTPUT_DIR="$W/phobos-prerelease" \
@@ -608,12 +608,12 @@ dmd-latest : $(STD_DDOC_LATEST) $(DMD_LATEST_DIR) $(DMD_LATEST)
 dmd-release : $(STD_DDOC_RELEASE) $(DMD_DIR) #$(DMD)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
 
-dmd-prerelease : $(STD_DDOC_PRERELEASE) $(DMD_DIR) $(DMD)
+dmd-prerelease : $(STD_DDOC_PRERELEASE) $(DMD_DIR) $(DMD) $G/changelog/next-version
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
 
 dmd-prerelease-verbatim : $(STD_DDOC_PRERELEASE) $(DMD_DIR) \
 		$W/phobos-prerelease/mars.verbatim
-$W/phobos-prerelease/mars.verbatim: verbatim.ddoc
+$W/phobos-prerelease/mars.verbatim: verbatim.ddoc $G/changelog/next-version
 	mkdir -p $(dir $@)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM)
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
@@ -625,7 +625,7 @@ $W/phobos-prerelease/mars.verbatim: verbatim.ddoc
 # TODO: remove DOCDIR and DOCFMT once they have been removed at Druntime
 ################################################################################
 
-druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRERELEASE)
+druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRERELEASE) $G/changelog/next-version
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_PRERELEASE_HTML) \
 		DOCDIR=$W/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRERELEASE))"
@@ -642,7 +642,7 @@ druntime-latest : ${DRUNTIME_LATEST_DIR} $(DMD_LATEST) $(STD_DDOC_LATEST)
 
 druntime-prerelease-verbatim : ${DRUNTIME_DIR} \
 		$W/phobos-prerelease/object.verbatim
-$W/phobos-prerelease/object.verbatim : $(DMD)
+$W/phobos-prerelease/object.verbatim : $(DMD) $G/changelog/next-version
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_PRERELEASE_VERBATIM) \
 		DOCDIR=$W/phobos-prerelease-verbatim \
 		DOCFMT="`pwd`/verbatim.ddoc"
@@ -670,7 +670,7 @@ phobos-latest : ${PHOBOS_LATEST_FILES_GENERATED} $(DMD_LATEST) $(STD_DDOC_LATEST
 phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} $W/phobos-prerelease/index.verbatim
 $W/phobos-prerelease/index.verbatim : verbatim.ddoc \
 		$W/phobos-prerelease/object.verbatim \
-		$W/phobos-prerelease/mars.verbatim
+		$W/phobos-prerelease/mars.verbatim $G/changelog/next-version
 	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM) \
 	  DOC_OUTPUT_DIR=$W/phobos-prerelease-verbatim
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
