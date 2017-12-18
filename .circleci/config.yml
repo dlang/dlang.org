@@ -1,0 +1,21 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/dlang.org
+    docker:
+      - image: circleci/node:4.8.2
+    parallelism: 1
+    steps:
+      - checkout
+      - run:
+          command: ./.circleci/run.sh install-deps
+          name: Install DMD
+      - run:
+          command: ./.circleci/run.sh install-make
+          name: Compile & install GNUmake
+      - run:
+          command: ./.circleci/run.sh setup-repos
+          name: Clone DMD + DRuntime + Phobos
+      - run:
+          command: ./.circleci/run.sh run-make
+          name: Run the Makefile in RELEASE=1 mode
