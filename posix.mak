@@ -344,9 +344,10 @@ endif
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
+PAGES_ROOT=$(SPEC_ROOT) $(CHANGELOG_FILES) $(addprefix pages/, \
+	404 acknowledgements areas-of-d-usage \
 	articles ascii-table bugstats builtin \
-	$(CHANGELOG_FILES) code_coverage community comparison concepts \
+	code_coverage community comparison concepts \
 	const-faq contributors cppcontracts cpptod ctarguments ctod donate \
 	D1toD2 d-array-article d-floating-point deprecate dlangupb-scholarship dll-linux dmd \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
@@ -355,9 +356,9 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	intro-to-datetime lazy-evaluation menu migrate-to-shared mixin \
 	orgs-using-d overview pretod rationale rdmd regular-expression resources safed \
 	search template-comparison templates-revisited tuple \
-	variadic-function-templates warnings wc windbg
+	variadic-function-templates warnings wc windbg)
 
-TARGETS=$(addsuffix .html,$(PAGES_ROOT))
+TARGETS=$(subst pages/,, $(addsuffix .html,$(PAGES_ROOT)))
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $W/, $(TARGETS) \
 $(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
@@ -381,7 +382,7 @@ docs : docs-latest docs-prerelease
 
 html : $(ALL_FILES)
 
-verbatim : $(addprefix $W/, $(addsuffix .verbatim,$(PAGES_ROOT))) phobos-prerelease-verbatim
+verbatim : $(addprefix $W/, $(subst pages/,, $(addsuffix .verbatim,$(PAGES_ROOT)))) phobos-prerelease-verbatim
 
 kindle : $W/dlangspec.mobi
 
@@ -389,8 +390,8 @@ pdf : $W/dlangspec.pdf
 
 diffable-intermediaries : $W/dlangspec.tex $W/dlangspec.html
 
-$W/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
-	cp -f sitemap-template.dd $G/sitemap.dd
+$W/sitemap.html : pages/sitemap-template.dd $(ALL_FILES_BUT_SITEMAP) $(DMD)
+	cp -f $< $G/sitemap.dd
 	(true $(foreach F, $(TARGETS), \
 		&& echo \
 			"$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $W/$F`")) \
@@ -459,19 +460,19 @@ $W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
 
-$W/404.html : 404.dd $(DDOC) $(DMD)
+$W/404.html : pages/404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
 
-$(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors.ddoc $(DDOC) $(DMD)
+$(DOC_OUTPUT_DIR)/contributors.html: pages/contributors.dd $G/contributors.ddoc $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
 
-$W/%.html : %.dd $(DDOC) $(DMD)
+$W/%.html : pages/%.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
 $W/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
 
-$W/%.verbatim : %.dd verbatim.ddoc $(DMD)
+$W/%.verbatim : pages/%.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
 
 $W/%.php : %.php.dd $(DDOC) $(DMD)
@@ -492,11 +493,11 @@ $W/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) dcompiler.dd $<
+$W/dmd-%.html : %.ddoc pages/dcompiler.dd $(DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) pages/dcompiler.dd $<
 
-$W/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
+$W/dmd-%.verbatim : %.ddoc pages/dcompiler.dd verbatim.ddoc $(DMD)
+	$(DMD) -c -o- -Df$@ verbatim.ddoc pages/dcompiler.dd $<
 
 $W:
 	mkdir -p $@
