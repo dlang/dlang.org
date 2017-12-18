@@ -152,6 +152,8 @@ DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
 TMP?=/tmp
+# Additional repositories to query while building the contributors list
+OTHER_D_REPOS=../dub ../dub-registry ../dconf.org
 
 # Last released versions
 DMD_LATEST_DIR=${DMD_DIR}-${LATEST}
@@ -577,7 +579,7 @@ $G/twid_latest.ddoc:
 ../%-${LATEST} :
 	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
 
-${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
+${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR} ${OTHER_D_REPOS}:
 	git clone --depth=1 ${GIT_HOME}/$(notdir $(@F)) $@
 
 ${DMD_DIR}/VERSION : ${DMD_DIR}
@@ -926,7 +928,7 @@ prerelease_changelog: changelog/prerelease.dd html
 # Contributors listing: A list of all the awesome who made D possible
 ################################################################################
 
-$G/contributors.dd:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
+$G/contributors.dd:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR) $(OTHER_D_REPOS)
 	@$(STABLE_RDMD) $(TOOLS_DIR)/contributors.d --format=ddoc "master" > $@
 
 $G/contributors.ddoc: $G/contributors.dd
