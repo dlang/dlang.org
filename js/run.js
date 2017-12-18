@@ -99,10 +99,18 @@ var backends = {
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS#Preflighted_requests
     contentType: "text/plain; charset=UTF-8",
     requestTransform: function(data) {
-        return JSON.stringify({
+        var req = {
             source: data.code,
             compiler: dmdCompilerBranch
-        });
+        }
+        // only send set attributes
+        if (data.stdin) {
+          req.stdin = data.stdin;
+        }
+        if (data.args) {
+          req.args = data.args;
+        }
+        return JSON.stringify(req);
     },
     parseOutput: function(data, opts) {
       var r = {};
@@ -166,6 +174,24 @@ function parseOutput(res, o, oTitle)
         o.text(output);
 }
 
+// wraps a unittest into a runnable script
+function wrapIntoMain(code) {
+    var currentPackage = $('body')[0].id;
+
+    // dynamically wrap into main if needed
+    if (code.indexOf("void main") >= 0 || code.indexOf("int main") >= 0) {
+        return code;
+    }
+    else {
+        var codeOut = "void main()\n{\n";
+        // writing to the stdout is probably often used
+        codeOut += "    import std.stdio: write, writeln, writef, writefln;\n    ";
+        codeOut += code.split("\n").join("\n    ");
+        codeOut += "\n}";
+        return codeOut;
+    }
+}
+
 $(document).ready(function()
 {
     setUpExamples();
@@ -215,8 +241,14 @@ $(document).ready(function()
         var outputDiv = parent.children("div.d_code_output");
         var hasStdin = parent.children(".inputButton").length > 0;
         var hasArgs  = parent.children(".argsButton").length > 0;
-        setupTextarea(this, {parent: parent, outputDiv: outputDiv,
-                        stdin: hasStdin, args: hasArgs});
+        setupTextarea(this, {
+          parent: parent,
+          outputDiv: outputDiv,
+          stdin: hasStdin,
+          args: hasArgs,
+          defaultOutput: "Succeed without output.",
+          transformOutput: wrapIntoMain,
+        });
     });
 });
 
@@ -231,11 +263,6 @@ function setupTextarea(el, opts)
     }, opts);
 
     var backend = backends[opts.backend || "tour"];
-    // only use DPaste if absolutely necessary (stdin or args provided)
-    // DPaste is very restrictive compared to the Dockerized DLang Tour backend
-    if (opts.args || opts.stdin) {
-      backend = backends.dpaste;
-    }
 
     if (!!opts.parent)
         var parent = opts.parent;
@@ -425,7 +452,8 @@ function setupTextarea(el, opts)
         });
     });
     openInEditorBtn.click(function(){
-      var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&source=" + encodeURIComponent(opts.transformOutput(editor.getValue()));
+      var text = (editor && editor.getValue()) || prepareForMain();
+      var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&source=" + encodeURIComponent(opts.transformOutput(text));
       window.open(url, "_blank");
     });
     return editor;

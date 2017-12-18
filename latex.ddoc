@@ -37,15 +37,16 @@ CODE_PERCENT=\verb|%|
 CODE_PIPE=\lstinline^|^
 CODE_RCURL=\verb|}|
 COMMA=,
-CONSOLE=$(TT $0)
-CPPCODE=\lstset{language=C++}\lstinline|$0|\lstset{language=C++}
+CONSOLE=\lstset{language=bash}\begin{lstlisting}
+$0\end{lstlisting}\lstset{language=D}
+CPPCODE=\lstset{language=C++}\lstinline|$0|\lstset{language=D}
 CROSS=$\times$
 _=
 
 CPPLISTING=\lstset{language=C++}
 \begin{lstlisting}
 $0\end{lstlisting}
-\lstset{language=C++}
+\lstset{language=D}
 _=
 
 D=\lstinline|$0|
@@ -66,7 +67,8 @@ DDOC_COMMENT=% $0
 DDOC_BLANKLINE = \par
 DDOC_KEYWORD=$0
 DDOC_UNDEFINED_MACRO = $(DDOC_COMMENT UNDEFINED MACRO: $1)
-DDOCCODE=$(D_CODE $0)
+DDOCCODE=\lstset{language=html}\begin{lstlisting}
+$0\end{lstlisting}\lstset{language=D}
 DDSUBLINK=$(LINK2 $1.html$(HASH)$2, $3)
 _=
 
@@ -239,6 +241,7 @@ PERCENT=\%
 PHOBOS=$(LINK2 phobos/std_$1.html\#$2, $3)
 _=
 
+RAWHTML=\begin{lstlisting}[language=html,breaklines=true,breakatwhitespace=true]$0\end{lstlisting}
 RCURL=$\}$
 RED={\color{red}$0}
 REF=$(D $2$(DOT_PREFIXED_SKIP $+).$1)
@@ -258,8 +261,15 @@ SECTION5=$(H5 $1) $+
 SHY=\-
 SINGLEQUOTE=`$0'
 SMALL=\small{$0}
+SPEC_RUNNABLE_EXAMPLE=$0
 SPEC_S=$(LAYOUT , $1, $(ARGS $+))
-SUB=\textsubscript{$0}
+SPEC_SUBNAV_NEXT=
+SPEC_SUBNAV_PREV=
+SPEC_SUBNAV_PREV_NEXT=
+SUBSCRIPT=\textsubscript{$0}
+SPEC_SUBNAV_PREV=
+SPEC_SUBNAV_PREV_NEXT=
+SPEC_SUBNAV_NEXT=
 SUP=\textsuperscript{$0}
 _=
 
@@ -299,7 +309,7 @@ $(B $1)\nopagebreak \\
 \end{center}
 _=
 
-TABLE_SPECIAL=\begin{center}
+TABLE_SPECIAL=\begin{center}\small
 $(B $1)\nopagebreak \\
 \begin{tabular}{p{0.2\textwidth}ll}
 $+
@@ -383,6 +393,7 @@ DDOC=% Copyright (c) 1999-$(YEAR) by Digital Mars
 \usepackage{multicol}
 \usepackage{longtable}
 \usepackage[T1]{fontenc}
+\usepackage{MnSymbol}
 
 \premulticols=50pt
 \multicolsep=0pt
@@ -390,43 +401,29 @@ DDOC=% Copyright (c) 1999-$(YEAR) by Digital Mars
 \hypersetup{pdftitle={D Programming Language Specification}}
 \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=Blue}
 
-\def\commentstyle{%
-  \color{OliveGreen}%
-  \textsl%
+% D language definition for the listings package
+\lstdefinelanguage{D}[ANSI]{C++}{basicstyle={\ttfamily}, basewidth={0.5em,0.5em}, breakatwhitespace=true, columns=fullflexible, commentstyle=\color{OliveGreen}\textsl, escapeinside={/*[}{]*/}, fontadjust=true, keepspaces=true, keywordstyle=\color{NavyBlue}, linewidth=\textwidth, literate={\\\$}{\$}1 {\\par}{}0, morecomment=[n]{/+}{+/}, morekeywords={
+    @disable, @property,
+    @safe, @system, @trusted, abstract, alias, align, asm, assert,
+    auto, body, bool, break, byte, case, cast, catch, cdouble,
+    cent, cfloat, char, class, const, continue, creal, dchar,
+    debug, default, delegate, delete, deprecated, do, double,
+    else, enum, export, extern, false, final, finally, float, for,
+    foreach, foreach_reverse, function, goto, idouble, if, ifloat,
+    immutable, import, in, inout, int, interface, invariant,
+    ireal, is, lazy, long, mixin, module, new, nothrow, null, out,
+    override, package, pragma, private, protected, public, real,
+    ref, return, scope, shared, short, static, struct, super,
+    switch, synchronized, template, this, throw, true, try,
+    typedef, typeid, typeof, ubyte, ucent, uint, ulong, union,
+    unittest, ushort, version, void, volatile, wchar, while,
+    with, \#!, macro, pure, __FILE__, __FILE_FULL_PATH__, __MODULE__,
+    __LINE__, __FUNCTION__, __PRETTY_FUNCTION__, __gshared, __traits,
+    __vector, __parameters},stringstyle=\color{BrickRed},
 }
+% Default language is D, if changed locally it should be restored.
+\lstset{language=D}
 
-\newcommand\ccbox[1]{\mbox{\cc{#1}}}
-
-\lstset{language=C++,basicstyle=\ttfamily,escapeinside={/*[}{]*/}}
-\lstset{commentstyle=\commentstyle,morecomment=[n]{/+}{+/}}
-\lstset{stringstyle=\color{BrickRed},keywordstyle=\color{NavyBlue}}
-\lstset{basewidth={0.5em,0.5em},fontadjust=true}
-\lstset{linewidth=\textwidth}
-\lstset{morekeywords={@disable,   @property,
-        @safe, @system, @trusted, abstract, alias, align, asm, assert,
-        auto,  body, bool,  break, byte,  case, cast,  catch, cdouble,
-        cent,  cfloat,  char, class,  const,  continue, creal,  dchar,
-        debug,  default,  delegate,  delete, deprecated,  do,  double,
-        else, enum, export, extern, false, final, finally, float, for,
-        foreach, foreach_reverse, function, goto, idouble, if, ifloat,
-        immutable,  import,  in,  inout,  int,  interface,  invariant,
-        ireal, is, lazy, long, mixin, module, new, nothrow, null, out,
-        override, package,  pragma, private, protected,  public, real,
-        ref,  return,  scope, shared,  short,  static, struct,  super,
-        switch,  synchronized,  template,   this,  throw,  true,  try,
-        typedef,  typeid, typeof,  ubyte, ucent,  uint,  ulong, union,
-        unittest,  ushort,  version,  void,  volatile,  wchar,  while,
-        with,\#!, macro, pure, __FILE__,__FILE_FULL_PATH__,__MODULE__,
-        __LINE__,__FUNCTION__,__PRETTY_FUNCTION__,__gshared, __traits,
-        __vector, __parameters}}
-\lstset{morecomment=[n]{/+}{+/}}
-
-% Nice line breaks.
-% See http://www.bollchen.de/blog/2011/04/good-looking-line-breaks-with-the-listings-package/
-\usepackage{MnSymbol}
-\lstset{prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\rhookswarrow}}}
-\lstset{postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\rcurvearrowse\space}}}
-\lstset{breaklines=true}
 \sloppy
 
 % Page size

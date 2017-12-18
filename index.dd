@@ -8,8 +8,9 @@ $(DIVC intro, $(DIV, $(DIV,
     $(DIV,
         $(TC p, pitch, $(B D) is a general-purpose programming language with
         static typing, systems-level access, and C-like syntax.
-        It combines efficiency, control and modeling power with safety
-        and programmer productivity.)
+        With the $(B D Programming Language), write fast,
+        read fast, and run fast.
+        $(BR)$(BR)Fast code, fast.)
 
         $(DIVC download,
             $(DIVC btn-group-vertical,
@@ -127,10 +128,10 @@ $(EXTRA_EXAMPLE_RUNNABLE Print hex dump,
 ----
 void main()
 {
-    import std.algorithm, std.stdio, std.file;
-    enum cols = 16;
-    // Split file into 16-byte chunks per row
-    thisExePath.File("rb").byChunk(cols).each!(chunk =>
+    import std.algorithm, std.stdio, std.file, std.range;
+    enum cols = 14;
+    // Split file into 14-byte chunks per row
+    thisExePath.File("rb").byChunk(cols).take(20).each!(chunk =>
         // Use range formatting to format the
         // hexadecimal part and align the text part
         writefln!"%(%02X %)%*s  %s"(
@@ -151,9 +152,7 @@ dependency "vibe-d" version="~>0.8.0"
 void main()
 {
     import vibe.d;
-    auto settings = new HTTPServerSettings;
-    settings.port = 8080;
-    listenHTTP(settings, (req, res) {
+    listenHTTP(":8080", (req, res) {
         res.writeBody("Hello, World: " ~ req.path);
     });
     runApplication();
@@ -164,7 +163,8 @@ $(EXTRA_EXAMPLE_RUNNABLE Initialize an Array in parallel,
 ----
 void main()
 {
-    import std.datetime, std.math, std.parallelism, std.stdio;
+    import std.datetime.stopwatch : benchmark;
+    import std.math, std.parallelism, std.stdio;
 
     auto logs = new double[100_000];
     auto bm = benchmark!({
@@ -174,8 +174,8 @@ void main()
         foreach (i, ref elem; logs.parallel)
             elem = log(1.0 + i);
     })(100); // number of executions of each tested function
-    writefln("Linear init: %s msecs", bm[0].msecs);
-    writefln("Parallel init: %s msecs", bm[1].msecs);
+    writefln("Linear init: %s msecs", bm[0].total!"msecs");
+    writefln("Parallel init: %s msecs", bm[1].total!"msecs");
 }
 ----
 )
@@ -391,10 +391,10 @@ $(DIVC boxes,
     )
 )
 
-$(DIVC whyd, $(SECTION2 Why D?,
+$(DIVC whyd, $(SECTION2 Fast code$(COMMA) fast.,
 
 $(DIVC section,
-$(DIV, $(SECTION3 $(WHY_D_ICON magic) Convenience,
+$(DIV, $(SECTION3 $(WHY_D_ICON magic) Write Fast,
 
 $(P D allows writing large code fragments without redundantly specifying types,
 like dynamic languages do. On the other hand, static inference deduces types and other
@@ -479,7 +479,7 @@ void main()
 
 )))
 
-$(DIVC section, $(DIV, $(SECTION3 $(WHY_D_ICON rocket) Power,
+$(DIVC section, $(DIV, $(SECTION3 $(WHY_D_ICON rocket) Read Fast,
 
 $(P The best paradigm is to not impose something at the expense of others.
 D offers classic polymorphism, value semantics, functional
@@ -549,7 +549,7 @@ Read more).)
 
 )))
 
-$(DIVC section, $(DIV, $(SECTION3 $(WHY_D_ICON bolt) Efficiency,
+$(DIVC section, $(DIV, $(SECTION3 $(WHY_D_ICON bolt) Run Fast,
 
 $(P D compiles naturally to efficient native code.)
 
@@ -617,11 +617,11 @@ consistency. $(LINK2 spec/memory-safe-d.html, Read more).)
 
 $(DIVC section, $(DIV, $(SECTION3 $(WHY_D_ICON industry) Industry-proven,
 $(DIVC frontpage-orgs center,
-    $(FRONTPAGE_ORG Facebook, https://www.facebook.com, facebook.svg,
-        Online social networking service
-    )
     $(FRONTPAGE_ORG eBay, https://www.ebay.com, ebay.jpg,
         One of the world’s largest marketplaces
+    )
+    $(FRONTPAGE_ORG Netflix, https://www.netflix.com, netflix.jpg,
+        Video-on-demand streaming platform
     )
     $(FRONTPAGE_ORG Sociomantic, https://www.sociomantic.com, sociomantic.png,
         Real-time personalized advertising
