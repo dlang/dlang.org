@@ -1,0 +1,670 @@
+Ddoc
+
+$(CHANGELOG_NAV_LAST 2.077.1)
+
+$(VERSION Jan 01, 2018, =================================================,
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 PR7356,`opDispatch` resolution in `with` statements))
+$(LI $(RELATIVE_LINK2 body,Generate header files using `do` instead of `body` as per DIP1003))
+$(LI $(RELATIVE_LINK2 crt-constructor,pragma(crt_constructor) and pragma(crt_destructor) were added))
+$(LI $(RELATIVE_LINK2 fix11006,Subtraction of pointers that point to different types has been deprecated.))
+$(LI $(RELATIVE_LINK2 fix15243_PR7403,Variadic template arguments no longer require `alias` workaround))
+$(LI $(RELATIVE_LINK2 fix16997,fix Issue 16997 - Integral promotion rules not being followed for unary + - ~ operators))
+$(LI $(RELATIVE_LINK2 optional_ModuleInfo,Optional `ModuleInfo`))
+$(LI $(RELATIVE_LINK2 raii,Added RAII and try-finally support for -betterC mode.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 core-runtime-unittestEnhancement,`core.runtime` now allows more fine-grained control over unittests.))
+$(LI $(RELATIVE_LINK2 covopts,The runtime learned a few new options to customize how coverage reports are created.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 std-algorithm-iteration-mean,`mean` Was Added To `std.algorithm`))
+$(LI $(RELATIVE_LINK2 std-algorithm-searching-findSkip,`findSkip` can now skip elements using just a predicate function))
+$(LI $(RELATIVE_LINK2 std-array-bypair,`std.array.byPair` now returns a `NamedTuple`))
+$(LI $(RELATIVE_LINK2 std-container-dlist-linearRemoveElement,`std.container.dlist` supports `linearRemoveElement`))
+$(LI $(RELATIVE_LINK2 std-container-slist-linearRemoveElement,`std.container.slist` supports `linearRemoveElement`))
+$(LI $(RELATIVE_LINK2 std-range-package-Transposed-deprecate-save,Deprecate `save` for `std.range.package.Transposed`))
+$(LI $(RELATIVE_LINK2 std-typecons-ternary-opBinary,`std.typecons.Ternary.opBinary` supports `bool` bitwise operands))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 PR7356,`opDispatch` resolution in `with` statements)
+$(P
+`opDispatch` resolution in `with` statements has been modified to bring it into compliance with the existing scope resolution rules in the language specification.  See $(LINK2 $(ROOT_DIR)spec/statement.html#with-statement, WithStatement) in the language specification.
+)
+
+$(P
+Prior to this release, the following code would not compile because the compiler would not be able to resolve the second call to `f()`, as `Bar` does not implement `f()` or `opDispatch`.
+)
+-------
+import std.stdio;
+
+struct Foo
+{
+    void opDispatch(string name)()
+    {
+        mixin("writeln(\"Foo.opDispatch!" ~ name ~ "\");");
+    }
+}
+
+struct Bar
+{
+    // `Bar` does not implement `f()` or `opDispatch`
+}
+
+void main()
+{
+    Foo foo;
+    Bar bar;
+
+    with(foo)
+    {
+        f();       // prints "Foo.opDispatch!f"
+        with(bar)
+        {
+            f();   // Prior to this Release: Error: undefined identifer `f`
+                   // Starting with  this release: Prints "Foo.opDispatch!f".
+                   // `f`'s resolution is forwarded up the scope hierarchy.
+        }
+    }
+}
+-------
+
+$(P
+Starting with this release, the second call to `f()` will be forwarded up the scope hierarchy, matching the implementation of `Foo.opDispatch`.
+)
+)
+
+$(LI $(LNAME2 body,Generate header files using `do` instead of `body` as per DIP1003)
+$(P
+Support for
+$(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/DIP1003.md, DIP1003)
+was added in release 2.075.0. Use of `body` in an error message and
+header file generation has been fixed in this release.
+)
+)
+
+$(LI $(LNAME2 crt-constructor,pragma(crt_constructor) and pragma(crt_destructor) were added)
+$(P
+This allows programs to run initialization code before or cleanup code after C
+main.
+)
+
+$(P
+In particular those pragmas can be used in $(TT -betterC) code as substitutes
+for $(LINK2 $(ROOT_DIR)spec/class.html#shared_static_constructors, `shared static this()`) and
+$(LINK2 $(ROOT_DIR)spec/class.html#shared_static_destructors, `shared static ~this()`).
+)
+
+$(P
+$(RED Note:) At the time of execution druntime is not initialized.
+)
+
+$(P
+$(RED Note:) The order in which constructors are executed is unspecified.
+)
+
+---
+import core.stdc.stdio;
+
+pragma(crt_constructor)
+void init()
+{
+    puts("init");
+}
+
+pragma(crt_destructor)
+void fini()
+{
+    puts("fini");
+}
+
+extern(C) int main()
+{
+    puts("main");
+}
+---
+)
+
+$(LI $(LNAME2 fix11006,Subtraction of pointers that point to different types has been deprecated.)
+$(P
+$(LINK2 $(ROOT_DIR)spec/expression.html#add_expressions, The language specification) reads:
+"If both operands are pointers, and the operator is -, the pointers are subtracted and the result is divided by the size of the type pointed to by the operands. It is an error if the pointers point to different types."
+)
+
+$(P
+Prior to this release, the compiler allowed the following pointer arithmetic:
+)
+-------
+void* p1;
+int* p2;
+auto p3 = p2 - p1;
+-------
+$(P
+Starting with this release, the subtraction of pointers that point to different types will emit a deprecation warning.  The warning will remain in place for at least a year, after which it will be changed to an error.
+)
+)
+
+$(LI $(LNAME2 fix15243_PR7403,Variadic template arguments no longer require `alias` workaround)
+$(P
+Prior to this release, the following code would not compile.
+)
+
+----
+class C(Types...)
+{
+    void apply(U)(U delegate(Types[0]) f0) { }  // Error: cannot deduce function from argument types
+}
+
+void test()
+{
+    C!int c;
+
+    int f(int) { return 0; }
+
+    c.apply(&f);
+}
+----
+
+$(P
+It could be worked around by `alias`ing the individual template arguments.
+)
+
+----
+class C(Types...)
+{
+    alias Types[0] T0;
+    void apply(U)(U delegate(T0) f0) { }  // OK
+}
+----
+
+$(P
+Starting with this release, the workaround is no longer required.
+)
+)
+
+$(LI $(LNAME2 fix16997,fix Issue 16997 - Integral promotion rules not being followed for unary + - ~ operators)
+$(P
+To follow the C integral promotion rules, types are promoted to `int` before the unary
++ - or ~ operators are applied. Existing D does not do this.
+)
+
+$(P
+This is corrected when one of the following command line switches are used:
+)
+
+$(P
+    -transition=intpromote
+    -transition=16997
+)
+
+$(P
+It affects operands of type `byte`, `ubyte`, `short`, `ushort`, `char`, and `wchar`.
+The operands are promoted to `int` before the operator is applied. The result
+type will now be `int`.
+)
+
+$(P
+The values computed will be different for some values of the operands:
+)
+
+$(P
+* All values of - and ~ applied to ubyte, ushort, char, and dchar operands will change.
+)
+
+$(P
+* The values of `-byte(-128)` and `-short(-32768)` will change.
+)
+
+$(P
+If one of the '-transition=' switches is not specified, and warnings are turned on,
+a warning will be emitted for these operations. To turn off the warning and work
+as desired with or without the '-transition=' switch:
+)
+
+$(P
+Option 1:
+)
+
+$(P
+Rewrite `op b` as `op int(b)` to use correct, i.e. C-like, behavior.
+)
+
+$(P
+Option 2:
+)
+
+$(P
+Rewrite `op b` as `typeof(b)(op int(b))` to preserve the old behavior.
+)
+
+$(P
+Eventually, the warning will become a deprecation, then an error, and then the C-like behavior
+will become the default.
+)
+)
+
+$(LI $(LNAME2 optional_ModuleInfo,Optional `ModuleInfo`)
+$(P
+$(LINK2 $(ROOT_DIR)phobos/object.html#.ModuleInfo, `ModuleInfo`) is not a necessary feature of D.  There are use cases where the program author may choose to provide an alternate implementation of the D runtime that does not include `ModuleInfo`.  This could be for interoperability with other software or to reduce the footprint of D programs in resource constrained platforms.
+)
+
+$(P
+Prior to this release, the compiler would emit an error if `ModuleInfo` was not declared in the D runtime.
+)
+
+$(P
+Platform support is provided by the D runtime. `ModuleInfo` is declared in object.d. Therefore, the compiler can see, at compile-time, whether or not the platform has provided support for `ModuleInfo` and generate object code accordingly.
+)
+
+$(P
+Starting with this release, if `ModuleInfo` is not delared in the D runtime, the compiler will simply not generate `ModuleInfo` instances.
+)
+
+$(P
+This should reduce friction for those wishing to incrementally port D to new platforms and use D in a more pay-as-you-go fashion.
+)
+)
+
+$(LI $(LNAME2 raii,Added RAII and try-finally support for -betterC mode.)
+$(P
+This also means that scope(exit) statements will also work, because
+they are internally lowered to try-finally statements.
+)
+
+$(P
+This does not mean that exceptions are supported. Throwing,
+catching, and stack frame unwinding is not supported, as that
+requires support from Phobos.
+)
+
+$(P
+It means that, for RAII, when variables go out of lexical scope
+their destructors get run. When try blocks from try-finally statements
+exit, the code in the finally block is run.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 core-runtime-unittestEnhancement,`core.runtime` now allows more fine-grained control over unittests.)
+$(P
+`core.runtime.extendedModuleUnitTester` property allows specifying information
+about the tests run, and how to handle the result. See documentation for
+`core.runtime.UnitTestResult` for details.
+)
+
+$(P
+`core.runtime.moduleUnitTester` (setting a unittest handler that returns bool)
+will continue to be supported for legacy projects.
+)
+
+-----------------
+import core.runtime;
+import core.stdc.stdio: printf;
+
+UnitTestResult customTester()
+{
+    UnitTestResult ret;
+
+    // run only the tests in my package
+    immutable prefix = "myPackage.";
+    foreach (m; ModuleInfo)
+    {
+        if (m.unitTest !is null && m.name.length >= prefix.length &&
+              m.name[0 .. prefix.length] == prefix)
+        {
+            ++ret.executed; // count unit tests run
+            try
+            {
+                m.unitTest();
+                ++ret.passed; // count unit tests passed
+            }
+            catch(Throwable t)
+            {
+                auto msg = t.toString();
+                printf("%.*s\n", cast(uint)msg.length, msg.ptr);
+            }
+        }
+    }
+    // always summarize
+    ret.summarize = true;
+    // only unit testing, don't ever run main
+    ret.runMain = false;
+}
+
+version(unittest) static shared this()
+{
+    Runtime.extendedModuleUnitTester = &customTester;
+}
+-----------------
+)
+
+$(LI $(LNAME2 covopts,The runtime learned a few new options to customize how coverage reports are created.)
+$(P
+The format is the same as with the GC but using `covopt` as suffix, for example
+you can pass options separating them with spaces like `--DRT-covopt "merge:1
+dstpath:/tmp"`.
+)
+
+$(P
+These are the currently accepted options:
+)
+
+$(P
+$(DL
+  $(DT merge) $(DD Merge the current run with existing reports if 1, or overwrite the existing reports if 0.)
+  $(DT srcpath) $(DD Set path to where source files are located.)
+  $(DT dstpath) $(DD Set path to where listing files are to be written.)
+)
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 std-algorithm-iteration-mean,`mean` Was Added To `std.algorithm`)
+$(P
+$(REF mean, std, algorithm, iteration) accurately finds the
+mean (a.k.a the average) of any range of number-like elements.
+)
+
+-----
+import std.algorithm.iteration : mean;
+import std.math : approxEqual;
+
+int[] arr1 = [1, 2, 3];
+real[] arr2 = [1.5, 2.5, 12.5];
+
+assert(arr1.mean.approxEqual(2));
+assert(arr2.mean.approxEqual(5.5));
+
+// user defined number types also work
+import std.bigint : BigInt;
+
+auto bigint_arr = [
+    BigInt("1_000_000_000_000_000_000"),
+    BigInt("2_000_000_000_000_000_000"),
+    BigInt("3_000_000_000_000_000_000"),
+    BigInt("6_000_000_000_000_000_000")
+];
+auto seed = BigInt(0);
+assert(bigint_arr.mean(seed) == BigInt("3_000_000_000_000_000_000"));
+-----
+)
+
+$(LI $(LNAME2 std-algorithm-searching-findSkip,`findSkip` can now skip elements using just a predicate function)
+$(P
+Previously, $(REF findSkip, std, algorithm, searching) could only
+be used to find a specific string. Now, a new overload allows elements
+in a range to be skipped over if the passed function returns `true`:
+)
+
+-------
+import std.ascii : isWhite;
+string s = "   abc";
+assert(findSkip!isWhite(s) == 3 && s == "abc");
+assert(!findSkip!isWhite(s) && s == "abc");
+-------
+)
+
+$(LI $(LNAME2 std-array-bypair,`std.array.byPair` now returns a `NamedTuple`)
+$(P
+$(REF byPair, std, array) now returns a named tuple.
+)
+
+---
+import std.array : byPair;
+import std.typecons : Tuple;
+
+int[string] dict = ["b": 2, "c": 3];
+auto pairs = dict.byPair;
+static assert(is(typeof(pairs.front) : Tuple!(string,int)));
+
+// access by index (existing way)
+assert(pairs.front[0] == "b");
+assert(pairs.front[1] == 2);
+
+// access by name (enabled with this release)
+assert(pairs.front.key == "b");
+assert(pairs.front.value == 2);
+---
+)
+
+$(LI $(LNAME2 std-container-dlist-linearRemoveElement,`std.container.dlist` supports `linearRemoveElement`)
+$(P
+`linearRemoveElement` removes the first occurence of an element from the dlist
+)
+
+-----
+import std.container : Dlist;
+import std.algorithm.comparison : equal;
+
+auto a = DList!int(-1, 1, 2, 1, 3, 4);
+a.linearRemoveElement(1);
+assert(equal(a[], [-1, 2, 1, 3, 4]));
+-----
+)
+
+$(LI $(LNAME2 std-container-slist-linearRemoveElement,`std.container.slist` supports `linearRemoveElement`)
+$(P
+`linearRemoveElement` removes the first occurence of an element from the slist
+)
+
+-----
+import std.container : Slist;
+import std.algorithm.comparison : equal;
+
+auto a = SList!int(-1, 1, 2, 1, 3, 4);
+a.linearRemoveElement(1);
+assert(equal(a[], [-1, 2, 1, 3, 4]));
+-----
+)
+
+$(LI $(LNAME2 std-range-package-Transposed-deprecate-save,Deprecate `save` for `std.range.package.Transposed`)
+$(P
+Transposed is incorrectly marked as a forward range. Its `popFront` primitive
+cannot be used without affecting any other copies made with `save`. `save` will be
+removed from Transposed in November 2018.
+)
+
+-----
+auto x = [[1,2,3],[4,5,6]].transposed;
+auto y = x.save;
+y.popFront;
+assert(x.equal([[1,4],[2,5],[3,6]])); // FAILS, x is really [[2,5],[3,6]]
+-----
+
+$(P
+For more details, please see the respective $(LINK2 https://issues.dlang.org/show_bug.cgi?id=17952,
+Bugzilla issue).
+)
+)
+
+$(LI $(LNAME2 std-typecons-ternary-opBinary,`std.typecons.Ternary.opBinary` supports `bool` bitwise operands)
+$(P
+Now $(REF Ternary, std, typecons) can be used in bitwise operations with `bool`s:
+)
+
+-----
+import std.typecons : Ternary;
+
+Ternary a = Ternary(true);
+assert(a == Ternary.yes);
+assert((a & false) == Ternary.no);
+assert((a | false) == Ternary.yes);
+assert((a ^ true) == Ternary.no);
+assert((a ^ false) == Ternary.yes);
+-----
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 17246): [REG2.053] Extra destructor call.)
+$(LI $(BUGZILLA 17371): [REG 2.074.0] di generation broken for anonymous classes)
+$(LI $(BUGZILLA 17559): [REG2.073.0] Wrong line number in stack trace)
+$(LI $(BUGZILLA 17915): [REG 2.073] core.exception.AssertError@ddmd/optimize.d$(LPAREN)614$(RPAREN): Assertion failure)
+$(LI $(BUGZILLA 17955): compiler segfault in DsymbolSemanticVisitor::visit$(LPAREN)UnittestDeclaration*$(RPAREN))
+$(LI $(BUGZILLA 18020): [Reg 2.078] no property opCmp for anon class)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 5332): Undefined reference to zero length array)
+$(LI $(BUGZILLA 6400): opDispatch with WithStatement)
+$(LI $(BUGZILLA 8262): ICE$(LPAREN)mtype.c$(RPAREN) alias this to alias of an expression tuple)
+$(LI $(BUGZILLA 9290): Ability to modify immutable struct members in static array assignment)
+$(LI $(BUGZILLA 10310): VRP for bitwise &|^ does not always produce the tightest bounds.)
+$(LI $(BUGZILLA 11006): Subtraction of pointers for `void` and non-void types compiles)
+$(LI $(BUGZILLA 12385): Enum member should not be modifiable when the member is immutable)
+$(LI $(BUGZILLA 12496): __traits$(LPAREN)parent, x$(RPAREN) returns incorrect type)
+$(LI $(BUGZILLA 12625): [scope] [DIP1000] implicit slicing of RValue static array should be illegal)
+$(LI $(BUGZILLA 15094): __traits$(LPAREN)getMember$(RPAREN) fails when the source is a struct/class field)
+$(LI $(BUGZILLA 15243): rejects-valid on variadic)
+$(LI $(BUGZILLA 15289): VRP not working as expected on division)
+$(LI $(BUGZILLA 15290): length of  associative array literal with duplicate keys is wrong)
+$(LI $(BUGZILLA 16649): Header gen skips parens)
+$(LI $(BUGZILLA 16694): ICE on taking address of `export` function $(LPAREN)declaration-only$(RPAREN))
+$(LI $(BUGZILLA 16997): Integral promotion rules not being followed for unary + - ~ expressions)
+$(LI $(BUGZILLA 17096): many traits accept an invalid parameter count without error)
+$(LI $(BUGZILLA 17167): dmd fails to write to file or create directory with more than 248 characters in the path)
+$(LI $(BUGZILLA 17382): void main$(LPAREN)$(RPAREN){}pragma$(LPAREN)msg,main$(LPAREN)$(RPAREN)$(RPAREN); crashes DMD)
+$(LI $(BUGZILLA 17585): Wrong error message for deprecated overrides)
+$(LI $(BUGZILLA 17586): Overriding a deprecated base class function gives no warning)
+$(LI $(BUGZILLA 17842): [scope] array append allows for escaping references)
+$(LI $(BUGZILLA 17843):  -betterC struct with `double` field generates references to TypeInfo)
+$(LI $(BUGZILLA 17853): Switch statement without braces only works with one case)
+$(LI $(BUGZILLA 17900): FreeBSD 10.3 runnable/cpp_abi_tests.d$(LPAREN)94$(RPAREN): Assertion failure $(LPAREN)test suite$(RPAREN))
+$(LI $(BUGZILLA 17908): Can't alias an overload set with disabled function)
+$(LI $(BUGZILLA 17927): [scope] `scope inout` parameter value can be escaped via return)
+$(LI $(BUGZILLA 17934): [scope] scopeness entrypoint for unique/ref-counted missing)
+$(LI $(BUGZILLA 17935): [scope] auto-generated destructor not scope aware)
+$(LI $(BUGZILLA 17940): bool function parameters loaded from struct sometimes miscompiled with -O)
+$(LI $(BUGZILLA 17944): MSCOFF: debug info not compatible with LLVMs LLD)
+$(LI $(BUGZILLA 17947): C++ std::pair::swap mangled incorrectly)
+$(LI $(BUGZILLA 17976): core.exception.AssertError@ddmd/dsymbolsem.d$(LPAREN)1624$(RPAREN))
+$(LI $(BUGZILLA 17997): autotester's d_do_test has strange failures with Win32)
+$(LI $(BUGZILLA 18014): DMD test suite fails to link on Linux distros where PIC/PIE is enforced)
+$(LI $(BUGZILLA 18045): Temporary created during comparison not destroyed)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 4946): Not good error message with wrongly positioned 'const')
+$(LI $(BUGZILLA 17256): Inconsistent output between json and ddoc)
+$(LI $(BUGZILLA 17868): add pragma$(LPAREN)crt_con/destructor$(RPAREN))
+$(LI $(BUGZILLA 17878): Add __traits$(LPAREN)isFuture, ...$(RPAREN))
+$(LI $(BUGZILLA 18076): dmd -run should work with `-` $(LPAREN)stdin$(RPAREN) too)
+)
+$(BUGSTITLE_BUGZILLA Phobos regressions,
+
+$(LI $(BUGZILLA 17962): dirEntries now truncates Unicode file names)
+$(LI $(BUGZILLA 17986): Erratic failure with std/experimental/allocator/common.d$(LPAREN)445$(RPAREN): unittest failure)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 2447): There's no disconnectall for std.signals)
+$(LI $(BUGZILLA 6820): etc.c.curl missing const)
+$(LI $(BUGZILLA 6895): std.traits.isCovariantWith doesn't work for function, function pointer and delegate)
+$(LI $(BUGZILLA 9661): LockingTextWriter should increment file handle reference count)
+$(LI $(BUGZILLA 10395): [std.stdio] Closing a popened File with unread output throws an exception)
+$(LI $(BUGZILLA 12064): std.typecons.wrap doesn't handle NVI)
+$(LI $(BUGZILLA 14477): Nullable does not work with structs with default constructor disabled)
+$(LI $(BUGZILLA 15140): std.experimental.allocator.building_blocks.free_list.FreeList leaks memory)
+$(LI $(BUGZILLA 15637): Region allocator assert failure when expanding the last allocation)
+$(LI $(BUGZILLA 16253): BitmappedBlock allocator not working with chooseAtRuntime)
+$(LI $(BUGZILLA 16542): makeArray not usable with const initializer)
+$(LI $(BUGZILLA 16564): KRRegion.empty sometimes returns Ternary.no)
+$(LI $(BUGZILLA 17459): format$(LPAREN)"%012,3d", ...$(RPAREN) doesn't handle field width and zero-padding correctly)
+$(LI $(BUGZILLA 17467): BitArray are broken with <<= 64)
+$(LI $(BUGZILLA 17730): [scope][dip1000] std.algorithm.move escapes scope variable in @safe code)
+$(LI $(BUGZILLA 17901): FreeBSD 10.3: AssertError@std/experimental/allocator/building_blocks/region.d$(LPAREN)652$(RPAREN))
+$(LI $(BUGZILLA 17995): template NoDuplicates$(LPAREN)TList...$(RPAREN) bug.)
+$(LI $(BUGZILLA 18044): std.conv.to for implicitly convertible associative arrays)
+$(LI $(BUGZILLA 18092): Can't combine take and takeExactly)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 1998): std.bitarray should have setAll / opSliceAssign$(LPAREN)bool$(RPAREN) etc)
+$(LI $(BUGZILLA 4717): std.bitmanip.BitArray changes)
+$(LI $(BUGZILLA 4763): std.stdio.File.open$(LPAREN)$(RPAREN) : more efficient implementation)
+$(LI $(BUGZILLA 6244): Add powmod / modpow function to std.math)
+$(LI $(BUGZILLA 9362): Add a method to remove one item to std.container.SList)
+$(LI $(BUGZILLA 13532): std.regex performance $(LPAREN)enums; regex vs ctRegex$(RPAREN))
+$(LI $(BUGZILLA 14034): std.algorithm.mean)
+$(LI $(BUGZILLA 16398): experimental allocators, add aligned reallocation for Posix)
+$(LI $(BUGZILLA 17742): std.range.transposed does not have opIndex)
+$(LI $(BUGZILLA 17905): byCodeUnit should allow access to underlying range)
+$(LI $(BUGZILLA 17919): std.container.Array could use pureMalloc)
+$(LI $(BUGZILLA 17952): std.range.transposed save is invalid)
+$(LI $(BUGZILLA 18021): FileLogger Member not accessible to subclasses)
+)
+$(BUGSTITLE_BUGZILLA Druntime regressions,
+
+$(LI $(BUGZILLA 17914): [Reg 2.075] Fibers guard page uses a lot more memory mappings)
+$(LI $(BUGZILLA 18071): [REG2.078] byKey, byValue and byKeyValue are now a hole for unsafe code)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 17108): Associative array byKeyValue is unsafe)
+$(LI $(BUGZILLA 17851): htonl already defined in phobos64.lib)
+$(LI $(BUGZILLA 17956): core.memory unittest failure $(LPAREN)possibly glibc 2.26 specific$(RPAREN))
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 17300): Enable setting code coverage options on the command line)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bugs,
+
+$(LI $(BUGZILLA 18033): Open in Editor button doesn't work)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 16392): drop win32.mak)
+$(LI $(BUGZILLA 17265): WithStatement: Find better Example for what "with" really does)
+$(LI $(BUGZILLA 17527): dlangspec.pdf: escape sequences table goes over the page boundaries)
+$(LI $(BUGZILLA 17529): dlangspec.pdf: grammar definitions go over the right margin)
+$(LI $(BUGZILLA 17531): dlangspec.pdf: overloading unary operators exposes LaTeX)
+$(LI $(BUGZILLA 17534): dlangspec.pdf: 25.24: getFunctionVariadicStyle's tables goes over the page margin and uses HTML)
+$(LI $(BUGZILLA 17535): dlangspec.pdf: enforce a maximal width for all code examples)
+$(LI $(BUGZILLA 17536): dlangspec.pdf: Unittests documentation uses HTML)
+$(LI $(BUGZILLA 17538): dlangspec.pdf: 33.14 Comparing D Immutable and Const with C++ Const goes over the page margin)
+$(LI $(BUGZILLA 17723): Replace Facebook on the front page with Weka.io)
+$(LI $(BUGZILLA 17925): [Contract Programming])
+$(LI $(BUGZILLA 17993): 404 Not Found: phobos/ddmd_utf.html)
+$(LI $(BUGZILLA 18032): [Home] Print hex dump example doesn't run)
+$(LI $(BUGZILLA 18067): Benchmark example is broken on the frontpage)
+$(LI $(BUGZILLA 18081): dlangspec.pdf: don't escape dollars in code examples)
+$(LI $(BUGZILLA 18082): Ubuntu/Debian repository installation should mention dub)
+)
+$(BUGSTITLE_BUGZILLA Tools bugs,
+
+$(LI $(BUGZILLA 7997): Optlink issues 'Index Range' error with static zero length array)
+)
+)
+$(CHANGELOG_NAV_LAST 2.077.1)
+Macros:
+    VER=2.078.0
+    TITLE=Change Log: $(VER)
