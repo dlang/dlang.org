@@ -126,6 +126,7 @@
 #
 #  See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
 PWD=$(shell pwd)
+MAKEFILE=$(firstword $(MAKEFILE_LIST))
 
 # Latest released version
 ifeq (,${LATEST})
@@ -462,7 +463,7 @@ $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
 
-$(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors.ddoc $(DDOC) $(DMD)
+$(DOC_OUTPUT_DIR)/contributors.html: contributors.dd contributors_list.ddoc $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
 
 $W/%.html : %.dd $(DDOC) $(DMD)
@@ -926,12 +927,15 @@ prerelease_changelog: changelog/prerelease.dd html
 # Contributors listing: A list of all the awesome who made D possible
 ################################################################################
 
-$G/contributors.dd:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
-	@$(STABLE_RDMD) $(TOOLS_DIR)/contributors.d --format=ddoc "master" > $@
+.PHONY: update_contributors
+update_contributors:
+	rm -f contributors_list.ddoc
+	$(MAKE) -f $(MAKEFILE) contributors_list.ddoc
 
-$G/contributors.ddoc: $G/contributors.dd
-	@echo "NR_D_CONTRIBUTORS=$$(wc -l < $<)" > $@
-	@echo "D_CONTRIBUTORS=" >> $@
-	@cat $< >> $@
+contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
+	$(STABLE_RDMD) $(TOOLS_DIR)/contributors.d --format=ddoc "master" > $G/contributors_list.tmp
+	echo "NR_D_CONTRIBUTORS=$$(wc -l < $G/contributors_list.tmp)" > $@
+	echo "D_CONTRIBUTORS=" >> $@
+	cat $G/contributors_list.tmp >> $@
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
