@@ -232,7 +232,7 @@ DBLOG_LATEST=
 # Disable all dynamic content that could potentially have an unrelated impact
 # on a diff
 ifeq (1,$(DIFFABLE))
- NODATETIME := nodatetime.ddoc
+ NODATETIME := ddoc/nodatetime.ddoc
  DPL_DOCS_PATH_RUN_FLAGS := --no-exact-source-links
 else
  CHANGELOG_VERSION_MASTER := "v${LATEST}..upstream/master"
@@ -274,7 +274,7 @@ DDOC_VARS_HTML=$(DDOC_VARS) \
 
 DDOC_VARS_VERBATIM=$(DDOC_VARS) \
 	DOC_OUTPUT_DIR="$W/phobos-prerelease-verbatim" \
-	STDDOC="$(PWD)/verbatim.ddoc"
+	STDDOC="$(PWD)/ddoc/verbatim.ddoc"
 
 ################################################################################
 # Resources
@@ -311,10 +311,13 @@ STYLES=$(addsuffix .css, $(addprefix css/, \
 # HTML Files
 ################################################################################
 
-DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME) $(DBLOG_LATEST)
-STD_DDOC_LATEST=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
-STD_DDOC_RELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-release) $(NODATETIME)
-STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
+DDOC=$(addprefix ddoc, $(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME) $(DBLOG_LATEST)
+STD_DDOC_LATEST=$(addprefix ddoc, $(addsuffix .ddoc, \
+	macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME))
+STD_DDOC_RELEASE=$(addprefix ddoc, $(addsuffix .ddoc, \
+	macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-release)) $(NODATETIME)
+STD_DDOC_PRERELEASE=$(addprefix ddoc, $(addsuffix .ddoc, \
+	macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease)) $(NODATETIME))
 SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
@@ -460,7 +463,7 @@ $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
 	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) ddoc/errorpage.ddoc $<
 
 $(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors.ddoc $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
@@ -468,8 +471,8 @@ $(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors.ddoc $(DDOC
 $W/%.html : %.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
-$W/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
+$W/%.verbatim : %_pre.dd ddoc/verbatim.ddoc $(DMD)
+	$(DMD) -c -o- -Df$@ ddoc/verbatim.ddoc $<
 
 $W/%.verbatim : %.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
@@ -492,11 +495,11 @@ $W/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
+$W/dmd-%.html : ddoc/%.ddoc dcompiler.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) dcompiler.dd $<
 
-$W/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
+$W/dmd-%.verbatim : ddoc/%.ddoc dcompiler.dd ddoc/verbatim.ddoc $(DMD)
+	$(DMD) -c -o- -Df$@ ddoc/verbatim.ddoc dcompiler.dd $<
 
 $W:
 	mkdir -p $@
@@ -508,8 +511,8 @@ $W:
 $G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) ../tools/catdoc.d -o$@ $(SPEC_DD)
 
-$G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD)
-	$(DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
+$G/dlangspec.html : $(DDOC) ddoc/ebook.ddoc $G/dlangspec.d $(DMD)
+	$(DMD) -conf= -Df$@ $(DDOC) ddoc/ebook.ddoc $G/dlangspec.d
 
 $G/dlangspec.zip : $G/dlangspec.html ebook.css
 	rm -f $@
@@ -531,8 +534,8 @@ $W/dlangspec.mobi : \
 $G/dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) --force ../tools/catdoc.d -o$@ $(SPEC_DD)
 
-$G/dlangspec.tex : $G/dlangspec-consolidated.d $(DMD) $(DDOC) latex.ddoc
-	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc $<
+$G/dlangspec.tex : $G/dlangspec-consolidated.d $(DMD) $(DDOC) ddoc/latex.ddoc
+	$(DMD) -conf= -Df$@ $(DDOC) ddoc/latex.ddoc $<
 
 # Run twice to fix multipage tables and \ref uses
 $W/dlangspec.pdf : $G/dlangspec.tex | $W
@@ -550,11 +553,11 @@ $W/dlangspec.html: $G/dlangspec.html | $W
 # Plaintext/verbatim generation - not part of the build, demo purposes only
 ################################################################################
 
-$G/dlangspec.txt : $G/dlangspec-consolidated.d $(DMD) macros.ddoc plaintext.ddoc
-	$(DMD) -conf= -Df$@ macros.ddoc plaintext.ddoc $<
+$G/dlangspec.txt : $G/dlangspec-consolidated.d $(DMD) ddoc/macros.ddoc ddoc/plaintext.ddoc
+	$(DMD) -conf= -Df$@ ddoc/macros.ddoc plaintext.ddoc $<
 
-$G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DMD) verbatim.ddoc
-	$(DMD) -conf= -Df$@ verbatim.ddoc $<
+$G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DMD) ddoc/verbatim.ddoc
+	$(DMD) -conf= -Df$@ ddoc/verbatim.ddoc $<
 
 ################################################################################
 # Fetch the latest article from the official D blog
@@ -605,7 +608,7 @@ dmd-prerelease : $(STD_DDOC_PRERELEASE) $(DMD_DIR) $(DMD)
 
 dmd-prerelease-verbatim : $(STD_DDOC_PRERELEASE) $(DMD_DIR) \
 		$W/phobos-prerelease/mars.verbatim
-$W/phobos-prerelease/mars.verbatim: verbatim.ddoc
+$W/phobos-prerelease/mars.verbatim: ddoc/verbatim.ddoc
 	mkdir -p $(dir $@)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_VERBATIM)
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
@@ -637,7 +640,7 @@ druntime-prerelease-verbatim : ${DRUNTIME_DIR} \
 $W/phobos-prerelease/object.verbatim : $(DMD)
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_VERBATIM) \
 		DOCDIR=$W/phobos-prerelease-verbatim \
-		DOCFMT="`pwd`/verbatim.ddoc"
+		DOCFMT="`pwd`/ddoc/verbatim.ddoc"
 	mkdir -p $(dir $@)
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
 	mv $W/phobos-prerelease-verbatim/* $(dir $@)
@@ -660,7 +663,7 @@ phobos-latest : ${PHOBOS_LATEST_FILES_GENERATED} $(DMD_LATEST) $(STD_DDOC_LATEST
 	$(MAKE) --directory=$(PHOBOS_LATEST_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} $W/phobos-prerelease/index.verbatim
-$W/phobos-prerelease/index.verbatim : verbatim.ddoc \
+$W/phobos-prerelease/index.verbatim : ddoc/verbatim.ddoc \
 		$W/phobos-prerelease/object.verbatim \
 		$W/phobos-prerelease/mars.verbatim
 	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak html $(DDOC_VARS_VERBATIM) \
@@ -676,21 +679,26 @@ $W/phobos-prerelease/index.verbatim : verbatim.ddoc \
 apidocs-prerelease : $W/library-prerelease/sitemap.xml $W/library-prerelease/.htaccess
 apidocs-latest : $W/library/sitemap.xml $W/library/.htaccess
 apidocs-serve : $G/docs-prerelease.json
-	${DPL_DOCS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
-		--override-macros=std-ddox-override.ddoc --package-order=std \
+	${DPL_DOCS} serve-html --std-macros=ddoc/html.ddoc --std-macros=ddoc/dlang.org.ddoc \
+		--std-macros=ddoc/std.ddoc --std-macros=ddoc/macros.ddoc --std-macros=ddoc/std-ddox.ddoc \
+		--override-macros=ddoc/std-ddox-override.ddoc --package-order=std
 		--git-target=master --web-file-dir=. $<
 
 $W/library-prerelease/sitemap.xml : $G/docs-prerelease.json
 	@mkdir -p $(dir $@)
-	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
-		--override-macros=std-ddox-override.ddoc --package-order=std \
+	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=ddoc/html.ddoc \
+		--std-macros=ddoc/dlang.org.ddoc --std-macros=ddoc/std.ddoc \
+		--std-macros=ddoc/macros.ddoc --std-macros=ddoc/std-ddox.ddoc \
+		--override-macros=ddoc/std-ddox-override.ddoc --package-order=std \
 		--git-target=master $(DPL_DOCS_PATH_RUN_FLAGS) \
 		$< $W/library-prerelease
 
 $W/library/sitemap.xml : $G/docs-latest.json
 	@mkdir -p $(dir $@)
-	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
-		--override-macros=std-ddox-override.ddoc --package-order=std \
+	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=ddoc/html.ddoc \
+		--std-macros=ddoc/dlang.org.ddoc --std-macros=ddoc/std.ddoc \
+		--std-macros=ddoc/macros.ddoc --std-macros=ddoc/std-ddox.ddoc \
+		--override-macros=ddoc/std-ddox-override.ddoc --package-order=std \
 		--git-target=v${LATEST} $(DPL_DOCS_PATH_RUN_FLAGS) \
 		$< $W/library
 
@@ -778,13 +786,13 @@ ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 ################################################################################
 
 # testing menu generation
-chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+chm-nav-latest.json : $(DDOC) ddoc/std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
 
-chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+chm-nav-release.json : $(DDOC) ddoc/std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
 
-chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+chm-nav-prerelease.json : $(DDOC) ddoc/std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
 
 ################################################################################
