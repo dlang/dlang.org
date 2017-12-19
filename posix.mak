@@ -156,10 +156,10 @@ GENERATED=.generated
 G=$(GENERATED)
 
 # Last released versions
-DMD_LATEST_DIR=$G/${DMD_DIR}-${LATEST}
+DMD_LATEST_DIR=$G/dmd-${LATEST}
 DMD_LATEST=$(DMD_LATEST_DIR)/generated/$(OS)/release/$(MODEL)/dmd
-DRUNTIME_LATEST_DIR=$G/${DRUNTIME_DIR}-${LATEST}
-PHOBOS_LATEST_DIR=$G/${PHOBOS_DIR}-${LATEST}
+DRUNTIME_LATEST_DIR=$G/druntime-${LATEST}
+PHOBOS_LATEST_DIR=$G/phobos-${LATEST}
 
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
