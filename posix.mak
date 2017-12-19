@@ -580,7 +580,7 @@ $G/%-${LATEST} :
 
 # Clone all main D repositories
 ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
-	git clone --depth=1 ${GIT_HOME}/$(notdir $(@F)) $@
+	git clone ${GIT_HOME}/$(notdir $(@F)) $@
 
 ${DMD_DIR}/VERSION : ${DMD_DIR}
 
