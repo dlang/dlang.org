@@ -337,7 +337,7 @@ SPEC_ROOT=$(addprefix spec/, \
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
-ifndef RELEASE
+ifneq (1,$(RELEASE))
  CHANGELOG_FILES+=changelog/pending
 endif
 
@@ -347,7 +347,7 @@ endif
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	articles ascii-table bugstats builtin \
 	$(CHANGELOG_FILES) code_coverage community comparison concepts \
-	const-faq contributors cppcontracts cpptod ctarguments ctod donate \
+	const-faq cppcontracts cpptod ctarguments ctod donate \
 	D1toD2 d-array-article d-floating-point deprecate dlangupb-scholarship dll-linux dmd \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
 	exception-safe faq forum-template foundation gpg_keys glossary \
@@ -356,6 +356,11 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	orgs-using-d overview pretod rationale rdmd regular-expression resources safed \
 	search template-comparison templates-revisited tuple \
 	variadic-function-templates warnings wc windbg
+
+# The contributors listing is dynamically generated
+ifneq (1,$(DIFFABLE))
+ PAGES_ROOT+=contributors
+endif
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
@@ -370,7 +375,7 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 
 all : docs html
 
-ifdef RELEASE
+ifeq (1,$(RELEASE))
 release : html dmd-release druntime-release phobos-release d-release.tag
 endif
 
