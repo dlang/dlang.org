@@ -152,12 +152,14 @@ DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
 TMP?=/tmp
+GENERATED=.generated
+G=$(GENERATED)
 
 # Last released versions
-DMD_LATEST_DIR=${DMD_DIR}-${LATEST}
+DMD_LATEST_DIR=$G/${DMD_DIR}-${LATEST}
 DMD_LATEST=$(DMD_LATEST_DIR)/generated/$(OS)/release/$(MODEL)/dmd
-DRUNTIME_LATEST_DIR=${DRUNTIME_DIR}-${LATEST}
-PHOBOS_LATEST_DIR=${PHOBOS_DIR}-${LATEST}
+DRUNTIME_LATEST_DIR=$G/${DRUNTIME_DIR}-${LATEST}
+PHOBOS_LATEST_DIR=$G/${PHOBOS_DIR}-${LATEST}
 
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
@@ -165,8 +167,6 @@ $(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(D
 
 ################################################################################
 # Automatically generated directories
-GENERATED=.generated
-G=$(GENERATED)
 PHOBOS_DIR_GENERATED=$(GENERATED)/phobos-prerelease
 PHOBOS_LATEST_DIR_GENERATED=$(GENERATED)/phobos-latest
 # The assert_writeln_magic tool transforms all source files from Phobos. Hence
@@ -574,9 +574,11 @@ $G/twid_latest.ddoc:
 # Git rules
 ################################################################################
 
-../%-${LATEST} :
+# Clone snapshots of the latest official release of all main D repositories
+$G/%-${LATEST} :
 	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
 
+# Clone all main D repositories
 ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
 	git clone --depth=1 ${GIT_HOME}/$(notdir $(@F)) $@
 
@@ -845,7 +847,7 @@ test_dspec: dspec_tester.d $(STABLE_DMD)
 
 test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
 	@echo "Searching for trailing whitespace"
-	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
+	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
 	@echo "Searching for undefined macros"
 	@grep -n "UNDEFINED MACRO" $$(find $W -type f -name "*.html" -not -path "$W/phobos/*") ; test $$? -eq 1
 	@echo "Searching for undefined ddoc"
