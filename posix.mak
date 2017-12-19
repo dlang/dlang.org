@@ -337,7 +337,7 @@ SPEC_ROOT=$(addprefix spec/, \
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
-ifndef RELEASE
+ifneq (1,$(RELEASE))
  CHANGELOG_FILES+=changelog/pending
 endif
 
@@ -375,7 +375,7 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 
 all : docs html
 
-ifdef RELEASE
+ifeq (1,$(RELEASE))
 release : html dmd-release druntime-release phobos-release d-release.tag
 endif
 
