@@ -197,7 +197,6 @@ STABLE_RDMD=$(STABLE_DMD_BIN_ROOT)/rdmd --compiler=$(STABLE_DMD) -conf=$(STABLE_
 DUB=$(STABLE_DMD_BIN_ROOT)/dub
 
 # exclude lists
-# keep the ddmd excludes during the ddmd -> dmd transition
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
 	gc. rt. core.internal. core.stdc.config core.sys. \
 	std.algorithm.internal std.c. std.concurrencybase std.internal. std.regex.internal. \
@@ -205,8 +204,8 @@ MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
 	std.experimental.ndslice.internal std.stdiobase \
 	std.typetuple \
 	tk. msvc_dmc msvc_lib \
-	ddmd.libmach ddmd.libmscoff \
-	ddmd.scanmach ddmd.scanmscoff \
+	dmd.libmach dmd.libmscoff \
+	dmd.scanmach dmd.scanmscoff \
 	dmd.libmach dmd.libmscoff \
 	dmd.scanmach dmd.scanmscoff)
 
@@ -413,22 +412,18 @@ ${GENERATED}/${LATEST}.ddoc :
 
 ${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
 	mkdir -p $(dir $@)
-	# Keep during the ddmd -> dmd transition
-	DMD_SRC_NAME=$$(if [ -d $(DMD_LATEST_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi) && \
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_LATEST) \
-		$(addprefix --dump , object std etc core) --dump "$${DMD_SRC_NAME}" >$@
+		$(addprefix --dump , object std etc core) --dump dmd >$@
 
 ${GENERATED}/modlist-release.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
-	DMD_SRC_NAME=$$(if [ -d $(DMD_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi) && \
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_RELEASE) \
-		$(addprefix --dump , object std etc core) --dump "$${DMD_SRC_NAME}" >$@
+		$(addprefix --dump , object std etc core) --dump dmd >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
-	DMD_SRC_NAME=$$(if [ -d $(DMD_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi) && \
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
-		$(addprefix --dump , object std etc core) --dump "$${DMD_SRC_NAME}" >$@
+		$(addprefix --dump , object std etc core) --dump dmd >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
