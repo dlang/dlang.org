@@ -242,6 +242,32 @@ void main()
 }
 ----
 )
+$(EXTRA_EXAMPLE_RUNNABLE Generate a config parser at compile-time,
+----
+import std.algorithm, std.conv, std.range, std.stdio, std.traits;
+struct Config {
+    int a, b; string c;
+}
+void main() {
+    Config conf;
+    // use the generated parser for each entry
+    "b=1,a=2,c=hello".splitter(",").each!(e => conf.parse(e));
+    conf.writeln;
+}
+void parse(Conf)(ref Conf c, string entry) {
+    auto r = entry.splitter("=");
+    Switch: switch (r.front) {
+        foreach (idx, _; c.tupleof) {
+            case Conf.tupleof[idx].stringof:
+                c.tupleof[idx] = r.dropOne.front
+                    .to!(typeof(Conf.tupleof[idx]));
+                break Switch;
+        }
+        default: assert (0, "Unknown member name.");
+    }
+}
+----
+)
 
 ) $(COMMENT your-code-here)
 ))) $(COMMENT intro, div, div)
