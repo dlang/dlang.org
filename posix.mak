@@ -410,23 +410,23 @@ ${GENERATED}/${LATEST}.ddoc :
 	mkdir -p $(dir $@)
 	echo "LATEST=${LATEST}" >$@
 
-${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
+${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
 	mkdir -p $(dir $@)
 	# Keep during the ddmd -> dmd transition
 	DMD_SRC_NAME=$$(if [ -d $(DMD_LATEST_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi) && \
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_LATEST) \
+	$(DMD) -run modlist.d $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_LATEST) \
 		$(addprefix --dump , object std etc core) --dump "$${DMD_SRC_NAME}" >$@
 
-${GENERATED}/modlist-release.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
+${GENERATED}/modlist-release.ddoc : modlist.d ${DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
 	DMD_SRC_NAME=$$(if [ -d $(DMD_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi) && \
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_RELEASE) \
+	$(DMD) -run modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_RELEASE) \
 		$(addprefix --dump , object std etc core) --dump "$${DMD_SRC_NAME}" >$@
 
-${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
+${GENERATED}/modlist-prerelease.ddoc : modlist.d ${DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
 	DMD_SRC_NAME=$$(if [ -d $(DMD_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi) && \
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
+	$(DMD) -run modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
 		$(addprefix --dump , object std etc core) --dump "$${DMD_SRC_NAME}" >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
@@ -438,7 +438,6 @@ rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
 	rm -rf $W ${GENERATED} dpl-docs/.dub dpl-docs/dpl-docs
-	@echo You should issue manually: rm -rf ${DMD_LATEST_DIR} ${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_DIR} ${STABLE_DMD_ROOT}
 
 RSYNC_FILTER=-f 'P /Usage' -f 'P /.dpl_rewrite*' -f 'P /install.sh*'
 
@@ -513,8 +512,8 @@ $W:
 # Ebook
 ################################################################################
 
-$G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
-	$(STABLE_RDMD) ../tools/catdoc.d -o$@ $(SPEC_DD)
+$G/dlangspec.d : $(SPEC_DD) ${DMD}
+	$(DMD) -run ../tools/catdoc.d -o$@ $(SPEC_DD)
 
 $G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD)
 	$(DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
@@ -536,8 +535,8 @@ $W/dlangspec.mobi : \
 # LaTeX
 ################################################################################
 
-$G/dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
-	$(STABLE_RDMD) --force ../tools/catdoc.d -o$@ $(SPEC_DD)
+$G/dlangspec-consolidated.d : $(SPEC_DD) ${DMD}
+	$(DMD) -run ../tools/catdoc.d -o$@ $(SPEC_DD)
 
 $G/dlangspec.tex : $G/dlangspec-consolidated.d $(DMD) $(DDOC) latex.ddoc $(NODATETIME)
 	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc $(NODATETIME) $<
@@ -822,14 +821,14 @@ d-prerelease.tag d-tags-prerelease.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) ph
 
 ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
 
-$(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB) $(STABLE_DMD)
+$(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB) $(DMD)
 	@mkdir -p $(dir $@)
-	$(DUB) build --single --compiler=$(STABLE_DMD) $<
+	$(DUB) build --single --compiler=$(DMD) $<
 	@mv ./assert_writeln_magic $@
 
-$(ASSERT_WRITELN_BIN)_test: assert_writeln_magic.d $(DUB) $(STABLE_DMD)
+$(ASSERT_WRITELN_BIN)_test: assert_writeln_magic.d $(DUB) $(DMD)
 	@mkdir -p $(dir $@)
-	$(DUB) build --single --compiler=$(STABLE_DMD) --build=unittest $<
+	$(DUB) build --single --compiler=$(DMD) --build=unittest $<
 	@mv ./assert_writeln_magic $@
 
 $(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
@@ -848,10 +847,10 @@ $(PHOBOS_LATEST_FILES_GENERATED): $(PHOBOS_LATEST_DIR_GENERATED)/%: $(PHOBOS_LAT
 # Style tests
 ################################################################################
 
-test_dspec: dspec_tester.d $(STABLE_DMD)
+test_dspec: dspec_tester.d $(DMD)
 	# Temporarily allows failures, see https://github.com/dlang/dlang.org/pull/2006
 	@echo "Test the D Language specification"
-	-DMD=$(DMD_LATEST) $(STABLE_RDMD) $<
+	-DMD=$(DMD_LATEST) $(DMD) -run $<
 
 test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
 	@echo "Searching for trailing whitespace"
@@ -915,13 +914,13 @@ $G/changelog/next-version: ${DMD_DIR}/VERSION
 	@mkdir -p $(dir $@)
 	@echo $(NEXT_VERSION) > $@
 
-changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
+changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${DMD} ../tools ../installer
+	$(DMD) -run -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_STABLE) -o $@ --version "${NEXT_VERSION}" \
 		--date "To be released"
 
-changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
-	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
+changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${DMD} ../tools ../installer
+	$(DMD) -run -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_MASTER) -o $@ --version "${NEXT_VERSION}" \
 		--date "To be released"
 
