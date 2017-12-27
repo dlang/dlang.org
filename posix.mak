@@ -360,7 +360,9 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 
 # The contributors listing is dynamically generated
 ifneq (1,$(DIFFABLE))
+ifneq (1,$(RELEASE))
  PAGES_ROOT+=contributors
+endif
 endif
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
@@ -468,7 +470,7 @@ $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
 
-$(DOC_OUTPUT_DIR)/contributors.html: contributors.dd contributors_list.ddoc $(DDOC) $(DMD)
+$(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors_list.ddoc $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
 
 $W/%.html : %.dd $(DDOC) $(DMD)
@@ -934,12 +936,7 @@ prerelease_changelog: changelog/prerelease.dd html
 # Contributors listing: A list of all the awesome who made D possible
 ################################################################################
 
-.PHONY: update_contributors
-update_contributors:
-	rm -f contributors_list.ddoc
-	$(MAKE) -f $(MAKEFILE) contributors_list.ddoc
-
-contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
+$G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 	$(STABLE_RDMD) $(TOOLS_DIR)/contributors.d --format=ddoc "master" > $G/contributors_list.tmp
 	echo "NR_D_CONTRIBUTORS=$$(wc -l < $G/contributors_list.tmp)" > $@
 	echo "D_CONTRIBUTORS=" >> $@
