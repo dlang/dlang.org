@@ -514,7 +514,7 @@ $W:
 ################################################################################
 
 $G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
-	$(STABLE_RDMD) ../tools/catdoc.d -o$@ $(SPEC_DD)
+	$(STABLE_RDMD) $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
 $G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD)
 	$(DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
@@ -537,7 +537,7 @@ $W/dlangspec.mobi : \
 ################################################################################
 
 $G/dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
-	$(STABLE_RDMD) --force ../tools/catdoc.d -o$@ $(SPEC_DD)
+	$(STABLE_RDMD) --force $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
 $G/dlangspec.tex : $G/dlangspec-consolidated.d $(DMD) $(DDOC) latex.ddoc $(NODATETIME)
 	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc $(NODATETIME) $<
@@ -915,12 +915,12 @@ $G/changelog/next-version: ${DMD_DIR}/VERSION
 	@mkdir -p $(dir $@)
 	@echo $(NEXT_VERSION) > $@
 
-changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
+changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR)
 	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_STABLE) -o $@ --version "${NEXT_VERSION}" \
 		--date "To be released"
 
-changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
+changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR)
 	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_MASTER) -o $@ --version "${NEXT_VERSION}" \
 		--date "To be released"
