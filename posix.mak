@@ -368,7 +368,7 @@ endif
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $W/, $(TARGETS) \
-$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
+$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT) install.sh)
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 
@@ -505,6 +505,9 @@ $W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
 
 $W/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
+
+$W/install.sh:
+	wget https://raw.githubusercontent.com/dlang/installer/stable/script/install.sh -O web/install.sh
 
 $W:
 	mkdir -p $@
