@@ -93,6 +93,7 @@
 #       test                    Runs several sanity checks
 #       clean                   Removes the .generated folder
 #       diffable-intermediaries Adds intermediary PDF/eBook files to the output, useful for diffing
+#       dautotest               Special target called by the DAutoTestCI and deployment
 #
 #  Ddoc vs. Ddox
 #  --------------
@@ -447,6 +448,8 @@ rsync : all kindle pdf
 
 rsync-only :
 	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $W/ $(REMOTE_DIR)/
+
+dautotest: all kindle pdf verbatim
 
 ################################################################################
 # Pattern rulez
