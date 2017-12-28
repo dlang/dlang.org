@@ -449,7 +449,7 @@ rsync : all kindle pdf
 rsync-only :
 	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $W/ $(REMOTE_DIR)/
 
-dautotest: all kindle pdf verbatim
+dautotest: all verbatim pdf diffable-intermediaries
 
 ################################################################################
 # Pattern rulez
