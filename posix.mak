@@ -713,26 +713,26 @@ $W/library-prerelease/.htaccess : dpl_prerelease_htaccess
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-DMD_EXCLUDE =
+# Can be removed after 2.079.0 (2018-03-01) (see https://github.com/dlang/dmd/pull/7567 for details)
+DMD_EXCLUDE_LATEST = -e /mscoff/d
 ifeq (osx,$(OS))
- DMD_EXCLUDE += -e /scanelf/d -e /libelf/d
+ DMD_EXCLUDE_LATEST += -e /scanelf/d -e /libelf/d
 else
- DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
+ DMD_EXCLUDE_LATEST += -e /scanmach/d -e /libmach/d
 endif
 
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 			${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_FILES_GENERATED} | dpl-docs
 	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
 	if [ -f $(DMD_LATEST_DIR)/src/*/objc_glue_stubs.d ] ; then \
-	   DMD_EXCLUDE_LATEST="-e /objc_glue.d/d"; \
+	   DMD_EXCLUDE_LATEST_BASH="-e /objc_glue.d/d"; \
 	fi; \
 	find ${DMD_LATEST_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d $${DMD_EXCLUDE_LATEST} ${DMD_EXCLUDE} \
-			> $G/.latest-files.txt
+		sed -e /mscoff/d $${DMD_EXCLUDE_LATEST_BASH} ${DMD_EXCLUDE_LATEST}
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
 	find ${PHOBOS_LATEST_DIR_GENERATED} -name '*.d' | \
-		sed -e /unittest.d/d -e /windows/d | sort >> $G/.latest-files.txt
+		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
 	${DMD_LATEST} -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
 		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
 		-Xf$@ -I${PHOBOS_LATEST_DIR_GENERATED} @$G/.latest-files.txt
@@ -740,9 +740,6 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 		--only-documented $(MOD_EXCLUDES_LATEST)
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
-# DDox tries to generate the docs for all `.d` files. However for dmd this is tricky,
-# because the `{mach, elf, mscoff}` are platform dependent.
-# Thus the need to exclude these files.
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		${PHOBOS_FILES_GENERATED} | dpl-docs
 	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
@@ -750,12 +747,11 @@ $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 	   DMD_EXCLUDE_PRERELEASE="-e /objc_glue.d/d"; \
 	fi; \
 	find ${DMD_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d $${DMD_EXCLUDE_PRERELEASE} ${DMD_EXCLUDE} \
-			> $G/.prerelease-files.txt
-	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
-		-e /unittest/d >> $G/.prerelease-files.txt
-	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
-		-e /windows/d | sort >> $G/.prerelease-files.txt
+		sed -e /mscoff/d $${DMD_EXCLUDE_PRERELEASE} > $G/.prerelease-files.txt
+	find ${DRUNTIME_DIR}/src -name '*.d' | \
+		sed -e /unittest/d >> $G/.prerelease-files.txt
+	find ${PHOBOS_DIR_GENERATED} -name '*.d' | \
+		sed -e /unittest.d/d | sort >> $G/.prerelease-files.txt
 	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
 		-version=StdDdoc -Df$G/.prerelease-dummy.html \
 		-Xf$@ -I${PHOBOS_DIR_GENERATED} @$G/.prerelease-files.txt
