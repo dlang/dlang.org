@@ -205,9 +205,9 @@ MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
 	std.experimental.ndslice.internal std.stdiobase \
 	std.typetuple \
 	tk. msvc_dmc msvc_lib \
-	ddmd.libmach ddmd.libmscoff ddmd.objc_glue \
+	ddmd.libmach ddmd.libmscoff \
 	ddmd.scanmach ddmd.scanmscoff \
-	dmd.libmach dmd.libmscoff dmd.objc_glue \
+	dmd.libmach dmd.libmscoff \
 	dmd.scanmach dmd.scanmscoff)
 
 MOD_EXCLUDES_LATEST=$(MOD_EXCLUDES_PRERELEASE)
@@ -725,10 +725,16 @@ else
  DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
 endif
 
+# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
+DMD_EXCLUDE_LATEST =
+ifneq (,$(wildcard $(DMD_DIR)/src/dmd/objc_glue_stubs.d))
+   DMD_EXCLUDE_LATEST += -e /objc_glue.d/d
+endif
+
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 			${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_FILES_GENERATED} | dpl-docs
 	find ${DMD_LATEST_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE} \
+		sed -e /mscoff/d ${DMD_EXCLUDE_LATEST} ${DMD_EXCLUDE} \
 			> $G/.latest-files.txt
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
@@ -741,13 +747,19 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 		--only-documented $(MOD_EXCLUDES_LATEST)
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
+# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
+DMD_EXCLUDE_PRERELEASE =
+ifneq (,$(wildcard $(DMD_DIR)/src/dmd/objc_glue_stubs.d))
+   DMD_EXCLUDE_PRERELEASE += -e /objc_glue.d/d
+endif
+
 # DDox tries to generate the docs for all `.d` files. However for dmd this is tricky,
 # because the `{mach, elf, mscoff}` are platform dependent.
-# Thus the need to exclude these files (and the `objc_glue.d` file).
+# Thus the need to exclude these files.
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		${PHOBOS_FILES_GENERATED} | dpl-docs
 	find ${DMD_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE} \
+		sed -e /mscoff/d ${DMD_EXCLUDE_PRERELEASE} ${DMD_EXCLUDE} \
 			> $G/.prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 		-e /unittest/d >> $G/.prerelease-files.txt
