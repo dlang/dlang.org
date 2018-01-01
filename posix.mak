@@ -725,16 +725,14 @@ else
  DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
 endif
 
-# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
-DMD_EXCLUDE_LATEST =
-ifneq (,$(wildcard $(DMD_DIR)/src/dmd/objc_glue_stubs.d))
-   DMD_EXCLUDE_LATEST += -e /objc_glue.d/d
-endif
-
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 			${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_FILES_GENERATED} | dpl-docs
+	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
+	if [ -f $(DMD_LATEST_DIR)/src/*/objc_glue_stubs.d ] ; then \
+	   DMD_EXCLUDE_LATEST="-e /objc_glue.d/d"; \
+	fi; \
 	find ${DMD_LATEST_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d ${DMD_EXCLUDE_LATEST} ${DMD_EXCLUDE} \
+		sed -e /mscoff/d $${DMD_EXCLUDE_LATEST} ${DMD_EXCLUDE} \
 			> $G/.latest-files.txt
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
@@ -747,19 +745,17 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 		--only-documented $(MOD_EXCLUDES_LATEST)
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
-# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
-DMD_EXCLUDE_PRERELEASE =
-ifneq (,$(wildcard $(DMD_DIR)/src/dmd/objc_glue_stubs.d))
-   DMD_EXCLUDE_PRERELEASE += -e /objc_glue.d/d
-endif
-
 # DDox tries to generate the docs for all `.d` files. However for dmd this is tricky,
 # because the `{mach, elf, mscoff}` are platform dependent.
 # Thus the need to exclude these files.
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		${PHOBOS_FILES_GENERATED} | dpl-docs
+	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
+	if [ -f $(DMD_DIR)/src/*/objc_glue_stubs.d ] ; then \
+	   DMD_EXCLUDE_PRERELEASE="-e /objc_glue.d/d"; \
+	fi; \
 	find ${DMD_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d ${DMD_EXCLUDE_PRERELEASE} ${DMD_EXCLUDE} \
+		sed -e /mscoff/d $${DMD_EXCLUDE_PRERELEASE} ${DMD_EXCLUDE} \
 			> $G/.prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
 		-e /unittest/d >> $G/.prerelease-files.txt
