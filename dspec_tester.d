@@ -110,16 +110,18 @@ int main(string[] args)
     }
 
     // Find all examples in the specification
+    alias findExamples = (file, ddocKey) => file
+            .readText
+            .findDdocMacro(ddocKey)
+            .map!ddocMacroToCode;
+
+    enum ddocKey = "$(SPEC_RUNNABLE_EXAMPLE";
+
     foreach (file; specDir.dirEntries("*.dd", SpanMode.depth).parallel(1))
     {
         import std.uni : isWhite;
-        auto allTests =
-            file
-            .readText
-            .findDdocMacro("$(SPEC_RUNNABLE_EXAMPLE")
-            .map!ddocMacroToCode
-            .map!compileAndCheck;
 
+        auto allTests = findExamples(file, ddocKey).map!compileAndCheck;
         if (!allTests.empty)
         {
             writefln("%s: %d examples found", file.baseName, allTests.walkLength);
