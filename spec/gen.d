@@ -65,9 +65,14 @@ auto parseToc(string text)
 
 auto genHeader(string fileText)
 {
-    enum ddocKey = "$(SPEC_HEADERNAV";
-    auto newContent = ddocKey ~ " foo)";
+    enum ddocKey = "$(SPEC_HEADERNAV_TOC";
+    auto newContent = ddocKey ~ "\n";
+    foreach (entry; fileText.parseToc)
+    {
+        newContent ~= "    $(SPEC_HEADERNAV_ITEM %s, %s)\n".format(entry.id, entry.name);
+    }
     parseToc(fileText).writeln;
+    newContent ~= ")";
     return updateDdocTag(fileText, ddocKey, newContent);
 }
 
