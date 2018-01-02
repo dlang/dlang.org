@@ -3,7 +3,7 @@
  * Footer generator for the specification pages.
  * This script can be used to update the nav footers.
  *
- * Copyright (C) 2017 by D Language Foundation
+ * Copyright (C) 2017-2018 by D Language Foundation
  *
  * Author: Sebastian Wilzbach
  *
