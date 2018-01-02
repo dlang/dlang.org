@@ -26,6 +26,56 @@ struct Config {
 }
 Config config;
 
+// a range until the next ')', nested () are ignored
+auto untilClosingParentheses(R)(R rs)
+{
+    struct State
+    {
+        size_t rightParensCount = 1;
+        bool inCodeBlock;
+        size_t dashCount;
+    }
+    return rs.cumulativeFold!((state, r){
+        if (r == '-')
+        {
+            state.dashCount++;
+        }
+        else
+        {
+            if (state.dashCount >= 3)
+                state.inCodeBlock = !state.inCodeBlock;
+
+            state.dashCount = 0;
+        }
+        switch(r)
+        {
+            case '-':
+                break;
+            case '(':
+                if (!state.inCodeBlock)
+                    state.rightParensCount++;
+                break;
+            case ')':
+                if (!state.inCodeBlock)
+                    state.rightParensCount--;
+                break;
+            default:
+        }
+        return state;
+    })(State()).zip(rs).until!(e => e[0].rightParensCount == 0).map!(e => e[1]);
+}
+
+unittest
+{
+    import std.algorithm.comparison : equal;
+    assert("aa $(foo $(bar)foobar)".untilClosingParentheses.equal("aa $(foo $(bar)foobar)"));
+}
+
+auto findDdocMacro(string text, string ddocKey)
+{
+    return text.splitter(ddocKey).map!untilClosingParentheses.dropOne;
+}
+
 int main(string[] args)
 {
     import std.conv, std.file, std.getopt, std.path;
@@ -50,7 +100,6 @@ int main(string[] args)
     }
 
     // Find all examples in the specification
-    auto r = regex(`SPEC_RUNNABLE_EXAMPLE\n\s*---+\n[^-]*---+\n\s*\)`, "s");
     foreach (file; specDir.dirEntries("*.dd", SpanMode.depth).parallel(1))
     {
         import std.ascii : newline;
@@ -58,8 +107,7 @@ int main(string[] args)
         auto allTests =
             file
             .readText
-            .matchAll(r)
-            .map!(a => a[0])
+            .findDdocMacro("$(SPEC_RUNNABLE_EXAMPLE")
             .map!(a => a
                     .find("---")
                     .findSplitAfter(newline)[1]
