@@ -16,6 +16,13 @@ import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
         std.path, std.range, std.string, std.typecons;
 import std.stdio : File, writeln, writefln;
 
+auto genHeader(string fileText)
+{
+    enum ddocKey = "$(SPEC_HEADERNAV";
+    auto newContent = ddocKey ~ " foo)";
+    return updateDdocTag(fileText, ddocKey, newContent);
+}
+
 auto genFooter(Entries)(string fileText, size_t i, Entries entries)
 {
     enum ddocKey = "$(SPEC_SUBNAV_";
@@ -31,12 +38,16 @@ auto genFooter(Entries)(string fileText, size_t i, Entries entries)
         navString ~= text("PREV ", entries[i - 1].name.stripExtension, ", ", entries[i - 1].title);
 
     navString ~= ")";
+    return updateDdocTag(fileText, ddocKey, navString);
+}
 
-    // idempotency - check for existing tags, otherwise insert new
+auto updateDdocTag(string fileText, string ddocKey, string newContent)
+{
     auto pos = fileText.representation.countUntil(ddocKey);
-    assert(pos);
+    if (pos < 0)
+        return fileText;
     auto len = fileText[pos .. $].representation.countUntil(")");
-    return fileText.replace(fileText[pos .. pos + len + 1], navString);
+    return fileText.replace(fileText[pos .. pos + len + 1], newContent);
 }
 
 void main()
@@ -67,6 +78,7 @@ void main()
         writefln("Processing %s", entry.name);
         auto fileName = specDir.buildPath(entry.name);
         auto text = fileName.readText;
+        text = genHeader(text);
         text = genFooter(text, i, entries);
         fileName.write(text);
     }
