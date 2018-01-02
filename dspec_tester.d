@@ -24,7 +24,7 @@ struct Config {
     string dmdBinPath = "dmd";
     bool printLineNumbers; // whether line numbers should be shown on errors
 }
-Config config;
+__gshared Config config;
 
 // a range until the next ')', nested () are ignored
 auto untilClosingParentheses(R)(R rs)
@@ -94,12 +94,13 @@ int main(string[] args)
     import std.typecons : Tuple;
 
     auto specDir = __FILE_FULL_PATH__.dirName.buildPath("spec");
-    config.dmdBinPath = environment.get("DMD", "dmd");
     bool hasFailed;
 
+    config.dmdBinPath = environment.get("DMD", "dmd");
     auto helpInformation = getopt(
         args,
         "l|lines", "Show the line numbers on errors", &config.printLineNumbers,
+        "compiler", "D compiler to use", &config.dmdBinPath,
     );
 
     if (helpInformation.helpWanted)

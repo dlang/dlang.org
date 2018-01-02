@@ -868,10 +868,9 @@ $(PHOBOS_LATEST_FILES_GENERATED): $(PHOBOS_LATEST_DIR_GENERATED)/%: $(PHOBOS_LAT
 # Style tests
 ################################################################################
 
-test_dspec: dspec_tester.d $(STABLE_DMD)
-	# Temporarily allows failures, see https://github.com/dlang/dlang.org/pull/2006
+test_dspec: dspec_tester.d $(DMD)
 	@echo "Test the D Language specification"
-	-DMD=$(DMD_LATEST) $(STABLE_RDMD) $<
+	$(DMD) -run $< --compiler=$(DMD)
 
 test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
 	@echo "Searching for trailing whitespace"
