@@ -1,7 +1,7 @@
 #!/usr/bin/env rdmd
 /*
- * Footer generator for the specification pages.
- * This script can be used to update the nav footers.
+ * TOC + footer generator for the specification pages.
+ * This script can be used to update the TOC index and navigation footers.
  *
  * Copyright (C) 2017-2018 by D Language Foundation
  *
@@ -16,6 +16,7 @@ import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
         std.meta, std.path, std.range, std.string, std.typecons;
 import std.stdio : File, writeln, writefln;
 
+// a range until the next ')', nested () are ignored
 auto untilClosingParentheses(R)(R rs)
 {
     return rs.cumulativeFold!((count, r){
@@ -39,6 +40,8 @@ unittest
     assert("aa $(foo $(bar)foobar)".untilClosingParentheses.equal("aa $(foo $(bar)foobar)"));
 }
 
+// parse the ddoc file for H2 and H3 items
+// H3 items are listed as subitems
 auto parseToc(string text)
 {
     alias TocEntry = Tuple!(string, "id", string, "name");
@@ -83,11 +86,13 @@ auto parseToc(string text)
     return toc;
 }
 
+// Ddoc splits arguments by commas
 auto escapeDdoc(string s)
 {
     return s.replace(",", "$(COMMA)");
 }
 
+// generated a SPEC_HEADERNAV_TOC Ddoc macro with the parsed H2/H3 entries
 auto genHeader(string fileText)
 {
     enum ddocKey = "$(SPEC_HEADERNAV_TOC";
@@ -112,6 +117,9 @@ auto genHeader(string fileText)
     return updateDdocTag(fileText, ddocKey, newContent);
 }
 
+// Adds pagination to the spec pages
+// The default Ddoc macro is `$(SPEC_SUBNAV_PREV_NEXT)`
+// The first and last page have special ddoc macros (`$(SPEC_SUBNAV_NEXT)`, `$(SPEC_SUBNAV_PREV)`)
 auto genFooter(Entries)(string fileText, size_t i, Entries entries)
 {
     enum ddocKey = "$(SPEC_SUBNAV_";
@@ -130,6 +138,7 @@ auto genFooter(Entries)(string fileText, size_t i, Entries entries)
     return updateDdocTag(fileText, ddocKey, navString);
 }
 
+// replaces the content of a DDoc macro call
 auto updateDdocTag(string fileText, string ddocKey, string newContent)
 {
     auto pos = fileText.representation.countUntil(ddocKey);
