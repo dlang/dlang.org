@@ -119,7 +119,8 @@ int main(string[] args)
 
     foreach (file; specDir.dirEntries("*.dd", SpanMode.depth).parallel(1))
     {
-        auto allTests = findExamples(file, ddocKey).map!compileAndCheck;
+        CompileConfig compileConfig = {mode: CompileConfig.TestMode.compile};
+        auto allTests = findExamples(file, ddocKey).map!(e => compileAndCheck(e, compileConfig));
         if (!allTests.empty)
         {
             writefln("%s: %d examples found", file.baseName, allTests.walkLength);
@@ -130,6 +131,15 @@ int main(string[] args)
     return hasFailed;
 }
 
+struct CompileConfig
+{
+    enum TestMode { run, compile, fail }
+    TestMode mode;
+    string[] args;
+    string expectedStdout;
+    string expectedStderr;
+}
+
 /**
 Executes source code with a D compiler (compile-only)
 
@@ -138,13 +148,29 @@ Params:
 
 Returns: the exit code of the compiler invocation.
 */
-auto compileAndCheck(R)(R buffer)
+auto compileAndCheck(R)(R buffer, CompileConfig config)
 {
     import std.process;
     import std.uni : isWhite;
 
-    auto pipes = pipeProcess([config.dmdBinPath, "-c", "-o-", "-"],
-            Redirect.stdin | Redirect.stdout | Redirect.stderr);
+    auto args = [.config.dmdBinPath];
+    args ~= config.args;
+    with (CompileConfig.TestMode)
+    final switch (config.mode)
+    {
+        case run:
+            args ~= ["-run"];
+            break;
+        case compile:
+            args ~= ["-c", "-o-"];
+            break;
+        case fail:
+            args ~= ["-c", "-o-"];
+            break;
+    }
+    args ~= "-";
+
+    auto pipes = pipeProcess(args, Redirect.all);
 
     static mainRegex = regex(`(void|int)\s+main`);
     const hasMain = !buffer.matchFirst(mainRegex).empty;
@@ -160,15 +186,27 @@ auto compileAndCheck(R)(R buffer)
     pipes.stdin.write(buffer);
     pipes.stdin.close;
     auto ret = wait(pipes.pid);
-    if (ret != 0)
+    if (config.mode == CompileConfig.TestMode.fail)
     {
-        stderr.writeln("--- ");
+        if (ret == 0)
+        {
+            stderr.writefln("Compilation should have failed for:\n%s", buffer);
+            ret = 1;
+        }
+        else
+        {
+            ret = 0;
+        }
+    }
+    else if (ret != 0)
+    {
+        stderr.writeln("---");
         int lineNumber = 1;
         buffer
             .splitter("\n")
             .each!((a) {
                 const indent = hasMain ? "    " : "";
-                if (config.printLineNumbers)
+                if (.config.printLineNumbers)
                     stderr.writefln("%3d: %s%s", lineNumber++, indent, a);
                 else
                     stderr.writefln("%s%s", indent, a);
@@ -177,5 +215,23 @@ auto compileAndCheck(R)(R buffer)
         stderr.writeln("---");
         pipes.stderr.byLine.each!(e => stderr.writeln(e));
     }
+    // check stdout or stderr
+    static foreach (stream; ["stdout", "stderr"])
+    {{
+        import std.ascii : toUpper;
+        import std.conv : to;
+        mixin("auto expected = config.expected" ~ stream.front.toUpper.to!string ~ stream.dropOne~ ";");
+        if (expected)
+        {
+            mixin("auto stream = pipes." ~ stream ~ ";");
+            auto obs = appender!string;
+            stream.byChunk(4096).each!(c => obs.put(c));
+            scope(failure) {
+                stderr.writefln("Expected: %s", expected);
+                stderr.writefln("Observed: %s", obs.data);
+            }
+            assert(obs.data == expected);
+        }
+    }}
     return ret;
 }
