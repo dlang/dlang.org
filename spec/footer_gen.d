@@ -12,15 +12,37 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
 */
 // Written in the D programming language.
+import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
+        std.path, std.range, std.string, std.typecons;
+import std.stdio : File, writeln, writefln;
+
+auto genFooter(Entries)(string fileText, size_t i, Entries entries)
+{
+    enum ddocKey = "$(SPEC_SUBNAV_";
+
+    // build the prev|next Ddoc string
+    string navString = ddocKey;
+    if (i == 0)
+        navString ~= text("NEXT ", entries[i + 1].name.stripExtension, ", ", entries[i + 1].title);
+    else if (i < entries.length - 1)
+        navString ~= text("PREV_NEXT ", entries[i - 1].name.stripExtension, ", ", entries[i - 1].title, ", ",
+            entries[i + 1].name.stripExtension, ", ", entries[i + 1].title);
+    else
+        navString ~= text("PREV ", entries[i - 1].name.stripExtension, ", ", entries[i - 1].title);
+
+    navString ~= ")";
+
+    // idempotency - check for existing tags, otherwise insert new
+    auto pos = fileText.representation.countUntil(ddocKey);
+    assert(pos);
+    auto len = fileText[pos .. $].representation.countUntil(")");
+    return fileText.replace(fileText[pos .. pos + len + 1], navString);
+}
 
 void main()
 {
-    import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
-           std.path, std.range, std.string, std.typecons;
-    import std.stdio : File, writeln, writefln;
     auto specDir = __FILE_FULL_PATH__.dirName.buildNormalizedPath;
     auto mainFile = specDir.buildPath("./spec.ddoc");
-    enum ddocKey = "$(SPEC_SUBNAV_";
 
     alias Entry = Tuple!(string, "name", string, "title");
     Entry[] entries;
@@ -42,26 +64,10 @@ void main()
 
     foreach (i, entry; entries)
     {
-        // build the prev|next Ddoc string
-        string navString = ddocKey;
-        if (i == 0)
-            navString ~= text("NEXT ", entries[i + 1].name.stripExtension, ", ", entries[i + 1].title);
-        else if (i < entries.length - 1)
-            navString ~= text("PREV_NEXT ", entries[i - 1].name.stripExtension, ", ", entries[i - 1].title, ", ",
-                entries[i + 1].name.stripExtension, ", ", entries[i + 1].title);
-        else
-            navString ~= text("PREV ", entries[i - 1].name.stripExtension, ", ", entries[i - 1].title);
-
-        navString ~= ")";
-        writefln("%s: %s", entry.name, navString);
+        writefln("Processing %s", entry.name);
         auto fileName = specDir.buildPath(entry.name);
-
         auto text = fileName.readText;
-        // idempotency - check for existing tags, otherwise insert new
-        auto pos = text.representation.countUntil(ddocKey);
-        assert(pos);
-        auto len = text[pos .. $].representation.countUntil(")");
-        text = text.replace(text[pos .. pos + len + 1], navString);
+        text = genFooter(text, i, entries);
         fileName.write(text);
     }
 }
