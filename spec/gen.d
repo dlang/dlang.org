@@ -36,14 +36,26 @@ auto untilClosingParentheses(R)(R rs)
 auto parseToc(string text)
 {
     alias TocEntry = Tuple!(string, "id", string, "name");
-    TocEntry[] toc;
+    alias TocTopEntry = Tuple!(TocEntry, "main", TocEntry[], "children");
+    TocTopEntry[] toc;
+
+    bool isH2 = true;
+    void append(string id, string name)
+    {
+        auto entry = TocEntry(id, name);
+        if (isH2)
+            toc ~= TocTopEntry(entry, null);
+        else
+            toc.back.children ~= entry;
+    }
     while (!text.empty)
     {
-        enum needles = AliasSeq!("$(H2 ", "$(SECTION2 ");
+        enum needles = AliasSeq!("$(H2 ", "$(SECTION2 ", "$(H3", "$(SECTION3");
         auto res = text.find(needles);
         if (res[0].empty)
             break;
 
+        isH2 = res[1] <= 2;
         text = res[0].drop(needles.only[res[1] - 1].length);
         text.skipOver!isWhite;
 
@@ -52,26 +64,44 @@ auto parseToc(string text)
         if (text.startsWith(gname))
         {
             auto name = text.drop(gname.length).untilClosingParentheses.to!string.strip;
-            toc ~= TocEntry(name, name);
+            append(name, name);
         }
         else if (auto idx = text.startsWith(lNameNeedles))
         {
             auto arr = text.drop(lNameNeedles.only[idx - 1].length).splitter(",");
-            toc ~= TocEntry(arr.front.strip, arr.dropOne.front.untilClosingParentheses.to!string.strip);
+            if (idx == 2)
+                arr.popFront;
+            append(arr.front.strip, arr.dropOne.front.untilClosingParentheses.to!string.strip);
         }
     }
     return toc;
+}
+
+auto escapeDdoc(string s)
+{
+    return s.replace(",", "$(COMMA)");
 }
 
 auto genHeader(string fileText)
 {
     enum ddocKey = "$(SPEC_HEADERNAV_TOC";
     auto newContent = ddocKey ~ "\n";
+    enum indent = "    ";
     foreach (entry; fileText.parseToc)
     {
-        newContent ~= "    $(SPEC_HEADERNAV_ITEM %s, %s)\n".format(entry.id, entry.name);
+        if (entry.children)
+        {
+            newContent ~= "%s$(SPEC_HEADERNAV_SUBITEMS %s, %s,\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
+            foreach (child; entry.children)
+                newContent ~= "%s$(SPEC_HEADERNAV_ITEM %s, %s)\n".format(indent.repeat(2).joiner, child.id, child.name.escapeDdoc);
+            newContent ~= indent;
+            newContent ~= ")\n";
+        }
+        else
+        {
+            newContent ~= "%s$(SPEC_HEADERNAV_ITEM %s, %s)\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
+        }
     }
-    parseToc(fileText).writeln;
     newContent ~= ")";
     return updateDdocTag(fileText, ddocKey, newContent);
 }
