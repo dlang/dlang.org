@@ -91,6 +91,7 @@ int main(string[] args)
     import std.file, std.getopt, std.path;
     import std.parallelism : parallel;
     import std.process : environment;
+    import std.typecons : Tuple;
 
     auto specDir = __FILE_FULL_PATH__.dirName.buildPath("spec");
     config.dmdBinPath = environment.get("DMD", "dmd");
@@ -115,12 +116,17 @@ int main(string[] args)
             .findDdocMacro(ddocKey)
             .map!ddocMacroToCode;
 
-    enum ddocKey = "$(SPEC_RUNNABLE_EXAMPLE";
-
+    alias SpecType = Tuple!(string, "key", CompileConfig.TestMode, "mode");
+    auto specTypes = [
+        SpecType("$(SPEC_RUNNABLE_EXAMPLE", CompileConfig.TestMode.compile),
+        SpecType("$(SPEC_RUNNABLE_EXAMPLE_RUN", CompileConfig.TestMode.run),
+        SpecType("$(SPEC_RUNNABLE_EXAMPLE_FAIL", CompileConfig.TestMode.fail),
+    ];
     foreach (file; specDir.dirEntries("*.dd", SpanMode.depth).parallel(1))
     {
-        CompileConfig compileConfig = {mode: CompileConfig.TestMode.compile};
-        auto allTests = findExamples(file, ddocKey).map!(e => compileAndCheck(e, compileConfig));
+        auto allTests = specTypes.map!(c => findExamples(file, c.key)
+                                            .map!(e => compileAndCheck(e, CompileConfig(c.mode))))
+                                 .joiner;
         if (!allTests.empty)
         {
             writefln("%s: %d examples found", file.baseName, allTests.walkLength);
