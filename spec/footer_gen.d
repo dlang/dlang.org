@@ -59,18 +59,9 @@ void main()
         auto text = fileName.readText;
         // idempotency - check for existing tags, otherwise insert new
         auto pos = text.representation.countUntil(ddocKey);
-        if (pos > 0)
-        {
-            auto len = text[pos .. $].representation.countUntil(")");
-            text = text.replace(text[pos .. pos + len + 1], navString);
-        }
-        else
-        {
-            // insert at the end of the ddoc page
-            auto v = text[0 .. $ - text.retro.countUntil((newline ~ "Macros:").retro)];
-            pos = v.length - v.retro.countUntil(")");
-            text.insertInPlace(pos - 1, navString ~ "\n");
-        }
+        assert(pos);
+        auto len = text[pos .. $].representation.countUntil(")");
+        text = text.replace(text[pos .. pos + len + 1], navString);
         fileName.write(text);
     }
 }
