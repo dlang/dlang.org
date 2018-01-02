@@ -13,7 +13,7 @@
 */
 // Written in the D programming language.
 import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
-        std.path, std.range, std.string, std.typecons;
+        std.meta, std.path, std.range, std.string, std.typecons;
 import std.stdio : File, writeln, writefln;
 
 auto untilClosingParentheses(R)(R rs)
@@ -39,11 +39,25 @@ auto parseToc(string text)
     TocEntry[] toc;
     while (!text.empty)
     {
-        text = text.find("$(H2").drop(5);
-        if (text.startsWith("$(LNAME2"))
+        enum needles = AliasSeq!("$(H2 ", "$(SECTION2 ");
+        auto res = text.find(needles);
+        if (res[0].empty)
+            break;
+
+        text = res[0].drop(needles.only[res[1] - 1].length);
+        text.skipOver!isWhite;
+
+        enum gname = "$(GNAME ";
+        enum lNameNeedles = AliasSeq!("$(LNAME2", "$(LEGACY_LNAME2");
+        if (text.startsWith(gname))
         {
-            auto arr = text.drop(9).splitter(",");
-            toc ~= TocEntry(arr.front, arr.dropOne.front.untilClosingParentheses.to!string);
+            auto name = text.drop(gname.length).untilClosingParentheses.to!string.strip;
+            toc ~= TocEntry(name, name);
+        }
+        else if (auto idx = text.startsWith(lNameNeedles))
+        {
+            auto arr = text.drop(lNameNeedles.only[idx - 1].length).splitter(",");
+            toc ~= TocEntry(arr.front.strip, arr.dropOne.front.untilClosingParentheses.to!string.strip);
         }
     }
     return toc;
