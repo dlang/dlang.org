@@ -175,11 +175,14 @@ void main()
 
     foreach (i, entry; entries)
     {
-        writefln("Processing %s", entry.name);
         auto fileName = specDir.buildPath(entry.name);
         auto text = fileName.readText;
-        text = genHeader(text);
-        text = genFooter(text, i, entries);
-        fileName.write(text);
+        auto newText = genHeader(text);
+        newText = genFooter(newText, i, entries);
+        if (text != newText)
+        {
+            writefln("Updating %s", entry.name);
+            fileName.write(newText);
+        }
     }
 }
