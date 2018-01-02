@@ -71,14 +71,24 @@ unittest
     assert("aa $(foo $(bar)foobar)".untilClosingParentheses.equal("aa $(foo $(bar)foobar)"));
 }
 
-auto findDdocMacro(string text, string ddocKey)
+auto findDdocMacro(R)(R text, string ddocKey)
 {
     return text.splitter(ddocKey).map!untilClosingParentheses.dropOne;
 }
 
+auto ddocMacroToCode(R)(R text)
+{
+    import std.ascii : newline;
+    import std.conv : to;
+    return text.find("---")
+               .findSplitAfter(newline)[1]
+               .findSplitBefore("---")[0]
+               .to!string;
+}
+
 int main(string[] args)
 {
-    import std.conv, std.file, std.getopt, std.path;
+    import std.file, std.getopt, std.path;
     import std.parallelism : parallel;
     import std.process : environment;
 
@@ -102,17 +112,12 @@ int main(string[] args)
     // Find all examples in the specification
     foreach (file; specDir.dirEntries("*.dd", SpanMode.depth).parallel(1))
     {
-        import std.ascii : newline;
         import std.uni : isWhite;
         auto allTests =
             file
             .readText
             .findDdocMacro("$(SPEC_RUNNABLE_EXAMPLE")
-            .map!(a => a
-                    .find("---")
-                    .findSplitAfter(newline)[1]
-                    .findSplitBefore("---")[0]
-                    .to!string)
+            .map!ddocMacroToCode
             .map!compileAndCheck;
 
         if (!allTests.empty)
