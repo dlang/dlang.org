@@ -94,6 +94,7 @@
 #       clean                   Removes the .generated folder
 #       diffable-intermediaries Adds intermediary PDF/eBook files to the output, useful for diffing
 #       dautotest               Special target called by the DAutoTestCI and deployment
+#       update-spec-toc         Update TOC and footer menus for the spec pages
 #
 #  Ddoc vs. Ddox
 #  --------------
@@ -385,7 +386,7 @@ docs-prerelease: dmd-prerelease druntime-prerelease phobos-prerelease apidocs-pr
 
 docs : docs-latest docs-prerelease
 
-html : $(ALL_FILES)
+html : update-spec-toc $(ALL_FILES)
 
 verbatim : $(addprefix $W/, $(addsuffix .verbatim,$(PAGES_ROOT))) phobos-prerelease-verbatim
 
@@ -848,6 +849,13 @@ $(PHOBOS_LATEST_FILES_GENERATED): $(PHOBOS_LATEST_DIR_GENERATED)/%: $(PHOBOS_LAT
 	@if [ $(subst .,, $(suffix $@)) = "d" ] && [ "$@" != "$(PHOBOS_LATEST_DIR_GENERATED)/index.d" ] ; then \
 		$(ASSERT_WRITELN_BIN) -i $< -o $@ ; \
 	else cp $< $@ ; fi
+
+################################################################################
+# TOC & Footer update (idempotent)
+################################################################################
+
+update-spec-toc: $(STABLE_DMD)
+	$(STABLE_RDMD) spec/gen.d
 
 ################################################################################
 # Style tests
