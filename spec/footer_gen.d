@@ -15,7 +15,8 @@
 
 void main()
 {
-    import std.algorithm, std.array, std.ascii, std.conv, std.file, std.path, std.range, std.string, std.typecons;
+    import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
+           std.path, std.range, std.string, std.typecons;
     import std.stdio : File, writeln, writefln;
     auto specDir = __FILE_FULL_PATH__.dirName.buildNormalizedPath;
     auto mainFile = specDir.buildPath("./spec.ddoc");
@@ -31,7 +32,7 @@ void main()
     foreach (line; specText.splitter("\n"))
     {
         enum ddocEntryStart = "$(ROOT_DIR)spec/";
-        if (line.canFind(ddocEntryStart))
+        if (line.find!(not!isWhite).startsWith(ddocEntryStart))
         {
             auto ps = line.splitter(ddocEntryStart).dropOne.front.splitter(",");
             entries ~= Entry(ps.front.stripExtension.withExtension(".dd").to!string,
