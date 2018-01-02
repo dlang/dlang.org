@@ -33,6 +33,12 @@ auto untilClosingParentheses(R)(R rs)
     })(1).zip(rs).until!(e => e[0] == 0).map!(e => e[1]);
 }
 
+unittest
+{
+    import std.algorithm.comparison : equal;
+    assert("aa $(foo $(bar)foobar)".untilClosingParentheses.equal("aa $(foo $(bar)foobar)"));
+}
+
 auto parseToc(string text)
 {
     alias TocEntry = Tuple!(string, "id", string, "name");
@@ -134,6 +140,7 @@ auto updateDdocTag(string fileText, string ddocKey, string newContent)
     return fileText.replace(fileText[pos .. pos + len + ddocStartLength + 1], newContent);
 }
 
+version(unittest) {} else
 void main()
 {
     auto specDir = __FILE_FULL_PATH__.dirName.buildNormalizedPath;
