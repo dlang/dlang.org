@@ -119,8 +119,6 @@ int main(string[] args)
 
     foreach (file; specDir.dirEntries("*.dd", SpanMode.depth).parallel(1))
     {
-        import std.uni : isWhite;
-
         auto allTests = findExamples(file, ddocKey).map!compileAndCheck;
         if (!allTests.empty)
         {
