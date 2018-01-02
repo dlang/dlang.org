@@ -16,10 +16,44 @@ import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
         std.path, std.range, std.string, std.typecons;
 import std.stdio : File, writeln, writefln;
 
+auto untilClosingParentheses(R)(R rs)
+{
+    return rs.cumulativeFold!((count, r){
+        switch(r)
+        {
+            case '(':
+                count++;
+                break;
+            case ')':
+                count--;
+                break;
+            default:
+        }
+        return count;
+    })(1).zip(rs).until!(e => e[0] == 0).map!(e => e[1]);
+}
+
+auto parseToc(string text)
+{
+    alias TocEntry = Tuple!(string, "id", string, "name");
+    TocEntry[] toc;
+    while (!text.empty)
+    {
+        text = text.find("$(H2").drop(5);
+        if (text.startsWith("$(LNAME2"))
+        {
+            auto arr = text.drop(9).splitter(",");
+            toc ~= TocEntry(arr.front, arr.dropOne.front.untilClosingParentheses.to!string);
+        }
+    }
+    return toc;
+}
+
 auto genHeader(string fileText)
 {
     enum ddocKey = "$(SPEC_HEADERNAV";
     auto newContent = ddocKey ~ " foo)";
+    parseToc(fileText).writeln;
     return updateDdocTag(fileText, ddocKey, newContent);
 }
 
@@ -46,8 +80,9 @@ auto updateDdocTag(string fileText, string ddocKey, string newContent)
     auto pos = fileText.representation.countUntil(ddocKey);
     if (pos < 0)
         return fileText;
-    auto len = fileText[pos .. $].representation.countUntil(")");
-    return fileText.replace(fileText[pos .. pos + len + 1], newContent);
+    const ddocStartLength = ddocKey.representation.until('(', No.openRight).count;
+    auto len = fileText[pos .. $].representation.drop(ddocStartLength).untilClosingParentheses.walkLength;
+    return fileText.replace(fileText[pos .. pos + len + ddocStartLength + 1], newContent);
 }
 
 void main()
