@@ -118,7 +118,7 @@ int main(string[] args)
 
     alias SpecType = Tuple!(string, "key", CompileConfig.TestMode, "mode");
     auto specTypes = [
-        SpecType("$(SPEC_RUNNABLE_EXAMPLE", CompileConfig.TestMode.compile),
+        SpecType("$(SPEC_RUNNABLE_EXAMPLE_COMPILE", CompileConfig.TestMode.compile),
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_RUN", CompileConfig.TestMode.run),
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_FAIL", CompileConfig.TestMode.fail),
     ];
