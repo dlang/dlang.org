@@ -38,6 +38,7 @@ unittest
 {
     import std.algorithm.comparison : equal;
     assert("aa $(foo $(bar)foobar)".untilClosingParentheses.equal("aa $(foo $(bar)foobar)"));
+    assert("$(FOO a, b, $(ARGS e, f)))".untilClosingParentheses.equal("$(FOO a, b, $(ARGS e, f))"));
 }
 
 // parse the ddoc file for H2 and H3 items
@@ -80,7 +81,7 @@ auto parseToc(string text)
             auto arr = text.drop(lNameNeedles.only[idx - 1].length).splitter(",");
             if (idx == 2)
                 arr.popFront;
-            append(arr.front.strip, arr.dropOne.front.untilClosingParentheses.to!string.strip);
+            append(arr.front.strip, arr.dropOne.joiner(",").untilClosingParentheses.to!string.strip);
         }
     }
     return toc;
