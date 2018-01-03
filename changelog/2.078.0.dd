@@ -14,6 +14,7 @@ $(LI $(RELATIVE_LINK2 fix15243_PR7403,Variadic template arguments no longer requ
 $(LI $(RELATIVE_LINK2 fix16997,fix Issue 16997 - Integral promotion rules not being followed for unary + - ~ operators))
 $(LI $(RELATIVE_LINK2 optional_ModuleInfo,Optional `ModuleInfo`))
 $(LI $(RELATIVE_LINK2 raii,Added RAII and try-finally support for -betterC mode.))
+$(LI $(RELATIVE_LINK2 vs-auto-detection,Windows: dmd can now detect Visual Studio installation paths))
 
 )
 
@@ -231,9 +232,8 @@ $(P
 )
 
 $(P
-If one of the '-transition=' switches is not specified, and warnings are turned on,
-a warning will be emitted for these operations. To turn off the warning and work
-as desired with or without the '-transition=' switch:
+If one of the '-transition=' switches is not specified, a deprecation will be emitted for these operations.
+To fix the deprecation and work as desired with or without the '-transition=' switch:
 )
 
 $(P
@@ -253,8 +253,7 @@ Rewrite `op b` as `typeof(b)(op int(b))` to preserve the old behavior.
 )
 
 $(P
-Eventually, the warning will become a deprecation, then an error, and then the C-like behavior
-will become the default.
+Once deprecated this will become an error, and then the C-like behavior will become the default.
 )
 )
 
@@ -296,6 +295,23 @@ $(P
 It means that, for RAII, when variables go out of lexical scope
 their destructors get run. When try blocks from try-finally statements
 exit, the code in the finally block is run.
+)
+)
+
+$(LI $(LNAME2 vs-auto-detection,Windows: dmd can now detect Visual Studio installation paths)
+$(P
+dmd now determines the environment variables that are usually set if the "Command Line prompt for Visual Studio" link is used to open a console window (or vcvarsall.bat is executed). This includes Windows SDK directories and Visual C library directories. When compiling with -m64 or -m32mscoff this allows dmd to invoke the linker without having a Visual Studio version preselected by the installer.
+)
+
+$(P
+In particular, the variables WindowsSdkDir, WindowsSdkVersion, UniversalCRTSdkDir,
+UCRTVersion, VSINSTALLDIR, VisualStudioVersion, VCINSTALLDIR and VCTOOLSINSTALLDIR are
+determined from the registry if they are not set in the environment or sc.ini.
+)
+
+$(P
+Supported Windows SDK range from 7.0A to 10.x, supported Visual Studio Versions are
+VS 2008 to VS 2017. If multiple versions are installed, highest versions are preferred.
 )
 )
 
