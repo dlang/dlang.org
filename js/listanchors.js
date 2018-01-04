@@ -30,6 +30,91 @@ function addAnchors()
     }
 }
 
+// Add a version selector button
+function addVersionSelector() {
+  // Latest version offered by the archive builds
+  // This needs to be manually updated after new versions have been archived
+  var currentArchivedVersion = 78;
+  // build URLs for dlang.org: DDoc + Dox
+  var ddocModuleURL = document.body.id.replace(/[.]/g, "_") + ".html";
+  var ddoxModuleURL = document.body.id.replace(/[.]/g, "/") + ".html";
+  var root = "phobos/";
+
+  var isSpec = window.location.pathname.indexOf("/spec/") >= 0;
+  if (isSpec) {
+    root = "spec/";
+    var uriParts = window.location.pathname.split("/");
+    ddocModuleURL = uriParts[uriParts.length - 1];
+    // these versions use a different layout
+    var plainSpecVersions = ["2.066", "2.067", "2.068", "2.069"];
+  }
+
+  // build list of versions available in the docarchives
+  var archivedVersions = [];
+  while (currentArchivedVersion >= 66) {
+    archivedVersions.push("2.0" + currentArchivedVersion--);
+  }
+  archivedVersions = archivedVersions.map(function(e) {
+      var currentRoot = root;
+      if (isSpec && plainSpecVersions.indexOf(e) >= 0) {
+        currentRoot = "";
+      }
+      return {
+        name: e,
+        url: "https://docarchives.dlang.io/v" + e + ".0/" + currentRoot + ddocModuleURL,
+        selected: false,
+      };
+  });
+
+  var rootURL = location.href.split(/\/(phobos|library|spec)(-prerelease)?/)[0]
+  var onlineVersions;
+  if (isSpec) {
+    onlineVersions = [{
+      name: "master",
+      url: rootURL + "/spec/" + ddocModuleURL,
+    }];
+  } else {
+    onlineVersions = [{
+      name: "master",
+      url: rootURL + "/phobos-prerelease/" + ddocModuleURL,
+    },{
+      name: "master (ddox)",
+      url: rootURL + "/library-prerelease/" + ddoxModuleURL,
+    },{
+      name: "stable",
+      url: rootURL + "/phobos/" + ddocModuleURL,
+    },{
+      name: "stable (ddox)",
+      url: rootURL + "/library/" + ddoxModuleURL,
+    }];
+  }
+
+  // set the current URL as selected
+  var currentURL = location.href.split(/[#?]/)[0];
+  onlineVersions.forEach(function(v, i) {
+    onlineVersions[i].selected = v.url === currentURL;
+  });
+  // Don't show the option chooser if the page hasn't been recognized
+  // For example, Ddox symbol pages are currently not supported
+  if (onlineVersions.filter(function(v){return v.selected}).length === 0)
+    return;
+
+  // build select box of all versions and append to current DOM
+  var versions = onlineVersions.concat(archivedVersions);
+  var options = versions.map(function(e, i){
+    return "<option value='" + i + "'" + (e.selected ? "selected" : "") + ">" + e.name + "</option>";
+  });
+  $("h1").after("<div class='version-changer-container fa-select'><select id='version-changer'>" + options.join("") + "</select></div>");
+  // attach event listener to select box -> change URL
+  $("#version-changer").change(function(){
+    var selected = parseInt($(this).find("option:selected").val());
+    var option = versions[selected];
+    if (!option.selected) {
+      window.location.href = option.url;
+    }
+  });
+}
+
 function listanchors()
 {
     var hideTop = (typeof inhibitQuickIndex !== 'undefined');
@@ -90,67 +175,7 @@ function listanchors()
         e.innerHTML = newText;
 
     }
-    function addVersionSelector() {
-      // Latest version offered by the archive builds
-      // This needs to be manually updated after new versions have been archived
-      var currentArchivedVersion = 78;
-      // build URLs for dlang.org: DDoc + Dox
-      var ddocModuleURL = document.body.id.replace(/[.]/g, "_") + ".html";
-      var ddoxModuleURL = document.body.id.replace(/[.]/g, "/") + ".html";
 
-      // build list of versions available in the docarchives
-      var archivedVersions = [];
-      while (currentArchivedVersion >= 66) {
-        archivedVersions.push("2.0" + currentArchivedVersion--);
-      }
-      archivedVersions = archivedVersions.map(function(e) {
-          return {
-            name: e,
-            url: "https://docarchives.dlang.io/v" + e + ".0/phobos/" + ddocModuleURL,
-            selected: false,
-          };
-      });
-
-      var rootURL = location.href.split(/\/(phobos|library)(-prerelease)?/)[0]
-      var onlineVersions = [{
-        name: "master",
-        url: rootURL + "/phobos-prerelease/" + ddocModuleURL,
-      },{
-        name: "master (ddox)",
-        url: rootURL + "/library-prerelease/" + ddoxModuleURL,
-      },{
-        name: "stable",
-        url: rootURL + "/phobos/" + ddocModuleURL,
-      },{
-        name: "stable (ddox)",
-        url: rootURL + "/library/" + ddoxModuleURL,
-      }];
-
-      // set the current URL as selected
-      var currentURL = location.href.split(/[#?]/)[0];
-      onlineVersions.forEach(function(v, i) {
-        onlineVersions[i].selected = v.url === currentURL;
-      });
-      // Don't show the option chooser if the page hasn't been recognized
-      // For example, Ddox symbol pages are currently not supported
-      if (onlineVersions.filter(function(v){return v.selected}).length === 0)
-        return;
-
-      // build select box of all versions and append to current DOM
-      var versions = onlineVersions.concat(archivedVersions);
-      var options = versions.map(function(e, i){
-        return "<option value='" + i + "'" + (e.selected ? "selected" : "") + ">" + e.name + "</option>";
-      });
-      $("h1").after("<div class='version-changer-container fa-select'><select id='version-changer'>" + options.join("") + "</select></div>");
-      // attach event listener to select box -> change URL
-      $("#version-changer").change(function(){
-        var selected = parseInt($(this).find("option:selected").val());
-        var option = versions[selected];
-        if (!option.selected) {
-          window.location.href = option.url;
-        }
-      });
-    }
     addAnchors();
     addVersionSelector();
 }
