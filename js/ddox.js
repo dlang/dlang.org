@@ -128,3 +128,13 @@ function performSymbolSearch(maxlen)
 
 	$('#symbolSearchResults').show();
 }
+
+$(function(){
+  $("#search-box form").on("submit", function(e) {
+    var searchResults = $('#symbolSearchResults').children();
+    if (searchResults.length > 0) {
+      window.location = searchResults.first().find("a").attr("href");
+      e.preventDefault();
+    }
+  });
+});
