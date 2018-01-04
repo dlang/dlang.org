@@ -1,8 +1,9 @@
 ![D Logo](https://dlang.org/images/dlogo.svg) D Language Website
 ===============================================================
 
-[![GitHub tag](https://img.shields.io/github/tag/dlang/dlang.org.svg?maxAge=86400)](#)
+[![GitHub tag](https://img.shields.io/github/tag/dlang/dlang.org.svg?maxAge=86400)](https://github.com/dlang/dlang.org/releases)
 [![Issue Stats](https://img.shields.io/issuestats/p/github/dlang/dlang.org.svg?maxAge=2592000)](http://www.issuestats.com/github/dlang/dlang.org)
+[![license](https://img.shields.io/github/license/dlang/dlang.org.svg)](https://github.com/dlang/dlang.org/blob/master/LICENSE.txt)
 
 This repository contains the source files for the [D Language
 Website](https://dlang.org), including the language specifications,
