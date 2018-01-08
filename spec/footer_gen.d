@@ -1,9 +1,9 @@
 #!/usr/bin/env rdmd
 /*
- * Footer generator for the specification pages.
- * This script can be used to update the nav footers.
+ * TOC + footer generator for the specification pages.
+ * This script can be used to update the TOC index and navigation footers.
  *
- * Copyright (C) 2017 by D Language Foundation
+ * Copyright (C) 2017-2018 by D Language Foundation
  *
  * Author: Sebastian Wilzbach
  *
@@ -13,9 +13,37 @@
 */
 // Written in the D programming language.
 import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
-        std.path, std.range, std.string, std.typecons;
+        std.meta, std.path, std.range, std.string, std.typecons;
 import std.stdio : File, writeln, writefln;
 
+// a range until the next ')', nested () are ignored
+auto untilClosingParentheses(R)(R rs)
+{
+    return rs.cumulativeFold!((count, r){
+        switch(r)
+        {
+            case '(':
+                count++;
+                break;
+            case ')':
+                count--;
+                break;
+            default:
+        }
+        return count;
+    })(1).zip(rs).until!(e => e[0] == 0).map!(e => e[1]);
+}
+
+unittest
+{
+    import std.algorithm.comparison : equal;
+    assert("aa $(foo $(bar)foobar)".untilClosingParentheses.equal("aa $(foo $(bar)foobar)"));
+    assert("$(FOO a, b, $(ARGS e, f)))".untilClosingParentheses.equal("$(FOO a, b, $(ARGS e, f))"));
+}
+
+// Adds pagination to the spec pages
+// The default Ddoc macro is `$(SPEC_SUBNAV_PREV_NEXT)`
+// The first and last page have special ddoc macros (`$(SPEC_SUBNAV_NEXT)`, `$(SPEC_SUBNAV_PREV)`)
 auto genFooter(Entries)(string fileText, size_t i, Entries entries)
 {
     enum ddocKey = "$(SPEC_SUBNAV_";
@@ -31,14 +59,21 @@ auto genFooter(Entries)(string fileText, size_t i, Entries entries)
         navString ~= text("PREV ", entries[i - 1].name.stripExtension, ", ", entries[i - 1].title);
 
     navString ~= ")";
-
-    // idempotency - check for existing tags, otherwise insert new
-    auto pos = fileText.representation.countUntil(ddocKey);
-    assert(pos);
-    auto len = fileText[pos .. $].representation.countUntil(")");
-    return fileText.replace(fileText[pos .. pos + len + 1], navString);
+    return updateDdocTag(fileText, ddocKey, navString);
 }
 
+// replaces the content of a DDoc macro call
+auto updateDdocTag(string fileText, string ddocKey, string newContent)
+{
+    auto pos = fileText.representation.countUntil(ddocKey);
+    if (pos < 0)
+        return fileText;
+    const ddocStartLength = ddocKey.representation.until('(', No.openRight).count;
+    auto len = fileText[pos .. $].representation.drop(ddocStartLength).untilClosingParentheses.walkLength;
+    return fileText.replace(fileText[pos .. pos + len + ddocStartLength + 1], newContent);
+}
+
+version(unittest) {} else
 void main()
 {
     auto specDir = __FILE_FULL_PATH__.dirName.buildNormalizedPath;
@@ -64,10 +99,13 @@ void main()
 
     foreach (i, entry; entries)
     {
-        writefln("Processing %s", entry.name);
         auto fileName = specDir.buildPath(entry.name);
         auto text = fileName.readText;
-        text = genFooter(text, i, entries);
-        fileName.write(text);
+        auto newText = genFooter(text, i, entries);
+        if (text != newText)
+        {
+            writefln("Updating %s", entry.name);
+            fileName.write(newText);
+        }
     }
 }
