@@ -278,6 +278,12 @@ DDOC_VARS_PRERELEASE_VERBATIM=$(DDOC_VARS_PRERELEASE) \
 	STDDOC="$(PWD)/verbatim.ddoc"
 
 ################################################################################
+# Ddoc binaries
+################################################################################
+
+DDOC_BIN:=$G/ddoc
+
+################################################################################
 # Resources
 ################################################################################
 
@@ -460,8 +466,8 @@ $W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DMD
 $W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
-$W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
-	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
+$W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN) --compiler=$(DMD) -o$@ $(SPEC_DDOC) $<
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
@@ -946,5 +952,16 @@ $G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 	echo "NR_D_CONTRIBUTORS=$$(wc -l < $G/contributors_list.tmp)" > $@
 	echo "D_CONTRIBUTORS=" >> $@
 	cat $G/contributors_list.tmp >> $@
+
+################################################################################
+# Custom DDoc wrapper
+# ------------------
+#
+# This allows extending Ddoc files dynamically on-the-fly.
+# It is currently only used for the specification pages
+################################################################################
+
+$(DDOC_BIN): ddoc.d | $(STABLE_DMD)
+	$(STABLE_DMD) -of$@ $<
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
