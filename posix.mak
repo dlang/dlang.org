@@ -513,8 +513,8 @@ $W/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) dcompiler.dd $<
+$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DDOC_BIN)
+	$(DDOC_BIN) -Df$@ $(DDOC) dcompiler.dd $<
 
 $W/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
@@ -982,7 +982,7 @@ $G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 ################################################################################
 
 $(DDOC_BIN): ddoc_preprocessor.d | $(STABLE_DMD)
-	$(STABLE_DMD) -g -of$@ $<
+	$(STABLE_RDMD) --build-only -g -of$@ -I$(DMD_DIR)/src $<
 
 ################################################################################
 # Build and render the DMD man page
