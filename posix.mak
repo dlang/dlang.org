@@ -684,14 +684,17 @@ $W/phobos-prerelease/object.verbatim : $(DMD) $G/changelog/next-version
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_FILES} druntime-target $(STD_DDOC_PRERELEASE)
-	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
+phobos-prerelease : ${PHOBOS_FILES} druntime-target $(STD_DDOC_PRERELEASE) $(DDOC_BIN) $(DMD)
+	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML) \
+		DMD="$(abspath $(DDOC_BIN)) --compiler=$(DMD)"
 
-phobos-release : ${PHOBOS_FILES} druntime-target $(STD_DDOC_RELEASE)
-	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
+phobos-release : ${PHOBOS_FILES} druntime-target $(STD_DDOC_RELEASE) $(DDOC_BIN) $(DMD)
+	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML) \
+		DMD="$(abspath $(DDOC_BIN)) --compiler=$(DMD)"
 
-phobos-latest : ${PHOBOS_LATEST_FILES} druntime-latest-target $(STD_DDOC_LATEST)
-	$(MAKE) --directory=$(PHOBOS_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
+phobos-latest : ${PHOBOS_LATEST_FILES} druntime-latest-target $(STD_DDOC_LATEST) $(DDOC_BIN) $(DMD)
+	$(MAKE) --directory=$(PHOBOS_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML) \
+		DMD="$(abspath $(DDOC_BIN)) --compiler=$(DMD)"
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES} druntime-target \
 		$W/phobos-prerelease/index.verbatim
