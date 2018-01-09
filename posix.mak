@@ -346,6 +346,8 @@ ifneq (1,$(RELEASE))
  CHANGELOG_FILES+=changelog/pending
 endif
 
+MAN_PAGE=docs/man/man1/dmd.1
+
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
@@ -372,7 +374,7 @@ endif
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $W/, $(TARGETS) \
-$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
+$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT) $(MAN_PAGE))
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 
@@ -963,5 +965,29 @@ $G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 
 $(DDOC_BIN): ddoc.d | $(STABLE_DMD)
 	$(STABLE_DMD) -of$@ $<
+
+################################################################################
+# Build and render the DMD man page
+# ---------------------------------
+#
+# This allows previewing changes to the automatically generated DMD man page
+################################################################################
+
+$W/$(MAN_PAGE): $(DMD_DIR)/docs/gen_man.d $(DMD_DIR)/src/dmd/cli.d | ${STABLE_DMD}
+	${MAKE} -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) build
+	# Remove the loop after https://github.com/dlang/dmd/pull/7637 has been merged
+	for file in "$(DMD_DIR)/generated/$(MAN_PAGE)" "$(DMD_DIR)/$(MAN_PAGE)" ; do \
+		if [ -f "$$file" ] ; then \
+			mkdir -p $(dir $@); \
+			cp $$file $@; \
+			break; \
+		fi \
+	done
+	# CircleCi + nightlies.dlang.org might not have `man` installed
+	if command -v man > /dev/null ; then \
+		${MAKE} -s -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) preview > $(dir $@)dmd.txt; \
+	fi
+
+man: $W/$(MAN_PAGE)
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)
