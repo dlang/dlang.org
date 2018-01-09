@@ -16,7 +16,7 @@ Author: Sebastian Wilzbach
 */
 import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
         std.meta, std.path, std.range, std.string, std.typecons;
-import std.stdio : writeln, writefln;
+import std.stdio;
 
 struct Config
 {
@@ -25,40 +25,43 @@ struct Config
 }
 Config config;
 
-int main(string[] args)
+int main(string[] rootArgs)
 {
     import std.getopt;
     auto helpInformation = getopt(
-        args,
+        rootArgs, std.getopt.config.passThrough,
         "compiler", "Compiler to use", &config.dmdBinPath,
-        "o|output", "Output file", &config.outputFile,
     );
-
-    assert(config.outputFile, "An output file is required.");
-    assert(args.length > 1, "An input file is required.");
-
     if (helpInformation.helpWanted)
     {
 `DDoc wrapper
+All unknown options are passed to the compiler.
 ./ddoc <file>...
 `.defaultGetoptPrinter(helpInformation.options);
         return 1;
     }
-
-    import std.file : readText;
-    auto text = args[$ - 1].readText;
+    auto args = rootArgs[1 .. $];
+    auto pos = args.countUntil!(a => a.endsWith(".dd", ".d") > 0);
+    assert(pos, "An input file (.d or .dd) must be provided");
+    auto text = args[pos].readText;
+    // replace only works with 2.078.1, see: https://github.com/dlang/phobos/pull/6017
+    args = args[0..pos].chain("-".only, args[pos..$].dropOne).array;
 
     // transform and extend the ddoc page
     text = genHeader(text);
 
-    return compile(text, args[1 .. $ - 1]);
+    return compile(text, args);
 }
 
 auto compile(R)(R buffer, string[] arguments)
 {
     import std.process : pipeProcess, Redirect, wait;
-    auto args = [config.dmdBinPath, "-c", "-Df"~config.outputFile, "-o-"] ~ arguments;
-    args ~= "-";
+    auto args = [config.dmdBinPath] ~ arguments;
+    foreach (arg; ["-c", "-o-", "-"])
+    {
+        if (!args.canFind(arg))
+            args ~= arg;
+    }
     auto pipes = pipeProcess(args, Redirect.stdin);
     pipes.stdin.write(buffer);
     pipes.stdin.close;
