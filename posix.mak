@@ -982,7 +982,7 @@ $G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 ################################################################################
 
 $(DDOC_BIN): ddoc_preprocessor.d | $(STABLE_DMD)
-	$(STABLE_RDMD) --build-only -g -of$@ -I$(DMD_DIR)/src $<
+	$(STABLE_RDMD) -version=DdocOptions --build-only -g -of$@ -I$(DMD_DIR)/src $<
 
 ################################################################################
 # Build and render the DMD man page

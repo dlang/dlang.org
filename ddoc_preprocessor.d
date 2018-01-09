@@ -18,6 +18,8 @@ import std.algorithm, std.array, std.ascii, std.conv, std.file, std.format, std.
         std.meta, std.path, std.range, std.string, std.typecons;
 import std.stdio;
 
+import dmd.cli;
+
 struct Config
 {
     string dmdBinPath = "dmd";
@@ -53,6 +55,7 @@ All unknown options are passed to the compiler.
     text = genGrammar(text);
     text = genHeader(text);
     text = genChangelogVersion(inputFile, text);
+    text = genSwitches(text);
 
     // inject custom, "dynamic" macros
     text ~= "\nSRC_FILENAME=%s\n".format(inputFile.buildNormalizedPath);
@@ -276,4 +279,96 @@ auto genChangelogVersion(string fileName, string fileText)
         fileText ~= macros;
     }
     return fileText;
+}
+
+// generate CLI documentation
+auto genSwitches(string fileText)
+{
+    enum ddocKey = "$(CLI_SWITCHES";
+    auto content = ddocKey ~ "\n";
+    foreach (option; Usage.options)
+    {
+        string flag = option.flag;
+        string helpText = option.helpText;
+        if (!option.ddocText.empty)
+            helpText = option.ddocText;
+
+        // capitalize the first letter
+        helpText = helpText.capitalize.to!string;
+
+        highlightSpecialWords(flag, helpText);
+        auto flagEndPos = flag.representation.countUntil("=", "$(", "<");
+        string switchName;
+        if (flagEndPos < 0)
+            switchName = "$(SWNAME -%s)".format(flag);
+        else
+            switchName = "$(SWNAME -%s)%s".format(flag[0..flagEndPos], flag[flagEndPos..$]);
+
+        auto currentFlag = "$(SWITCH %s,\n
+            %s
+        )".format(switchName, helpText);
+
+        with(TargetOS)
+        switch(option.os)
+        {
+            case windows:
+                currentFlag = text("$(WINDOWS ", currentFlag, ")");
+                break;
+            case linux:
+            case macOS:
+            case freeBSD:
+            case solaris:
+            case dragonFlyBSD:
+                currentFlag = text("$(UNIX ", currentFlag, ")");
+                break;
+            case all:
+            default:
+                break;
+        }
+        content ~= currentFlag;
+    }
+    return updateDdocTag(fileText, ddocKey, content);
+}
+
+auto italic(string w)
+{
+    return "$(I %s )".format(w);
+}
+
+
+// capitalize the first letter
+auto capitalize(string w)
+{
+    import std.range, std.uni;
+    return w.take(1).asUpperCase.chain(w.dropOne);
+}
+
+private void highlightSpecialWords(ref string flag, ref string helpText)
+{
+    if (flag.canFind("<", "[") && flag.canFind(">", "]"))
+    {
+        string specialWord;
+
+        // detect special words in <...> and highlight them
+        static foreach (t; [["<", ">"], ["[", "]"]])
+        {
+            if (flag.canFind(t[0]))
+            {
+                specialWord = flag.findSplit(t[0])[2].until(t[1]).to!string;
+                // keep []
+                auto replaceWord = t[0] == "<" ? t[0] ~ specialWord ~ t[1] : specialWord;
+                flag = flag.replace(replaceWord, specialWord.italic);
+            }
+        }
+
+        // highlight individual words in the description
+        helpText = helpText
+            .splitter(" ")
+            .map!((w){
+                auto wPlain = w.filter!(c => !c.among('<', '>', '`', '\'')).to!string;
+                return wPlain == specialWord ? wPlain.italic: w;
+            })
+            .joiner(" ")
+            .to!string;
+    }
 }
