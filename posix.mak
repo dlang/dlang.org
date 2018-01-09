@@ -867,6 +867,8 @@ test_dspec: dspec_tester.d $(STABLE_DMD)
 test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
 	@echo "Searching for trailing whitespace"
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
+	@echo "Searching for tabs"
+	@grep -n -P "\t" $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
 	@echo "Searching for undefined macros"
 	@grep -n "UNDEFINED MACRO" $$(find $W -type f -name "*.html" -not -path "$W/phobos/*") ; test $$? -eq 1
 	@echo "Searching for undefined ddoc"
