@@ -975,16 +975,12 @@ $(DDOC_BIN): ddoc.d | $(STABLE_DMD)
 # This allows previewing changes to the automatically generated DMD man page
 ################################################################################
 
-$W/$(MAN_PAGE): $(DMD_DIR)/docs/gen_man.d $(DMD_DIR)/src/dmd/cli.d | ${STABLE_DMD}
+$(DMD_DIR)/generated/$(MAN_PAGE): $(DMD_DIR)/docs/gen_man.d $(DMD_DIR)/src/dmd/cli.d | ${STABLE_DMD}
 	${MAKE} -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) build
-	# Remove the loop after https://github.com/dlang/dmd/pull/7637 has been merged
-	for file in "$(DMD_DIR)/generated/$(MAN_PAGE)" "$(DMD_DIR)/$(MAN_PAGE)" ; do \
-		if [ -f "$$file" ] ; then \
-			mkdir -p $(dir $@); \
-			cp $$file $@; \
-			break; \
-		fi \
-	done
+
+$W/$(MAN_PAGE): $(DMD_DIR)/generated/$(MAN_PAGE) | ${STABLE_DMD}
+	mkdir -p $(dir $@)
+	cp $< $@
 	# CircleCi + nightlies.dlang.org might not have `man` installed
 	if command -v man > /dev/null ; then \
 		${MAKE} -s -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) preview > $(dir $@)dmd.txt; \
