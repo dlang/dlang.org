@@ -42,7 +42,7 @@ All unknown options are passed to the compiler.
     }
     auto args = rootArgs[1 .. $];
     auto pos = args.countUntil!(a => a.endsWith(".dd", ".d") > 0);
-    assert(pos, "An input file (.d or .dd) must be provided");
+    assert(pos >= 0, "An input file (.d or .dd) must be provided");
     auto text = args[pos].readText;
     // replace only works with 2.078.1, see: https://github.com/dlang/phobos/pull/6017
     args = args[0..pos].chain("-".only, args[pos..$].dropOne).array;
