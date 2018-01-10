@@ -26,6 +26,7 @@ $(UL
         $(LI $(RELATIVE_LINK2 metatemplates, Meta Templates))
         $(LI $(RELATIVE_LINK2 typetraits, Type Traits))
         $(LI $(RELATIVE_LINK2 interfaces, Interfaces))
+        $(LI $(RELATIVE_LINK2 references, References in D))
 )
 
 
@@ -912,6 +913,47 @@ FirstVariant.method();
 SecondVariant.method();
 ------
 
+
+<hr>$(COMMENT  -------------------------------------------- )
+
+$(H3 $(LNAME2 references, References in D))
+
+
+        D doesn't have a (C++-style) concept of references as part of the type. Arguments can be passed by reference - hence the `ref` keyword, but "free" references don't exist in the language.
+
+        The `ref` in `foreach` loop variables can be conceptually thought of as a parameter to the loop body as well. (For `opApply` based iteration, the loop body indeed gets turned into a function; for "plain" iteration the compiler AST internally has special `ref` variables, but they are not visible to the language.)
+
+        In the below code, `d2` is a value copy of `gallery[0]` and is not a reference.
+
+$(RUNNABLE_EXAMPLE
+------
+module test;
+
+void main()
+{
+    struct Data
+    {
+        int id;
+    }
+
+    import std.container.array : Array;
+    Array!Data gallery;
+
+    Data d1;
+    gallery.insertBack(d1);
+
+    auto d2 = gallery[0];
+    d2.id = 1;
+    assert(d2.id == gallery[0].id, "neither ref nor pointer");
+}
+------
+)
+
+        Instead of trying to get a reference in such a case, get a pointer. After all, you don't have to use `->` operator in D, which is nice in syntax.
+
+------
+    auto d2 = &gallery[0];
+------
 
 )
 
