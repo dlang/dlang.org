@@ -74,6 +74,9 @@ auto updateDdocTag(string fileText, string ddocKey, string newContent)
     auto pos = fileText.representation.countUntil(ddocKey);
     if (pos < 0)
         return fileText;
+
+    newContent ~= ")";
+
     const ddocStartLength = ddocKey.representation.until('(', No.openRight).count;
     auto len = fileText[pos .. $].representation.drop(ddocStartLength).untilClosingParentheses.walkLength;
     return fileText.replace(fileText[pos .. pos + len + ddocStartLength + 1], newContent);
@@ -162,22 +165,24 @@ auto genHeader(string fileText)
     enum ddocKey = "$(HEADERNAV_TOC";
     auto newContent = ddocKey ~ "\n";
     enum indent = "    ";
-    foreach (entry; fileText.parseToc)
+    if (fileText.canFind(ddocKey))
     {
-        if (entry.children)
+        foreach (entry; fileText.parseToc)
         {
-            newContent ~= "%s$(HEADERNAV_SUBITEMS %s, %s,\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
-            foreach (child; entry.children)
-                newContent ~= "%s$(HEADERNAV_ITEM %s, %s)\n".format(indent.repeat(2).joiner, child.id, child.name.escapeDdoc);
-            newContent ~= indent;
-            newContent ~= ")\n";
-        }
-        else
-        {
-            newContent ~= "%s$(HEADERNAV_ITEM %s, %s)\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
+            if (entry.children)
+            {
+                newContent ~= "%s$(HEADERNAV_SUBITEMS %s, %s,\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
+                foreach (child; entry.children)
+                    newContent ~= "%s$(HEADERNAV_ITEM %s, %s)\n".format(indent.repeat(2).joiner, child.id, child.name.escapeDdoc);
+                newContent ~= indent;
+                newContent ~= ")\n";
+            }
+            else
+            {
+                newContent ~= "%s$(HEADERNAV_ITEM %s, %s)\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
+            }
         }
     }
-    newContent ~= ")";
     return updateDdocTag(fileText, ddocKey, newContent);
 }
 
