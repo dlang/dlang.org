@@ -156,25 +156,25 @@ auto escapeDdoc(string s)
     return s.replace(",", "$(COMMA)");
 }
 
-// generated a SPEC_HEADERNAV_TOC Ddoc macro with the parsed H2/H3 entries
+// generated a HEADERNAV_TOC Ddoc macro with the parsed H2/H3 entries
 auto genHeader(string fileText)
 {
-    enum ddocKey = "$(SPEC_HEADERNAV_TOC";
+    enum ddocKey = "$(HEADERNAV_TOC";
     auto newContent = ddocKey ~ "\n";
     enum indent = "    ";
     foreach (entry; fileText.parseToc)
     {
         if (entry.children)
         {
-            newContent ~= "%s$(SPEC_HEADERNAV_SUBITEMS %s, %s,\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
+            newContent ~= "%s$(HEADERNAV_SUBITEMS %s, %s,\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
             foreach (child; entry.children)
-                newContent ~= "%s$(SPEC_HEADERNAV_ITEM %s, %s)\n".format(indent.repeat(2).joiner, child.id, child.name.escapeDdoc);
+                newContent ~= "%s$(HEADERNAV_ITEM %s, %s)\n".format(indent.repeat(2).joiner, child.id, child.name.escapeDdoc);
             newContent ~= indent;
             newContent ~= ")\n";
         }
         else
         {
-            newContent ~= "%s$(SPEC_HEADERNAV_ITEM %s, %s)\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
+            newContent ~= "%s$(HEADERNAV_ITEM %s, %s)\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
         }
     }
     newContent ~= ")";
