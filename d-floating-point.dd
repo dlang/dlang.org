@@ -2,7 +2,9 @@ Ddoc
 
 $(D_S $(TITLE),
 
-$(H2 Introduction)
+$(HEADERNAV_TOC)
+
+$(H2 $(LNAME2 introduction, Introduction))
 
 $(P $(I by Don Clugston))
 
@@ -37,7 +39,7 @@ Easy access to the "strange" features of floating point results in better educat
 This article will provide a brief overview of the support for floating point in the D programming language.
 )
 
-$(H2 Demystifying Floating-Point)
+$(H2 $(LNAME2 deemystifying-floating-point, Demystifying Floating-Point))
 
 $(P D guarantees that all built-in floating-point types conform to IEEE 754 arithmetic, making behaviour entirely predictable (note that this is $(I not) the same as producing identical results on all platforms). IEEE 754-2008 is the latest revision of the IEEE 754 Standard for Floating-Point Arithmetic. D is progressing towards full compliance with 754-2008.)
 
@@ -92,7 +94,7 @@ equivalent to [-$(INFIN), $(INFIN)]).)
 $(LI A naive binary chop doesn't work correctly. The fact that there are hundreds or thousands of times as many representable numbers between 0 and 1, as there are between 1 and 2, is problematic for divide-and-conquer algorithms. A naive binary chop would divide the interval [0 .. 2] into [0 .. 1] and [1 .. 2]. Unfortunately, this is not a true binary chop, because the interval [0 .. 1] contains more than 99% of the representable numbers from the original interval!)
 )
 
-$(H2 Condition number)
+$(H2 $(LNAME2 condition-number, Condition number))
 
 $(P Using nextUp, it's easy to approximately calculate the condition number.)
 
@@ -190,7 +192,7 @@ $(LI If $(D x-y==0), then $(D x==y  && isFinite(x) && isFinite(y)). Note that if
 $(LI $(D F.max * F.min_normal = 4.0) for binary types, $(D 10.0) for decimal types.)
 )
 
-$(H3  Addition and subtraction)
+$(H3 $(LNAME2 addition-subtraction, Addition and subtraction))
 
 $(UL
 $(LI Some loss of precision occurs with x$(PLUSMN)y if exponent(x)!=exponent(y). The number of digits of precision which are lost is abs(exponent(x)-exponent(y)).)
@@ -202,7 +204,7 @@ $(LI Subtraction is not quite commutative: $(D a - b == -(b - a)), but produce +
 $(LI Addition is not associative at all.)
 )
 
-$(H3 Multiplication and division)
+$(H3 $(LNAME2 multiplication-division, Multiplication and division))
 
 $(UL
 $(LI Multiplication and division are $(I always) at risk of overflow or underflow.
@@ -221,7 +223,7 @@ $(LI Performing a division by multiplication by the reciprocal returns a result 
 )
 
 
-$(H3  Powers and logarithms)
+$(H3 $(LNAME2 powers-logarithm, Powers and logarithms))
 
 $(UL
 $(LI $(D F.mant_dig = -log2(F.epsilon)) for binary types;)
@@ -233,7 +235,7 @@ $(LI For any positive finite $(D x), $(D F.min_exp - F.mant_dig <= log2(x) < F.m
 $(LI $(D exp2(x) == 0) if $(D x < F.min_exp - F.mant_dig), $(D exp2(x) == infinity) if $(D x >= F.max_exp))
 )
 
-$(H2 NaN payloads)
+$(H2 $(LNAME2 nan, NaN payloads))
 
 $(P According to the IEEE 754 standard, a $(SINGLEQUOTE payload) can be stored in the mantissa of a NaN. This payload can contain information about how or why it was generated. Historically, almost no programming languages have ever made use of this potentially powerful feature. In D, this payload consists of a positive integer.)
 
@@ -244,7 +246,7 @@ $(LI $(D ulong getNaNPayload(real x)) -- returns the integer payload. Note that 
 
 $(P $(I Never) store a pointer as an integer payload inside a NaN. The garbage collector will not be able to find it!)
 
-$(H2 The IEEE Rounding Modes)
+$(H2 $(LNAME2 iee-rounding-modes, The IEEE Rounding Modes))
 
 $(P The rounding mode is controlled within a scope. Rounding mode will be restored to its previous state at the end of that scope.
 Four rounding modes can be set. The default mode, $(I Round to nearest), is the most statistically accurate, but the least intuitive. In the event of tie, the result is rounded to an even number.
@@ -265,7 +267,7 @@ The round-to-zero mode is used for casting floating-point numbers to integers. S
 
 $(P The only other commonly cited reason for changing the rounding mode is as a simple check for numerical stability: if the calculation produces wildly different results when the rounding mode is changed, it's a clear sign that it is suffering from round-off errors. )
 
-$(H2 The IEEE Exception Status Flags)
+$(H2 $(LNAME2 iee-exception-status-flags, The IEEE Exception Status Flags))
 
 $(P All IEEE-compiliant processors include special status bits that indicate when "weird" things have happened that programs might want to know about. For example, $(D ieeeFlags.divideByZero) tells if any infinities have been created by dividing by zero. They are 'sticky' bits: once they have been set, they remain set until explicitly cleared. By only checking this once at the end of a calculation, it may be possible to avoid comparing thousands of comparisions that are almost never going to fail.)
 
@@ -290,21 +292,21 @@ This can be an invaluable debugging aid.
 A more advanced usage, not yet supported on any platform(!) is to provide a nested function to be used as a hardware exception handler. This is most useful for the overflow and underflow exceptions.
 )
 
-$(H2 Floating point and $(SINGLEQUOTE pure nothrow))
+$(H2 $(LNAME2 pure-nothrow, Floating point and $(SINGLEQUOTE pure nothrow)))
 
 $(P Every floating point operation, even the most trivial, is affected by the floating-point rounding state, and writes to the sticky flags. The status flags and control state are thus 'hidden variables', potentially affecting every $(D pure) function; and if the floating point traps are enabled, any floating point operation can generate a hardware exception.
 D provides a facility for the floating-point control mode and exception flags to be usable in limited circumstances even when $(D pure) and $(D nothrow) functions are called.
 )
 
-$(P [TODO: I've made two proposals, but I haven't persauded Walter yet!].)
+$(P [TODO: I've made two proposals, but I haven't persuaded Walter yet!].)
 
-$(H2 Conclusion)
+$(H2 $(LNAME2 conclusion, Conclusion))
 
 $(P Although D is a general-purpose programming language and supports many high-level concepts, it gives direct and convenient access to almost all features of modern floating-point hardware. This makes it an excellent language for development of robust, high-performance numerical code. It is also a language which encourages a deep understanding of the machine, making it fertile ground for innovation and for developing new algorithms.)
 
 
 
-$(H2 References and Further Reading)
+$(H2 $(LNAME2 references-further-reading, References and Further Reading))
 
 $(OL
 $(LI
