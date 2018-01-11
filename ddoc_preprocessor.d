@@ -14,7 +14,7 @@ Example usage:
 
 Author: Sebastian Wilzbach
 */
-import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
+import std.algorithm, std.array, std.ascii, std.conv, std.file, std.format, std.functional,
         std.meta, std.path, std.range, std.string, std.typecons;
 import std.stdio;
 
@@ -43,13 +43,16 @@ All unknown options are passed to the compiler.
     auto args = rootArgs[1 .. $];
     auto pos = args.countUntil!(a => a.endsWith(".dd", ".d") > 0);
     assert(pos >= 0, "An input file (.d or .dd) must be provided");
-    auto text = args[pos].readText;
+    auto inputFile = args[pos];
+    auto text = inputFile.readText;
     // replace only works with 2.078.1, see: https://github.com/dlang/phobos/pull/6017
     args = args[0..pos].chain("-".only, args[pos..$].dropOne).array;
 
     // transform and extend the ddoc page
     text = genHeader(text);
 
+    // inject custom, "dynamic" macros
+    text ~= "\nSRC_FILENAME=%s\n".format(inputFile.buildNormalizedPath);
     return compile(text, args);
 }
 
