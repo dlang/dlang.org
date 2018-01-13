@@ -31,9 +31,9 @@ auto untilClosingParentheses(R)(R rs)
 {
     struct State
     {
-        size_t rightParensCount = 1;
+        uint rightParensCount = 1;
         bool inCodeBlock;
-        size_t dashCount;
+        uint dashCount;
     }
     return rs.cumulativeFold!((state, r){
         if (r == '-')
@@ -44,7 +44,6 @@ auto untilClosingParentheses(R)(R rs)
         {
             if (state.dashCount >= 3)
                 state.inCodeBlock = !state.inCodeBlock;
-
             state.dashCount = 0;
         }
         switch(r)
