@@ -24,7 +24,7 @@ struct Config {
     string dmdBinPath = "dmd";
     bool printLineNumbers; // whether line numbers should be shown on errors
 }
-__gshared Config config;
+shared Config config;
 
 // a range until the next ')', nested () are ignored
 auto untilClosingParentheses(R)(R rs)
@@ -98,8 +98,8 @@ int main(string[] args)
     config.dmdBinPath = environment.get("DMD", "dmd");
     auto helpInformation = getopt(
         args,
-        "l|lines", "Show the line numbers on errors", &config.printLineNumbers,
-        "compiler", "D compiler to use", &config.dmdBinPath,
+        "l|lines", "Show the line numbers on errors", cast(bool*) &config.printLineNumbers,
+        "compiler", "D compiler to use", cast(string*) &config.dmdBinPath,
     );
 
     if (helpInformation.helpWanted)
@@ -159,7 +159,7 @@ auto compileAndCheck(R)(R buffer, CompileConfig config)
     import std.process;
     import std.uni : isWhite;
 
-    auto args = [.config.dmdBinPath];
+    string[] args = [.config.dmdBinPath];
     args ~= config.args;
     with (CompileConfig.TestMode)
     final switch (config.mode)
