@@ -965,7 +965,7 @@ $G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 # It is currently only used for the specification pages
 ################################################################################
 
-$(DDOC_BIN): ddoc.d | $(STABLE_DMD)
+$(DDOC_BIN): ddoc_preprocessor.d | $(STABLE_DMD)
 	$(STABLE_DMD) -of$@ $<
 
 ################################################################################
