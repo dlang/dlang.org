@@ -782,7 +782,7 @@ endif
 
 .PHONY: dpl-docs
 dpl-docs: ${DUB} ${STABLE_DMD}
-	DFLAGS="$(DPL_DOCS_DFLAGS)" ${DUB} build --root=${DPL_DOCS_PATH} \
+	DFLAGS="$(DPL_DOCS_DFLAGS)" ${DUB} -v build --root=${DPL_DOCS_PATH} \
 		--compiler=${STABLE_DMD}
 
 # .tar.xz's archives are smaller (and don't need a temporary dir) -> prefer if available
@@ -841,12 +841,12 @@ ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
 
 $(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB) $(STABLE_DMD)
 	@mkdir -p $(dir $@)
-	$(DUB) build --single --compiler=$(STABLE_DMD) $<
+	$(DUB) -v build --single --compiler=$(STABLE_DMD) $<
 	@mv ./assert_writeln_magic $@
 
 $(ASSERT_WRITELN_BIN)_test: assert_writeln_magic.d $(DUB) $(STABLE_DMD)
 	@mkdir -p $(dir $@)
-	$(DUB) build --single --compiler=$(STABLE_DMD) --build=unittest $<
+	$(DUB) -v build --single --compiler=$(STABLE_DMD) --build=unittest $<
 	@mv ./assert_writeln_magic $@
 
 $(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
