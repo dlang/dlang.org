@@ -199,12 +199,11 @@ DUB=$(STABLE_DMD_BIN_ROOT)/dub
 
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
-	gc. core.internal. core.stdc.config core.sys. \
-	std.algorithm.internal std.c. std.concurrencybase std.internal. std.regex.internal. \
-	std.windows.iunknown std.windows.registry etc.linux.memoryerror \
-	std.experimental.ndslice.internal std.stdiobase \
+	core.internal. core.stdc.config core.sys. \
+	std.algorithm.internal std.c. std.internal. std.regex.internal. \
+	std.windows.registry etc.linux.memoryerror \
 	std.typetuple \
-	tk. msvc_dmc msvc_lib \
+	msvc_dmc msvc_lib \
 	dmd.libmach dmd.libmscoff \
 	dmd.scanmach dmd.scanmscoff \
 	dmd.libmach dmd.libmscoff \
