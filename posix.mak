@@ -169,6 +169,22 @@ $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
 $(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(DRUNTIME_DIR))
 
 ################################################################################
+# Detect the number of process automatically
+################################################################################
+
+NPROCS:=1
+OS_UNAME:=$(shell uname -s)
+
+ifeq ($(OS_UNAME),Linux)
+ NPROCS:=$(shell grep -c ^processor /proc/cpuinfo)
+endif
+ifeq ($(OS_UNAME),Darwin) # Assume Mac OS X
+ NPROCS:=$(shell system_profiler | awk '/Number Of CPUs/{print $4}{next;}')
+endif
+
+PMAKE:=${MAKE} -j$(NPROCS)
+
+################################################################################
 # Automatically generated directories
 PHOBOS_DIR_GENERATED=$(GENERATED)/phobos-prerelease
 PHOBOS_LATEST_DIR_GENERATED=$(GENERATED)/phobos-latest
@@ -602,25 +618,25 @@ ${DMD_DIR}/VERSION : ${DMD_DIR}
 ################################################################################
 
 $(DMD) : ${DMD_DIR}
-	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
+	${PMAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
 $(DMD_LATEST) : ${DMD_LATEST_DIR}
-	${MAKE} --directory=${DMD_LATEST_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
+	${PMAKE} --directory=${DMD_LATEST_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
 dmd-prerelease : $(STD_DDOC_PRERELEASE) druntime-target $G/changelog/next-version
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
+	$(PMAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
 
 dmd-release : $(STD_DDOC_RELEASE) druntime-target
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
+	$(PMAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
 
 dmd-latest : $(STD_DDOC_LATEST) druntime-latest-target
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
+	$(PMAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
 
 dmd-prerelease-verbatim : $(STD_DDOC_PRERELEASE) druntime-target \
 		$W/phobos-prerelease/mars.verbatim
 $W/phobos-prerelease/mars.verbatim: verbatim.ddoc $G/changelog/next-version
 	mkdir -p $(dir $@)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM)
+	$(PMAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM)
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
 	mv $W/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r $W/phobos-prerelease-verbatim
@@ -631,30 +647,30 @@ $W/phobos-prerelease/mars.verbatim: verbatim.ddoc $G/changelog/next-version
 ################################################################################
 
 druntime-target: ${DRUNTIME_DIR} ${DMD}
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target ${DDOC_VARS_PRERELEASE_HTML}
+	${PMAKE} --directory=${DRUNTIME_DIR} -f posix.mak target ${DDOC_VARS_PRERELEASE_HTML}
 
 druntime-latest-target: ${DRUNTIME_LATEST_DIR} ${DMD_LATEST}
-	${MAKE} --directory=${DRUNTIME_LATEST_DIR} -f posix.mak target ${DDOC_VARS_LATEST_HTML}
+	${PMAKE} --directory=${DRUNTIME_LATEST_DIR} -f posix.mak target ${DDOC_VARS_LATEST_HTML}
 
 druntime-prerelease : druntime-target $(STD_DDOC_PRERELEASE) $G/changelog/next-version
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak doc $(DDOC_VARS_PRERELEASE_HTML) \
+	${PMAKE} --directory=${DRUNTIME_DIR} -f posix.mak doc $(DDOC_VARS_PRERELEASE_HTML) \
 		DOCDIR=$W/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRERELEASE))"
 
 druntime-release : druntime-target $(STD_DDOC_RELEASE)
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak doc $(DDOC_VARS_RELEASE_HTML) \
+	${PMAKE} --directory=${DRUNTIME_DIR} -f posix.mak doc $(DDOC_VARS_RELEASE_HTML) \
 		DOCDIR=$W/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_RELEASE))"
 
 druntime-latest : druntime-latest-target $(STD_DDOC_LATEST)
-	${MAKE} --directory=${DRUNTIME_LATEST_DIR} -f posix.mak doc $(DDOC_VARS_LATEST_HTML) \
+	${PMAKE} --directory=${DRUNTIME_LATEST_DIR} -f posix.mak doc $(DDOC_VARS_LATEST_HTML) \
 		DOCDIR=$W/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_LATEST))"
 
 druntime-prerelease-verbatim : druntime-target \
 		$W/phobos-prerelease/object.verbatim
 $W/phobos-prerelease/object.verbatim : $(DMD) $G/changelog/next-version
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_PRERELEASE_VERBATIM) \
+	${PMAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_PRERELEASE_VERBATIM) \
 		DOCDIR=$W/phobos-prerelease-verbatim \
 		DOCFMT="`pwd`/verbatim.ddoc"
 	mkdir -p $(dir $@)
@@ -668,27 +684,27 @@ $W/phobos-prerelease/object.verbatim : $(DMD) $G/changelog/next-version
 
 .PHONY: phobos-prerelease
 phobos-prerelease : ${PHOBOS_FILES_GENERATED} druntime-target $(STD_DDOC_PRERELEASE)
-	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
+	$(PMAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
 
 phobos-release : ${PHOBOS_FILES_GENERATED} druntime-target $(STD_DDOC_RELEASE)
-	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
+	$(PMAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
 
 phobos-latest : ${PHOBOS_LATEST_FILES_GENERATED} druntime-latest-target $(STD_DDOC_LATEST)
-	$(MAKE) --directory=$(PHOBOS_LATEST_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
+	$(PMAKE) --directory=$(PHOBOS_LATEST_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} druntime-target \
 		$W/phobos-prerelease/index.verbatim
 $W/phobos-prerelease/index.verbatim : verbatim.ddoc \
 		$W/phobos-prerelease/object.verbatim \
 		$W/phobos-prerelease/mars.verbatim $G/changelog/next-version
-	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM) \
+	${PMAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM) \
 	  DOC_OUTPUT_DIR=$W/phobos-prerelease-verbatim
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
 	mv $W/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r $W/phobos-prerelease-verbatim
 
 $(PHOBOS_LIB): $(DMD)
-	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak lib
+	${PMAKE} --directory=${PHOBOS_DIR} -f posix.mak lib
 
 ################################################################################
 # phobos and druntime, latest released build and current build (DDOX version)
@@ -788,7 +804,7 @@ dpl-docs: ${DUB} ${STABLE_DMD}
 # .tar.xz's archives are smaller (and don't need a temporary dir) -> prefer if available
 ${STABLE_DMD_ROOT}/.downloaded:
 	@mkdir -p $(dir $@)
-	@if command -v xz >/dev/null 2>&1 ; then \
+	if command -v xz >/dev/null 2>&1 ; then \
 		curl -fSL --retry 3 $(subst .zip,.tar.xz,$(STABLE_DMD_URL)) | tar -Jxf - -C $(dir $@); \
 	else \
 		TMPFILE=$$(mktemp deleteme.XXXXXXXX) && curl -fsSL ${STABLE_DMD_URL} > ${TMP}/$${TMPFILE}.zip && \
@@ -979,14 +995,14 @@ $(DDOC_BIN): ddoc.d | $(STABLE_DMD)
 ################################################################################
 
 $(DMD_DIR)/generated/$(MAN_PAGE): $(DMD_DIR)/docs/gen_man.d $(DMD_DIR)/src/dmd/cli.d | ${STABLE_DMD}
-	${MAKE} -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) build
+	${PMAKE} -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) build
 
 $W/$(MAN_PAGE): $(DMD_DIR)/generated/$(MAN_PAGE) | ${STABLE_DMD}
 	mkdir -p $(dir $@)
 	cp $< $@
 	# CircleCi + nightlies.dlang.org might not have `man` installed
 	if command -v man > /dev/null ; then \
-		${MAKE} -s -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) preview > $(dir $@)dmd.txt; \
+		${PMAKE} -s -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) preview > $(dir $@)dmd.txt; \
 	fi
 
 man: $W/$(MAN_PAGE)
