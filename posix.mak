@@ -519,21 +519,21 @@ $W:
 $G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
-$G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD)
-	$(DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
+$G/dlangspec.html : $(DDOC) spec/ebook.ddoc $G/dlangspec.d $(DMD)
+	$(DMD) -conf= -Df$@ $(DDOC) spec/ebook.ddoc $G/dlangspec.d
 
-$G/dlangspec.zip : $G/dlangspec.html ebook.css
-	rm -f $@
-	zip --junk-paths $@ $G/dlangspec.html ebook.css
+$G/dlangspec.opf $G/dlangspec.png $G/dlangspec.ncx $G/ebook.css: $G/% : spec/%
+	cp $< $@
 
-$W/dlangspec.mobi : \
-		dlangspec.opf dlangspec.ncx dlangspec.png $G/dlangspec.html  ebook.css
-	rm -f $@ $G/dlangspec.mobi dlangspec.html
+$G/images:
+	ln -s ../images $@
+
+$W/dlangspec.mobi : $G/dlangspec.opf $G/dlangspec.ncx $G/dlangspec.png \
+					$G/dlangspec.html $G/ebook.css | $G/images $W
+	rm -f $G/dlangspec.mobi
 	# kindlegen has warnings, ignore them for now
-	-cp -f $G/dlangspec.html dlangspec.html; \
-		trap "rm -f dlangspec.html" EXIT; \
-		kindlegen dlangspec.opf
-	mv dlangspec.mobi $@
+	-kindlegen $G/dlangspec.opf
+	cp $G/dlangspec.mobi $@
 
 ################################################################################
 # LaTeX
