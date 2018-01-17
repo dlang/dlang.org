@@ -542,8 +542,8 @@ $W/dlangspec.mobi : \
 $G/dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) --force $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
-$G/dlangspec.tex : $G/dlangspec-consolidated.d $(DMD) $(DDOC) latex.ddoc $(NODATETIME)
-	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc $(NODATETIME) $<
+$G/dlangspec.tex : $G/dlangspec-consolidated.d $(DMD) $(DDOC) spec/latex.ddoc $(NODATETIME)
+	$(DMD) -conf= -Df$@ $(DDOC) spec/latex.ddoc $(NODATETIME) $<
 
 # Run twice to fix multipage tables and \ref uses
 $W/dlangspec.pdf : $G/dlangspec.tex | $W
