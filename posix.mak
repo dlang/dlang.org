@@ -199,12 +199,11 @@ DUB=$(STABLE_DMD_BIN_ROOT)/dub
 
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
-	gc. rt. core.internal. core.stdc.config core.sys. \
-	std.algorithm.internal std.c. std.concurrencybase std.internal. std.regex.internal. \
-	std.windows.iunknown std.windows.registry etc.linux.memoryerror \
-	std.experimental.ndslice.internal std.stdiobase \
+	core.internal. core.stdc.config core.sys. \
+	std.algorithm.internal std.c. std.internal. std.regex.internal. \
+	std.windows.registry etc.linux.memoryerror \
 	std.typetuple \
-	tk. msvc_dmc msvc_lib \
+	msvc_dmc msvc_lib \
 	dmd.libmach dmd.libmscoff \
 	dmd.scanmach dmd.scanmscoff \
 	dmd.libmach dmd.libmscoff \
@@ -430,7 +429,7 @@ ${GENERATED}/modlist-release.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PH
 ${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
-		$(addprefix --dump , object std etc core) --dump dmd >$@
+		$(addprefix --dump , object std etc core dmd rt) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
