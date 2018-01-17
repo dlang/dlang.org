@@ -239,7 +239,7 @@ ifeq (1,$(DIFFABLE))
 else
  CHANGELOG_VERSION_MASTER := "v${LATEST}..upstream/master"
  CHANGELOG_VERSION_STABLE := "v${LATEST}..upstream/stable"
- DBLOG_LATEST=$G/dblog_latest.ddoc $G/twid_latest.ddoc
+ DBLOG_LATEST=$G/dblog_latest.ddoc $G/dblog_latest2.ddoc
 endif
 
 ################################################################################
@@ -574,13 +574,16 @@ $G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DMD) verbatim.ddoc
 
 $G/dblog_latest.ddoc:
 	@echo "Receiving the latest DBlog article. Disable with DIFFABLE=1"
-	curl -s --retry 3 --retry-delay 5 http://blog.dlang.org | grep -m1 'entry-title' | \
-		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time>.*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE=\2|DBLOG_LATEST_LINK=\1|DBLOG_LATEST_DATE=\3|DBLOG_LATEST_AUTHOR=\4/' | \
+	curl -s --retry 3 --retry-delay 5 http://blog.dlang.org > $(TMP)/blog.html
+	cat $(TMP)/blog.html | grep -m1 'entry-title' | \
+		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE=\2|DBLOG_LATEST_LINK=\1|DBLOG_LATEST_DATE=\3|DBLOG_LATEST_AUTHOR=\4/' | \
 		tr '|' '\n' > $@
+	cat $(TMP)/blog.html | grep -m2 'entry-title' | tail -n1 | \
+		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE2=\2|DBLOG_LATEST_LINK2=\1|DBLOG_LATEST_DATE2=\3|DBLOG_LATEST_AUTHOR2=\4/' | \
+		tr '|' '\n' > $(basename $@)2.ddoc
+	rm $(TMP)/blog.html
 
-$G/twid_latest.ddoc:
-	@echo "Receiving the latest TWID article. Disable with DIFFABLE=1"
-	curl -s --retry 3 --retry-delay 5 http://arsdnet.net/this-week-in-d/twid_latest.dd > $@
+$G/dblog_latest2.ddoc: $G/dblog_latest.ddoc
 
 ################################################################################
 # Git rules
