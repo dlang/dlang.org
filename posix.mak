@@ -468,7 +468,7 @@ $W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
 $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN) --compiler=$(DMD) -o$@ $(SPEC_DDOC) $<
+	$(DDOC_BIN) --compiler=$(DMD) -Df$@ $(SPEC_DDOC) $<
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
@@ -476,8 +476,8 @@ $W/404.html : 404.dd $(DDOC) $(DMD)
 $(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors_list.ddoc $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
 
-$W/%.html : %.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
+$W/%.html : %.dd $(DDOC) $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN) --compiler=$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
 $W/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc $<

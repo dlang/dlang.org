@@ -14,9 +14,9 @@ Example usage:
 
 Author: Sebastian Wilzbach
 */
-import std.algorithm, std.array, std.ascii, std.conv, std.file, std.functional,
+import std.algorithm, std.array, std.ascii, std.conv, std.file, std.format, std.functional,
         std.meta, std.path, std.range, std.string, std.typecons;
-import std.stdio : writeln, writefln;
+import std.stdio;
 
 struct Config
 {
@@ -25,40 +25,46 @@ struct Config
 }
 Config config;
 
-int main(string[] args)
+int main(string[] rootArgs)
 {
     import std.getopt;
     auto helpInformation = getopt(
-        args,
+        rootArgs, std.getopt.config.passThrough,
         "compiler", "Compiler to use", &config.dmdBinPath,
-        "o|output", "Output file", &config.outputFile,
     );
-
-    assert(config.outputFile, "An output file is required.");
-    assert(args.length > 1, "An input file is required.");
-
     if (helpInformation.helpWanted)
     {
 `DDoc wrapper
+All unknown options are passed to the compiler.
 ./ddoc <file>...
 `.defaultGetoptPrinter(helpInformation.options);
         return 1;
     }
-
-    import std.file : readText;
-    auto text = args[$ - 1].readText;
+    auto args = rootArgs[1 .. $];
+    auto pos = args.countUntil!(a => a.endsWith(".dd", ".d") > 0);
+    assert(pos >= 0, "An input file (.d or .dd) must be provided");
+    auto inputFile = args[pos];
+    auto text = inputFile.readText;
+    // replace only works with 2.078.1, see: https://github.com/dlang/phobos/pull/6017
+    args = args[0..pos].chain("-".only, args[pos..$].dropOne).array;
 
     // transform and extend the ddoc page
     text = genHeader(text);
 
-    return compile(text, args[1 .. $ - 1]);
+    // inject custom, "dynamic" macros
+    text ~= "\nSRC_FILENAME=%s\n".format(inputFile.buildNormalizedPath);
+    return compile(text, args);
 }
 
 auto compile(R)(R buffer, string[] arguments)
 {
     import std.process : pipeProcess, Redirect, wait;
-    auto args = [config.dmdBinPath, "-c", "-Df"~config.outputFile, "-o-"] ~ arguments;
-    args ~= "-";
+    auto args = [config.dmdBinPath] ~ arguments;
+    foreach (arg; ["-c", "-o-", "-"])
+    {
+        if (!args.canFind(arg))
+            args ~= arg;
+    }
     auto pipes = pipeProcess(args, Redirect.stdin);
     pipes.stdin.write(buffer);
     pipes.stdin.close;
@@ -71,6 +77,9 @@ auto updateDdocTag(string fileText, string ddocKey, string newContent)
     auto pos = fileText.representation.countUntil(ddocKey);
     if (pos < 0)
         return fileText;
+
+    newContent ~= ")";
+
     const ddocStartLength = ddocKey.representation.until('(', No.openRight).count;
     auto len = fileText[pos .. $].representation.drop(ddocStartLength).untilClosingParentheses.walkLength;
     return fileText.replace(fileText[pos .. pos + len + ddocStartLength + 1], newContent);
@@ -153,28 +162,30 @@ auto escapeDdoc(string s)
     return s.replace(",", "$(COMMA)");
 }
 
-// generated a SPEC_HEADERNAV_TOC Ddoc macro with the parsed H2/H3 entries
+// generated a HEADERNAV_TOC Ddoc macro with the parsed H2/H3 entries
 auto genHeader(string fileText)
 {
-    enum ddocKey = "$(SPEC_HEADERNAV_TOC";
+    enum ddocKey = "$(HEADERNAV_TOC";
     auto newContent = ddocKey ~ "\n";
     enum indent = "    ";
-    foreach (entry; fileText.parseToc)
+    if (fileText.canFind(ddocKey))
     {
-        if (entry.children)
+        foreach (entry; fileText.parseToc)
         {
-            newContent ~= "%s$(SPEC_HEADERNAV_SUBITEMS %s, %s,\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
-            foreach (child; entry.children)
-                newContent ~= "%s$(SPEC_HEADERNAV_ITEM %s, %s)\n".format(indent.repeat(2).joiner, child.id, child.name.escapeDdoc);
-            newContent ~= indent;
-            newContent ~= ")\n";
-        }
-        else
-        {
-            newContent ~= "%s$(SPEC_HEADERNAV_ITEM %s, %s)\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
+            if (entry.children)
+            {
+                newContent ~= "%s$(HEADERNAV_SUBITEMS %s, %s,\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
+                foreach (child; entry.children)
+                    newContent ~= "%s$(HEADERNAV_ITEM %s, %s)\n".format(indent.repeat(2).joiner, child.id, child.name.escapeDdoc);
+                newContent ~= indent;
+                newContent ~= ")\n";
+            }
+            else
+            {
+                newContent ~= "%s$(HEADERNAV_ITEM %s, %s)\n".format(indent, entry.main.id, entry.main.name.escapeDdoc);
+            }
         }
     }
-    newContent ~= ")";
     return updateDdocTag(fileText, ddocKey, newContent);
 }
 
