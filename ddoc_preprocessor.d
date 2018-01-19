@@ -123,9 +123,14 @@ auto parseToc(string text)
     {
         auto entry = TocEntry(id, name);
         if (isH2)
+        {
             toc ~= TocTopEntry(entry, null);
+        }
         else
+        {
+            assert(toc.length > 0, "TOC generation error: $(H2) needs to come before $(H3)");
             toc.back.children ~= entry;
+        }
     }
     while (!text.empty)
     {
