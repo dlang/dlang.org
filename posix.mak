@@ -970,7 +970,7 @@ $G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 ################################################################################
 
 $(DDOC_BIN): ddoc_preprocessor.d | $(STABLE_DMD)
-	$(STABLE_DMD) -of$@ $<
+	$(STABLE_DMD) -g -of$@ $<
 
 ################################################################################
 # Build and render the DMD man page
