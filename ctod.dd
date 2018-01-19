@@ -244,7 +244,7 @@ $(P
 $(CCODE
 #define ARRAY_LENGTH        17
 int array[ARRAY_LENGTH];
-for (i = 0; i &lt; ARRAY_LENGTH; i++)
+for (size_t i = 0; i &lt; ARRAY_LENGTH; i++)
     func(array[i]);
 )
 
@@ -252,7 +252,7 @@ or:
 
 $(CCODE
 int array[17];
-for (i = 0; i &lt; sizeof(array) / sizeof(array[0]); i++)
+for (size_t i = 0; i &lt; sizeof(array) / sizeof(array[0]); i++)
     func(array[i]);
 )
 
@@ -666,11 +666,11 @@ struct ABC
     align (1) int x;    // x is byte aligned
     align (4)
     {
-        ...             // declarations in {} are dword aligned
+        ...             // declarations in {} are 32-bit aligned
     }
-    align (2):          // switch to word alignment from here on
+    align (2):          // switch to 16-bit alignment from here on
 
-    int y;              // y is word aligned
+    int y;              // y is 16-bit aligned
 }
 ----------------------------
 
@@ -856,7 +856,7 @@ $(H2 $(LNAME2 arrayinit2, Array Initializations))
 
 $(H4 The C Way)
 
-       C initializes array by positional dependence. C99 fixes the issue:
+       C initializes arrays by positional dependence. C99 fixes the issue:
 $(CCODE
 int a[3] = { 3,2,1 };
 int a[3] = { [2]=1, [0]=3, [1]=2 };  /* C99 designated initializer */
@@ -889,7 +889,8 @@ enum color { black, red, green }
 int[3] c = [ black:3, green:2, red:5 ];
 ----------------------------
 
-        Nested array initializations must be explicit:
+        Nested array initializations must be explicit and consistent with the
+        array types:
 
 ----------------------------
 int[2][3] b = [ [2,3], [6,5], [3,4] ];
@@ -902,7 +903,8 @@ $(H2 $(LNAME2 stringlit, Escaped String Literals))
 
 $(H4 The C Way)
 
-       C has problems with the DOS file system because a \ is an escape in a string. To specifiy file c:\root\file.c:
+       C has problems with the DOS file system because a \ is an escape in a string.
+       To specifiy the file c:\root\file.c you would use:
 $(CCODE
 char file[] = "c:\\root\\file.c";
 )
@@ -918,7 +920,7 @@ char quoteString[] = "\"[^\\\\]*(\\\\.[^\\\\]*)*\"";
 $(H4 The D Way)
 
     D has both C-style string literals which can use escaping,
-    and WYSIWYG (what you see is what you get) raw strings
+    and WYSIWYG (what you see is what you get) raw strings,
     usable with the `$(BACKTICK)foo$(BACKTICK)` and `r"bar"` syntax:
 
 ----------------------------
@@ -951,15 +953,15 @@ $(CCODE
 #include &lt;tchar.h&gt;
 tchar string[] = TEXT("hello");
 )
-    Furthermore, in praxis `wchar_t` is not usable in portable code as its size
+    Furthermore, in practice `wchar_t` is not usable in portable code as its size
     is implementation dependent. On POSIX conforming machines it generally
-    represents an UTF-32 codeunit, on Windows an UTF-16 codeunit. C11 introduced
+    represents an UTF-32 codeunit, on Windows an UTF-16 code unit. C11 introduced
     C++11 types char16_t and char32_t to overcome this issue.
 
 $(H4 The D Way)
 
     The type of a string is determined by semantic analysis, so there is no need
-    to wrap strings in a macro call. Alternatively if type inference is used the
+    to wrap strings in a macro call. Alternatively, if type inference is used, the
     string can have a `c`, `w` or `d` suffix, representing UTF-8,
     UTF-16 and UTF-32 encoding, respectively. If no suffix is used the type is
     inferred to be a UTF-8 string:
@@ -1098,7 +1100,7 @@ if (h != Handle.init)
     ...
 -----------------------------
 
-        There's only one name to remember: $(D Handle).
+        Now there's only one name to remember: $(D Handle).
 
 <hr>$(COMMENT  ============================================ )
 $(H2 $(LNAME2 structcmp, Comparing structs))
