@@ -675,6 +675,48 @@ dmd -cov -unittest myprog.d
         are searched in the same order.
       )
 
+      $(SWITCH $(SWNAME -i),
+        same as -i=-std,-core,-etc,-object
+      )
+
+      $(SWITCH $(SWNAME -i=[-]$(I pattern)&#44;[-]$(I pattern)&#44;...),
+        $(P this option enables "include import" mode, where the compiler will
+        include imported modules in the compilation, as if they were given
+        on the command line.)
+
+        $(P Determining which modules to include is based on a set of "module patterns".
+        These patterns are optionally included after the "-i=" option as a comma
+        separated list.  A pattern matches any module whose fully qualified name
+        starts with the pattern. The pattern "foo.bar" matches all modules in the
+        "foo.bar" package, such as "foo.bar" itself, "foo.bar.baz" or even
+        "foo.bar.package".  Note that matching is based on the full component name so
+        "foo.bar" would not match a module named "foo.barx".)
+
+        $(P The presence of the "-" prefix in a module pattern indicates that matching-modules
+        should be excluded from compilation.  Patterns without this indicate that
+        matching-modules should be included in compilation.)
+
+        $(P Note that along with the module patterns given by the user, there is a standard
+        set of exclusionary module patterns that are always used, namely "-std,-core,-etc,-object".
+        Note that these can be overriden (i.e. -i=std,core,etc,object).)
+
+        $(P Since module patterns can either be inclusionary or exclusionary, a priority
+        must be established to handle the case where a module matches multiple patterns.
+        A pattern's priority is determined by it's component length, where more components
+        means higher priority, i.e. foo.bar.baz is a higher priority match than foo.bar.)
+
+        $(P The default behavior to include modules or exclude them is based on whether the user
+        has provided any "inclusionary" module patterns.  If no patterns are given, or they
+        are all exclusionary, then modules that don't match any pattern will be included
+        by default.  However, if at least one "inclusionary" module pattern is given, then
+        modules that don't match any pattern will be excluded by default.  Should the user
+        want to override this behavior, they can use the special "." pattern to "include by
+        default" or "-." to "exclude by default".)
+
+        $(P Note: multiple "-i=..." options are allowed, each one simply adds more patterns.)
+        $(P Note: if the same pattern is given multiple times, the first one will have priority.)
+      )
+
       $(SWITCH $(SWNAME -ignore),
         ignore unsupported pragmas
       )
