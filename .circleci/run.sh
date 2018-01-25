@@ -108,7 +108,8 @@ run_make()
     export PATH="$(pwd)/make:$PATH"
     make -v
 
-    make -f posix.mak -j$N RELEASE=1 DIFFABLE=1 release
+    # -j1 is used for a better error log
+    make -f posix.mak -j1 RELEASE=1 DIFFABLE=1 release
 }
 
 case $1 in
