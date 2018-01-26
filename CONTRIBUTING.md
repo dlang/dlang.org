@@ -95,3 +95,7 @@ be present in `$R`: `dlang.org`, `dmd`, `dmd-2.083.2`, `druntime-2.083.2`, and
 should be the same for all three directories.
 
 The output is in `web/phobos` and `web/library`.
+
+### Learning more about DDoc
+
+Please see the [Ddoc fundamentals](https://wiki.dlang.org/Contributing_to_dlang.org).
