@@ -49,6 +49,7 @@ All unknown options are passed to the compiler.
     args = args[0..pos].chain("-".only, args[pos..$].dropOne).array;
 
     // transform and extend the ddoc page
+    text = genGrammar(text);
     text = genHeader(text);
 
     // inject custom, "dynamic" macros
@@ -192,5 +193,63 @@ auto genHeader(string fileText)
         }
     }
     return updateDdocTag(fileText, ddocKey, newContent);
+}
+
+// parse the menu from the Ddoc file
+auto specTocEntries()
+{
+    alias Entry = Tuple!(string, "name", string, "title", string, "fileName");
+    Entry[] entries;
+
+    static immutable specDir = __FILE_FULL_PATH__.dirName.buildNormalizedPath("spec");
+    static immutable mainFile = specDir.buildPath("./spec.ddoc");
+
+    auto specText = mainFile.readText;
+    if (!specText.findSkip("SUBMENU2"))
+        writeln("Menu file has an invalid format.");
+    foreach (line; specText.splitter("\n"))
+    {
+        enum ddocEntryStart = "$(ROOT_DIR)spec/";
+        if (line.find!(not!isWhite).startsWith(ddocEntryStart))
+        {
+            auto ps = line.splitter(ddocEntryStart).dropOne.front.splitter(",");
+            auto name = ps.front.stripExtension.withExtension(".dd").to!string;
+            auto fileName = specDir.buildPath(name);
+            auto title = ps.dropOne.front.idup.strip;
+            entries ~= Entry(name, title, fileName);
+        }
+    }
+    return entries;
+}
+
+// Automatically generate spec/grammar
+auto genGrammar(string fileText)
+{
+    import std.uni : toLower;
+
+    enum ddocKey = "$(GRAMMAR_SUMMARY";
+    auto newContent = ddocKey ~ "\n";
+
+    if (fileText.canFind(ddocKey))
+    {
+        foreach (i, entry; specTocEntries)
+        {
+            if (entry.fileName.endsWith("grammar.dd", "lex.dd", "simd.dd"))
+                continue;
+
+            enum grammarKey = "$(GRAMMAR";
+            auto text = entry.fileName.readText.find(grammarKey);
+            if (text.length)
+                newContent ~= "$(H2 $(LNAME2 %s, %s))\n".format(entry.title.toLower, entry.title);
+            for (; text.length; text = text[ grammarKey.length .. $].find(grammarKey))
+            {
+                newContent ~= grammarKey;
+                newContent ~= text.drop(grammarKey.length).untilClosingParentheses.to!string;
+                newContent ~= ")\n";
+            }
+        }
+        return updateDdocTag(fileText, ddocKey, newContent);
+    }
+    return fileText;
 }
 
