@@ -986,7 +986,7 @@ $W/$(MAN_PAGE): $(DMD_DIR)/generated/$(MAN_PAGE) | ${STABLE_DMD}
 	mkdir -p $(dir $@)
 	cp $< $@
 	# CircleCi + nightlies.dlang.org might not have `man` installed
-	if command -v man > /dev/null ; then \
+	if [ $(OS) != "osx" ] -a [ command -v man > /dev/null ] ; then \
 		${MAKE} -s -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) preview > $(dir $@)dmd.txt; \
 	fi
 
