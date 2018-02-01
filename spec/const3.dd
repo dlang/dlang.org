@@ -4,20 +4,34 @@ $(D_S Type Qualifiers,
 
 $(HEADERNAV_TOC)
 
-        $(P Type qualifiers modify a type by applying a $(GLINK2 declaration, TypeCtor).
-        $(I TypeCtor)s are: $(D const), $(D immutable), $(D shared), and $(D inout).
-        Each applies transitively to all subtypes.
+        $(P $(I Type qualifiers) are a subset of $(I type constructors).
+        Type qualifiers are: $(D const), $(D immutable), $(D shared), and $(D inout).
+        Types resulting from the application of type qualifiers to a type
+        are called $(I qualified types).
         )
 
-$(H2 $(LNAME2 const_and_immutable, Const and Immutable))
+$(H2 $(LNAME2 transitive, Transitivity))
 
-        $(P When examining a data structure or interface, it is very
-        helpful to be able to easily tell which data can be expected to not
-        change, which data might change, and who may change that data.
-        This is done with the aid of the language typing system.
-        Data can be marked as const or immutable, with the default being
-        changeable (or $(I mutable)).
+        $(P Type qualifiers apply transitively to all subtypes.
+        It is not possible to specify, for example, a const pointer
+        to a mutable type.
         )
+
+        $(P Types are $(I mutable) by default, meaning variables with such
+        types can be assigned new values at any time.
+        )
+
+        $(P Types are thread local by default, meaning variables with such
+        types are not accessible from other threads.
+        )
+
+        $(BEST_PRACTICE Initially, the transitivity can appear onerous.
+        But once successfully used, it enables much clearer specifications of
+        types, and is foundational for programming in a functional style.
+        )
+
+
+$(H2 $(LNAME2 immutable_type, Immutable Type))
 
         $(P $(D immutable) applies to data that cannot change.
         Immutable data values, once constructed, remain the same for
@@ -25,188 +39,10 @@ $(H2 $(LNAME2 const_and_immutable, Const and Immutable))
         execution.
         Immutable data can be placed in ROM (Read Only Memory) or in
         memory pages marked by the hardware as read only.
-        Since immutable data does not change, it enables many opportunities
-        for program optimization, and has applications in functional
-        style programming.
         )
 
-        $(P $(D const) applies to data that cannot be changed by
-        the const reference to that data. It may, however, be changed
-        by another reference to that same data.
-        Const finds applications in passing data through interfaces
-        that promise not to modify them.
-        )
-
-        $(P Both immutable and const are $(I transitive), which means
-        that any data reachable through an immutable reference is also
-        immutable, and likewise for const.
-        )
-
-$(H2 $(LNAME2 immutable_storage_class, Immutable Storage Class))
-
-        $(P
-        The simplest immutable declarations use it as a storage class.
-        It can be used to declare manifest constants.
-        )
-
----
-immutable int x = 3;  // x is set to 3
-x = 4;        // error, x is immutable
-char[x] s;    // s is an array of 3 char's
----
-
-        $(P The type can be inferred from the initializer:
-        )
----
-immutable y = 4; // y is of type int
-y = 5;           // error, y is immutable
----
-
-        $(P If the initializer is not present, the immutable can
-        be initialized from the corresponding constructor:
-        )
-
----
-immutable int z;
-void test()
-{
-    z = 3; // error, z is immutable
-}
-static this()
-{
-    z = 3; // ok, can set immutable that doesn't
-           // have static initializer
-}
----
-        $(P
-        The initializer for a non-local immutable declaration must be
-        evaluatable
-        at compile time:
-        )
-
----
-int foo(int f) { return f * 3; }
-int i = 5;
-immutable x = 3 * 4;      // ok, 12
-immutable y = i + 1;      // error, cannot evaluate at compile time
-immutable z = foo(2) + 1; // ok, foo(2) can be evaluated at compile time, 7
----
-
-        $(P The initializer for a non-static local immutable declaration
-        is evaluated at run time:
-        )
----
-int foo(int f)
-{
-    immutable x = f + 1;  // evaluated at run time
-    x = 3;                // error, x is immutable
-}
----
-
-        $(P
-        Because immutable is transitive, data referred to by an immutable is
-        also immutable:
-        )
-
----
-immutable char[] s = "foo";
-s[0] = 'a';  // error, s refers to immutable data
-s = "bar";   // error, s is immutable
----
-
-        $(P Immutable declarations can appear as lvalues, i.e. they can
-        have their address taken, and occupy storage.
-        )
-
-$(H2 $(LNAME2 const_storage_class, Const Storage Class))
-
-        $(P
-        A const declaration is exactly like an immutable declaration,
-        with the following differences:
-        )
-
-        $(UL
-        $(LI Any data referenced by the const declaration cannot be
-        changed from the const declaration, but it might be changed
-        by other references to the same data.)
-
-        $(LI The type of a const declaration is itself const.)
-        )
-
-$(COMMENT
-$(TABLE
-
-$(TR $(TH $(NBSP)) $(TH AddrOf) $(TH CTFEInit) $(TH Static) $(TH Field) $(TH Stack) $(TH Ctor))
-
-$(TR $(TD $(NBSP))
- $(TD Can the address be taken?)
- $(TD Is compile time function evaluation done on the initializer?)
- $(TD allocated as static data?)
- $(TD allocated as a per-instance field?)
- $(TD allocated on the stack?)
- $(TD Can the variable be assigned to in a constructor?)
-)
-
-
-$(TR $(TH Global data))
-
-$(TR $(TD1 const T x;)          $(Y)    $(N)    $(Y)    $(N)    $(N)    $(Y))
-$(TR $(TD1 const T x = 3;)              $(N)    $(Y)    $(N)    $(N)    $(N)    $(N))
-$(TR $(TD1 static const T x;)   $(Y)    $(N)    $(Y)    $(N)    $(N)    $(Y))
-$(TR $(TD1 static const T x = 3;)       $(Y)    $(Y)    $(Y)    $(N)    $(N)    $(N))
-
-
-$(TR $(TH Class Members))
-
-$(TR $(TD1 const T x;)          $(Y)    $(N)    $(N)    $(Y)    $(N)    $(Y))
-$(TR $(TD1 const T x = 3;)              $(N)    $(Y)    $(N)    $(N)    $(N)    $(N))
-$(TR $(TD1 static const T x;)   $(Y)    $(N)    $(Y)    $(N)    $(N)    $(Y))
-$(TR $(TD1 static const T x = 3;)       $(Y)    $(Y)    $(Y)    $(N)    $(N)    $(N))
-
-
-$(TR $(TH Local Variables))
-
-$(TR $(TD1 const T x;)          $(Y)    $(Y)    $(N)    $(N)    $(Y)    $(N))
-$(TR $(TD1 const T x = 3;)              $(Y)    $(N)    $(N)    $(N)    $(Y)    $(N))
-$(TR $(TD1 static const T x;)   $(Y)    $(Y)    $(Y)    $(N)    $(N)    $(N))
-$(TR $(TD1 static const T x = 3;)       $(Y)    $(Y)    $(Y)    $(N)    $(N)    $(N))
-
-$(TR $(TH Function Parameters))
-
-$(TR $(TD1 const T x;)          $(Y)    $(N)    $(N)    $(N)    $(Y)    $(N))
-)
-
-
-$(P Notes:)
-
-$(OL
-$(LI If CTFEInit is true, then the initializer can also be used for
-constant folding.)
-)
-
-
-$(TABLE
-<caption>Template Argument Deduced Type</caption>
-$(TR $(TH $(NBSP))               $(TH mutable $(CODE T)) $(TH1 const(T)) $(TH1 immutable(T)))
-$(TR $(TD1 foo(U))              $(TDE T) $(TDE T) $(TDE T))
-$(TR $(TD1 foo(U:U))            $(TDE T) $(TDE const(T)) $(TDE immutable(T)))
-$(TR $(TD1 foo(U:const(U)))     $(TDI T) $(TDE T) $(TDI T))
-$(TR $(TD1 foo(U:immutable(U))) $(NM) $(NM) $(TDE T))
-)
-
-$(P Where:)
-
-$(TABLE
-$(TR $(TD $(GREEN green)) $(TD exact match))
-$(TR $(TD $(ORANGE orange)) $(TD implicit conversion))
-)
-)
-
-$(H2 $(LNAME2 immutable_type, Immutable Type))
-
-        $(P
-        Data that will never change its value can be typed as immutable.
-        The immutable keyword can be used as a $(I type qualifier):
+        $(P Immutable data is implicitly safe to access from multiple
+        threads without synchronization.
         )
 
 ---
@@ -247,7 +83,7 @@ immutable(int) y = 3;  // y is immutable
 ---
 
 
-$(H2 $(LNAME2 creating_immutable_data, Creating Immutable Data))
+$(H3 $(LNAME2 creating_immutable_data, Creating Immutable Data))
 
         $(P
         The first way is to use a literal that is already immutable,
@@ -282,7 +118,7 @@ auto p = s.idup;
 p[0] = ...;       // error, p[] is immutable
 ---
 
-$(H2 $(LNAME2 removing_with_cast, Removing Immutable or Const with a Cast))
+$(H3 $(LNAME2 removing_with_cast, Removing Immutable or Const with a Cast))
 
         $(P
         An immutable or const type qualifier can be removed with a cast:
@@ -328,7 +164,7 @@ void main()
 }
 ---
 
-$(H2 $(LNAME2 immutable_member_functions, Immutable Member Functions))
+$(H3 $(LNAME2 immutable_member_functions, Immutable Member Functions))
 
         $(P
         Immutable member functions are guaranteed that the object
@@ -384,14 +220,12 @@ struct S
 
 $(H2 $(LNAME2 const_type, Const Type))
 
-        $(P
-        Const types are like immutable types, except that const
-        forms a read-only $(I view) of data. Other aliases to that
-        same data may change it at any time.
+        $(P $(D const) applies to data that cannot be changed by
+        the const reference to that data. It may, however, be changed
+        by another reference to that same data.
         )
 
-
-$(H2 $(LNAME2 const_member_functions, Const Member Functions))
+$(H3 $(LNAME2 const_member_functions, Const Member Functions))
 
         $(P
         Const member functions are functions that are not allowed to
@@ -513,6 +347,97 @@ void main()
         $(P Otherwise, a $(GLINK2 expression, CastExpression) can be used to force a conversion
         when an implicit version is disallowed, but this cannot be done in $(D @safe) code,
         and the correctness of it must be verified by the user.
+        )
+
+$(H2 $(LNAME2 immutable_storage_class, Immutable Storage Class))
+
+        $(P
+        The simplest immutable declarations use it as a storage class.
+        It can be used to declare manifest constants.
+        )
+
+---
+immutable int x = 3;  // x is set to 3
+x = 4;        // error, x is immutable
+char[x] s;    // s is an array of 3 char's
+---
+
+        $(P The type can be inferred from the initializer:
+        )
+---
+immutable y = 4; // y is of type int
+y = 5;           // error, y is immutable
+---
+
+        $(P If the initializer is not present, the immutable can
+        be initialized from the corresponding constructor:
+        )
+
+---
+immutable int z;
+void test()
+{
+    z = 3; // error, z is immutable
+}
+static this()
+{
+    z = 3; // ok, can set immutable that doesn't
+           // have static initializer
+}
+---
+        $(P
+        The initializer for a non-local immutable declaration must be
+        evaluatable
+        at compile time:
+        )
+
+---
+int foo(int f) { return f * 3; }
+int i = 5;
+immutable x = 3 * 4;      // ok, 12
+immutable y = i + 1;      // error, cannot evaluate at compile time
+immutable z = foo(2) + 1; // ok, foo(2) can be evaluated at compile time, 7
+---
+
+        $(P The initializer for a non-static local immutable declaration
+        is evaluated at run time:
+        )
+---
+int foo(int f)
+{
+    immutable x = f + 1;  // evaluated at run time
+    x = 3;                // error, x is immutable
+}
+---
+
+        $(P
+        Because immutable is transitive, data referred to by an immutable is
+        also immutable:
+        )
+
+---
+immutable char[] s = "foo";
+s[0] = 'a';  // error, s refers to immutable data
+s = "bar";   // error, s is immutable
+---
+
+        $(P Immutable declarations can appear as lvalues, i.e. they can
+        have their address taken, and occupy storage.
+        )
+
+$(H2 $(LNAME2 const_storage_class, Const Storage Class))
+
+        $(P
+        A const declaration is exactly like an immutable declaration,
+        with the following differences:
+        )
+
+        $(UL
+        $(LI Any data referenced by the const declaration cannot be
+        changed from the const declaration, but it might be changed
+        by other references to the same data.)
+
+        $(LI The type of a const declaration is itself const.)
         )
 
 $(SPEC_SUBNAV_PREV_NEXT enum, Enums, function, Functions)
