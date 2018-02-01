@@ -2,7 +2,9 @@
 
 set -ueEo pipefail
 
-cd changelog
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $DIR
+
 all_vers=($(ls *.dd | grep '^[0-9]\.[0-9][0-9][0-9]\(\.[0-9]\)\?\(_pre\)\?\.dd$' | sort))
 # also see http://wiki.bash-hackers.org/syntax/pe#search_and_replace
 # filter-out all pre-release changelogs
