@@ -458,14 +458,14 @@ dautotest: all verbatim pdf diffable-intermediaries
 # NOTE: Depending on the version of make, order matters here. Therefore, put
 # sub-directories before their parents.
 
-$W/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+$W/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DDOC_BIN) | $(DMD)
+	$(DDOC_BIN) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
 
-$W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
+$W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DDOC_BIN) | $(DMD)
+	$(DDOC_BIN) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
 
-$W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
+$W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DDOC_BIN) | $(DMD)
+	$(DDOC_BIN) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
 $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN) --compiler=$(DMD) -Df$@ $(SPEC_DDOC) $<
