@@ -11,14 +11,14 @@
 #
 #  This makefile supports 3 flavors of documentation:
 #
-#   latest          Latest released version (by git tag)
+#   stable          Stable build (uses upstream/stable)
 #   prerelease      Master (uses the D repositories as they exist locally)
 #   release         Documentation build that is shipped with the binary release
 #
 #  For `release` the LATEST version is not yet published at build time,
 #  hence a few things differ from a `prerelease` build.
 #
-#  To build `latest` and `prerelease` docs:
+#  To build `stable` and `prerelease` docs:
 #
 #      make -f posix.mak all
 #
@@ -46,7 +46,7 @@
 #        phobos-prerelease
 #        apidocs-prerelease      Ddox documentation
 #
-#  B) `docs-latest` (aka stable)
+#  B) `docs-latest` (aka upstream/stable)
 #
 #    Based on the last official release (git tag), the repositories are freshly cloned from GitHub.
 #    Individual targets include:
@@ -159,10 +159,10 @@ GENERATED=.generated
 G=$(GENERATED)
 
 # Last released versions
-DMD_STABLE_DIR=$G/dmd-${LATEST}
+DMD_STABLE_DIR=$G/dmd-stable
 DMD_STABLE=$(DMD_STABLE_DIR)/generated/$(OS)/release/$(MODEL)/dmd
-DRUNTIME_STABLE_DIR=$G/druntime-${LATEST}
-PHOBOS_STABLE_DIR=$G/phobos-${LATEST}
+DRUNTIME_STABLE_DIR=$G/druntime-stable
+PHOBOS_STABLE_DIR=$G/phobos-stable
 
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
@@ -171,7 +171,7 @@ $(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(D
 ################################################################################
 # Automatically generated directories
 PHOBOS_DIR_GENERATED=$(GENERATED)/phobos-prerelease
-PHOBOS_STABLE_DIR_GENERATED=$(GENERATED)/phobos-latest
+PHOBOS_STABLE_DIR_GENERATED=$(GENERATED)/phobos-stable
 # The assert_writeln_magic tool transforms all source files from Phobos. Hence
 # - a temporary folder with a copy of Phobos needs to be generated
 # - a list of all files in Phobos and the temporary copy is needed to setup proper
@@ -181,7 +181,7 @@ PHOBOS_FILES_GENERATED := $(subst $(PHOBOS_DIR), $(PHOBOS_DIR_GENERATED), $(PHOB
 ifndef RELEASE
  # TODO: should be replaced by make targets
  $(shell [ ! -d $(PHOBOS_DIR) ] && git clone --depth=1 ${GIT_HOME}/phobos $(PHOBOS_DIR))
- $(shell [ ! -d $(PHOBOS_STABLE_DIR) ] && git clone -b v${LATEST} --depth=1 ${GIT_HOME}/phobos $(PHOBOS_STABLE_DIR))
+ $(shell [ ! -d $(PHOBOS_STABLE_DIR) ] && git clone -b stable --depth=1 ${GIT_HOME}/phobos $(PHOBOS_STABLE_DIR))
  PHOBOS_STABLE_FILES := $(shell find $(PHOBOS_STABLE_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
  PHOBOS_STABLE_FILES_GENERATED := $(subst $(PHOBOS_STABLE_DIR), $(PHOBOS_STABLE_DIR_GENERATED), $(PHOBOS_STABLE_FILES))
 endif
@@ -319,7 +319,7 @@ STYLES=$(addsuffix .css, $(addprefix css/, \
 ################################################################################
 
 DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME) $(DBLOG_STABLE)
-STD_DDOC_STABLE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
+STD_DDOC_STABLE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-stable) $(NODATETIME)
 STD_DDOC_RELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-release) $(NODATETIME)
 STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
 SPEC_DDOC=${DDOC} spec/spec.ddoc
@@ -416,7 +416,7 @@ ${GENERATED}/${LATEST}.ddoc :
 	mkdir -p $(dir $@)
 	echo "LATEST=${LATEST}" >$@
 
-${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR) $(DMD_STABLE_DIR)
+${GENERATED}/modlist-stable.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR) $(DMD_STABLE_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_STABLE_DIR) $(PHOBOS_STABLE_DIR) $(DMD_STABLE_DIR) $(MOD_EXCLUDES_STABLE) \
 		$(addprefix --dump , object std etc core) --dump dmd >$@
@@ -589,8 +589,8 @@ $G/dblog_latest2.ddoc: $G/dblog_latest.ddoc
 ################################################################################
 
 # Clone snapshots of the latest official release of all main D repositories
-$G/%-${LATEST} :
-	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
+$G/%-stable :
+	git clone -b stable --depth=1 ${GIT_HOME}/$(notdir $*) $@
 
 # Clone all main D repositories
 ${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
@@ -804,7 +804,7 @@ ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 ################################################################################
 
 # testing menu generation
-chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-stable.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
 
 chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
@@ -818,7 +818,7 @@ chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-p
 ################################################################################
 
 d-latest.tag d-tags-latest.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
-	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target latest
+	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target stable
 
 d-release.tag d-tags-release.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
 	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target release
