@@ -46,15 +46,15 @@
 #        phobos-prerelease
 #        apidocs-prerelease      Ddox documentation
 #
-#  B) `docs-latest` (aka upstream/stable)
+#  B) `docs-stable` (aka upstream/stable)
 #
 #    Based on the last official release (git tag), the repositories are freshly cloned from GitHub.
 #    Individual targets include:
 #
-#        dmd-latest
-#        druntime-latest
-#        phobos-latest
-#        apidocs-latest          Ddox documentation
+#        dmd-stable
+#        druntime-stable
+#        phobos-stable
+#        apidocs-stable          Ddox documentation
 #
 #  Documentation development Ddox web server
 #  -----------------------------------------
@@ -101,9 +101,9 @@
 #  It's a long-lasting effort to transition from the Ddoc documentation build
 #  to a Ddox documentation build of the D standard library.
 #
-#      https://dlang.org/phobos                Stable Ddoc build (`docs-latest`)
+#      https://dlang.org/phobos                Stable Ddoc build (`docs-stable`)
 #      https://dlang.org/phobos-prerelease     Master Ddoc build (`docs-prerelease`)
-#      https://dlang.org/library               Stable Ddox build (`apidocs-latest`)
+#      https://dlang.org/library               Stable Ddox build (`apidocs-stable`)
 #      https://dlang.org/library-release       Master Ddox build (`apidocs-prerelease`)
 #
 #  For more documentation on Ddox, see https://github.com/rejectedsoftware/ddox
@@ -388,10 +388,10 @@ ifeq (1,$(RELEASE))
 release : html dmd-release druntime-release phobos-release d-release.tag
 endif
 
-docs-latest: dmd-latest druntime-latest phobos-latest apidocs-latest
+docs-stable: dmd-stable druntime-stable phobos-stable apidocs-stable
 docs-prerelease: dmd-prerelease druntime-prerelease phobos-prerelease apidocs-prerelease
 
-docs : docs-latest docs-prerelease
+docs : docs-stable docs-prerelease
 
 html : $(ALL_FILES)
 
@@ -614,7 +614,7 @@ dmd-prerelease : $(STD_DDOC_PRERELEASE) druntime-target $G/changelog/next-versio
 dmd-release : $(STD_DDOC_RELEASE) druntime-target
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
 
-dmd-latest : $(STD_DDOC_STABLE) druntime-latest-target
+dmd-stable : $(STD_DDOC_STABLE) druntime-stable-target
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_STABLE_DIR) -f posix.mak html $(DDOC_VARS_STABLE_HTML)
 
 dmd-prerelease-verbatim : $(STD_DDOC_PRERELEASE) druntime-target \
@@ -634,7 +634,7 @@ $W/phobos-prerelease/mars.verbatim: verbatim.ddoc $G/changelog/next-version
 druntime-target: ${DRUNTIME_DIR} ${DMD}
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target ${DDOC_VARS_PRERELEASE_HTML}
 
-druntime-latest-target: ${DRUNTIME_STABLE_DIR} ${DMD_STABLE}
+druntime-stable-target: ${DRUNTIME_STABLE_DIR} ${DMD_STABLE}
 	${MAKE} --directory=${DRUNTIME_STABLE_DIR} -f posix.mak target ${DDOC_VARS_STABLE_HTML}
 
 druntime-prerelease : druntime-target $(STD_DDOC_PRERELEASE) $G/changelog/next-version
@@ -647,7 +647,7 @@ druntime-release : druntime-target $(STD_DDOC_RELEASE)
 		DOCDIR=$W/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_RELEASE))"
 
-druntime-latest : druntime-latest-target $(STD_DDOC_STABLE)
+druntime-stable : druntime-stable-target $(STD_DDOC_STABLE)
 	${MAKE} --directory=${DRUNTIME_STABLE_DIR} -f posix.mak doc $(DDOC_VARS_STABLE_HTML) \
 		DOCDIR=$W/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_STABLE))"
@@ -674,7 +674,7 @@ phobos-prerelease : ${PHOBOS_FILES_GENERATED} druntime-target $(STD_DDOC_PRERELE
 phobos-release : ${PHOBOS_FILES_GENERATED} druntime-target $(STD_DDOC_RELEASE)
 	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
 
-phobos-latest : ${PHOBOS_STABLE_FILES_GENERATED} druntime-latest-target $(STD_DDOC_STABLE)
+phobos-stable : ${PHOBOS_STABLE_FILES_GENERATED} druntime-stable-target $(STD_DDOC_STABLE)
 	$(MAKE) --directory=$(PHOBOS_STABLE_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_STABLE_HTML)
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} druntime-target \
@@ -696,7 +696,7 @@ $(PHOBOS_LIB): $(DMD)
 ################################################################################
 
 apidocs-prerelease : $W/library-prerelease/sitemap.xml $W/library-prerelease/.htaccess
-apidocs-latest : $W/library/sitemap.xml $W/library/.htaccess
+apidocs-stable : $W/library/sitemap.xml $W/library/.htaccess
 apidocs-serve : $G/docs-prerelease.json
 	${DPL_DOCS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 		--override-macros=std-ddox-override.ddoc --package-order=std \
@@ -709,7 +709,7 @@ $W/library-prerelease/sitemap.xml : $G/docs-prerelease.json
 		--git-target=master $(DPL_DOCS_PATH_RUN_FLAGS) \
 		$< $W/library-prerelease
 
-$W/library/sitemap.xml : $G/docs-latest.json
+$W/library/sitemap.xml : $G/docs-stable.json
 	@mkdir -p $(dir $@)
 	${DPL_DOCS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 		--override-macros=std-ddox-override.ddoc --package-order=std \
@@ -732,7 +732,7 @@ else
  DMD_EXCLUDE_STABLE += -e /scanmach/d -e /libmach/d
 endif
 
-$G/docs-latest.json : ${DMD_STABLE} ${DMD_STABLE_DIR} \
+$G/docs-stable.json : ${DMD_STABLE} ${DMD_STABLE_DIR} \
 			${DRUNTIME_STABLE_DIR} ${PHOBOS_STABLE_FILES_GENERATED} | dpl-docs
 	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
 	if [ -f $(DMD_STABLE_DIR)/src/*/objc_glue_stubs.d ] ; then \
@@ -804,7 +804,7 @@ ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 ################################################################################
 
 # testing menu generation
-chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-stable.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
+chm-nav-stable.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-stable.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
 
 chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
@@ -817,7 +817,7 @@ chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-p
 # Dman tags
 ################################################################################
 
-d-latest.tag d-tags-latest.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
+d-stable.tag d-tags-stable.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-stable druntime-stable chm-nav-stable.json
 	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target stable
 
 d-release.tag d-tags-release.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
