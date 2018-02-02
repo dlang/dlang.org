@@ -141,6 +141,7 @@ PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
 TOOLS_DIR=../tools
 INSTALLER_DIR=../installer
+DUB_DIR=../dub
 
 include $(DMD_DIR)/src/osmodel.mak
 
@@ -606,7 +607,7 @@ $G/%-${LATEST} :
 	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
 
 # Clone all main D repositories
-${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
+${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR} ${DUB_DIR}:
 	git clone ${GIT_HOME}/$(notdir $(@F)) $@
 
 ${DMD_DIR}/VERSION : ${DMD_DIR}
@@ -941,19 +942,22 @@ LOOSE_CHANGELOG_FILES:=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 				$(wildcard $(DRUNTIME_DIR)/changelog/*.dd) \
 				$(wildcard $(PHOBOS_DIR)/changelog/*.dd) \
 				$(wildcard $(TOOLS_DIR)/changelog/*.dd) \
-				$(wildcard $(INSTALLER_DIR)/changelog/*.dd)
+				$(wildcard $(INSTALLER_DIR)/changelog/*.dd) \
+				$(wildcard $(DUB_DIR)/changelog/*.dd)
 
 $G/changelog/next-version: ${DMD_DIR}/VERSION
 	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
 	@mkdir -p $(dir $@)
 	@echo $(NEXT_VERSION) > $@
 
-changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR)
+changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
+							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
 	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_STABLE) -o $@ --version "${NEXT_VERSION}" \
 		--date "To be released"
 
-changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR)
+changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
+							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
 	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_MASTER) -o $@ --version "${NEXT_VERSION}" \
 		--date "To be released"
