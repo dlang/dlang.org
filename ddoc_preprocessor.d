@@ -22,6 +22,7 @@ struct Config
 {
     string dmdBinPath = "dmd";
     string outputFile;
+    string cwd = __FILE_FULL_PATH__.dirName;
 }
 Config config;
 
@@ -51,6 +52,7 @@ All unknown options are passed to the compiler.
     // transform and extend the ddoc page
     text = genGrammar(text);
     text = genHeader(text);
+    text = genChangelogVersion(inputFile, text);
 
     // inject custom, "dynamic" macros
     text ~= "\nSRC_FILENAME=%s\n".format(inputFile.buildNormalizedPath);
@@ -201,8 +203,8 @@ auto specTocEntries()
     alias Entry = Tuple!(string, "name", string, "title", string, "fileName");
     Entry[] entries;
 
-    static immutable specDir = __FILE_FULL_PATH__.dirName.buildNormalizedPath("spec");
-    static immutable mainFile = specDir.buildPath("./spec.ddoc");
+    immutable specDir = config.cwd.buildNormalizedPath("spec");
+    immutable mainFile = specDir.buildPath("./spec.ddoc");
 
     auto specText = mainFile.readText;
     if (!specText.findSkip("SUBMENU2"))
@@ -253,3 +255,25 @@ auto genGrammar(string fileText)
     return fileText;
 }
 
+// Automatically generate a versions overview
+auto genChangelogVersion(string fileName, string fileText)
+{
+    import std.regex;
+    static re = regex(`^[0-9]\.[0-9][0-9][0-9](\.[0-9])?(_pre)?\.dd$`);
+    if (fileName.dirName.baseName == "changelog")
+    {
+        string macros = "\nCHANGELOG_VERSIONS=";
+        macros ~= "$(CHANGELOG_VERSION_NIGHTLY)\n";
+        auto changelogFiles = dirEntries(fileName.dirName, SpanMode.depth).filter!(a => !a.name.baseName.matchFirst(re).empty).array;
+        changelogFiles.sort;
+        foreach (file; changelogFiles.retro)
+        {
+            auto arr = file.readText.findSplitAfter("$(VERSION ")[1].until!(a => a.among('\n', '=')).array;
+            auto date = arr.retro.findSplitAfter(",")[1].retro;
+            auto ver = file.name.baseName.stripExtension.until("_pre");
+            macros ~= "$(CHANGELOG_VERSION%s %s, %s)\n".format(file.name.endsWith("_pre.dd") ? "_PRE" : "", ver, date);
+        }
+        fileText ~= macros;
+    }
+    return fileText;
+}

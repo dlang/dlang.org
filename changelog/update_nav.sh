@@ -27,38 +27,3 @@ for ver in "${all_vers[@]}"; do
         prec_rel=$ver
     fi
 done
-
-# update VER=2.012.3 macros
-for ver in "${all_vers[@]}"; do
-    if [[ "$ver" = *_pre.dd ]]; then
-        sed -i "s|VER=[0-9\.][0-9\.]*|VER=${ver%_pre.dd}|" "$ver"
-    else
-        sed -i "s|VER=[0-9\.][0-9\.]*|VER=${ver%.dd}|" "$ver"
-    fi
-done
-
-# reverse sort versions array, http://stackoverflow.com/a/11789688/2371032
-IFS=$'\n'
-rev_all_vers=($(sort --reverse <<<"${all_vers[*]}"))
-rev_rel_vers=($(sort --reverse <<<"${rel_vers[*]}"))
-rev_pre_vers=($(sort --reverse <<<"${pre_vers[*]}"))
-unset IFS
-
-# update index of all changlogs
-sed -i '/BEGIN_GENERATED_CHANGELOG_VERSIONS/,/END_GENERATED_CHANGELOG_VERSIONS/d' changelog.ddoc
-echo '_=BEGIN_GENERATED_CHANGELOG_VERSIONS' >> changelog.ddoc
-echo 'CHANGELOG_VERSIONS =' >> changelog.ddoc
-echo '    $(CHANGELOG_VERSION_NIGHTLY)' >> changelog.ddoc
-for ver in "${rev_pre_vers[@]}"; do
-    echo "    \$(CHANGELOG_VERSION_PRE ${ver%_pre.dd}, not yet released)" >> changelog.ddoc
-done
-for ver in "${rev_rel_vers[@]}"; do
-    echo "    \$(CHANGELOG_VERSION ${ver%.dd})" >> changelog.ddoc
-done
-echo '_=END_GENERATED_CHANGELOG_VERSIONS' >> changelog.ddoc
-
-# add release dates
-(
-    IFS=$'\n'
-    sed -i changelog.ddoc $(grep '(VERSION' -- *.dd | sed -E 's/^(.*)\.dd:\$\(VERSION (.*), ==.*/-e\ns#CHANGELOG_VERSION \1)#CHANGELOG_VERSION \1, \2)#/')
-)
