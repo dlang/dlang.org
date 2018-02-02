@@ -741,15 +741,15 @@ $G/docs-stable.json : ${DMD_STABLE} ${DMD_STABLE_DIR} \
 	find ${DMD_STABLE_DIR}/src -name '*.d' | \
 		sed -e /mscoff/d $${DMD_EXCLUDE_STABLE_BASH} ${DMD_EXCLUDE_STABLE}
 	find ${DRUNTIME_STABLE_DIR}/src -name '*.d' | \
-		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
+		sed -e /unittest.d/d -e /gcstub/d >> $G/.stable-files.txt
 	find ${PHOBOS_STABLE_DIR_GENERATED} -name '*.d' | \
-		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
+		sed -e /unittest.d/d | sort >> $G/.stable-files.txt
 	${DMD_STABLE} -J$(DMD_STABLE_DIR)/res -J$(dir $(DMD_STABLE)) -c -o- -version=CoreDdoc \
-		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
-		-Xf$@ -I${PHOBOS_STABLE_DIR_GENERATED} @$G/.latest-files.txt
+		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.stable-dummy.html \
+		-Xf$@ -I${PHOBOS_STABLE_DIR_GENERATED} @$G/.stable-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
 		--only-documented $(MOD_EXCLUDES_STABLE)
-	rm -f $G/.latest-files.txt $G/.latest-dummy.html
+	rm -f $G/.stable-files.txt $G/.stable-dummy.html
 
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		${PHOBOS_FILES_GENERATED} | dpl-docs
