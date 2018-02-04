@@ -134,6 +134,9 @@
 #  before actually running Ddoc.
 #  Currently this is used for:
 #    - TOC
+#    - dynamic TOC generation
+#    - GRAMMAR overview generation
+#    - CHANGELOG menu generation
 #    - assert -> writeln magic
 PWD=$(shell pwd)
 MAKEFILE=$(firstword $(MAKEFILE_LIST))
@@ -284,7 +287,7 @@ DDOC_VARS_PRERELEASE_VERBATIM=$(DDOC_VARS_PRERELEASE) \
 # Ddoc binaries
 ################################################################################
 
-DDOC_BIN:=$G/ddoc
+DDOC_BIN:=$G/ddoc_preprocessor
 DDOC_BIN_DMD:=$(DDOC_BIN) --compiler=$(DMD)
 
 ################################################################################
@@ -684,23 +687,24 @@ $W/phobos-prerelease/object.verbatim : $(DMD) $G/changelog/next-version
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_FILES} druntime-target $(STD_DDOC_PRERELEASE) $(DDOC_BIN) $(DMD)
+phobos-prerelease : ${PHOBOS_FILES} druntime-target $(STD_DDOC_PRERELEASE) $(DDOC_BIN) $(DMD) \
+					$G/changelog/next-version
 	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML) \
-		DMD="$(abspath $(DDOC_BIN)) --compiler=$(DMD)"
+		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD))"
 
 phobos-release : ${PHOBOS_FILES} druntime-target $(STD_DDOC_RELEASE) $(DDOC_BIN) $(DMD)
 	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML) \
-		DMD="$(abspath $(DDOC_BIN)) --compiler=$(DMD)"
+		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD))"
 
-phobos-latest : ${PHOBOS_LATEST_FILES} druntime-latest-target $(STD_DDOC_LATEST) $(DDOC_BIN) $(DMD)
+phobos-latest : ${PHOBOS_LATEST_FILES} druntime-latest-target $(STD_DDOC_LATEST) $(DDOC_BIN) $(DMD_LATEST)
 	$(MAKE) --directory=$(PHOBOS_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML) \
-		DMD="$(abspath $(DDOC_BIN)) --compiler=$(DMD)"
+		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD_LATEST))"
 
 phobos-prerelease-verbatim : ${PHOBOS_FILES} druntime-target \
 		$W/phobos-prerelease/index.verbatim
 $W/phobos-prerelease/index.verbatim : verbatim.ddoc \
 		$W/phobos-prerelease/object.verbatim \
-		$W/phobos-prerelease/mars.verbatim $G/changelog/next-version
+		$W/phobos-prerelease/mars.verbatim $G/changelog/next-version $(DMD)
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM) \
 	  DOC_OUTPUT_DIR=$W/phobos-prerelease-verbatim
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
@@ -854,7 +858,7 @@ test_dspec: dspec_tester.d $(DMD) $(PHOBOS_LIB)
 	$(DMD) -run $< --compiler=$(DMD)
 
 .PHONY:
-test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all | $(STABLE_DMD)
+test: $test_dspec test/next_version.sh all | $(STABLE_DMD)
 	@echo "Searching for trailing whitespace"
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
 	@echo "Searching for tabs"
@@ -862,8 +866,8 @@ test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all | $(STABLE_
 	@echo "Checking DDoc's output"
 	$(STABLE_RDMD) -main -unittest check_ddoc.d
 	$(STABLE_RDMD) check_ddoc.d $$(find $W -type f -name "*.html" -not -path "$W/phobos/*")
-	@echo "Executing assert_writeln_magic tests"
-	$<
+	@echo "Executing ddoc_preprocessor tests"
+	dub -C ddoc test
 	@echo "Executing next_version tests"
 	test/next_version.sh
 
@@ -951,22 +955,12 @@ $G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 # Custom DDoc wrapper
 # ------------------
 #
-# This allows extending Ddoc files dynamically on-the-fly.
-# It is currently only used for the specification pages
-#
-# It does:
-# - dynamic TOC generation
-# - GRAMMAR overview generation
-# - CHANGELOG menu generation
-# - Assert -> writeln magic (https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org)
-#  - This transforms assert(a == b) to writeln(a); // b
-#  - It creates a copy of Phobos to apply the transformations
-#  - All "d" files are piped through the transformator,
-#   other needed files (e.g. posix.mak) get copied over
+# This allows extending Ddoc files and D source code files dynamically on-the-fly.
 ################################################################################
 
-$(DDOC_BIN): ddoc_preprocessor.d | $(STABLE_DMD) $(DMD)
-	$(STABLE_RDMD) -version=DdocOptions --build-only -g -of$@ -I$(DMD_DIR)/src $<
+$(DDOC_BIN): ddoc/source/preprocessor.d ddoc/source/assert_writeln_magic.d | $(STABLE_DMD)
+	$(STABLE_DMD_BIN_ROOT)/dub build --compiler=$(STABLE_DMD) --root=ddoc && \
+		mv ddoc/ddoc_preprocessor $@
 
 ################################################################################
 # Build and render the DMD man page

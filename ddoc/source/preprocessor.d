@@ -24,12 +24,14 @@ struct Config
 {
     string dmdBinPath = "dmd";
     string outputFile;
-    string cwd = __FILE_FULL_PATH__.dirName;
+    string cwd = __FILE_FULL_PATH__.dirName.dirName.dirName;
 }
 Config config;
 
+version(unittest) {} else
 int main(string[] rootArgs)
 {
+    import assert_writeln_magic;
     import std.getopt;
     auto helpInformation = getopt(
         rootArgs, std.getopt.config.passThrough,
@@ -49,8 +51,11 @@ All unknown options are passed to the compiler.
     assert(pos >= 0, "An input file (.d or .dd) must be provided");
     auto inputFile = args[pos];
     auto text = inputFile.readText;
-    // replace only works with 2.078.1, see: https://github.com/dlang/phobos/pull/6017
-    args = args[0..pos].chain("-".only, args[pos..$].dropOne).array;
+
+    // for now only non-package modules are supported
+    if (!inputFile.endsWith("package.d", "index.d"))
+        // replace only works with 2.078.1, see: https://github.com/dlang/phobos/pull/6017
+        args = args[0..pos].chain("-".only, args[pos..$].dropOne).array;
 
     // transform and extend the ddoc page
     text = genGrammar(text);
@@ -58,24 +63,42 @@ All unknown options are passed to the compiler.
     text = genChangelogVersion(inputFile, text);
     text = genSwitches(text);
 
+    if (inputFile.endsWith(".d"))
+        text = assertWriteln(text);
+
     // inject custom, "dynamic" macros
-    text ~= "\nSRC_FILENAME=%s\n".format(inputFile.buildNormalizedPath);
+    if (inputFile.endsWith(".dd", "index.d"))
+        text ~= "\nSRC_FILENAME=%s\n".format(inputFile.buildNormalizedPath);
+    else if (inputFile.endsWith(".d"))
+        text ~= "/**\nMacros:\n\nSRC_FILENAME=%s\n*/".format(inputFile.buildNormalizedPath);
     return compile(text, args);
 }
 
 auto compile(R)(R buffer, string[] arguments)
 {
+    import core.time : usecs;
+    import core.thread : Thread;
     import std.process : pipeProcess, Redirect, wait;
     auto args = [config.dmdBinPath] ~ arguments;
-    foreach (arg; ["-c", "-o-", "-"])
+
+    import std.file : write, tempDir;
+    import std.uuid : randomUUID;
+    auto fileName = tempDir.buildPath("ddoc_preprocessor_" ~ randomUUID.toString.replace("-", "") ~ ".d");
+    std.file.write(fileName, buffer);
+    scope(exit) fileName.remove;
+    args = args.replace("-", fileName);
+
+    foreach (arg; ["-c", "-o-"])
     {
         if (!args.canFind(arg))
             args ~= arg;
     }
     auto pipes = pipeProcess(args, Redirect.stdin);
-    pipes.stdin.write(buffer);
-    pipes.stdin.close;
-    return wait(pipes.pid);
+    import std.process : execute;
+    auto ret = execute(args);
+    if (ret.status != 0)
+        stderr.writeln(ret.output);
+    return ret.status;
 }
 
 // replaces the content of a DDoc macro call

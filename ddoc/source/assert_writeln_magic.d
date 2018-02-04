@@ -177,7 +177,7 @@ private:
     Out fl;
 }
 
-void parseString(Visitor)(ubyte[] sourceCode, string fileName, Visitor visitor)
+void parseString(Visitor)(ubyte[] sourceCode, Visitor visitor)
 {
     import dparse.lexer;
     import dparse.parser : parseModule;
@@ -188,89 +188,19 @@ void parseString(Visitor)(ubyte[] sourceCode, string fileName, Visitor visitor)
     const(Token)[] tokens = getTokensForParser(sourceCode, config, &cache).array;
 
     RollbackAllocator rba;
-    auto m = parseModule(tokens, fileName, &rba);
+    auto m = parseModule(tokens, "magic.d", &rba);
     visitor.visit(m);
 }
 
-void parseFile(string fileName, string destFile)
+auto assertWriteln(string fileText)
 {
-    import std.array : uninitializedArray;
-
-    auto inFile = File(fileName);
-    if (inFile.size == 0)
-        warningf("%s is empty", inFile.name);
-
-    ubyte[] sourceCode = uninitializedArray!(ubyte[])(to!size_t(inFile.size));
-    if (sourceCode.length == 0)
-        return;
-
-    inFile.rawRead(sourceCode);
-    auto fl = FileLines(fileName, destFile);
+    import std.string : representation;
+    auto fl = FileLines(fileText);
     auto visitor = new TestVisitor!(typeof(fl))(fl);
-    parseString(sourceCode, fileName, visitor);
+    // libdparse doesn't allow to work on immutable source code
+    parseString(cast(ubyte[]) fileText.representation, visitor);
     delete visitor;
-}
-
-// Modify a path under oldBase to a new path with the same subpath under newBase.
-// E.g.: `/foo/bar`.rebasePath(`/foo`, `/quux`) == `/quux/bar`
-string rebasePath(string path, string oldBase, string newBase)
-{
-    import std.path : absolutePath, buildPath, relativePath;
-    return buildPath(newBase, path.absolutePath.relativePath(oldBase.absolutePath));
-}
-
-version(unittest) { void main(){} } else
-void main(string[] args)
-{
-    import std.file;
-    import std.getopt;
-    import std.path;
-
-    string inputDir, outputDir;
-    string[] ignoredFiles;
-
-    auto helpInfo = getopt(args, config.required,
-            "inputdir|i", "Folder to start the recursive search for unittest blocks (can be a single file)", &inputDir,
-            "outputdir|o", "Alternative folder to use as output (can be a single file)", &outputDir,
-            "ignore", "List of files to exclude (partial matching is supported)", &ignoredFiles);
-
-    if (helpInfo.helpWanted)
-    {
-        return defaultGetoptPrinter(`assert_writeln_magic
-Tries to lower EqualExpression in AssertExpressions of Unittest blocks to commented writeln calls.
-`, helpInfo.options);
-    }
-
-    inputDir = inputDir.asNormalizedPath.array;
-
-    DirEntry[] files;
-
-    // inputDir as default output directory
-    if (!outputDir.length)
-        outputDir = inputDir;
-
-    if (inputDir.isFile)
-    {
-        files = [DirEntry(inputDir)];
-        inputDir = "";
-    }
-    else
-    {
-        files = dirEntries(inputDir, SpanMode.depth).filter!(
-                a => a.name.endsWith(".d") && !a.name.canFind(".git")).array;
-    }
-
-    foreach (file; files)
-    {
-        if (!ignoredFiles.any!(x => file.name.canFind(x)))
-        {
-            // single files
-            if (inputDir.length == 0)
-                parseFile(file.name, outputDir);
-            else
-                parseFile(file.name, file.name.rebasePath(inputDir, outputDir));
-        }
-    }
+    return fl.buildLines;
 }
 
 /**
@@ -284,47 +214,26 @@ struct FileLines
 
     string[] lines;
     string destFile;
-    bool overwriteInputFile;
     bool hasWrittenChanges;
 
-    this(string inputFile, string destFile)
+    this(string inputText)
     {
-        stderr.writefln("%s -> %s", inputFile, destFile);
-        this.overwriteInputFile = inputFile == destFile;
-        this.destFile = destFile;
-        lines = File(inputFile).byLineCopy.array;
-
-        destFile.dirName.mkdirRecurse;
-    }
-
-    // dumps all changes
-    ~this()
-    {
-        if (overwriteInputFile)
-        {
-            if (hasWrittenChanges)
-            {
-                auto tmpFile = File(destFile ~ ".tmp", "w");
-                writeLinesToFile(tmpFile);
-                tmpFile.close;
-                tmpFile.name.rename(destFile);
-            }
-        }
-        else
-        {
-            writeLinesToFile(File(destFile, "w"));
-        }
+        lines = inputText.split("\n");
     }
 
     // writes all changes to a random, temporary file
-    void writeLinesToFile(File outFile) {
+    auto buildLines() {
+        auto app = appender!string;
         // dump file
         foreach (line; lines)
-            outFile.writeln(line);
+        {
+            app ~= line;
+            app ~= "\n";
+        }
         // within the docs we automatically inject std.stdio (hence we need to do the same here)
         // writeln needs to be @nogc, @safe, pure and nothrow (we just fake it)
-        outFile.writeln("// \nprivate void writeln(T)(T l) { }");
-        outFile.flush;
+        app ~= "// \nprivate void writeln(T)(T l) { }";
+        return app.data;
     }
 
     string opIndex(size_t i) { return lines[i]; }
@@ -349,7 +258,7 @@ version(unittest)
         import std.string : representation;
         auto mock = FileLinesMock(sourceCode.split("\n"));
         auto visitor = new TestVisitor!(typeof(mock))(mock);
-        parseString(sourceCode.representation.dup, "testmodule", visitor);
+        parseString(sourceCode.representation.dup, visitor);
         delete visitor;
         return mock;
     }
