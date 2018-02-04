@@ -1,6 +1,6 @@
 module app;
 
-import ddox.main;
+import ddox_main;
 import std.getopt;
 import std.process;
 import vibe.core.log;
