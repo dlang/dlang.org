@@ -28,7 +28,7 @@ struct Config
 }
 Config config;
 
-version(unittest) {} else
+version(IsExecutable)
 int main(string[] rootArgs)
 {
     import assert_writeln_magic;
@@ -64,7 +64,7 @@ All unknown options are passed to the compiler.
     text = genSwitches(text);
 
     if (inputFile.endsWith(".d"))
-        text = assertWriteln(text);
+        text = assertWritelnModule(text);
 
     // inject custom, "dynamic" macros
     if (inputFile.endsWith(".dd", "index.d"))

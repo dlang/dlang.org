@@ -192,7 +192,7 @@ void parseString(Visitor)(ubyte[] sourceCode, Visitor visitor)
     visitor.visit(m);
 }
 
-auto assertWriteln(string fileText)
+private auto assertWritelnModuleImpl(string fileText)
 {
     import std.string : representation;
     auto fl = FileLines(fileText);
@@ -200,7 +200,24 @@ auto assertWriteln(string fileText)
     // libdparse doesn't allow to work on immutable source code
     parseString(cast(ubyte[]) fileText.representation, visitor);
     delete visitor;
-    return fl.buildLines;
+    return fl;
+}
+
+auto assertWritelnModule(string fileText)
+{
+    return assertWritelnModuleImpl(fileText).buildLines;
+}
+auto assertWritelnBlock(string fileText)
+{
+    auto source = "unittest{\n" ~ fileText ~ "}\n";
+    auto fl = assertWritelnModuleImpl(source);
+    auto app = appender!string;
+    foreach (line; fl.lines[1 .. $ - 2])
+    {
+        app ~= line;
+        app ~= "\n";
+    }
+    return app.data;
 }
 
 /**

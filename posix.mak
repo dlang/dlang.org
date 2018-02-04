@@ -858,7 +858,7 @@ test_dspec: dspec_tester.d $(DMD) $(PHOBOS_LIB)
 	$(DMD) -run $< --compiler=$(DMD)
 
 .PHONY:
-test: $test_dspec test/next_version.sh all | $(STABLE_DMD)
+test: test_dspec test/next_version.sh all | $(STABLE_DMD) $(DUB)
 	@echo "Searching for trailing whitespace"
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
 	@echo "Searching for tabs"
@@ -867,7 +867,7 @@ test: $test_dspec test/next_version.sh all | $(STABLE_DMD)
 	$(STABLE_RDMD) -main -unittest check_ddoc.d
 	$(STABLE_RDMD) check_ddoc.d $$(find $W -type f -name "*.html" -not -path "$W/phobos/*")
 	@echo "Executing ddoc_preprocessor tests"
-	dub -C ddoc test
+	$(DUB) test --compiler=${STABLE_DMD} --root ddoc
 	@echo "Executing next_version tests"
 	test/next_version.sh
 
