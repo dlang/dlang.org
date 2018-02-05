@@ -63,30 +63,41 @@ All unknown options are passed to the compiler.
     text = genChangelogVersion(inputFile, text);
     text = genSwitches(text);
 
-    if (inputFile.endsWith(".d"))
+    // Phobos index.d should have been named index.dd
+    if (inputFile.endsWith(".d") && !inputFile.endsWith("index.d"))
         text = assertWritelnModule(text);
 
-    // inject custom, "dynamic" macros
-    if (inputFile.endsWith(".dd", "index.d"))
-        text ~= "\nSRC_FILENAME=%s\n".format(inputFile.buildNormalizedPath);
-    else if (inputFile.endsWith(".d"))
-        text ~= "/**\nMacros:\n\nSRC_FILENAME=%s\n*/".format(inputFile.buildNormalizedPath);
-    return compile(text, args);
+    string[string] macros;
+    macros["SRC_FILENAME"] = "%s\n".format(inputFile.buildNormalizedPath);
+    return compile(text, args, macros);
 }
 
-auto compile(R)(R buffer, string[] arguments)
+static auto createTmpFile(string buffer = null, string extension = ".d")
+{
+    import std.uuid : randomUUID;
+    auto name = tempDir.buildPath("ddoc_preprocessor_" ~ randomUUID.toString.replace("-", "") ~ extension);
+    if (buffer !is null)
+        std.file.write(name, buffer);
+    return name;
+}
+
+auto compile(R)(R buffer, string[] arguments, string[string] macros = null)
 {
     import core.time : usecs;
     import core.thread : Thread;
     import std.process : pipeProcess, Redirect, wait;
     auto args = [config.dmdBinPath] ~ arguments;
 
-    import std.file : write, tempDir;
-    import std.uuid : randomUUID;
-    auto fileName = tempDir.buildPath("ddoc_preprocessor_" ~ randomUUID.toString.replace("-", "") ~ ".d");
-    std.file.write(fileName, buffer);
-    scope(exit) fileName.remove;
-    args = args.replace("-", fileName);
+    string[] tmpFiles = [createTmpFile(buffer, ".d")];
+    args = args.replace("-", tmpFiles[$ - 1]);
+    scope(exit) tmpFiles.each!remove;
+
+    if (macros !is null)
+    {
+        auto macroString = macros.byPair.map!(a => "%s=%s".format(a[0], a[1])).join("\n");
+        args ~= createTmpFile(macroString, ".ddoc");
+        tmpFiles ~= args[$ - 1];
+    }
 
     foreach (arg; ["-c", "-o-"])
     {
