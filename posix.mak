@@ -870,6 +870,7 @@ test_dspec: dspec_tester.d $(DMD) $(PHOBOS_LIB)
 	@echo "Test the D Language specification"
 	$(DMD) -run $< --compiler=$(DMD)
 
+.PHONY:
 test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
 	@echo "Searching for trailing whitespace"
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
@@ -878,7 +879,7 @@ test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
 	@echo "Searching for undefined macros"
 	@grep -n "UNDEFINED MACRO" $$(find $W -type f -name "*.html" -not -path "$W/phobos/*") ; test $$? -eq 1
 	@echo "Searching for undefined ddoc"
-	@grep -rn '[$$](' $$(find $W/phobos-prerelease -type f -name "*.html") ; test $$? -eq 1
+	@grep -n "[\$$]([^']" $$(find $W -type f -name "*.html" -not -path "$W/phobos/*") ; test $$? -eq 1
 	@echo "Executing assert_writeln_magic tests"
 	$<
 	@echo "Executing next_version tests"
