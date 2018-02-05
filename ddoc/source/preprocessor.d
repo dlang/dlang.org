@@ -53,7 +53,7 @@ All unknown options are passed to the compiler.
     auto text = inputFile.readText;
 
     // for now only non-package modules are supported
-    if (!inputFile.endsWith("package.d", "index.d"))
+    if (!inputFile.endsWith("index.d"))
         // replace only works with 2.078.1, see: https://github.com/dlang/phobos/pull/6017
         args = args[0..pos].chain("-".only, args[pos..$].dropOne).array;
 
@@ -69,34 +69,39 @@ All unknown options are passed to the compiler.
 
     string[string] macros;
     macros["SRC_FILENAME"] = "%s\n".format(inputFile.buildNormalizedPath);
-    return compile(text, args, macros);
+    return compile(text, args, inputFile, macros);
 }
 
-static auto createTmpFile(string buffer = null, string extension = ".d")
+auto createTmpDir()
 {
     import std.uuid : randomUUID;
-    auto name = tempDir.buildPath("ddoc_preprocessor_" ~ randomUUID.toString.replace("-", "") ~ extension);
-    if (buffer !is null)
-        std.file.write(name, buffer);
-    return name;
+    auto dir = tempDir.buildPath("ddoc_preprocessor_" ~ randomUUID.toString.replace("-", ""));
+    mkdir(dir);
+    return dir;
 }
 
-auto compile(R)(R buffer, string[] arguments, string[string] macros = null)
+auto compile(R)(R buffer, string[] arguments, string inputFile, string[string] macros = null)
 {
     import core.time : usecs;
     import core.thread : Thread;
     import std.process : pipeProcess, Redirect, wait;
     auto args = [config.dmdBinPath] ~ arguments;
 
-    string[] tmpFiles = [createTmpFile(buffer, ".d")];
-    args = args.replace("-", tmpFiles[$ - 1]);
-    scope(exit) tmpFiles.each!remove;
+    // Note: ideally we could pass in files directly on stdin.
+    // However, for package.d files, we need to imitate package directory layout to avoid conflicts
+    auto tmpDir = createTmpDir;
+    auto inputTmpFile = tmpDir.buildPath(inputFile);
+    inputTmpFile.dirName.mkdirRecurse;
+    std.file.write(inputTmpFile, buffer);
+    args = args.replace("-", inputTmpFile);
+    scope(exit) tmpDir.rmdirRecurse;
 
     if (macros !is null)
     {
         auto macroString = macros.byPair.map!(a => "%s=%s".format(a[0], a[1])).join("\n");
-        args ~= createTmpFile(macroString, ".ddoc");
-        tmpFiles ~= args[$ - 1];
+        auto macroFile = tmpDir.buildPath("macros.ddoc");
+        std.file.write(macroFile, macroString);
+        args ~= macroFile;
     }
 
     foreach (arg; ["-c", "-o-"])
