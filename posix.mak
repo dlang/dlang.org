@@ -355,19 +355,20 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
 	articles ascii-table bugstats builtin \
 	$(CHANGELOG_FILES) code_coverage community comparison concepts \
 	const-faq cppcontracts cpptod ctarguments ctod donate \
-	D1toD2 d-array-article d-floating-point deprecate dlangupb-scholarship dll-linux dmd \
+	D1toD2 d-array-article d-floating-point deprecate dll-linux dmd \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
-	exception-safe faq forum-template foundation foundation_overview gpg_keys glossary \
+	exception-safe faq forum-template gpg_keys glossary \
 	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod index install \
 	intro-to-datetime lazy-evaluation menu migrate-to-shared mixin \
 	orgs-using-d overview pretod rationale rdmd regular-expression resources safed \
-	search sponsors template-comparison templates-revisited tuple \
-	variadic-function-templates warnings wc windbg
+	search template-comparison templates-revisited tuple \
+	variadic-function-templates warnings wc windbg \
+	$(addprefix foundation/, index about sponsors upb-scholarship)
 
 # The contributors listing is dynamically generated
 ifneq (1,$(DIFFABLE))
 ifneq (1,$(RELEASE))
- PAGES_ROOT+=contributors
+ PAGES_ROOT+=foundation/contributors
 endif
 endif
 
@@ -475,6 +476,9 @@ $W/404.html : 404.dd $(DDOC) $(DMD)
 
 $(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors_list.ddoc $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
+
+$W/foundation/%.html : foundation/%.dd $(DDOC) $(DMD) $(DDOC_BIN) foundation/foundation.ddoc
+	$(DDOC_BIN) --compiler=$(DMD) -conf= -c -o- -Df$@ $(DDOC) $< foundation/foundation.ddoc
 
 $W/%.html : %.dd $(DDOC) $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN) --compiler=$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
