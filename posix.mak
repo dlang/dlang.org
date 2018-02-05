@@ -477,6 +477,9 @@ $W/404.html : 404.dd $(DDOC) $(DMD)
 $(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors_list.ddoc $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
 
+$W/foundation/%.html : foundation/%.dd $(DDOC) $(DMD) $(DDOC_BIN) foundation/foundation.ddoc
+	$(DDOC_BIN) --compiler=$(DMD) -conf= -c -o- -Df$@ $(DDOC) $< foundation/foundation.ddoc
+
 $W/%.html : %.dd $(DDOC) $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN) --compiler=$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
