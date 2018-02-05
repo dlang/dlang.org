@@ -352,18 +352,20 @@ MAN_PAGE=docs/man/man1/dmd.1
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
-	articles ascii-table bugstats builtin \
-	$(CHANGELOG_FILES) code_coverage community comparison concepts \
-	const-faq cppcontracts cpptod ctarguments ctod \
-	D1toD2 d-array-article d-floating-point deprecate dll-linux dmd \
+	ascii-table bugstats builtin $(CHANGELOG_FILES) community comparison concepts \
+	cppcontracts D1toD2 deprecate dll-linux dmd \
 	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
-	exception-safe faq forum-template gpg_keys glossary \
-	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod index install \
-	intro-to-datetime lazy-evaluation menu migrate-to-shared mixin \
-	orgs-using-d overview pretod rationale rdmd regular-expression resources safed \
-	search template-comparison templates-revisited tuple \
-	variadic-function-templates warnings wc windbg \
+	forum-template gpg_keys glossary \
+	gsoc2011 gsoc2012 gsoc2012-template howto-promote htod index install \
+	menu mixin orgs-using-d overview rationale rdmd resources \
+	search template-comparison tuple wc windbg \
 	$(addprefix foundation/, index about donate sponsors upb-scholarship)
+	$(addprefix articles/, index.dd builtin.dd code_coverage.dd const-faq.dd
+		cpptod.dd ctarguments.dd ctod.dd d-array-article.dd d-floating-point.dd \
+		exception-safe.dd faq.dd hijack.dd intro-to-datetime.dd lazy-evaluation.dd \
+		migrate-to-shared.dd mixin.dd pretod.dd rationale.dd regular-expression.dd \
+		safed.dd templates-revisited.dd variadic-function-templates.dd warnings.dd \
+	)
 
 # The contributors listing is dynamically generated
 ifneq (1,$(DIFFABLE))
