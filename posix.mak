@@ -348,23 +348,24 @@ endif
 
 MAN_PAGE=docs/man/man1/dmd.1
 
+ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
+		cpptod ctarguments ctod d-array-article d-floating-point \
+		exception-safe faq hijack intro-to-datetime lazy-evaluation \
+		migrate-to-shared mixin pretod rationale regular-expression \
+		safed templates-revisited variadic-function-templates warnings \
+		cppcontracts template-comparison dll-linux \
+	)
+
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
+PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 	ascii-table bugstats builtin $(CHANGELOG_FILES) community comparison concepts \
 	cppcontracts D1toD2 deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys glossary \
 	gsoc2011 gsoc2012 gsoc2012-template howto-promote htod index install \
 	menu mixin orgs-using-d overview rationale rdmd resources search tuple wc windbg \
 	$(addprefix foundation/, index about donate sponsors upb-scholarship)
-	$(addprefix articles/, index.dd builtin.dd code_coverage.dd const-faq.dd
-		cpptod.dd ctarguments.dd ctod.dd d-array-article.dd d-floating-point.dd \
-		exception-safe.dd faq.dd hijack.dd intro-to-datetime.dd lazy-evaluation.dd \
-		migrate-to-shared.dd mixin.dd pretod.dd rationale.dd regular-expression.dd \
-		safed.dd templates-revisited.dd variadic-function-templates.dd warnings.dd \
-		cppcontracts template-comparison dll-linux
-	)
 
 # The contributors listing is dynamically generated
 ifneq (1,$(DIFFABLE))
@@ -477,6 +478,9 @@ $W/404.html : 404.dd $(DDOC) $(DMD)
 
 $(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors_list.ddoc $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
+
+$W/articles/%.html : articles/%.dd $(DDOC) $(DMD) $(DDOC_BIN) articles/articles.ddoc
+	$(DDOC_BIN) --compiler=$(DMD) -conf= -c -o- -Df$@ $(DDOC) $< articles/articles.ddoc
 
 $W/foundation/%.html : foundation/%.dd $(DDOC) $(DMD) $(DDOC_BIN) foundation/foundation.ddoc
 	$(DDOC_BIN) --compiler=$(DMD) -conf= -c -o- -Df$@ $(DDOC) $< foundation/foundation.ddoc
