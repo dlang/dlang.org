@@ -33,6 +33,7 @@ int main(string[] rootArgs)
     import std.getopt;
     auto helpInformation = getopt(
         rootArgs, std.getopt.config.passThrough,
+        std.getopt.config.required,
         "compiler", "Compiler to use", &config.dmdBinPath,
     );
     if (helpInformation.helpWanted)
