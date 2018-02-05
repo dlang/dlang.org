@@ -503,8 +503,8 @@ $W/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) dcompiler.dd $<
+$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DDOC_BIN)
+	$(DDOC_BIN) -Df$@ $(DDOC) dcompiler.dd $<
 
 $W/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
