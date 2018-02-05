@@ -360,11 +360,11 @@ ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
-	ascii-table bugstats builtin $(CHANGELOG_FILES) community comparison concepts \
+	ascii-table bugstats $(CHANGELOG_FILES) community comparison concepts \
 	cppcontracts D1toD2 deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys glossary \
 	gsoc2011 gsoc2012 gsoc2012-template howto-promote htod index install \
-	menu mixin orgs-using-d overview rationale rdmd resources search tuple wc windbg \
+	menu orgs-using-d overview rdmd resources search sponsors tuple wc windbg \
 	$(addprefix foundation/, index about donate sponsors upb-scholarship)
 
 # The contributors listing is dynamically generated
