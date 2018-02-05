@@ -145,7 +145,6 @@ include $(DMD_DIR)/src/osmodel.mak
 
 # External binaries
 DMD=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)/dmd
-PHOBOS_LIB=$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)/dmd/libphobos2.a
 
 # External directories
 DOC_OUTPUT_DIR:=$(PWD)/web
@@ -688,9 +687,6 @@ $W/phobos-prerelease/index.verbatim : verbatim.ddoc \
 	mv $W/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r $W/phobos-prerelease-verbatim
 
-$(PHOBOS_LIB): $(DMD)
-	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak lib
-
 ################################################################################
 # phobos and druntime, latest released build and current build (DDOX version)
 ################################################################################
@@ -866,9 +862,9 @@ $(PHOBOS_LATEST_FILES_GENERATED): $(PHOBOS_LATEST_DIR_GENERATED)/%: $(PHOBOS_LAT
 # Style tests
 ################################################################################
 
-test_dspec: dspec_tester.d $(DMD) $(PHOBOS_LIB)
+test_dspec: dspec_tester.d $(STABLE_DMD)
 	@echo "Test the D Language specification"
-	$(DMD) -run $< --compiler=$(DMD)
+	$(STABLE_DMD) -run $< --compiler=$(DMD)
 
 test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
 	@echo "Searching for trailing whitespace"
