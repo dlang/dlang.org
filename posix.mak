@@ -575,14 +575,15 @@ $G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DMD) verbatim.ddoc
 # Fetch the latest article from the official D blog
 ################################################################################
 
-$G/dblog_latest.ddoc:
+$G/dblog_latest.html:
 	@echo "Receiving the latest DBlog article. Disable with DIFFABLE=1"
-	curl -s --fail --retry 3 --retry-delay 5 http://blog.dlang.org > $(TMP)/blog.html
-	@[ $? -eq 0 ] || (echo "Curl couldn't connect to the DBlog."; exit 1)
-	cat $(TMP)/blog.html | grep -m1 'entry-title' | \
+	curl -s --fail --retry 3 --retry-delay 5 http://blog.dlang.org -o $@
+
+$G/dblog_latest.ddoc: $G/dblog_latest.html
+	cat $< | grep -m1 'entry-title' | \
 		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE=\2|DBLOG_LATEST_LINK=\1|DBLOG_LATEST_DATE=\3|DBLOG_LATEST_AUTHOR=\4/' | \
 		tr '|' '\n' > $@
-	cat $(TMP)/blog.html | grep -m2 'entry-title' | tail -n1 | \
+	cat $< | grep -m2 'entry-title' | tail -n1 | \
 		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE2=\2|DBLOG_LATEST_LINK2=\1|DBLOG_LATEST_DATE2=\3|DBLOG_LATEST_AUTHOR2=\4/' | \
 		tr '|' '\n' > $(basename $@)2.ddoc
 	rm $(TMP)/blog.html
