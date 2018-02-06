@@ -589,9 +589,11 @@ $G/dblog_latest.ddoc: $G/dblog_latest.html
 	cat $< | grep -m1 'entry-title' | \
 		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE=\2|DBLOG_LATEST_LINK=\1|DBLOG_LATEST_DATE=\3|DBLOG_LATEST_AUTHOR=\4/' | \
 		tr '|' '\n' > $@
+	@if [ ! -s $@ ] ; then echo "$@ is empty. Please check the download"; rm -f $@; exit 1 ; fi
 	cat $< | grep -m2 'entry-title' | tail -n1 | \
 		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE2=\2|DBLOG_LATEST_LINK2=\1|DBLOG_LATEST_DATE2=\3|DBLOG_LATEST_AUTHOR2=\4/' | \
 		tr '|' '\n' > $(basename $@)2.ddoc
+	@if [ ! -s $(basename $@)2.ddoc ] ; then echo "$(basename $@)2.ddoc is empty. Please check the download"; rm -f $(basename $@)2.ddoc; exit 1 ; fi
 
 $G/dblog_latest2.ddoc: $G/dblog_latest.ddoc
 
