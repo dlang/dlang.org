@@ -583,7 +583,7 @@ $G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DMD) verbatim.ddoc
 
 $G/dblog_latest.html:
 	@echo "Receiving the latest DBlog article. Disable with DIFFABLE=1"
-	curl -s --fail --retry 3 --retry-delay 5 http://blog.dlang.org -o $@
+	curl -s --fail --retry 3 --retry-delay 5 -L https://blog.dlang.org -o $@
 
 $G/dblog_latest.ddoc: $G/dblog_latest.html
 	cat $< | grep -m1 'entry-title' | \
