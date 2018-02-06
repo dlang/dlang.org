@@ -128,6 +128,7 @@
 #  See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
 PWD=$(shell pwd)
 MAKEFILE=$(firstword $(MAKEFILE_LIST))
+SHELL:=/bin/bash
 
 # Latest released version
 ifeq (,${LATEST})
