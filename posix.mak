@@ -587,7 +587,6 @@ $G/dblog_latest.ddoc: $G/dblog_latest.html
 	cat $< | grep -m2 'entry-title' | tail -n1 | \
 		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE2=\2|DBLOG_LATEST_LINK2=\1|DBLOG_LATEST_DATE2=\3|DBLOG_LATEST_AUTHOR2=\4/' | \
 		tr '|' '\n' > $(basename $@)2.ddoc
-	rm $(TMP)/blog.html
 
 $G/dblog_latest2.ddoc: $G/dblog_latest.ddoc
 
