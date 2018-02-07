@@ -302,7 +302,7 @@ auto genSwitches(string fileText)
         if (flagEndPos < 0)
             switchName = "$(SWNAME -%s)".format(flag);
         else
-            switchName = "$(SWNAME -%s)%s".format(flag[0..flagEndPos], flag[flagEndPos..$]);
+            switchName = "$(SWNAME -%s)%s".format(flag[0..flagEndPos], flag[flagEndPos..$].escapeDdoc);
 
         auto currentFlag = "$(SWITCH %s,\n
             %s
