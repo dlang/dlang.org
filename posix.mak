@@ -190,7 +190,7 @@ endif
 ################################################################################
 
 # stable dub and dmd versions used to build dpl-docs
-STABLE_DMD_VER=2.077.1
+STABLE_DMD_VER=2.078.2
 STABLE_DMD_ROOT=$(GENERATED)/stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD_BIN_ROOT=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))
