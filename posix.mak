@@ -284,6 +284,7 @@ DDOC_VARS_PRERELEASE_VERBATIM=$(DDOC_VARS_PRERELEASE) \
 ################################################################################
 
 DDOC_BIN:=$G/ddoc
+DDOC_BIN_DMD:=$(DDOC_BIN) --compiler=$(DMD)
 
 ################################################################################
 # Resources
@@ -464,16 +465,16 @@ dautotest: all verbatim pdf diffable-intermediaries
 # sub-directories before their parents.
 
 $W/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DDOC_BIN) | $(DMD)
-	$(DDOC_BIN) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
 
 $W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DDOC_BIN) | $(DMD)
-	$(DDOC_BIN) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
 
 $W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DDOC_BIN) | $(DMD)
-	$(DDOC_BIN) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
 $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN) --compiler=$(DMD) -Df$@ $(SPEC_DDOC) $<
+	$(DDOC_BIN_DMD) -Df$@ $(SPEC_DDOC) $<
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
@@ -482,19 +483,19 @@ $(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors_list.ddoc $
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
 
 $W/articles/%.html : articles/%.dd $(DDOC) $(DMD) $(DDOC_BIN) articles/articles.ddoc
-	$(DDOC_BIN) --compiler=$(DMD) -conf= -c -o- -Df$@ $(DDOC) $< articles/articles.ddoc
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $< articles/articles.ddoc
 
 $W/foundation/%.html : foundation/%.dd $(DDOC) $(DMD) $(DDOC_BIN) foundation/foundation.ddoc
-	$(DDOC_BIN) --compiler=$(DMD) -conf= -c -o- -Df$@ $(DDOC) $< foundation/foundation.ddoc
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $< foundation/foundation.ddoc
 
 $W/%.html : %.dd $(DDOC) $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN) --compiler=$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
-$W/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
+$W/%.verbatim : %_pre.dd verbatim.ddoc $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -c -o- -Df$@ verbatim.ddoc $<
 
-$W/%.verbatim : %.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
+$W/%.verbatim : %.dd verbatim.ddoc $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -c -o- -Df$@ verbatim.ddoc $<
 
 $W/%.php : %.php.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
@@ -515,7 +516,7 @@ $W/% : %
 	cp $< $@
 
 $W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DDOC_BIN)
-	$(DDOC_BIN) -Df$@ $(DDOC) dcompiler.dd $<
+	$(DDOC_BIN_DMD) -Df$@ $(DDOC) dcompiler.dd $<
 
 $W/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
@@ -530,8 +531,8 @@ $W:
 $G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
-$G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD)
-	$(DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
+$G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
 
 $G/dlangspec.zip : $G/dlangspec.html ebook.css
 	rm -f $@
@@ -553,8 +554,8 @@ $W/dlangspec.mobi : \
 $G/dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) --force $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
-$G/dlangspec.tex : $G/dlangspec-consolidated.d $(DMD) $(DDOC) spec/latex.ddoc $(NODATETIME)
-	$(DMD) -conf= -Df$@ $(DDOC) spec/latex.ddoc $(NODATETIME) $<
+$G/dlangspec.tex : $G/dlangspec-consolidated.d $(DDOC_BIN) $(DDOC) spec/latex.ddoc $(NODATETIME)
+	$(DDOC_BIN_DMD) -conf= -Df$@ $(DDOC) spec/latex.ddoc $(NODATETIME) $<
 
 # Run twice to fix multipage tables and \ref uses
 $W/dlangspec.pdf : $G/dlangspec.tex | $W
@@ -572,11 +573,11 @@ $W/dlangspec.html: $G/dlangspec.html | $W
 # Plaintext/verbatim generation - not part of the build, demo purposes only
 ################################################################################
 
-$G/dlangspec.txt : $G/dlangspec-consolidated.d $(DMD) macros.ddoc plaintext.ddoc
-	$(DMD) -conf= -Df$@ macros.ddoc plaintext.ddoc $<
+$G/dlangspec.txt : $G/dlangspec-consolidated.d $(DDOC_BIN) macros.ddoc plaintext.ddoc
+	$(DDOC_BIN_DMD) -conf= -Df$@ macros.ddoc plaintext.ddoc $<
 
-$G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DMD) verbatim.ddoc
-	$(DMD) -conf= -Df$@ verbatim.ddoc $<
+$G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DDOC_BIN) verbatim.ddoc
+	$(DDOC_BIN_DMD) -conf= -Df$@ verbatim.ddoc $<
 
 ################################################################################
 # Fetch the latest article from the official D blog
@@ -987,7 +988,7 @@ $G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 # It is currently only used for the specification pages
 ################################################################################
 
-$(DDOC_BIN): ddoc_preprocessor.d | $(STABLE_DMD)
+$(DDOC_BIN): ddoc_preprocessor.d | $(STABLE_DMD) $(DMD)
 	$(STABLE_RDMD) -version=DdocOptions --build-only -g -of$@ -I$(DMD_DIR)/src $<
 
 ################################################################################
