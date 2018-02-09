@@ -286,6 +286,9 @@ auto genSwitches(string fileText)
 {
     enum ddocKey = "$(CLI_SWITCHES";
     auto content = ddocKey ~ "\n";
+
+    bool[string] seen;
+
     foreach (option; Usage.options)
     {
         string flag = option.flag;
@@ -299,10 +302,21 @@ auto genSwitches(string fileText)
         highlightSpecialWords(flag, helpText);
         auto flagEndPos = flag.representation.countUntil("=", "$(", "<");
         string switchName;
+
+        string swNameMacro = "SWNAME";
+        // flags links should be unique
+        auto swKey = flag[0 .. flagEndPos < 0 ? $ : flagEndPos];
+        if (auto v = swKey in seen)
+        {
+            swNameMacro = "B";
+            swKey.writeln;
+        }
+        seen[swKey] = 1;
+
         if (flagEndPos < 0)
-            switchName = "$(SWNAME -%s)".format(flag);
+            switchName = "$(%s -%s)".format(swNameMacro, flag);
         else
-            switchName = "$(SWNAME -%s)%s".format(flag[0..flagEndPos], flag[flagEndPos..$].escapeDdoc);
+            switchName = "$(%s -%s)%s".format(swNameMacro, flag[0..flagEndPos], flag[flagEndPos..$].escapeDdoc);
 
         auto currentFlag = "$(SWITCH %s,\n
             %s
