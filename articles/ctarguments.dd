@@ -16,7 +16,7 @@ $(HEADERNAV_TOC)
         internals, but don't get confused - they don't have much in common with tuples that
         commonly exist in other languages. Sequences of values of different types that can be
         returned from functions are provided by $(PHOBOS typecons, .Tuple, std.typecons.Tuple).
-        Using term "tuple" to mean compile-time sequences is discouraged to avoid confusion, and if encountered
+        Using the term "tuple" to mean compile-time sequences is discouraged to avoid confusion, and if encountered
         should result in a $(LINK2 https://issues.dlang.org, documentation bug report).
     )
 
@@ -115,7 +115,7 @@ $(H2 $(LNAME2 available-operations, Available operations))
 
         $(P D's $(LINK2 spec/statement.html#ForeachStatement, foreach statement) has special
             semantics when iterating over compile-time sequences. It repeats the body of the loop
-            for each of the sequence elements, with the loop iteration "variable" becoming an alias
+            for each of the sequence elements, with the loop iteration symbol being an alias
             for each compile-time sequence element in turn.
         )
 
@@ -134,7 +134,6 @@ $(H2 $(LNAME2 available-operations, Available operations))
         }
 
         /* Prints:
-
         int
         string
         void()
@@ -172,7 +171,7 @@ $(H2 $(LNAME2 homogenous-sequences, Homogenous sequences))
 
     $(P An $(ALOCAL AliasSeq, AliasSeq) that consists of only type or value elements are
         commonly called "type sequences" or "value sequences" respectively. The concept of
-        a "symbol sequence" is rarely mentioned explicitly but fits the same pattern.
+        a "symbol sequence" is used less frequently but fits the same pattern.
     )
 
 $(H3 $(LNAME2 type-seq, Type sequences))
@@ -208,8 +207,8 @@ $(H4 $(LNAME2 type-seq-instantiation, Type sequence instantiation))
     alias variables = AliasSeq!(__var1, __var2, __var3);
     ---
 
-    $(P So a type sequence instance acts as a symbol sequence that only aliases
-    variables.)
+    $(P So a type sequence instance is a kind of symbol sequence that only aliases
+    variables, known as an $(I lvalue sequence).)
 
     $(P $(DDSUBLINK spec/template, variadic-templates, Variadic template functions)
     use a type sequence instance for a function parameter:)
@@ -229,20 +228,39 @@ $(H4 $(LNAME2 type-seq-instantiation, Type sequence instantiation))
 
 $(H3 $(LNAME2 value-seq, Value sequences))
 
-    $(P It is possible to use value sequences with values of the same type to declare array literals:)
+    $(P It is possible to use a sequence of values of the same type to declare an array literal:)
 
     ---
     import std.meta;
-    static assert ([ AliasSeq!(1, 2, 3) ] == [ 1, 2, 3 ]);
+    enum e = 3;
+    enum arr = [ AliasSeq!(1, 2, e) ];
+    static assert(arr == [ 1, 2, 3 ]);
     ---
+
+    $(P The above sequence is an $(I rvalue sequence), as it is comprised only of literal values
+    and manifest constants. Each element's value is known at compile-time.)
+
+    $(P The following demonstrates use of an $(I lvalue sequence):)
+    ---
+    import std.meta, std.algorithm;
+    auto x = 3, y = 7;
+    alias pair = AliasSeq!(x, y);
+    swap(pair);
+    assert(x == 7 && y == 3);
+    ---
+    $(P As above, such sequences may use $(ALOCAL assignment, assignment).)
+
+$(H4 $(LNAME2 tupleof, Aggregate field sequences))
+
+    $(P $(DDSUBLINK spec/class, class_properties, `.tupleof`) is a
+    class/struct instance property that provides an lvalue sequence
+    of each field.)
 
 $(H3 $(LNAME2 symbol-seq, Symbol sequences))
 
-    $(P $(DDSUBLINK spec/class, class_properties, `.tupleof`) is a
-    class/struct instance property that provides a symbol sequence
-    of fields.)
-
-)
+$(P A symbol sequence aliases any named symbol - types, variables, functions and templates -
+but not literals.
+Like an alias sequence, the kind of elements can be mixed.)
 
 Macros:
     TITLE=Compile-time Sequences
