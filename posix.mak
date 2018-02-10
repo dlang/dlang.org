@@ -479,7 +479,7 @@ $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
 
-$(DOC_OUTPUT_DIR)/contributors.html: contributors.dd $G/contributors_list.ddoc $(DDOC) $(DMD)
+$(DOC_OUTPUT_DIR)/foundation/contributors.html: foundation/contributors.dd $G/contributors_list.ddoc $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
 
 $W/articles/%.html : articles/%.dd $(DDOC) $(DMD) $(DDOC_BIN) articles/articles.ddoc
@@ -886,15 +886,14 @@ test_dspec: dspec_tester.d $(DMD) $(PHOBOS_LIB)
 	$(DMD) -run $< --compiler=$(DMD)
 
 .PHONY:
-test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
+test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all | $(STABLE_DMD)
 	@echo "Searching for trailing whitespace"
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
 	@echo "Searching for tabs"
 	@grep -n -P "\t" $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
-	@echo "Searching for undefined macros"
-	@grep -n "UNDEFINED MACRO" $$(find $W -type f -name "*.html" -not -path "$W/phobos/*") ; test $$? -eq 1
-	@echo "Searching for undefined ddoc"
-	@grep -n "[\$$]([^']" $$(find $W -type f -name "*.html" -not -path "$W/phobos/*") ; test $$? -eq 1
+	@echo "Checking DDoc's output"
+	$(STABLE_RDMD) -main -unittest check_ddoc.d
+	$(STABLE_RDMD) check_ddoc.d $$(find $W -type f -name "*.html" -not -path "$W/phobos/*")
 	@echo "Executing assert_writeln_magic tests"
 	$<
 	@echo "Executing next_version tests"
