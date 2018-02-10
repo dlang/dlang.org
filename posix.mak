@@ -819,14 +819,14 @@ ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 ################################################################################
 
 # testing menu generation
-chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
-chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
-chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
 ################################################################################
 # Dman tags
