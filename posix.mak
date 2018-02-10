@@ -836,10 +836,10 @@ d-latest.tag d-tags-latest.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-lat
 	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target latest
 
 d-release.tag d-tags-release.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
-	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target release
+	$(STABLE_RDMD) chmgen.d --root=$W --target release
 
 d-prerelease.tag d-tags-prerelease.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
-	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target prerelease
+	$(STABLE_RDMD) chmgen.d --root=$W --target prerelease
 
 ################################################################################
 # Assert -> writeln magic
