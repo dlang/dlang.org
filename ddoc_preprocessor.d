@@ -264,7 +264,7 @@ auto genChangelogVersion(string fileName, string fileText)
 {
     import std.regex;
     static re = regex(`^[0-9]\.[0-9][0-9][0-9](\.[0-9])?(_pre)?\.dd$`);
-    if (fileName.dirName.baseName == "changelog")
+    if (fileName.dirName.baseName == "changelog" || fileName.endsWith("chm-nav.dd"))
     {
         string macros = "\nCHANGELOG_VERSIONS=";
         macros ~= "$(CHANGELOG_VERSION_NIGHTLY)\n";
@@ -308,10 +308,7 @@ auto genSwitches(string fileText)
         // flags links should be unique
         auto swKey = flag[0 .. flagEndPos < 0 ? $ : flagEndPos];
         if (auto v = swKey in seen)
-        {
             swNameMacro = "B";
-            swKey.writeln;
-        }
         seen[swKey] = 1;
 
         if (flagEndPos < 0)
