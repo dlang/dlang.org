@@ -155,7 +155,7 @@ void print(...)
 
         $(P It isn't elegant or the most efficient,
         but it does work. However it is not the recommended way to write variadic functions.
-        (It relies on the parameters _argptr and _arguments imported from core.vararg
+        (It relies on the parameters `_argptr` and `_arguments` imported from `core.vararg`
         which give a pointer to the values and their types, respectively.)
         )
 
@@ -180,18 +180,19 @@ void print(T, A...)(T t, A a)
         $(P There are two function templates. The first provides the
         degenerate case of no arguments, and a terminus for the
         recursion of the second. The second has two arguments:
-        t for the first value and a for the rest of the values.
-        A... says the parameter is a tuple, and implicit function
-        template instantiation will fill in A with the list of
-        all the types following t. So, print(7, 'a', 6.8) will
-        fill in int for T, and a tuple (char, double) for A.
-        The parameter a becomes an expression tuple of the arguments.
+        `t` for the first value and `a` for any remaining values.
+        `A...` says the parameter is a sequence, and $(I implicit function
+        template instantiation) will fill in `A` with all the types of any 
+        arguments supplied following `t`. So, `print(7, 'a', 6.8)` will
+        fill in `int` for `T`, and a type sequence `(char, double)` for `A`.
+        The parameter `a` is an lvalue sequence of any
+        arguments supplied after `t`.
         )
 
-        $(P The function works by printing the first parameter t,
+        $(P The function works by printing the first parameter `t`,
         and then recursively calling itself with the remaining arguments
-        a. The recursion terminates when there are no longer any
-        arguments by calling print()().
+        `a`. The recursion terminates when there are no longer any
+        arguments by calling `print()()`.
         )
 
 $(H4 The Static If Solution)
@@ -213,18 +214,18 @@ void print(A...)(A a)
 }
 ---
 
-        $(P Tuples can be manipulated much like arrays.
-        So a.length resolves to the number of expressions
-        in the tuple a. a[0] gives the first expression
-        in the tuple. a[1 .. $] creates a new tuple
-        by slicing the original tuple.
+        $(P Sequences can be manipulated much like arrays.
+        So `a.length` resolves to the number of elements
+        in the sequence `a`. `a[0]` gives the first element
+        in the sequence. `a[1 .. $]` creates a new sequence
+        from any remaining elements in the original sequence.
         )
 
 $(H4 The Foreach Solution)
 
-        $(P But since tuples can be manipulated like arrays,
-        we can use a foreach statement to 'loop' over
-        the tuple's expressions:
+        $(P But since sequences can be manipulated like arrays,
+        we can use a `foreach` statement to iterate over
+        the sequence's elements:
         )
 
 ---
