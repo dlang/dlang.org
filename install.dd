@@ -1,0 +1,213 @@
+Ddoc
+
+
+$(D_S $(TITLE),
+
+$(H2 Introduction)
+
+The $(LINK2 https://dlang.org/install.sh, `dlang.org/install.sh`) script is the
+official D version manager for DMD, GDC and LDC on FreeBSD, Linux and macOS.
+It provides a convenient way to fetch and install a D compiler
+without requiring administrative privileges nor external dependencies.
+Its features include:
+
+$(UL
+ $(LI Maintaining one or more portable compiler installations in the user's home directory (`~/dlang`))
+ $(LI Maintaining the latest stable version of the D package manager, $(LINK2 http://code.dlang.org/docs/commandline, `dub`))
+ $(LI Self-updating via `~/dlang/install.sh update`)
+ $(LI Supporting nested activation of compilers. Activating a compiler
+      will setup the `PATH`, `LIBRARY_PATH`, `LD_LIBRARY_PATH`, `DMD`, `DC`, `PS1` environment variables,
+      and a `deactivate` command, which reverts the modified variables to their old values.)
+ $(LI Supporting the Fish shell, in addition to Bash-compatible shells.)
+ $(LI Verifying binary signatures via the $(LINK2 $(ROOT_DIR)gpg_keys.html,D keyring) (automatic if `gpg` is installed))
+ $(LI For `dmd`, installation of the following versions is supported:
+    $(UL
+        $(LI `dmd` - latest stable version)
+        $(LI `dmd-beta` - latest beta version)
+        $(LI `dmd-nightly` - the latest nightly release)
+        $(LI `dmd-<version>` - specific official release (including beta releases))
+        $(LI `dmd-branch` - experimental compiler branches)
+    )
+ )
+ $(LI For `ldc`, installation of the following versions is supported:
+    $(UL
+        $(LI `ldc` - latest stable version)
+        $(LI `ldc-beta` - latest beta version)
+        $(LI `ldc-<version>` - specific official release (including beta releases))
+    )
+ )
+ $(LI For `gdc`, installation of the following versions is supported:
+    $(UL
+        $(LI `gdc` - latest stable version)
+    )
+ )
+)
+
+$(H3 Content)
+
+$(UL
+    $(LI $(RELATIVE_LINK2 get, Downloading the installer))
+    $(LI $(RELATIVE_LINK2 usage, Usage))
+    $(UL
+        $(LI $(RELATIVE_LINK2 install, Installation))
+        $(LI $(RELATIVE_LINK2 uninstall, Uninstallation))
+        $(LI $(RELATIVE_LINK2 list, Listing available compilers))
+        $(LI $(RELATIVE_LINK2 update, Update))
+    )
+)
+
+$(H2 $(LNAME2 get, Downloading the installer))
+
+$(CONSOLE
+mkdir -p ~/dlang && wget https://dlang.org/install.sh -O ~/dlang/install.sh
+)
+
+Alternatively, the script can be invoked directly:
+
+$(CONSOLE
+curl https://dlang.org/install.sh | bash -s
+)
+
+$(P If no arguments are provided, the latest DMD compiler will be installed.)
+
+$(P The installer also makes a copy of itself at `~/dlang/install.sh`.)
+
+$(H2 $(LNAME2 usage, Usage))
+
+$(CONSOLE
+~/dlang/install.sh [&lt;command&gt;] [&lt;args&gt;]
+)
+
+$(UL
+    $(LI $(RELATIVE_LINK2 install, Installation))
+    $(LI $(RELATIVE_LINK2 uninstall, Uninstallation))
+    $(LI $(RELATIVE_LINK2 list, Listing available compilers))
+    $(LI $(RELATIVE_LINK2 update, Update))
+)
+
+$(H3 $(LNAME2 global_options, Global options))
+
+$(DL
+    $(DT
+        $(SWITCH $(SWNAME -p) $(SWNAME --path),
+            Changes the install location (default `~/dlang`))
+        $(SWITCH $(SWNAME -v),
+            Activates more verbose output)
+        $(SWITCH $(SWNAME -h),
+            Displays a help page)
+    )
+)
+
+$(H3 $(LNAME2 install, Install))
+
+$(CONSOLE
+~/dlang/install.sh install &lt;compiler&gt;
+)
+
+Download and install a D compiler.
+By default the latest release of the DMD compiler is selected.
+
+$(H4 Options)
+
+$(DL
+    $(DT
+        $(SWITCH $(SWNAME -a) $(SWNAME --active),
+            Only prints the path to the activate script)
+        $(SWITCH $(SWNAME dmd|ldc|gdc),
+            Installs the latest version of a compiler)
+        $(SWITCH $(SWNAME dmd|ldc|gdc-&lt;version&gt;),
+            Installs a specific version of a compiler (e.g. dmd-2.071.1, ldc-1.1.0-beta2))
+        $(SWITCH $(SWNAME dmd|ldc-beta),
+            Installs the latest beta version of a compiler)
+        $(SWITCH $(SWNAME dmd-nightly),
+            Installs DMD nightly)
+        $(SWITCH $(SWNAME dmd-2017-02-10),
+            Installs specific DMD nightly)
+    )
+)
+
+$(EXAMPLES
+~/dlang/install.sh
+~/dlang/install.sh dmd
+~/dlang/install.sh install dmd
+~/dlang/install.sh install dmd-2.071.1
+~/dlang/install.sh install ldc-1.1.0-beta2
+~/dlang/install.sh install dmd-beta
+~/dlang/install.sh install dmd-nightly
+)
+
+Once a compiler is installed, it can be activated for the current session.
+Run the respective `activate` script in a shell to use a compiler by default:
+
+$(CONSOLE
+source ~/dlang/&lt;installed-compiler&gt;/activate
+)
+
+This will setup the `PATH`, `LIBRARY_PATH`, `LD_LIBRARY_PATH`, `DMD`, `DC`,
+and `PS1` environment variables.
+It's also possible to combine this into one command:
+
+$(CONSOLE
+source $(DOLLAR)(~/dlang/install.sh dmd -a)
+)
+
+The activated compiler can be removed from the current session by restoring
+the previous environment:
+
+$(CONSOLE
+deactivate
+)
+
+Alternatively, it is also possible to call the compiler binary directly.
+Note that the exact path varies between the compiler vendors:
+
+$(CONSOLE
+~/dlang/&lt;installed-dmd-compiler&gt;/bin64/dmd
+~/dlang/&lt;installed-ldc-compiler&gt;/ldc2
+)
+
+Users of the $(LINK2 https://fishshell.com, Fish shell) can `activate.fish`:
+
+$(CONSOLE
+source ~/dlang/&lt;installed-compiler&gt;/activate.fish
+)
+
+
+$(H3 $(LNAME2 uninstall, Uninstall))
+
+Uninstall a D compiler.
+
+$(CONSOLE
+~/dlang/install.sh uninstall &lt;compiler&gt;
+)
+
+$(EXAMPLES
+~/dlang/install.sh uninstall dmd
+~/dlang/install.sh uninstall dmd-2.071.1
+~/dlang/install.sh uninstall ldc-1.1.0-beta2
+)
+
+$(H3 $(LNAME2 list, List))
+
+List all installed D compilers.
+
+$(CONSOLE
+~/dlang/install.sh list
+)
+
+$(H3 $(LNAME2 update, Update))
+
+Update the installer itself.
+
+$(CONSOLE
+~/dlang/install.sh update
+)
+
+)
+Macros:
+    TITLE=Install.sh script
+    SWNAME=$(LNAME2 switch$1, $(B $1))
+    SWLINK=$(LINK2 #switch$1, $(B $1))
+    SWITCH=$(DT $1)$(DD $+)
+    EXAMPLES=$(H4 Examples)$(CONSOLE $0)
+    SUBNAV=$(SUBNAV_CLI_REFERENCE)

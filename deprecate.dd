@@ -10,17 +10,18 @@ $(SPEC_S Deprecated Features,
 
     $(TABLE2 Deprecated Features,
         $(THEAD Feature,                                                          Spec,  Dep,    Error,  Gone)
+        $(TROW $(DEPLINK Hexstring literals),                                     2.079, 2.079, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Class allocators and deallocators),                      future, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Implicit comparison of different enums),                 2.075,  2.075, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Implicit string concatenation),                          2.072,  2.072, &nbsp;, &nbsp;)
-        $(TROW $(DEPLINK Using the result of a comma expression),                 2.072,  2.072,  &nbsp;, &nbsp;)
+        $(TROW $(DEPLINK Using the result of a comma expression),                 2.072,  2.072,  2.079, &nbsp;)
         $(TROW $(DEPLINK delete),                                                 future, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK scope for allocating classes on the stack),              future, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Imaginary and complex types),                            future, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Implicit catch statement),                               2.072, 2.072,  future, future )
         $(TROW $(DEPLINK .sort and .reverse properties for arrays),               ?,     2.072,  &nbsp;, 2.075)
         $(TROW $(DEPLINK C-style array pointers),                                 ?,     2.072;, &nbsp;, &nbsp;)
-        $(TROW $(DEPLINK Floating point NCEG operators),                          ?,     2.066,  2.072,  &nbsp;)
+        $(TROW $(DEPLINK Floating point NCEG operators),                          2.079, 2.066,  2.072,  &nbsp;)
         $(TROW $(DEPLINK clear),                                                  2.060, 2.066,  &nbsp;, 2.068 )
         $(TROW $(DEPLINK .min property for floating point types),                 N/A,   2.065,  2.067,  2.072 )
         $(TROW $(DEPLINK Cast T[] to integral type),                              ?,     2.060,  &nbsp;, 2.061 )
@@ -57,6 +58,23 @@ $(SPEC_S Deprecated Features,
         $(DD It is an error to use the feature)
         $(DT Gone)
         $(DD The feature is completely gone)
+    )
+
+$(H3 $(DEPNAME Hexstring literals))
+    $(P Hexstring literals can be used to enter literals in base 16.
+        ---
+        // deprecated code
+        // auto x = x"1234";
+        ---
+    )
+$(H4 Corrective Action)
+    $(P Use the $(REF hexString, std,conv) template.
+        ---
+        auto x = hexString!"1234";
+        ---
+    )
+$(H4 Rationale)
+    $(P Hexstrings are used so seldom that they don't warrant a language feature.
     )
 
 $(H3 $(DEPNAME Class allocators and deallocators))
@@ -233,7 +251,7 @@ $(H4 Rationale)
         foo((++a, b));
 
         synchronized (lockA, lockB) {}
-        // isn't currently implemented, but still compiles "thanks" to the comma operator
+        // isn't currently implemented, but still compiles due to the comma operator
         ---
     )
 
@@ -938,8 +956,8 @@ $(H4 Rationale)
 )
 
 Macros:
-	DEPLINK=$(RELATIVE_LINK2 $0, $0)
-	DEPLINK2=$(LINK2 $1.html#$2, $2)
-	DEPNAME=$(LNAME2 $0, $0)
-	TITLE=Deprecated Features
-	STDFILEREF = <a href="phobos/std_$1.html">$(D std.$1)</a>
+        DEPLINK=$(RELATIVE_LINK2 $0, $0)
+        DEPLINK2=$(LINK2 $1.html#$2, $2)
+        DEPNAME=$(LNAME2 $0, $0)
+        TITLE=Deprecated Features
+        STDFILEREF = <a href="phobos/std_$1.html">$(D std.$1)</a>

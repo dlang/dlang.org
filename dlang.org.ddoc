@@ -4,6 +4,9 @@ ACRONYM = <acronym title="$+">$1</acronym> ($+)
 ASSIGNEXPRESSION = $(GLINK2 expression, AssignExpression)
 _=
 
+$(COMMENT While not part of the spec, best practices offers advice on how to best use a feature)
+BEST_PRACTICE= $(P $(B Best Practices:) $0)
+
 BIGOH = $(SPANC bigoh, &Omicron;($(D $0)))
 BLOCKQUOTE = $(T blockquote, $(P $0))
 BLOCKQUOTE_BY = $(BLOCKQUOTE $+ $(T cite, $1))
@@ -12,6 +15,7 @@ BLUE=$(SPANC blue, $0)
 BODY_PREFIX=
 BOOKTABLE = $(TC table, book, $(T caption, $1)$+)
 BUGZILLA = $(SPANC bugzilla, $(AHTTPS issues.dlang.org/show_bug.cgi?id=$0, Bugzilla $0))
+BUGZILLA_NEW_BUG_URL=https://issues.dlang.org/enter_bug.cgi?bug_file_loc=http%3A%2F%2Fdlang.org/$(SELF_PATH)$(AMP)component=$(PROJECT)$(AMP)op_sys=All$(AMP)priority=P3$(AMP)product=D$(AMP)rep_platform=All$(AMP)short_desc=%5B$(TITLE)%5D$(AMP)version=D2
 _=
 
 CCODE=$(TC pre, ccode notranslate, $0)
@@ -47,7 +51,7 @@ COMPATIBILITY_BOX_EXPERIMENTAL = $(MESSAGE_BOX orange, $(B Experimental) - $0)
 _=
 
 CONSOLE=$(TC pre, console notranslate, $0)
-COPYRIGHT_FOUNDATION=Copyright &copy; 1999-$(YEAR) by the $(LINK2 $(ROOT_DIR)foundation.html, D Language Foundation)
+COPYRIGHT_FOUNDATION=Copyright &copy; 1999-$(YEAR) by the $(LINK2 $(ROOT_DIR)foundation_overview.html, D Language Foundation)
 CPPCODE=$(TC pre, cppcode notranslate, $0)
 CPPLISTING=$(CPPCODE $0)
 CROSS=&#x2718;
@@ -63,7 +67,7 @@ DDOC=
 <!--
     Copyright (c) 1999-$(YEAR) by the D Language Foundation
     All Rights Reserved.
-    https://dlang.org/foundation.html
+    https://dlang.org/foundation_overview.html
   -->
 <head>
 <meta charset="utf-8">
@@ -145,9 +149,13 @@ _=
 
 DBLOG_LATEST_AUTHOR=
 DBLOG_LATEST_DATE=
-DBLOG_LATEST_LINK=
+DBLOG_LATEST_LINK=https://dlang.org/blog
 DBLOG_LATEST_TITLE=
-DMDSRC=$(HTTPS github.com/dlang/dmd/blob/master/src/ddmd/$0, $0)
+DBLOG_LATEST_AUTHOR2=
+DBLOG_LATEST_DATE2=
+DBLOG_LATEST_LINK2=https://dlang.org/blog
+DBLOG_LATEST_TITLE2=
+DMDSRC=$(HTTPS github.com/dlang/dmd/blob/master/src/dmd/$0, $0)
 DOT_PREFIXED=.$1$(DOT_PREFIXED $+)
 DOT_PREFIXED_SKIP=$(DOT_PREFIXED $+)
 DRUNTIMESRC=$(HTTPS github.com/dlang/druntime/blob/master/src/$0, $0)
@@ -181,11 +189,21 @@ GT=&gt;
 _=
 
 HASH=#
+HEADERNAV_TOC=$(DIVC page-contents quickindex,
+    $(DIVC page-contents-header,
+        $(B Contents)
+    )
+    $(OL $0)
+)
+HEADERNAV_ITEM=$(LI $(RELATIVE_LINK2 $1, $+))
+HEADERNAV_SUBITEMS=$(LI $(RELATIVE_LINK2 $1, $2)$(OL $(MULTICOLS $+)))
 HTMLTAG3=<$1 $2>$(TAIL $+)</$1>
 HTMLTAG3V=<$1 $2>$(TAIL $+)
 HYPHENATE=hyphenate
 _=
 
+$(COMMENT Identifies implementation-defined behavior in the spec)
+IMPLEMENTATION_DEFINED=$(P $(B Implementation Defined): $0)
 ISEXPRESSION=$(GLINK2 expression, IsExpression)
 _=
 
@@ -220,9 +238,9 @@ MULTICOL_CELL=<td colspan="$1">$+</td>
 MULTICOL_HEADER=<th colspan="$1">$+</th>
 MULTICOLS=$+
 MULTIROW_HEADER=<th rowspan="$1">$+</th>
-MREF=<a href="$(PHOBOS_PATH)$1$(UNDERSCORE_PREFIXED $+).html">$(D $1$(DOT_PREFIXED $+))</a>
-MREF_ALTTEXT=<a href="$(PHOBOS_PATH)$2$(UNDERSCORE_PREFIXED_SKIP $+).html">$1</a>
-MREF1=<a href="$(PHOBOS_PATH)$1.html">$(D $1)</a>
+MREF=$(LINK2 $(PHOBOS_PATH)$1$(UNDERSCORE_PREFIXED $+).html, $(D $1$(DOT_PREFIXED $+)))
+MREF_ALTTEXT=$(LINK2 $(PHOBOS_PATH)$2$(UNDERSCORE_PREFIXED_SKIP $+).html, $1)
+MREF1=$(LINK2 $(PHOBOS_PATH)$1.html, $(D $1))
 _=
 
 
@@ -249,9 +267,10 @@ $(SUBMENU_MANUAL
     $(SUBMENU_LINK_DIVIDER https://github.com/dlang, GitHub)
     $(SUBMENU_LINK $(ROOT_DIR)bugstats.html, Issues)
     $(SUBMENU_LINK https://wiki.dlang.org/Get_involved, Get involved)
-    $(SUBMENU_LINK_DIVIDER $(ROOT_DIR)contributors.html, Contributors)
-    $(SUBMENU_LINK $(ROOT_DIR)foundation.html, Foundation)
-    $(SUBMENU_LINK $(ROOT_DIR)donate.html, Donate)
+    $(SUBMENU_LINK_DIVIDER $(ROOT_DIR)foundation/contributors.html, Contributors)
+    $(SUBMENU_LINK $(ROOT_DIR)foundation/index.html, Foundation)
+    $(SUBMENU_LINK $(ROOT_DIR)foundation/donate.html, Donate)
+    $(SUBMENU_LINK $(ROOT_DIR)foundation/sponsors.html, Sponsors)
 )
 NAVIGATION_DOCUMENTATION=
 $(SUBMENU_MANUAL
@@ -263,6 +282,7 @@ $(SUBMENU_MANUAL
 )
 NAVIGATION_RESOURCES=
 $(SUBMENU_MANUAL
+    $(SUBMENU_LINK https://tour.dlang.org, Tour)
     $(SUBMENU_LINK https://wiki.dlang.org/Books, Books)
     $(SUBMENU_LINK https://wiki.dlang.org/Tutorials, Tutorials)
     $(SUBMENU_LINK_DIVIDER https://wiki.dlang.org/Development_tools, Tools)
@@ -292,13 +312,13 @@ _=
 PAGE_TOOLS=
 $(DIVID tools, $(DIV,
 	$(DIVC tip smallprint,
-		$(HTMLTAG3 a, href="https://issues.dlang.org/enter_bug.cgi?bug_file_loc=http%3A%2F%2Fdlang.org/$(SELF_PATH)$(AMP)bug_severity=enhancement$(AMP)component=$(PROJECT)$(AMP)op_sys=All$(AMP)priority=P3$(AMP)product=D$(AMP)rep_platform=All$(AMP)short_desc=%5B$(TITLE)%5D$(AMP)version=D2", Report a bug)
+		$(HTMLTAG3 a, href="$(BUGZILLA_NEW_BUG_URL)$(AMP)bug_severity=enhancement", Report a bug)
 		$(DIV,
 			If you spot a problem with this page, click here to create a Bugzilla issue.
 		)
 	)
 	$(DIVC tip smallprint,
-		<a href="https://github.com/dlang/$(PROJECT)/edit/master/$(PROJECT_SOURCE_DIR)$(SRCFILENAME)">Improve this page</a>
+		<a href="https://github.com/dlang/$(PROJECT)/edit/master/$(PROJECT_SOURCE_DIR)$(SRC_FILENAME)">Improve this page</a>
 		$(DIV,
 			Quickly fork, edit online, and submit a pull request for this page.
 			Requires a signed-in GitHub account. This works well for small changes.
@@ -345,8 +365,8 @@ $(COMMENT
     The generated href will be "phobos/std_container_array.html#.Array.back"
     (the phobos path can be different, of course).
 )
-REF=<a href="$(PHOBOS_PATH)$2$(UNDERSCORE_PREFIXED_SKIP $+).html#.$1">$(D $2$(DOT_PREFIXED_SKIP $+, $1))</a>
-REF1=<a href="$(PHOBOS_PATH)$2.html#.$1">$(D $2)</a>
+REF=$(LINK2 $(PHOBOS_PATH)$2$(UNDERSCORE_PREFIXED_SKIP $+).html#.$1, $(D $2$(DOT_PREFIXED_SKIP $+, $1)))
+REF1=$(LINK2 $(PHOBOS_PATH)$2.html#.$1", $(D $1))
 _=
 
 $(COMMENT
@@ -358,8 +378,8 @@ $(COMMENT
     generates a link like this:
     <a href="phobos/std_container_array.html#.Array.back">the 'back' method</a>
 )
-REF_ALTTEXT=<a href="$(PHOBOS_PATH)$3$(UNDERSCORE_PREFIXED_SKIP2 $+).html#.$2">$1</a>
-REF1_ALTTEXT=<a href="$(PHOBOS_PATH)$3.html#.$2">$1</a>
+REF_ALTTEXT=$(LINK2 $(PHOBOS_PATH)$3$(UNDERSCORE_PREFIXED_SKIP2 $+).html#.$2, $1)
+REF1_ALTTEXT=$(LINK2 $(PHOBOS_PATH)$3.html#.$2", $1)
 _=
 
 $(COMMENT
@@ -417,6 +437,9 @@ SIMPLE_CHEATSHEET=$(TC table, simple-cheatsheet, $(T caption, Cheat Sheet) $0)
 _=
 
 SLASH_PREFIXED=/$1$(SLASH_PREFIXED $+)
+
+
+SRC_FILENAME=$(SRCFILENAME)
 STATIC=$(ROOT_DIR)$1
 SUBMENU=<ul class='expand-content'>$(SUBMENU2 $1,$+)</ul></li>
 SUBMENU2=<li><a href='$1'>$2</a></li>$(SUBMENU3 $+)
@@ -429,30 +452,46 @@ _=
 SUBNAV=
 SUBNAV_ARTICLES=
 $(SUBNAV_TEMPLATE
-    $(SUBNAV_HEAD Articles, $(ROOT_DIR)articles.html, overview)
+    $(SUBNAV_HEAD Articles, $(ROOT_DIR)articles/index.html, overview)
     $(UL $(SUBMENU2
-        $(ROOT_DIR)faq.html, FAQ,
-        $(ROOT_DIR)const-faq.html, const(FAQ),
-        $(ROOT_DIR)d-floating-point.html, Floating Point,
-        $(ROOT_DIR)warnings.html, Warnings,
-        $(ROOT_DIR)rationale.html, Rationale,
-        $(ROOT_DIR)builtin.html, Builtin Rationale,
-        $(ROOT_DIR)ctod.html, C to D,
-        $(ROOT_DIR)cpptod.html, C++ to D,
-        $(ROOT_DIR)pretod.html, C Preprocessor vs D,
-        $(ROOT_DIR)code_coverage.html, Code coverage analysis,
-        $(ROOT_DIR)exception-safe.html, Exception Safety,
-        $(ROOT_DIR)hijack.html, Hijacking,
-        $(ROOT_DIR)intro-to-datetime.html, Introduction to std.datetime,
-        $(ROOT_DIR)lazy-evaluation.html, Lazy Evaluation,
-        $(ROOT_DIR)migrate-to-shared.html, Migrating to Shared,
-        $(ROOT_DIR)mixin.html, Mixins,
-        $(ROOT_DIR)regular-expression.html, Regular Expressions,
-        $(ROOT_DIR)safed.html, SafeD,
-        $(ROOT_DIR)templates-revisited.html, Templates Revisited,
-        $(ROOT_DIR)ctarguments.html, Compile-time Argument Lists,
-        $(ROOT_DIR)variadic-function-templates.html, Variadic Templates,
-        $(ROOT_DIR)d-array-article.html, D Slices
+        $(ROOT_DIR)articles/faq.html, FAQ,
+        $(ROOT_DIR)articles/const-faq.html, const(FAQ),
+        $(ROOT_DIR)articles/d-floating-point.html, Floating Point,
+        $(ROOT_DIR)articles/warnings.html, Warnings,
+        $(ROOT_DIR)articles/rationale.html, Rationale,
+        $(ROOT_DIR)articles/builtin.html, Builtin Rationale,
+        $(ROOT_DIR)articles/ctod.html, C to D,
+        $(ROOT_DIR)articles/cpptod.html, C++ to D,
+        $(ROOT_DIR)articles/pretod.html, C Preprocessor vs D,
+        $(ROOT_DIR)articles/code_coverage.html, Code coverage analysis,
+        $(ROOT_DIR)articles/exception-safe.html, Exception Safety,
+        $(ROOT_DIR)articles/hijack.html, Hijacking,
+        $(ROOT_DIR)articles/intro-to-datetime.html, Introduction to std.datetime,
+        $(ROOT_DIR)articles/lazy-evaluation.html, Lazy Evaluation,
+        $(ROOT_DIR)articles/migrate-to-shared.html, Migrating to Shared,
+        $(ROOT_DIR)articles/mixin.html, Mixins,
+        $(ROOT_DIR)articles/regular-expression.html, Regular Expressions,
+        $(ROOT_DIR)articles/safed.html, SafeD,
+        $(ROOT_DIR)articles/templates-revisited.html, Templates Revisited,
+        $(ROOT_DIR)articles/ctarguments.html, Compile-time Argument Lists,
+        $(ROOT_DIR)articles/variadic-function-templates.html, Variadic Templates,
+        $(ROOT_DIR)articles/d-array-article.html, D Slices,
+        $(ROOT_DIR)articles/cppcontracts.html, D's Contract Programming,
+        $(ROOT_DIR)articles/template-comparison.html, Template Comparison,
+        $(ROOT_DIR)articles/dll-linux.html, Writing Shared Libraries
+    ))
+)
+SUBNAV_FOUNDATION=
+$(SUBNAV_TEMPLATE
+    $(SUBNAV_HEAD Foundation, $(ROOT_DIR)foundation/index.html, overview)
+    $(UL $(SUBMENU2
+        $(ROOT_DIR)foundation/about.html, About the Foundation,
+        $(ROOT_DIR)foundation/donate.html, Donate,
+        $(ROOT_DIR)foundation/upb-scholarship.html, Scholarships,
+        https://wiki.dlang.org/GSOC_2018_Ideas, GSoC 2018 Ideas,
+        https://dconf.org, DConf,
+        $(ROOT_DIR)foundation/sponsors.html, Sponsors,
+        $(ROOT_DIR)foundation/contributors.html, Contributors,
     ))
 )
 
@@ -474,6 +513,7 @@ $(SUBNAV_TEMPLATE
         $(ROOT_DIR)dmd-osx.html, dmd (OSX),
         $(ROOT_DIR)dmd-freebsd.html, dmd (FreeBSD),
         $(ROOT_DIR)rdmd.html, rdmd,
+        $(ROOT_DIR)install.html, install.sh,
         $(ROOT_DIR)htod.html, htod
     ))
 )
@@ -497,11 +537,10 @@ TR2=$(TR $1 $2)
 TR3=$(TR $1 $2 $3)
 TROW=$(TR $(TDX $1, $+))
 TROW_EXPLANATORY=<td colspan="10">$0</td>
-TWID_LATEST_DATE=
-TWID_LATEST_LINK=
-TWID_LATEST_TITLE=
 _=
 
+$(COMMENT Identifies undefined-defined behavior in the spec)
+UNDEFINED_BEHAVIOR=$(P $(B Undefined Behavior): $0)
 UNDERSCORE=_
 UNDERSCORE_PREFIXED=_$1$(UNDERSCORE_PREFIXED $+)
 UNDERSCORE_PREFIXED_SKIP=$(UNDERSCORE_PREFIXED $+)

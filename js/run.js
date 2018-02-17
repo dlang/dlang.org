@@ -117,13 +117,14 @@ var backends = {
       if (data.success === "undefined") {
         return null;
       }
-      r.cout = data.success === false ? data.output : "";
-      r.stdout = data.success === true ? data.output : "";
-      r.stderr = "";
+      var success = !(data.errors && data.errors.length > 0);
+      r.cout = !success ? data.output : "";
+      r.stdout = success ? data.output : "";
+      r.stderr = !success ? data.output : "";
       r.ctime = "";
       r.rtime = "";
-      r.cstatus = data.errors.length === 0 ? 0 : 1;
-      r.rstatus = data.success === true ? 0 : 1;
+      r.cstatus = success ? 0 : 1;
+      r.rstatus = 0; // not supported
       r.cerr = "";
       r.rerr = "";
       r.defaultOutput = data.output || opts.defaultOutput;

@@ -93,6 +93,7 @@
 #       test                    Runs several sanity checks
 #       clean                   Removes the .generated folder
 #       diffable-intermediaries Adds intermediary PDF/eBook files to the output, useful for diffing
+#       dautotest               Special target called by the DAutoTestCI and deployment
 #
 #  Ddoc vs. Ddox
 #  --------------
@@ -127,6 +128,7 @@
 #  See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
 PWD=$(shell pwd)
 MAKEFILE=$(firstword $(MAKEFILE_LIST))
+SHELL:=/bin/bash
 
 # Latest released version
 ifeq (,${LATEST})
@@ -139,11 +141,13 @@ PHOBOS_DIR=../phobos
 DRUNTIME_DIR=../druntime
 TOOLS_DIR=../tools
 INSTALLER_DIR=../installer
+DUB_DIR=../dub
 
 include $(DMD_DIR)/src/osmodel.mak
 
 # External binaries
 DMD=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)/dmd
+PHOBOS_LIB=$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)/dmd/libphobos2.a
 
 # External directories
 DOC_OUTPUT_DIR:=$(PWD)/web
@@ -153,12 +157,14 @@ DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
 TMP?=/tmp
+GENERATED=.generated
+G=$(GENERATED)
 
 # Last released versions
-DMD_LATEST_DIR=${DMD_DIR}-${LATEST}
+DMD_LATEST_DIR=$G/dmd-${LATEST}
 DMD_LATEST=$(DMD_LATEST_DIR)/generated/$(OS)/release/$(MODEL)/dmd
-DRUNTIME_LATEST_DIR=${DRUNTIME_DIR}-${LATEST}
-PHOBOS_LATEST_DIR=${PHOBOS_DIR}-${LATEST}
+DRUNTIME_LATEST_DIR=$G/druntime-${LATEST}
+PHOBOS_LATEST_DIR=$G/phobos-${LATEST}
 
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
@@ -166,8 +172,6 @@ $(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(D
 
 ################################################################################
 # Automatically generated directories
-GENERATED=.generated
-G=$(GENERATED)
 PHOBOS_DIR_GENERATED=$(GENERATED)/phobos-prerelease
 PHOBOS_LATEST_DIR_GENERATED=$(GENERATED)/phobos-latest
 # The assert_writeln_magic tool transforms all source files from Phobos. Hence
@@ -186,7 +190,7 @@ endif
 ################################################################################
 
 # stable dub and dmd versions used to build dpl-docs
-STABLE_DMD_VER=2.077.1
+STABLE_DMD_VER=2.078.2
 STABLE_DMD_ROOT=$(GENERATED)/stable_dmd-$(STABLE_DMD_VER)
 STABLE_DMD_URL=http://downloads.dlang.org/releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER).$(OS).zip
 STABLE_DMD_BIN_ROOT=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))
@@ -196,17 +200,15 @@ STABLE_RDMD=$(STABLE_DMD_BIN_ROOT)/rdmd --compiler=$(STABLE_DMD) -conf=$(STABLE_
 DUB=$(STABLE_DMD_BIN_ROOT)/dub
 
 # exclude lists
-# keep the ddmd excludes during the ddmd -> dmd transition
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
-	gc. rt. core.internal. core.stdc.config core.sys. \
-	std.algorithm.internal std.c. std.concurrencybase std.internal. std.regex.internal. \
-	std.windows.iunknown std.windows.registry etc.linux.memoryerror \
-	std.experimental.ndslice.internal std.stdiobase \
+	core.internal. core.stdc.config core.sys. \
+	std.algorithm.internal std.c. std.internal. std.regex.internal. \
+	std.windows.registry etc.linux.memoryerror \
 	std.typetuple \
-	tk. msvc_dmc msvc_lib \
-	ddmd.libmach ddmd.libmscoff ddmd.objc_glue \
-	ddmd.scanmach ddmd.scanmscoff \
-	dmd.libmach dmd.libmscoff dmd.objc_glue \
+	msvc_dmc msvc_lib \
+	dmd.libmach dmd.libmscoff \
+	dmd.scanmach dmd.scanmscoff \
+	dmd.libmach dmd.libmscoff \
 	dmd.scanmach dmd.scanmscoff)
 
 MOD_EXCLUDES_LATEST=$(MOD_EXCLUDES_PRERELEASE)
@@ -238,7 +240,7 @@ ifeq (1,$(DIFFABLE))
 else
  CHANGELOG_VERSION_MASTER := "v${LATEST}..upstream/master"
  CHANGELOG_VERSION_STABLE := "v${LATEST}..upstream/stable"
- DBLOG_LATEST=$G/dblog_latest.ddoc $G/twid_latest.ddoc
+ DBLOG_LATEST=$G/dblog_latest.ddoc $G/dblog_latest2.ddoc
 endif
 
 ################################################################################
@@ -262,20 +264,27 @@ DDOC_VARS_RELEASE_HTML= \
 	DOCSRC="$(PWD)" \
 	VERSION="$(abspath ${DMD_DIR}/VERSION)"
 
-DDOC_VARS= \
+DDOC_VARS_PRERELEASE= \
 	DMD="$(abspath ${DMD})" \
 	DMD_DIR="$(abspath ${DMD_DIR})" \
 	DRUNTIME_PATH="$(abspath ${DRUNTIME_DIR})" \
 	DOCSRC="$(PWD)" \
-	VERSION="$(abspath ${DMD_DIR}/VERSION)"
+	VERSION="$(abspath $G/changelog/next-version)"
 
-DDOC_VARS_HTML=$(DDOC_VARS) \
+DDOC_VARS_PRERELEASE_HTML=$(DDOC_VARS_PRERELEASE) \
 	DOC_OUTPUT_DIR="$W/phobos-prerelease" \
 	STDDOC="$(addprefix $(PWD)/, $(STD_DDOC_PRERELEASE))"
 
-DDOC_VARS_VERBATIM=$(DDOC_VARS) \
+DDOC_VARS_PRERELEASE_VERBATIM=$(DDOC_VARS_PRERELEASE) \
 	DOC_OUTPUT_DIR="$W/phobos-prerelease-verbatim" \
 	STDDOC="$(PWD)/verbatim.ddoc"
+
+################################################################################
+# Ddoc binaries
+################################################################################
+
+DDOC_BIN:=$G/ddoc
+DDOC_BIN_DMD:=$(DDOC_BIN) --compiler=$(DMD)
 
 ################################################################################
 # Resources
@@ -289,9 +298,9 @@ IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 	d002.ico \
 	$(addprefix compiler-, dmd.png gdc.svg ldc.png) \
 	$(addsuffix .svg, icon_minus icon_plus hamburger dlogo faster-aa-1 faster-gc-1 \
-		dconf_logo_2017 qualifier-combinations qualifier-conversions) \
+		qualifier-combinations qualifier-conversions) \
 	$(addsuffix .png, archlinux_logo apple_logo centos_logo chocolatey_logo \
-		d3 debian_logo dlogo fedora_logo freebsd_logo gentoo_logo homebrew_logo \
+		d3 dconf_logo_2018 debian_logo dlogo fedora_logo freebsd_logo gentoo_logo homebrew_logo \
 		opensuse_logo ubuntu_logo windows_logo pattern github-ribbon \
 		dlogo_opengraph \
 		$(addprefix ddox/, alias class enum enummember function \
@@ -321,9 +330,7 @@ CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
 
-PREMADE=appendices.html articles.html fetch-issue-cnt.php howtos.html \
-	language-reference.html robots.txt .htaccess .dpl_rewrite_map.txt \
-	d-keyring.gpg
+PREMADE=fetch-issue-cnt.php robots.txt .htaccess .dpl_rewrite_map.txt d-keyring.gpg
 
 # Language spec root filenames. They have extension .dd in the source
 # and .html in the generated HTML. These are also used for the mobi
@@ -338,30 +345,42 @@ SPEC_ROOT=$(addprefix spec/, \
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
-ifndef RELEASE
+ifneq (1,$(RELEASE))
  CHANGELOG_FILES+=changelog/pending
 endif
+
+MAN_PAGE=docs/man/man1/dmd.1
+
+ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
+		cpptod ctarguments ctod d-array-article d-floating-point \
+		exception-safe faq hijack intro-to-datetime lazy-evaluation \
+		migrate-to-shared mixin pretod rationale regular-expression \
+		safed templates-revisited variadic-function-templates warnings \
+		cppcontracts template-comparison dll-linux \
+	)
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage \
-	articles ascii-table bugstats builtin \
-	$(CHANGELOG_FILES) code_coverage community comparison concepts \
-	const-faq contributors cppcontracts cpptod ctarguments ctod donate \
-	D1toD2 d-array-article d-floating-point deprecate dlangupb-scholarship dll-linux dmd \
-	dmd-freebsd dmd-linux dmd-osx dmd-windows documentation download dstyle \
-	exception-safe faq forum-template foundation gpg_keys glossary \
-	gsoc2011 gsoc2012 gsoc2012-template hijack howto-promote htod index \
-	intro-to-datetime lazy-evaluation menu migrate-to-shared mixin \
-	orgs-using-d overview pretod rationale rdmd regular-expression resources safed \
-	search template-comparison templates-revisited tuple \
-	variadic-function-templates warnings wc windbg
+PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
+	ascii-table bugstats $(CHANGELOG_FILES) community comparison concepts \
+	D1toD2 deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
+	documentation download dstyle forum-template gpg_keys glossary \
+	gsoc2011 gsoc2012 gsoc2012-template howto-promote htod index install \
+	menu orgs-using-d overview rdmd resources search tuple wc windbg \
+	$(addprefix foundation/, index about donate sponsors upb-scholarship)
+
+# The contributors listing is dynamically generated
+ifneq (1,$(DIFFABLE))
+ifneq (1,$(RELEASE))
+ PAGES_ROOT+=foundation/contributors
+endif
+endif
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
 
 ALL_FILES_BUT_SITEMAP = $(addprefix $W/, $(TARGETS) \
-$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT))
+$(PREMADE) $(STYLES) $(IMAGES) $(JAVASCRIPT) $(MAN_PAGE))
 
 ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 
@@ -371,7 +390,7 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 
 all : docs html
 
-ifdef RELEASE
+ifeq (1,$(RELEASE))
 release : html dmd-release druntime-release phobos-release d-release.tag
 endif
 
@@ -405,22 +424,18 @@ ${GENERATED}/${LATEST}.ddoc :
 
 ${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
 	mkdir -p $(dir $@)
-	# Keep during the ddmd -> dmd transition
-	DMD_SRC_NAME=$$(if [ -d $(DMD_LATEST_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi) && \
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_LATEST) \
-		$(addprefix --dump , object std etc core) --dump "$${DMD_SRC_NAME}" >$@
+		$(addprefix --dump , object std etc core) --dump dmd >$@
 
 ${GENERATED}/modlist-release.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
-	DMD_SRC_NAME=$$(if [ -d $(DMD_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi) && \
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_RELEASE) \
-		$(addprefix --dump , object std etc core) --dump "$${DMD_SRC_NAME}" >$@
+		$(addprefix --dump , object std etc core) --dump dmd >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
-	DMD_SRC_NAME=$$(if [ -d $(DMD_DIR)/src/ddmd ] ; then echo "ddmd" ; else echo "dmd"; fi) && \
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
-		$(addprefix --dump , object std etc core) --dump "$${DMD_SRC_NAME}" >$@
+		$(addprefix --dump , object std etc core dmd rt) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
@@ -431,7 +446,6 @@ rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
 	rm -rf $W ${GENERATED} dpl-docs/.dub dpl-docs/dpl-docs
-	@echo You should issue manually: rm -rf ${DMD_LATEST_DIR} ${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_DIR} ${STABLE_DMD_ROOT}
 
 RSYNC_FILTER=-f 'P /Usage' -f 'P /.dpl_rewrite*' -f 'P /install.sh*'
 
@@ -441,6 +455,8 @@ rsync : all kindle pdf
 rsync-only :
 	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $W/ $(REMOTE_DIR)/
 
+dautotest: all verbatim pdf diffable-intermediaries
+
 ################################################################################
 # Pattern rulez
 ################################################################################
@@ -448,32 +464,38 @@ rsync-only :
 # NOTE: Depending on the version of make, order matters here. Therefore, put
 # sub-directories before their parents.
 
-$W/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+$W/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DDOC_BIN) | $(DMD)
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
 
-$W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
+$W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DDOC_BIN) | $(DMD)
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
 
-$W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
+$W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DDOC_BIN) | $(DMD)
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
 
-$W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD)
-	$(DMD) -c -o- -Df$@ $(SPEC_DDOC) $<
+$W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -Df$@ $(SPEC_DDOC) $<
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
 
-$(DOC_OUTPUT_DIR)/contributors.html: contributors.dd contributors_list.ddoc $(DDOC) $(DMD)
+$(DOC_OUTPUT_DIR)/foundation/contributors.html: foundation/contributors.dd $G/contributors_list.ddoc $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
 
-$W/%.html : %.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
+$W/articles/%.html : articles/%.dd $(DDOC) $(DMD) $(DDOC_BIN) articles/articles.ddoc
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $< articles/articles.ddoc
 
-$W/%.verbatim : %_pre.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
+$W/foundation/%.html : foundation/%.dd $(DDOC) $(DMD) $(DDOC_BIN) foundation/foundation.ddoc
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $< foundation/foundation.ddoc
 
-$W/%.verbatim : %.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc $<
+$W/%.html : %.dd $(DDOC) $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $<
+
+$W/%.verbatim : %_pre.dd verbatim.ddoc $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -c -o- -Df$@ verbatim.ddoc $<
+
+$W/%.verbatim : %.dd verbatim.ddoc $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -c -o- -Df$@ verbatim.ddoc $<
 
 $W/%.php : %.php.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
@@ -493,8 +515,8 @@ $W/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) dcompiler.dd $<
+$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -Df$@ $(DDOC) dcompiler.dd $<
 
 $W/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
@@ -507,10 +529,10 @@ $W:
 ################################################################################
 
 $G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
-	$(STABLE_RDMD) ../tools/catdoc.d -o$@ $(SPEC_DD)
+	$(STABLE_RDMD) $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
-$G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD)
-	$(DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
+$G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
 
 $G/dlangspec.zip : $G/dlangspec.html ebook.css
 	rm -f $@
@@ -530,10 +552,10 @@ $W/dlangspec.mobi : \
 ################################################################################
 
 $G/dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
-	$(STABLE_RDMD) --force ../tools/catdoc.d -o$@ $(SPEC_DD)
+	$(STABLE_RDMD) --force $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
-$G/dlangspec.tex : $G/dlangspec-consolidated.d $(DMD) $(DDOC) latex.ddoc
-	$(DMD) -conf= -Df$@ $(DDOC) latex.ddoc $<
+$G/dlangspec.tex : $G/dlangspec-consolidated.d $(DDOC_BIN) $(DDOC) spec/latex.ddoc $(NODATETIME)
+	$(DDOC_BIN_DMD) -conf= -Df$@ $(DDOC) spec/latex.ddoc $(NODATETIME) $<
 
 # Run twice to fix multipage tables and \ref uses
 $W/dlangspec.pdf : $G/dlangspec.tex | $W
@@ -551,35 +573,43 @@ $W/dlangspec.html: $G/dlangspec.html | $W
 # Plaintext/verbatim generation - not part of the build, demo purposes only
 ################################################################################
 
-$G/dlangspec.txt : $G/dlangspec-consolidated.d $(DMD) macros.ddoc plaintext.ddoc
-	$(DMD) -conf= -Df$@ macros.ddoc plaintext.ddoc $<
+$G/dlangspec.txt : $G/dlangspec-consolidated.d $(DDOC_BIN) macros.ddoc plaintext.ddoc
+	$(DDOC_BIN_DMD) -conf= -Df$@ macros.ddoc plaintext.ddoc $<
 
-$G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DMD) verbatim.ddoc
-	$(DMD) -conf= -Df$@ verbatim.ddoc $<
+$G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DDOC_BIN) verbatim.ddoc
+	$(DDOC_BIN_DMD) -conf= -Df$@ verbatim.ddoc $<
 
 ################################################################################
 # Fetch the latest article from the official D blog
 ################################################################################
 
-$G/dblog_latest.ddoc:
+$G/dblog_latest.html:
 	@echo "Receiving the latest DBlog article. Disable with DIFFABLE=1"
-	curl -s --retry 3 --retry-delay 5 -L http://blog.dlang.org | grep -m1 'entry-title' | \
-		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time>.*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE=\2|DBLOG_LATEST_LINK=\1|DBLOG_LATEST_DATE=\3|DBLOG_LATEST_AUTHOR=\4/' | \
-		tr '|' '\n' > $@
+	curl -s --fail --retry 3 --retry-delay 5 -L https://blog.dlang.org -o $@
 
-$G/twid_latest.ddoc:
-	@echo "Receiving the latest TWID article. Disable with DIFFABLE=1"
-	curl -s --retry 3 --retry-delay 5 http://arsdnet.net/this-week-in-d/twid_latest.dd > $@
+$G/dblog_latest.ddoc: $G/dblog_latest.html
+	cat $< | grep -m1 'entry-title' | \
+		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE=\2|DBLOG_LATEST_LINK=\1|DBLOG_LATEST_DATE=\3|DBLOG_LATEST_AUTHOR=\4/' | \
+		tr '|' '\n' > $@
+	@if [ ! -s $@ ] ; then echo "$@ is empty. Please check the download"; rm -f $@; exit 1 ; fi
+	cat $< | grep -m2 'entry-title' | tail -n1 | \
+		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE2=\2|DBLOG_LATEST_LINK2=\1|DBLOG_LATEST_DATE2=\3|DBLOG_LATEST_AUTHOR2=\4/' | \
+		tr '|' '\n' > $(basename $@)2.ddoc
+	@if [ ! -s $(basename $@)2.ddoc ] ; then echo "$(basename $@)2.ddoc is empty. Please check the download"; rm -f $(basename $@)2.ddoc; exit 1 ; fi
+
+$G/dblog_latest2.ddoc: $G/dblog_latest.ddoc
 
 ################################################################################
 # Git rules
 ################################################################################
 
-../%-${LATEST} :
+# Clone snapshots of the latest official release of all main D repositories
+$G/%-${LATEST} :
 	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
 
-${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR}:
-	git clone --depth=1 ${GIT_HOME}/$(notdir $(@F)) $@
+# Clone all main D repositories
+${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR} ${DUB_DIR}:
+	git clone ${GIT_HOME}/$(notdir $(@F)) $@
 
 ${DMD_DIR}/VERSION : ${DMD_DIR}
 
@@ -593,20 +623,20 @@ $(DMD) : ${DMD_DIR}
 $(DMD_LATEST) : ${DMD_LATEST_DIR}
 	${MAKE} --directory=${DMD_LATEST_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
-dmd-latest : $(STD_DDOC_LATEST) $(DMD_LATEST_DIR) $(DMD_LATEST)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
+dmd-prerelease : $(STD_DDOC_PRERELEASE) druntime-target $G/changelog/next-version
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
 
-dmd-release : $(STD_DDOC_RELEASE) $(DMD_DIR) #$(DMD)
+dmd-release : $(STD_DDOC_RELEASE) druntime-target
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
 
-dmd-prerelease : $(STD_DDOC_PRERELEASE) $(DMD_DIR) $(DMD)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_HTML)
+dmd-latest : $(STD_DDOC_LATEST) druntime-latest-target
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
 
-dmd-prerelease-verbatim : $(STD_DDOC_PRERELEASE) $(DMD_DIR) \
+dmd-prerelease-verbatim : $(STD_DDOC_PRERELEASE) druntime-target \
 		$W/phobos-prerelease/mars.verbatim
-$W/phobos-prerelease/mars.verbatim: verbatim.ddoc
+$W/phobos-prerelease/mars.verbatim: verbatim.ddoc $G/changelog/next-version
 	mkdir -p $(dir $@)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_VERBATIM)
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM)
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
 	mv $W/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r $W/phobos-prerelease-verbatim
@@ -616,25 +646,31 @@ $W/phobos-prerelease/mars.verbatim: verbatim.ddoc
 # TODO: remove DOCDIR and DOCFMT once they have been removed at Druntime
 ################################################################################
 
-druntime-prerelease : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_PRERELEASE)
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_HTML) \
+druntime-target: ${DRUNTIME_DIR} ${DMD}
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target ${DDOC_VARS_PRERELEASE_HTML}
+
+druntime-latest-target: ${DRUNTIME_LATEST_DIR} ${DMD_LATEST}
+	${MAKE} --directory=${DRUNTIME_LATEST_DIR} -f posix.mak target ${DDOC_VARS_LATEST_HTML}
+
+druntime-prerelease : druntime-target $(STD_DDOC_PRERELEASE) $G/changelog/next-version
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak doc $(DDOC_VARS_PRERELEASE_HTML) \
 		DOCDIR=$W/phobos-prerelease \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_PRERELEASE))"
 
-druntime-release : ${DRUNTIME_DIR} $(DMD) $(STD_DDOC_RELEASE)
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_RELEASE_HTML) \
+druntime-release : druntime-target $(STD_DDOC_RELEASE)
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak doc $(DDOC_VARS_RELEASE_HTML) \
 		DOCDIR=$W/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_RELEASE))"
 
-druntime-latest : ${DRUNTIME_LATEST_DIR} $(DMD_LATEST) $(STD_DDOC_LATEST)
-	${MAKE} --directory=${DRUNTIME_LATEST_DIR} -f posix.mak target doc $(DDOC_VARS_LATEST_HTML) \
+druntime-latest : druntime-latest-target $(STD_DDOC_LATEST)
+	${MAKE} --directory=${DRUNTIME_LATEST_DIR} -f posix.mak doc $(DDOC_VARS_LATEST_HTML) \
 		DOCDIR=$W/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_LATEST))"
 
-druntime-prerelease-verbatim : ${DRUNTIME_DIR} \
+druntime-prerelease-verbatim : druntime-target \
 		$W/phobos-prerelease/object.verbatim
-$W/phobos-prerelease/object.verbatim : $(DMD)
-	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_VERBATIM) \
+$W/phobos-prerelease/object.verbatim : $(DMD) $G/changelog/next-version
+	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_PRERELEASE_VERBATIM) \
 		DOCDIR=$W/phobos-prerelease-verbatim \
 		DOCFMT="`pwd`/verbatim.ddoc"
 	mkdir -p $(dir $@)
@@ -647,26 +683,28 @@ $W/phobos-prerelease/object.verbatim : $(DMD)
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_FILES_GENERATED} $(STD_DDOC_PRERELEASE) druntime-prerelease
-	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_HTML)
+phobos-prerelease : ${PHOBOS_FILES_GENERATED} druntime-target $(STD_DDOC_PRERELEASE)
+	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
 
-phobos-release : ${PHOBOS_FILES_GENERATED} $(DMD) $(STD_DDOC_RELEASE) \
-		druntime-release dmd-release
+phobos-release : ${PHOBOS_FILES_GENERATED} druntime-target $(STD_DDOC_RELEASE)
 	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
 
-phobos-latest : ${PHOBOS_LATEST_FILES_GENERATED} $(DMD_LATEST) $(STD_DDOC_LATEST) \
-		druntime-latest dmd-latest
+phobos-latest : ${PHOBOS_LATEST_FILES_GENERATED} druntime-latest-target $(STD_DDOC_LATEST)
 	$(MAKE) --directory=$(PHOBOS_LATEST_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
 
-phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} $W/phobos-prerelease/index.verbatim
+phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} druntime-target \
+		$W/phobos-prerelease/index.verbatim
 $W/phobos-prerelease/index.verbatim : verbatim.ddoc \
 		$W/phobos-prerelease/object.verbatim \
-		$W/phobos-prerelease/mars.verbatim
-	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak html $(DDOC_VARS_VERBATIM) \
+		$W/phobos-prerelease/mars.verbatim $G/changelog/next-version
+	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM) \
 	  DOC_OUTPUT_DIR=$W/phobos-prerelease-verbatim
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
 	mv $W/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r $W/phobos-prerelease-verbatim
+
+$(PHOBOS_LIB): $(DMD)
+	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak lib
 
 ################################################################################
 # phobos and druntime, latest released build and current build (DDOX version)
@@ -701,22 +739,26 @@ $W/library-prerelease/.htaccess : dpl_prerelease_htaccess
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-DMD_EXCLUDE =
+# Can be removed after 2.079.0 (2018-03-01) (see https://github.com/dlang/dmd/pull/7567 for details)
+DMD_EXCLUDE_LATEST = -e /mscoff/d
 ifeq (osx,$(OS))
- DMD_EXCLUDE += -e /scanelf/d -e /libelf/d
+ DMD_EXCLUDE_LATEST += -e /scanelf/d -e /libelf/d
 else
- DMD_EXCLUDE += -e /scanmach/d -e /libmach/d
+ DMD_EXCLUDE_LATEST += -e /scanmach/d -e /libmach/d
 endif
 
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 			${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_FILES_GENERATED} | dpl-docs
+	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
+	if [ -f $(DMD_LATEST_DIR)/src/*/objc_glue_stubs.d ] ; then \
+	   DMD_EXCLUDE_LATEST_BASH="-e /objc_glue.d/d"; \
+	fi; \
 	find ${DMD_LATEST_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE} \
-			> $G/.latest-files.txt
+		sed -e /mscoff/d $${DMD_EXCLUDE_LATEST_BASH} ${DMD_EXCLUDE_LATEST}
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
 	find ${PHOBOS_LATEST_DIR_GENERATED} -name '*.d' | \
-		sed -e /unittest.d/d -e /windows/d | sort >> $G/.latest-files.txt
+		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
 	${DMD_LATEST} -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
 		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
 		-Xf$@ -I${PHOBOS_LATEST_DIR_GENERATED} @$G/.latest-files.txt
@@ -724,18 +766,18 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 		--only-documented $(MOD_EXCLUDES_LATEST)
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
-# DDox tries to generate the docs for all `.d` files. However for dmd this is tricky,
-# because the `{mach, elf, mscoff}` are platform dependent.
-# Thus the need to exclude these files (and the `objc_glue.d` file).
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		${PHOBOS_FILES_GENERATED} | dpl-docs
+	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
+	if [ -f $(DMD_DIR)/src/*/objc_glue_stubs.d ] ; then \
+	   DMD_EXCLUDE_PRERELEASE="-e /objc_glue.d/d"; \
+	fi; \
 	find ${DMD_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d -e /objc_glue.d/d ${DMD_EXCLUDE} \
-			> $G/.prerelease-files.txt
-	find ${DRUNTIME_DIR}/src -name '*.d' | sed -e '/gcstub/d' \
-		-e /unittest/d >> $G/.prerelease-files.txt
-	find ${PHOBOS_DIR_GENERATED} -name '*.d' | sed -e /unittest.d/d \
-		-e /windows/d | sort >> $G/.prerelease-files.txt
+		sed -e /mscoff/d $${DMD_EXCLUDE_PRERELEASE} > $G/.prerelease-files.txt
+	find ${DRUNTIME_DIR}/src -name '*.d' | \
+		sed -e /unittest/d >> $G/.prerelease-files.txt
+	find ${PHOBOS_DIR_GENERATED} -name '*.d' | \
+		sed -e /unittest.d/d | sort >> $G/.prerelease-files.txt
 	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
 		-version=StdDdoc -Df$G/.prerelease-dummy.html \
 		-Xf$@ -I${PHOBOS_DIR_GENERATED} @$G/.prerelease-files.txt
@@ -756,7 +798,7 @@ endif
 
 .PHONY: dpl-docs
 dpl-docs: ${DUB} ${STABLE_DMD}
-	DFLAGS="$(DPL_DOCS_DFLAGS)" ${DUB} build --root=${DPL_DOCS_PATH} \
+	DFLAGS="$(DPL_DOCS_DFLAGS)" ${DUB} -v build --root=${DPL_DOCS_PATH} \
 		--compiler=${STABLE_DMD}
 
 # .tar.xz's archives are smaller (and don't need a temporary dir) -> prefer if available
@@ -777,14 +819,14 @@ ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 ################################################################################
 
 # testing menu generation
-chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
-chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
-chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD),$^)
+chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
 ################################################################################
 # Dman tags
@@ -794,10 +836,10 @@ d-latest.tag d-tags-latest.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-lat
 	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target latest
 
 d-release.tag d-tags-release.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
-	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target release
+	$(STABLE_RDMD) chmgen.d --root=$W --target release
 
 d-prerelease.tag d-tags-prerelease.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
-	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target prerelease
+	$(STABLE_RDMD) chmgen.d --root=$W --target prerelease
 
 ################################################################################
 # Assert -> writeln magic
@@ -815,12 +857,12 @@ ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
 
 $(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB) $(STABLE_DMD)
 	@mkdir -p $(dir $@)
-	$(DUB) build --single --compiler=$(STABLE_DMD) $<
+	$(DUB) -v build --single --compiler=$(STABLE_DMD) $<
 	@mv ./assert_writeln_magic $@
 
 $(ASSERT_WRITELN_BIN)_test: assert_writeln_magic.d $(DUB) $(STABLE_DMD)
 	@mkdir -p $(dir $@)
-	$(DUB) build --single --compiler=$(STABLE_DMD) --build=unittest $<
+	$(DUB) -v build --single --compiler=$(STABLE_DMD) --build=unittest $<
 	@mv ./assert_writeln_magic $@
 
 $(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
@@ -839,18 +881,19 @@ $(PHOBOS_LATEST_FILES_GENERATED): $(PHOBOS_LATEST_DIR_GENERATED)/%: $(PHOBOS_LAT
 # Style tests
 ################################################################################
 
-test_dspec: dspec_tester.d $(STABLE_DMD)
-	# Temporarily allows failures, see https://github.com/dlang/dlang.org/pull/2006
+test_dspec: dspec_tester.d $(DMD) $(PHOBOS_LIB)
 	@echo "Test the D Language specification"
-	-DMD=$(DMD_LATEST) $(STABLE_RDMD) $<
+	$(DMD) -run $< --compiler=$(DMD)
 
-test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all
+.PHONY:
+test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all | $(STABLE_DMD)
 	@echo "Searching for trailing whitespace"
-	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd") ; test $$? -eq 1
-	@echo "Searching for undefined macros"
-	@grep -n "UNDEFINED MACRO" $$(find $W -type f -name "*.html" -not -path "$W/phobos/*") ; test $$? -eq 1
-	@echo "Searching for undefined ddoc"
-	@grep -rn '[$$](' $$(find $W/phobos-prerelease -type f -name "*.html") ; test $$? -eq 1
+	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
+	@echo "Searching for tabs"
+	@grep -n -P "\t" $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
+	@echo "Checking DDoc's output"
+	$(STABLE_RDMD) -main -unittest check_ddoc.d
+	$(STABLE_RDMD) check_ddoc.d $$(find $W -type f -name "*.html" -not -path "$W/phobos/*")
 	@echo "Executing assert_writeln_magic tests"
 	$<
 	@echo "Executing next_version tests"
@@ -899,19 +942,22 @@ LOOSE_CHANGELOG_FILES:=$(wildcard $(DMD_DIR)/changelog/*.dd) \
 				$(wildcard $(DRUNTIME_DIR)/changelog/*.dd) \
 				$(wildcard $(PHOBOS_DIR)/changelog/*.dd) \
 				$(wildcard $(TOOLS_DIR)/changelog/*.dd) \
-				$(wildcard $(INSTALLER_DIR)/changelog/*.dd)
+				$(wildcard $(INSTALLER_DIR)/changelog/*.dd) \
+				$(wildcard $(DUB_DIR)/changelog/*.dd)
 
 $G/changelog/next-version: ${DMD_DIR}/VERSION
 	$(eval NEXT_VERSION:=$(shell changelog/next_version.sh ${DMD_DIR}/VERSION))
 	@mkdir -p $(dir $@)
 	@echo $(NEXT_VERSION) > $@
 
-changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
+changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
+							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
 	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_STABLE) -o $@ --version "${NEXT_VERSION}" \
 		--date "To be released"
 
-changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | ${STABLE_DMD} ../tools ../installer
+changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
+							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
 	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_MASTER) -o $@ --version "${NEXT_VERSION}" \
 		--date "To be released"
@@ -927,15 +973,41 @@ prerelease_changelog: changelog/prerelease.dd html
 # Contributors listing: A list of all the awesome who made D possible
 ################################################################################
 
-.PHONY: update_contributors
-update_contributors:
-	rm -f contributors_list.ddoc
-	$(MAKE) -f $(MAKEFILE) contributors_list.ddoc
-
-contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
+$G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 	$(STABLE_RDMD) $(TOOLS_DIR)/contributors.d --format=ddoc "master" > $G/contributors_list.tmp
 	echo "NR_D_CONTRIBUTORS=$$(wc -l < $G/contributors_list.tmp)" > $@
 	echo "D_CONTRIBUTORS=" >> $@
 	cat $G/contributors_list.tmp >> $@
+
+################################################################################
+# Custom DDoc wrapper
+# ------------------
+#
+# This allows extending Ddoc files dynamically on-the-fly.
+# It is currently only used for the specification pages
+################################################################################
+
+$(DDOC_BIN): ddoc_preprocessor.d | $(STABLE_DMD) $(DMD)
+	$(STABLE_RDMD) -version=DdocOptions --build-only -g -of$@ -I$(DMD_DIR)/src $<
+
+################################################################################
+# Build and render the DMD man page
+# ---------------------------------
+#
+# This allows previewing changes to the automatically generated DMD man page
+################################################################################
+
+$(DMD_DIR)/generated/$(MAN_PAGE): $(DMD_DIR)/docs/gen_man.d $(DMD_DIR)/src/dmd/cli.d | ${STABLE_DMD}
+	${MAKE} -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) build
+
+$W/$(MAN_PAGE): $(DMD_DIR)/generated/$(MAN_PAGE) | ${STABLE_DMD}
+	mkdir -p $(dir $@)
+	cp $< $@
+	# CircleCi + nightlies.dlang.org might not have `man` installed
+	if [ $(OS) != "osx" ] -a [ command -v man > /dev/null ] ; then \
+		${MAKE} -s -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) preview > $(dir $@)dmd.txt; \
+	fi
+
+man: $W/$(MAN_PAGE)
 
 .DELETE_ON_ERROR: # GNU Make directive (delete output files on error)

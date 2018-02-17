@@ -135,7 +135,22 @@ ubyte asciiChar;
 -------------------------------
     )
 
+    $(DT $(LNAME2 naming_udas, User-Defined Attributes))
+    $(DD For symbols that are only to be used as user-defined attributes the
+         names should be camelCased, so their first letter is lowercase. This
+         convention takes precedence over any previously mentioned conventions.
+         This matches conventions of the built in attributes like `@safe`,
+         `@nogc` and the special compiler recognized UDA `@selector`.
 
+-------------------------------
+struct Foo {} // this struct follows the regular naming conventions
+
+// this struct is only intended to be used as an UDA and therefore overrides the
+// regular naming conventions for structs
+struct name { string value; }
+@name("bar") Foo foo;
+-------------------------------
+    )
 )
 
 $(H3 $(LNAME2 type_aliases, Type Aliases))
@@ -378,6 +393,38 @@ class MyClass
     double y;
 }
 -------------------------------
+)
+
+$(LISTSECTION phobos_documentation, Documentation,
+    $(LI Every public symbol should be exposed in the documentation:)
+---
+/// A public symbol
+enum myFancyConstant;
+---
+    $(LI Every public function should have a Ddoc description and documented
+    `Params:` and `Returns:` sections (if applicable):)
+---
+/**
+Checks whether a number is positive.
+`0` isn't considered as positive number.
+
+Params:
+    number = number to be checked
+
+Returns: `true` if the number is positive, `0` otherwise.
+
+See_Also: $(LREF isNegative)
+*/
+bool isPositive(int number)
+{
+    return number > 0;
+}
+---
+    $(LI Text in sections (e.g. `Params:`, `Returns:`, `See_Also`) should be indented by one level if it spans more than the line of the section.)
+    $(LI Documentation comments should not use more than two stars `/**` or two pluses `/++` in the header line.)
+    $(LI Either Block comments (`/**`) or nesting block comments (`/++`) should be used except when the ddoc comment is a ditto comment such as `/// Ditto`)
+    $(LI Documentation comments should not have leading stars on each line.)
+    $(LI Text example blocks should use three dashes (`---`) only.)
 )
 
 $(BR)
