@@ -323,7 +323,7 @@ STYLES=$(addsuffix .css, $(addprefix css/, \
 
 DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME) $(DBLOG_LATEST)
 STD_DDOC_LATEST=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
-STD_DDOC_RELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-release) $(NODATETIME)
+STD_DDOC_RELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release) $(NODATETIME)
 STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
 SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
@@ -391,7 +391,7 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 all : docs html
 
 ifeq (1,$(RELEASE))
-release : html dmd-release druntime-release phobos-release d-release.tag
+release : html dmd-release druntime-release phobos-release
 endif
 
 docs-latest: dmd-latest druntime-latest phobos-latest apidocs-latest
@@ -425,11 +425,6 @@ ${GENERATED}/${LATEST}.ddoc :
 ${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) modlist.d $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_LATEST) \
-		$(addprefix --dump , object std etc core) --dump dmd >$@
-
-${GENERATED}/modlist-release.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
-	mkdir -p $(dir $@)
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_RELEASE) \
 		$(addprefix --dump , object std etc core) --dump dmd >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
@@ -822,9 +817,6 @@ ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
-chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
-
 chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
@@ -834,9 +826,6 @@ chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-p
 
 d-latest.tag d-tags-latest.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
 	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target latest
-
-d-release.tag d-tags-release.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
-	$(STABLE_RDMD) chmgen.d --root=$W --target release
 
 d-prerelease.tag d-tags-prerelease.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
 	$(STABLE_RDMD) chmgen.d --root=$W --target prerelease
