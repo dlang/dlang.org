@@ -585,6 +585,9 @@ string absoluteUrl(string base, string url)
     while (urlSegments.startsWith([`..`]))
     {
         urlSegments = urlSegments[1..$];
+        enforce(pathSegments.length,
+            "Attempting to escape site root (dereferencing %s from %s)"
+            .format(url, base));
         pathSegments = pathSegments[0..$-1];
     }
     return (pathSegments ~ urlSegments).join(`/`);
