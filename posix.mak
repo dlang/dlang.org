@@ -833,7 +833,7 @@ chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-p
 ################################################################################
 
 d-latest.tag d-tags-latest.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
-	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target latest
+	$(STABLE_RDMD) chmgen.d --root=$W --target latest
 
 d-release.tag d-tags-release.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
 	$(STABLE_RDMD) chmgen.d --root=$W --target release
