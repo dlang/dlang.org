@@ -1,0 +1,1609 @@
+Ddoc
+
+$(CHANGELOG_NAV_LAST 2.078.3)
+
+$(VERSION Feb 18, 2018, =================================================,
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 comma-deprecation-error,The deprecation period of using the result of comma expression has ended))
+$(LI $(RELATIVE_LINK2 default_after_variadic,Function parameters with default values are now allowed after variadic template parameters))
+$(LI $(RELATIVE_LINK2 deprecate_delete,The `delete` keyword has been deprecated.))
+$(LI $(RELATIVE_LINK2 deprecation-dylib,The deprecation period of the `-dylib` flag on OSX has ended. Use `-shared`))
+$(LI $(RELATIVE_LINK2 disabled-trait,A compiler trait used to detect if a function is marked with `@disable` has been added.))
+$(LI $(RELATIVE_LINK2 fix17630,Fix Issue 17630 - selective imports find symbols in private imports of other modules))
+$(LI $(RELATIVE_LINK2 fix17899,Fix issue 17899 - Allow delegates to be initialised at compile time))
+$(LI $(RELATIVE_LINK2 fix18053,Fix Issue 18053 - mangle long/ulong as int64_t/uint64_t))
+$(LI $(RELATIVE_LINK2 fix18219,Fix Issue 18219 - Private import inside struct leaks symbols when used as VarDeclaration types))
+$(LI $(RELATIVE_LINK2 fix18361,Fix issue 18361 - Ddoc ability to opt-out of automatic keyword highlighting in running text))
+$(LI $(RELATIVE_LINK2 fix8207,D ABI change on Win32 and OSX targets))
+$(LI $(RELATIVE_LINK2 hexstrings,HexString literals are deprecated.))
+$(LI $(RELATIVE_LINK2 includeimports,Added the -i command line option to automatically include imports))
+$(LI $(RELATIVE_LINK2 json_includes,Added `-Xi=<name>` to include more fields in the JSON output))
+$(LI $(RELATIVE_LINK2 lambdacomp,Lambda comparison using __traits(isSame, ...)))
+$(LI $(RELATIVE_LINK2 minimal_runtime,Using D with no/minimal/custom runtime implementation in a pay-as-you-go fashion))
+$(LI $(RELATIVE_LINK2 multi_module_selective_imports,Allow multiple selective imports from different modules in a single import statement))
+$(LI $(RELATIVE_LINK2 osx-10_9,macOS deployment target was increased to 10.9))
+$(LI $(RELATIVE_LINK2 private,Deprecate the use of selectively imported private members))
+$(LI $(RELATIVE_LINK2 ptr-safe-end-of-deprecation,`.ptr` on arrays can no longer be used in `@safe` code))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 core-memory-__delete,`core.memory.__delete` has been added))
+$(LI $(RELATIVE_LINK2 lazy-gc-init,the garbage collector is now lazily initialized on first use))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 compile-time-format-optimized,`std.format` with strings passed during compile-time has been optimized))
+$(LI $(RELATIVE_LINK2 fix18397,Changed `std.conv.hexString` to return an immutable string literal))
+$(LI $(RELATIVE_LINK2 nullable-class,`Nullable!C.nullify` no longer calls .destroy when `C` is a class or interface))
+$(LI $(RELATIVE_LINK2 std-algorithm-iteration-substitute,`std.algorithm.searching.substitute` was added))
+$(LI $(RELATIVE_LINK2 std-bigint-divmod,`divMod` was added to std.bigint.))
+$(LI $(RELATIVE_LINK2 std-bigint-getDigit,`getDigit` Was Added To `std.bigint`))
+$(LI $(RELATIVE_LINK2 std-exception-enforce,std.exception.enforce can now be used as an eponymous template to create your own enforce function))
+$(LI $(RELATIVE_LINK2 std-experimental-allocator-rciallocator,Replace `std.experimental.allocator.IAllocator` with `std.experimental.allocator.RCIAllocator`))
+$(LI $(RELATIVE_LINK2 std-experimental-allocator-rcisharedallocator,Replace `std.experimental.allocator.ISharedAllocator` with `std.experimental.allocator.RCISharedAllocator`))
+$(LI $(RELATIVE_LINK2 std-experimental-scripting,`import std.experimental.scripting` as a global convenience import))
+$(LI $(RELATIVE_LINK2 std-file-readText,readText now checks BOMs))
+$(LI $(RELATIVE_LINK2 std-parallelism-fold,`fold` is added to `std.parallelism.TaskPool`))
+$(LI $(RELATIVE_LINK2 std-range-nullsink,`nullSink` was added to `std.range`))
+$(LI $(RELATIVE_LINK2 std-range-slide,`std.range.slide` (a fixed-size sliding window range) was added))
+$(LI $(RELATIVE_LINK2 std-string-strip,`std.string.strip` now accepts a string of characters to be stripped))
+$(LI $(RELATIVE_LINK2 std-traits-issomestring,isSomeString and isNarrowString are now `false` for enums))
+$(LI $(RELATIVE_LINK2 toString,`toString` Can Now Use Output Ranges))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 comma-deprecation-error,The deprecation period of using the result of comma expression has ended)
+$(P
+Comma expressions have proven to be a frequent source of confusion, and bugs.
+Using their result will now trigger an error message.
+)
+
+$(P
+$(P The comma operator (`,`) allows executing multiple expressions and
+    discards the result of them except for the last which is returned.
+)
+
+    ---
+    int a = 1;
+    int b = 2;
+    bool ret = a == 2, b == 2; // true
+    ---
+
+$(P
+    It's also common to use the comma operator in for-loop increment
+    statements to allow multiple expressions.
+)
+
+    ---
+    for (; !a.empty && !b.empty; a.popFront, b.popFront)
+    ---
+
+$(P
+    Hence, using the comma operator in for-loop increment statements is still allowed.
+)
+$(H4 Corrective Action)
+$(P If possible, split the comma operator in two statements. Otherwise use
+    lambdas.
+)
+
+    ---
+    auto result = foo(), bar();
+
+    // split off in two statements
+    foo();
+    auto result = bar();
+
+    // or use lambdas
+    auto result = {foo(); return bar();}();
+    ---
+$(P
+)
+$(H4 Rationale)
+$(P The comma operator leads to unintended behavior (see below for a selection)
+    Moreover it is not commonly used and it blocks the ability to implement tuples
+    as a language features using commas.
+)
+
+$(P
+    A selection of problems through the accidental use of the comma operator:
+)
+    ---
+    writeln( 6, mixin("7,8"), 9 ); // 6, 8, 9
+
+    template vec(T...)(T args) { ... }
+    vec v = (0, 0, 3); // 3, because vec is variadic
+
+    int a = 0;
+    int b = 2;
+    if (a == 1, b == 2) {
+        // will always be reached
+    }
+
+    void foo(int x, int y=0) {}
+    foo((a, b)); // Oops, foo is called with x=b
+
+    synchronized (lockA, lockB) {}
+    // isn't currently implemented, but still compiles due to the comma operator
+    ---
+$(P
+)
+)
+)
+
+$(LI $(LNAME2 default_after_variadic,Function parameters with default values are now allowed after variadic template parameters)
+$(P
+Function parameters with default values are now allowed after variadic template parameters
+and when IFTI is used, always take their default values.
+This allows using special tokens (eg `__FILE__`) after variadic parameters, which was previously impossible.
+)
+
+$(P
+For example:
+)
+
+---
+string log(T...)(T a, string file = __FILE__, int line = __LINE__)
+{
+  return text(file, ":", line, " ", a);
+}
+
+assert(log(10, "abc") == text(__FILE__, ":", __LINE__, " 10abc"));
+---
+
+$(P
+This should be preferred to the previous workaround, which causes a new template instantiation
+for every invocation:
+)
+---
+string log(string file = __FILE__, int line = __LINE__, T...)(T a);
+---
+)
+
+$(LI $(LNAME2 deprecate_delete,The `delete` keyword has been deprecated.)
+$(P
+See the $(LINK2 $(ROOT_DIR)deprecate.html#delete, Deprecated Features) for more information.
+)
+
+$(P
+Starting with this release, using the `delete` keyword will result in a deprecation warning.
+)
+
+$(P
+As a replacement, users are encouraged to use $(REF1 destroy, object)
+if feasible, or $(REF __delete, core,memory) as a last resort.
+)
+)
+
+$(LI $(LNAME2 deprecation-dylib,The deprecation period of the `-dylib` flag on OSX has ended. Use `-shared`)
+$(P
+The deprecation period of the `-dylib` flag on OSX has ended.
+)
+
+$(P
+$(CONSOLE dmd -dylib awesome_d_library.d)
+)
+
+$(P
+Use the `-shared` flag to generate a shared library:
+)
+
+$(P
+$(CONSOLE dmd -shared awesome_d_library.d)
+)
+)
+
+$(LI $(LNAME2 disabled-trait,A compiler trait used to detect if a function is marked with `@disable` has been added.)
+$(P
+Prior to this release is was impossible to filter out `@disable` functions without
+using `__trait(compiles)`, which was less than ideal since `false` could be
+returned for other reasons.
+)
+
+$(P
+Now, in metaprogramming code, `@disable` functions can be detected accurately,
+using `__traits(isDisabled)` and even in overload sets:
+)
+
+---
+module runnable;
+
+struct Foo
+{
+    import std.stdio;
+    @disable static void foo() {__PRETTY_FUNCTION__.writeln;}
+    static void foo(int v) {__PRETTY_FUNCTION__.writeln;}
+    static void bar() {__PRETTY_FUNCTION__.writeln;}
+    @disable static void bar(int v) {__PRETTY_FUNCTION__.writeln;}
+}
+
+void test(T)()
+{
+    foreach (member; __traits(allMembers, T))
+        foreach (overload; __traits(getOverloads, T, member))
+            static if (!__traits(isDisabled, overload))
+    {
+        static if (is(typeof(&overload) == void function()))
+            overload();
+        else static if (is(typeof(&overload) == void function(int)))
+            overload(42);
+    }
+}
+
+void main(){test!Foo;}
+---
+
+$(P
+prints:
+)
+
+$(P
+$(CONSOLE
+void runnable.Foo.foo(int v)
+void runnable.Foo.bar()
+)
+)
+)
+
+$(LI $(LNAME2 fix17630,Fix Issue 17630 - selective imports find symbols in private imports of other modules)
+$(P
+Selectively importing a symbol should work only if the symbol
+imported is defined or publicly imported in the imported module.
+Due to a compiler bug, selectively importing a symbol works even
+if the symbol is defined in a privately imported module in the
+imported module.
+)
+-----------------------------------------------------------
+//a.d
+int bar;
+
+//b.d
+import a;
+
+//c.d
+import b : bar;
+------------------------------------------------------------
+$(P
+The above code will now result in a deprecation message
+which states that `bar` cannot be accessed since it is
+privately imported in `b`.
+)
+)
+
+$(LI $(LNAME2 fix17899,Fix issue 17899 - Allow delegates to be initialised at compile time)
+$(P
+delegates may now be initialised at module scope. This changes the effect of the fix for 13259 (turning the ICE that resulted into an error) making the follow legal:
+)
+---
+void delegate() bar = (){};
+---
+
+$(P
+The function pointer is set to the function of the delegate, the context pointer is set to null.
+)
+)
+
+$(LI $(LNAME2 fix18053,Fix Issue 18053 - mangle long/ulong as int64_t/uint64_t)
+$(P
+This is a breaking change (on OSX 64).
+)
+
+$(P
+Due to the erratic implementation defined behavior of C++ name mangling, it was
+difficult to get D's long/ulong to portably match up with the corresponding
+C++ compiler.
+)
+
+$(P
+By instead relying on how the corresponding C++ compiler mangled int64_t/uint64_t
+it makes the C++ side of the D<=>C++ interface much simpler.
+)
+
+$(P
+For the current platforms dmd supports, only the OSX 64 bit mangling changes. In
+this case from 'm' to 'y'.
+)
+
+$(P
+Note:
+    int64_t and uint64_t are defined in stdint.h
+)
+)
+
+$(LI $(LNAME2 fix18219,Fix Issue 18219 - Private import inside struct leaks symbols when used as VarDeclaration types)
+$(P
+When implementing a struct which has a local private import
+the imported symbols are leaked if present in a VarDeclaration statement. For more information and examples see : https://issues.dlang.org/show_bug.cgi?id=18219
+)
+
+$(P
+Symbols from the private import should not visible outside the
+struct scope. A deprecation is now issued when such cases are
+encountered
+)
+)
+
+$(LI $(LNAME2 fix18361,Fix issue 18361 - Ddoc ability to opt-out of automatic keyword highlighting in running text)
+$(P
+Currently, ddoc automatically highlights all occurrences of words in running
+text that coincide with the symbol or module being documented, or a parameter
+name of a function being documented.  While convenient, it often caused
+unintended highlighting of normal words in text when module, function, or
+parameter identifiers coincide with normal words.  This led to a proliferation
+of prefixing words with `_` in order to suppress this behaviour.
+)
+
+$(P
+Now a better solution has been implemented to completely opt-out of this
+feature via the `DDOC_AUTO_PSYMBOL`, `DDOC_AUTO_KEYWORD`, and `DDOC_AUTO_PARAM`
+macros, which are used for all such automatically-highlighted words in running
+text. Occurrences of module, function, or parameter names inside code blocks
+are not included. By default, these macros simply redirect to `DDOC_PSYMBOL`,
+`DDOC_KEYWORD`, and `DDOC_PARAM`, but the user can now redefine these macros so
+that they simply expand to the word itself without any highlighting:
+)
+
+----
+DDOC_AUTO_PSYMBOL = $0
+DDOC_AUTO_KEYWORD = $0
+DDOC_AUTO_PARAM = $0
+----
+
+$(P
+Furthermore, whenever a word is prefixed with `_` to suppress automatic
+highlighting, it is now wrapped in the `DDOC_AUTO_PSYMBOL_SUPPRESS` macro. This
+is to provide users who wish to opt out of automatic highlighting an easy way
+to find all occurrences of these underscore prefixes so that they can be
+removed from the text.  For example, they can redefine this macro to something
+highly-visible and easily searched for, such as:
+)
+
+----
+DDOC_AUTO_PSYMBOL_SUPPRESS = FIXME_UNDERSCORE_PREFIX $0
+----
+
+$(P
+and then search the generated documentation for the string
+`FIXME_UNDERSCORE_PREFIX` and delete the `_` prefix from all corresponding
+parts of the documentation comment text.
+)
+)
+
+$(LI $(LNAME2 fix8207,D ABI change on Win32 and OSX targets)
+$(P
+The compiler has been updated to prefix all `extern(D)` symbols with an extra
+underscore where the platform expects one on all external symbols. This allows
+compiled code to work better with binutil programs, such as the ability to list
+symbols demangled inside a debugger.
+)
+
+$(P
+This is an ABI breaking change and requires recompiling libraries.
+)
+)
+
+$(LI $(LNAME2 hexstrings,HexString literals are deprecated.)
+$(P
+$(LINK2 http://dlang.org/spec/lex.html#HexString, HexString literals) are deprecated.
+Use $(LINK2 https://dlang.org/phobos/std_conv.html#hexString, `std.conv.hexString`) instead.
+)
+)
+
+$(LI $(LNAME2 includeimports,Added the -i command line option to automatically include imports)
+$(P
+Added the command line option -i which causes the compiler to treat imported modules as if they were given on the command line.  The option also accepts "module patterns" that include/exclude modules based on their name.  For example, the following will include all modules whose names start with `foo`, except for those that start with `foo.bar`:
+)
+
+$(P
+$(CONSOLE dmd -i=foo -i=-foo.bar)
+)
+
+$(P
+The option -i by itself is equivalent to:
+)
+
+$(P
+$(CONSOLE dmd -i=-std,-core,-etc,-object)
+)
+)
+
+$(LI $(LNAME2 json_includes,Added `-Xi=<name>` to include more fields in the JSON output)
+$(P
+Added `-Xi=<name>` to include more fields in the JSON output. Currently there are 4 fields that can be included: "compilerInfo", "buildInfo", "modules" and "semantics", i.e.
+)
+
+$(P
+$(CONSOLE dmd -Xi=compilerInfo -Xi=buildInfo -Xi=semantics -Xi=modules)
+)
+
+$(P
+will generate a JSON file with the following:
+)
+---
+{
+  "compilerInfo" : {
+    "binary" : "<filename-of-compiler-binary>",
+    "version" : "<compiler-version>",
+    "supportsIncludeImports" : true,
+  },
+  "buildInfo" : {
+    "config" : "<config-filename>",
+    "cwd" : "<cwd-during-build>",
+    "importParths" : [
+      "<import-path1>",
+      "<import-path2>",
+      // ...
+    ]
+  },
+  "semantics" : {
+    "modules" : [
+      {
+        "name" : "<module-name>",
+        "file" : "<module-filename>",
+        "isRoot" : true|false
+      },
+      // more module objects...
+    ]
+  },
+  "modules" : [
+    // an array of the syntax data for all the modules,
+    // this is the same array that would be generated
+    // for a JSON file with no -Xi=<field> options
+  ]
+}
+---
+$(P
+If JSON is generated without any `-Xi=` options then the old format is used.  The old format is the same data that would appear in the new "modules" field.
+)
+
+$(P
+Also note that the compiler can now be invoked with no source files as long as at least one JSON field is provided, i.e.
+)
+
+$(P
+$(CONSOLE dmd -Xi=compilerInfo)
+)
+
+$(P
+$(RED This is an experimental command-line flag and will be stabilized in the next release.)
+)
+)
+
+$(LI $(LNAME2 lambdacomp,Lambda comparison using __traits(isSame, ...))
+$(P
+It is now possible to compare two lambda functions, under certain
+constraints, using __traits(isSame, lamda1, lambda2). In order to
+correctly compare two lambdas, the following conditions must be
+satisfied:
+)
+
+$(P
+$(UL
+    $(LI the lambda function arguments must not have a template instantiation
+    as an explicit argument type. Any other argument types (basic,
+    user-defined, template) are supported.)
+    $(LI the lambda function body must contain a single expression (no return statement)
+    which contains only numeric values, manifest constants, enum values and arguments.
+    If the expression contains local variables, function calls or return statements,
+    the function is considered uncomparable.)
+)
+)
+
+$(P
+These limitations might be lifted in the next release version.
+)
+
+$(P
+Whenver a lambda is considered uncomparable, the __traits(isSame, ...) expression
+in which it's used will return false, no matter what other lambda is used in
+the comparison.
+)
+)
+
+$(LI $(LNAME2 minimal_runtime,Using D with no/minimal/custom runtime implementation in a pay-as-you-go fashion)
+$(P
+$(P DMD has been further decoupled from the runtime so it is now easier and more
+convenient to use D without the runtime in a pay-as-you-go fashion.  This will
+be of interest to users wishing to incrementally or partially port D to new
+platforms, users targeting bare-metal or resource constrained platforms, and
+users wishing to use D as a library from other languages without the runtime.)
+)
+
+$(P
+$(P Prior to this release, if one attempted to compile a simple D application that
+made no use of any runtime features, the compiler would have emitted a number
+of errors about a missing object.d, a missing `Error` class, missing `TypeInfo`,
+and missing `ModuleInfo`, among others.)
+)
+
+$(P
+$(P Starting with this release, one can now create a library for use from another
+language, requiring only the `.d` source file that implements that library, and
+an empty `object.d` file)
+)
+
+$(P
+$(B Example 1)
+)
+---
+module object
+---
+
+---
+module math;
+
+extern(C) int add(int a, int b)
+{
+    return a + b;
+}
+---
+
+$(P
+$(CONSOLE
+dmd -conf= -lib math.d
+size math.a
+   text    data     bss     dec     hex filename
+      0       0       0       0       0 math.o (ex math.a)
+     20       0       0      20      14 math_1_129.o (ex math.a)
+)
+)
+
+$(P
+$(P Also, starting with this release, one can now create very small executables
+with a minimal runtime implementation.)
+)
+
+$(P
+$(B Example 2)
+$(P DMD auto-generates a call to `_d_run_main` which, in turn, calls the user-defined
+`main` function.  DMD automatically generates a call to `g++` which links in the C runtime.)
+)
+---
+module object;
+
+private alias extern(C) int function(char[][] args) MainFunc;
+private extern (C) int _d_run_main(int argc, char** argv, MainFunc mainFunc)
+{
+    return mainFunc(null);  // assumes `void main()` for simplicity
+}
+---
+
+---
+module main;
+
+void main() { }
+---
+
+$(P
+$(CONSOLE
+dmd -conf= -defaultlib= -fPIC main.d object.d -of=main
+size main
+   text    data     bss     dec     hex filename
+   1403     584      16    2003     7d3 main
+)
+)
+
+$(P
+$(B Example 3)
+$(P Manually generated call to `main`.  No C runtime.)
+)
+---
+module object;
+
+extern(C) void __d_sys_exit(long arg1)
+{
+    asm
+    {
+        mov RAX, 60;
+        mov RDI, arg1;
+        syscall;
+    }
+}
+
+extern void main();
+private extern(C) void _start()
+{
+    main();
+    __d_sys_exit(0);
+}
+---
+
+---
+module main;
+
+void main() { }
+---
+
+$(P
+$(CONSOLE
+dmd -c -lib main.d object.d -of=main.o
+ld main.o -o main
+size main
+   text    data     bss     dec     hex filename
+     56       0       0      56      38 main
+)
+)
+
+$(P
+$(P Usage of more advanced D features (e.g. classes, exceptions, etc...) will require
+runtime implementation code, but they can be implemented in a pay-as-you-go fashion.)
+)
+)
+
+$(LI $(LNAME2 multi_module_selective_imports,Allow multiple selective imports from different modules in a single import statement)
+$(P
+It is now possible to add imports from a different module after a selective
+import list, when those import are also selective or when the imported module
+has a qualified name.
+)
+
+-------
+import pkg.mod1 : sym1, mod2 : sym2;
+import pkg.mod1 : sym1, sym2, pkg.mod2;
+-------
+
+$(P
+Unqualified modules or renamed imports following a selective import will be
+parsed as part of the selective import list, not as separate modules.
+)
+
+-------
+import pkg.mod1 : sym1, mod2;           // selectively imports mod2 from pkg.mod1
+import pkg.mod1 : sym1, name=mod2;      // selectively imports mod2 as name from pkg.mod1
+import pkg.mod1 : sym1, name=pkg1.mod1; // parsing renamed selective imports fails due to qualfier
+-------
+)
+
+$(LI $(LNAME2 osx-10_9,macOS deployment target was increased to 10.9)
+$(P
+The compiler has been updated to use 10.9 and link with `libc++` on OSX.
+This is due the shared `libstdc++` library from older versions of macOS
+having compatibility issues with the headers included in a modern XCode.
+)
+
+$(P
+The minimum required version of running the compiler is now Mac OS X Mavericks (10.9).
+)
+)
+
+$(LI $(LNAME2 private,Deprecate the use of selectively imported private members)
+$(P
+$(LINK2 $(ROOT_DIR)spec/attribute.html#visibility_attributes, The specification states) that a private member
+is visible only from within the same module.
+Prior to this release, due to a bug, private members
+were visible through selective imports from other modules, violating the specification.
+Beginning with this release, accessing private members from outside the module
+in which they are declared will result in a deprecation message.
+)
+)
+
+$(LI $(LNAME2 ptr-safe-end-of-deprecation,`.ptr` on arrays can no longer be used in `@safe` code)
+$(P
+The deprecation period for using `.ptr` on arrays in `@safe` ended.
+The following now triggers an error instead of a deprecation:
+)
+
+---
+@safe ubyte* oops(ubyte[] arr) {
+    return arr.ptr;
+}
+---
+
+$(P
+Use `&arr[0]` instead:
+)
+
+---
+@safe ubyte* oops(ubyte[] arr) {
+    return &arr[0];
+}
+---
+
+$(P
+Note that this only applies to SafeD - in `@system` code `.ptr` may still be used:
+)
+
+---
+@system ubyte* oops(ubyte[] arr) {
+    return arr.ptr;
+}
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 core-memory-__delete,`core.memory.__delete` has been added)
+$(P
+$(REF __delete, core, memory) allows easy migration from the deprecated `delete`.
+`__delete` behaves exactly like `delete`:
+)
+
+---
+bool dtorCalled;
+class B
+{
+    int test;
+    ~this()
+    {
+        dtorCalled = true;
+    }
+}
+B b = new B();
+B a = b;
+b.test = 10;
+
+__delete(b);
+assert(b is null);
+assert(dtorCalled);
+// but be careful, a still points to it
+assert(a !is null);
+---
+
+$(P
+For example, on a Posix platform you can simply run:
+)
+
+$(P
+$(CONSOLE
+sed "s/delete \(.*\);/__delete(\1);/" -i **/*.d
+)
+)
+
+$(P
+Users should prefer $(REF destroy, object)` to explicitly finalize objects,
+and only resort to $(REF __delete, core,memory) when $(REF destroy, object)
+would not be a feasible option.
+)
+)
+
+$(LI $(LNAME2 lazy-gc-init,the garbage collector is now lazily initialized on first use)
+$(P
+The runtime now lazily initializes the GC on first use, thus allowing applications that do not use the GC to skip its initialization.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 compile-time-format-optimized,`std.format` with strings passed during compile-time has been optimized)
+$(P
+Giving $(REF format, std, format) a string as a template parameter allows
+the type correctness of the parameters to be checked at compile time:
+)
+
+-------
+import std.format : format;
+
+auto s1 = format!"%d"(4); // works fine
+auto s2 = format("%d"); // runtime exception
+auto s3 = format!"%d"(); // compile time error
+-------
+
+$(P
+Now, using this overload also allows std.format to make an educated guess at
+the length of the resulting string, reducing the total number of reallocations
+made to the output buffer.
+)
+
+-------
+import std.format : format;
+
+auto s1 = format!"%02d:%02d:%02d"(10, 30, 50); // known for certain to be 8 chars long
+auto s2 = format!"%s %d"("Error Code: ", 42); // Makes an educated guess
+-------
+
+$(P
+Longer format strings benefit the most from this change.
+)
+)
+
+$(LI $(LNAME2 fix18397,Changed `std.conv.hexString` to return an immutable string literal)
+$(P
+$(REF hexString, std,conv) now returns an immutable string literal rather than an array of ubytes.
+This is more in keeping with
+the documentation that says it is a replacement for the deprecated
+`x"deadbeef"` string literal syntax.
+)
+
+$(P
+The benefits of this change are:
+)
+
+$(P
+$(UL
+  $(LI behavior consistency with the documentation)
+  $(LI the `hexString` template instantiations no longer appear in the generated object file)
+  $(LI the generated object file no longer contains references to `TypeInfo` and various druntime functions)
+  $(LI it is now compatible with `-betterC` mode)
+)
+)
+
+$(P
+In some cases, code did rely on it being an array, and a cast will
+fix the issue:
+)
+
+---
+// now an error:
+enum ubyte[8] input = hexString!"c3 fc 3d 7e fb ea dd aa";
+---
+
+---
+// add cast to fix:
+enum ubyte[8] input = cast(ubyte[8]) hexString!"c3 fc 3d 7e fb ea dd aa";
+---
+)
+
+$(LI $(LNAME2 nullable-class,`Nullable!C.nullify` no longer calls .destroy when `C` is a class or interface)
+$(P
+Previously, when `.nullify` is called on a `Nullable!C` where `C` is a class or
+interface, the underlying object is destructed immediately via the `.destroy`
+function. This led to bugs when there are still references to the object
+outside of the `Nullable` instance:
+)
+
+------
+class C
+{
+    int canary = 0xA71FE;
+    ~this()
+    {
+        canary = 0x5050DEAD;
+    }
+}
+
+auto c = new C;
+assert(c.canary == 0xA71FE);
+
+Nullable!C nc = nullable(c);
+nc.nullify;
+assert(c.canary == 0xA71FE); // This would fail
+------
+
+$(P
+The `.nullify` method has been fixed so that it no longer calls `.destroy` on
+class or interface instances, and the above code will now work correctly.
+)
+)
+
+$(LI $(LNAME2 std-algorithm-iteration-substitute,`std.algorithm.searching.substitute` was added)
+$(P
+$(REF substitute, std,algorithm,searching) yields a lazy range with
+all occurrences of `substs` in `r` replaced with their substitution:
+)
+
+---
+import std.algorithm.comparison : equal;
+import std.algorithm.searching : substitute;
+
+// substitute single elements
+assert("do_it".substitute('_', ' ').equal("do it"));
+
+// substitute multiple, single elements
+assert("do_it".substitute('_', ' ',
+                           'd', 'g',
+                           'i', 't',
+                           't', 'o')
+              .equal("go to"));
+
+// substitute subranges
+assert("do_it".substitute("_", " ",
+                          "do", "done")
+              .equal("done it"));
+
+// substitution works for any ElementType
+int[] x = [1, 2, 3];
+auto y = x.substitute(1, 0.1);
+assert(y.equal([0.1, 2, 3]));
+static assert(is(typeof(y.front) == double));
+---
+
+$(P
+If the substitution parameters are known at compile-time, the faster
+template overload can be used:
+)
+
+---
+import std.algorithm.comparison : equal;
+import std.algorithm.searching : substitute;
+
+// substitute subranges of a range
+assert("apple_tree".substitute!("apple", "banana",
+                                "tree", "shrub").equal("banana_shrub"));
+
+// substitute elements in a range
+assert("apple_tree".substitute!('a', 'b',
+                                't', 'f').equal("bpple_free"));
+
+// substitute values
+assert('a'.substitute!('a', 'b', 't', 'f') == 'b');
+---
+)
+
+$(LI $(LNAME2 std-bigint-divmod,`divMod` was added to std.bigint.)
+$(P
+$(REF divMod, std, bigint) calculates both the quotient and the remainder in one go:
+)
+
+-----
+void divMod(const BigInt dividend, const BigInt divisor, out BigInt quotient, out BigInt remainder) pure nothrow
+{
+auto a = BigInt(123);
+auto b = BigInt(25);
+BigInt q, r;
+
+divMod(a, b, q, r);
+
+assert(q == 4);
+assert(r == 23);
+assert(q * b + r == a);
+}
+-----
+)
+
+$(LI $(LNAME2 std-bigint-getDigit,`getDigit` Was Added To `std.bigint`)
+$(P
+$(REF getDigit, std, algorithm, BigInt) gives the `ulongs` or `uints`
+that make up the underlying representation of the `BigInt`.
+)
+
+-----
+import std.bigint;
+
+auto a = BigInt("1000");
+assert(a.getDigit(0) == 1000);
+
+auto b = BigInt("2_000_000_000_000_000_000_000_000_000");
+assert(b.getDigit(0) == 4584946418820579328);
+assert(b.getDigit(1) == 108420217);
+-----
+)
+
+$(LI $(LNAME2 std-exception-enforce,std.exception.enforce can now be used as an eponymous template to create your own enforce function)
+$(P
+$(REF enforce, std,exception) now mirrors the behavior of $(REF enforceEx, std,exception)
+and can be used as an eponymous template:
+)
+
+---
+import std.conv : ConvException;
+alias convEnforce = enforce!ConvException;
+assertNotThrown(convEnforce(true));
+assertThrown!ConvException(convEnforce(false, "blah"));
+---
+
+$(P
+With this change, $(REF enforce, std,exception) is a strict superset of $(REF enforceEx, std,exception), which will be deprecated in 2.079.
+)
+)
+
+$(LI $(LNAME2 std-experimental-allocator-rciallocator,Replace `std.experimental.allocator.IAllocator` with `std.experimental.allocator.RCIAllocator`)
+$(P
+$(B Motivation):
+)
+
+$(P
+Keep track of references to allocators so they don't escape, dangle,
+and cause undefined behavior.
+)
+
+$(P
+From now on, `RCIAllocator` will be used instead of the old `IAllocator`
+interface. $(REF allocatorObject, std, experimental, allocator) can be used to build
+a `RCIAllocator` out of a custom allocator.
+)
+
+------
+import std.experimental.allocator.mallocator : Mallocator;
+
+RCIAllocator a = allocatorObject(Mallocator.instance);
+auto b = a.allocate(100);
+assert(b.length == 100);
+assert(a.deallocate(b));
+------
+)
+
+$(LI $(LNAME2 std-experimental-allocator-rcisharedallocator,Replace `std.experimental.allocator.ISharedAllocator` with `std.experimental.allocator.RCISharedAllocator`)
+$(P
+$(B Motivation):
+)
+
+$(P
+Keep track of references to allocators so they don't escape, dangle,
+and cause undefined behavior.
+)
+
+$(P
+From now on, `RCISharedAllocator` will be used instead of the old
+`ISharedAllocator` interface.
+$(REF sharedAllocatorObject, std, experimental, allocator)` can be used to build
+a `RCISharedAllocator` out of a custom allocator.
+)
+
+------
+import std.experimental.allocator.building_blocks.free_list : SharedFreeList;
+import std.experimental.allocator.mallocator : Mallocator;
+
+shared SharedFreeList!(Mallocator, chooseAtRuntime, chooseAtRuntime) sharedFL;
+shared RCISharedAllocator sharedFLObj = sharedAllocatorObject(sharedFL);
+
+auto b = sharedFLObj.allocate(100);
+assert(b.length == 100);
+assert(sharedFLObj.deallocate(b));
+------
+)
+
+$(LI $(LNAME2 std-experimental-scripting,`import std.experimental.scripting` as a global convenience import)
+$(P
+$(MREF std,experimental,scripting) allows convenient use of all Phobos modules
+with one import:
+)
+
+---
+import std.experimental.scripting;
+void main()
+{
+    10.iota.map!log.sum.writeln;
+}
+---
+
+$(P
+For short scripts a lot of imports are often needed to get all the
+modules from the standard library.
+With this release it's possible to use `import std.experimental.scripting` for importing the entire
+standard library at once. This can be used for fast prototyping or REPLs:
+)
+
+---
+import std.experimental.scripting;
+void main()
+{
+    6.iota
+      .filter!(a => a % 2) // 0 2 4
+      .map!(a => a * 2) // 0 4 8
+      .tee!writeln
+      .sum
+      .reverseArgs!writefln("Sum: %d"); // 18
+}
+---
+
+$(P
+As before, symbol conflicts will only arise if a symbol with collisions is used.
+In this case, $(LINK2 $(ROOT)spec/module.html#static_imports, static imports) or
+$(LINK2 $(ROOT)spec/module.html#renamed_imports, renamed imports) can be used
+to uniquely select a specific symbol.
+)
+
+$(P
+The baseline cost for `import std.experimental.scripting`
+is less than half a second (varying from system to system) and
+work is in progress to reduce this overhead even further.
+)
+)
+
+$(LI $(LNAME2 std-file-readText,readText now checks BOMs)
+$(P
+$(REF readText, std, file) now checks for a
+$(HTTP https://en.wikipedia.org/wiki/Byte_order_mark, BOM). If a BOM is present
+and it is for UTF-8, UTF-16, or UTF-32, $(REF readText, std, file) verifies
+that it matches the requested string type and the endianness of the machine,
+and if there is a mismatch, a $(REF UTFException, std, utf) is thrown without
+bothering to validate the string.
+)
+
+$(P
+If there is no BOM, or if the BOM is not for UTF-8, UTF-16, or UTF-32, then the
+behavior is what it's always been, and UTF validation continues as per normal,
+so if the text isn't valid for the requested string type, a
+$(REF UTFException, std, utf) will be thrown.
+)
+
+$(P
+In addition, before the buffer is cast to the requested string type, the
+alignment is checked (e.g. 5 bytes don't fit cleanly in an array of $(D wchar)
+or $(D dchar)), and a $(REF UTFException, std, utf) is now throw if the
+number of bytes does not align with the requested string type. Previously, the
+alignment was not checked before casting, so if there was an alignment mismatch,
+the cast would throw an Error, killing the program.
+)
+)
+
+$(LI $(LNAME2 std-parallelism-fold,`fold` is added to `std.parallelism.TaskPool`)
+$(P
+$(REF fold, std, parallelism, TaskPool) is functionally equivalent to
+$(REF_ALTTEXT `reduce`, reduce, std, parallelism, TaskPool) except the range
+parameter comes first and there is no need to use $(REF_ALTTEXT
+`tuple`,tuple,std,typecons) for multiple seeds.
+)
+
+---
+static int adder(int a, int b)
+{
+    return a + b;
+}
+static int multiplier(int a, int b)
+{
+    return a * b;
+}
+
+// Just the range
+auto x = taskPool.fold!adder([1, 2, 3, 4]);
+assert(x == 10);
+
+// The range and the seeds (0 and 1 below; also note multiple
+// functions in this example)
+auto y = taskPool.fold!(adder, multiplier)([1, 2, 3, 4], 0, 1);
+assert(y[0] == 10);
+assert(y[1] == 24);
+
+// The range, the seed (0), and the work unit size (20)
+auto z = taskPool.fold!adder([1, 2, 3, 4], 0, 20);
+assert(z == 10);
+---
+)
+
+$(LI $(LNAME2 std-range-nullsink,`nullSink` was added to `std.range`)
+$(P
+$(REF nullSink, std, range) is a convenience wrapper for $(REF NullSink, std,range)
+and creates an output range that discards the data it receives. It's the range analog
+of `/dev/null`.
+)
+
+---
+import std.csv : csvNextToken;
+
+string line = "a,b,c";
+
+// ignore the first column
+line.csvNextToken(nullSink, ',', '"');
+line.popFront;
+
+// look at the second column
+Appender!string app;
+line.csvNextToken(app, ',', '"');
+assert(app.data == "b");
+---
+)
+
+$(LI $(LNAME2 std-range-slide,`std.range.slide` (a fixed-size sliding window range) was added)
+$(P
+$(REF slide, std, range) allows to iterate a range in sliding windows:
+)
+
+---
+import std.array : array;
+import std.algorithm.comparison : equal;
+
+assert([0, 1, 2, 3].slide(2).equal!equal(
+    [[0, 1], [1, 2], [2, 3]]
+));
+assert(5.iota.slide(3).equal!equal(
+    [[0, 1, 2], [1, 2, 3], [2, 3, 4]]
+));
+
+assert(iota(7).slide(2, 2).equal!equal([[0, 1], [2, 3], [4, 5]]));
+assert(iota(12).slide(2, 4).equal!equal([[0, 1], [4, 5], [8, 9]]));
+
+// set a custom stepsize (default 1)
+assert(6.iota.slide(1, 2).equal!equal(
+    [[0], [2], [4]]
+));
+
+assert(6.iota.slide(2, 4).equal!equal(
+    [[0, 1], [4, 5]]
+));
+
+// allow slide with less elements than the window size
+assert(3.iota.slide!(No.withPartial)(4).empty);
+assert(3.iota.slide!(Yes.withPartial)(4).equal!equal(
+    [[0, 1, 2]]
+));
+---
+)
+
+$(LI $(LNAME2 std-string-strip,`std.string.strip` now accepts a string of characters to be stripped)
+$(P
+New overload functions of $(REF strip, std, string),
+$(REF stripLeft, std, string) and
+$(REF stripRight, std, string) accepts a string of characters to be
+stripped instead of stripping only whitespace.
+)
+
+---
+import std.string: stripLeft, stripRight, strip;
+
+assert(stripLeft("www.dlang.org", "w.") == "dlang.org");
+assert(stripRight("dlang.org/", "/") == "dlang.org");
+assert(strip("www.dlang.org/", "w./") == "dlang.org");
+---
+)
+
+$(LI $(LNAME2 std-traits-issomestring,isSomeString and isNarrowString are now `false` for enums)
+$(P
+Previously, enums whose base type was a string type were `true` for
+$(REF isSomeString, std, traits) and $(REF isNarrowString, std, traits).
+Occasionally, this was useful, but in general, it was a source of bugs, because
+code that works with strings does not necessarily work with enums whose base
+type is a string, making it easy to write code where an enum would pass the
+template constraint and then the template would fail to compile. For instance,
+enums of base type string are `false` for
+$(REF isInputRange, std, range, primitives). As such, it really doesn't make
+sense for $(REF isSomeString, std, traits) and
+$(REF isNarrowString, std, traits) to be `true` for enums.
+)
+
+$(P
+For some code, this will be a breaking change, but most code will either be
+unaffected, or it will then fail with enums at the template constraint instead
+of inside the function. So, the risk of code breakage is minimal but does exist.
+Other code will now be able to remove stuff like `!is(T == enum)` from its
+template constraints, since that is now part of
+$(REF isSomeString, std, traits) and $(REF isNarrowString, std, traits), but
+it will continue to compile with the now unnecessary check for enums.
+)
+
+$(P
+Code that uses $(REF isSomeString, std, traits) or
+$(REF isNarrowString, std, traits) in a template constraint and has no other
+conditions which would prevent enums from passing the constraint but then would
+fail to compile inside the template if an enum were passed to it will now fail
+to compile at the template constraint instead of inside the template. So, such
+code is fixed rather than broken.
+)
+
+$(P
+The rare code that does break because of these changes is code that uses
+$(REF isSomeString, std, traits) or $(REF isNarrowString, std, traits) in a
+template constraint or static if and does not use other conditions to prevent enums
+from passing and actually has code in the template which compiles with both strings
+and enums with a base type of string. Such code will need to be changed to use
+$(REF OriginalType, std, traits), $(REF asOriginalType, std, conv), or
+$(REF StringTypeOf, std, traits) instead. e.g. for enums to pass the constraint,
+instead of
+)
+
+---
+auto foo(S)(S str)
+if (isSomeString!S)
+{
+    ...
+}
+---
+
+$(P
+the code would be
+)
+
+---
+auto foo(S)(S str)
+if (isSomeString!(OriginalType!S))
+{
+    ...
+}
+---
+
+$(P
+As a rule of thumb, generic code should either disallow implicit conversions
+and force the caller to do the conversion explicitly (which generally is the
+least error-prone approach), or it should force the conversion to the desired
+type before the parameter is used in the function so that the function is
+definitely operating on the desired type and not just on one that implicitly
+converts to it and thus will work regardless of whether the argument was the
+exact type or implicitly converted to it.
+)
+
+$(P
+However, great care should be taken if the implicit conversion will result in
+slicing the parameter or otherwise referring to its address, since that makes
+it very easy for a reference to local memory to escape the function, whereas if
+the conversion is done at the call site, then the slicing is done at the call
+site, so the dynamic array is still valid when the function returns.
+Fortunately, enums with a base type of string do not have that problem, but
+other types which implicitly convert to dynamic arrays (such as static arrays)
+do have that problem, which is a big reason why it's generally recommended to
+not have generic functions accept types based on implicit conversions.
+)
+
+$(P
+It is recommended that if a function is supposed to accept both strings and
+types which implicitly convert to a string type, then it should explicitly
+accept dynamic arrays but be templated on the element type. e.g.
+)
+
+---
+auto foo(C)(C[] str)
+if (isSomeChar!C)
+{
+    ...
+}
+---
+
+$(P
+That way, any implicit conversions are done at the call site and do not
+introduce @safety problems inside the function. It also tends to result in
+template constraints which are shorter and more easily understood.
+)
+)
+
+$(LI $(LNAME2 toString,`toString` Can Now Use Output Ranges)
+$(P
+The standard library has been modified to recognize and use `toString` overloads
+that accept $(REF_ALTTEXT output ranges, isOutputRange, std, range, primitives)
+when such overloads exist.
+)
+
+-------
+import std.range.primitives;
+import std.stdio;
+
+struct MyType
+{
+    void toString(W)(ref W writer) if (isOutputRange!(W, char))
+    {
+        put(writer, "Custom toString");
+    }
+}
+
+auto t = MyType();
+writeln(t); // writes "Custom toString"
+-------
+
+$(P
+This has several benefits for the user. First, this design is much friendlier
+to inlining than the `toString(scope void delegate(const(char)[]) sink)` method of
+`toString`. Second, this cuts down on memory usage, as characters are placed right
+into the output buffers of functions like $(REF format, std, format). Third,
+because `toString` is now a template, can be marked `@safe` via inference much more
+often.
+)
+
+$(P
+All previous forms of `toString` will continue to work.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 17605): [REG2.066.0] __traits$(LPAREN)compiles, closure$(RPAREN) adds link-time reference to _d_allocmemory)
+$(LI $(BUGZILLA 17970): shared struct destructor doesn't compile anymore)
+$(LI $(BUGZILLA 18030): Segmentation fault with __traits$(LPAREN)getProtection$(RPAREN) on template function.)
+$(LI $(BUGZILLA 18093): [Reg 2.071] MSCOFF: dmd crashes when overriding a C++ method in a mixin template)
+$(LI $(BUGZILLA 18097): [REG2.077] Unittest function is undefined identifier)
+$(LI $(BUGZILLA 18322): void fun$(LPAREN)string file=__FILE_FULL_PATH__$(RPAREN)$(LPAREN)$(RPAREN) returns relative path $(LPAREN)pointing to nowhere$(RPAREN))
+$(LI $(BUGZILLA 18430): isSame is wrong for non global lambdas)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 2789): Functions overloads are not checked for conflicts)
+$(LI $(BUGZILLA 8207): OS X: Should extern$(LPAREN)D$(RPAREN) symbols include another underscore?)
+$(LI $(BUGZILLA 8687): Variadic templates do not work properly with default arguments)
+$(LI $(BUGZILLA 9433): Deprecate delete)
+$(LI $(BUGZILLA 12511): static overloaded function is not accessible)
+$(LI $(BUGZILLA 12901): Assignments to outside members in `in`/`out` contracts shouldn't be allowed)
+$(LI $(BUGZILLA 14907): DMD crash when using template name as a default value of template's typed argument)
+$(LI $(BUGZILLA 15777): Premature expansion of overload set in tuples)
+$(LI $(BUGZILLA 16042): Identifier on template arguments should consider eponymous member lookup)
+$(LI $(BUGZILLA 17437): Incorrect range check when implicitly converting integer literals to float/double)
+$(LI $(BUGZILLA 17570): Misleading error message illegal conditional function definition)
+$(LI $(BUGZILLA 17625): Confusing error message for private functions in different modules)
+$(LI $(BUGZILLA 17630): selective imports find symbols in private imports of other modules)
+$(LI $(BUGZILLA 17663): header generation $(LPAREN)-H$(RPAREN) is broken with public override of private default)
+$(LI $(BUGZILLA 18014): DMD test suite fails to link on Linux distros where PIC/PIE is enforced)
+$(LI $(BUGZILLA 18057): [ICE] Segmentation fault $(LPAREN)stack overflow$(RPAREN) in Expression::ctfeInterpret$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 18083):  -w doesn't work for the ddoc build)
+$(LI $(BUGZILLA 18143): in/out contracts should be implicitly 'this' const)
+$(LI $(BUGZILLA 18190): [asan] heap-buffer-overflow in Module.load.checkModFileAlias)
+$(LI $(BUGZILLA 18212): Usage of cfloat,cdouble,cfloat,ifloat,idouble,ireal shouldn't trigger an error in deprecated code)
+$(LI $(BUGZILLA 18218): __traits$(LPAREN)isDeprecated, creal$(RPAREN) should return true)
+$(LI $(BUGZILLA 18219): Private import inside struct leaks symbols when used as VarDeclaration types)
+$(LI $(BUGZILLA 18225): Wrong condition in VRP)
+$(LI $(BUGZILLA 18232): Union methods fail to initialize local variables to .init)
+$(LI $(BUGZILLA 18243): selective import + overload = private visibility)
+$(LI $(BUGZILLA 18261): Linkage information isn't part of the json output)
+$(LI $(BUGZILLA 18312): string concatenation with -betterC fails with linker errors)
+$(LI $(BUGZILLA 18335): The D_ObjectiveC version identifier is not printed in verbose mode)
+$(LI $(BUGZILLA 18364): header file generation doesn't print the package name in package$(LPAREN)XXX$(RPAREN))
+$(LI $(BUGZILLA 18367): dmd should not segfault on -X with libraries, but no source files)
+$(LI $(BUGZILLA 18429): alias this enum causes segmentation fault)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 6549): Implement contracts without implementation.)
+$(LI $(BUGZILLA 11529): Unclear error message when rvalue is passed as `ref')
+$(LI $(BUGZILLA 11555): std.algorithm.reverse should return the just-reversed range)
+$(LI $(BUGZILLA 11714): Improve error message for wrongly initialized thread-local class instances)
+$(LI $(BUGZILLA 13855): Allow multiple selective imports from different modules in a single import statement)
+$(LI $(BUGZILLA 15613): Parameter type mismatch error message are not very helpful)
+$(LI $(BUGZILLA 16492): support @nogc in debug{} blocks)
+$(LI $(BUGZILLA 17899): Cannot initialise contextless delegate at compile time)
+$(LI $(BUGZILLA 18053): Use stdint.h mangling for int64_t/uint64_t when mangling D long/ulong)
+$(LI $(BUGZILLA 18149): Add a compiler trait to detect if a function is @disable)
+$(LI $(BUGZILLA 18273): Better C: wrong exit code from main$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 18361): Ddoc: support ability to opt out of automatic keyword highlighting in text)
+$(LI $(BUGZILLA 18427): `Symbol FOO is not visible because it is privately imported` => compiler should show how to import it)
+)
+$(BUGSTITLE_BUGZILLA Phobos regressions,
+
+$(LI $(BUGZILLA 18316): std.net.curl.SMTP.mailTo fails to compile)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 10879): std.variant Variant/Algebraic: Can't store static arrays > 32$(LPAREN)/16$(RPAREN) bytes)
+$(LI $(BUGZILLA 15157): std.experimental.allocator.building_blocks docs)
+$(LI $(BUGZILLA 15391): Problems loading libcurl.so and running datetime unittest on NixOS package build)
+$(LI $(BUGZILLA 17832): std.random.choice cannot be used with other random generators)
+$(LI $(BUGZILLA 18092): Can't combine take and takeExactly)
+$(LI $(BUGZILLA 18124): std.regex.RegexMatch's front property is under-documented)
+$(LI $(BUGZILLA 18153): deprecate public symbols ByLine, ByRecord, ByChunk)
+$(LI $(BUGZILLA 18224): BigInt modulo uint must return long.)
+$(LI $(BUGZILLA 18229): Misleading documentation of std.process.environment.get)
+$(LI $(BUGZILLA 18259): allocatorObject's CAllocatorImpl should store the passed allocator within)
+$(LI $(BUGZILLA 18278): writef documentation 404 error)
+$(LI $(BUGZILLA 18285): std.algorithm.comparison.cmp for strings with custom predicate compares lengths wrong)
+$(LI $(BUGZILLA 18286): std.algorithm.comparison.cmp for string with custom predicate fails if distinct chars can compare equal)
+$(LI $(BUGZILLA 18288): std.algorithm.comparison.cmp for wide strings should be @safe)
+$(LI $(BUGZILLA 18299): std.datetime.date.cmpTimeUnits does not throw a DateTimeException)
+$(LI $(BUGZILLA 18328): algorithm.startsWith can compare narrow string lengths in more circumstances)
+$(LI $(BUGZILLA 18349): std/math.d$(LPAREN)543,33$(RPAREN): Deprecation: integral promotion not done for -x)
+$(LI $(BUGZILLA 18384): std.net.isemail is slow to import due to regex)
+$(LI $(BUGZILLA 18397): Poor implementation of std.conv.hexString results in unintended bloat)
+$(LI $(BUGZILLA 18434): BigInt gcd asserts when one argument is zero.)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 5489): std.typecons tuples dynamically iterable)
+$(LI $(BUGZILLA 10828): datetime toString functions should accept sink)
+$(LI $(BUGZILLA 11084): std.algorithm.scan)
+$(LI $(BUGZILLA 11747): Better error message with @disabled toString)
+$(LI $(BUGZILLA 13632): Second argument for std.string.strip)
+$(LI $(BUGZILLA 14767): Support CTFE of BigInt under x86)
+$(LI $(BUGZILLA 15949): Improve readtext handling of byte order mark $(LPAREN)BOM$(RPAREN))
+$(LI $(BUGZILLA 17249): Make BigInt data visible $(LPAREN)not modifiable!$(RPAREN))
+$(LI $(BUGZILLA 17440): Nullable.nullify$(LPAREN)$(RPAREN) resets referenced object)
+$(LI $(BUGZILLA 18086): BigInt DivMod)
+$(LI $(BUGZILLA 18096): Add fold$(LPAREN)$(RPAREN) to std.parallelism)
+$(LI $(BUGZILLA 18116): to!wchar$(LPAREN)[string, dstring]$(RPAREN), and to!char$(LPAREN)[wstring, dstring]$(RPAREN) don't compile)
+$(LI $(BUGZILLA 18152): std.format.formattedRead should work with rvalues.)
+$(LI $(BUGZILLA 18186): std.array.replaceSlice should be usable in @safe)
+$(LI $(BUGZILLA 18214): TemplateOf should return void for non-templated symbols)
+$(LI $(BUGZILLA 18217): Don't repeatedly call unpredictableSeed to initialize rndGen)
+$(LI $(BUGZILLA 18230): multiwayUnion sets wrong pred lambdas)
+$(LI $(BUGZILLA 18239): std.experimental.allocator fillWithMemcpy could use memset when T.sizeof==1)
+$(LI $(BUGZILLA 18280): std.algorithm.comparison.cmp for non-strings should call opCmp only once per item pair)
+$(LI $(BUGZILLA 18329): std.algorithm.startsWith & endsWith can sometimes statically determine decoding unnecessary)
+)
+$(BUGSTITLE_BUGZILLA Druntime regressions,
+
+$(LI $(BUGZILLA 15482): new uuid.d forbids to link statically with other libraries)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 18240): core.stdc.wchar_ wmemset, etc. should be pure)
+$(LI $(BUGZILLA 18247): core.stdc.math functions that never set errno should be pure)
+$(LI $(BUGZILLA 18279): rt.util.utf does not properly reserve buffer in toUTF16/toUTF16z)
+$(LI $(BUGZILLA 18409): DScanner SEGFAULTS on CircleCI)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bugs,
+
+$(LI $(BUGZILLA 13844): core.stdc.config isn't listed in the docs)
+$(LI $(BUGZILLA 14475): man page is outdated)
+$(LI $(BUGZILLA 16490): Usage of attributes in inline asm blocks is not documented)
+$(LI $(BUGZILLA 18306): No compliation errors shown when running modified examples)
+$(LI $(BUGZILLA 18319): std.exception: enforce example does not compile)
+$(LI $(BUGZILLA 18355): [Areas of D usage])
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 17998): Document Options for install.sh)
+$(LI $(BUGZILLA 18202): Show TOC overview in the dlang specification pages)
+$(LI $(BUGZILLA 18337): https://dlang.org/spec/operatoroverloading.html missing opIn/opIn_r)
+$(LI $(BUGZILLA 18379): [404 Not Found] Foundation Donate page not found)
+$(LI $(BUGZILLA 18383): Front page blog section is only partially filled.)
+)
+)
+$(D_CONTRIBUTORS_HEADER 77)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR acehreli)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR aldacron)
+    $(D_CONTRIBUTOR Alexandru Jercaianu)
+    $(D_CONTRIBUTOR Ali Akhtarzada)
+    $(D_CONTRIBUTOR Ali Çehreli)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Andrey Penechko)
+    $(D_CONTRIBUTOR Andy Smith)
+    $(D_CONTRIBUTOR Aravinda VK)
+    $(D_CONTRIBUTOR Arun Chandrasekaran)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR BBasile)
+    $(D_CONTRIBUTOR carblue)
+    $(D_CONTRIBUTOR Daniel Kozak)
+    $(D_CONTRIBUTOR Diederik de Groot)
+    $(D_CONTRIBUTOR dmdw64)
+    $(D_CONTRIBUTOR Dragos Carp)
+    $(D_CONTRIBUTOR Duncan Paterson)
+    $(D_CONTRIBUTOR Eduard Staniloiu)
+    $(D_CONTRIBUTOR Elias Batek)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR Héctor Barreras Almarcha [Dechcaudron])
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jack Stouffer)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR jacob-carlborg)
+    $(D_CONTRIBUTOR jercaianu)
+    $(D_CONTRIBUTOR jmh530)
+    $(D_CONTRIBUTOR Joakim Noah)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR Johannes Pfau)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR Jonathan Marler)
+    $(D_CONTRIBUTOR Joseph Rushton Wakeling)
+    $(D_CONTRIBUTOR Kai Nacke)
+    $(D_CONTRIBUTOR kinke)
+    $(D_CONTRIBUTOR Lance Bachmeier)
+    $(D_CONTRIBUTOR Lucia Mcojocaru)
+    $(D_CONTRIBUTOR Luís Marques)
+    $(D_CONTRIBUTOR Manuel Maier)
+    $(D_CONTRIBUTOR Markus F.X.J. Oberhumer)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Baumann)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR MetaLang)
+    $(D_CONTRIBUTOR Michael Parker)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Lindsay Wilson)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Oleg Nykytenko)
+    $(D_CONTRIBUTOR Patrick Schlüter)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Pradeep Gowda)
+    $(D_CONTRIBUTOR Radu Racariu)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR shoo)
+    $(D_CONTRIBUTOR Simen Kjærås)
+    $(D_CONTRIBUTOR skl131313)
+    $(D_CONTRIBUTOR Stanislav Blinov)
+    $(D_CONTRIBUTOR Stefan Koch)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Thomas Mader)
+    $(D_CONTRIBUTOR Timothee Cour)
+    $(D_CONTRIBUTOR Tomáš Chaloupka)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Yannick Koechlin)
+    $(D_CONTRIBUTOR Yuxuan Shui)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_LAST 2.078.3)
+Macros:
+    VER=2.079.0
+    TITLE=Change Log: $(VER)
