@@ -40,7 +40,14 @@ int ddoxMain(string[] args)
 	if( args[1] == "serve-html" && args.length >= 3 )
 		return cmdServeHtml(args);
 	if( args[1] == "filter" && args.length >= 3 )
-		return cmdFilterDocs(args);
+	{
+        import assert_writeln_magic : assertWritelnBlock;
+        import std.functional : toDelegate;
+        FilterConfig config = {
+            postUnittestSourceCode: (&assertWritelnBlock).toDelegate,
+        };
+		return cmdFilterDocs(args, config);
+	}
 	if( args[1] == "serve-test" && args.length >= 3 )
 		return cmdServeTest(args);
 	showUsage(args);
@@ -56,7 +63,22 @@ alias parseDocFile = ddox.main.parseDocFile;
 alias setupGeneratorInput = ddox.main.setupGeneratorInput;
 alias showUsage = ddox.main.showUsage;
 
-int cmdFilterDocs(string[] args)
+
+/**
+The following functions are copied from `ddox.main` with
+https://github.com/rejectedsoftware/ddox/pull/199 applied.
+Once #199 is merged at upstream, this can be removed.
+*/
+struct FilterConfig
+{
+	/**
+	Custom delegate that is called after the unittest source code has been parsed
+	Can be used to inject custom logic like an assert/writeln transformation.
+	*/
+	string delegate(string) postUnittestSourceCode;
+}
+
+int cmdFilterDocs(string[] args, FilterConfig filterConfig = FilterConfig.init)
 {
 	string[] excluded, included;
 	Protection minprot = Protection.Private;
@@ -128,9 +150,9 @@ int cmdFilterDocs(string[] args)
 					if (last_decl["comment"].opt!string.empty) {
 						writefln("Warning: Cannot add documented unit test %s to %s, which is not documented.", name, last_decl["name"].opt!string);
 					} else {
-					    import assert_writeln_magic;
-                        auto rewrittenSource = assertWritelnBlock(source);
-                        last_decl["comment"] ~= format("Example:\n%s$(DDOX_UNITTEST_HEADER %s)\n---\n%s\n---\n$(DDOX_UNITTEST_FOOTER %s)\n", comment.strip, name, rewrittenSource, name);
+						if (filterConfig.postUnittestSourceCode !is null)
+							source = filterConfig.postUnittestSourceCode(source);
+						last_decl["comment"] ~= format("Example:\n%s$(DDOX_UNITTEST_HEADER %s)\n---\n%s\n---\n$(DDOX_UNITTEST_FOOTER %s)\n", comment.strip, name, source, name);
 					}
 				} catch (Exception e) {
 					writefln("Failed to add documented unit test %s:%s as example: %s",
