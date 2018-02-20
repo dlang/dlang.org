@@ -483,8 +483,9 @@ $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
 
-$(DOC_OUTPUT_DIR)/foundation/contributors.html: foundation/contributors.dd $G/contributors_list.ddoc $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
+$(DOC_OUTPUT_DIR)/foundation/contributors.html: foundation/contributors.dd \
+		$G/contributors_list.ddoc foundation/foundation.ddoc $(DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $(word 3, $^) $<
 
 $W/articles/%.html : articles/%.dd $(DDOC) $(DMD) $(DDOC_BIN) articles/articles.ddoc
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $< articles/articles.ddoc
