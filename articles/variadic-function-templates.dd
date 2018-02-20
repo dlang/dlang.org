@@ -158,33 +158,37 @@ $(H3 Translating the Variadic C++ Solution into D)
         )
 
 ---
-void print()()
+void print()
 {
 }
 
 void print(T, A...)(T t, A a)
 {
+    import std.stdio;
     writeln(t);
     print(a);
 }
 ---
 
-        $(P There are two function templates. The first provides the
+        $(P There are two overloads. The first provides the
         degenerate case of no arguments, and a terminus for the
         recursion of the second. The second has two arguments:
         `t` for the first value and `a` for any remaining values.
-        `A...` says the parameter is a sequence, and $(I implicit function
-        template instantiation) will fill in `A` with all the types of any 
+        `A...` says the parameter is a sequence, and
+        $(GLOSSARY2 ifti, Implicit Function Template Instantiation)
+        will fill in `A` with all the types of any
         arguments supplied following `t`. So, `print(7, 'a', 6.8)` will
         fill in `int` for `T`, and a type sequence `(char, double)` for `A`.
         The parameter `a` is an lvalue sequence of any
-        arguments supplied after `t`.
+        arguments supplied after `t`. See
+        $(DDLINK articles/ctarguments, Compile-time Sequences, Compile-time Sequences)
+        for more information.
         )
 
         $(P The function works by printing the first parameter `t`,
         and then recursively calling itself with the remaining arguments
         `a`. The recursion terminates when there are no longer any
-        arguments by calling `print()()`.
+        arguments by calling `print()`.
         )
 
 $(H3 The Static If Solution)
