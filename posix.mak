@@ -348,7 +348,7 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd betterc)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
+CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) changelog/release-schedule
 ifneq (1,$(RELEASE))
  CHANGELOG_FILES+=changelog/pending
 endif
