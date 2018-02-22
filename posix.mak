@@ -406,7 +406,9 @@ docs : docs-latest docs-prerelease
 
 html : $(ALL_FILES)
 
-verbatim : $(addprefix $W/, $(addsuffix .verbatim,$(PAGES_ROOT))) phobos-prerelease-verbatim
+html-verbatim: $(addprefix $W/, $(addsuffix .verbatim,$(PAGES_ROOT)))
+
+verbatim : html-verbatim phobos-prerelease-verbatim
 
 kindle : $W/dlangspec.mobi
 
