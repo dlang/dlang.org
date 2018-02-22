@@ -317,6 +317,26 @@ auto genChangelogVersion(string fileName, string fileText)
             auto ver = file.name.baseName.stripExtension.until("_pre");
             macros ~= "$(CHANGELOG_VERSION%s %s, %s)\n".format(file.name.endsWith("_pre.dd") ? "_PRE" : "", ver, date);
         }
+
+        // inject the changelog footer
+        auto fileBaseName = fileName.baseName;
+        auto r = changelogFiles.enumerate.find!(a => a.value.baseName == fileBaseName);
+        if (r.length != 0)
+        {
+            auto el = r.front;
+            macros ~= "\nCHANGELOG_NAV_INJECT=";
+            auto versions = changelogFiles.map!(a => a.baseName.until(".dd"));
+            // mapping for the first and last page is different
+            if (el.index == 0)
+                macros ~="\n$(CHANGELOG_NAV_FIRST %s)".format(versions[1]);
+            else if (el.index == changelogFiles.length - 1 ||
+                     // prerelease pages shouldn't be linked to from the released versions
+                     el.index == changelogFiles.length - 2 && versions[$ - 1].canFind("_pre"))
+                macros ~="\n$(CHANGELOG_NAV_LAST %s)".format(versions[el.index - 1]);
+            else
+                macros ~="\n$(CHANGELOG_NAV %s, %s)".format(versions[el.index - 1], versions[el.index + 1]);
+            macros ~= "\n_=";
+        }
         fileText ~= macros;
     }
     return fileText;
