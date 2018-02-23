@@ -2,7 +2,7 @@ Ddoc
 
 $(CHANGELOG_NAV_LAST 2.078.3)
 
-$(VERSION Feb 18, 2018, =================================================,
+$(VERSION Mar 01, 2018, =================================================,
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
@@ -10,6 +10,7 @@ $(LI $(RELATIVE_LINK2 comma-deprecation-error,The deprecation period of using th
 $(LI $(RELATIVE_LINK2 default_after_variadic,Function parameters with default values are now allowed after variadic template parameters))
 $(LI $(RELATIVE_LINK2 deprecate_delete,The `delete` keyword has been deprecated.))
 $(LI $(RELATIVE_LINK2 deprecation-dylib,The deprecation period of the `-dylib` flag on OSX has ended. Use `-shared`))
+$(LI $(RELATIVE_LINK2 dip1008,Experimental `@nogc` Exception throwing with `-dip1008`))
 $(LI $(RELATIVE_LINK2 disabled-trait,A compiler trait used to detect if a function is marked with `@disable` has been added.))
 $(LI $(RELATIVE_LINK2 fix17630,Fix Issue 17630 - selective imports find symbols in private imports of other modules))
 $(LI $(RELATIVE_LINK2 fix17899,Fix issue 17899 - Allow delegates to be initialised at compile time))
@@ -20,9 +21,9 @@ $(LI $(RELATIVE_LINK2 fix8207,D ABI change on Win32 and OSX targets))
 $(LI $(RELATIVE_LINK2 hexstrings,HexString literals are deprecated.))
 $(LI $(RELATIVE_LINK2 includeimports,Added the -i command line option to automatically include imports))
 $(LI $(RELATIVE_LINK2 json_includes,Added `-Xi=<name>` to include more fields in the JSON output))
-$(LI $(RELATIVE_LINK2 lambdacomp,Lambda comparison using __traits(isSame, ...)))
+$(LI $(RELATIVE_LINK2 lambdacomp,Lambda comparison using `__traits(isSame, ...)`))
+$(LI $(RELATIVE_LINK2 lld_mingw,Windows: Visual C++ and the Windows SDK are no longer required to build 64-bit executables))
 $(LI $(RELATIVE_LINK2 minimal_runtime,Using D with no/minimal/custom runtime implementation in a pay-as-you-go fashion))
-$(LI $(RELATIVE_LINK2 multi_module_selective_imports,Allow multiple selective imports from different modules in a single import statement))
 $(LI $(RELATIVE_LINK2 osx-10_9,macOS deployment target was increased to 10.9))
 $(LI $(RELATIVE_LINK2 private,Deprecate the use of selectively imported private members))
 $(LI $(RELATIVE_LINK2 ptr-safe-end-of-deprecation,`.ptr` on arrays can no longer be used in `@safe` code))
@@ -32,7 +33,7 @@ $(LI $(RELATIVE_LINK2 ptr-safe-end-of-deprecation,`.ptr` on arrays can no longer
 $(BUGSTITLE_TEXT_HEADER Runtime changes,
 
 $(LI $(RELATIVE_LINK2 core-memory-__delete,`core.memory.__delete` has been added))
-$(LI $(RELATIVE_LINK2 lazy-gc-init,the garbage collector is now lazily initialized on first use))
+$(LI $(RELATIVE_LINK2 lazy-gc-init,The garbage collector is now lazily initialized on first use))
 
 )
 
@@ -113,7 +114,7 @@ $(P
 $(H4 Rationale)
 $(P The comma operator leads to unintended behavior (see below for a selection)
     Moreover it is not commonly used and it blocks the ability to implement tuples
-    as a language features using commas.
+    as a language feature using commas.
 )
 
 $(P
@@ -122,8 +123,12 @@ $(P
     ---
     writeln( 6, mixin("7,8"), 9 ); // 6, 8, 9
 
-    template vec(T...)(T args) { ... }
-    vec v = (0, 0, 3); // 3, because vec is variadic
+    struct Vec
+    {
+        this(T...)(T args) { ... }
+    }
+    // missing type name
+    Vec v = (0, 0, 3); // Vec(3)
 
     int a = 0;
     int b = 2;
@@ -132,10 +137,10 @@ $(P
     }
 
     void foo(int x, int y=0) {}
-    foo((a, b)); // Oops, foo is called with x=b
+    foo((a, b)); // Oops, foo(b) is called
 
     synchronized (lockA, lockB) {}
-    // isn't currently implemented, but still compiles due to the comma operator
+    // multiple expressions aren't currently implemented, but it compiles due to the comma operator
     ---
 $(P
 )
@@ -201,6 +206,23 @@ Use the `-shared` flag to generate a shared library:
 
 $(P
 $(CONSOLE dmd -shared awesome_d_library.d)
+)
+)
+
+$(LI $(LNAME2 dip1008,Experimental `@nogc` Exception throwing with `-dip1008`)
+$(P
+[DIP1008](https://github.com/dlang/DIPs/blob/master/DIPs/DIP1008.md) has been merged and it can be previewed under the experimental `-dip1008` flag:
+)
+
+---
+void main() @nogc
+{
+    throw new Exception("I'm @nogc now");
+}
+---
+
+$(P
+$(CONSOLE rdmd -dip1008 app.d)
 )
 )
 
@@ -414,7 +436,7 @@ The option -i by itself is equivalent to:
 )
 
 $(P
-$(CONSOLE dmd -i=-std,-core,-etc,-object)
+$(CONSOLE dmd -i=-std -i=-core -i=-etc -i=-object)
 )
 )
 
@@ -480,10 +502,10 @@ $(RED This is an experimental command-line flag and will be stabilized in the ne
 )
 )
 
-$(LI $(LNAME2 lambdacomp,Lambda comparison using __traits(isSame, ...))
+$(LI $(LNAME2 lambdacomp,Lambda comparison using `__traits(isSame, ...)`)
 $(P
 It is now possible to compare two lambda functions, under certain
-constraints, using __traits(isSame, lamda1, lambda2). In order to
+constraints, using `__traits(isSame, lamda1, lambda2)`. In order to
 correctly compare two lambdas, the following conditions must be
 satisfied:
 )
@@ -505,9 +527,19 @@ These limitations might be lifted in the next release version.
 )
 
 $(P
-Whenver a lambda is considered uncomparable, the __traits(isSame, ...) expression
+Whenever a lambda is considered uncomparable, the `__traits(isSame, ...)` expression
 in which it's used will return false, no matter what other lambda is used in
 the comparison.
+)
+)
+
+$(LI $(LNAME2 lld_mingw,Windows: Visual C++ and the Windows SDK are no longer required to build 64-bit executables)
+$(P
+The Windows installer now adds platform libraries built from the MinGW definitions and
+a wrapper library for the VC2010 shared C runtime. When building COFF object files with
+`-m64` or `-m32mscoff` and no Visual Studio installation is detected or
+no platform libraries are found these will be used as replacements. If the Microsoft linker
+is not found, the LLVM linker LLD will be used.
 )
 )
 
@@ -641,30 +673,6 @@ runtime implementation code, but they can be implemented in a pay-as-you-go fash
 )
 )
 
-$(LI $(LNAME2 multi_module_selective_imports,Allow multiple selective imports from different modules in a single import statement)
-$(P
-It is now possible to add imports from a different module after a selective
-import list, when those import are also selective or when the imported module
-has a qualified name.
-)
-
--------
-import pkg.mod1 : sym1, mod2 : sym2;
-import pkg.mod1 : sym1, sym2, pkg.mod2;
--------
-
-$(P
-Unqualified modules or renamed imports following a selective import will be
-parsed as part of the selective import list, not as separate modules.
-)
-
--------
-import pkg.mod1 : sym1, mod2;           // selectively imports mod2 from pkg.mod1
-import pkg.mod1 : sym1, name=mod2;      // selectively imports mod2 as name from pkg.mod1
-import pkg.mod1 : sym1, name=pkg1.mod1; // parsing renamed selective imports fails due to qualfier
--------
-)
-
 $(LI $(LNAME2 osx-10_9,macOS deployment target was increased to 10.9)
 $(P
 The compiler has been updated to use 10.9 and link with `libc++` on OSX.
@@ -770,7 +778,7 @@ would not be a feasible option.
 )
 )
 
-$(LI $(LNAME2 lazy-gc-init,the garbage collector is now lazily initialized on first use)
+$(LI $(LNAME2 lazy-gc-init,The garbage collector is now lazily initialized on first use)
 $(P
 The runtime now lazily initializes the GC on first use, thus allowing applications that do not use the GC to skip its initialization.
 )
@@ -1392,6 +1400,7 @@ $(LI $(BUGZILLA 18093): [Reg 2.071] MSCOFF: dmd crashes when overriding a C++ me
 $(LI $(BUGZILLA 18097): [REG2.077] Unittest function is undefined identifier)
 $(LI $(BUGZILLA 18322): void fun$(LPAREN)string file=__FILE_FULL_PATH__$(RPAREN)$(LPAREN)$(RPAREN) returns relative path $(LPAREN)pointing to nowhere$(RPAREN))
 $(LI $(BUGZILLA 18430): isSame is wrong for non global lambdas)
+$(LI $(BUGZILLA 18469): [REG 2.079-b1] Segfault when trying to get type of __dtor.opCall)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bugs,
 
@@ -1449,6 +1458,7 @@ $(LI $(BUGZILLA 18316): std.net.curl.SMTP.mailTo fails to compile)
 )
 $(BUGSTITLE_BUGZILLA Phobos bugs,
 
+$(LI $(BUGZILLA 7054): format$(LPAREN)$(RPAREN) aligns using code units instead of graphemes)
 $(LI $(BUGZILLA 10879): std.variant Variant/Algebraic: Can't store static arrays > 32$(LPAREN)/16$(RPAREN) bytes)
 $(LI $(BUGZILLA 15157): std.experimental.allocator.building_blocks docs)
 $(LI $(BUGZILLA 15391): Problems loading libcurl.so and running datetime unittest on NixOS package build)
@@ -1511,6 +1521,7 @@ $(LI $(BUGZILLA 14475): man page is outdated)
 $(LI $(BUGZILLA 16490): Usage of attributes in inline asm blocks is not documented)
 $(LI $(BUGZILLA 18306): No compliation errors shown when running modified examples)
 $(LI $(BUGZILLA 18319): std.exception: enforce example does not compile)
+$(LI $(BUGZILLA 18341): Documentation for std.array.split is confusing/incorrect)
 $(LI $(BUGZILLA 18355): [Areas of D usage])
 )
 $(BUGSTITLE_BUGZILLA dlang.org enhancements,
@@ -1520,6 +1531,10 @@ $(LI $(BUGZILLA 18202): Show TOC overview in the dlang specification pages)
 $(LI $(BUGZILLA 18337): https://dlang.org/spec/operatoroverloading.html missing opIn/opIn_r)
 $(LI $(BUGZILLA 18379): [404 Not Found] Foundation Donate page not found)
 $(LI $(BUGZILLA 18383): Front page blog section is only partially filled.)
+)
+$(BUGSTITLE_BUGZILLA Installer bugs,
+
+$(LI $(BUGZILLA 15131): curl.lib is not available in 32 bit mscoff format)
 )
 )
 $(D_CONTRIBUTORS_HEADER 77)
