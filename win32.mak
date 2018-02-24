@@ -6,6 +6,7 @@ LATEST=prerelease
 
 DMD=dmd
 DDOC=macros.ddoc html.ddoc dlang.org.ddoc windows.ddoc doc.ddoc $(NODATETIME)
+W=web
 
 CHMTARGETS=d.hhp d.hhc d.hhk d.chm
 HHC=$(ProgramFiles)\HTML Help Workshop\hhc.exe
@@ -18,7 +19,7 @@ chmgen.exe : chmgen.d
 	$(DMD) -g chmgen
 
 chm\d.hhp chm\d.hhc chm\d.hhk : chmgen.exe chm-nav-release.json $(TARGETS)
-	chmgen --target release
+	chmgen --root=$W --target release
 
 chm\d.chm : chm\d.hhp chm\d.hhc chm\d.hhk
 	-cmd /C "cd chm && "$(HHC)" d.hhp"
