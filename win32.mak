@@ -30,11 +30,6 @@ d.chm : chm\d.chm
 chm-nav-release.json : $(DDOC) std.ddoc spec\spec.ddoc modlist-release.ddoc changelog\changelog.ddoc chm-nav.dd
 	$(DMD) -o- -c -Df$@ $**
 
-d.tag : chmgen.exe $(TARGETS)
-	chmgen --only-tags
-
-d-tags.json : d.tag
-
 modlist-release.ddoc : modlist.d
 # need + to run as sub-cmd, redirect doesn't work otherwise
 	+$(DMD) -run modlist.d ..\druntime ..\phobos $(MOD_EXCLUDES_RELEASE) >$@
