@@ -46,9 +46,9 @@ $(LI $(RELATIVE_LINK2 std-algorithm-iteration-substitute,`std.algorithm.searchin
 $(LI $(RELATIVE_LINK2 std-bigint-divmod,`divMod` was added to std.bigint.))
 $(LI $(RELATIVE_LINK2 std-bigint-getDigit,`getDigit` Was Added To `std.bigint`))
 $(LI $(RELATIVE_LINK2 std-exception-enforce,std.exception.enforce can now be used as an eponymous template to create your own enforce function))
+$(LI $(RELATIVE_LINK2 std-experimental-all,`import std.experimental.all` as a global convenience import))
 $(LI $(RELATIVE_LINK2 std-experimental-allocator-rciallocator,Replace `std.experimental.allocator.IAllocator` with `std.experimental.allocator.RCIAllocator`))
 $(LI $(RELATIVE_LINK2 std-experimental-allocator-rcisharedallocator,Replace `std.experimental.allocator.ISharedAllocator` with `std.experimental.allocator.RCISharedAllocator`))
-$(LI $(RELATIVE_LINK2 std-experimental-scripting,`import std.experimental.scripting` as a global convenience import))
 $(LI $(RELATIVE_LINK2 std-file-readText,readText now checks BOMs))
 $(LI $(RELATIVE_LINK2 std-parallelism-fold,`fold` is added to `std.parallelism.TaskPool`))
 $(LI $(RELATIVE_LINK2 std-range-nullsink,`nullSink` was added to `std.range`))
@@ -1001,6 +1001,54 @@ With this change, $(REF enforce, std,exception) is a strict superset of $(REF en
 )
 )
 
+$(LI $(LNAME2 std-experimental-all,`import std.experimental.all` as a global convenience import)
+$(P
+$(MREF std,experimental,all) allows convenient use of all Phobos modules
+with one import:
+)
+
+---
+import std.experimental.all;
+void main()
+{
+    10.iota.map!log.sum.writeln;
+}
+---
+
+$(P
+For short scripts a lot of imports are often needed to get all the
+modules from the standard library.
+With this release it's possible to use `import std.experimental.all` for importing the entire
+standard library at once. This can be used for fast prototyping or REPLs:
+)
+
+---
+import std.experimental.all;
+void main()
+{
+    6.iota
+      .filter!(a => a % 2) // 0 2 4
+      .map!(a => a * 2) // 0 4 8
+      .tee!writeln
+      .sum
+      .reverseArgs!writefln("Sum: %d"); // 18
+}
+---
+
+$(P
+As before, symbol conflicts will only arise if a symbol with collisions is used.
+In this case, $(LINK2 $(ROOT)spec/module.html#static_imports, static imports) or
+$(LINK2 $(ROOT)spec/module.html#renamed_imports, renamed imports) can be used
+to uniquely select a specific symbol.
+)
+
+$(P
+The baseline cost for `import std.experimental.all`
+is less than half a second (varying from system to system) and
+work is in progress to reduce this overhead even further.
+)
+)
+
 $(LI $(LNAME2 std-experimental-allocator-rciallocator,Replace `std.experimental.allocator.IAllocator` with `std.experimental.allocator.RCIAllocator`)
 $(P
 $(B Motivation):
@@ -1055,54 +1103,6 @@ auto b = sharedFLObj.allocate(100);
 assert(b.length == 100);
 assert(sharedFLObj.deallocate(b));
 ------
-)
-
-$(LI $(LNAME2 std-experimental-scripting,`import std.experimental.scripting` as a global convenience import)
-$(P
-$(MREF std,experimental,scripting) allows convenient use of all Phobos modules
-with one import:
-)
-
----
-import std.experimental.scripting;
-void main()
-{
-    10.iota.map!log.sum.writeln;
-}
----
-
-$(P
-For short scripts a lot of imports are often needed to get all the
-modules from the standard library.
-With this release it's possible to use `import std.experimental.scripting` for importing the entire
-standard library at once. This can be used for fast prototyping or REPLs:
-)
-
----
-import std.experimental.scripting;
-void main()
-{
-    6.iota
-      .filter!(a => a % 2) // 0 2 4
-      .map!(a => a * 2) // 0 4 8
-      .tee!writeln
-      .sum
-      .reverseArgs!writefln("Sum: %d"); // 18
-}
----
-
-$(P
-As before, symbol conflicts will only arise if a symbol with collisions is used.
-In this case, $(LINK2 $(ROOT)spec/module.html#static_imports, static imports) or
-$(LINK2 $(ROOT)spec/module.html#renamed_imports, renamed imports) can be used
-to uniquely select a specific symbol.
-)
-
-$(P
-The baseline cost for `import std.experimental.scripting`
-is less than half a second (varying from system to system) and
-work is in progress to reduce this overhead even further.
-)
 )
 
 $(LI $(LNAME2 std-file-readText,readText now checks BOMs)
@@ -1398,9 +1398,11 @@ $(LI $(BUGZILLA 17970): shared struct destructor doesn't compile anymore)
 $(LI $(BUGZILLA 18030): Segmentation fault with __traits$(LPAREN)getProtection$(RPAREN) on template function.)
 $(LI $(BUGZILLA 18093): [Reg 2.071] MSCOFF: dmd crashes when overriding a C++ method in a mixin template)
 $(LI $(BUGZILLA 18097): [REG2.077] Unittest function is undefined identifier)
+$(LI $(BUGZILLA 18296): [Reg2.078.1] invalid code with coverage and copy construction)
 $(LI $(BUGZILLA 18322): void fun$(LPAREN)string file=__FILE_FULL_PATH__$(RPAREN)$(LPAREN)$(RPAREN) returns relative path $(LPAREN)pointing to nowhere$(RPAREN))
 $(LI $(BUGZILLA 18430): isSame is wrong for non global lambdas)
 $(LI $(BUGZILLA 18469): [REG 2.079-b1] Segfault when trying to get type of __dtor.opCall)
+$(LI $(BUGZILLA 18480): [Reg 2.079] dmd hangs with self-alias declaration)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bugs,
 
@@ -1410,6 +1412,7 @@ $(LI $(BUGZILLA 8687): Variadic templates do not work properly with default argu
 $(LI $(BUGZILLA 9433): Deprecate delete)
 $(LI $(BUGZILLA 12511): static overloaded function is not accessible)
 $(LI $(BUGZILLA 12901): Assignments to outside members in `in`/`out` contracts shouldn't be allowed)
+$(LI $(BUGZILLA 14147): Compiler crash on identical functions in a single module)
 $(LI $(BUGZILLA 14907): DMD crash when using template name as a default value of template's typed argument)
 $(LI $(BUGZILLA 15777): Premature expansion of overload set in tuples)
 $(LI $(BUGZILLA 16042): Identifier on template arguments should consider eponymous member lookup)
@@ -1435,15 +1438,13 @@ $(LI $(BUGZILLA 18335): The D_ObjectiveC version identifier is not printed in ve
 $(LI $(BUGZILLA 18364): header file generation doesn't print the package name in package$(LPAREN)XXX$(RPAREN))
 $(LI $(BUGZILLA 18367): dmd should not segfault on -X with libraries, but no source files)
 $(LI $(BUGZILLA 18429): alias this enum causes segmentation fault)
+$(LI $(BUGZILLA 18468): cannot use `synchronized {}` in @safe code)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
 $(LI $(BUGZILLA 6549): Implement contracts without implementation.)
 $(LI $(BUGZILLA 11529): Unclear error message when rvalue is passed as `ref')
-$(LI $(BUGZILLA 11555): std.algorithm.reverse should return the just-reversed range)
 $(LI $(BUGZILLA 11714): Improve error message for wrongly initialized thread-local class instances)
-$(LI $(BUGZILLA 13855): Allow multiple selective imports from different modules in a single import statement)
-$(LI $(BUGZILLA 15613): Parameter type mismatch error message are not very helpful)
 $(LI $(BUGZILLA 16492): support @nogc in debug{} blocks)
 $(LI $(BUGZILLA 17899): Cannot initialise contextless delegate at compile time)
 $(LI $(BUGZILLA 18053): Use stdint.h mangling for int64_t/uint64_t when mangling D long/ulong)
@@ -1454,6 +1455,7 @@ $(LI $(BUGZILLA 18427): `Symbol FOO is not visible because it is privately impor
 )
 $(BUGSTITLE_BUGZILLA Phobos regressions,
 
+$(LI $(BUGZILLA 18114): [Reg 2.078] regex performance regression)
 $(LI $(BUGZILLA 18316): std.net.curl.SMTP.mailTo fails to compile)
 )
 $(BUGSTITLE_BUGZILLA Phobos bugs,
@@ -1479,12 +1481,14 @@ $(LI $(BUGZILLA 18349): std/math.d$(LPAREN)543,33$(RPAREN): Deprecation: integra
 $(LI $(BUGZILLA 18384): std.net.isemail is slow to import due to regex)
 $(LI $(BUGZILLA 18397): Poor implementation of std.conv.hexString results in unintended bloat)
 $(LI $(BUGZILLA 18434): BigInt gcd asserts when one argument is zero.)
+$(LI $(BUGZILLA 18492): DLang STL links are broken)
 )
 $(BUGSTITLE_BUGZILLA Phobos enhancements,
 
 $(LI $(BUGZILLA 5489): std.typecons tuples dynamically iterable)
 $(LI $(BUGZILLA 10828): datetime toString functions should accept sink)
 $(LI $(BUGZILLA 11084): std.algorithm.scan)
+$(LI $(BUGZILLA 11555): std.algorithm.reverse should return the just-reversed range)
 $(LI $(BUGZILLA 11747): Better error message with @disabled toString)
 $(LI $(BUGZILLA 13632): Second argument for std.string.strip)
 $(LI $(BUGZILLA 14767): Support CTFE of BigInt under x86)
@@ -1535,6 +1539,7 @@ $(LI $(BUGZILLA 18383): Front page blog section is only partially filled.)
 $(BUGSTITLE_BUGZILLA Installer bugs,
 
 $(LI $(BUGZILLA 15131): curl.lib is not available in 32 bit mscoff format)
+$(LI $(BUGZILLA 18510): [Beta 2.079] lld-link.exe fails to open obj file in subpath)
 )
 )
 $(D_CONTRIBUTORS_HEADER 77)
