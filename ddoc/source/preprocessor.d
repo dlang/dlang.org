@@ -24,12 +24,14 @@ struct Config
 {
     string dmdBinPath = "dmd";
     string outputFile;
-    string cwd = __FILE_FULL_PATH__.dirName;
+    string cwd = __FILE_FULL_PATH__.dirName.dirName.dirName;
 }
 Config config;
 
+version(IsExecutable)
 int main(string[] rootArgs)
 {
+    import assert_writeln_magic;
     import std.getopt;
     auto helpInformation = getopt(
         rootArgs, std.getopt.config.passThrough,
@@ -49,33 +51,71 @@ All unknown options are passed to the compiler.
     assert(pos >= 0, "An input file (.d or .dd) must be provided");
     auto inputFile = args[pos];
     auto text = inputFile.readText;
-    // replace only works with 2.078.1, see: https://github.com/dlang/phobos/pull/6017
-    args = args[0..pos].chain("-".only, args[pos..$].dropOne).array;
+
+    // for now only non-package modules are supported
+    if (!inputFile.endsWith("index.d"))
+        // replace only works with 2.078.1, see: https://github.com/dlang/phobos/pull/6017
+        args = args[0..pos].chain("-".only, args[pos..$].dropOne).array;
 
     // transform and extend the ddoc page
     text = genGrammar(text);
     text = genHeader(text);
     text = genChangelogVersion(inputFile, text);
     text = genSwitches(text);
+    text = fixDdocBugs(inputFile, text);
 
-    // inject custom, "dynamic" macros
-    text ~= "\nSRC_FILENAME=%s\n".format(inputFile.buildNormalizedPath);
-    return compile(text, args);
+    // Phobos index.d should have been named index.dd
+    if (inputFile.endsWith(".d") && !inputFile.endsWith("index.d"))
+        text = assertWritelnModule(text);
+
+    string[string] macros;
+    macros["SRC_FILENAME"] = "%s\n".format(inputFile.buildNormalizedPath);
+    return compile(text, args, inputFile, macros);
 }
 
-auto compile(R)(R buffer, string[] arguments)
+auto createTmpDir()
 {
+    import std.uuid : randomUUID;
+    auto dir = tempDir.buildPath("ddoc_preprocessor_" ~ randomUUID.toString.replace("-", ""));
+    mkdir(dir);
+    return dir;
+}
+
+auto compile(R)(R buffer, string[] arguments, string inputFile, string[string] macros = null)
+{
+    import core.time : usecs;
+    import core.thread : Thread;
     import std.process : pipeProcess, Redirect, wait;
     auto args = [config.dmdBinPath] ~ arguments;
-    foreach (arg; ["-c", "-o-", "-"])
+
+    // Note: ideally we could pass in files directly on stdin.
+    // However, for package.d files, we need to imitate package directory layout to avoid conflicts
+    auto tmpDir = createTmpDir;
+    auto inputTmpFile = tmpDir.buildPath(inputFile);
+    inputTmpFile.dirName.mkdirRecurse;
+    std.file.write(inputTmpFile, buffer);
+    args = args.replace("-", inputTmpFile);
+    scope(exit) tmpDir.rmdirRecurse;
+
+    if (macros !is null)
+    {
+        auto macroString = macros.byPair.map!(a => "%s=%s".format(a[0], a[1])).join("\n");
+        auto macroFile = tmpDir.buildPath("macros.ddoc");
+        std.file.write(macroFile, macroString);
+        args ~= macroFile;
+    }
+
+    foreach (arg; ["-c", "-o-"])
     {
         if (!args.canFind(arg))
             args ~= arg;
     }
     auto pipes = pipeProcess(args, Redirect.stdin);
-    pipes.stdin.write(buffer);
-    pipes.stdin.close;
-    return wait(pipes.pid);
+    import std.process : execute;
+    auto ret = execute(args);
+    if (ret.status != 0)
+        stderr.writeln(ret.output);
+    return ret.status;
 }
 
 // replaces the content of a DDoc macro call
@@ -277,6 +317,26 @@ auto genChangelogVersion(string fileName, string fileText)
             auto ver = file.name.baseName.stripExtension.until("_pre");
             macros ~= "$(CHANGELOG_VERSION%s %s, %s)\n".format(file.name.endsWith("_pre.dd") ? "_PRE" : "", ver, date);
         }
+
+        // inject the changelog footer
+        auto fileBaseName = fileName.baseName;
+        auto r = changelogFiles.enumerate.find!(a => a.value.baseName == fileBaseName);
+        if (r.length != 0)
+        {
+            auto el = r.front;
+            macros ~= "\nCHANGELOG_NAV_INJECT=";
+            auto versions = changelogFiles.map!(a => a.baseName.until(".dd"));
+            // mapping for the first and last page is different
+            if (el.index == 0)
+                macros ~="\n$(CHANGELOG_NAV_FIRST %s)".format(versions[1]);
+            else if (el.index == changelogFiles.length - 1 ||
+                     // prerelease pages shouldn't be linked to from the released versions
+                     el.index == changelogFiles.length - 2 && versions[$ - 1].canFind("_pre"))
+                macros ~="\n$(CHANGELOG_NAV_LAST %s)".format(versions[el.index - 1]);
+            else
+                macros ~="\n$(CHANGELOG_NAV %s, %s)".format(versions[el.index - 1], versions[el.index + 1]);
+            macros ~= "\n_=";
+        }
         fileText ~= macros;
     }
     return fileText;
@@ -383,4 +443,19 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
             .joiner(" ")
             .to!string;
     }
+}
+
+// Fix ddoc bugs
+string fixDdocBugs(string inputFile, string text)
+{
+
+    // https://github.com/dlang/dlang.org/pull/2069#issuecomment-363154934
+    // can be removed once the Phobos PR is in stable and master
+    // https://github.com/dlang/phobos/pull/6126
+    if (inputFile.endsWith("exception.d"))
+    {
+        text = text.replace(`typeof(new E("", __FILE__, __LINE__)`, `typeof(new E("", string.init, size_t.init)`);
+        text = text.replace(`typeof(new E(__FILE__, __LINE__)`, `typeof(new E(string.init, size_t.init)`);
+    }
+    return text;
 }

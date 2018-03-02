@@ -126,6 +126,18 @@
 #  in the build folder `.generated`, s.t. Ddoc can be run on the modified sources.
 #
 #  See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
+#
+#  Custom DDoc wrapper
+#  -------------------
+#
+#  `ddoc.d` is a wrapper around Ddoc and allows expanding Ddoc macros dynamically
+#  before actually running Ddoc.
+#  Currently this is used for:
+#    - TOC
+#    - dynamic TOC generation
+#    - GRAMMAR overview generation
+#    - CHANGELOG menu generation
+#    - assert -> writeln magic
 PWD=$(shell pwd)
 MAKEFILE=$(firstword $(MAKEFILE_LIST))
 SHELL:=/bin/bash
@@ -171,21 +183,13 @@ $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
 $(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(DRUNTIME_DIR))
 
 ################################################################################
-# Automatically generated directories
-PHOBOS_DIR_GENERATED=$(GENERATED)/phobos-prerelease
-PHOBOS_LATEST_DIR_GENERATED=$(GENERATED)/phobos-latest
-# The assert_writeln_magic tool transforms all source files from Phobos. Hence
-# - a temporary folder with a copy of Phobos needs to be generated
-# - a list of all files in Phobos and the temporary copy is needed to setup proper
-#   Makefile dependencies and rules
+# Automatically clone Phobos
 PHOBOS_FILES := $(shell find $(PHOBOS_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
-PHOBOS_FILES_GENERATED := $(subst $(PHOBOS_DIR), $(PHOBOS_DIR_GENERATED), $(PHOBOS_FILES))
 ifndef RELEASE
  # TODO: should be replaced by make targets
  $(shell [ ! -d $(PHOBOS_DIR) ] && git clone --depth=1 ${GIT_HOME}/phobos $(PHOBOS_DIR))
  $(shell [ ! -d $(PHOBOS_LATEST_DIR) ] && git clone -b v${LATEST} --depth=1 ${GIT_HOME}/phobos $(PHOBOS_LATEST_DIR))
  PHOBOS_LATEST_FILES := $(shell find $(PHOBOS_LATEST_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
- PHOBOS_LATEST_FILES_GENERATED := $(subst $(PHOBOS_LATEST_DIR), $(PHOBOS_LATEST_DIR_GENERATED), $(PHOBOS_LATEST_FILES))
 endif
 ################################################################################
 
@@ -283,7 +287,7 @@ DDOC_VARS_PRERELEASE_VERBATIM=$(DDOC_VARS_PRERELEASE) \
 # Ddoc binaries
 ################################################################################
 
-DDOC_BIN:=$G/ddoc
+DDOC_BIN:=$G/ddoc_preprocessor
 DDOC_BIN_DMD:=$(DDOC_BIN) --compiler=$(DMD)
 
 ################################################################################
@@ -299,10 +303,11 @@ IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 	$(addprefix compiler-, dmd.png gdc.svg ldc.png) \
 	$(addsuffix .svg, icon_minus icon_plus hamburger dlogo faster-aa-1 faster-gc-1 \
 		qualifier-combinations qualifier-conversions) \
-	$(addsuffix .png, archlinux_logo apple_logo centos_logo chocolatey_logo \
+	$(addsuffix .png, archlinux_logo apple_logo \
+		centos_logo chocolatey_logo \
 		d3 dconf_logo_2018 debian_logo dlogo fedora_logo freebsd_logo gentoo_logo homebrew_logo \
 		opensuse_logo ubuntu_logo windows_logo pattern github-ribbon \
-		dlogo_opengraph \
+		dlogo_opengraph state-of-d-2018 \
 		$(addprefix ddox/, alias class enum enummember function \
 			inherited interface module package private property protected \
 			struct template variable)) \
@@ -344,7 +349,7 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd betterc)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
+CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) changelog/release-schedule
 ifneq (1,$(RELEASE))
  CHANGELOG_FILES+=changelog/pending
 endif
@@ -363,7 +368,7 @@ ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
-	ascii-table bugstats $(CHANGELOG_FILES) community comparison concepts \
+	ascii-table bugstats $(CHANGELOG_FILES) calendar community comparison concepts \
 	D1toD2 deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys glossary \
 	gsoc2011 gsoc2012 gsoc2012-template howto-promote htod index install \
@@ -401,7 +406,9 @@ docs : docs-latest docs-prerelease
 
 html : $(ALL_FILES)
 
-verbatim : $(addprefix $W/, $(addsuffix .verbatim,$(PAGES_ROOT))) phobos-prerelease-verbatim
+html-verbatim: $(addprefix $W/, $(addsuffix .verbatim,$(PAGES_ROOT)))
+
+verbatim : html-verbatim phobos-prerelease-verbatim
 
 kindle : $W/dlangspec.mobi
 
@@ -455,7 +462,7 @@ rsync : all kindle pdf
 rsync-only :
 	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $W/ $(REMOTE_DIR)/
 
-dautotest: all verbatim pdf diffable-intermediaries
+dautotest: all verbatim pdf diffable-intermediaries d-latest.tag d-prerelease.tag
 
 ################################################################################
 # Pattern rulez
@@ -479,8 +486,9 @@ $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
 
-$(DOC_OUTPUT_DIR)/foundation/contributors.html: foundation/contributors.dd $G/contributors_list.ddoc $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $<
+$(DOC_OUTPUT_DIR)/foundation/contributors.html: foundation/contributors.dd \
+		$G/contributors_list.ddoc foundation/foundation.ddoc $(DDOC) $(DMD)
+	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $(word 3, $^) $<
 
 $W/articles/%.html : articles/%.dd $(DDOC) $(DMD) $(DDOC_BIN) articles/articles.ddoc
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $< articles/articles.ddoc
@@ -683,22 +691,26 @@ $W/phobos-prerelease/object.verbatim : $(DMD) $G/changelog/next-version
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_FILES_GENERATED} druntime-target $(STD_DDOC_PRERELEASE)
-	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
+phobos-prerelease : ${PHOBOS_FILES} druntime-target $(STD_DDOC_PRERELEASE) $(DDOC_BIN) $(DMD) \
+					$G/changelog/next-version
+	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML) \
+		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD))"
 
-phobos-release : ${PHOBOS_FILES_GENERATED} druntime-target $(STD_DDOC_RELEASE)
-	$(MAKE) --directory=$(PHOBOS_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
+phobos-release : ${PHOBOS_FILES} druntime-target $(STD_DDOC_RELEASE) $(DDOC_BIN) $(DMD)
+	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML) \
+		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD))"
 
-phobos-latest : ${PHOBOS_LATEST_FILES_GENERATED} druntime-latest-target $(STD_DDOC_LATEST)
-	$(MAKE) --directory=$(PHOBOS_LATEST_DIR_GENERATED) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
+phobos-latest : ${PHOBOS_LATEST_FILES} druntime-latest-target $(STD_DDOC_LATEST) $(DDOC_BIN) $(DMD_LATEST)
+	$(MAKE) --directory=$(PHOBOS_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML) \
+		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD_LATEST))"
 
-phobos-prerelease-verbatim : ${PHOBOS_FILES_GENERATED} druntime-target \
+phobos-prerelease-verbatim : ${PHOBOS_FILES} druntime-target \
 		$W/phobos-prerelease/index.verbatim
 $W/phobos-prerelease/index.verbatim : verbatim.ddoc \
 		$W/phobos-prerelease/object.verbatim \
-		$W/phobos-prerelease/mars.verbatim $G/changelog/next-version
-	${MAKE} --directory=${PHOBOS_DIR_GENERATED} -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM) \
-	  DOC_OUTPUT_DIR=$W/phobos-prerelease-verbatim
+		$W/phobos-prerelease/mars.verbatim $G/changelog/next-version $(DMD) $(DDOC_BIN)
+	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM) \
+	  DOC_OUTPUT_DIR=$W/phobos-prerelease-verbatim DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD))"
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
 	mv $W/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r $W/phobos-prerelease-verbatim
@@ -748,7 +760,7 @@ else
 endif
 
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
-			${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_FILES_GENERATED} | dpl-docs
+			${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_FILES} | dpl-docs
 	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
 	if [ -f $(DMD_LATEST_DIR)/src/*/objc_glue_stubs.d ] ; then \
 	   DMD_EXCLUDE_LATEST_BASH="-e /objc_glue.d/d"; \
@@ -757,17 +769,17 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 		sed -e /mscoff/d $${DMD_EXCLUDE_LATEST_BASH} ${DMD_EXCLUDE_LATEST}
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
-	find ${PHOBOS_LATEST_DIR_GENERATED} -name '*.d' | \
+	find ${PHOBOS_LATEST_DIR} -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
 	${DMD_LATEST} -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
 		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
-		-Xf$@ -I${PHOBOS_LATEST_DIR_GENERATED} @$G/.latest-files.txt
+		-Xf$@ -I${PHOBOS_LATEST_DIR} @$G/.latest-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
 		--only-documented $(MOD_EXCLUDES_LATEST)
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
-		${PHOBOS_FILES_GENERATED} | dpl-docs
+		${PHOBOS_FILES} | dpl-docs
 	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
 	if [ -f $(DMD_DIR)/src/*/objc_glue_stubs.d ] ; then \
 	   DMD_EXCLUDE_PRERELEASE="-e /objc_glue.d/d"; \
@@ -776,11 +788,11 @@ $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
 		sed -e /mscoff/d $${DMD_EXCLUDE_PRERELEASE} > $G/.prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | \
 		sed -e /unittest/d >> $G/.prerelease-files.txt
-	find ${PHOBOS_DIR_GENERATED} -name '*.d' | \
+	find ${PHOBOS_DIR} -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.prerelease-files.txt
 	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
 		-version=StdDdoc -Df$G/.prerelease-dummy.html \
-		-Xf$@ -I${PHOBOS_DIR_GENERATED} @$G/.prerelease-files.txt
+		-Xf$@ -I${PHOBOS_DIR} @$G/.prerelease-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
 		--only-documented $(MOD_EXCLUDES_PRERELEASE)
 	rm -f $G/.prerelease-files.txt $G/.prerelease-dummy.html
@@ -833,49 +845,13 @@ chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-p
 ################################################################################
 
 d-latest.tag d-tags-latest.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
-	$(STABLE_RDMD) chmgen.d --root=$W --only-tags --target latest
+	$(STABLE_RDMD) chmgen.d --root=$W --target latest
 
 d-release.tag d-tags-release.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
 	$(STABLE_RDMD) chmgen.d --root=$W --target release
 
 d-prerelease.tag d-tags-prerelease.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
 	$(STABLE_RDMD) chmgen.d --root=$W --target prerelease
-
-################################################################################
-# Assert -> writeln magic
-# -----------------------
-#
-# - This transforms assert(a == b) to writeln(a); // b
-# - It creates a copy of Phobos to apply the transformations
-# - All "d" files are piped through the transformator,
-#   other needed files (e.g. posix.mak) get copied over
-#
-# See also: https://dlang.org/blog/2017/03/08/editable-and-runnable-doc-examples-on-dlang-org
-################################################################################
-
-ASSERT_WRITELN_BIN = $(GENERATED)/assert_writeln_magic
-
-$(ASSERT_WRITELN_BIN): assert_writeln_magic.d $(DUB) $(STABLE_DMD)
-	@mkdir -p $(dir $@)
-	$(DUB) -v build --single --compiler=$(STABLE_DMD) $<
-	@mv ./assert_writeln_magic $@
-
-$(ASSERT_WRITELN_BIN)_test: assert_writeln_magic.d $(DUB) $(STABLE_DMD)
-	@mkdir -p $(dir $@)
-	$(DUB) -v build --single --compiler=$(STABLE_DMD) --build=unittest $<
-	@mv ./assert_writeln_magic $@
-
-$(PHOBOS_FILES_GENERATED): $(PHOBOS_DIR_GENERATED)/%: $(PHOBOS_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
-	@mkdir -p $(dir $@)
-	@if [ $(subst .,, $(suffix $@)) = "d" ] && [ "$@" != "$(PHOBOS_DIR_GENERATED)/index.d" ] ; then \
-		$(ASSERT_WRITELN_BIN) -i $< -o $@ ; \
-	else cp $< $@ ; fi
-
-$(PHOBOS_LATEST_FILES_GENERATED): $(PHOBOS_LATEST_DIR_GENERATED)/%: $(PHOBOS_LATEST_DIR)/% $(DUB) $(ASSERT_WRITELN_BIN)
-	@mkdir -p $(dir $@)
-	@if [ $(subst .,, $(suffix $@)) = "d" ] && [ "$@" != "$(PHOBOS_LATEST_DIR_GENERATED)/index.d" ] ; then \
-		$(ASSERT_WRITELN_BIN) -i $< -o $@ ; \
-	else cp $< $@ ; fi
 
 ################################################################################
 # Style tests
@@ -886,7 +862,7 @@ test_dspec: dspec_tester.d $(DMD) $(PHOBOS_LIB)
 	$(DMD) -run $< --compiler=$(DMD)
 
 .PHONY:
-test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all | $(STABLE_DMD)
+test: test_dspec test/next_version.sh all | $(STABLE_DMD) $(DUB)
 	@echo "Searching for trailing whitespace"
 	@grep -n '[[:blank:]]$$' $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
 	@echo "Searching for tabs"
@@ -894,8 +870,8 @@ test: $(ASSERT_WRITELN_BIN)_test test_dspec test/next_version.sh all | $(STABLE_
 	@echo "Checking DDoc's output"
 	$(STABLE_RDMD) -main -unittest check_ddoc.d
 	$(STABLE_RDMD) check_ddoc.d $$(find $W -type f -name "*.html" -not -path "$W/phobos/*")
-	@echo "Executing assert_writeln_magic tests"
-	$<
+	@echo "Executing ddoc_preprocessor tests"
+	$(DUB) test --compiler=${STABLE_DMD} --root ddoc
 	@echo "Executing next_version tests"
 	test/next_version.sh
 
@@ -954,13 +930,13 @@ changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
 							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
 	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_STABLE) -o $@ --version "${NEXT_VERSION}" \
-		--date "To be released"
+		--prev-version="${LATEST}" --date "To be released"
 
 changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
 							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
 	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_MASTER) -o $@ --version "${NEXT_VERSION}" \
-		--date "To be released"
+		--prev-version="${LATEST}" --date "To be released"
 
 pending_changelog: changelog/pending.dd html
 	@echo "Please open file:///$(shell pwd)/web/changelog/pending.html in your browser"
@@ -983,12 +959,12 @@ $G/contributors_list.ddoc:  | $(STABLE_RDMD) $(TOOLS_DIR) $(INSTALLER_DIR)
 # Custom DDoc wrapper
 # ------------------
 #
-# This allows extending Ddoc files dynamically on-the-fly.
-# It is currently only used for the specification pages
+# This allows extending Ddoc files and D source code files dynamically on-the-fly.
 ################################################################################
 
-$(DDOC_BIN): ddoc_preprocessor.d | $(STABLE_DMD) $(DMD)
-	$(STABLE_RDMD) -version=DdocOptions --build-only -g -of$@ -I$(DMD_DIR)/src $<
+$(DDOC_BIN): ddoc/source/preprocessor.d ddoc/source/assert_writeln_magic.d | $(STABLE_DMD)
+	$(STABLE_DMD_BIN_ROOT)/dub build --compiler=$(STABLE_DMD) --root=ddoc && \
+		mv ddoc/ddoc_preprocessor $@
 
 ################################################################################
 # Build and render the DMD man page

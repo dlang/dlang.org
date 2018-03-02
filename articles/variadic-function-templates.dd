@@ -2,6 +2,8 @@ Ddoc
 
 $(D_S Variadic Templates,
 
+$(HEADERNAV_TOC)
+
         $(P The problem statement is simple: write a function that
         takes an arbitrary number of values of arbitrary types,
         and print those values out one per line in a manner
@@ -22,15 +24,14 @@ $(CONSOLE
 )
 
         $(P We'll explore how this can
-        be done in standard C++, followed by doing it using
-        the proposed variadic template C++ extension.
+        be done in C++.
         Then, we'll do it the various ways the D programming
         language makes possible.
         )
 
-$(H3 C++ Solutions)
+$(H2 $(LNAME2 cpp-solutions, C++ Solutions))
 
-$(H4 The Standard C++ Solution)
+$(H3 The Overload Solution)
 
         $(P The straightforward way to do this in standard C++
         is to use a series of function templates, one for
@@ -97,12 +98,9 @@ template&lt;class T1, class T2, class T3&gt; void print(T1 a1, T2 a2, T3 a3)
         compilation.
         )
 
-$(H4 The C++ Extension Solution)
+$(H3 C++ Variadic Templates)
 
-        $(P Douglas Gregor has proposed a
-        variadic template scheme [1]
-        for C++ that solves these problems.
-        The result looks like:
+        $(P C++11 supports variadic templates:
         )
 
 $(CCODE
@@ -120,17 +118,11 @@ template&lt;class T, class... U&gt; void print(T a1, U... an)
         $(P It uses recursive function template instantiation
         to pick off the arguments one by one.
         A specialization with no arguments ends the recursion.
-        It's a neat and tidy solution, but with one glaring problem:
-        it's a proposed extension, which means it isn't part
-        of the C++ standard, may not get into the C++ standard
-        in its current form, may not get into the standard
-        in any form, and even if it does, it may be many, many
-        years before the feature is commonly implemented.
         )
 
-$(H3 D Programming Language Solutions)
+$(H2 $(LNAME2 d-solutions, D Programming Language Solutions))
 
-$(H4 The D Look Ma No Templates Solution)
+$(H3 The D Look Ma No Templates Solution)
 
         $(P It is not practical to solve this problem in C++ without
         using templates. In D, one can because D supports typesafe
@@ -155,46 +147,51 @@ void print(...)
 
         $(P It isn't elegant or the most efficient,
         but it does work. However it is not the recommended way to write variadic functions.
-        (It relies on the parameters _argptr and _arguments imported from core.vararg
+        (It relies on the parameters `_argptr` and `_arguments` imported from `core.vararg`
         which give a pointer to the values and their types, respectively.)
         )
 
-$(H4 Translating the Variadic C++ Solution into D)
+$(H3 Translating the Variadic C++ Solution into D)
 
         $(P Variadic templates in D enable a straightforward translation
-        of the proposed C++ variadic syntax:
+        of the C++11 variadic solution:
         )
 
 ---
-void print()()
+void print()
 {
 }
 
 void print(T, A...)(T t, A a)
 {
+    import std.stdio;
     writeln(t);
     print(a);
 }
 ---
 
-        $(P There are two function templates. The first provides the
+        $(P There are two overloads. The first provides the
         degenerate case of no arguments, and a terminus for the
         recursion of the second. The second has two arguments:
-        t for the first value and a for the rest of the values.
-        A... says the parameter is a tuple, and implicit function
-        template instantiation will fill in A with the list of
-        all the types following t. So, print(7, 'a', 6.8) will
-        fill in int for T, and a tuple (char, double) for A.
-        The parameter a becomes an expression tuple of the arguments.
+        `t` for the first value and `a` for any remaining values.
+        `A...` says the parameter is a sequence, and
+        $(GLOSSARY2 ifti, Implicit Function Template Instantiation)
+        will fill in `A` with all the types of any
+        arguments supplied following `t`. So, `print(7, 'a', 6.8)` will
+        fill in `int` for `T`, and a type sequence `(char, double)` for `A`.
+        The parameter `a` is an lvalue sequence of any
+        arguments supplied after `t`. See
+        $(DDLINK articles/ctarguments, Compile-time Sequences, Compile-time Sequences)
+        for more information.
         )
 
-        $(P The function works by printing the first parameter t,
+        $(P The function works by printing the first parameter `t`,
         and then recursively calling itself with the remaining arguments
-        a. The recursion terminates when there are no longer any
-        arguments by calling print()().
+        `a`. The recursion terminates when there are no longer any
+        arguments by calling `print()`.
         )
 
-$(H4 The Static If Solution)
+$(H3 The Static If Solution)
 
         $(P It would be nice to encapsulate all the logic into a
         single function. One way to do that is by using
@@ -213,18 +210,18 @@ void print(A...)(A a)
 }
 ---
 
-        $(P Tuples can be manipulated much like arrays.
-        So a.length resolves to the number of expressions
-        in the tuple a. a[0] gives the first expression
-        in the tuple. a[1 .. $] creates a new tuple
-        by slicing the original tuple.
+        $(P Sequences can be manipulated much like arrays.
+        So `a.length` resolves to the number of elements
+        in the sequence `a`. `a[0]` gives the first element
+        in the sequence. `a[1 .. $]` creates a new sequence
+        from any remaining elements in the original sequence.
         )
 
-$(H4 The Foreach Solution)
+$(H3 The Foreach Solution)
 
-        $(P But since tuples can be manipulated like arrays,
-        we can use a foreach statement to 'loop' over
-        the tuple's expressions:
+        $(P But since sequences can be manipulated like arrays,
+        we can use a `foreach` statement to iterate over
+        the sequence's elements:
         )
 
 ---
@@ -251,14 +248,6 @@ $(H3 Acknowledgments)
         for their inspirational work
         on C++ variadic templates.
         )
-
-        )
-
-$(H3 References)
-
-        $(OL
-
-        $(LI $(LINK2 http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2080.pdf, Variadic Templates N2080))
 
         )
 

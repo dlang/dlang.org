@@ -233,7 +233,8 @@ $(document).ready(function()
             + (args.length > 0 ? '<input type="button" class="argsButton" value="Args">' : '')
             + (stdin.length > 0 ? '<input type="button" class="inputButton" value="Input">' : '')
             + '<input type="button" class="runButton" value="Run">'
-            + '<input type="button" class="resetButton" value="Reset"></div>'
+            + '<input type="button" class="resetButton" value="Reset">'
+            + '<input type="button" class="openInEditorButton" value="Open in IDE"></div>'
         );
     });
 
