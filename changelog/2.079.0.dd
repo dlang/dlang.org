@@ -6,6 +6,7 @@ $(VERSION Mar 01, 2018, =================================================,
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
+$(LI $(RELATIVE_LINK2 argument-mismatch,Argument mismatch errors have been improved))
 $(LI $(RELATIVE_LINK2 comma-deprecation-error,The deprecation period of using the result of comma expression has ended))
 $(LI $(RELATIVE_LINK2 default_after_variadic,Function parameters with default values are now allowed after variadic template parameters))
 $(LI $(RELATIVE_LINK2 deprecate_delete,The `delete` keyword has been deprecated.))
@@ -19,7 +20,7 @@ $(LI $(RELATIVE_LINK2 fix18219,Fix Issue 18219 - Private import inside struct le
 $(LI $(RELATIVE_LINK2 fix18361,Fix issue 18361 - Ddoc ability to opt-out of automatic keyword highlighting in running text))
 $(LI $(RELATIVE_LINK2 fix8207,D ABI change on Win32 and OSX targets))
 $(LI $(RELATIVE_LINK2 hexstrings,HexString literals are deprecated.))
-$(LI $(RELATIVE_LINK2 includeimports,Added the -i command line option to automatically include imports))
+$(LI $(RELATIVE_LINK2 includeimports,Added the `-i` command line option to automatically include imports))
 $(LI $(RELATIVE_LINK2 json_includes,Added `-Xi=<name>` to include more fields in the JSON output))
 $(LI $(RELATIVE_LINK2 lambdacomp,Lambda comparison using `__traits(isSame, ...)`))
 $(LI $(RELATIVE_LINK2 lld_mingw,Windows: Visual C++ and the Windows SDK are no longer required to build 64-bit executables))
@@ -64,6 +65,33 @@ $(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
 $(CHANGELOG_SEP_HEADER_TEXT)
 
 $(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 argument-mismatch,Argument mismatch errors have been improved)
+$(P
+$(P `dmd` now shows which argument failed to match a parameter with an explanatory error message.)
+)
+---
+void fill(ref char[16] buf, char c);
+
+void main()
+{
+    fill("1234567890123456", '*');
+
+    const char[16] s;
+    fill(s, '*');
+}
+---
+$(P
+$(P Output:)
+$(CONSOLE
+fillchar.d(5): Error: function `fillchar.fill(ref char[16] buf, char c)` is not callable using argument types `(string, char)`
+fillchar.d(5):        cannot pass rvalue argument `"1234567890123456"` of type `string` to parameter `ref char[16] buf`
+fillchar.d(8): Error: function `fillchar.fill(ref char[16] buf, char c)` is not callable using argument types `(const(char[16]), char)`
+fillchar.d(8):        cannot pass argument `s` of type `const(char[16])` to parameter `ref char[16] buf`
+)
+$(P Note: Currently this change doesn't apply when the function has overloads.)
+)
+)
 
 $(LI $(LNAME2 comma-deprecation-error,The deprecation period of using the result of comma expression has ended)
 $(P
@@ -422,9 +450,9 @@ Use $(LINK2 https://dlang.org/phobos/std_conv.html#hexString, `std.conv.hexStrin
 )
 )
 
-$(LI $(LNAME2 includeimports,Added the -i command line option to automatically include imports)
+$(LI $(LNAME2 includeimports,Added the `-i` command line option to automatically include imports)
 $(P
-Added the command line option -i which causes the compiler to treat imported modules as if they were given on the command line.  The option also accepts "module patterns" that include/exclude modules based on their name.  For example, the following will include all modules whose names start with `foo`, except for those that start with `foo.bar`:
+Added the command line option `-i` which causes the compiler to treat imported modules as if they were given on the command line.  The option also accepts "module patterns" that include/exclude modules based on their name.  For example, the following will include all modules whose names start with `foo`, except for those that start with `foo.bar`:
 )
 
 $(P
@@ -432,7 +460,7 @@ $(CONSOLE dmd -i=foo -i=-foo.bar)
 )
 
 $(P
-The option -i by itself is equivalent to:
+The option `-i` by itself is equivalent to:
 )
 
 $(P
@@ -1031,7 +1059,7 @@ void main()
       .map!(a => a * 2) // 0 4 8
       .tee!writeln
       .sum
-      .reverseArgs!writefln("Sum: %d"); // 18
+      .writefln!"Sum: %d"; // 18
 }
 ---
 
@@ -1406,7 +1434,6 @@ $(LI $(BUGZILLA 18480): [Reg 2.079] dmd hangs with self-alias declaration)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bugs,
 
-$(LI $(BUGZILLA 2789): Functions overloads are not checked for conflicts)
 $(LI $(BUGZILLA 8207): OS X: Should extern$(LPAREN)D$(RPAREN) symbols include another underscore?)
 $(LI $(BUGZILLA 8687): Variadic templates do not work properly with default arguments)
 $(LI $(BUGZILLA 9433): Deprecate delete)
@@ -1445,6 +1472,7 @@ $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 $(LI $(BUGZILLA 6549): Implement contracts without implementation.)
 $(LI $(BUGZILLA 11529): Unclear error message when rvalue is passed as `ref')
 $(LI $(BUGZILLA 11714): Improve error message for wrongly initialized thread-local class instances)
+$(LI $(BUGZILLA 13855): Allow multiple selective imports from different modules in a single import statement)
 $(LI $(BUGZILLA 16492): support @nogc in debug{} blocks)
 $(LI $(BUGZILLA 17899): Cannot initialise contextless delegate at compile time)
 $(LI $(BUGZILLA 18053): Use stdint.h mangling for int64_t/uint64_t when mangling D long/ulong)
@@ -1516,7 +1544,9 @@ $(BUGSTITLE_BUGZILLA Druntime bugs,
 $(LI $(BUGZILLA 18240): core.stdc.wchar_ wmemset, etc. should be pure)
 $(LI $(BUGZILLA 18247): core.stdc.math functions that never set errno should be pure)
 $(LI $(BUGZILLA 18279): rt.util.utf does not properly reserve buffer in toUTF16/toUTF16z)
+$(LI $(BUGZILLA 18300): core.demangle demangling of really long symbol fails)
 $(LI $(BUGZILLA 18409): DScanner SEGFAULTS on CircleCI)
+$(LI $(BUGZILLA 18531): core.exception.RangeError@src/core/demangle.d$(LPAREN)216$(RPAREN): Range violation)
 )
 $(BUGSTITLE_BUGZILLA dlang.org bugs,
 
@@ -1536,13 +1566,17 @@ $(LI $(BUGZILLA 18337): https://dlang.org/spec/operatoroverloading.html missing 
 $(LI $(BUGZILLA 18379): [404 Not Found] Foundation Donate page not found)
 $(LI $(BUGZILLA 18383): Front page blog section is only partially filled.)
 )
+$(BUGSTITLE_BUGZILLA Tools bugs,
+
+$(LI $(BUGZILLA 18208): demangle RangeError@src/core/demangle.d$(LPAREN)230$(RPAREN))
+)
 $(BUGSTITLE_BUGZILLA Installer bugs,
 
 $(LI $(BUGZILLA 15131): curl.lib is not available in 32 bit mscoff format)
 $(LI $(BUGZILLA 18510): [Beta 2.079] lld-link.exe fails to open obj file in subpath)
 )
 )
-$(D_CONTRIBUTORS_HEADER 77)
+$(D_CONTRIBUTORS_HEADER 78)
 $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR acehreli)
     $(D_CONTRIBUTOR aG0aep6G)
@@ -1559,6 +1593,7 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Basile Burg)
     $(D_CONTRIBUTOR Bastiaan Veelo)
     $(D_CONTRIBUTOR BBasile)
+    $(D_CONTRIBUTOR Brad Roberts)
     $(D_CONTRIBUTOR carblue)
     $(D_CONTRIBUTOR Daniel Kozak)
     $(D_CONTRIBUTOR Diederik de Groot)
