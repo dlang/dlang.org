@@ -604,18 +604,34 @@ $(GNAME VoidInitializer):
         $(P Normally, variables are initialized either with an explicit
         $(GLINK Initializer) or are set to the default value for the
         type of the variable. If the $(I Initializer) is $(D void),
-        however, the variable is not initialized. If its value is
-        used before it is set, undefined program behavior will result.
+        however, the variable is not initialized.
         )
 
-        $(UNDEFINED_BEHAVIOR If a void initialized variable's value is
-        used before it is set, the behavior is undefined.
+        $(IMPLEMENTATION_DEFINED If a void initialized variable's value is
+        used before it is set, the value is implementation defined.
+
+        ---
+        import std.stdio;
+        void foo()
+        {
+            int x = void;
+            writeln(x);  // will likely print garbage
+        }
+        ---
+        )
+
+        $(UNDEFINED_BEHAVIOR If a void initialized variable is a reference type
+        and its value is dereferenced before it is set, the behavior is undefined.
+        Such initializations are not allowed in `@safe` code.
 
         ---
         void foo()
         {
-            int x = void;
-            writeln(x);  // will print garbage
+            int* p = void;
+            *p = 3;      // undefined behavior
+            int x;
+            p = &x;
+            *p = 3;      // ok
         }
         ---
         )
