@@ -319,21 +319,34 @@ auto genChangelogVersion(string fileName, string fileText)
 
         // inject the changelog footer
         auto fileBaseName = fileName.baseName;
-        auto r = changelogFiles.enumerate.find!(a => a.value.baseName == fileBaseName);
+        auto r = changelogFiles.chain("pending.dd".only).enumerate.find!(a => a.value.baseName == fileBaseName);
         if (r.length != 0)
         {
             auto el = r.front;
             macros ~= "\nCHANGELOG_NAV_INJECT=";
             auto versions = changelogFiles.map!(a => a.baseName.until(".dd"));
+            auto hasPrerelease = versions[$ - 1].canFind("_pre");
             // mapping for the first and last page is different
             if (el.index == 0)
+            {
                 macros ~="\n$(CHANGELOG_NAV_FIRST %s)".format(versions[1]);
-            else if (el.index == changelogFiles.length - 1 ||
-                     // prerelease pages shouldn't be linked to from the released versions
-                     el.index == changelogFiles.length - 2 && versions[$ - 1].canFind("_pre"))
-                macros ~="\n$(CHANGELOG_NAV_LAST %s)".format(versions[el.index - 1]);
+            }
+            else if (
+                    // latest version + nightlies (pending.dd)
+                    el.index >= versions.length ||
+                    // prerelease pages
+                    el.index == versions.length - 1 && hasPrerelease)
+            {
+                macros ~="\n$(CHANGELOG_NAV_LAST %s)".format(versions.retro.find!(v => !v.canFind("_pre", "pending")).front);
+            }
+            else if (el.index == versions.length - 1 && !hasPrerelease)
+            {
+                macros ~="\n$(CHANGELOG_NAV_LAST %s)".format(versions[$ - 2]);
+            }
             else
+            {
                 macros ~="\n$(CHANGELOG_NAV %s, %s)".format(versions[el.index - 1], versions[el.index + 1]);
+            }
             macros ~= "\n_=";
         }
         fileText ~= macros;
