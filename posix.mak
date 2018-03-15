@@ -305,9 +305,10 @@ IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 		qualifier-combinations qualifier-conversions) \
 	$(addsuffix .png, archlinux_logo apple_logo \
 		centos_logo chocolatey_logo \
-		d3 dconf_logo_2018 debian_logo dlogo fedora_logo freebsd_logo gentoo_logo homebrew_logo nix_logo \
+		d3 dconf_logo_2018 debian_logo dlogo fedora_logo freebsd_logo gentoo_logo homebrew_logo \
+		index-banner nix_logo \
 		opensuse_logo ubuntu_logo windows_logo pattern github-ribbon \
-		dlogo_opengraph state-of-d-2018 \
+		dlogo_opengraph \
 		$(addprefix ddox/, alias class enum enummember function \
 			inherited interface module package private property protected \
 			struct template variable)) \
