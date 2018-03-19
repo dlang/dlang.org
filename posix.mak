@@ -233,9 +233,6 @@ CHANGE_SUFFIX = \
 		mv $$f `dirname $$f`/`basename $$f .$1`.$2 ; \
 	done
 
-# Caches the latest D blog post for the front page
-DBLOG_LATEST=
-
 # Disable all dynamic content that could potentially have an unrelated impact
 # on a diff
 ifeq (1,$(DIFFABLE))
@@ -244,7 +241,6 @@ ifeq (1,$(DIFFABLE))
 else
  CHANGELOG_VERSION_MASTER := "v${LATEST}..upstream/master"
  CHANGELOG_VERSION_STABLE := "v${LATEST}..upstream/stable"
- DBLOG_LATEST=$G/dblog_latest.ddoc $G/dblog_latest2.ddoc
 endif
 
 ################################################################################
@@ -327,7 +323,7 @@ STYLES=$(addsuffix .css, $(addprefix css/, \
 # HTML Files
 ################################################################################
 
-DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME) $(DBLOG_LATEST)
+DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME) $G/dblog_latest.ddoc
 STD_DDOC_LATEST=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
 STD_DDOC_RELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-release) $(NODATETIME)
 STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
@@ -592,21 +588,18 @@ $G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DDOC_BIN) verbatim.ddo
 # Fetch the latest article from the official D blog
 ################################################################################
 
-$G/dblog_latest.html:
+ifeq (1,$(DIFFABLE))
+$G/dblog_latest.xml: dblog_feed_example.xml
+	@echo "Create a dummy DBlog XML stream due to DIFFABLE=1"
+	cp $< $@
+else
+$G/dblog_latest.xml:
 	@echo "Receiving the latest DBlog article. Disable with DIFFABLE=1"
-	curl -s --fail --retry 3 --retry-delay 5 -L https://blog.dlang.org -o $@
+	curl -s --fail --retry 3 --retry-delay 5 -L http://feeds.feedburner.com/OfficialDBlog -o $@
+endif
 
-$G/dblog_latest.ddoc: $G/dblog_latest.html
-	cat $< | grep -m1 'entry-title' | \
-		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time>.*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE=\2|DBLOG_LATEST_LINK=\1|DBLOG_LATEST_DATE=\3|DBLOG_LATEST_AUTHOR=\4/' | \
-		tr '|' '\n' > $@
-	@if [ ! -s $@ ] ; then echo "$@ is empty. Please check the download"; rm -f $@; exit 1 ; fi
-	cat $< | grep -m2 'entry-title' | tail -n1 | \
-		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE2=\2|DBLOG_LATEST_LINK2=\1|DBLOG_LATEST_DATE2=\3|DBLOG_LATEST_AUTHOR2=\4/' | \
-		tr '|' '\n' > $(basename $@)2.ddoc
-	@if [ ! -s $(basename $@)2.ddoc ] ; then echo "$(basename $@)2.ddoc is empty. Please check the download"; rm -f $(basename $@)2.ddoc; exit 1 ; fi
-
-$G/dblog_latest2.ddoc: $G/dblog_latest.ddoc
+$G/dblog_latest.ddoc: $G/dblog_latest.xml $(STABLE_DMD) tools/ddoc_xml_extractor.d
+	$(STABLE_RDMD) tools/ddoc_xml_extractor.d -i $< -o $@
 
 ################################################################################
 # Git rules
