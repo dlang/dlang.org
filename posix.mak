@@ -598,7 +598,7 @@ $G/dblog_latest.html:
 
 $G/dblog_latest.ddoc: $G/dblog_latest.html
 	cat $< | grep -m1 'entry-title' | \
-		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time><time class="updated".*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE=\2|DBLOG_LATEST_LINK=\1|DBLOG_LATEST_DATE=\3|DBLOG_LATEST_AUTHOR=\4/' | \
+		sed -E 's/^.*<a href="(.+)" rel="bookmark">([^<]+)<\/a>.*<time.*datetime="[^"]+">([^<]*)<\/time>.*Author *<\/span><a [^>]+>([^<]+)<\/a>.*/DBLOG_LATEST_TITLE=\2|DBLOG_LATEST_LINK=\1|DBLOG_LATEST_DATE=\3|DBLOG_LATEST_AUTHOR=\4/' | \
 		tr '|' '\n' > $@
 	@if [ ! -s $@ ] ; then echo "$@ is empty. Please check the download"; rm -f $@; exit 1 ; fi
 	cat $< | grep -m2 'entry-title' | tail -n1 | \
