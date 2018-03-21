@@ -462,9 +462,8 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
 string fixDdocBugs(string inputFile, string text)
 {
 
-    // https://github.com/dlang/dlang.org/pull/2069#issuecomment-363154934
-    // can be removed once the Phobos PR is in stable and master
-    // https://github.com/dlang/phobos/pull/6126
+    // __FILE__ changes on every build
+    // can be removed once https://github.com/dlang/phobos/pull/6321 is merged and part of a release
     if (inputFile.endsWith("exception.d"))
     {
         text = text.replace(`typeof(new E("", __FILE__, __LINE__)`, `typeof(new E("", string.init, size_t.init)`);
