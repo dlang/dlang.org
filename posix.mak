@@ -155,6 +155,8 @@ TOOLS_DIR=../tools
 INSTALLER_DIR=../installer
 DUB_DIR=../dub
 
+# Auto-cloning missing directories
+$(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
 include $(DMD_DIR)/src/osmodel.mak
 
 # External binaries
@@ -177,21 +179,6 @@ DMD_LATEST_DIR=$G/dmd-${LATEST}
 DMD_LATEST=$(DMD_LATEST_DIR)/generated/$(OS)/release/$(MODEL)/dmd
 DRUNTIME_LATEST_DIR=$G/druntime-${LATEST}
 PHOBOS_LATEST_DIR=$G/phobos-${LATEST}
-
-# Auto-cloning missing directories
-$(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
-$(shell [ ! -d $(DRUNTIME_DIR) ] && git clone --depth=1 ${GIT_HOME}/druntime $(DRUNTIME_DIR))
-
-################################################################################
-# Automatically clone Phobos
-PHOBOS_FILES := $(shell find $(PHOBOS_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
-ifndef RELEASE
- # TODO: should be replaced by make targets
- $(shell [ ! -d $(PHOBOS_DIR) ] && git clone --depth=1 ${GIT_HOME}/phobos $(PHOBOS_DIR))
- $(shell [ ! -d $(PHOBOS_LATEST_DIR) ] && git clone -b v${LATEST} --depth=1 ${GIT_HOME}/phobos $(PHOBOS_LATEST_DIR))
- PHOBOS_LATEST_FILES := $(shell find $(PHOBOS_LATEST_DIR) -name '*.d' -o -name '*.mak' -o -name '*.ddoc')
-endif
-################################################################################
 
 # stable dub and dmd versions used to build dpl-docs
 STABLE_DMD_VER=2.078.2
@@ -693,20 +680,20 @@ $W/phobos-prerelease/object.verbatim : $(DMD) $G/changelog/next-version
 ################################################################################
 
 .PHONY: phobos-prerelease
-phobos-prerelease : ${PHOBOS_FILES} druntime-target $(STD_DDOC_PRERELEASE) $(DDOC_BIN) $(DMD) \
+phobos-prerelease : druntime-target $(STD_DDOC_PRERELEASE) $(DDOC_BIN) $(DMD) \
 					$G/changelog/next-version
 	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML) \
 		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD))"
 
-phobos-release : ${PHOBOS_FILES} druntime-target $(STD_DDOC_RELEASE) $(DDOC_BIN) $(DMD)
+phobos-release : druntime-target $(STD_DDOC_RELEASE) $(DDOC_BIN) $(DMD)
 	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML) \
 		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD))"
 
-phobos-latest : ${PHOBOS_LATEST_FILES} druntime-latest-target $(STD_DDOC_LATEST) $(DDOC_BIN) $(DMD_LATEST)
+phobos-latest : druntime-latest-target $(STD_DDOC_LATEST) $(DDOC_BIN) $(DMD_LATEST)
 	$(MAKE) --directory=$(PHOBOS_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML) \
 		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD_LATEST))"
 
-phobos-prerelease-verbatim : ${PHOBOS_FILES} druntime-target \
+phobos-prerelease-verbatim : druntime-target \
 		$W/phobos-prerelease/index.verbatim
 $W/phobos-prerelease/index.verbatim : verbatim.ddoc \
 		$W/phobos-prerelease/object.verbatim \
@@ -762,7 +749,7 @@ else
 endif
 
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
-			${DRUNTIME_LATEST_DIR} ${PHOBOS_LATEST_FILES} | dpl-docs
+			${DRUNTIME_LATEST_DIR} | dpl-docs
 	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
 	if [ -f $(DMD_LATEST_DIR)/src/*/objc_glue_stubs.d ] ; then \
 	   DMD_EXCLUDE_LATEST_BASH="-e /objc_glue.d/d"; \
@@ -780,8 +767,7 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 		--only-documented $(MOD_EXCLUDES_LATEST)
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
-$G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} \
-		${PHOBOS_FILES} | dpl-docs
+$G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} | dpl-docs
 	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
 	if [ -f $(DMD_DIR)/src/*/objc_glue_stubs.d ] ; then \
 	   DMD_EXCLUDE_PRERELEASE="-e /objc_glue.d/d"; \
