@@ -54,6 +54,7 @@ $(UL
         $(LI $(RELATIVE_LINK2 list, Listing available compilers))
         $(LI $(RELATIVE_LINK2 update, Update))
     )
+    $(LI $(RELATIVE_LINK2 ci, Continuous integration))
 )
 
 $(H2 $(LNAME2 get, Downloading the installer))
@@ -202,6 +203,39 @@ Update the installer itself.
 $(CONSOLE
 ~/dlang/install.sh update
 )
+
+
+$(H3 $(LNAME2 ci, Continuous integration))
+
+If you use this script in your favorite CI runner, we recommend the following curl flags:
+
+$(CONSOLE
+curl --silent --fail --show-error --retry 5 --retry-max-time 60 https://dlang.org/install.sh | bash -s
+)
+
+If you are still experiencing issues with spurious download failures, you might want to use more mirrors:
+
+---
+download_install_sh() {
+  local mirrors location
+  location="${1:-install.sh}"
+  mirrors=(
+    "https://dlang.org/install.sh"
+    "https://downloads.dlang.org/other/install.sh"
+    "https://nightlies.dlang.org/install.sh"
+  )
+  if [ -f "$location" ] ; then
+      return
+  fi
+  for mirror in "${mirrors[@]}" ; do
+    if curl -fsS --retry 5 --retry-max-time 60 --connect-timeout 5 --speed-time 30 --speed-limit 1024 "$mirror" -o "$location" ; then
+        break 2
+    fi
+  done
+}
+download_install_sh
+bash install.sh dmd
+---
 
 )
 Macros:
