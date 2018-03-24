@@ -62,6 +62,7 @@ All unknown options are passed to the compiler.
     text = genHeader(text);
     text = genChangelogVersion(inputFile, text);
     text = genSwitches(text);
+    text = fixDdocBugs(inputFile, text);
 
     // Phobos index.d should have been named index.dd
     if (inputFile.endsWith(".d") && !inputFile.endsWith("index.d"))
@@ -455,4 +456,18 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
             .joiner(" ")
             .to!string;
     }
+}
+
+// Fix ddoc bugs
+string fixDdocBugs(string inputFile, string text)
+{
+
+    // __FILE__ changes on every build
+    // can be removed once https://github.com/dlang/phobos/pull/6321 is merged and part of a release
+    if (inputFile.endsWith("exception.d"))
+    {
+        text = text.replace(`typeof(new E("", __FILE__, __LINE__)`, `typeof(new E("", string.init, size_t.init)`);
+        text = text.replace(`typeof(new E(__FILE__, __LINE__)`, `typeof(new E(string.init, size_t.init)`);
+    }
+    return text;
 }
