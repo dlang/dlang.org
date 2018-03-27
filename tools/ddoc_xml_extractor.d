@@ -30,7 +30,7 @@ auto toDdoc(const ref Article article, string suffix)
 with(article)
 {
     auto prettyMonth = ["January", "February", "March", "April", "May", "June", "July",
-    "August", "September", "October", "November", "December"][date.month-1];
+        "August", "September", "October", "November", "December"][date.month - 1];
     auto prettyDate = "%s %d, %d".format(prettyMonth, date.day, date.year);
     text =
 `DBLOG_LATEST_TITLE%5$s=%1$s

@@ -92,7 +92,7 @@ int main(string[] args)
     import std.process : environment;
     import std.typecons : Tuple;
 
-    auto specDir = __FILE_FULL_PATH__.dirName.buildPath("spec");
+    auto specDir = __FILE_FULL_PATH__.dirName.dirName.buildPath("spec");
     bool hasFailed;
 
     config.dmdBinPath = environment.get("DMD", "dmd");

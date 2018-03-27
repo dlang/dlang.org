@@ -413,19 +413,19 @@ ${GENERATED}/${LATEST}.ddoc :
 	mkdir -p $(dir $@)
 	echo "LATEST=${LATEST}" >$@
 
-${GENERATED}/modlist-${LATEST}.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
+${GENERATED}/modlist-${LATEST}.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_LATEST) \
+	$(STABLE_RDMD) $< $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_LATEST) \
 		$(addprefix --dump , object std etc core) --dump dmd >$@
 
-${GENERATED}/modlist-release.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
+${GENERATED}/modlist-release.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_RELEASE) \
+	$(STABLE_RDMD) $< $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_RELEASE) \
 		$(addprefix --dump , object std etc core) --dump dmd >$@
 
-${GENERATED}/modlist-prerelease.ddoc : modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
+${GENERATED}/modlist-prerelease.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) modlist.d $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
+	$(STABLE_RDMD) $< $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
 		$(addprefix --dump , object std etc core dmd rt) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
@@ -825,20 +825,20 @@ chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-p
 # Dman tags
 ################################################################################
 
-d-latest.tag d-tags-latest.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
-	$(STABLE_RDMD) chmgen.d --root=$W --target latest
+d-latest.tag d-tags-latest.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
+	$(STABLE_RDMD) $< --root=$W --target latest
 
-d-release.tag d-tags-release.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
-	$(STABLE_RDMD) chmgen.d --root=$W --target release
+d-release.tag d-tags-release.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
+	$(STABLE_RDMD) $< --root=$W --target release
 
-d-prerelease.tag d-tags-prerelease.json : chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
-	$(STABLE_RDMD) chmgen.d --root=$W --target prerelease
+d-prerelease.tag d-tags-prerelease.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
+	$(STABLE_RDMD) $< --root=$W --target prerelease
 
 ################################################################################
 # Style tests
 ################################################################################
 
-test_dspec: dspec_tester.d $(DMD) $(PHOBOS_LIB)
+test_dspec: tools/dspec_tester.d $(DMD) $(PHOBOS_LIB)
 	@echo "Test the D Language specification"
 	$(DMD) -run $< --compiler=$(DMD)
 
@@ -849,8 +849,8 @@ test: test_dspec test/next_version.sh all | $(STABLE_DMD) $(DUB)
 	@echo "Searching for tabs"
 	@grep -n -P "\t" $$(find . -type f -name "*.dd" | grep -v .generated) ; test $$? -eq 1
 	@echo "Checking DDoc's output"
-	$(STABLE_RDMD) -main -unittest check_ddoc.d
-	$(STABLE_RDMD) check_ddoc.d $$(find $W -type f -name "*.html" -not -path "$W/phobos/*")
+	$(STABLE_RDMD) -main -unittest tools/check_ddoc.d
+	$(STABLE_RDMD) tools/check_ddoc.d $$(find $W -type f -name "*.html" -not -path "$W/phobos/*")
 	@echo "Executing ddoc_preprocessor tests"
 	$(DUB) test --compiler=${STABLE_DMD} --root ddoc
 	@echo "Executing next_version tests"
