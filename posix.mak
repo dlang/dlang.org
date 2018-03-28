@@ -416,12 +416,12 @@ ${GENERATED}/${LATEST}.ddoc :
 ${GENERATED}/modlist-${LATEST}.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) $< $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_LATEST) \
-		$(addprefix --dump , object std etc core) --dump dmd >$@
+		$(addprefix --dump , object std etc core dmd rt) >$@
 
 ${GENERATED}/modlist-release.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) $< $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_RELEASE) \
-		$(addprefix --dump , object std etc core) --dump dmd >$@
+		$(addprefix --dump , object std etc core dmd rt) >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
