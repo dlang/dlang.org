@@ -280,26 +280,9 @@ DDOC_BIN_DMD:=$(DDOC_BIN) --compiler=$(DMD)
 # Set to 1 in the command line to minify css files
 CSS_MINIFY=
 
-ORGS_USING_D=$(wildcard images/orgs-using-d/*)
-IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
-	d002.ico \
-	$(addprefix compiler-, dmd.png gdc.svg ldc.png) \
-	$(addsuffix .svg, icon_minus icon_plus hamburger dlogo faster-aa-1 faster-gc-1 \
-		qualifier-combinations qualifier-conversions) \
-	$(addsuffix .png, archlinux_logo apple_logo \
-		centos_logo chocolatey_logo \
-		d3 dconf_logo_2018 debian_logo dlogo docker_logo \
-		fedora_logo freebsd_logo gentoo_logo homebrew_logo \
-		index-banner nix_logo \
-		opensuse_logo ubuntu_logo windows_logo pattern github-ribbon \
-		dlogo_opengraph snapcraft_logo \
-		$(addprefix ddox/, alias class enum enummember function \
-			inherited interface module package private property protected \
-			struct template variable)) \
-	$(addsuffix .gif, c1 cpp1 d4 d5 dmlogo dmlogo-smaller globe style3 \
-		pen) \
-	$(addsuffix .jpg, dman-error dman-rain dman-time tdpl))
-
+IMAGES=favicon.ico images/d002.ico $(filter-out $(wildcard images/*_hq.*) images/dlogo_2015.svg, \
+			$(wildcard images/*.jpg images/*.png images/*.svg images/*.gif)) \
+		$(wildcard images/ddox/* images/orgs-using-d/*)
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed dlang ddox listanchors platform-downloads run \
 	run_examples show_contributors jquery-1.7.2.min))
