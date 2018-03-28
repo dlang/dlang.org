@@ -288,7 +288,8 @@ IMAGES=favicon.ico $(ORGS_USING_D) $(addprefix images/, \
 		qualifier-combinations qualifier-conversions) \
 	$(addsuffix .png, archlinux_logo apple_logo \
 		centos_logo chocolatey_logo \
-		d3 dconf_logo_2018 debian_logo dlogo fedora_logo freebsd_logo gentoo_logo homebrew_logo \
+		d3 dconf_logo_2018 debian_logo dlogo docker_logo \
+		fedora_logo freebsd_logo gentoo_logo homebrew_logo \
 		index-banner nix_logo \
 		opensuse_logo ubuntu_logo windows_logo pattern github-ribbon \
 		dlogo_opengraph snapcraft_logo \
