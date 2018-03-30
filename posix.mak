@@ -282,7 +282,10 @@ CSS_MINIFY=
 
 IMAGES=favicon.ico images/d002.ico $(filter-out $(wildcard images/*_hq.*) images/dlogo_2015.svg, \
 			$(wildcard images/*.jpg images/*.png images/*.svg images/*.gif)) \
-		$(wildcard images/ddox/* images/orgs-using-d/*)
+		$(wildcard images/ddox/*) \
+		$(filter-out $(wildcard images/orgs-using-d/*_hq.*), $(wildcard images/orgs-using-d/*))
+$(info $(IMAGES))
+
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed dlang ddox listanchors platform-downloads run \
 	run_examples show_contributors jquery-1.7.2.min))
