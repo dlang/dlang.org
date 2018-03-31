@@ -16,7 +16,5 @@ int main(string[] args)
 	environment["GIT_TARGET"] = git_target;
 	environment["NO_EXACT_SOURCE_CODE_LINKS"] = noExactSourceCodeLinks ? "1" : "0";
 	setLogFormat(FileLogger.Format.plain);
-	if (args.length > 1 && args[1] != "filter")
-	    args ~= "--html-style=pretty";
 	return ddoxMain(args);
 }
