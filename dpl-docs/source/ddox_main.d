@@ -50,7 +50,7 @@ int ddoxMain(string[] args)
 static import ddox.main;
 
 alias cmdGenerateHtml = ddox.main.cmdGenerateHtml;
-alias cmdServeHtml = ddox.main.cmdServeTest;
+alias cmdServeHtml = ddox.main.cmdServeHtml;
 alias cmdServeTest = ddox.main.cmdServeTest;
 alias parseDocFile = ddox.main.parseDocFile;
 alias setupGeneratorInput = ddox.main.setupGeneratorInput;
