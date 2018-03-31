@@ -1,3 +1,13 @@
+function getParameterByName(name, url) {
+		if (!url) url = window.location.href;
+		name = name.replace(/[\[\]]/g, "\\$&");
+		var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+				results = regex.exec(url);
+		if (!results) return '';
+		if (!results[2]) return '';
+		return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
 function setupDdox()
 {
 	$(".tree-view").children(".package").click(toggleTree);
@@ -6,6 +16,12 @@ function setupDdox()
 
 	updateSearchBox();
 	$('#sitesearch').change(updateSearchBox);
+
+	var searchParam = getParameterByName("q");
+	if (searchParam.length > 0) {
+		$("#symbolSearch").val(searchParam)
+		performSymbolSearch(40);
+	}
 }
 
 function updateSearchBox()
@@ -30,17 +46,24 @@ function toggleTree()
 var searchCounter = 0;
 var lastSearchString = "";
 
+var closeButton = undefined;
+
 function performSymbolSearch(maxlen)
 {
 	if (maxlen === 'undefined') maxlen = 26;
 
 	var searchstring = $("#symbolSearch").val().toLowerCase();
 
+	if (searchstring.length === 0) {
+		$('.container').show();
+		return;
+	}
+
 	if (searchstring == lastSearchString) return;
 	lastSearchString = searchstring;
 
 	var scnt = ++searchCounter;
-	$('#symbolSearchResults').hide();
+	$('#symbolSearchResultsContainer').hide();
 	$('#symbolSearchResults').empty();
 
 	var terms = $.trim(searchstring).split(/\s+/);
@@ -97,6 +120,16 @@ function performSymbolSearch(maxlen)
 
 	results.sort(compare);
 
+	if (closeButton === undefined) {
+		console.log("foo");
+		closeButton = $("<div id='symbolSearchCloseButton'><i class='fa fa-times big-icon'></i></div>");
+		closeButton.on("click", function() {
+			$('#symbolSearchResultsContainer').hide();
+			$('.container').show();
+		});
+		$('#symbolSearchResultsContainer').prepend(closeButton);
+	}
+
 	for (i = 0; i < results.length && i < 100; i++) {
 			var sym = results[i];
 
@@ -127,14 +160,16 @@ function performSymbolSearch(maxlen)
 	}
 
 	$('#symbolSearchResults').show();
+	$('#symbolSearchResultsContainer').show();
+	$('.container').hide();
 }
 
 $(function(){
-  $("#search-box form").on("submit", function(e) {
-    var searchResults = $('#symbolSearchResults').children();
-    if (searchResults.length > 0) {
-      window.location = searchResults.first().find("a").attr("href");
-      e.preventDefault();
-    }
-  });
+	$("#search-box form").on("submit", function(e) {
+		var searchResults = $('#symbolSearchResults').children();
+		if (searchResults.length > 0) {
+			window.location = searchResults.first().find("a").attr("href");
+			e.preventDefault();
+		}
+	});
 });
