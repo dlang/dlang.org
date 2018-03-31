@@ -661,15 +661,17 @@ $W/phobos-prerelease/object.verbatim : $(DMD) $G/changelog/next-version
 
 .PHONY: phobos-prerelease
 phobos-prerelease : druntime-target $(STD_DDOC_PRERELEASE) $(DDOC_BIN) $(DMD) \
-					$G/changelog/next-version
+					$G/changelog/next-version $W/js/d-tags-release.json
 	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML) \
 		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD))"
 
-phobos-release : druntime-target $(STD_DDOC_RELEASE) $(DDOC_BIN) $(DMD)
+phobos-release : druntime-target $(STD_DDOC_RELEASE) $(DDOC_BIN) $(DMD) \
+				$W/js/d-tags-release.json
 	$(MAKE) --directory=$(PHOBOS_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML) \
 		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD))"
 
-phobos-latest : druntime-latest-target $(STD_DDOC_LATEST) $(DDOC_BIN) $(DMD_LATEST)
+phobos-latest : druntime-latest-target $(STD_DDOC_LATEST) $(DDOC_BIN) $(DMD_LATEST) \
+				$W/js/d-tags-release.json
 	$(MAKE) --directory=$(PHOBOS_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML) \
 		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD_LATEST))"
 
@@ -820,6 +822,13 @@ d-release.tag d-tags-release.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) ph
 
 d-prerelease.tag d-tags-prerelease.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
 	$(STABLE_RDMD) $< --root=$W --target prerelease
+
+$W/js/d-tags-prerelease.json: d-tags-prerelease.json
+ifeq (1,$(RELEASE))
+$W/js/d-tags-release.json: d-tags-release.json
+else
+$W/js/d-tags-latest.json: d-tags-latest.json
+endif
 
 ################################################################################
 # Style tests

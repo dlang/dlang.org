@@ -74,5 +74,83 @@
                 elem.show();
             }
         });
+
+      var search = $("#q")
+      search.attr("placeholder", "API Search");
+      search.attr("autocomplete", "off");
+      var onChange = function(){
+        performChmgenSearch(80);
+      };
+      search.on("change", onChange);
+      search.on("keypress", onChange);
+      search.on("input", onChange);
+    });
+    jQuery.get("../js/d-tags-prerelease.json", function(d){
+      chmgenSymbols = d;
     });
 })(jQuery);
+
+var chmgenSymbols = undefined;
+
+function performChmgenSearch(maxlen)
+{
+  // not loaded yet
+  if (!chmgenSymbols) return;
+	if (maxlen === 'undefined') maxlen = 26;
+
+	var el = $("#symbolSearch");
+	if (el.length  === 0) el = $("#q");
+
+	var searchstring = el.val().toLowerCase();
+
+	if (searchstring == lastSearchString) return;
+	lastSearchString = searchstring;
+
+	var scnt = ++searchCounter;
+	$('#symbolSearchResults').hide();
+	$('#symbolSearchResults').empty();
+
+	var terms = $.trim(searchstring).split(/\s+/);
+	if (terms.length == 0 || (terms.length == 1 && terms[0].length < 2)) return;
+
+	var results = [];
+	for (var key in chmgenSymbols) {
+		var sym = chmgenSymbols[key];
+		var all_match = true;
+		for (var j in terms)
+			if (key.toLowerCase().indexOf(terms[j]) < 0) {
+				all_match = false;
+				break;
+			}
+		if (!all_match) continue;
+
+    sym.forEach(function(e){
+      results.push({
+        name: key,
+        href: e,
+      });
+		});
+	}
+
+  console.log(results);
+
+	for (i = 0; i < results.length && i < 100; i++) {
+			var sym = results[i];
+
+			var el = $(document.createElement("li"));
+			//el.addClass(sym.kind);
+			//for (j in sym.attributes)
+				//el.addClass(sym.attributes[j]);
+
+			var name = sym.name;
+			var shortname = sym.name;
+			el.append('<a href="'+sym.href+'" title="'+name+'" tabindex="1001">'+shortname+'</a>');
+			$('#symbolSearchResults').append(el);
+		}
+
+	if (results.length > 100) {
+		$('#symbolSearchResults').append("<li>&hellip;"+(results.length-100)+" additional results</li>");
+	}
+
+	$('#symbolSearchResults').show();
+}

@@ -34,7 +34,10 @@ function performSymbolSearch(maxlen)
 {
 	if (maxlen === 'undefined') maxlen = 26;
 
-	var searchstring = $("#symbolSearch").val().toLowerCase();
+	var el = $("#symbolSearch");
+	if (el.length  === 0) el = $("#q");
+
+	var searchstring = el.val().toLowerCase();
 
 	if (searchstring == lastSearchString) return;
 	lastSearchString = searchstring;
@@ -118,7 +121,17 @@ function performSymbolSearch(maxlen)
 			if (np > 0) shortname = ".." + shortname;
 			else shortname = shortname.substr(1);
 
-			el.append('<a href="'+symbolSearchRootDir+sym.path+'" title="'+name+'" tabindex="1001">'+shortname+'</a>');
+      if (typeof(symbolSearchRootDir) === "undefined") {
+        // translate ddox path into ddoc path
+        var hashName = sym.name.replace(/(.*)[.](.*)$/g, "$2")
+        var path = sym.path.slice(0, -5);
+        path = path.replace(/(.*)\/(.*)$/g, "$1.html");
+        path = path.replace(/\//g, "_").replace("._", "");
+        path = path + "#" + hashName;
+			  el.append('<a href="'+path+'" title="'+name+'" tabindex="1001">'+shortname+'</a>');
+      } else {
+			  el.append('<a href="'+symbolSearchRootDir+sym.path+'" title="'+name+'" tabindex="1001">'+shortname+'</a>');
+			}
 			$('#symbolSearchResults').append(el);
 		}
 
