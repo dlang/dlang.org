@@ -28,7 +28,7 @@ d.chm : chm\d.chm
 	copy /Y chm\d.chm d.chm
 
 chm-nav-release.json : $(DDOC) std.ddoc spec\spec.ddoc modlist-release.ddoc changelog\changelog.ddoc chm-nav.dd
-	$(DMD) -o- -c -Df$@ $**
+	$(DMD) -o- -c -transition=markdown -Df$@ $**
 
 modlist-release.ddoc : tools\modlist.d
 # need + to run as sub-cmd, redirect doesn't work otherwise

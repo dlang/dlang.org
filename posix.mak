@@ -393,7 +393,7 @@ $W/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 		&& echo \
 			"$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $W/$F`")) \
 		| sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\([^\n\r]*\)/<a href="\1">\2<\/a><br>/' >> $G/sitemap.dd
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $G/sitemap.dd
+	$(DMD) -conf= -c -o- -transition=markdown -Df$@ $(DDOC) $G/sitemap.dd
 	rm $G/sitemap.dd
 
 ${GENERATED}/${LATEST}.ddoc :
@@ -443,41 +443,41 @@ dautotest: all verbatim pdf diffable-intermediaries d-latest.tag d-prerelease.ta
 # sub-directories before their parents.
 
 $W/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DDOC_BIN) | $(DMD)
-	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+	$(DDOC_BIN_DMD) -conf= -c -o- -transition=markdown -Df$@ $(CHANGELOG_PRE_DDOC) $<
 
 $W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DDOC_BIN) | $(DMD)
-	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
+	$(DDOC_BIN_DMD) -conf= -c -o- -transition=markdown -Df$@ $(CHANGELOG_PENDING_DDOC) $<
 
 $W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DDOC_BIN) | $(DMD)
-	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
+	$(DDOC_BIN_DMD) -conf= -c -o- -transition=markdown -Df$@ $(CHANGELOG_DDOC) $<
 
 $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -Df$@ $(SPEC_DDOC) $<
+	$(DDOC_BIN_DMD) -transition=markdown -Df$@ $(SPEC_DDOC) $<
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
+	$(DMD) -conf= -c -o- -transition=markdown -Df$@ $(DDOC) errorpage.ddoc $<
 
 $(DOC_OUTPUT_DIR)/foundation/contributors.html: foundation/contributors.dd \
 		$G/contributors_list.ddoc foundation/foundation.ddoc $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $(word 3, $^) $<
+	$(DMD) -conf= -c -o- -transition=markdown -Df$@ $(DDOC) $(word 2, $^) $(word 3, $^) $<
 
 $W/articles/%.html : articles/%.dd $(DDOC) $(DMD) $(DDOC_BIN) articles/articles.ddoc
-	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $< articles/articles.ddoc
+	$(DDOC_BIN_DMD) -conf= -c -o- -transition=markdown -Df$@ $(DDOC) $< articles/articles.ddoc
 
 $W/foundation/%.html : foundation/%.dd $(DDOC) $(DMD) $(DDOC_BIN) foundation/foundation.ddoc
-	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $< foundation/foundation.ddoc
+	$(DDOC_BIN_DMD) -conf= -c -o- -transition=markdown -Df$@ $(DDOC) $< foundation/foundation.ddoc
 
 $W/%.html : %.dd $(DDOC) $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $<
+	$(DDOC_BIN_DMD) -conf= -c -o- -transition=markdown -Df$@ $(DDOC) $<
 
 $W/%.verbatim : %_pre.dd verbatim.ddoc $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -c -o- -Df$@ verbatim.ddoc $<
+	$(DDOC_BIN_DMD) -c -o- -transition=markdown -Df$@ verbatim.ddoc $<
 
 $W/%.verbatim : %.dd verbatim.ddoc $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -c -o- -Df$@ verbatim.ddoc $<
+	$(DDOC_BIN_DMD) -c -o- -transition=markdown -Df$@ verbatim.ddoc $<
 
 $W/%.php : %.php.dd $(DDOC) $(DMD)
-	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
+	$(DMD) -conf= -c -o- -transition=markdown -Df$@ $(DDOC) $<
 
 $W/css/% : css/%
 	@mkdir -p $(dir $@)
@@ -488,17 +488,17 @@ else
 endif
 
 $W/%.css : %.css.dd $(DMD)
-	$(DMD) -c -o- -Df$@ $<
+	$(DMD) -c -o- -transition=markdown -Df$@ $<
 
 $W/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
 $W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -Df$@ $(DDOC) dcompiler.dd $<
+	$(DDOC_BIN_DMD) -transition=markdown -Df$@ $(DDOC) dcompiler.dd $<
 
 $W/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
-	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
+	$(DMD) -c -o- -transition=markdown -Df$@ verbatim.ddoc dcompiler.dd $<
 
 $W:
 	mkdir -p $@
@@ -511,7 +511,7 @@ $G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
 $G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
+	$(DDOC_BIN_DMD) -conf= -transition=markdown -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
 
 $G/dlangspec.zip : $G/dlangspec.html ebook.css
 	rm -f $@
@@ -534,7 +534,7 @@ $G/dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) --force $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
 $G/dlangspec.tex : $G/dlangspec-consolidated.d $(DDOC_BIN) $(DDOC) spec/latex.ddoc $(NODATETIME)
-	$(DDOC_BIN_DMD) -conf= -Df$@ $(DDOC) spec/latex.ddoc $(NODATETIME) $<
+	$(DDOC_BIN_DMD) -conf= -transition=markdown -Df$@ $(DDOC) spec/latex.ddoc $(NODATETIME) $<
 
 # Run twice to fix multipage tables and \ref uses
 $W/dlangspec.pdf : $G/dlangspec.tex | $W
@@ -553,10 +553,10 @@ $W/dlangspec.html: $G/dlangspec.html | $W
 ################################################################################
 
 $G/dlangspec.txt : $G/dlangspec-consolidated.d $(DDOC_BIN) macros.ddoc plaintext.ddoc
-	$(DDOC_BIN_DMD) -conf= -Df$@ macros.ddoc plaintext.ddoc $<
+	$(DDOC_BIN_DMD) -conf= -transition=markdown -Df$@ macros.ddoc plaintext.ddoc $<
 
 $G/dlangspec.verbatim.txt : $G/dlangspec-consolidated.d $(DDOC_BIN) verbatim.ddoc
-	$(DDOC_BIN_DMD) -conf= -Df$@ verbatim.ddoc $<
+	$(DDOC_BIN_DMD) -conf= -transition=markdown -Df$@ verbatim.ddoc $<
 
 ################################################################################
 # Fetch the latest article from the official D blog
@@ -741,7 +741,7 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 	find ${PHOBOS_LATEST_DIR} -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
 	${DMD_LATEST} -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
-		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
+		-version=MARS -version=CoreDdoc -version=StdDdoc -transition=markdown -Df$G/.latest-dummy.html \
 		-Xf$@ -I${PHOBOS_LATEST_DIR} @$G/.latest-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
 		--only-documented $(MOD_EXCLUDES_LATEST)
@@ -759,7 +759,7 @@ $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} | dpl-docs
 	find ${PHOBOS_DIR} -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.prerelease-files.txt
 	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
-		-version=StdDdoc -Df$G/.prerelease-dummy.html \
+		-version=StdDdoc -transition=markdown -Df$G/.prerelease-dummy.html \
 		-Xf$@ -I${PHOBOS_DIR} @$G/.prerelease-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
 		--only-documented $(MOD_EXCLUDES_PRERELEASE)
@@ -800,13 +800,13 @@ ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 
 # testing menu generation
 chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
+	$(DDOC_BIN_DMD) -conf= -c -o- -transition=markdown -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
 chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
+	$(DDOC_BIN_DMD) -conf= -c -o- -transition=markdown -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
 chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
+	$(DDOC_BIN_DMD) -conf= -c -o- -transition=markdown -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
 ################################################################################
 # Dman tags
