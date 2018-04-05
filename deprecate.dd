@@ -16,7 +16,7 @@ $(SPEC_S Deprecated Features,
         $(TROW $(DEPLINK Implicit string concatenation),                          2.072,  2.072, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Using the result of a comma expression),                 2.072,  2.072,  2.079, &nbsp;)
         $(TROW $(DEPLINK delete),                                                 &nbsp;,  2.079, &nbsp;, &nbsp;)
-        $(TROW $(DEPLINK scope for allocating classes on the stack),              future, &nbsp;, &nbsp;, &nbsp;)
+        $(TROW $(DEPLINK scope as a type constraint),                             future, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Imaginary and complex types),                            future, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Implicit catch statement),                               2.072, 2.072,  future, future )
         $(TROW $(DEPLINK .sort and .reverse properties for arrays),               ?,     2.072,  &nbsp;, 2.075)
@@ -281,52 +281,41 @@ $(H4 Rationale)
 
 
 
-$(H3 $(DEPNAME scope for allocating classes on the stack))
-    $(P The $(D scope) keyword can be used to allocate class objects on the stack:
+$(H3 $(DEPNAME scope as a type constraint))
+    $(P
+        The `scope` keyword can be added to a class declaration to force all instances of the
+        class to be attributed with the `scope` storage class.
+
         ---
-        class A
-        {
-            int x;
-            this(int x) { this.x = x; }
-        }
+        scope class C { }          // `scope` type constraint.  This usage of `scope` is deprecated.
 
         void main()
         {
-            A obj;
-            {
-                scope A a = new A(1);
-                obj = a;
-            }
-            assert(obj.x == 1);  // fails, 'a' has been destroyed
+            C c1 = new C();        // Error: reference to `scope class` must be `scope`
+                                   // This error is due to the `scope` attribution on the declaration
+                                   // of `class C` and the missing `scope` storage class attribution
+                                   // on `c1`.
+
+            scope C c2 = new C();  // OK because the instance `c2` is attributed with the `scope`
+                                   // storage class.  This usage of `scope` is not deprecated.
         }
         ---
     )
 $(H4 Corrective Action)
-    $(P Use $(REF scoped, std,typecons) instead.
-        ---
-        class A
-        {
-            this(int x) { }
-        }
-        void main()
-        {
-            auto a = scoped!A(1);
-        }
-        ---
-    )
+    There is no current counterpart in the D programming language or library that places such a
+    constraint on a type requiring all instances of the type to be attributed with the `scope`
+    storage class.
+
 $(H4 Rationale)
-    $(P $(D scope) was an unsafe feature. A reference to a scoped class could easily
-        be returned from a function without errors, which would make using such
-        an object undefined behavior due to the object being destroyed after
-        exiting the scope of the function it was allocated in. To discourage it
-        from general-use but still allow usage when needed a library solution was
-        implemented.
+    $(P
+        `scope` as a type constraint was a quirk in the language without a compelling
+        use case.
     )
     $(P
-        Note that $(D scope) for other usages (e.g. scoped variables) is unrelated
-        to this feature and will not be deprecated.
+        Note that this deprecation only affects the usage of `scope` as a type constraint
+        attributed to a class declaration.  `scope` as a storage class attributed to variables,
+        function parameters, etc. is not deprecated.
     )
-
 
 
 $(H3 $(DEPNAME Imaginary and complex types))
