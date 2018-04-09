@@ -738,7 +738,7 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 		sed -e /mscoff/d $${DMD_EXCLUDE_LATEST_BASH} ${DMD_EXCLUDE_LATEST}
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
-	find ${PHOBOS_LATEST_DIR} -name '*.d' | \
+	find ${PHOBOS_LATEST_DIR} -name '*.d' -not -path '${PHOBOS_LATEST_DIR}/generated/*' | \
 		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
 	${DMD_LATEST} -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
 		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
@@ -756,7 +756,7 @@ $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} | dpl-docs
 		sed -e /mscoff/d $${DMD_EXCLUDE_PRERELEASE} > $G/.prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | \
 		sed -e /unittest/d >> $G/.prerelease-files.txt
-	find ${PHOBOS_DIR} -name '*.d' | \
+	find ${PHOBOS_DIR} -name '*.d' -not -path '${PHOBOS_DIR}/generated/*' | \
 		sed -e /unittest.d/d | sort >> $G/.prerelease-files.txt
 	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
 		-version=StdDdoc -Df$G/.prerelease-dummy.html \
