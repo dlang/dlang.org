@@ -422,7 +422,7 @@ rebase-druntime: ; cd $(DRUNTIME_DIR) && $(call REBASE,druntime)
 rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
-	rm -rf $W ${GENERATED} dpl-docs/.dub dpl-docs/dpl-docs
+	rm -rf $W ${GENERATED} $(DPL_DOCS_PATH)/.dub $(DPL_DOCS)
 
 RSYNC_FILTER=-f 'P /Usage' -f 'P /.dpl_rewrite*' -f 'P /install.sh*'
 
