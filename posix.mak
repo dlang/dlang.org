@@ -720,22 +720,9 @@ $W/library-prerelease/.htaccess : dpl_prerelease_htaccess
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-# Can be removed after 2.079.0 (2018-03-01) (see https://github.com/dlang/dmd/pull/7567 for details)
-DMD_EXCLUDE_LATEST = -e /mscoff/d
-ifeq (osx,$(OS))
- DMD_EXCLUDE_LATEST += -e /scanelf/d -e /libelf/d
-else
- DMD_EXCLUDE_LATEST += -e /scanmach/d -e /libmach/d
-endif
-
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 			${DRUNTIME_LATEST_DIR} | dpl-docs
-	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
-	if [ -f $(DMD_LATEST_DIR)/src/*/objc_glue_stubs.d ] ; then \
-	   DMD_EXCLUDE_LATEST_BASH="-e /objc_glue.d/d"; \
-	fi; \
-	find ${DMD_LATEST_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d $${DMD_EXCLUDE_LATEST_BASH} ${DMD_EXCLUDE_LATEST}
+	find ${DMD_LATEST_DIR}/src -name '*.d' > $G/.latest-files.txt
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
 	find ${PHOBOS_LATEST_DIR} -name '*.d' -not -path '${PHOBOS_LATEST_DIR}/generated/*' | \
@@ -748,12 +735,7 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} | dpl-docs
-	# remove this after https://github.com/dlang/dmd/pull/7513 has been merged
-	if [ -f $(DMD_DIR)/src/*/objc_glue_stubs.d ] ; then \
-	   DMD_EXCLUDE_PRERELEASE="-e /objc_glue.d/d"; \
-	fi; \
-	find ${DMD_DIR}/src -name '*.d' | \
-		sed -e /mscoff/d $${DMD_EXCLUDE_PRERELEASE} > $G/.prerelease-files.txt
+	find ${DMD_DIR}/src -name '*.d' > $G/.prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | \
 		sed -e /unittest/d >> $G/.prerelease-files.txt
 	find ${PHOBOS_DIR} -name '*.d' -not -path '${PHOBOS_DIR}/generated/*' | \
