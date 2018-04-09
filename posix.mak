@@ -284,7 +284,6 @@ IMAGES=favicon.ico images/d002.ico $(filter-out $(wildcard images/*_hq.*) images
 			$(wildcard images/*.jpg images/*.png images/*.svg images/*.gif)) \
 		$(wildcard images/ddox/*) \
 		$(filter-out $(wildcard images/orgs-using-d/*_hq.*), $(wildcard images/orgs-using-d/*))
-$(info $(IMAGES))
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed dlang ddox listanchors platform-downloads run \
