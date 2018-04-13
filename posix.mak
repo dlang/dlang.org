@@ -74,7 +74,7 @@
 #
 #       DIFFABLE=1          Removes inclusion of all dynamic content and timestamps
 #       RELEASE=1           Release build (needs to be set for the `release` target)
-#       CSS_MINIFY=1        Minify the CSS via an online service
+#       MINIFY=1            Minify the CSS and JS (requires Java)
 #       DOC_OUTPUT_DIR      Folder to build the documentation (default: `web`)
 #
 #  Other targets
@@ -231,6 +231,30 @@ else
 endif
 
 ################################################################################
+# Build compression variables
+################################################################################
+# Set to 1 in the command line to minify css files
+MINIFY=0
+
+YUICOMPRESSOR_VERSION=2.4.8
+YUICOMPRESSOR=yuicompressor-$(YUICOMPRESSOR_VERSION).jar
+JS_COMPRESSOR_BIN=$G/$(YUICOMPRESSOR)
+JS_COMPRESSOR=java -jar $(JS_COMPRESSOR_BIN) --type js
+CSS_COMPRESSOR_BIN=$(JS_COMPRESSOR_BIN)
+CSS_COMPRESSOR=java -jar $(CSS_COMPRESSOR_BIN) --type css
+
+GOOGLE_HTMLCOMPRESSOR_VERSION=1.5.3
+GOOGLE_HTMLCOMPRESSOR=htmlcompressor-$(GOOGLE_HTMLCOMPRESSOR_VERSION).jar
+HTML_COMPRESSOR_BIN=$G/$(GOOGLE_HTMLCOMPRESSOR)
+HTML_COMPRESSOR=java -jar $(HTML_COMPRESSOR_BIN) --compress-css
+
+$(JS_COMPRESSOR_BIN):
+	wget -q https://github.com/yui/yuicompressor/releases/download/v$(YUICOMPRESSOR_VERSION)/$(YUICOMPRESSOR) -O $@
+
+$(HTML_COMPRESSOR_BIN):
+	wget -q https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/htmlcompressor/$(GOOGLE_HTMLCOMPRESSOR) -O $@
+
+################################################################################
 # Ddoc build variables
 ################################################################################
 DDOC_VARS_LATEST_HTML= \
@@ -276,9 +300,6 @@ DDOC_BIN_DMD:=$(DDOC_BIN) --compiler=$(DMD)
 ################################################################################
 # Resources
 ################################################################################
-
-# Set to 1 in the command line to minify css files
-CSS_MINIFY=
 
 IMAGES=favicon.ico images/d002.ico $(filter-out $(wildcard images/*_hq.*) images/dlogo_2015.svg, \
 			$(wildcard images/*.jpg images/*.png images/*.svg images/*.gif)) \
@@ -391,7 +412,7 @@ $W/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	cp -f sitemap-template.dd $G/sitemap.dd
 	(true $(foreach F, $(TARGETS), \
 		&& echo \
-			"$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $W/$F`")) \
+			"$F	`sed -n 's/.*<title>\(.*\) - D Programming Language.*<\/title>.*/\1/'p $W/$F`")) \
 		| sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\([^\n\r]*\)/<a href="\1">\2<\/a><br>/' >> $G/sitemap.dd
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $G/sitemap.dd
 	rm $G/sitemap.dd
@@ -442,33 +463,60 @@ dautotest: all verbatim pdf diffable-intermediaries d-latest.tag d-prerelease.ta
 # NOTE: Depending on the version of make, order matters here. Therefore, put
 # sub-directories before their parents.
 
-$W/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DDOC_BIN) | $(DMD)
+$W/changelog/%.html : changelog/%_pre.dd $(CHANGELOG_PRE_DDOC) $(DDOC_BIN) $(HTML_COMPRESSOR_BIN) | $(DMD)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PRE_DDOC) $<
+ifeq (1,$(MINIFY))
+	$(HTML_COMPRESSOR) $@ > $@.1 && mv $@.1 $@
+endif
 
-$W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DDOC_BIN) | $(DMD)
+$W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DDOC_BIN) $(HTML_COMPRESSOR_BIN) | $(DMD)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_PENDING_DDOC) $<
+ifeq (1,$(MINIFY))
+	$(HTML_COMPRESSOR) $@ > $@.1 && mv $@.1 $@
+endif
 
-$W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DDOC_BIN) | $(DMD)
+$W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DDOC_BIN) $(HTML_COMPRESSOR_BIN) | $(DMD)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(CHANGELOG_DDOC) $<
+ifeq (1,$(MINIFY))
+	$(HTML_COMPRESSOR) $@ > $@.1 && mv $@.1 $@
+endif
 
-$W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
+$W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN) $(HTML_COMPRESSOR_BIN)
 	$(DDOC_BIN_DMD) -Df$@ $(SPEC_DDOC) $<
+ifeq (1,$(MINIFY))
+	$(HTML_COMPRESSOR) $@ > $@.1 && mv $@.1 $@
+endif
 
-$W/404.html : 404.dd $(DDOC) $(DMD)
+$W/404.html : 404.dd $(DDOC) $(DMD) $(HTML_COMPRESSOR_BIN)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) errorpage.ddoc $<
+ifeq (1,$(MINIFY))
+	$(HTML_COMPRESSOR) $@ > $@.1 && mv $@.1 $@
+endif
 
 $(DOC_OUTPUT_DIR)/foundation/contributors.html: foundation/contributors.dd \
-		$G/contributors_list.ddoc foundation/foundation.ddoc $(DDOC) $(DMD)
+		$G/contributors_list.ddoc foundation/foundation.ddoc $(DDOC) $(DMD) $(HTML_COMPRESSOR_BIN)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $(word 2, $^) $(word 3, $^) $<
+ifeq (1,$(MINIFY))
+	$(HTML_COMPRESSOR) $@ > $@.1 && mv $@.1 $@
+endif
 
-$W/articles/%.html : articles/%.dd $(DDOC) $(DMD) $(DDOC_BIN) articles/articles.ddoc
+$W/articles/%.html : articles/%.dd $(DDOC) $(DMD) $(DDOC_BIN) articles/articles.ddoc $(HTML_COMPRESSOR_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $< articles/articles.ddoc
+ifeq (1,$(MINIFY))
+	$(HTML_COMPRESSOR) $@ > $@.1 && mv $@.1 $@
+endif
 
-$W/foundation/%.html : foundation/%.dd $(DDOC) $(DMD) $(DDOC_BIN) foundation/foundation.ddoc
+$W/foundation/%.html : foundation/%.dd $(DDOC) $(DMD) $(DDOC_BIN) foundation/foundation.ddoc $(HTML_COMPRESSOR_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $< foundation/foundation.ddoc
+ifeq (1,$(MINIFY))
+	$(HTML_COMPRESSOR) $@ > $@.1 && mv $@.1 $@
+endif
 
-$W/%.html : %.dd $(DDOC) $(DMD) $(DDOC_BIN)
+$W/%.html : %.dd $(DDOC) $(DMD) $(DDOC_BIN) $(HTML_COMPRESSOR_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(DDOC) $<
+ifeq (1,$(MINIFY))
+	$(HTML_COMPRESSOR) $@ > $@.1 && mv $@.1 $@
+endif
 
 $W/%.verbatim : %_pre.dd verbatim.ddoc $(DDOC_BIN)
 	$(DDOC_BIN_DMD) -c -o- -Df$@ verbatim.ddoc $<
@@ -479,23 +527,35 @@ $W/%.verbatim : %.dd verbatim.ddoc $(DDOC_BIN)
 $W/%.php : %.php.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
-$W/css/% : css/%
+$W/css/% : css/% $(CSS_COMPRESSOR_BIN)
 	@mkdir -p $(dir $@)
-ifeq (1,$(CSS_MINIFY))
-	curl -X POST -fsS --data-urlencode 'input@$<' http://cssminifier.com/raw >$@
+ifeq (1,$(MINIFY))
+	$(CSS_COMPRESSOR) $< > $@
 else
 	cp $< $@
 endif
 
-$W/%.css : %.css.dd $(DMD)
+$W/%.css : %.css.dd $(DMD) $(CSS_COMPRESSOR_BIN)
 	$(DMD) -c -o- -Df$@ $<
+
+$W/js/%.js : js/%.js $(JS_COMPRESSOR_BIN)
+	@mkdir -p $(dir $@)
+ifeq (1,$(MINIFY))
+	$(JS_COMPRESSOR) $< > $@
+else
+	cp $< $@
+endif
+
 
 $W/% : %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DDOC_BIN)
+$W/dmd-%.html : %.ddoc dcompiler.dd $(DDOC) $(DDOC_BIN) $(HTML_COMPRESSOR_BIN)
 	$(DDOC_BIN_DMD) -Df$@ $(DDOC) dcompiler.dd $<
+ifeq (1,$(MINIFY))
+	$(HTML_COMPRESSOR) $@ > $@.1 && mv $@.1 $@
+endif
 
 $W/dmd-%.verbatim : %.ddoc dcompiler.dd verbatim.ddoc $(DMD)
 	$(DMD) -c -o- -Df$@ verbatim.ddoc dcompiler.dd $<
