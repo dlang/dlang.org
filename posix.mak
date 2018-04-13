@@ -284,7 +284,6 @@ IMAGES=favicon.ico images/d002.ico $(filter-out $(wildcard images/*_hq.*) images
 			$(wildcard images/*.jpg images/*.png images/*.svg images/*.gif)) \
 		$(wildcard images/ddox/*) \
 		$(filter-out $(wildcard images/orgs-using-d/*_hq.*), $(wildcard images/orgs-using-d/*))
-$(info $(IMAGES))
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed dlang ddox listanchors platform-downloads run \
@@ -423,7 +422,7 @@ rebase-druntime: ; cd $(DRUNTIME_DIR) && $(call REBASE,druntime)
 rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
-	rm -rf $W ${GENERATED} dpl-docs/.dub dpl-docs/dpl-docs
+	rm -rf $W ${GENERATED} $(DPL_DOCS_PATH)/.dub $(DPL_DOCS)
 
 RSYNC_FILTER=-f 'P /Usage' -f 'P /.dpl_rewrite*' -f 'P /install.sh*'
 
