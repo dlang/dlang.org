@@ -154,6 +154,7 @@ DRUNTIME_DIR=../druntime
 TOOLS_DIR=../tools
 INSTALLER_DIR=../installer
 DUB_DIR=../dub
+GIT_HOME=https://github.com/dlang
 
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
@@ -166,7 +167,6 @@ PHOBOS_LIB=$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)/dmd/libphobos2.a
 # External directories
 DOC_OUTPUT_DIR:=$(PWD)/web
 W:=$(DOC_OUTPUT_DIR)
-GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
 DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
 REMOTE_DIR=d-programming@digitalmars.com:data
@@ -598,7 +598,8 @@ $(DMD) : ${DMD_DIR}
 
 $(DMD_LATEST) : ${DMD_LATEST_DIR}
 	${MAKE} --directory=${DMD_LATEST_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
-	sed -i -e "s|../druntime/import |../druntime-${LATEST}/import |" -e "s|../phobos |../phobos-${LATEST} |" $@.conf
+	sed -e "s|../druntime/import |../druntime-${LATEST}/import |" -e "s|../phobos |../phobos-${LATEST} |" $@.conf > $@.conf.tmp \
+		&& mv $@.conf.tmp $@.conf
 
 dmd-prerelease : $(STD_DDOC_PRERELEASE) druntime-target $G/changelog/next-version
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
@@ -877,13 +878,13 @@ $G/changelog/next-version: ${DMD_DIR}/VERSION
 	@echo $(NEXT_VERSION) > $@
 
 changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
-							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
+							${STABLE_DMD} $(DMD_DIR) $(DRUNTIME_DIR) $(PHOBOS_DIR) $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
 	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_STABLE) -o $@ --version "${NEXT_VERSION}" \
 		--prev-version="${LATEST}" --date "To be released"
 
 changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
-							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
+							${STABLE_DMD} $(DMD_DIR) $(DRUNTIME_DIR) $(PHOBOS_DIR) $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
 	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_MASTER) -o $@ --version "${NEXT_VERSION}" \
 		--prev-version="${LATEST}" --date "To be released"
