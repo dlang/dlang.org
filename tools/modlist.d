@@ -36,7 +36,7 @@ struct Tree
     void dumpRoot()
     {
         writeln();
-        writefln("$(MENU_W_SUBMENU $(TT %s))", name);
+        writefln("$(MENU_W_SUBMENU %s)", name);
         writefln("$(ITEMIZE");
         dumpChildren([name]);
         writeln(")");
