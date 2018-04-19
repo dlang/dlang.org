@@ -263,6 +263,40 @@ $(H2 $(LNAME2 construction_assignment_entries, Construction or Assignment on Set
         aa["a"] = 20;   // call aa["a"].opAssign(20)
         ---------
 
+$(H2 $(LNAME2 inserting_if_not_present, Inserting if not present))
+
+    $(P When AA access requires that there must be a value corresponding to the
+        key, a value must be constructed and inserted if not present. The
+        $(D require) function provides a means to construct a new value via a
+        lazy argument. The lazy argument is evaluated when the key is not
+        present.)
+
+        ---------
+        class C{}
+        C[string] aa;
+
+        auto a = aa.require("a", new C);   // lookup "a", construct if not present
+        ---------
+
+    $(P Sometimes it is necessary to know whether the value was constructed or
+        already exists. The $(D require) function doesn't provide a boolean
+        parameter to indicate whether the value was constructed but instead
+        allows the construction via a function or delegate. This allows the use
+        of any mechanism as demonstrated below.)
+
+        ---------
+        class C{}
+        C[string] aa;
+
+        bool constructed;
+        auto a = aa.require("a", { constructed=true; return new C;}());
+        assert(constructed == true);
+
+        C newc;
+        auto b = aa.require("b", { newc = new C; return newc;}());
+        assert(b is newc);
+        ---------
+
 $(H2 $(LNAME2 static_initialization, Static Initialization of AAs))
 
         ---------
