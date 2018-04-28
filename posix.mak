@@ -608,9 +608,9 @@ dmd-release : $(STD_DDOC_RELEASE) druntime-target
 dmd-latest : $(STD_DDOC_LATEST) druntime-latest-target
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
 
-dmd-prerelease-verbatim : $(STD_DDOC_PRERELEASE) druntime-target \
-		$W/phobos-prerelease/mars.verbatim
-$W/phobos-prerelease/mars.verbatim: verbatim.ddoc $G/changelog/next-version
+dmd-prerelease-verbatim : $W/phobos-prerelease/mars.verbatim
+$W/phobos-prerelease/mars.verbatim: $(STD_DDOC_PRERELEASE) druntime-target \
+		verbatim.ddoc $G/changelog/next-version
 	mkdir -p $(dir $@)
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM)
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
@@ -643,9 +643,8 @@ druntime-latest : druntime-latest-target $(STD_DDOC_LATEST)
 		DOCDIR=$W/phobos \
 		DOCFMT="$(addprefix `pwd`/, $(STD_DDOC_LATEST))"
 
-druntime-prerelease-verbatim : druntime-target \
-		$W/phobos-prerelease/object.verbatim
-$W/phobos-prerelease/object.verbatim : $(DMD) $G/changelog/next-version
+druntime-prerelease-verbatim : $W/phobos-prerelease/object.verbatim
+$W/phobos-prerelease/object.verbatim : $(DMD) druntime-target $G/changelog/next-version
 	${MAKE} --directory=${DRUNTIME_DIR} -f posix.mak target doc $(DDOC_VARS_PRERELEASE_VERBATIM) \
 		DOCDIR=$W/phobos-prerelease-verbatim \
 		DOCFMT="`pwd`/verbatim.ddoc"
@@ -672,9 +671,8 @@ phobos-latest : druntime-latest-target $(STD_DDOC_LATEST) $(DDOC_BIN) $(DMD_LATE
 	$(MAKE) --directory=$(PHOBOS_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML) \
 		DMD="$(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD_LATEST))"
 
-phobos-prerelease-verbatim : druntime-target \
-		$W/phobos-prerelease/index.verbatim
-$W/phobos-prerelease/index.verbatim : verbatim.ddoc \
+phobos-prerelease-verbatim : $W/phobos-prerelease/index.verbatim
+$W/phobos-prerelease/index.verbatim : druntime-target verbatim.ddoc \
 		$W/phobos-prerelease/object.verbatim \
 		$W/phobos-prerelease/mars.verbatim $G/changelog/next-version $(DMD) $(DDOC_BIN)
 	${MAKE} --directory=${PHOBOS_DIR} -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM) \
