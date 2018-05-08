@@ -282,18 +282,13 @@ function setupTextarea(el, opts)
 
     var prepareForMain = function()
     {
-        var src = $.browser.msie && $.browser.version < 9.0 ? orgSrc[0].innerText : orgSrc.text();
+        var src = orgSrc.text();
         var arr = src.split("\n");
         var str = "";
-        for ( i = 0; i < arr.length; i++)
+        for (var i = 0; i < arr.length; i++)
         {
             str += arr[i]+"\n";
         }
-        if ($.browser.msie && $.browser.version < 9.0)
-            str = str.substr(0, str.length - 1);
-        else
-            str = str.substr(0, str.length - 2);
-
         return str;
     };
 
