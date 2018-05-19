@@ -74,7 +74,7 @@
 #
 #       DIFFABLE=1          Removes inclusion of all dynamic content and timestamps
 #       RELEASE=1           Release build (needs to be set for the `release` target)
-#       CSS_MINIFY=1        Minify the CSS via an online service
+#       MINIFY=1            Minify the CSS and JS (requires Java)
 #       DOC_OUTPUT_DIR      Folder to build the documentation (default: `web`)
 #
 #  Other targets
@@ -231,6 +231,22 @@ else
 endif
 
 ################################################################################
+# Build compression variables
+################################################################################
+# Set to 1 in the command line to minify css and js files
+MINIFY=0
+
+YUICOMPRESSOR_VERSION=2.4.8
+YUICOMPRESSOR=yuicompressor-$(YUICOMPRESSOR_VERSION).jar
+JS_COMPRESSOR_BIN=$G/$(YUICOMPRESSOR)
+JS_COMPRESSOR=java -jar $(JS_COMPRESSOR_BIN) --type js
+CSS_COMPRESSOR_BIN=$(JS_COMPRESSOR_BIN)
+CSS_COMPRESSOR=java -jar $(CSS_COMPRESSOR_BIN) --type css
+
+$(JS_COMPRESSOR_BIN):
+	wget -q https://github.com/yui/yuicompressor/releases/download/v$(YUICOMPRESSOR_VERSION)/$(YUICOMPRESSOR) -O $@
+
+################################################################################
 # Ddoc build variables
 ################################################################################
 DDOC_VARS_LATEST_HTML= \
@@ -276,9 +292,6 @@ DDOC_BIN_DMD:=$(DDOC_BIN) --compiler=$(DMD)
 ################################################################################
 # Resources
 ################################################################################
-
-# Set to 1 in the command line to minify css files
-CSS_MINIFY=
 
 IMAGES=favicon.ico images/d002.ico $(filter-out $(wildcard images/*_hq.*) images/dlogo_2015.svg, \
 			$(wildcard images/*.jpg images/*.png images/*.svg images/*.gif)) \
@@ -478,16 +491,25 @@ $W/%.verbatim : %.dd verbatim.ddoc $(DDOC_BIN)
 $W/%.php : %.php.dd $(DDOC) $(DMD)
 	$(DMD) -conf= -c -o- -Df$@ $(DDOC) $<
 
-$W/css/% : css/%
+$W/css/% : css/% $(CSS_COMPRESSOR_BIN)
 	@mkdir -p $(dir $@)
-ifeq (1,$(CSS_MINIFY))
-	curl -X POST -fsS --data-urlencode 'input@$<' http://cssminifier.com/raw >$@
+ifeq (1,$(MINIFY))
+	$(CSS_COMPRESSOR) $< > $@
 else
 	cp $< $@
 endif
 
-$W/%.css : %.css.dd $(DMD)
+$W/%.css : %.css.dd $(DMD) $(CSS_COMPRESSOR_BIN)
 	$(DMD) -c -o- -Df$@ $<
+
+$W/js/%.js : js/%.js $(JS_COMPRESSOR_BIN)
+	@mkdir -p $(dir $@)
+ifeq (1,$(MINIFY))
+	$(JS_COMPRESSOR) $< > $@
+else
+	cp $< $@
+endif
+
 
 $W/% : %
 	@mkdir -p $(dir $@)
