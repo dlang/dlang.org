@@ -297,6 +297,42 @@ $(H2 $(LNAME2 inserting_if_not_present, Inserting if not present))
         assert(b is newc);
         ---------
 
+$(H2 $(LNAME2 advanced_updating, Advanced updating))
+
+    $(P Typically updating a value in an associative array is simply done with
+        an assign statement.)
+
+        ---------
+        int[string] aa;
+
+        aa["a"] = 3;  // set value associated with key "a" to 3
+        ---------
+
+    $(P Sometimes it is necessary to perform different operations depending on
+        whether a value already exists or needs to be constructed. The
+        $(D update) function provides a means to construct a new value via the
+        $(D create) delegate or update an existing value via the $(D update)
+        delegate.)
+
+        ---------
+        class C{}
+        C[string] aa;
+
+        C older;
+        C newer;
+        aa.update("a",
+        {
+            newer = new C;
+            return newer;
+        },
+        (ref C c)
+        {
+            older = c;
+            newer = new C;
+            return newer;
+        });
+        ---------
+
 $(H2 $(LNAME2 static_initialization, Static Initialization of AAs))
 
         ---------
