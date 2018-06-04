@@ -24,7 +24,7 @@
 #
 #  To build `release` docs:
 #
-#      make -f posix.mak RELEASE=1 release
+#      make -f posix.mak release
 #
 #  Individual documentation targets
 #  --------------------------------
@@ -319,10 +319,7 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd betterc)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) changelog/release-schedule
-ifneq (1,$(RELEASE))
- CHANGELOG_FILES+=changelog/pending
-endif
+CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) changelog/pending changelog/release-schedule
 
 MAN_PAGE=docs/man/man1/dmd.1
 
@@ -347,9 +344,7 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 
 # The contributors listing is dynamically generated
 ifneq (1,$(DIFFABLE))
-ifneq (1,$(RELEASE))
  PAGES_ROOT+=foundation/contributors
-endif
 endif
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
@@ -365,9 +360,11 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 
 all : docs html
 
-ifeq (1,$(RELEASE))
+# Avoid running additional scripts when building release (tarball)
+# docs for the sake of stability and reproducibility.
+release : CHANGELOG_FILES:=$(filter-out changelog/pending,$(CHANGELOG_FILES))
+release : PAGES_ROOT:=$(filter-out foundation/contributors,$(PAGES_ROOT))
 release : html dmd-release druntime-release phobos-release d-release.tag
-endif
 
 docs-latest: dmd-latest druntime-latest phobos-latest apidocs-latest
 docs-prerelease: dmd-prerelease druntime-prerelease phobos-prerelease apidocs-prerelease
