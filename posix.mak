@@ -24,7 +24,7 @@
 #
 #  To build `release` docs:
 #
-#      make -f posix.mak RELEASE=1 release
+#      make -f posix.mak release
 #
 #  Individual documentation targets
 #  --------------------------------
@@ -73,7 +73,6 @@
 #  Commonly used options include:
 #
 #       DIFFABLE=1          Removes inclusion of all dynamic content and timestamps
-#       RELEASE=1           Release build (needs to be set for the `release` target)
 #       CSS_MINIFY=1        Minify the CSS via an online service
 #       DOC_OUTPUT_DIR      Folder to build the documentation (default: `web`)
 #
@@ -320,7 +319,7 @@ SPEC_ROOT=$(addprefix spec/, \
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) changelog/release-schedule
-ifneq (1,$(RELEASE))
+ifneq (1,$(ENABLE_RELEASE))
  CHANGELOG_FILES+=changelog/pending
 endif
 
@@ -347,7 +346,7 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 
 # The contributors listing is dynamically generated
 ifneq (1,$(DIFFABLE))
-ifneq (1,$(RELEASE))
+ifneq (1,$(ENABLE_RELEASE))
  PAGES_ROOT+=foundation/contributors
 endif
 endif
@@ -365,7 +364,10 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 
 all : docs html
 
-ifeq (1,$(RELEASE))
+ifneq (1,$(ENABLE_RELEASE))
+release :
+	$(MAKE) -f $(MAKEFILE) ENABLE_RELEASE=1 release
+else
 release : html dmd-release druntime-release phobos-release d-release.tag
 endif
 
