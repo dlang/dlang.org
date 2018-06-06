@@ -808,6 +808,78 @@ $(H2 $(LNAME2 field-init, Field initialization inside constructor))
         ---
         )
 
+        $(P In order to enforce the above mentioned rules, the compiler implements a primitive flow analysis. Each
+        constructor declaration AST node has an associated scope object that containts a `CtorFlow` object. The latter
+        stores information about field initializations and whether the constructor has made any calls to other
+        constructors:
+        )
+
+        ---
+        struct CtorFlow
+        {
+            CSX callSuper;
+            CSX[] fieldInit;
+        }
+        ---
+
+        $(P The field `callSuper` is used to store whether the current constructor has made
+        any calls to other constructors, while `fieldInit` is an array that stores information
+        regarding the state of initialization of each field of the struct/class containing the
+        constructor. The `CSX` type is defined the following way:
+        )
+
+        ---
+        enum CSX : ushort
+        {
+            none            = 0,
+            this_ctor       = 0x01,     /// called this()
+            super_ctor      = 0x02,     /// called super()
+            label           = 0x10,     /// seen a label
+            return_         = 0x20,     /// seen a return statement
+            any_ctor        = 0x40,     /// either this() or super() was called
+            halt            = 0x80,     /// assert(0)
+        }
+        ---
+
+        $(P At the start of the type checking phase of the constructor, all `fieldInit`
+        elements are by default initialized to `CSX.none`.
+        )
+
+        $(P The `CSX.this_ctor` value is used to pinpoint that a member field was initialized
+        either by being present on the left hand side of an "=" expression ar by a call
+        to another constructor. After assigning `CSX.this_ctor` to a member field, subsequent
+        assignments to it will be regarded as modifications. Example:
+        )
+
+        ---
+        struct A
+        {
+            immutable int a;
+            this(int a)
+            {
+                this.a = a;      // fieldInit of a is CSX.none => initialization: fieldInit[a] = this_ctor
+                this.a = a +2;   // fieldInit of a is CSX.this_ctor => assignment : modifying immutable error
+            }
+        }
+
+        struct B
+        {
+            immutable int a;
+            immutable int b;
+            this(int a)
+            {
+                this(a, 5);     // called this => fieldInit of all fields is now this_ctor
+                this.a = 9;     // fieldInit of a is CSX.this_ctor => modifying immutable error
+                this.b = 4;     // fieldInit of b is CSX.this_ctor => modifying immutable error
+            }
+
+            this(int a, int b)
+            {
+                this.a = a + b;
+            }
+        }
+        ---
+
 $(H2 $(LEGACY_LNAME2 StructPostblit, struct-postblit, Struct Postblits))
 
 $(GRAMMAR
