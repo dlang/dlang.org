@@ -73,7 +73,6 @@
 #  Commonly used options include:
 #
 #       DIFFABLE=1          Removes inclusion of all dynamic content and timestamps
-#       RELEASE=1           Release build (needs to be set for the `release` target)
 #       CSS_MINIFY=1        Minify the CSS via an online service
 #       DOC_OUTPUT_DIR      Folder to build the documentation (default: `web`)
 #
@@ -319,7 +318,10 @@ SPEC_ROOT=$(addprefix spec/, \
 	abi simd betterc)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) changelog/pending changelog/release-schedule
+CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) changelog/release-schedule
+ifneq (1,$(ENABLE_RELEASE))
+ CHANGELOG_FILES+=changelog/pending
+endif
 
 MAN_PAGE=docs/man/man1/dmd.1
 
@@ -344,7 +346,9 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 
 # The contributors listing is dynamically generated
 ifneq (1,$(DIFFABLE))
+ifneq (1,$(ENABLE_RELEASE))
  PAGES_ROOT+=foundation/contributors
+endif
 endif
 
 TARGETS=$(addsuffix .html,$(PAGES_ROOT))
@@ -360,11 +364,12 @@ ALL_FILES = $(ALL_FILES_BUT_SITEMAP) $W/sitemap.html
 
 all : docs html
 
-# Avoid running additional scripts when building release (tarball)
-# docs for the sake of stability and reproducibility.
-release : CHANGELOG_FILES:=$(filter-out changelog/pending,$(CHANGELOG_FILES))
-release : PAGES_ROOT:=$(filter-out foundation/contributors,$(PAGES_ROOT))
+ifneq (1,$(ENABLE_RELEASE))
+release :
+	$(MAKE) -f $(MAKEFILE) ENABLE_RELEASE=1 release
+else
 release : html dmd-release druntime-release phobos-release d-release.tag
+endif
 
 docs-latest: dmd-latest druntime-latest phobos-latest apidocs-latest
 docs-prerelease: dmd-prerelease druntime-prerelease phobos-prerelease apidocs-prerelease
@@ -590,20 +595,20 @@ ${DMD_DIR}/VERSION : ${DMD_DIR}
 ################################################################################
 
 $(DMD) : ${DMD_DIR}
-	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 RELEASE=
+	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 
 $(DMD_LATEST) : ${DMD_LATEST_DIR}
-	${MAKE} --directory=${DMD_LATEST_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1 RELEASE=
+	${MAKE} --directory=${DMD_LATEST_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
 	sed -i -e "s|../druntime/import |../druntime-${LATEST}/import |" -e "s|../phobos |../phobos-${LATEST} |" $@.conf
 
 dmd-prerelease : $(STD_DDOC_PRERELEASE) druntime-target $G/changelog/next-version
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML) RELEASE=
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
 
 dmd-release : $(STD_DDOC_RELEASE) druntime-target
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML) RELEASE=
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
 
 dmd-latest : $(STD_DDOC_LATEST) druntime-latest-target
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML) RELEASE=
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
 
 dmd-prerelease-verbatim : $W/phobos-prerelease/mars.verbatim
 $W/phobos-prerelease/mars.verbatim: $(STD_DDOC_PRERELEASE) druntime-target \
