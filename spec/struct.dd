@@ -1223,6 +1223,11 @@ $(H2 $(LEGACY_LNAME2 StructDestructor, struct-destructor, Struct Destructors))
 
         $(P Unions may not have fields that have destructors.)
 
+        $(P It is important to keep in mind that even in $(D @safe) code,
+        the object will not necessarily have been constructed when the destructor is called.
+        However, it will either be constructed or in its $(D .init) state, which the destructor
+        must be able to handle gracefully.)
+
 $(H2 $(LNAME2 StructInvariant, Struct Invariants))
 
 $(GRAMMAR
@@ -1249,7 +1254,8 @@ $(GNAME StructInvariant):
     $(P There may be multiple invariants in a struct. They are applied in lexical order.)
 
     $(P $(I StructInvariant)s must hold at the exit of the struct constructor (if any),
-    and at the entry of the struct destructor (if any).)
+    but not necessarily at the entry of the struct destructor (if any), since the struct may also
+    be in its $(D .init) state.)
 
     $(P $(I StructInvariant)s must hold
     at the entry and exit of all public or exported non-static member functions.
