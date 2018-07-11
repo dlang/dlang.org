@@ -96,6 +96,15 @@ should be the same for all three directories.
 
 The output is in `web/phobos` and `web/library`.
 
+### Avoid building dmd
+
+By default, the dlang.org build downloads a stable DMD compiler which is used to build the documentation pages.
+If you prefer to use an installed `dmd` binary, set `STABLE_DMD` and `STABLE_DMD_CONF`:
+
+```
+make -f posix.mak html -j4 STABLE_DMD=dmd STABLE_DMD_CONF=/etc/dmd.conf
+```
+
 ### Learning more about DDoc
 
 Please see the [Ddoc fundamentals](https://wiki.dlang.org/Contributing_to_dlang.org).
