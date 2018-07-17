@@ -723,7 +723,8 @@ $W/library-prerelease/.htaccess : dpl_prerelease_htaccess
 
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 			${DRUNTIME_LATEST_DIR} | dpl-docs
-	find ${DMD_LATEST_DIR}/src -name '*.d' -o -name '*.di' > $G/.latest-files.txt
+	find ${DMD_LATEST_DIR}/src -name '*.d' -o -name '*.di' | sort -r | \
+		gawk '!n[gensub(/\.di?$$/, "", 1)]++' > $G/.latest-files.txt
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
 	find ${PHOBOS_LATEST_DIR}/etc ${PHOBOS_LATEST_DIR}/std -name '*.d' | \
@@ -736,7 +737,8 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} | dpl-docs
-	find ${DMD_DIR}/src -name '*.d' -o -name '*.di' > $G/.prerelease-files.txt
+	find ${DMD_DIR}/src -name '*.d' -o -name '*.di' | sort -r | \
+		gawk '!n[gensub(/\.di?$$/, "", 1)]++' > $G/.prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | \
 		sed -e /unittest/d >> $G/.prerelease-files.txt
 	find ${PHOBOS_DIR}/etc ${PHOBOS_DIR}/std -name '*.d' | \
