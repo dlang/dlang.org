@@ -193,6 +193,7 @@ DUB=$(STABLE_DMD_BIN_ROOT)/dub
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
 	core.internal. core.stdc.config core.sys. \
 	std.algorithm.internal std.c. std.internal. std.regex.internal. \
+	std.digest.digest \
 	std.windows.registry etc.linux.memoryerror \
 	std.typetuple \
 	msvc_dmc msvc_lib \
