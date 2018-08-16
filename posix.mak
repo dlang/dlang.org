@@ -193,6 +193,7 @@ DUB=$(STABLE_DMD_BIN_ROOT)/dub
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
 	core.internal. core.stdc.config core.sys. \
 	std.algorithm.internal std.c. std.internal. std.regex.internal. \
+	std.digest.digest \
 	std.windows.registry etc.linux.memoryerror \
 	std.typetuple \
 	msvc_dmc msvc_lib \
@@ -304,7 +305,8 @@ CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
 
-PREMADE=fetch-issue-cnt.php robots.txt .htaccess .dpl_rewrite_map.txt d-keyring.gpg d-keyring.gpg.sig
+PREMADE=fetch-issue-cnt.php robots.txt .htaccess .dpl_rewrite_map.txt \
+		d-keyring.gpg d-keyring.gpg.sig d-security.asc
 
 # Language spec root filenames. They have extension .dd in the source
 # and .html in the generated HTML. These are also used for the mobi
@@ -341,7 +343,7 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 	D1toD2 deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys glossary \
 	gsoc2011 gsoc2012 gsoc2012-template howto-promote htod index install \
-	menu orgs-using-d overview rdmd resources search tuple wc windbg \
+	menu orgs-using-d overview rdmd resources search security tuple wc windbg \
 	$(addprefix foundation/, index about donate sponsors upb-scholarship)
 
 # The contributors listing is dynamically generated
@@ -721,10 +723,11 @@ $W/library-prerelease/.htaccess : dpl_prerelease_htaccess
 
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 			${DRUNTIME_LATEST_DIR} | dpl-docs
-	find ${DMD_LATEST_DIR}/src -name '*.d' > $G/.latest-files.txt
+	find ${DMD_LATEST_DIR}/src -name '*.d' -o -name '*.di' | sort -r | \
+		gawk '!n[gensub(/\.di?$$/, "", 1)]++' > $G/.latest-files.txt
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
-	find ${PHOBOS_LATEST_DIR} -name '*.d' -not -path '${PHOBOS_LATEST_DIR}/generated/*' | \
+	find ${PHOBOS_LATEST_DIR}/etc ${PHOBOS_LATEST_DIR}/std -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
 	${DMD_LATEST} -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
 		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
@@ -734,10 +737,11 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} | dpl-docs
-	find ${DMD_DIR}/src -name '*.d' > $G/.prerelease-files.txt
+	find ${DMD_DIR}/src -name '*.d' -o -name '*.di' | sort -r | \
+		gawk '!n[gensub(/\.di?$$/, "", 1)]++' > $G/.prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | \
 		sed -e /unittest/d >> $G/.prerelease-files.txt
-	find ${PHOBOS_DIR} -name '*.d' -not -path '${PHOBOS_DIR}/generated/*' | \
+	find ${PHOBOS_DIR}/etc ${PHOBOS_DIR}/std -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.prerelease-files.txt
 	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
 		-version=StdDdoc -Df$G/.prerelease-dummy.html \
