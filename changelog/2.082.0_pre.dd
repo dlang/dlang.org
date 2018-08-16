@@ -1,0 +1,844 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Sep 01, 2018, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 26 major changes and 66 fixed Bugzilla issues.
+                            A huge thanks goes to the 47 contributors who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 betterc_cmp_types,Support for comparing arrays of unsigned byte-sized types and structs has been added to -betterC))
+$(LI $(RELATIVE_LINK2 betterc_versions,Added `D_ModuleInfo`, `D_Exceptions`, and `D_TypeInfo` version identifiers))
+$(LI $(RELATIVE_LINK2 cond_assign,Deprecate conditional expression followed by an assign expression))
+$(LI $(RELATIVE_LINK2 debug-unsafe,Unsafe code can now be used in debug blocks))
+$(LI $(RELATIVE_LINK2 deprecate-opDot,Deprecatie usage of `opDot`))
+$(LI $(RELATIVE_LINK2 enum_attributes,D now supports deprecated, @disable and user-defined attributes on enum members))
+$(LI $(RELATIVE_LINK2 error_for_c-style_arrays,Deprecated C-style array declarations will now result in a compilation error))
+$(LI $(RELATIVE_LINK2 fix19043,Mangling of extern(C++) template on Windows now correctly mangles const non-pointer template parameters.))
+$(LI $(RELATIVE_LINK2 objc_offsetof_tupleof,`.offsetof` and `.tupleof` for fields of Objective-C classes have now been disabled))
+$(LI $(RELATIVE_LINK2 osx64_long_cppmangling,64-bit OS X: Revert C++ mangling of `long` to pre-2.079 to restore `size_t` interop))
+$(LI $(RELATIVE_LINK2 uda-function-arguments,UDAs on function arguments are now supported))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 exceptions-opt,Exception trapping can now be disabled via `--DRT-trapExceptions=0`))
+$(LI $(RELATIVE_LINK2 require_update,Additional functions for associative arrays))
+$(LI $(RELATIVE_LINK2 typeinfo-gethash,`TypeInfo.getHash` now uses `core.internal.hash.hashOf` functions for hash computing))
+$(LI $(RELATIVE_LINK2 utsname_version,core.sys.posix.utsname.update renamed to version_))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 math_float_double_implementations,Single- and double-precision implementations for (a)tan and exp function families))
+$(LI $(RELATIVE_LINK2 std-algorithm-iteration-joiner,`std.algorithm.iteration.joiner` can now be used for bidirectional ranges))
+$(LI $(RELATIVE_LINK2 std-algorithm-searching-skipOver,`std.algorithm.searching.skipOver` can now handle variadic arguments))
+$(LI $(RELATIVE_LINK2 std-array-asStatic,Added `staticArray` to construct a static array from array / input range. Includes a length-inferring compile-time variant.))
+$(LI $(RELATIVE_LINK2 std-datetime-timezone-remove,Deprecated functions for getting the timezone have been removed.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 buildSettingsVars,Variables such as `$ARCH` or `$PLATFORM` are now supported in the build settings.))
+$(LI $(RELATIVE_LINK2 buildTypeSyntax,DUB supports build type "syntax"))
+$(LI $(RELATIVE_LINK2 env-var-replacement,Enviroment variable expansion was improved))
+$(LI $(RELATIVE_LINK2 recursive_dependecy_resolution,Dependency resolution has been reimplemented using a recursive algorithm))
+$(LI $(RELATIVE_LINK2 stdinForSingleFilePackages,DUB accepts single file packages on STDIN))
+$(LI $(RELATIVE_LINK2 upgrade_check,The regular upgrade check has been removed))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 betterc_cmp_types,Support for comparing arrays of unsigned byte-sized types and structs has been added to -betterC)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/betterc_cmp_types.dd)
+$(P
+Prior to this release, the following code did not build in -betterC, but will with this release.
+)
+
+---
+// (Prior to this release) Error: TypeInfo cannot be used with -betterC
+struct Sint
+{
+    int x;
+    this(int v) { x = v;}
+}
+
+extern(C) void main()
+{
+    Sint[6] a1 = [Sint(1), Sint(2), Sint(3), Sint(1), Sint(2), Sint(3)];
+    assert(a1[0..3] == a1[3..$]);
+}
+---
+
+---
+// (Prior to this release) Linker Error: undefined reference to `core.internal.string.dstrcmp`
+extern(C) void main()
+{
+    auto s = "abc";
+    switch(s)
+    {
+        case "abc":
+            break;
+        default:
+            break;
+    }
+}
+---
+
+---
+// (Prior to this release) Linker Error: undefined reference to `core.internal.string.dstrcmp`
+extern(C) void main()
+{
+    char[6] a = [1,2,3,1,2,3];
+    assert(a[0..3] >= a[3..$]);  // failed for any byte-sized type (e.g. `char`, `ubyte`, etc...)
+}
+---
+)
+
+$(LI $(LNAME2 betterc_versions,Added `D_ModuleInfo`, `D_Exceptions`, and `D_TypeInfo` version identifiers)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/betterc_versions.dd)
+$(P
+`D_ModuleInfo`, `D_Exceptions`, and `D_TypeInfo` version identifiers were added to allow
+better precision in druntime and other library implementations.
+)
+
+$(P
+See $(LINK2 https://dlang.org/spec/version.html#predefined-versions, Predefined Versions)
+)
+)
+
+$(LI $(LNAME2 cond_assign,Deprecate conditional expression followed by an assign expression)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/cond_assign.dd)
+$(P
+When a conditional expression is the left operand of an assign
+expression, they would be parsed as an assignment to $(I the result) of
+the conditional. This has now been deprecated. To preserve the existing
+behaviour, add parentheses for the conditional without including the
+assignment:
+)
+
+---
+bool test;
+int a, b, c;
+...
+test ? a = b : c = 2;   // Deprecated
+(test ? a = b : c) = 2; // Equivalent
+---
+
+$(P
+This makes the intent clearer, because the first statement can easily
+be misread as the following code:
+)
+
+---
+test ? a = b : (c = 2);
+---
+)
+
+$(LI $(LNAME2 debug-unsafe,Unsafe code can now be used in debug blocks)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/debug-unsafe.dd)
+$(P
+When writing debug code, one isn't interested in the type safety, but a pleasant
+debugging experience.
+The type checker already allowed to escape `pure` and `@nogc` within `debug`
+statement.
+With this release, `@system` code can be called from `debug` statements too:
+)
+
+---
+void main()
+{
+    int[] arr = [1, 2];
+    debug unsafeCode(arr);
+}
+
+@system void unsafeCode(T)(T[] arr)
+{
+    import core.stdc.stdio;
+    printf("arr.ptr: %p", arr.ptr);
+}
+---
+)
+
+$(LI $(LNAME2 deprecate-opDot,Deprecatie usage of `opDot`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecate-opDot.dd)
+$(P
+`opDot` was the D1 analog to `alias this`.
+However, `alias this` covers all use cases of `opDot`, but ensures safety.
+)
+
+---
+struct S
+{
+    int a, b;
+}
+struct T
+{
+    S s;
+
+    S* opDot()
+    {
+        return &s;
+    }
+}
+
+void main()
+{
+    T t;
+    t.a = 4;
+    assert(t.a == 4);
+    t.b = 5;
+}
+---
+
+$(P
+With `alias this`:
+)
+
+---
+struct S
+{
+    int a, b;
+}
+struct T
+{
+    S s;
+
+    alias s this;
+}
+
+void main() @safe
+{
+    T t;
+    t.a = 4;
+    assert(t.a == 4);
+    t.b = 5;
+}
+---
+)
+
+$(LI $(LNAME2 enum_attributes,D now supports deprecated, @disable and user-defined attributes on enum members)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/enum_attributes.dd)
+$(P
+Example
+)
+---
+template AliasSeq(TList...)
+{
+    alias AliasSeq = TList;
+}
+
+enum MyEnum
+{
+    @("uda0") value0,
+    @disable value1,
+    deprecated value2  // Deprecation: enum member `main.MyEnum.value2` is deprecated
+}
+
+static assert(__traits(getAttributes, MyEnum.value0) == AliasSeq!("uda0"));
+
+void main()
+{
+    auto v1 = MyEnum.value1;  // Error: enum member `main.MyEnum.value1` cannot be used because it is annotated with `@disable`
+}
+---
+)
+
+$(LI $(LNAME2 error_for_c-style_arrays,Deprecated C-style array declarations will now result in a compilation error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/error_for_c-style_arrays.dd)
+$(P
+The deprecation period for C-style array declarations has expired.  Beginning with this
+release, declaring arrays with C-style syntax will result in an error.
+)
+
+---
+int a[2];  // Error: instead of C-style syntax, use D-style `int a[2]`
+int[2] b;  // OK
+---
+)
+
+$(LI $(LNAME2 fix19043,Mangling of extern(C++) template on Windows now correctly mangles const non-pointer template parameters.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/fix19043.dd)
+$(P
+It used to ignore the const and was missing the $$C escape prefix.
+)
+
+-----
+extern(C++) struct foo(T) {}
+
+extern(C++) void test(foo!(const(char)) a) {}
+// New
+static assert(test.mangleof == "?test@@YAXU?$foo@$$CBD@@@Z");
+// Old
+//static assert(test.mangleof == "?test@@YAXU?$foo@D@@@Z");
+-----
+)
+
+$(LI $(LNAME2 objc_offsetof_tupleof,`.offsetof` and `.tupleof` for fields of Objective-C classes have now been disabled)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/objc_offsetof_tupleof.dd)
+$(P
+To solve the fragile base class problem [1] in Objective-C, fields have a
+dynamic offset instead of a static offset. The compiler outputs a statically
+known offset which later the dynamic loader can update, if necessary, when the
+application is loaded. Due to this behavior it doesn't make sense to be able to
+get the offset of a field at compile time, because this offset might not
+actually be the same at runtime.
+)
+
+$(P
+To get the offset or value of a field, that is correct at runtime, functionality
+from the Objective-C runtime can be used instead [2].
+)
+
+$(P
+[1] $(LINK2 Fragile Binary Interface Problem, https://en.wikipedia.org/wiki/Fragile_binary_interface_problem)
+[2] $(LINK2 Objective-C Runtime, https://developer.apple.com/documentation/objectivec/objective_c_runtime)
+)
+)
+
+$(LI $(LNAME2 osx64_long_cppmangling,64-bit OS X: Revert C++ mangling of `long` to pre-2.079 to restore `size_t` interop)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/osx64_long_cppmangling.dd)
+$(P
+Direct interop of D `size_t` and C++ `size_t` was working before 2.079, on all platforms
+except for 32-bit OS X. By mangling D `long` as C++ `long long` on 64-bit OS X starting
+with 2.079, `size_t` interop broke on a more relevant platform.
+With new/fixed aliases, e.g., $(REF int64_t, core, stdc, stdint),
+$(REF uint64_t, core, stdc, stdint) and $(REF cpp_size_t, core, stdc, config), there are
+now proper tools for portable C++ interop wrt. integers.
+Reverting to the previous C++ mangling on 64-bit OS X (C++ `long`) may save mixed D/C++
+code bases from the need of manual adaptations by skipping the 2.079 and 2.080 DMD
+versions.
+)
+)
+
+$(LI $(LNAME2 uda-function-arguments,UDAs on function arguments are now supported)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/uda-function-arguments.dd)
+$(P
+User-defined attributes on function arguments behave analogous to existing UDAs:
+)
+
+---
+void test(A)(@(22) A a)
+{
+    static assert([__traits(getAttributes, a)] == [22]);
+}
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 exceptions-opt,Exception trapping can now be disabled via `--DRT-trapExceptions=0`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/exceptions-opt.dd)
+$(P
+Previously it was only possible to disable the trapping of exception by setting
+the global variable `rt_trapExceptions` to `false`.
+Now you can, for example, immediately open `gdb` at the uncaught exception:
+)
+
+$(P
+$(CONSOLE
+> gdb -ex run --args <my-program> --DRT-trapExceptions=0
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+uncaught exception
+object.Exception@src/rt_trap_exceptions_drt.d(4): foo
+$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)
+src/rt_trap_exceptions_drt.d:4 void rt_trap_exceptions_drt.test() [0x55591026]
+src/rt_trap_exceptions_drt.d:9 _Dmain [0x55591058]
+$(P)
+Program received signal SIGABRT, Aborted.
+0x00007ffff6e7b86b in raise () from /usr/lib/libc.so.6
+(gdb) bt full
+#0  0x00007ffff6e7b86b in raise () from /usr/lib/libc.so.6
+No symbol table info available.
+#1  0x00007ffff6e6640e in abort () from /usr/lib/libc.so.6
+No symbol table info available.
+#2  0x00005555555918cc in _d_throwdwarf (o=0x7ffff7ea4000) at src/rt/dwarfeh.d:233
+        eh = 0x7ffff7fa4740
+        refcount = 0
+        r = 5
+#3  0x0000555555591027 in rt_trap_exceptions_drt.test() () at ../../src/object.d:2695
+        innerLocal = 20
+#4  0x0000555555591059 in D main (args=...) at src/rt_trap_exceptions_drt.d:9
+        myLocal = "bar"
+)
+)
+
+$(P
+$(LINK2 http://arsdnet.net/this-week-in-d/2016-aug-07.html, This Week in D) for
+an in-depth explanation of `rt_trapExceptions`
+)
+)
+
+$(LI $(LNAME2 require_update,Additional functions for associative arrays)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/require_update.dd)
+$(P
+The $(D require) function provides a means to construct a new value when the key
+is not present.
+)
+
+---------
+class C{}
+C[string] aa;
+
+auto a = aa.require("a", new C);    // lookup "a", construct if not present
+---------
+
+$(P
+The $(D update) function allows different operations to be performed depending
+on whether a value already exists or needs to be constructed.
+)
+
+---------
+class C{}
+C[string] aa;
+
+C older;
+C newer;
+aa.update("a",
+{
+    newer = new C;
+    return newer;
+},
+(ref C c)
+{
+    older = c;
+    newer = new C;
+    return newer;
+});
+---------
+
+$(P
+The functions avoid the need to perform multiple key lookups. Further details
+are available in the $(LINK2 $(ROOT_DIR)spec/hash-map.html, spec.)
+)
+)
+
+$(LI $(LNAME2 typeinfo-gethash,`TypeInfo.getHash` now uses `core.internal.hash.hashOf` functions for hash computing)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/typeinfo-gethash.dd)
+$(P
+Now `typeid(typeof(var)).getHash(&var)` should be always equal `hashOf(val)`.
+hashOf uses MurmurHash3 algorithm for bitwise hashing, including string hashing.
+Old implementation used polynomial hash for string hashing, which often provided
+lexicographical order of strings in associative array. However AA doesn't guarantee
+some specific order of elements, thus tests which rely on it should be changed.
+)
+)
+
+$(LI $(LNAME2 utsname_version,core.sys.posix.utsname.update renamed to version_)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/utsname_version.dd)
+$(P
+The struct that $(D uname) returns - $(D utsname) - has the field $(D version)
+in C. The D definition of the struct cannot match that, because $(D version) is
+a keyword in D. So, it's been called $(D update), which is not an obvious
+choice. It is more in line with current naming policies (and more in line with
+the name in C) for it to be called $(D version_), since that's the closest that
+we can get to $(D version) in D. So, $(D update) has now been renamed to
+$(D version_), and $(D update) is an alias of $(D version_) which will be
+deprecated in a future release.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 math_float_double_implementations,Single- and double-precision implementations for (a)tan and exp function families)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/math_float_double_implementations.dd)
+$(P
+The `float` and `double` overloads of
+$(REF atan, std, math), $(REF atan2, std, math), $(REF tan, std, math),
+$(REF exp, std, math), $(REF expm1, std, math) and $(REF exp2, std, math)
+previously forwarded to the `real` implementation (inline assembly) and
+now got proper 'software' implementations in the corresponding precision.
+)
+
+$(P
+While this may result in a slowdown in some cases for DMD (especially for
+`exp()` and `exp2()`), the overall speed-up factor for LDC is > 3, for
+both `double` and `float`.
+)
+
+$(P
+This also implies less precise results, especially in single-precision,
+so if your code depended on more accurate results via 80-bit intermediate
+precision, you'll have to cast the argument(s) explicitly now.
+)
+)
+
+$(LI $(LNAME2 std-algorithm-iteration-joiner,`std.algorithm.iteration.joiner` can now be used for bidirectional ranges)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-algorithm-iteration-joiner.dd)
+$(P
+$(REF joiner, std,algorithm,iteration) can now be requested to be a bidirectional range.
+)
+
+---
+import std.algorithm.iteration : joiner;
+import std.range : retro;
+[[1, 2], [3, 4]].joiner.retro; // [4, 3, 2, 1]
+---
+
+$(P
+A more complex example of inserting a format delimiter fully lazily:
+)
+
+---
+import std.algorithm.comparison : equal;
+import std.range : chain, cycle, iota, only, retro, take, zip;
+import std.format : format;
+
+static immutable number = "12345678";
+static immutable delimiter = ",";
+auto formatted = number.retro
+    .zip(3.iota.cycle.take(number.length))
+    .map!(z => chain(z[0].only, z[1] == 2 ? delimiter : null))
+    .joiner
+    .retro; // "12,345,678"
+---
+)
+
+$(LI $(LNAME2 std-algorithm-searching-skipOver,`std.algorithm.searching.skipOver` can now handle variadic arguments)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-algorithm-searching-skipOver.dd)
+$(P
+$(REF skipOver, std,algorithm) which allows to move over a needle if it matches
+now accepts variadic arguments for needles to skip over:
+)
+
+---
+auto s = "DLang.rocks";
+assert(!s.skipOver("dlang", "DLF", "DLang "));
+assert(s == "DLang.rocks");
+
+assert(s.skipOver("dlang", "DLANG", "DLF", "D", "DL", "DLanp"));
+assert(s == "ang.rocks");
+---
+)
+
+$(LI $(LNAME2 std-array-asStatic,Added `staticArray` to construct a static array from array / input range. Includes a length-inferring compile-time variant.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-array-asStatic.dd)
+$(P
+The type of elements can be specified implicitly so that $(D [1, 2].staticArray) results in `int[2]`,
+or explicitly, e.g. $(D [1, 2].staticArray!float) returns `float[2]`.
+When `a` is a range whose length is not known at compile time, the number of elements must be given as template argument
+(e.g. `myrange.staticArray!2`).
+Size and type can be combined, if the source range elements are implicitly
+convertible to the requested element type (eg: `2.iota.staticArray!(long[2])`).
+When the range `a` is known at compile time, it can also be specified as a
+template argument to avoid having to specify the number of elements
+(e.g.: `staticArray!(2.iota)` or `staticArray!(double, 2.iota)`).
+)
+
+---
+import std.range : iota;
+
+auto input = 3.iota;
+auto a = input.staticArray!2;
+static assert(is(typeof(a) == int[2]));
+assert(a == [0, 1]);
+auto b = input.staticArray!(long[4]);
+static assert(is(typeof(b) == long[4]));
+assert(b == [0, 1, 2, 0]);
+---
+)
+
+$(LI $(LNAME2 std-datetime-timezone-remove,Deprecated functions for getting the timezone have been removed.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-datetime-timezone-remove.dd)
+$(P
+Due to the fact that Microsoft changes its timezone definitions too frequently
+to maintain the conversion between the IANA TZ Database names and the names that
+Microsoft uses in the standard library, several functions in
+std.datetime.timezone related to getting the time zone independently of the
+host OS were previously deprecated: $(D TimeZone.getTimeZone),
+$(D TimeZone.getInstalledTZNames), $(D tzDatabaseNameToWindowsTZName), and
+$(D windowsTZNameToTZDatabaseName). These functions have now been fully removed.
+)
+
+$(P
+Instead of $(D TimeZone.getTimeZone),
+$(REF PosixTimeZone.getTimeZone, std, datetime, timezone) and
+$(REF WindowsTimeZone.getTimeZone, std, datetime, timezone) should be used
+directly. Instead of $(D Timezone.getInstalledTimeZones),
+$(REF PosixTimeZone.getInstalledTZNames, std, datetime, timezone) and
+$(REF WindowsTimeZone.getInstalledTZNames, std, datetime, timezone) should be
+used directly. And any programs looking to convert between the TZ Database
+names and the Windows names can use
+$(REF parseTZConversions, std, datetime, timezone) with the current
+windowsZones.xml file to get the current conversions (see the documenation for
+$(REF parseTZConversions, std, datetime, timezone) for details).
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 buildSettingsVars,Variables such as `$ARCH` or `$PLATFORM` are now supported in the build settings.)
+$(CHANGELOG_SOURCE_FILE dub, changelog/buildSettingsVars.dd)
+$(P
+JSON lines such as
+)
+-------
+    "lflags-posix-x86": [ "-L$PACKAGE_DIR/lib/posix-x86" ],
+    "lflags-posix-x86_64": [ "-L$PACKAGE_DIR/lib/posix-x86_64" ],
+-------
+$(P
+can be turned into
+)
+-------
+    "lflags-posix": [ "-L$PACKAGE_DIR/lib/posix-$ARCH" ],
+-------
+
+$(P
+Both `$VAR` and `${VAR}` syntaxes are supported.
+The supported variables are as follow:
+$(TABLE
+    $(TR $(TH name) $(TH values))
+    $(TR $(TD `$ARCH`) $(TD $(D_INLINECODE "x86", "x86_64")))
+    $(TR $(TD `$PLATFORM`) $(TD $(D_INLINECODE "linux", "windows", ...)))
+    $(TR $(TD `$PLATFORM_POSIX`) $(TD $(D_INLINECODE "posix", "windows", ...)))
+    $(TR $(TD `$BUILD_TYPE`) $(TD $(D_INLINECODE "debug", "release", ...)))
+)
+)
+)
+
+$(LI $(LNAME2 buildTypeSyntax,DUB supports build type "syntax")
+$(CHANGELOG_SOURCE_FILE dub, changelog/buildTypeSyntax.dd)
+$(P
+With this release new build type "syntax" is added. This build type is useful for IDEs to check the syntax of D coding without generating binaries.
+)
+)
+
+$(LI $(LNAME2 env-var-replacement,Enviroment variable expansion was improved)
+$(CHANGELOG_SOURCE_FILE dub, changelog/env-var-replacement.dd)
+$(P
+Environment variable expansion now supports the braced `${MY_VAR}` expansion syntax: e.g. for `${PACKAGE_PATH}_suffix`.
+)
+
+$(P
+Moreover, `$PACKAGE_PATH`, `$ROOT_PACKAGE_PATH`, and `$DEP_PACKAGE_PATH` no longer end
+  with a `/` or `\` to support clean concatenation, e.g. `${PACKAGE_PATH}/subpath`.
+)
+
+$(P
+Learn more about the details at $(LINK2 https://github.com/dlang/dub/pull/1392, #1392).
+)
+)
+
+$(LI $(LNAME2 recursive_dependecy_resolution,Dependency resolution has been reimplemented using a recursive algorithm)
+$(CHANGELOG_SOURCE_FILE dub, changelog/recursive_dependecy_resolution.dd)
+$(P
+The new algorithm minimizes the search space while descending the dependency
+graph. Compared to the old approach, it is now much less likely to run into
+pathological cases that result in exponential run time ("The dependency
+resolution algorithm is taking too long").
+)
+
+$(P
+Furthermore, the error message in case of unsatisfiable dependencies is more
+precise, usually making it straight forward to debug issues in the dependency
+graph of a failing package.
+)
+)
+
+$(LI $(LNAME2 stdinForSingleFilePackages,DUB accepts single file packages on STDIN)
+$(CHANGELOG_SOURCE_FILE dub, changelog/stdinForSingleFilePackages.dd)
+$(P
+You can pass single file packages to dub on STDIN using dash as first argument to DUB.
+All arguments after dash will be passed as runtime arguments to the application.
+)
+
+$(P
+Example `cat app.d | dub - --foo=bar`
+)
+)
+
+$(LI $(LNAME2 upgrade_check,The regular upgrade check has been removed)
+$(CHANGELOG_SOURCE_FILE dub, changelog/upgrade_check.dd)
+$(P
+Previously dub would regularly (once a day) check for possible package upgrades before building a packages.
+This lead to unexpected build failures, e.g. when internet connectivity was down or dependency resolution failed, and caused unnecessary delays.
+)
+
+$(P
+The build flag `--nodeps` now only suppresses resolution of missing dependencies.
+)
+
+$(P
+The new upgrade flag `--dry-run` was added to explicitly check for upgradable packages without actually upgrading anything.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 19050): Running the DMD test suite with a compiler compiled in debug mode fails due to invalid characters, -)
+$(LI $(BUGZILLA 19074): [REG 2.080] SIGSEGV in el_ptr $(LPAREN)s=0x15$(RPAREN) at dmd/backend/el.c:1760)
+$(LI $(BUGZILLA 19076): dmd 2.081 crashed by getVirtualFunctions for a interface extended interface)
+$(LI $(BUGZILLA 19140): [REG master] AssertError@dmd/ctfeexpr.d$(LPAREN)229$(RPAREN): Assertion failure)
+$(LI $(BUGZILLA 19152): 2.081.1 getOverloads regression compiler bug)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 9701): UDAs cannot be attached to enum values.)
+$(LI $(BUGZILLA 15373): Segfault when using typeid on extern$(LPAREN)C++$(RPAREN) class with virtual functions)
+$(LI $(BUGZILLA 17580): Marking methods as synchronized is allowed despite spec)
+$(LI $(BUGZILLA 18620): `error cannot be interpreted at compile time` is missing context where error occurs)
+$(LI $(BUGZILLA 18985): bad error message for += operation on shared Object)
+$(LI $(BUGZILLA 19018): Lexer allows invalid integer literals, like `0x`)
+$(LI $(BUGZILLA 19035): Escape in scope inference, improve scope inference)
+$(LI $(BUGZILLA 19043): Incorrect mangling for extern$(LPAREN)C++$(RPAREN) const template parameter on windows)
+$(LI $(BUGZILLA 19051): Undefined functions Set/GetWindowLongPtr in mingw libs)
+$(LI $(BUGZILLA 19053): debug should escape @safe)
+$(LI $(BUGZILLA 19059): Invalid integer literal 08 and 09 allowed)
+$(LI $(BUGZILLA 19107):  -de produces compilation error, -dw does not)
+$(LI $(BUGZILLA 19112): Associative array opIn with static array key fails with dynamic array)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 17602): improve message for deprecated enum comparison)
+$(LI $(BUGZILLA 18743): ConditionalExpression and AssignExpression should require parentheses)
+$(LI $(BUGZILLA 18994): Use noncopyable variable in foreach loop without ref results in error message without line number)
+$(LI $(BUGZILLA 19022): CTorFlow: Show the line of the duplicated initialization for const/immutable fields)
+$(LI $(BUGZILLA 19081): Can't declare enum with UDA at statement level)
+$(LI $(BUGZILLA 19108): Unknown pragmas not ignored inside body)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 12507): SysTime.init.toString should not segfault)
+$(LI $(BUGZILLA 15732): std.function partial does not work with function / delegate references)
+$(LI $(BUGZILLA 18804): std.algorithm.mutation.copy puts whole source range into target range when it should put elements)
+$(LI $(BUGZILLA 18933): std.range.assumeSorted should not nest SortedRange!$(LPAREN)SortedRange!$(LPAREN)...$(RPAREN), pred$(RPAREN))
+$(LI $(BUGZILLA 18995): std.array.array doesn't free elements)
+$(LI $(BUGZILLA 19003): format!"" breaks with structs containing invariants violated in .init)
+$(LI $(BUGZILLA 19094): Anchored section does not exist in std.uni.normalize phobos documentation)
+$(LI $(BUGZILLA 19138): std.uuid.randomUUID should not depend on std.random.Random being Mt19937)
+$(LI $(BUGZILLA 19147): Reduce template bloat in std.complex by using const arguments)
+$(LI $(BUGZILLA 19171): Array!bool range slicing has invalid assert)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 12335): std.algorithm.skipOver should support multiple args like startsWith)
+$(LI $(BUGZILLA 13121): std.algorithm.joiner should return a bidirectional range if possible)
+$(LI $(BUGZILLA 14001): Optionally @nogc std.random.randomCover)
+$(LI $(BUGZILLA 16639): Review std.json wrt this article on JSON edge cases and ambiguities)
+$(LI $(BUGZILLA 16745): Add template helper for creating static arrays with the size inferred)
+$(LI $(BUGZILLA 17019): std.algorithm.iteration.each should be usable with parallel)
+$(LI $(BUGZILLA 18790): can't put a const$(LPAREN)char$(RPAREN)[] into a char[])
+$(LI $(BUGZILLA 19037): Nullable should use moveEmplace to support any type.)
+$(LI $(BUGZILLA 19135): std.json : JSON_TYPE does not match D Style.)
+$(LI $(BUGZILLA 19156):  @nogc std.random.randomShuffle)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 19046): OSX: bad value for core.stdc.time.CLOCKS_PER_SEC)
+$(LI $(BUGZILLA 19073): core.internal.hash should not bitwise hash representations of floating point numbers)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 18220): Allow rt_trapexceptions to be set from the CLI)
+$(LI $(BUGZILLA 18918): core.internal.hash should perform memberwise hashing of structs with references)
+$(LI $(BUGZILLA 18921): make core.internal.hash cater to memberwise hash chaining)
+$(LI $(BUGZILLA 18923): Semaphore internal handle should be `protected` instead of `private`)
+$(LI $(BUGZILLA 18942): core.internal.hash can take advantage of alignment info on non-x86)
+$(LI $(BUGZILLA 18981): SIGSEGV during backtrace when debug info is compressed)
+$(LI $(BUGZILLA 19009): core.internal.hash.hashOf default hash $(LPAREN)absent `toHash`$(RPAREN) should be `@nogc`)
+$(LI $(BUGZILLA 19048): In core.internal.hash.hashOf reduce template bloat: remove `auto ref` where unneeded and add `const` where possible)
+$(LI $(BUGZILLA 19049): object.hashOf - don't wrap a public function with an identical public function)
+$(LI $(BUGZILLA 19071): core.internal.hash should have non-chained toHash overloads)
+$(LI $(BUGZILLA 19072): Object.toHash and typeid$(LPAREN)void*$(RPAREN).getHash$(LPAREN)&ptr$(RPAREN) should be more varied in their low bits)
+$(LI $(BUGZILLA 19075): rt.util.random.Rand48.defaultSeed should prefer RDTSC or mach_absolute_time or QueryPerformanceCounter to ctime.time)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bugs,
+
+$(LI $(BUGZILLA 18558): Template alias spec incomplete)
+$(LI $(BUGZILLA 18782): Documentation error: ProtectionAttributes should say Visibility Attributes)
+$(LI $(BUGZILLA 19055): [404 Not Found] std.digest.digest)
+$(LI $(BUGZILLA 19067): [Mixins] Dead Link to template-mixin)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 19041): errnoEnforce: example does not compile)
+)
+$(BUGSTITLE_BUGZILLA Installer bugs,
+
+$(LI $(BUGZILLA 2473): Linux system install instructions incorrect)
+$(LI $(BUGZILLA 10941): object.d not found when following Mac installation instructions)
+$(LI $(BUGZILLA 19100): install.sh signature verification fails, no public key)
+)
+)
+$(D_CONTRIBUTORS_HEADER 47)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Alexibu)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR BBasile)
+    $(D_CONTRIBUTOR Brian Schott)
+    $(D_CONTRIBUTOR David Bennett)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Diederik de Groot)
+    $(D_CONTRIBUTOR dukc)
+    $(D_CONTRIBUTOR GabyForceQ)
+    $(D_CONTRIBUTOR gapdan)
+    $(D_CONTRIBUTOR Giles Bathgate)
+    $(D_CONTRIBUTOR glitchbunny)
+    $(D_CONTRIBUTOR Greg V)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR Joakim Noah)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR John Colvin)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR kinke)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Lindsay Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Roman Chistokhodov)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Timothee Cour)
+    $(D_CONTRIBUTOR Tyler Knott)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR wazar)
+    $(D_CONTRIBUTOR Yuxuan Shui)
+    $(D_CONTRIBUTOR Zach Tollen)
+    $(D_CONTRIBUTOR Zevenberge)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.082.0
+    TITLE=Change Log: $(VER)
