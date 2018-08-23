@@ -5,8 +5,8 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Sep 01, 2018, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 27 major changes and 66 fixed Bugzilla issues.
-                            A huge thanks goes to the 47 contributors who made $(VER) possible.)
+$(VER) comes with 28 major changes and 68 fixed Bugzilla issues.
+                            A huge thanks goes to the 48 contributors who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
@@ -20,7 +20,7 @@ $(LI $(RELATIVE_LINK2 error_for_c-style_arrays,Deprecated C-style array declarat
 $(LI $(RELATIVE_LINK2 fix19043,Mangling of extern(C++) template on Windows now correctly mangles const non-pointer template parameters.))
 $(LI $(RELATIVE_LINK2 objc_offsetof_tupleof,`.offsetof` and `.tupleof` for fields of Objective-C classes have now been disabled))
 $(LI $(RELATIVE_LINK2 osx64_long_cppmangling,64-bit OS X: Revert C++ mangling of `long` to pre-2.079 to restore `size_t` interop))
-$(LI $(RELATIVE_LINK2 uda-function-arguments,UDAs on function arguments are now supported))
+$(LI $(RELATIVE_LINK2 uda-function-parameters,UDAs on function parameters are now supported))
 
 )
 
@@ -36,6 +36,7 @@ $(LI $(RELATIVE_LINK2 utsname_version,core.sys.posix.utsname.update renamed to v
 $(BUGSTITLE_TEXT_HEADER Library changes,
 
 $(LI $(RELATIVE_LINK2 math_float_double_implementations,Single- and double-precision implementations for (a)tan and exp function families))
+$(LI $(RELATIVE_LINK2 std-algorithm-iteration-each-early-stopping,`std.algorithm.iteration.each` is now capable of early-stopping))
 $(LI $(RELATIVE_LINK2 std-algorithm-iteration-joiner,`std.algorithm.iteration.joiner` can now be used for bidirectional ranges))
 $(LI $(RELATIVE_LINK2 std-algorithm-searching-skipOver,`std.algorithm.searching.skipOver` can now handle variadic arguments))
 $(LI $(RELATIVE_LINK2 std-array-asStatic,Added `staticArray` to construct a static array from array / input range. Includes a length-inferring compile-time variant.))
@@ -323,21 +324,22 @@ With new/fixed aliases, e.g., $(REF int64_t, core, stdc, stdint),
 $(REF uint64_t, core, stdc, stdint) and $(REF cpp_size_t, core, stdc, config), there are
 now proper tools for portable C++ interop wrt. integers.
 Reverting to the previous C++ mangling on 64-bit OS X (C++ `long`) may save mixed D/C++
-code bases from the need of manual adaptations by skipping the 2.079 and 2.080 DMD
-versions.
+code bases from the need of manual adaptations by skipping the 2.079-2.081 DMD versions.
 )
 )
 
-$(LI $(LNAME2 uda-function-arguments,UDAs on function arguments are now supported)
-$(CHANGELOG_SOURCE_FILE dmd, changelog/uda-function-arguments.dd)
+$(LI $(LNAME2 uda-function-parameters,UDAs on function parameters are now supported)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/uda-function-parameters.dd)
 $(P
-User-defined attributes on function arguments behave analogous to existing UDAs:
+User-defined attributes on function parameters behave analogous to existing UDAs:
 )
 
 ---
-void test(A)(@(22) A a)
+void example(@(22) string param)
 {
-    static assert([__traits(getAttributes, a)] == [22]);
+    @(11) string var;
+    static assert([__traits(getAttributes, var)] == [11]);
+    static assert([__traits(getAttributes, param)] == [22]);
 }
 ---
 )
@@ -485,6 +487,23 @@ This also implies less precise results, especially in single-precision,
 so if your code depended on more accurate results via 80-bit intermediate
 precision, you'll have to cast the argument(s) explicitly now.
 )
+)
+
+$(LI $(LNAME2 std-algorithm-iteration-each-early-stopping,`std.algorithm.iteration.each` is now capable of early-stopping)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-algorithm-iteration-each-early-stopping.dd)
+$(P
+$(REF each, std,algorithm,iteration) is now capable of exiting early.
+When a `No.each` $(REF Flag, std,typecons) is returned from the function that
+is called by `each`, the iteration will be aborted early.
+Analogously, returning `Yes.each` will continue the iteration.
+For example:
+)
+
+---
+auto arr = [10, 20, 30];
+arr.each!((n) { arr ~= n; return (n == 20) ? No.each : Yes.each; }); // aborts after the second iteration
+assert(arr == [10, 20, 30, 10, 20]);
+---
 )
 
 $(LI $(LNAME2 std-algorithm-iteration-joiner,`std.algorithm.iteration.joiner` can now be used for bidirectional ranges)
@@ -731,6 +750,7 @@ $(LI $(BUGZILLA 19074): [REG 2.080] SIGSEGV in el_ptr $(LPAREN)s=0x15$(RPAREN) a
 $(LI $(BUGZILLA 19076): dmd 2.081 crashed by getVirtualFunctions for a interface extended interface)
 $(LI $(BUGZILLA 19140): [REG master] AssertError@dmd/ctfeexpr.d$(LPAREN)229$(RPAREN): Assertion failure)
 $(LI $(BUGZILLA 19152): 2.081.1 getOverloads regression compiler bug)
+$(LI $(BUGZILLA 19162): [REG: 2.079.0] Public Import Overlapping Names Conflict Resolution)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bugs,
 
@@ -747,6 +767,7 @@ $(LI $(BUGZILLA 19053): debug should escape @safe)
 $(LI $(BUGZILLA 19059): Invalid integer literal 08 and 09 allowed)
 $(LI $(BUGZILLA 19107):  -de produces compilation error, -dw does not)
 $(LI $(BUGZILLA 19112): Associative array opIn with static array key fails with dynamic array)
+$(LI $(BUGZILLA 19176): Dmd crashes because of __traits$(LPAREN)getUnitTests$(RPAREN))
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
@@ -821,7 +842,7 @@ $(LI $(BUGZILLA 10941): object.d not found when following Mac installation instr
 $(LI $(BUGZILLA 19100): install.sh signature verification fails, no public key)
 )
 )
-$(D_CONTRIBUTORS_HEADER 47)
+$(D_CONTRIBUTORS_HEADER 48)
 $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR aG0aep6G)
     $(D_CONTRIBUTOR Alexibu)
@@ -847,6 +868,7 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR John Colvin)
     $(D_CONTRIBUTOR Jonathan M Davis)
     $(D_CONTRIBUTOR kinke)
+    $(D_CONTRIBUTOR look-at-me)
     $(D_CONTRIBUTOR Martin Nowak)
     $(D_CONTRIBUTOR Mathias Lang)
     $(D_CONTRIBUTOR Mathis Beer)
