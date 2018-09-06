@@ -13,17 +13,17 @@
 
     var files;
     if (platform.indexOf('win') != -1)
-        files = [{name: 'dmd-' + latest, suffix: '.exe'}];
+        files = [{name: 'dmd-' + latest, suffix: 'Windows Installer'}];
     else if (platform.indexOf('mac') != -1)
-        files = [{name: 'dmd.' + latest, suffix: '.dmg'}];
+        files = [{name: 'dmd.' + latest, suffix: 'DMG File'}];
     else if (model == null) // platforms with multiple archs follow
         return;
     else if (platform.indexOf('linux') != -1)
-        files = [{name: 'dmd_' + latest + '-0_' + (model == 64 ? 'amd64' : 'i386'), suffix: '.deb'},
-                 {name: 'dmd-' + latest + '-0.fedora.' + (model == 64 ? 'x86_64' : 'i386'), suffix: '.rpm'}
+        files = [{name: 'dmd_' + latest + '-0_' + (model == 64 ? 'amd64' : 'i386'), suffix: 'DEB File'},
+                 {name: 'dmd-' + latest + '-0.fedora.' + (model == 64 ? 'x86_64' : 'i386'), suffix: 'RPM  File'}
         ];
     else if (platform.indexOf('freebsd') != -1)
-        files = [{name: 'dmd.' + latest + '.freebsd-' + model.toString(), suffix: '.tar.xz'}];
+        files = [{name: 'dmd.' + latest + '.freebsd-' + model.toString(), suffix: 'GZIP Archive'}];
     else
         return;
 
@@ -31,7 +31,7 @@
     for (var i = 0; i < files.length; ++i) {
         var f = files[i];
         var url = 'http://downloads.dlang.org/releases/2.x/' + latest + '/' + f.name + f.suffix;
-        html += '<a href="' + url + '" class="btn action">Install ' + f.suffix + '</a>';
+        html += '<a href="' + url + '" class="btn action">Download ' + f.suffix + '</a>';
     }
     if (files.length > 1) {
         html = '<div class="hbox">' + html + '</div>';
