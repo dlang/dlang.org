@@ -195,6 +195,40 @@ $(H3 C++ $(LNAME2 namespace, Namespaces))
 
         $(CPPCODE namespace N { namespace M { namespace R { void foo(); } } })
 
+        $(P The linkage form $(D extern $(LPAREN)C++, )$(I StringLiteralList)$(D $(RPAREN))
+        provides an alternative syntax which only modifies the mangle of the symbol.
+        No C++ namespace features are emulated allowing for the D module system to be used
+        unobstructed.
+        )
+
+        ---
+        extern (C++, bar)
+        {
+            void barFunc();
+        }
+
+        int bar; // error - conflicts with namespace `bar`
+
+        extern (C++, "foo") // note: new syntax
+        {
+            void fooFunc();
+        }
+
+        int foo; // ok
+        ---
+
+        $(P Similarly to the previous example multiple string literals in
+        the $(I StringLiteralList) create nested namespaces:
+        )
+
+        ---
+        extern (C++, "N", "M", "R") { void foo(); }
+        ---
+
+        $(P mangles to the equivalent C++ code:)
+
+        $(CPPCODE namespace N { namespace M { namespace R { void foo(); } } })
+
 
 $(H2 $(LNAME2 align, $(D align) Attribute))
 
