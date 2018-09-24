@@ -77,7 +77,6 @@ $(GRAMMAR
 $(GNAME LinkageAttribute):
     $(D extern) $(D $(LPAREN)) $(GLINK LinkageType) $(D $(RPAREN))
     $(D extern) $(D $(LPAREN)) $(D C++), $(GLINK2 declaration, IdentifierList) $(D $(RPAREN))
-    $(D extern) $(D $(LPAREN)) $(D C++), $(GLINK2 StringLiteralList) $(D $(RPAREN))
 
 $(GNAME LinkageType):
     $(D C)
@@ -87,11 +86,6 @@ $(GNAME LinkageType):
     $(D Pascal)
     $(D System)
     $(D Objective-C)
-
-$(GNAME StringLiteralList):
-    $(GLINK2 lex, StringLiteral)
-    $(GLINK2 lex, StringLiteral), $(I StringLiteralList)
-
 )
 
         $(P D provides an easy way to call C functions and operating
@@ -192,41 +186,6 @@ $(H3 C++ $(LNAME2 namespace, Namespaces))
         ---
 
         $(P refers to the C++ declaration:)
-
-        $(CPPCODE namespace N { namespace M { namespace R { void foo(); } } })
-
-        $(P The linkage form $(D extern $(LPAREN)C++, )$(I StringLiteralList)$(D $(RPAREN))
-        provides an alternative syntax which only modifies the mangle of the symbol.
-        No C++ namespace features are emulated allowing for the D module system to be used
-        unobstructed. As the new syntax uses a string to declare the namespace, D keywords
-        can be used for C++ namespaces.
-        )
-
-        ---
-        extern (C++, bar)
-        {
-            void barFunc();
-        }
-
-        int bar; // error - conflicts with namespace `bar`
-
-        extern (C++, "foo") // note: new syntax
-        {
-            void fooFunc();
-        }
-
-        int foo; // ok
-        ---
-
-        $(P Similarly to the previous example multiple string literals in
-        the $(I StringLiteralList) create nested namespaces:
-        )
-
-        ---
-        extern (C++, "N", "M", "R") { void foo(); }
-        ---
-
-        $(P mangles to the equivalent C++ code:)
 
         $(CPPCODE namespace N { namespace M { namespace R { void foo(); } } })
 
