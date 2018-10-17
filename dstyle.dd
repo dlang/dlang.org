@@ -384,17 +384,38 @@ void foo(R)(R r)
 if (R == 1)
 -------------------------------
     $(LI Pre and post contracts should have the same indentation level as their
-         declaration. Put no space between `in`/`out` and an open parenthesis:)
+         declaration. The expression-based syntax should be preferred when the
+         equivalent long-form syntax would have a single `assert` statement.
+         Put a space after `in`/`out` similar to `if` constraints:)
 -------------------------------
-int foo(int r)
-in(r == 0)
-out(result; result == 0)
-do { … }
+// Prefer:
+T transmogrify(T)(T value)
+if (isIntegral!T)
+in (value % 7 == 0)
+out (result; result % 11 == 0)
+{
+    // ...
+}
 
-int foo(int r)
-in { … }
-out(result) { … }
-do { … }
+// over this:
+T transmogrify(T)(T value)
+if (isIntegral!T)
+in { assert(value % 7 == 0); }
+out (result) { assert(result % 11 == 0); }
+do
+{
+    // ...
+}
+-------------------------------
+    $(LI Invariants should use the expression-based syntax when the equivalent
+         long-form syntax would have a single `assert` statement. Put a space
+         between `invariant` and the opening parentheses:)
+-------------------------------
+struct S
+{
+    int x;
+    invariant (x > 0);
+}
 -------------------------------
 )
 $(LISTSECTION phobos_class_struct_field_declaration, Class/Struct Field Declarations,
