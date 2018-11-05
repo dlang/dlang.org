@@ -181,8 +181,8 @@ PHOBOS_LATEST_DIR=$G/phobos-${LATEST}
 
 # stable dub and dmd versions used to build dpl-docs
 STABLE_DMD_VER=2.083.0
-STABLE_DMD_VER_SUFFIX=-beta.2
-STABLE_DMD_VER_PREFIX=pre-
+STABLE_DMD_VER_SUFFIX=
+STABLE_DMD_VER_PREFIX=
 STABLE_DMD_ROOT=$(GENERATED)/stable_dmd-$(STABLE_DMD_VER)$(STABLE_DMD_VER_SUFFIX)
 STABLE_DMD_URL=http://downloads.dlang.org/$(STABLE_DMD_VER_PREFIX)releases/2.x/$(STABLE_DMD_VER)/dmd.$(STABLE_DMD_VER)$(STABLE_DMD_VER_SUFFIX).$(OS).zip
 STABLE_DMD_BIN_ROOT=$(STABLE_DMD_ROOT)/dmd2/$(OS)/$(if $(filter $(OS),osx),bin,bin$(MODEL))
