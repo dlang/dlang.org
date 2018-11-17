@@ -161,6 +161,7 @@ auto compileAndCheck(R)(R buffer, CompileConfig config)
 
     string[] args = [.config.dmdBinPath];
     args ~= config.args;
+    args ~= "-unittest";
     with (CompileConfig.TestMode)
     final switch (config.mode)
     {
