@@ -115,6 +115,7 @@ $(H2 $(LNAME2 fields, Fields))
         $(P Members of a base class can be accessed by prepending the name of
         the base class followed by a dot:)
 
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---
 class A { int a; int a2;}
 class B : A { int a; }
@@ -126,6 +127,7 @@ void foo(B b)
     b.A.a = 5; // accesses field A.a
 }
 ---
+)
 
         $(P The D compiler is free to rearrange the order of fields in a class to
         optimally pack them in an implementation-defined manner.
@@ -153,6 +155,7 @@ $(H2 $(LNAME2 field_properties, Field Properties))
         the field itself, not the class type:
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ------
 class Foo
 {
@@ -167,6 +170,7 @@ void test(Foo foo)
     o = foo.x.offsetof; // ok
 }
 ------
+)
 
 $(H2 $(LNAME2 class_properties, Class Properties))
 
@@ -177,6 +181,8 @@ $(H2 $(LNAME2 class_properties, Class Properties))
         `.tupleof` is not available for `extern(Objective-C)` classes due to
         their fields having a dynamic offset.
         )
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---
 class Foo { int x; long y; }
 
@@ -191,6 +197,7 @@ void test(Foo foo)
         write(x);       // prints 12
 }
 ---
+)
 
         $(P The properties $(D .__vptr) and $(D .__monitor) give access
         to the class object's vtbl[] and monitor, respectively, but
@@ -215,6 +222,8 @@ $(H2 $(LNAME2 member-functions, Member Functions))
         $(D const), $(D immutable), $(D shared), or $(D inout).
         These attributes apply to the hidden $(I this) parameter.
         )
+
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---
 class C
 {
@@ -229,6 +238,7 @@ class C
     }
 }
 ---
+)
 
 
 $(H2 $(LNAME2 synchronized-classes, Synchronized Classes))
@@ -274,6 +284,7 @@ $(H2 $(LNAME2 synchronized-classes, Synchronized Classes))
         $(P Member fields of a synchronized class cannot be public:
         )
 
+        $(SPEC_RUNNABLE_EXAMPLE_FAIL
         ---
         synchronized class Foo
         {
@@ -285,6 +296,7 @@ $(H2 $(LNAME2 synchronized-classes, Synchronized Classes))
             private int bar;  // ok
         }
         ---
+        )
 
         $(P The $(D synchronized) attribute can only be applied to classes,
         structs cannot be marked to be synchronized.)
@@ -305,6 +317,8 @@ $(GNAME Constructor):
         If the field declaration has an optional $(GLINK2 declaration, Initializer)
         that will be used instead of the default.
         )
+
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ------
         class Abc
         {
@@ -313,6 +327,7 @@ $(GNAME Constructor):
             float f;    // default initializer for f is NAN
         }
         ------
+        )
 
         $(P The $(I Initializer) is evaluated at compile time.)
 
@@ -471,6 +486,8 @@ $(GNAME Constructor):
         $(D const), $(D immutable), and $(D shared). Construction of qualified
         objects will then be restricted to the implemented qualified constructors.
         )
+
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ------
         class C
         {
@@ -489,9 +506,12 @@ $(GNAME Constructor):
         // a mutable constructor cannot create a shared object
         // shared C s = new shared C();
         ------
+        )
 
         $(P Constructors can be overloaded with different attributes.
         )
+
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ------
         class C
         {
@@ -504,10 +524,13 @@ $(GNAME Constructor):
         shared s = new shared C();
         immutable i = new immutable C();
         ------
+        )
 
         $(P If the constructor can create a unique object (e.g. if it is `pure`),
         the object can be implicitly convertible to any qualifiers.
         )
+
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ------
         class C
         {
@@ -528,6 +551,7 @@ $(GNAME Constructor):
         shared s = new shared C();                 // this() pure is called
         C m = new C([1,2,3]);       // this(int[]) immutable pure is called
         ------
+        )
 
 $(H2 $(LNAME2 field-init, Field initialization inside constructor))
 
@@ -535,6 +559,7 @@ $(H2 $(LNAME2 field-init, Field initialization inside constructor))
         its initialization.
         )
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ------
         class C
         {
@@ -546,10 +571,12 @@ $(H2 $(LNAME2 field-init, Field initialization inside constructor))
             }
         }
         ------
+        )
 
        $(P If the field type has an $(LINK2 operatoroverloading.html#assignment, `opAssign`)
        method, it will not be used for initialization.)
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ------
         struct A
         {
@@ -566,9 +593,11 @@ $(H2 $(LNAME2 field-init, Field initialization inside constructor))
             }
         }
         ------
+        )
 
         $(P If the field type is not mutable, multiple initialization will be rejected.)
 
+        $(SPEC_RUNNABLE_EXAMPLE_FAIL
         ------
         class C
         {
@@ -580,6 +609,7 @@ $(H2 $(LNAME2 field-init, Field initialization inside constructor))
             }
         }
         ------
+        )
 
         $(P If the field is initialized on one path, it must be initialized on all paths.)
         ---
@@ -606,6 +636,7 @@ $(H2 $(LNAME2 field-init, Field initialization inside constructor))
         $(P A field initialization may not appear in a loop or after
         a label.)
 
+        $(SPEC_RUNNABLE_EXAMPLE_FAIL
         ------
         class C
         {
@@ -625,6 +656,7 @@ $(H2 $(LNAME2 field-init, Field initialization inside constructor))
             }
         }
         ------
+        )
 
         $(P If a field's type has disabled default construction, then it must be initialized
         in the constructor.)
@@ -651,6 +683,7 @@ $(GNAME Destructor):
         $(P The garbage collector calls the destructor function when the object
         is deleted. The syntax is:)
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ------
         class Foo
         {
@@ -659,6 +692,7 @@ $(GNAME Destructor):
             }
         }
         ------
+        )
 
         $(P There can be only one destructor per class, the destructor
         does not have any parameters,
@@ -721,13 +755,15 @@ $(GNAME StaticConstructor):
         having good control over exactly when the code is executed, for example:
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ------
 class Foo
 {
-    static int a = b + 1;
-    static int b = a * 2;
+    static int a = b + 1; // Error: static variable b cannot be read at compile time
+    static int b = a * 2; // Error: static variable a cannot be read at compile time
 }
 ------
+)
 
         What values do a and b end up with, what order are the initializations
         executed in, what
@@ -746,6 +782,7 @@ class Foo
         initialization is performed by a static constructor, defined with
         a special syntax $(D static this()).)
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ------
 class Foo
 {
@@ -753,13 +790,14 @@ class Foo
     static int b = 1;
     static int c = b + a; // error, not a constant initializer
 
-    $(CODE_HIGHLIGHT static this)()    // static constructor
+    static this()    // static constructor
     {
         a = b + 1;          // a is set to 2
         b = a * 2;          // b is set to 4
     }
 }
 ------
+)
 
 $(P If $(D main()) or the thread returns normally, (does not throw an
 exception), the static destructor is added to the list of functions to be called
@@ -805,6 +843,7 @@ $(GNAME StaticDestructor):
         A static destructor is defined as a special static function with the
         syntax $(D static ~this()).
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ------
 class Foo
 {
@@ -813,6 +852,7 @@ class Foo
     }
 }
 ------
+)
 
         $(P
         A static destructor gets called on thread termination,
@@ -911,6 +951,7 @@ $(GNAME ClassInvariant):
     $(P The invariant need not hold if the class instance is implicitly constructed using
     the default $(D .init) value.)
 
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
     class Date
     {
@@ -931,9 +972,11 @@ $(GNAME ClassInvariant):
         int hour;
     }
     ---
+    )
 
     $(P Public or exported non-static member functions cannot be called from within an invariant.)
 
+    $(SPEC_RUNNABLE_EXAMPLE_FAIL
     ---
     class Foo
     {
@@ -947,6 +990,7 @@ $(GNAME ClassInvariant):
         }
     }
     ---
+    )
 
     $(UNDEFINED_BEHAVIOR happens if the invariant does not hold and execution continues.)
 
@@ -1046,12 +1090,14 @@ Use the $(D destroy) function to finalize an object by calling its destructor.
 The memory of the object is $(B not) immediately deallocated, instead the GC
 will collect the memory of the object at an undetermined point after finalization:
 
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ------
 class Foo { int x; this() { x = 1; } }
 Foo foo = new Foo;
 destroy(foo);
 assert(foo.x == int.init);  // object is still accessible
 ------
+)
 
 $(GRAMMAR
 $(GNAME Deallocator):
@@ -1135,6 +1181,7 @@ void test()
         be forwarded to the $(I AliasThis) member.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 struct Foo
 {
@@ -1155,12 +1202,14 @@ void test()
     i = bar.get(); // i == 7
 }
 ---
+)
 
         $(P If the $(I Identifier) refers to a property member
         function with no parameters, conversions and undefined
         lookups are forwarded to the return value of the function.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 struct S
 {
@@ -1179,6 +1228,8 @@ void test()
     int i = s; // i == 4
 }
 ---
+)
+
         $(P $(GLINK2 attribute, Attribute)s are ignored for $(D AliasThis).
         )
 
@@ -1223,10 +1274,12 @@ $(H2 $(LNAME2 final, Final Classes))
 
         $(P Final classes cannot be subclassed:)
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---
 final class A { }
 class B : A { }  // error, class A is final
 ---
+)
 
         $(P Methods of a final class are `final` by default.)
 
@@ -1236,6 +1289,7 @@ $(P A $(I nested class) is a class that is declared inside the scope of a
 function or another class. A nested class has access to the variables and other
 symbols of the classes and functions it is nested inside:)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ------
 class Outer
 {
@@ -1263,11 +1317,13 @@ void func()
     }
 }
 ------
+)
 
 $(P If a nested class has the $(D static) attribute, then it can not access
 variables of the enclosing scope that are local to the stack or need a
 `this`:)
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ------
 class Outer
 {
@@ -1299,6 +1355,7 @@ void func()
     }
 }
 ------
+)
 
 $(P Non-static nested classes work by containing an extra hidden member (called
 the context pointer) that is the frame pointer of the enclosing function if it
@@ -1311,6 +1368,7 @@ if it is nested inside a class.)
         A non-static nested class can only be instantiated when the necessary
         context pointer information is available:)
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ------
 class Outer
 {
@@ -1330,6 +1388,7 @@ void func()
     Nested n = new Nested;      // Ok
 }
 ------
+)
 
 
 
@@ -1337,6 +1396,7 @@ void func()
         inner class instance by prefixing it to the $(I NewExpression):
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
 class Outer
 {
@@ -1355,10 +1415,11 @@ int bar()
 {
     Outer o = new Outer;
     o.a = 3;
-    Outer.Inner oi = $(CODE_HIGHLIGHT o).new Inner;
+    Outer.Inner oi = o.new Inner;
     return oi.foo();    // returns 3
 }
 ---------
+)
 
         $(P Here $(D o) supplies the $(I this) to the outer class
         instance of $(D Outer).
@@ -1370,6 +1431,7 @@ int bar()
         function frame with $(D void*).
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ----
 class Outer
 {
@@ -1377,7 +1439,7 @@ class Outer
     {
         Outer getOuter()
         {
-            return this.$(CODE_HIGHLIGHT outer);
+            return this.outer;
         }
     }
 
@@ -1401,7 +1463,7 @@ class Outer
                 // The Inner2 instance owns function frame of bar
                 // as static frame pointer, but .outer yet returns
                 // the enclosing Outer class instance property.
-                return this.$(CODE_HIGHLIGHT outer);
+                return this.outer;
             }
         }
 
@@ -1411,7 +1473,7 @@ class Outer
 
     static void baz()
     {
-        // make a closure envronment
+        // make a closure environment
         int x = 1;
 
         class Inner3
@@ -1421,7 +1483,7 @@ class Outer
                 x = 2;
                 // There's no accessible enclosing class instance, so
                 // .outer property returns the function frame of bar.
-                return this.$(CODE_HIGHLIGHT outer);
+                return this.outer;
             }
         }
 
@@ -1430,6 +1492,7 @@ class Outer
     }
 }
 ----
+)
 
 $(H2 $(LNAME2 anonymous, Anonymous Nested Classes))
 

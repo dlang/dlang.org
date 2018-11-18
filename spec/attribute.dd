@@ -212,6 +212,7 @@ $(GNAME AlignAttribute):
         sets it to the default, which matches the default member alignment
         of the companion C compiler.)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 --------
 struct S
 {
@@ -220,8 +221,9 @@ struct S
     int b;    // placed at offset 4
     long c;   // placed at offset 8
 }
-auto sz = S.sizeof;  // 16
+static assert(S.sizeof == 16);
 --------
+)
 
         $(P $(I AssignExpression) specifies the alignment
         which matches the behavior of the companion C compiler when non-default
@@ -232,6 +234,7 @@ auto sz = S.sizeof;  // 16
         fields are packed together.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 --------
 struct S
 {
@@ -240,8 +243,9 @@ struct S
     int b;    // placed at offset 1
     long c;   // placed at offset 5
 }
-auto sz = S.sizeof;  // 16
+static assert(S.sizeof == 13);
 --------
+)
 
         $(P The alignment for the fields of an aggregate does not affect the alignment
         of the aggregate itself - that is affected by the alignment setting outside
@@ -255,7 +259,7 @@ align (2) struct S
     int b;    // placed at offset 1
     long c;   // placed at offset 5
 }
-auto sz = S.sizeof;  // 14
+static assert(S.sizeof == 14);
 --------
 
         $(P Setting the alignment of a field aligns it to that power of 2, regardless
@@ -269,7 +273,7 @@ struct S
     byte b;   // placed at offset 4
     short c;  // placed at offset 8
 }
-auto sz = S.sizeof;  // 12
+static assert(S.sizeof == 12);
 --------
 
 
@@ -306,14 +310,19 @@ $(GNAME DeprecatedAttribute):
         if any code refers to deprecated declarations:
         )
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---------------
-        deprecated
+        struct Foo
         {
-            void oldFoo();
+            deprecated
+            {
+                void oldFoo();
+            }
         }
 
-        oldFoo();   // Deprecated: function test.oldFoo is deprecated
+        Foo().oldFoo();   // Deprecated: function test.oldFoo is deprecated
         ---------------
+        )
 
         $(P Optionally a string literal or manifest constant can be used
         to provide additional information in the deprecation message.
@@ -327,16 +336,23 @@ $(GNAME DeprecatedAttribute):
         $(P Calling CTFE-able functions or using manifest constants is also possible.
         )
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---------------
         import std.format;
         enum Message = format("%s and all its members are obsolete", Foobar.stringof);
         deprecated(Message) class Foobar {}
-        auto f = new Foobar();   // Deprecated: class test.Foobar is deprecated - Foobar
-             // and all its members are obsolete
+
         deprecated(format("%s is also obsolete", "This class")) class BarFoo {}
-        auto bf = new BarFoo();  // Deprecated: class test.BarFoo is deprecated - This
-             // class is also obsolete
+
+        void main()
+        {
+            auto f = new Foobar();   // Deprecated: class test.Foobar is deprecated - Foobar
+                 // and all its members are obsolete
+            auto bf = new BarFoo();  // Deprecated: class test.BarFoo is deprecated - This
+                 // class is also obsolete
+        }
         ---------------
+        )
 
         $(P $(D Implementation Note:) The compiler should have a switch
         specifying if $(D deprecated) should be ignored, cause a warning, or cause an error during compilation.
@@ -463,6 +479,7 @@ $(H2 $(LNAME2 gshared, $(D __gshared) Attribute))
         except that the variable is shared by all threads rather than being
         thread local.)
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
         class Foo
         {
@@ -475,6 +492,7 @@ $(H2 $(LNAME2 gshared, $(D __gshared) Attribute))
             return bar++; // Not thread safe.
         }
         ---
+        )
 
         $(P Unlike the $(D shared) attribute, $(D __gshared) provides no
         safe-guards against data races or other multi-threaded synchronization
@@ -490,12 +508,13 @@ causes a compile time error. This can be used to explicitly disallow certain
 operations or overloads at compile time rather than relying on generating a
 runtime error.)
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---
 @disable void foo() { }
----
----
+
 void main() { foo(); /* error, foo is disabled */ }
 ---
+)
 
         $(P $(DDSUBLINK spec/struct, Struct-Constructor, Disabling struct no-arg constructor)
         disallows default construction of the struct.
@@ -543,6 +562,7 @@ $(H2 $(LNAME2 override, $(D override) Attribute))
         their overriding functions updated.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---------------
 class Foo
 {
@@ -559,6 +579,7 @@ class Foo2 : Foo
     }
 }
 ---------------
+)
 
 $(H2 $(LNAME2 static, $(D static) Attribute))
 
@@ -569,6 +590,7 @@ $(H2 $(LNAME2 static, $(D static) Attribute))
         $(D static) is ignored when applied to other declarations.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---------------
 class Foo
 {
@@ -584,6 +606,7 @@ Foo.foobar();   // error, no instance of Foo
 f.bar();        // produces 6;
 f.foobar();     // produces 7;
 ---------------
+)
 
 $(P
         Static functions are never virtual.
@@ -695,9 +718,13 @@ $(GNAME UserDefinedAttribute):
 
 A user-defined attribute looks like:
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 @(3) int a;
 ---
+)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 @("string", 7) int b;
 
@@ -711,6 +738,7 @@ struct Bar
 
 @Bar(3) int d;
 ---
+)
 
         $(P
             If there are multiple UDAs in scope for a declaration, they are concatenated:
@@ -728,10 +756,12 @@ struct Bar
             UDAs can be extracted into an expression tuple using $(D __traits):
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 @('c') string s;
 pragma(msg, __traits(getAttributes, s)); // prints tuple('c')
 ---
+)
 
         $(P
             If there are no user-defined attributes for the symbol, an empty tuple is returned.
