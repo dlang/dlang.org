@@ -29,6 +29,7 @@ $(GNAME TraitsKeyword):
     $(GLINK isFloating)
     $(GLINK isIntegral)
     $(GLINK isScalar)
+    $(GLINK isDynamicArray)
     $(GLINK isStaticArray)
     $(GLINK isUnsigned)
     $(GLINK isDisabled)
@@ -203,6 +204,26 @@ static assert(!__traits(isUnsigned, float));
 static assert(!__traits(isUnsigned, SignedEnum));
 static assert(!__traits(isUnsigned, uint[4]));
 static assert(!__traits(isUnsigned, void*));
+---
+)
+
+$(H2 $(GNAME isDynamicArray))
+
+        $(P Works like $(D isArithmetic), except it's for dynamic array
+        types.)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+import core.simd : int4;
+
+enum E : int[4] { a = [1, 2, 3, 4] }
+
+static array = [1, 2, 3]; // A dynamic array: the type is inferred as int[].
+
+static assert(__traits(isDynamicArray, array));
+static assert(!__traits(isDynamicArray, void[0]));
+static assert(!__traits(isDynamicArray, E));
+static assert(!__traits(isDynamicArray, int4));
 ---
 )
 
