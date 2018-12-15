@@ -4,7 +4,7 @@ dependency "libdparse" version="0.7.2-alpha.4"
 name "assert_writeln_magic"
 +/
 /*
- * Tries to convert `assert`'s into user-friendly `writeln` calls.
+ * Tries to convert `assert`s into user-friendly `writeln` calls.
  * The objective of this tool is to be conservative as
  * broken example look a lot worse than a few statements
  * that could have potentially been rewritten.
@@ -196,10 +196,9 @@ private auto assertWritelnModuleImpl(string fileText)
 {
     import std.string : representation;
     auto fl = FileLines(fileText);
-    auto visitor = new TestVisitor!(typeof(fl))(fl);
+    scope visitor = new TestVisitor!(typeof(fl))(fl);
     // libdparse doesn't allow to work on immutable source code
     parseString(cast(ubyte[]) fileText.representation, visitor);
-    delete visitor;
     return fl;
 }
 
@@ -274,9 +273,8 @@ version(unittest)
     {
         import std.string : representation;
         auto mock = FileLinesMock(sourceCode.split("\n"));
-        auto visitor = new TestVisitor!(typeof(mock))(mock);
+        scope visitor = new TestVisitor!(typeof(mock))(mock);
         parseString(sourceCode.representation.dup, visitor);
-        delete visitor;
         return mock;
     }
 }

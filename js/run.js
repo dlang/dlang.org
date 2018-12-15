@@ -101,6 +101,7 @@ var backends = {
     requestTransform: function(data) {
         var req = {
             source: data.code,
+            args: "-unittest",
             compiler: dmdCompilerBranch
         }
         // only send set attributes
@@ -450,7 +451,7 @@ function setupTextarea(el, opts)
     });
     openInEditorBtn.click(function(){
       var text = (editor && editor.getValue()) || prepareForMain();
-      var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&source=" + encodeURIComponent(opts.transformOutput(text));
+      var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&args=-unittest&source=" + encodeURIComponent(opts.transformOutput(text));
       window.open(url, "_blank");
     });
     return editor;
