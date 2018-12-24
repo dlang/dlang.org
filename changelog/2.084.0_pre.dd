@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Jan 01, 2019, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 21 major changes and 87 fixed Bugzilla issues.
+$(VER) comes with 21 major changes and 93 fixed Bugzilla issues.
                             A huge thanks goes to the 51 contributors who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
@@ -298,19 +298,48 @@ $(BUGSTITLE_TEXT_BODY Dub changes,
 $(LI $(LNAME2 addcommand,Add Command)
 $(CHANGELOG_SOURCE_FILE dub, changelog/addcommand.dd)
 $(P
-The `add` command adds a dependency to the dub.json/dub.sdl file.
+The `add` command adds a dependency to the dub.json/dub.sdl recipe file.
 )
 
 $(P
-Running `dub add vibe-d` is equivalent to manually adding the following line to dub.sdl (X.Y.Z represents the latest version):
+Running `dub add vibe-d` queries the latest version for vibe-d from the
+registry, then rewrites your recipe file with the new dependency added.
+)
+
+$(P
+dub.json:
+)
+------
+  "dependencies": {
+      "vibe-d": "~>X.Y.Z"
+  }
+------
+
+$(P
+dub.sdl:
+)
+------
 dependency "vibe-d" version="~>X.Y.Z"
+------
+
+$(P
+It is also possible to add multiple packages at once and explicitly add a
+simple $(LINK2 version specification,http://code.dlang.org/package-format?lang=json#version-specs)
+for some of them.
 )
 
 $(P
-Or the following in dub.json:
-"dependencies": {
-    "vibe-d": "~>X.Y.Z"
-}
+For example the command `dub add vibe-d='~>0.8.2' mir-algorithm=3.1.21` would
+add the given 2 dependencies to the recipe file without querying the registry.
+)
+
+$(P
+Packages with and without version-specifier can be mixed in a single invocation.
+)
+
+$(P
+The can also be used to overwrite existing dependencies of the same name with
+different version specifications.
 )
 )
 
@@ -454,11 +483,14 @@ $(BUGSTITLE_BUGZILLA DMD Compiler regressions,
 $(LI $(BUGZILLA 15206): [REG2.077] ICE on optimized build, tym = x1d Internal error: backend\cgxmm.c 547)
 $(LI $(BUGZILLA 16284): [REG2.067] CTFE internal error: bad compare)
 $(LI $(BUGZILLA 18938): Dmd segfault when compiling this dub package in test release)
+$(LI $(BUGZILLA 19103): Can imports symbols in module to a struct with mixin.)
+$(LI $(BUGZILLA 19202): deprecated eponymous template prints no warning)
 $(LI $(BUGZILLA 19227): S.init is S.init failing for struct with float member)
 $(LI $(BUGZILLA 19389): Multiple assignment does not work for struct members)
 $(LI $(BUGZILLA 19409): static if $(LPAREN)__traits$(LPAREN)compiles, __traits$(LPAREN)identifier, ...$(RPAREN)$(RPAREN)$(RPAREN) evaluates to false even though the expression alone evaluates to true)
 $(LI $(BUGZILLA 19447): [REG2.066] fixed size slice assignment in ctfe loses connection with array)
 $(LI $(BUGZILLA 19473): DMD Segfault on circular struct reference)
+$(LI $(BUGZILLA 19491): ICE $(LPAREN)segfault$(RPAREN) when initializing scope variable with shared type)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bugs,
 
@@ -500,11 +532,17 @@ $(LI $(BUGZILLA 19246): Binary literal `0b_` allowed)
 $(LI $(BUGZILLA 19278): extern$(LPAREN)C++, "name"$(RPAREN) doesn't accept expressions)
 $(LI $(BUGZILLA 19439): Make __traits$(LPAREN)getAliasThis$(RPAREN) return empty tuple for non-aggregate types)
 )
+$(BUGSTITLE_BUGZILLA Phobos regressions,
+
+$(LI $(BUGZILLA 18824): [REG 2.080] Tuple's opBinaryRight takes precedence over appending a tuple to an array of tuples)
+$(LI $(BUGZILLA 19133): core.exception.rangeerror@std/file.d$(LPAREN)3812$(RPAREN):)
+)
 $(BUGSTITLE_BUGZILLA Phobos bugs,
 
 $(LI $(BUGZILLA 4957): std.concurrency does not allow to pass Tid in struct fields)
 $(LI $(BUGZILLA 18327): std.random.XorshiftEngine is parameterized by UIntType but only works with uint)
 $(LI $(BUGZILLA 18680): std.random.LinearCongruentialEngine has opEquals but no toHash)
+$(LI $(BUGZILLA 18755): std.typecons.Rebindable breaks @safe-ty)
 $(LI $(BUGZILLA 18778): std.format: Positional arguments do not work as expected with nesting)
 $(LI $(BUGZILLA 18796): std.algorithm.substitute asserts on empty range)
 $(LI $(BUGZILLA 19331): std.regex.internal.ir.SmallFixedArray.toHash is ignored because it's non-const)
