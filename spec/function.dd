@@ -1524,6 +1524,51 @@ class C
         the `return scope` attribute.)
 
 
+$(H3 $(LNAME2 return-ref-scope-parameters, Return Ref Scope Parameters))
+
+        $(P If the function returns by `ref`, the parameter is treated
+        as `return ref` and `scope`. Otherwise, it is treated as
+        `ref` and `return scope`.)
+
+---
+ref int* kili(return ref scope int* p)
+{
+    return p; // ok
+}
+
+ref int* dori()
+{
+    int* p;
+    return kili(p); // error: escaping reference to p
+}
+
+int* nori()
+{
+    scope int* p;
+    return kili(p); // error: returning scope variable p
+}
+---
+
+---
+int* gili(return ref scope int* p)
+{
+    return p; // ok
+}
+
+ref int* dori()
+{
+    int* p;
+    return gili(p); // error: gili(p) is not an lvalue
+}
+
+int* nori()
+{
+    scope int* p;
+    return gili(p); // error: returning scope variable p
+}
+---
+
+
 $(H3 $(LNAME2 udas-parameters, User-Defined Attributes for Parameters))
 
 See also: $(GLINK2_ALTTEXT attribute, UserDefinedAttribute, User-Defined Attributes)
