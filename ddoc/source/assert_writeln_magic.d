@@ -1,8 +1,4 @@
 #!/usr/bin/env dub
-/++ dub.sdl:
-dependency "libdparse" version="0.7.2-alpha.4"
-name "assert_writeln_magic"
-+/
 /*
  * Tries to convert `assert`s into user-friendly `writeln` calls.
  * The objective of this tool is to be conservative as
