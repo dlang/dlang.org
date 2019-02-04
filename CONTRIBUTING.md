@@ -70,22 +70,22 @@ make -f posix.mak phobos-prerelease
 
 The output is in `web/phobos-prerelease` and `library-prerelease`.
 
-### Building the `release` libraries
+### Building the `latest` release libraries
 
 Fortunately there's no need to fumble with version numbers and git tags etc.;
 all is automated. Run this command:
 
 ```
-make -f posix.mak docs-release
+make -f posix.mak docs-latest
 ```
 
 If you only want to build a specific part (e.g. Phobos), run:
 
 ```
-make -f posix.mak phobos-release
+make -f posix.mak phobos-latest
 ```
 
-(`docs-release` is a shorthand for `dmd-release`, `druntime-release`, `phobos-releas` and `apidocs-release`)
+(`docs-latest` is a shorthand for `dmd-latest`, `druntime-latest`, `phobos-latest` and `apidocs-latest`)
 
 These commands tell you the release being built in their first line of output.
 Then they proceed and clone the appropriate release for `dmd`, `druntime`, and
