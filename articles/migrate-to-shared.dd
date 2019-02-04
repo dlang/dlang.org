@@ -16,22 +16,30 @@ $(HEADERNAV_TOC)
 
 $(H2 $(LNAME2 performance, Performance of TLS variables))
 
-        $(P Reading or writing TLS variables is slower than for classic
-        global variables. The exact difference depends, among others,
+        $(P Reading or writing TLS variables is potentially slower than for
+        classic global variables. The exact difference depends, among others,
         on compiler code generation settings and the target architecture.
-        For PIC (position independent code), which is the default setting
-        on Linux, TLS access is slower because a call to $(D __tls_get_addr)
-        is required. However for non-PIC, the performance difference is
-        smaller or even negligible.
-        Given that TLS access is slower than classic global variables,
-        what can we do about it?
+        The performance difference ranges from negligible (Windows) to a call
+        to a special function (PIC on Linux, macOS, *BSD. Search for example
+        for $(D __tls_get_address) online). For non-PIC, the performance
+        difference is much smaller or even negligible.
+        If you find that TLS access is slower than classic global variables,
+        what can you do about it?
         )
 
         $(OL
         $(LI Minimize use of global variables. Reducing the use
         of globals can improve the modularization and maintainability
         of the code anyway, so this is a worthy goal.)
-        $(LI Make them immutable. Immutable data doesn't have
+        $(LI Group related global variables into a struct. The TLS-related
+        overhead is (often) proportional to the number of variables accessed.
+        Because a global struct variable is just one single variable, after
+        accessing one member of the struct, accessing another member is
+        "for free" (does not incur the extra TLS-related overhead).
+        Of course when you've grouped the data into a struct, perhaps you
+        should remove the global altogether by passing around a reference to
+        the struct as context...)
+        $(LI Make global variables immutable. Immutable data doesn't have
         synchronization problems, so the compiler doesn't place it
         in TLS.)
         $(LI Cache a reference to the global. Making a local cache
