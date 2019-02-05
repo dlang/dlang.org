@@ -1,0 +1,269 @@
+Ddoc
+
+$(D_S $(TITLE),
+
+$(HEADERNAV_TOC)
+
+    $(H2 $(LNAME2 Background, Background))
+
+    $(P Compile-time sequences are an important metaprogramming concept that comes naturally
+        from D support for $(LINK2 variadic-function-templates.html, variadic templates). They
+        allow a programmer to operate on types, symbols and values, enabling the ability to define
+        compile-time algorithms that operate on types, symbols and values.
+    )
+
+    $(P $(B Note:) For historical reasons these sequences can sometimes be called tuples in documentation or compiler
+        internals, but don't get confused - they don't have much in common with tuples that
+        commonly exist in other languages. Sequences of values of different types that can be
+        returned from functions are provided by $(REF Tuple, std, typecons).
+        Using the term "tuple" to mean compile-time sequences is discouraged to avoid confusion, and if encountered
+        should result in a $(LINK2 https://issues.dlang.org, documentation bug report).
+    )
+
+    $(P Consider this simple variadic template:)
+
+    ---
+    template Variadic(T...) { /* ... */ }
+    ---
+
+    $(P `T` here is a $(DDSUBLINK spec/template, variadic-templates, TemplateParameterSequence),
+        which is a core language feature. It has its own special semantics,
+        and, from the programmer's point of view, is most similar to an array of compile-time entities - types,
+        symbols (names) and values. One can check the length of this sequence
+        and access any individual element:
+    )
+
+    ---
+    template Variadic(T...)
+    {
+        static assert (T.length > 1);
+        pragma(msg, T[0]);
+        pragma(msg, T[1]);
+    }
+
+    alias dummy = Variadic!(int, 42);
+    // prints during compilation:
+    // int
+    // 42
+    ---
+
+    $(H2 $(LNAME2 AliasSeq, AliasSeq))
+
+    $(P The language itself does not provide any means to define such sequences outside of
+        a template parameter declaration. Instead, there is a
+        $(MREF_ALTTEXT simple utility, std, meta) provided by the standard
+        library:
+    )
+
+    ---
+    alias AliasSeq(T...) = T;
+    ---
+
+    $(P All it does is give a specific variadic argument sequence an externally accessible name so
+        that it can be worked with in any other context:
+    )
+
+    ---
+    import std.meta;
+    // can alias to some other name
+    alias Name = AliasSeq!(int, 42);
+    pragma(msg, Name[0]);   // int
+    pragma(msg, Name[1]);   // 42
+    // or work with a sequence directly
+    pragma(msg, AliasSeq!("aaa", 0, double)[2]);    // double
+    ---
+
+$(H2 $(LNAME2 available-operations, Available operations))
+
+    $(H3 $(LNAME2 checking-length, Checking the length))
+
+        ---
+        import std.meta;
+        static assert (AliasSeq!(1, 2, 3, 4).length == 4);
+        ---
+
+    $(H3 $(LNAME2 indexing-slicing, Indexing and slicing))
+
+        $(P Indexes must be known at compile-time)
+
+        ---
+        import std.meta;
+        alias Numbers = AliasSeq!(1, 2, 3, 4);
+        static assert (Numbers[1] == 2);
+        alias SubNumbers = Numbers[1 .. $];
+        static assert (SubNumbers[0] == 2);
+        ---
+
+    $(H3 $(LNAME2 assignment, Assignment))
+
+        $(P Works only if the sequence element is a symbol that refers to a mutable variable)
+
+        ---
+        import std.meta;
+
+        void main()
+        {
+            int x;
+            alias seq = AliasSeq!(10, x);
+            seq[1] = 42;
+            assert (x == 42);
+            // seq[0] = 42; // won't compile, can't assign to a constant
+        }
+        ---
+
+    $(H3 $(LNAME2 loops, Loops))
+
+        $(P D's $(DDSUBLINK spec/statement, ForeachStatement, foreach statement) has special
+            semantics when iterating over compile-time sequences. It repeats the body of the loop
+            for each of the sequence elements, with the loop iteration symbol being an alias
+            for each compile-time sequence element in turn.
+        )
+
+        ---
+        import std.meta;
+
+        void main()
+        {
+            foreach (sym; AliasSeq!(int, "literal", main))
+            {
+                static if (is(sym))
+                    pragma (msg, sym);
+                else
+                    pragma (msg, typeof(sym));
+            }
+        }
+
+        /* Prints:
+        int
+        string
+        void()
+        */
+        ---
+
+        $(P $(B Note:) $(DDSUBLINK version, staticforeach, Static foreach)
+        should be preferred in new code.)
+
+$(H2 $(LNAME2 auto-expansion, Auto-expansion))
+
+    $(P One less obvious property of compile-time argument sequences is that when used
+        as an argument to a function or template, they are automatically treated as a sequence
+        of comma-separated arguments:
+    )
+
+    ---
+    import std.meta;
+
+    template Print0(T...)
+    {
+        pragma(msg, T[0]);
+    }
+
+    alias Dummy = Print0!(AliasSeq!(int, double));
+    ---
+
+    $(P This will only print `int` during compilation because the last line gets rewritten
+        as `alias Dummy = Print0!(int, double)`. If auto-expansion didn't happen,
+        `AliasSeq!(int, double)` would be printed instead. This is an inherent part of
+        the language semantics for variadic sequences, and thus also preserved by `AliasSeq`.
+    )
+
+$(H2 $(LEGACY_LNAME2 homogenous-lists, homogenous-sequences, Homogenous sequences))
+
+    $(P An $(ALOCAL AliasSeq, AliasSeq) that consists of only type or value elements are
+        commonly called "type sequences" or "value sequences" respectively. The concept of
+        a "symbol sequence" is used less frequently but fits the same pattern.
+    )
+
+$(H3 $(LNAME2 type-seq, Type sequences))
+
+    $(P It is possible to use homogenous type sequences in declarations:)
+
+    ---
+    import std.meta;
+    alias Params = AliasSeq!(int, double, string);
+    void foo(Params); // void foo(int, double, string);
+    ---
+
+$(H4 $(LNAME2 type-seq-instantiation, Type sequence instantiation))
+
+    $(P D supports a special variable declaration syntax where a type sequence acts as a type:)
+
+    ---
+    import std.meta;
+
+    void foo()
+    {
+        AliasSeq!(int, double, string) variables;
+        variables[0] = 42;
+        variables[1] = 42.0;
+        variables[2] = "just a normal variable";
+    }
+    ---
+    $(P The compiler will rewrite such a declaration to something like this:)
+    ---
+    int __var1;
+    double __var2;
+    string __var3;
+    alias variables = AliasSeq!(__var1, __var2, __var3);
+    ---
+
+    $(P So a type sequence instance is a kind of symbol sequence that only aliases
+    variables, known as an $(I lvalue sequence).)
+
+    $(P $(DDSUBLINK spec/template, variadic-templates, Variadic template functions)
+    use a type sequence instance for a function parameter:)
+
+    ---
+    void foo(T...)(T args)
+    {
+        // 'T' is a type sequence of argument types.
+        // 'args' is an instance of T whose elements are the function parameters
+        static assert(is(typeof(args) == T));
+        args[0] = T[0].init;
+    }
+    ---
+
+    $(P $(B Note:) $(REF Tuple, std, typecons) wraps a type sequence instance,
+    preventing auto-expansion, and allowing it to be returned from functions.)
+
+$(H3 $(LNAME2 value-seq, Value sequences))
+
+    $(P It is possible to use a sequence of values of the same type to declare an array literal:)
+
+    ---
+    import std.meta;
+    enum e = 3;
+    enum arr = [ AliasSeq!(1, 2, e) ];
+    static assert(arr == [ 1, 2, 3 ]);
+    ---
+
+    $(P The above sequence is an $(I rvalue sequence), as it is comprised only of literal values
+    and manifest constants. Each element's value is known at compile-time.)
+
+    $(P The following demonstrates use of an $(I lvalue sequence):)
+    ---
+    import std.meta, std.algorithm;
+    auto x = 3, y = 7;
+    alias pair = AliasSeq!(x, y);
+    swap(pair);
+    assert(x == 7 && y == 3);
+    ---
+    $(P As above, such sequences may use $(ALOCAL assignment, assignment).)
+
+$(H4 $(LNAME2 tupleof, Aggregate field sequences))
+
+    $(P $(DDSUBLINK spec/class, class_properties, `.tupleof`) is a
+    class/struct instance property that provides an lvalue sequence
+    of each field.)
+
+$(H3 $(LNAME2 symbol-seq, Symbol sequences))
+
+$(P A symbol sequence aliases any named symbol - types, variables, functions and templates -
+but not literals.
+Like an alias sequence, the kind of elements can be mixed.)
+
+)
+
+Macros:
+    TITLE=Compile-time Sequences
+    SUBNAV=$(SUBNAV_ARTICLES)

@@ -18,52 +18,55 @@ $(GNAME TraitsExpression):
     $(D __traits) $(D $(LPAREN)) $(GLINK TraitsKeyword) $(D ,) $(GLINK TraitsArguments) $(D $(RPAREN))
 
 $(GNAME TraitsKeyword):
-    $(GBLINK isAbstractClass)
-    $(GBLINK isArithmetic)
-    $(GBLINK isAssociativeArray)
-    $(GBLINK isFinalClass)
-    $(GBLINK isPOD)
-    $(GBLINK isNested)
-    $(GBLINK isFuture)
-    $(GBLINK isDeprecated)
-    $(GBLINK isFloating)
-    $(GBLINK isIntegral)
-    $(GBLINK isScalar)
-    $(GBLINK isStaticArray)
-    $(GBLINK isUnsigned)
-    $(GBLINK isDisabled)
-    $(GBLINK isVirtualFunction)
-    $(GBLINK isVirtualMethod)
-    $(GBLINK isAbstractFunction)
-    $(GBLINK isFinalFunction)
-    $(GBLINK isStaticFunction)
-    $(GBLINK isOverrideFunction)
-    $(GBLINK isTemplate)
-    $(GBLINK isRef)
-    $(GBLINK isOut)
-    $(GBLINK isLazy)
-    $(GBLINK hasMember)
-    $(GBLINK identifier)
-    $(GBLINK getAliasThis)
-    $(GBLINK getAttributes)
-    $(GBLINK getFunctionAttributes)
-    $(GBLINK getFunctionVariadicStyle)
-    $(GBLINK getLinkage)
-    $(GBLINK getMember)
-    $(GBLINK getOverloads)
-    $(GBLINK getParameterStorageClasses)
-    $(GBLINK getPointerBitmap)
-    $(GBLINK getProtection)
-    $(GBLINK getVirtualFunctions)
-    $(GBLINK getVirtualMethods)
-    $(GBLINK getUnitTests)
-    $(GBLINK parent)
-    $(GBLINK classInstanceSize)
-    $(GBLINK getVirtualIndex)
-    $(GBLINK allMembers)
-    $(GBLINK derivedMembers)
-    $(GBLINK isSame)
-    $(GBLINK compiles)
+    $(GLINK isAbstractClass)
+    $(GLINK isArithmetic)
+    $(GLINK isAssociativeArray)
+    $(GLINK isFinalClass)
+    $(GLINK isPOD)
+    $(GLINK isNested)
+    $(GLINK isFuture)
+    $(GLINK isDeprecated)
+    $(GLINK isFloating)
+    $(GLINK isIntegral)
+    $(GLINK isScalar)
+    $(GLINK isStaticArray)
+    $(GLINK isUnsigned)
+    $(GLINK isDisabled)
+    $(GLINK isVirtualFunction)
+    $(GLINK isVirtualMethod)
+    $(GLINK isAbstractFunction)
+    $(GLINK isFinalFunction)
+    $(GLINK isStaticFunction)
+    $(GLINK isOverrideFunction)
+    $(GLINK isTemplate)
+    $(GLINK isRef)
+    $(GLINK isOut)
+    $(GLINK isLazy)
+    $(GLINK isReturnOnStack)
+    $(GLINK isZeroInit)
+    $(GLINK hasMember)
+    $(GLINK identifier)
+    $(GLINK getAliasThis)
+    $(GLINK getAttributes)
+    $(GLINK getFunctionAttributes)
+    $(GLINK getFunctionVariadicStyle)
+    $(GLINK getLinkage)
+    $(GLINK getMember)
+    $(GLINK getOverloads)
+    $(GLINK getParameterStorageClasses)
+    $(GLINK getPointerBitmap)
+    $(GLINK getProtection)
+    $(GLINK getTargetInfo)
+    $(GLINK getVirtualFunctions)
+    $(GLINK getVirtualMethods)
+    $(GLINK getUnitTests)
+    $(GLINK parent)
+    $(GLINK classInstanceSize)
+    $(GLINK getVirtualIndex)
+    $(GLINK allMembers)
+    $(GLINK derivedMembers)
+    $(GLINK isSame)
+    $(GLINK compiles)
 
 $(GNAME TraitsArguments):
     $(GLINK TraitsArgument)
@@ -74,18 +77,6 @@ $(GNAME TraitsArgument):
     $(GLINK2 declaration, Type)
 )
 
-$(P Additionally special keywords are provided for debugging purposes:)
-
-$(GRAMMAR
-$(GNAME SpecialKeyword):
-    $(D $(RELATIVE_LINK2 specialkeywords, __FILE__))
-    $(D $(RELATIVE_LINK2 specialkeywords, __FILE_FULL_PATH__))
-    $(D $(RELATIVE_LINK2 specialkeywords, __MODULE__))
-    $(D $(RELATIVE_LINK2 specialkeywords, __LINE__))
-    $(D $(RELATIVE_LINK2 specialkeywords, __FUNCTION__))
-    $(D $(RELATIVE_LINK2 specialkeywords, __PRETTY_FUNCTION__))
-)
-
 $(H2 $(GNAME isArithmetic))
 
         $(P If the arguments are all either types that are arithmetic types,
@@ -94,6 +85,7 @@ $(H2 $(GNAME isArithmetic))
         Otherwise, $(D false) is returned.
         If there are no arguments, $(D false) is returned.)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -106,6 +98,7 @@ void main()
     writeln(__traits(isArithmetic, int*));
 }
 ---
+)
 
         Prints:
 
@@ -121,25 +114,117 @@ $(H2 $(GNAME isFloating))
         $(P Works like $(D isArithmetic), except it's for floating
         point types (including imaginary and complex types).)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+import core.simd : float4;
+
+enum E : float { a, b }
+
+static assert(__traits(isFloating, float));
+static assert(__traits(isFloating, idouble));
+static assert(__traits(isFloating, creal));
+static assert(__traits(isFloating, E));
+static assert(__traits(isFloating, float4));
+
+static assert(!__traits(isFloating, float[4]));
+---
+)
+
 $(H2 $(GNAME isIntegral))
 
         $(P Works like $(D isArithmetic), except it's for integral
         types (including character types).)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+import core.simd : int4;
+
+enum E { a, b }
+
+static assert(__traits(isIntegral, bool));
+static assert(__traits(isIntegral, char));
+static assert(__traits(isIntegral, int));
+static assert(__traits(isIntegral, E));
+static assert(__traits(isIntegral, int4));
+
+static assert(!__traits(isIntegral, float));
+static assert(!__traits(isIntegral, int[4]));
+static assert(!__traits(isIntegral, void*));
+---
+)
 
 $(H2 $(GNAME isScalar))
 
         $(P Works like $(D isArithmetic), except it's for scalar
         types.)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+import core.simd : int4, void16;
+
+enum E { a, b }
+
+static assert(__traits(isScalar, bool));
+static assert(__traits(isScalar, char));
+static assert(__traits(isScalar, int));
+static assert(__traits(isScalar, float));
+static assert(__traits(isScalar, E));
+static assert(__traits(isScalar, int4));
+static assert(__traits(isScalar, void*)); // Includes pointers!
+
+static assert(!__traits(isScalar, int[4]));
+static assert(!__traits(isScalar, void16));
+static assert(!__traits(isScalar, void));
+static assert(!__traits(isScalar, typeof(null)));
+static assert(!__traits(isScalar, Object));
+---
+)
+
 $(H2 $(GNAME isUnsigned))
 
         $(P Works like $(D isArithmetic), except it's for unsigned
         types.)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+import core.simd : uint4;
+
+enum SignedEnum { a, b }
+enum UnsignedEnum : uint { a, b }
+
+static assert(__traits(isUnsigned, bool));
+static assert(__traits(isUnsigned, char));
+static assert(__traits(isUnsigned, uint));
+static assert(__traits(isUnsigned, UnsignedEnum));
+static assert(__traits(isUnsigned, uint4));
+
+static assert(!__traits(isUnsigned, int));
+static assert(!__traits(isUnsigned, float));
+static assert(!__traits(isUnsigned, SignedEnum));
+static assert(!__traits(isUnsigned, uint[4]));
+static assert(!__traits(isUnsigned, void*));
+---
+)
+
 $(H2 $(GNAME isStaticArray))
 
         $(P Works like $(D isArithmetic), except it's for static array
         types.)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+import core.simd : int4;
+
+enum E : int[4] { a = [1, 2, 3, 4] }
+
+static array = [1, 2, 3]; // Not a static array: the type is inferred as int[] not int[3].
+
+static assert(__traits(isStaticArray, void[0]));
+static assert(__traits(isStaticArray, E));
+static assert(!__traits(isStaticArray, int4));
+static assert(!__traits(isStaticArray, array));
+---
+)
 
 $(H2 $(GNAME isAssociativeArray))
 
@@ -154,6 +239,7 @@ $(H2 $(GNAME isAbstractClass))
         Otherwise, $(D false) is returned.
         If there are no arguments, $(D false) is returned.)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -168,6 +254,7 @@ void main()
     writeln(__traits(isAbstractClass, int*));
 }
 ---
+)
 
         Prints:
 
@@ -213,6 +300,7 @@ $(H2 $(GNAME isDisabled))
     $(P Takes one argument and returns `true` if it's a function declaration
     marked with `@disable`.)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 struct Foo
 {
@@ -223,15 +311,18 @@ struct Foo
 static assert(__traits(isDisabled, Foo.foo));
 static assert(!__traits(isDisabled, Foo.bar));
 ---
+)
 
     $(P For any other declaration even if `@disable` is a syntactically valid
     attribute `false` is returned because the annotation has no effect.)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 @disable struct Bar{}
 
 static assert(!__traits(isDisabled, Bar));
 ---
+)
 
 $(H2 $(GNAME isVirtualFunction))
 
@@ -246,6 +337,7 @@ $(H2 $(GNAME isVirtualMethod))
         Final functions that don't override anything return false.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -265,6 +357,7 @@ void main()
     writeln(__traits(isVirtualMethod, S.bar));  // false
 }
 ---
+)
 
 $(H2 $(GNAME isAbstractFunction))
 
@@ -272,6 +365,7 @@ $(H2 $(GNAME isAbstractFunction))
         $(D true) is returned, otherwise $(D false).
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -297,6 +391,7 @@ void main()
     writeln(__traits(isAbstractFunction, AC.foo));  // true
 }
 ---
+)
 
 $(H2 $(GNAME isFinalFunction))
 
@@ -304,6 +399,7 @@ $(H2 $(GNAME isFinalFunction))
         $(D true) is returned, otherwise $(D false).
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -331,6 +427,7 @@ void main()
     writeln(__traits(isFinalFunction, FC.foo)); // true
 }
 ---
+)
 
 $(H2 $(GNAME isOverrideFunction))
 
@@ -338,6 +435,7 @@ $(H2 $(GNAME isOverrideFunction))
         $(D_KEYWORD override), $(D true) is returned, otherwise $(D false).
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -359,6 +457,7 @@ void main()
     writeln(__traits(isOverrideFunction, Foo.bar));  // false
 }
 ---
+)
 
 $(H2 $(GNAME isStaticFunction))
 
@@ -367,6 +466,22 @@ $(H2 $(GNAME isStaticFunction))
         $(D true) is returned, otherwise $(D false).
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+struct A
+{
+    int foo() { return 3; }
+    static int boo(int a) { return a; }
+}
+
+void main()
+{
+    assert(__traits(isStaticFunction, A.boo));
+    assert(!__traits(isStaticFunction, A.foo));
+    assert(__traits(isStaticFunction, main));
+}
+---
+)
 
 $(H2 $(GNAME isRef), $(GNAME isOut), $(GNAME isLazy))
 
@@ -375,6 +490,7 @@ $(H2 $(GNAME isRef), $(GNAME isOut), $(GNAME isLazy))
         or $(D_KEYWORD lazy), otherwise $(D false).
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 void fooref(ref int x)
 {
@@ -397,6 +513,7 @@ void foolazy(lazy int x)
     static assert(__traits(isLazy, x));
 }
 ---
+)
 
 $(H2 $(GNAME isTemplate))
 
@@ -404,12 +521,78 @@ $(H2 $(GNAME isTemplate))
         otherwise $(D false).
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 void foo(T)(){}
 static assert(__traits(isTemplate,foo));
 static assert(!__traits(isTemplate,foo!int()));
 static assert(!__traits(isTemplate,"string"));
 ---
+)
+
+$(H2 $(GNAME isZeroInit))
+
+        $(P Takes one argument which must be a type. If the type's
+        $(DDSUBLINK spec/property, init, default initializer) is all zero
+        bits then `true` is returned, otherwise `false`.)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+struct S1 { int x; }
+struct S2 { int x = -1; }
+
+static assert(__traits(isZeroInit, S1));
+static assert(!__traits(isZeroInit, S2));
+
+void test()
+{
+    int x = 3;
+    static assert(__traits(isZeroInit, typeof(x)));
+}
+
+// `isZeroInit` will always return true for a class C
+// because `C.init` is null reference.
+
+class C { int x = -1; }
+
+static assert(__traits(isZeroInit, C));
+---
+)
+
+$(H2 $(GNAME isReturnOnStack))
+
+    $(P
+        Takes one argument which must either be a function symbol, function literal,
+        a delegate, or a function pointer.
+        It returns a `bool` which is `true` if the return value of the function is
+        returned on the stack via a pointer to it passed as a hidden extra
+        parameter to the function.
+    )
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+    ---
+    struct S { int[20] a; }
+    int test1();
+    S test2();
+
+    static assert(__traits(isReturnOnStack, test1) == false);
+    static assert(__traits(isReturnOnStack, test2) == true);
+    ---
+)
+
+    $(IMPLEMENTATION_DEFINED
+        This is determined by the function ABI calling convention in use,
+        which is often complex.
+    )
+
+    $(BEST_PRACTICE This has applications in:
+    $(OL
+    $(LI Returning values in registers is often faster, so this can be used as
+    a check on a hot function to ensure it is using the fastest method.)
+    $(LI When using inline assembly to correctly call a function.)
+    $(LI Testing that the compiler does this correctly is normally hackish and awkward,
+    this enables efficient, direct, and simple testing.)
+    ))
 
 $(H2 $(GNAME hasMember))
 
@@ -420,12 +603,15 @@ $(H2 $(GNAME hasMember))
         $(D true) is returned, otherwise $(D false).
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
 struct S
 {
     int m;
+
+    import std.stdio; // imports write
 }
 
 void main()
@@ -435,15 +621,18 @@ void main()
     writeln(__traits(hasMember, S, "m")); // true
     writeln(__traits(hasMember, s, "m")); // true
     writeln(__traits(hasMember, S, "y")); // false
+    writeln(__traits(hasMember, S, "write")); // true
     writeln(__traits(hasMember, int, "sizeof")); // true
 }
 ---
+)
 
 $(H2 $(GNAME identifier))
 
         $(P Takes one argument, a symbol. Returns the identifier
         for that symbol as a string literal.
         )
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -453,25 +642,50 @@ pragma(msg, typeof(__traits(identifier, var))); // string
 writeln(var);                                   // 123
 writeln(__traits(identifier, var));             // "var"
 ---
+)
 
 $(H2 $(GNAME getAliasThis))
 
-    $(P Takes one argument, a symbol of aggregate type.
-        If the given aggregate type has $(D alias this), returns a list of
-        $(D alias this) names, by a tuple of $(D string)s.
-        Otherwise returns an empty tuple.
+    $(P Takes one argument, a type. If the type has `alias this` declarations,
+        returns a sequence of the names (as `string`s) of the members used in
+        those declarations. Otherwise returns an empty sequence.
     )
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+alias AliasSeq(T...) = T;
+
+struct S1
+{
+    string var;
+    alias var this;
+}
+static assert(__traits(getAliasThis, S1) == AliasSeq!("var"));
+static assert(__traits(getAliasThis, int).length == 0);
+
+pragma(msg, __traits(getAliasThis, S1));
+pragma(msg, __traits(getAliasThis, int));
+---
+)
+
+        Prints:
+
+$(CONSOLE
+tuple("var")
+tuple()
+)
 
 $(SECTION2 $(GNAME getAttributes),
     $(P
         Takes one argument, a symbol. Returns a tuple of all attached user-defined attributes.
-        If no UDA's exist it will return an empty tuple.
+        If no UDAs exist it will return an empty tuple.
     )
 
     $(P
         For more information, see: $(DDSUBLINK spec/attribute, uda, User-Defined Attributes)
     )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 @(3) int a;
 @("string", 7) int b;
@@ -483,6 +697,7 @@ pragma(msg, __traits(getAttributes, a));
 pragma(msg, __traits(getAttributes, b));
 pragma(msg, __traits(getAttributes, c));
 ---
+)
 
         Prints:
 
@@ -509,6 +724,7 @@ $(SECTION2 $(GNAME getFunctionVariadicStyle),
         $(TROW $(D "typesafe"), typesafe variadic function, array on stack, $(D void def(int[] ...)))
     )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import core.stdc.stdarg;
 
@@ -527,6 +743,7 @@ static assert(__traits(getFunctionVariadicStyle, typesafe) == "typesafe");
 static assert(__traits(getFunctionVariadicStyle, (int[] a...) {}) == "typesafe");
 static assert(__traits(getFunctionVariadicStyle, typeof(cstyle)) == "stdarg");
 ---
+)
 )
 
 $(SECTION2 $(GNAME getFunctionAttributes),
@@ -553,10 +770,10 @@ $(SECTION2 $(GNAME getFunctionAttributes),
 
     For example:
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 int sum(int x, int y) pure nothrow { return x + y; }
 
-// prints ("pure", "nothrow", "@system")
 pragma(msg, __traits(getFunctionAttributes, sum));
 
 struct S
@@ -564,22 +781,41 @@ struct S
     void test() const @system { }
 }
 
-// prints ("const", "@system")
 pragma(msg, __traits(getFunctionAttributes, S.test));
+
+void main(){}
 ---
+)
+
+        Prints:
+
+$(CONSOLE
+tuple("pure", "nothrow", "@system")
+tuple("const", "@system")
+)
 
     $(P Note that some attributes can be inferred. For example:)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
-// prints ("pure", "nothrow", "@nogc", "@trusted")
 pragma(msg, __traits(getFunctionAttributes, (int x) @trusted { return x * 2; }));
+
+void main(){}
 ---
+)
+
+        Prints:
+
+$(CONSOLE
+tuple("pure", "nothrow", "@nogc", "@trusted")
+)
+)
 )
 
 $(H2 $(GNAME getLinkage))
 
-        $(P Takes one argument, which is a declaration symbol, or the type of a function,
-        delegate, or pointer to function.
+        $(P Takes one argument, which is a declaration symbol, or the type of a function, delegate,
+        pointer to function, struct, class, or interface.
         Returns a string representing the $(LINK2 attribute.html#LinkageAttribute, LinkageAttribute)
         of the declaration.
         The string is one of:
@@ -590,18 +826,27 @@ $(H2 $(GNAME getLinkage))
         $(LI $(D "C"))
         $(LI $(D "C++"))
         $(LI $(D "Windows"))
-        $(LI $(D "Pascal"))
         $(LI $(D "Objective-C"))
         $(LI $(D "System"))
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 extern (C) int fooc();
 alias aliasc = fooc;
 
 static assert(__traits(getLinkage, fooc) == "C");
 static assert(__traits(getLinkage, aliasc) == "C");
+
+extern (C++) struct FooCPPStruct {}
+extern (C++) class FooCPPClass {}
+extern (C++) interface FooCPPInterface {}
+
+static assert(__traits(getLinkage, FooCPPStruct) == "C++");
+static assert(__traits(getLinkage, FooCPPClass) == "C++");
+static assert(__traits(getLinkage, FooCPPInterface) == "C++");
 ---
+)
 
 $(H2 $(GNAME getMember))
 
@@ -611,6 +856,7 @@ $(H2 $(GNAME getMember))
         argument as an identifier.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -627,19 +873,23 @@ void main()
     __traits(getMember, s, "mx") = 1;  // same as s.mx=1;
     writeln(__traits(getMember, s, "m" ~ "x")); // 1
 
-    __traits(getMember, S, "mx") = 1;  // error, no this for S.mx
+    // __traits(getMember, S, "mx") = 1;  // error, no this for S.mx
     __traits(getMember, S, "my") = 2;  // ok
 }
 ---
+)
 
 $(H2 $(GNAME getOverloads))
 
         $(P The first argument is an aggregate (e.g. struct/class/module).
-        The second argument is a string that matches the name of
-        one of the functions in that aggregate.
-        The result is a tuple of all the overloads of that function.
+        The second argument is a `string` that matches the name of
+        the member(s) to return.
+        The third argument is a `bool`, and is optional.  If `true`, the
+        result will also include template overloads.
+        The result is a tuple of all the overloads of the supplied name.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -649,6 +899,8 @@ class D
     ~this() { }
     void foo() { }
     int foo(int) { return 2; }
+    void bar(T)() { return T.init; }
+    class bar(int n) {}
 }
 
 void main()
@@ -664,8 +916,12 @@ void main()
 
     auto i = __traits(getOverloads, d, "foo")[1](1);
     writeln(i);
+
+    foreach (t; __traits(getOverloads, D, "bar", true))
+        writeln(t.stringof);
 }
 ---
+)
 
         Prints:
 
@@ -675,6 +931,8 @@ int()
 void()
 int()
 2
+bar(T)()
+bar(int n)
 )
 
 $(H2 $(GNAME getParameterStorageClasses))
@@ -688,6 +946,7 @@ $(H2 $(GNAME getParameterStorageClasses))
         It returns a tuple of strings representing the storage classes of that parameter.
     )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 ref int foo(return ref const int* p, scope int* a, out int b, lazy int c);
 
@@ -698,6 +957,7 @@ static assert(__traits(getParameterStorageClasses, foo, 1)[0] == "scope");
 static assert(__traits(getParameterStorageClasses, foo, 2)[0] == "out");
 static assert(__traits(getParameterStorageClasses, typeof(&foo), 3)[0] == "lazy");
 ---
+)
 
 $(H2 $(GNAME getPointerBitmap))
 
@@ -705,35 +965,40 @@ $(H2 $(GNAME getPointerBitmap))
     The result is an array of $(D size_t) describing the memory used by an instance of the given type.
     )
     $(P The first element of the array is the size of the type (for classes it is
-    the $(GBLINK classInstanceSize)).)
+    the $(GLINK classInstanceSize)).)
     $(P The following elements describe the locations of GC managed pointers within the
     memory occupied by an instance of the type.
     For type T, there are $(D T.sizeof / size_t.sizeof) possible pointers represented
     by the bits of the array values.)
     $(P This array can be used by a precise GC to avoid false pointers.)
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
-class C
+void main()
 {
-    // implicit virtual function table pointer not marked
-    // implicit monitor field not marked, usually managed manually
-    C next;
-    size_t sz;
-    void* p;
-    void function () fn; // not a GC managed pointer
-}
+    static class C
+    {
+        // implicit virtual function table pointer not marked
+        // implicit monitor field not marked, usually managed manually
+        C next;
+        size_t sz;
+        void* p;
+        void function () fn; // not a GC managed pointer
+    }
 
-struct S
-{
-    size_t val1;
-    void* p;
-    C c;
-    byte[] arr;          // { length, ptr }
-    void delegate () dg; // { context, func }
-}
+    static struct S
+    {
+        size_t val1;
+        void* p;
+        C c;
+        byte[] arr;          // { length, ptr }
+        void delegate () dg; // { context, func }
+    }
 
-static assert (__traits(getPointerBitmap, C) == [6*size_t.sizeof, 0b010100]);
-static assert (__traits(getPointerBitmap, S) == [7*size_t.sizeof, 0b0110110]);
+    static assert (__traits(getPointerBitmap, C) == [6*size_t.sizeof, 0b010100]);
+    static assert (__traits(getPointerBitmap, S) == [7*size_t.sizeof, 0b0110110]);
+}
 ---
+)
 
 
 $(H2 $(GNAME getProtection))
@@ -742,6 +1007,7 @@ $(H2 $(GNAME getProtection))
         The result is a string giving its protection level: "public", "private", "protected", "export", or "package".
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -762,6 +1028,7 @@ void main()
     writeln(j);
 }
 ---
+)
 
         Prints:
 
@@ -770,6 +1037,28 @@ export
 public
 )
 
+$(H2 $(GNAME getTargetInfo))
+
+        $(P Receives a string key as argument.
+        The result is an expression describing the requested target information.
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+version (CppRuntime_Microsoft)
+    static assert(__traits(getTargetInfo, "cppRuntimeLibrary") == "libcmt");
+---
+)
+
+        $(P Keys are implementation defined, allowing relevant data for exotic targets.
+        A reliable subset exists which are always available:
+        )
+
+        $(UL
+        $(LI $(D "cppRuntimeLibrary") - The C++ runtime library affinity for this toolchain)
+        $(LI $(D "floatAbi") - Floating point ABI; may be $(D "hard"), $(D "soft"), or $(D "softfp"))
+        $(LI $(D "objectFormat") - Target object format)
+        )
 
 $(H2 $(GNAME getVirtualFunctions))
 
@@ -787,6 +1076,7 @@ $(H2 $(GNAME getVirtualMethods))
         It does not include final functions that do not override anything.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -813,6 +1103,7 @@ void main()
     writeln(i);
 }
 ---
+)
 
         Prints:
 
@@ -831,7 +1122,7 @@ $(H2 $(GNAME getUnitTests))
                 The result is a tuple of all the unit test functions of that aggregate.
                 The functions returned are like normal nested static functions,
                 $(DDSUBLINK glossary, ctfe, CTFE) will work and
-                $(DDSUBLINK spec/attribute, uda, UDA's) will be accessible.
+                $(DDSUBLINK spec/attribute, uda, UDAs) will be accessible.
         )
 
         $(H3 Note:)
@@ -842,6 +1133,7 @@ $(H2 $(GNAME getUnitTests))
                 empty tuple.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 module foo;
 
@@ -892,6 +1184,7 @@ void main()
         test();
 }
 ---
+)
 
         $(P By default, the above will print:)
 
@@ -938,6 +1231,7 @@ $(H2 $(GNAME allMembers))
         Builtin properties are not included.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -957,6 +1251,7 @@ void main()
     // "Monitor", "factory"]
 }
 ---
+)
 
         $(P The order in which the strings appear in the result
         is not defined.)
@@ -972,6 +1267,7 @@ $(H2 $(GNAME derivedMembers))
         Builtin properties are not included.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -989,6 +1285,7 @@ void main()
     writeln(a);    // ["__ctor", "__dtor", "foo"]
 }
 ---
+)
 
         $(P The order in which the strings appear in the result
         is not defined.)
@@ -998,6 +1295,7 @@ $(H2 $(GNAME isSame))
         $(P Takes two arguments and returns bool $(D true) if they
         are the same symbol, $(D false) if not.)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -1016,9 +1314,80 @@ void main()
     writeln(__traits(isSame, std, std)); // true
 }
 ---
+)
 
         $(P If the two arguments are expressions made up of literals
         or enums that evaluate to the same value, true is returned.)
+
+        $(P If the two arguments are both lambda functions (or aliases
+        to lambda functions), then they are compared for equality. For
+        the comparison to be computed correctly, the following conditions
+        must be met for both lambda functions:)
+
+        $(OL
+        $(LI The lambda function arguments must not have a template
+        instantiation as an explicit argument type. Any other argument
+        types (basic, user-defined, template) are supported.)
+        $(LI The lambda function body must contain a single expression
+        (no return statement) which contains only numeric values,
+        manifest constants, enum values, function arguments and function
+        calls. If the expression contains local variables or return
+        statements, the function is considered incomparable.)
+        )
+
+        $(P If these constraints aren't fulfilled, the function is considered
+        incomparable and `isSame` returns $(D false).)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+int f() { return 2; }
+void test(alias pred)()
+{
+    // f() from main is a different function from top-level f()
+    static assert(!__traits(isSame, (int a) => a + f(), pred));
+}
+
+void main()
+{
+    static assert(__traits(isSame, (a, b) => a + b, (c, d) => c + d));
+    static assert(__traits(isSame, a => ++a, b => ++b));
+    static assert(!__traits(isSame, (int a, int b) => a + b, (a, b) => a + b));
+    static assert(__traits(isSame, (a, b) => a + b + 10, (c, d) => c + d + 10));
+
+    // lambdas accessing local variables are considered incomparable
+    int b;
+    static assert(!__traits(isSame, a => a + b, a => a + b));
+
+    // lambdas calling other functions are comparable
+    int f() { return 3;}
+    static assert(__traits(isSame, a => a + f(), a => a + f()));
+    test!((int a) => a + f())();
+
+    class A
+    {
+        int a;
+        this(int a)
+        {
+            this.a = a;
+        }
+    }
+
+    class B
+    {
+        int a;
+        this(int a)
+        {
+            this.a = a;
+        }
+    }
+
+    static assert(__traits(isSame, (A a) => ++a.a, (A b) => ++b.a));
+    // lambdas with different data types are considered incomparable,
+    // even if the memory layout is the same
+    static assert(!__traits(isSame, (A a) => ++a.a, (B a) => ++a.a));
+}
+---
+)
 
 $(H2 $(GNAME compiles))
 
@@ -1031,6 +1400,7 @@ $(H2 $(GNAME compiles))
 
         $(P If there are no arguments, the result is $(D false).)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
 
@@ -1057,6 +1427,7 @@ void main()
     writeln(__traits(compiles, 1,2,3,int,long,3[1])); // false
 }
 ---
+)
 
         $(P This is useful for:)
 
@@ -1068,55 +1439,6 @@ void main()
         )
 
 
-$(H2 $(LNAME2 specialkeywords, Special Keywords))
-
-    $(P $(CODE __FILE__) and $(CODE __LINE__) expand to the source
-    file name and line number at the point of instantiation. The path of
-    the source file is left up to the compiler. )
-
-    $(P $(CODE __FILE_FULL_PATH__) expands to the absolute source
-    file name at the point of instantiation.)
-
-    $(P $(CODE __MODULE__) expands to the module name at the point of
-    instantiation.)
-
-    $(P $(CODE __FUNCTION__) expands to the fully qualified name of the
-    function at the point of instantiation.)
-
-    $(P $(CODE __PRETTY_FUNCTION__) is similar to $(CODE __FUNCTION__),
-    but also expands the function return type, its parameter types,
-    and its attributes.)
-
-    $(P Example usage:)
-
------
-module test;
-import std.stdio;
-
-void test(string file = __FILE__, size_t line = __LINE__,
-        string mod = __MODULE__, string func = __FUNCTION__,
-        string pretty = __PRETTY_FUNCTION__,
-        string fileFullPath = __FILE_FULL_PATH__)
-{
-    writefln("file: '%s', line: '%s', module: '%s',\nfunction: '%s', " ~
-        "pretty function: '%s',\nfile full path: '%s'",
-        file, line, mod, func, pretty, fileFullPath);
-}
-
-int main(string[] args)
-{
-    test();
-    return 0;
-}
------
-
-        $(P Assuming the file was at /example/test.d, this will output:)
-
-$(CONSOLE
-file: 'test.d', line: '13', module: 'test',
-function: 'test.main', pretty function: 'int test.main(string[] args)',
-file full path: '/example/test.d'
-)
 
 $(SPEC_SUBNAV_PREV_NEXT version, Conditional Compilation, errors, Error Handling)
 )
@@ -1124,4 +1446,3 @@ $(SPEC_SUBNAV_PREV_NEXT version, Conditional Compilation, errors, Error Handling
 Macros:
         CHAPTER=25
         TITLE=Traits
-        GBLINK=$(RELATIVE_LINK2 $0, $(D $0))

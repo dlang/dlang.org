@@ -1,0 +1,231 @@
+Ddoc
+
+$(D_S $(TITLE),
+
+$(HEADERNAV_TOC)
+
+        $(P Starting with
+        $(DDLINK changelog/2.030, Change Log: 2.030, dmd version 2.030),
+        the default storage class
+        for statics and globals will be
+        $(DDSUBLINK glossary, tls, thread local storage (TLS)), rather
+        than the classic global data segment.
+        While most D code should just compile and run successfully without
+        change, there can be some issues.
+        )
+
+$(H2 $(LNAME2 performance, Performance of TLS variables))
+
+        $(P Reading or writing TLS variables is potentially slower than for
+        classic global variables. The exact difference depends, among others,
+        on compiler code generation settings and the target architecture.
+        The performance difference ranges from negligible (Windows) to a call
+        to a special function (PIC on Linux, macOS, *BSD. Search for example
+        for $(D __tls_get_address) online). For non-PIC, the performance
+        difference is much smaller or even negligible.
+        If you find that TLS access is slower than classic global variables,
+        what can you do about it?
+        )
+
+        $(OL
+        $(LI Minimize use of global variables. Reducing the use
+        of globals can improve the modularization and maintainability
+        of the code anyway, so this is a worthy goal.)
+        $(LI Group related global variables into a struct. The TLS-related
+        overhead is (often) proportional to the number of variables accessed.
+        Because a global struct variable is just one single variable, after
+        accessing one member of the struct, accessing another member is
+        "for free" (does not incur the extra TLS-related overhead).
+        Of course when you've grouped the data into a struct, perhaps you
+        should remove the global altogether by passing around a reference to
+        the struct as context...)
+        $(LI Make global variables immutable. Immutable data doesn't have
+        synchronization problems, so the compiler doesn't place it
+        in TLS.)
+        $(LI Cache a reference to the global. Making a local cache
+        of it, and then accessing the cached value rather than the
+        original, can speed things up especially if the cached value
+        gets enregistered by the compiler.)
+        $(LI Cowboy it with $(D __gshared).)
+        )
+
+$(H2 $(LNAME2 vtls, Identifying TLS variables))
+
+        $(P The first step is to find all the global variables,
+        so they can be reviewed for disposition.
+        )
+
+        $(P Given the complexity of source code, it isn't always
+        easy to identify the global variables. Since it (used to be)
+        implicit, there's no way to grep for them. It's hard
+        to be sure you've found them all.
+        )
+
+        $(P A new dmd compiler switch was added, $(B -vtls).
+        Compiling with it on will print a list of all the global
+        variables that are now defaulting to thread local storage.
+        )
+
+---
+int x;
+
+void main()
+{
+    static int y;
+}
+---
+
+$(CONSOLE
+dmd test $(B -vtls)
+test.d(2): x is thread local
+test.d(6): y is thread local
+)
+
+$(H2 $(LNAME2 immutable, Switch to Immutable))
+
+        $(P Immutable data, once initialized, never changes.
+        This means that there are no synchronization issues
+        with multithreading, and so no need to put immutable data
+        into TLS. The compiler will put immutable data into
+        classic global storage, not TLS.
+        )
+
+        $(P A good chunk of global data falls into this category.
+        Just mark it as $(D immutable) and it's done.
+        )
+
+---
+int[3] table = [6, 123, 0x87];
+---
+        $(P becomes:)
+---
+immutable int[3] table = [6, 123, 0x87];
+---
+
+        $(P Immutability is also nice because it opens the door
+        for further compiler optimizations.
+        )
+
+$(H2 $(LNAME2 shared, Marking As Shared))
+
+        $(P Global data that is meant to be shared among multiple
+        threads should be marked with the $(D shared) keyword:
+        )
+
+---
+shared int flag;
+---
+
+        $(P Not only does this cause $(CODE flag) to be put into
+        classic global storage, it is also typed as being shared:
+        )
+
+---
+int* p = &flag;           // error, flag is shared
+shared(int)* q = &flag;   // ok
+---
+
+        $(P The $(CODE shared) type attribute is transitive (like
+        $(CODE const) and $(CODE immutable)) are. This enables
+        static checking and sharing correctness.
+        )
+
+$(H2 $(LNAME2 gshared, Cowboying With __gshared))
+
+        $(P Sometimes, none of the above solutions will be
+        acceptable:
+        )
+
+        $(OL
+        $(LI interfacing with C code that uses classic globals)
+        $(LI just get it working, and go back and fix it later)
+        $(LI the app is single threaded only, so no sharing issues)
+        $(LI you need every erg of performance)
+        $(LI you want to handle all the synchronization issues
+        yourself)
+        )
+
+        $(P As D is a systems language, of course there's a way to
+        do this. Use the storage class $(D __gshared):
+        )
+
+---
+__gshared int x;
+
+void main()
+{
+    __gshared int y;
+}
+---
+
+        $(P $(D __gshared) stores the variable in the classic global
+        data segment.
+        )
+
+        $(P Naturally, $(D __gshared) is not allowed in safe mode.
+        )
+
+        $(P Using $(D __gshared) makes such code easily searchable
+        when doing QA code reviews or when going back later to
+        fix any workarounds.
+        )
+
+$(H2 $(LNAME2 compile-errors, Compile Errors))
+
+        $(P The most common compiler error related to TLS will be:
+        )
+
+---
+int x;
+int* p = &x;
+---
+$(CONSOLE
+test.d(2): Error: non-constant expression & x
+)
+
+        $(P While this works with classic global variables, it
+        won't work with TLS variables. The reason is because
+        TLS variables don't have a location in memory known to
+        either the linker or the loader. It's a runtime computed
+        value.)
+
+        $(P The solution is to initialize such things in
+        a static constructor.)
+
+$(H2 $(LNAME2 link-errors, Link Errors))
+
+        $(P Sometimes you may encounter strange error messages from the linker
+        about the global variables.
+        These are nearly always caused by one module putting the variable
+        in TLS, and another putting that same variable in classic global
+        storage.
+        This can happen when linking code with libraries that were built
+        with earlier versions of dmd. Check that libphobos2.a was properly
+        replaced with the latest.
+        It can also happen when interfacing with C. C globals default
+        to being classic global, although C does support TLS declarations.
+        Make sure the corresponding D declarations match the C ones in
+        terms of TLS or classic global.
+        )
+
+$(CCODE
+int x;
+extern int y;
+__thread int z;
+)
+
+---
+extern (C)
+{
+    extern shared int x;
+    shared int y;
+    extern int z;
+}
+---
+
+)
+
+Macros:
+        TITLE=Migrating to Shared
+        SUBNAV=$(SUBNAV_ARTICLES)
+

@@ -296,17 +296,19 @@ $(H4 $(LNAME2 phobos_line_length, Line length))
          80 characters long but that they $(I can) exceed 80 characters when
          appropriate. However, they can $(I never) exceed 120 characters.)
 $(LISTSECTION phobos_whitespace, Whitespace,
-    $(LI Put a space after `for`, `foreach`, `if`, and `while`: )
+    $(LI Put a space after `for`, `foreach`, `if`, `while`, and `version`: )
 -------------------------------
 for (…) { … }
 foreach (…) { … }
+static foreach (…) { … }
 if (x) { … }
 static if (x) { … }
 while (…) { … }
 do { … } while (…);
+version (…) { … }
 -------------------------------
-    $(LI Chains containing `else if (…)` or `else static if (…)` should set the
-        keywords on the same line:)
+    $(LI Chains containing `else if (…)`, `else static if (…)` or `else version (…)`
+        should set the keywords on the same line:)
 -------------------------------
 if (…)
 {
@@ -355,8 +357,13 @@ $(LISTSECTION phobos_return_types, Return type,
 $(LISTSECTION phobos_attributes, Attributes,
     $(LI $(I Non-templated) functions should be annotated with
          matching attributes (`@nogc`, `@safe`, `pure`, `nothrow`).)
-    $(LI $(I Templated) functions should $(B not) be annotated with attributes
-         as the compiler can infer them.)
+    $(LI If the template arguments for a $(I templated) function affect whether
+         an attribute is appropriate, then the function should $(B not) be
+         annotated with that attribute so that the compiler can infer it.
+         However, if the attribute is not affected by the template arguments
+         (and thus would always be inferred), then the function should be
+         explicitly annotated with that attribute just like a non-templated
+         function would be.)
     $(LI Attributes should be listed in alphabetical ordering, e.g. `const @nogc nothrow pure @safe`
         (the ordering should ignore the leading `@`).
     )
@@ -376,6 +383,40 @@ $(LISTSECTION phobos_declarations, Declarations,
 void foo(R)(R r)
 if (R == 1)
 -------------------------------
+    $(LI Pre and post contracts should have the same indentation level as their
+         declaration. The expression-based syntax should be preferred when the
+         equivalent long-form syntax would have a single `assert` statement.
+         Put a space after `in`/`out` similar to `if` constraints:)
+-------------------------------
+// Prefer:
+T transmogrify(T)(T value)
+if (isIntegral!T)
+in (value % 7 == 0)
+out (result; result % 11 == 0)
+{
+    // ...
+}
+
+// over this:
+T transmogrify(T)(T value)
+if (isIntegral!T)
+in { assert(value % 7 == 0); }
+out (result) { assert(result % 11 == 0); }
+do
+{
+    // ...
+}
+-------------------------------
+    $(LI Invariants should use the expression-based syntax when the equivalent
+         long-form syntax would have a single `assert` statement. Put a space
+         between `invariant` and the opening parentheses:)
+-------------------------------
+struct S
+{
+    int x;
+    invariant (x > 0);
+}
+-------------------------------
 )
 $(LISTSECTION phobos_class_struct_field_declaration, Class/Struct Field Declarations,
     $(LI In structs and classes, there should only be one space between the type of
@@ -393,6 +434,38 @@ class MyClass
     double y;
 }
 -------------------------------
+)
+
+$(LISTSECTION phobos_documentation, Documentation,
+    $(LI Every public symbol should be exposed in the documentation:)
+---
+/// A public symbol
+enum myFancyConstant;
+---
+    $(LI Every public function should have a Ddoc description and documented
+    `Params:` and `Returns:` sections (if applicable):)
+---
+/**
+Checks whether a number is positive.
+`0` isn't considered as positive number.
+
+Params:
+    number = number to be checked
+
+Returns: `true` if the number is positive, `0` otherwise.
+
+See_Also: $(LREF isNegative)
+*/
+bool isPositive(int number)
+{
+    return number > 0;
+}
+---
+    $(LI Text in sections (e.g. `Params:`, `Returns:`, `See_Also`) should be indented by one level if it spans more than the line of the section.)
+    $(LI Documentation comments should not use more than two stars `/**` or two pluses `/++` in the header line.)
+    $(LI Either Block comments (`/**`) or nesting block comments (`/++`) should be used except when the ddoc comment is a ditto comment such as `/// Ditto`)
+    $(LI Documentation comments should not have leading stars on each line.)
+    $(LI Text example blocks should use three dashes (`---`) only.)
 )
 
 $(BR)

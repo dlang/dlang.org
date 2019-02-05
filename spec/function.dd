@@ -6,21 +6,25 @@ $(HEADERNAV_TOC)
 
 $(H2 $(LNAME2 grammar, Grammar))
 
+$(H3 Function declaration)
+
 $(GRAMMAR
 $(GNAME FuncDeclaration):
     $(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK FuncDeclarator) $(GLINK FunctionBody)
     $(GLINK AutoFuncDeclaration)
 
 $(GNAME AutoFuncDeclaration):
-    $(GLINK2 declaration, StorageClasses) $(I Identifier) $(GLINK FuncDeclaratorSuffix) $(GLINK FunctionBody)
+    $(GLINK2 declaration, StorageClasses) $(GLINK_LEX Identifier) $(GLINK FuncDeclaratorSuffix) $(GLINK FunctionBody)
 
 $(GNAME FuncDeclarator):
-    $(GLINK2 declaration, BasicType2)$(OPT) $(I Identifier) $(GLINK FuncDeclaratorSuffix)
+    $(GLINK2 declaration, BasicType2)$(OPT) $(GLINK_LEX Identifier) $(GLINK FuncDeclaratorSuffix)
 
 $(GNAME FuncDeclaratorSuffix):
     $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT)
     $(GLINK2 template, TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
 )
+
+$(H3 Parameters)
 
 $(GRAMMAR
 $(GNAME Parameters):
@@ -32,17 +36,20 @@ $(GNAME ParameterList):
     $(D ...)
 
 $(GNAME Parameter):
-    $(I InOut)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
-    $(I InOut)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(D ...)
-    $(I InOut)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) = $(ASSIGNEXPRESSION)
-    $(I InOut)$(OPT) $(GLINK2 declaration, Type)
-    $(I InOut)$(OPT) $(GLINK2 declaration, Type) $(D ...)
+    $(I ParameterAttributes)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
+    $(I ParameterAttributes)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(D ...)
+    $(I ParameterAttributes)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) = $(ASSIGNEXPRESSION)
+    $(I ParameterAttributes)$(OPT) $(GLINK2 declaration, Type)
+    $(I ParameterAttributes)$(OPT) $(GLINK2 declaration, Type) $(D ...)
+
+$(GNAME ParameterAttributes):
+    $(I InOut)
+    $(GLINK2 attribute, UserDefinedAttribute)
+    $(I ParameterAttributes InOut)
+    $(I ParameterAttributes) $(GLINK2 attribute, UserDefinedAttribute)
+    $(I ParameterAttributes)
 
 $(GNAME InOut):
-    $(I InOutX)
-    $(I InOut InOutX)
-
-$(GNAME InOutX):
     $(D auto)
     $(GLINK2 declaration, TypeCtor)
     $(D final)
@@ -52,7 +59,11 @@ $(GNAME InOutX):
     $(D ref)
     $(RELATIVE_LINK2 return-ref-parameters, $(D return ref))
     $(D scope)
+)
 
+$(H3 Function attributes)
+
+$(GRAMMAR
 $(GNAME FunctionAttributes):
     $(GLINK FunctionAttribute)
     $(GLINK FunctionAttribute) $(I FunctionAttributes)
@@ -75,30 +86,64 @@ $(GNAME MemberFunctionAttribute):
     $(GLINK FunctionAttribute)
 )
 
+$(H3 Function body)
+
 $(GRAMMAR
 $(GNAME FunctionBody):
-    $(GLINK2 statement, BlockStatement)
-    $(GLINK FunctionContracts)$(OPT) $(GLINK BodyStatement)
-    $(GLINK FunctionContracts)
+    $(GLINK SpecifiedFunctionBody)
+    $(GLINK MissingFunctionBody)
 
+$(GNAME FunctionLiteralBody):
+    $(GLINK SpecifiedFunctionBody)
+
+$(GNAME SpecifiedFunctionBody):
+    $(D do)$(OPT) $(GLINK2 statement, BlockStatement)
+    $(GLINK FunctionContracts)$(OPT) $(GLINK InOutContractExpression) $(D do)$(OPT) $(GLINK2 statement, BlockStatement)
+    $(GLINK FunctionContracts)$(OPT) $(GLINK InOutStatement) $(D do) $(GLINK2 statement, BlockStatement)
+
+$(GNAME MissingFunctionBody):
+    $(D ;)
+    $(GLINK FunctionContracts)$(OPT) $(GLINK InOutContractExpression) $(D ;)
+    $(GLINK FunctionContracts)$(OPT) $(GLINK InOutStatement)
+)
+
+$(H3 Function contracts)
+
+$(GRAMMAR
 $(GNAME FunctionContracts):
-    $(GLINK InStatement) $(GLINK OutStatement)$(OPT)
-    $(GLINK OutStatement) $(GLINK InStatement)$(OPT)
+    $(GLINK FunctionContract)
+    $(GLINK FunctionContract) $(I FunctionContracts)
+
+$(GNAME FunctionContract):
+    $(GLINK InOutContractExpression)
+    $(GLINK InOutStatement)
+
+$(GNAME InOutContractExpression):
+    $(GLINK InContractExpression)
+    $(GLINK OutContractExpression)
+
+$(GNAME InOutStatement):
+    $(GLINK InStatement)
+    $(GLINK OutStatement)
+
+$(GNAME InContractExpression):
+    $(D in $(LPAREN)) $(GLINK2 expression, AssertArguments) $(D $(RPAREN))
+
+$(GNAME OutContractExpression):
+    $(D out $(LPAREN) ;) $(GLINK2 expression, AssertArguments) $(D $(RPAREN))
+    $(D out $(LPAREN)) $(GLINK_LEX Identifier) $(D ;) $(GLINK2 expression, AssertArguments) $(D $(RPAREN))
 
 $(GNAME InStatement):
     $(D in) $(GLINK2 statement, BlockStatement)
 
 $(GNAME OutStatement):
     $(D out) $(GLINK2 statement, BlockStatement)
-    $(D out) $(D $(LPAREN)) $(I Identifier) $(D $(RPAREN)) $(GLINK2 statement, BlockStatement)
-
-$(GNAME BodyStatement):
-    $(D body) $(GLINK2 statement, BlockStatement)
+    $(D out) $(D $(LPAREN)) $(GLINK_LEX Identifier) $(D $(RPAREN)) $(GLINK2 statement, BlockStatement)
 )
 
 $(H2 $(LNAME2 contracts, Contracts))
 
-    $(P The $(D in) and $(D out) blocks of a function declaration specify
+    $(P The $(D in) and $(D out) blocks or expressions of a function declaration specify
     the pre- and post-conditions of the function. They are used in
     $(LINK2 contracts.html, Contract Programming).
     The code inside these blocks should
@@ -153,11 +198,6 @@ $(H2 $(LNAME2 pure-functions, Pure Functions))
             Weakly `pure` functions are useful as reusable building blocks for strongly pure functions.
         )
 
-        $(P To control mutations, D has the `immutable` type qualifier. If all of
-            a $(D pure) function's parameters are `immutable` or copied values
-            without any indirections, it can guarantee that the pure function has
-            no side effects.
-        )
         $(P To prevent mutation, D offers the `immutable` type qualifier.
             If all of a `pure` function's parameters are `immutable` or
             copied values without any indirections (e.g. `int`),
@@ -477,35 +517,34 @@ $(H2 $(LNAME2 inout-functions, Inout Functions))
         be matched with inout.
     )
 
-    $(P $(RELATIVE_LINK2 variadicnested, Nested functions) inside pure function are implicitly marked as pure.
+    $(P $(RELATIVE_LINK2 variadicnested, Nested functions) inside pure function are implicitly marked as pure.)
 
-        ---
-        pure int foo(int x, immutable int y)
+    ---
+    pure int foo(int x, immutable int y)
+    {
+        int bar()
+        // implicitly marked as pure, to be "weak purity"
+        // hidden context pointer is mutable
         {
-            int bar()
-            // implicitly marked as pure, to be "weak purity"
-            // hidden context pointer is mutable
-            {
-                x = 10;     // can access states in enclosing scope
-                            // through the mutable context pointer
-                return x;
-            }
-            pragma(msg, typeof(&bar));  // int delegate() pure
-
-            int baz() immutable
-            // qualify hidden context pointer with immutable,
-            // and has no other parameters, make "strong purity"
-            {
-                //return x; // error, cannot access mutable data
-                            // through the immutable context pointer
-                return y;   // ok
-            }
-
-            // can call pure nested functions
-            return bar() + baz();
+            x = 10;     // can access states in enclosing scope
+                        // through the mutable context pointer
+            return x;
         }
-        ---
-    )
+        pragma(msg, typeof(&bar));  // int delegate() pure
+
+        int baz() immutable
+        // qualify hidden context pointer with immutable,
+        // and has no other parameters, make "strong purity"
+        {
+            //return x; // error, cannot access mutable data
+                        // through the immutable context pointer
+            return y;   // ok
+        }
+
+        // can call pure nested functions
+        return bar() + baz();
+    }
+    ---
 
 $(H2 $(LNAME2 optional-parenthesis, Optional Parentheses))
 
@@ -556,7 +595,7 @@ $(H2 $(LNAME2 optional-parenthesis, Optional Parentheses))
     ---
     struct S {
         int function() callfp() { return &numfp; }
-        int delegate() calldg() { return &numdg; }
+        int delegate() calldg() return { return &numdg; }
         int numdg() { return 6; }
     }
 
@@ -591,6 +630,10 @@ $(H2 $(LNAME2 optional-parenthesis, Optional Parentheses))
     )
 
 $(H2 $(LNAME2 property-functions, Property Functions))
+
+    $(P WARNING: The definition and usefulness of property functions is being reviewed, and the implementation
+    is currently incomplete.  Using property functions is not recommended until the definition is
+    more certain and implementation more mature.)
 
     $(P Properties are functions that can be syntactically treated
     as if they were fields or variables. Properties can be read from or written to.
@@ -674,7 +717,8 @@ $(H2 $(LNAME2 virtual-functions, Virtual Functions))
         are not templatized are virtual unless the compiler can determine that
         they will never be overridden (e.g. they are marked with $(D final) and
         do not override any functions in a base class), in which case, it will
-        make them non-virtual. This results in fewer bugs caused by not
+        make them non-virtual. Static or `final` functions with `Objective-C`
+        linkage are virtual as well. This results in fewer bugs caused by not
         declaring a function virtual and then overriding it anyway.
         )
 
@@ -754,6 +798,11 @@ class Bar : Foo
         $(P Virtual functions all have a hidden parameter called the
         $(I this) reference, which refers to the class object for which
         the function is called.
+        )
+
+        $(P
+            Functions with `Objective-C` linkage has an additional hidden,
+            unnamed, parameter which is the selector it was called with.
         )
 
         $(P To avoid dynamic binding on member function call, insert
@@ -1000,6 +1049,8 @@ void main()
 ------
 )
 
+    $(P Static functions with `Objective-C` linkage are overridable.)
+
 $(H2 $(LNAME2 inline-functions, Inline Functions))
 
         $(P The compiler makes the decision whether to inline a function or not.
@@ -1154,6 +1205,8 @@ void bar(C c)
 
 $(H2 $(LNAME2 parameters, Function Parameters))
 
+$(H3 $(LNAME2 param-storage, Parameter Storage Classes))
+
         $(P Parameter storage classes are $(D in), $(D out),
         $(D ref), $(D lazy), $(D const), $(D immutable), $(D shared),
         $(D inout) or
@@ -1180,7 +1233,10 @@ int foo(in int x, out int y, ref int z, int q);
     $(THEAD Storage Class, Description)
     $(TROW $(I none), parameter becomes a mutable copy of its argument)
 
-    $(TROW $(D in), equivalent to $(D const scope))
+    $(TROW $(D in), defined as $(D scope const).  However $(D in) has not yet been properly
+    implemented so it's current implementation is equivalent to $(D const).  It is recommended
+    to avoid using $(D in) until it is properly defined and implemented.  Use $(D scope const)
+    or $(D const) explicitly instead.)
     $(TROW $(D out), parameter is initialized upon function entry with the default value
     for its type)
 
@@ -1188,8 +1244,13 @@ int foo(in int x, out int y, ref int z, int q);
     $(TROW $(D scope), references in the parameter
     cannot be escaped (e.g. assigned to a global variable).
     Ignored for parameters with no references)
+    $(TROW $(D return), $(ARGS Parameter may be returned or copied to the first parameter,
+    but otherwise does not escape from the function.
+    Such copies are required not to outlive the argument(s) they were derived from.
+    Ignored for parameters with no references.
+    See $(DDSUBLINK spec/memory-safe-d, scope-return-params, Scope Parameters).))
     $(TROW $(D lazy), argument is evaluated by the called function and not by the caller)
-        $(TROW $(D const), argument is implicitly converted to a const type)
+    $(TROW $(D const), argument is implicitly converted to a const type)
     $(TROW $(D immutable), argument is implicitly converted to an immutable type)
     $(TROW $(D shared), argument is implicitly converted to a shared type)
     $(TROW $(D inout), argument is implicitly converted to an inout type)
@@ -1232,23 +1293,28 @@ def(z);
         apply only to the reference and not the contents.
         )
 
-        $(P $(D lazy) arguments are evaluated not when the function is called,
-        but when the parameter is evaluated within the function. Hence,
-        a $(D lazy) argument can be executed 0 or more times. A $(D lazy) parameter
-        cannot be an lvalue.)
+$(H3 $(LNAME2 lazy-params, Lazy Parameters))
+
+        $(P An argument to a $(D lazy) parameter is not evaluated before the function is called.
+        The argument is only evaluated if/when the parameter is evaluated within the function. Hence,
+        a $(D lazy) argument can be executed 0 or more times. )
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
-void dotimes(int n, lazy void exp)
+import std.stdio : writeln;
+
+void main()
+{
+    int x;
+    3.times(writeln(x++));
+    writeln("-");
+    writeln(x);
+}
+
+void times(int n, lazy void exp)
 {
     while (n--)
         exp();
-}
-
-void test()
-{
-    int x;
-    dotimes(3, writeln(x++));
 }
 ---
 )
@@ -1259,10 +1325,16 @@ $(CONSOLE
 0
 1
 2
+$(MINUS)
+3
 )
+
+        $(P A $(D lazy) parameter cannot be an lvalue.)
 
         $(P A $(D lazy) parameter of type $(D void) can accept an argument
         of any type.)
+
+        $(P See Also: $(RELATIVE_LINK2 lazy_variadic_functions, Lazy Variadic Functions))
 
 $(H3 $(LNAME2 function-default-args, Function Default Arguments))
 
@@ -1309,8 +1381,8 @@ ref int gun(return ref int x) {
 }
 ---
 
-        $(P Ref methods marked with the `return` attribute ensure the returned
-        reference will not outlive the respective aggregate instance.
+        $(P Struct non-static methods marked with the `return` attribute ensure the returned
+        reference will not outlive the struct instance.
         )
 
 ---
@@ -1327,9 +1399,153 @@ ref int escape()
 }
 ---
 
-$(P Template functions and lambdas can deduce the `return` attribute.)
+        $(P Returning the address of a `ref` variable is also checked.)
+
+---
+int* pluto(ref int i)
+{
+    return &i; // error: returning &i escapes a reference to parameter i
+}
+
+int* mars(return ref int i)
+{
+    return &i;  // ok
+}
+---
+
+$(P If the function returns `void`, and the first parameter is `ref` or `out`, then
+all subsequent `return ref` parameters are considered as being assigned to
+the first parameter for lifetime checking.
+The `this` reference parameter to a struct non-static member function is
+considered the first parameter.)
+
+$(P If there are multiple `return ref` parameters, the lifetime of the return
+value is the smallest lifetime of the corresponding arguments.)
+
+$(P Neither the type of the `return ref` parameter(s) nor the type of the return
+value is considered when determining the lifetime of the return value.)
+
+$(P It is not an error if the return type does not contain any indirections.)
+
+---
+int mercury(return ref int i)
+{
+    return i; // ok
+}
+---
+
+$(P Template functions, auto functions, nested functions and lambdas can deduce the `return` attribute.)
+
+---
+ref int templateFunction()(ref int i)
+{
+    return i; // ok
+}
+
+ref auto autoFunction(ref int i)
+{
+    return i; // ok
+}
+
+void uranus()
+{
+    ref int nestedFunction(ref int i)
+    {
+        return i; // ok
+    }
+}
+
+void venus()
+{
+    auto lambdaFunction =
+        (ref int i)
+        {
+            return &i; // ok
+        };
+}
+---
 
 $(P `inout ref` parameters imply the `return` attribute.)
+
+---
+inout(int)* neptune(inout ref int i)
+{
+    return &i;  // ok
+}
+---
+
+$(H3 $(LNAME2 return-scope-parameters, Return Scope Parameters))
+
+        $(P Parameters marked as `return scope` that contain indirections
+        can only escape those indirections via the function's return value.)
+
+---
+int* gp;
+void thorin(scope int*);
+void gloin(int*);
+int* balin(return scope int* p, scope int* q, int* r)
+{
+     gp = p; // error, p escapes to global gp
+     gp = q; // error, q escapes to global gp
+     gp = r; // ok
+
+     thorin(p); // ok, p does not escape thorin()
+     thorin(q); // ok
+     thorin(r); // ok
+
+     gloin(p); // error, gloin() escapes p
+     gloin(q); // error, gloin() escapes q
+     gloin(r); // ok that gloin() escapes r
+
+     return p; // ok
+     return q; // error, cannot return 'scope' q
+     return r; // ok
+}
+---
+
+        $(P Class references are considered pointers that are subject to `scope`.)
+
+---
+class C { }
+C gp;
+void thorin(scope C);
+void gloin(C);
+C balin(return scope C p, scope C q, C r)
+{
+     gp = p; // error, p escapes to global gp
+     gp = q; // error, q escapes to global gp
+     gp = r; // ok
+
+     thorin(p); // ok, p does not escape thorin()
+     thorin(q); // ok
+     thorin(r); // ok
+
+     gloin(p); // error, gloin() escapes p
+     gloin(q); // error, gloin() escapes q
+     gloin(r); // ok that gloin() escapes r
+
+     return p; // ok
+     return q; // error, cannot return 'scope' q
+     return r; // ok
+}
+---
+
+        $(P `return scope` can be applied to the `this` of class and interface member functions.)
+
+---
+class C
+{
+    C bofur() return scope { return this; }
+}
+---
+
+        $(P Template functions, auto functions, nested functions and lambdas can deduce
+        the `return scope` attribute.)
+
+
+$(H3 $(LNAME2 udas-parameters, User-Defined Attributes for Parameters))
+
+See also: $(GLINK2_ALTTEXT attribute, UserDefinedAttribute, User-Defined Attributes)
 
 $(H3 $(LNAME2 variadic, Variadic Functions))
 
@@ -1659,6 +1875,25 @@ foo(1, 3+x, dg, cast(int delegate())null);
 
 ---
 foo( { return 1; }, { return 3+x; }, dg, null );
+---
+
+        $(P The lazy variadic delegate solution is preferable to using a lazy
+        variadic array, because each array index would evaluate every element:)
+
+---
+import std.stdio;
+
+void foo(lazy int[] arr...)
+{
+    writeln(arr[0]); // 1
+    writeln(arr[1]); // 4, not 2
+}
+
+void main()
+{
+    int x;
+    foo(++x, ++x);
+}
 ---
 
 $(H2 $(LEGACY_LNAME2 Local Variables, local-variables, Local Variables))
@@ -2113,6 +2348,24 @@ void test()
         $(P The $(D .funcptr) property of a delegate will return the
         $(I function pointer) value as a function type.
         )
+        $(P Functions and delegates declared at module scope are zero-initialized by default.
+        However both can be initialized to any function pointer (including a function literal).
+        For delegates, the context pointer $(D .ptr) is initialized to null.
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+int function() foo = { return 42; };
+int delegate() bar = { return 43; };
+int delegate() baz;
+void main()
+{
+    assert(foo() == 42);
+    assert(bar() == 43);
+    assert(baz is null);
+}
+---
+)
 
         $(P $(B Future directions:) Function pointers and delegates may merge
         into a common syntax and be interchangeable with each other.
@@ -2181,15 +2434,50 @@ void main()
 $(H2 $(LNAME2 interpretation, Compile Time Function Execution (CTFE)))
 
     $(P Functions which are both portable and free of global side-effects can be
-    executed at compile time. This is useful when constant folding
-    algorithms need to include recursion and looping. Compile time function
-    execution is subject to the following restrictions:
+    executed at compile time. In certain contexts, such compile time execution
+    is guaranteed. It is called Compile Time Function Execution (CTFE) then.
+    The contexts that trigger CTFE are:)
+
+    $(UL
+    $(LI initialization of a static variable or a
+        $(DDSUBLINK spec/enum, manifest_constants, manifest constant))
+    $(LI static initializers of struct/class members)
+    $(LI dimension of a $(DDSUBLINK spec/arrays, static-arrays, static array))
+    $(LI argument for a $(DDSUBLINK spec/template, template_value_parameter,
+        template value parameter))
+    $(LI $(DDSUBLINK spec/version, staticif, `static if`))
+    $(LI $(DDSUBLINK spec/version, staticforeach, `static foreach`))
+    $(LI $(DDSUBLINK spec/version, static-assert, `static assert`))
+    $(LI $(DDSUBLINK spec/statement, mixin-statement,
+        `mixin` statement))
+    $(LI $(DDLINK spec/pragma, Pragmas, `pragma` argument))
     )
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+enum eval(Args...) = Args[0];
+
+int square(int i)
+{
+    return i * i;
+}
+
+void foo()
+{
+    static j = square(3);      // CTFE
+    writeln(j);
+    assert(square(4));         // run time
+    writeln(eval!(square(5))); // CTFE
+}
+---
+)
+
+    $(P CTFE is subject to the following restrictions:)
 
     $(OL
     $(LI The function source code must be available to the compiler. Functions
         which exist in the source code only as $(D_KEYWORD extern) declarations
-        cannot be executed at compile time.)
+        cannot be executed in CTFE.)
 
     $(LI Executed expressions may not reference any global or local
         static variables.)
@@ -2199,7 +2487,7 @@ $(H2 $(LNAME2 interpretation, Compile Time Function Execution (CTFE)))
     $(LI Non-portable casts (eg, from $(D int[]) to $(D float[])), including
         casts which depend on endianness, are not permitted.
         Casts between signed and unsigned types are permitted)
-    $(LI Reinterpretation of overlapped fields in a Union.)
+    $(LI Reinterpretation of overlapped fields in a Union is not permitted.)
     )
 
     $(P Pointers are permitted in CTFE, provided they are used safely:)
@@ -2271,47 +2559,14 @@ static assert(countTen(6) == 6);    // OK
 static assert(countTen(12) == 12);  // invalid, modifies y.
 ---
     $(P The $(D __ctfe) boolean pseudo-variable, which evaluates to $(D_KEYWORD true)
-        at compile time, but $(D_KEYWORD false) at run time, can be used to provide
+        in CTFE, but $(D_KEYWORD false) otherwise, can be used to provide
         an alternative execution path to avoid operations which are forbidden
-        at compile time. Every usage of $(D __ctfe) is evaluated before
+        in CTFE. Every usage of $(D __ctfe) is evaluated before
         code generation and therefore has no run-time cost, even if no optimizer
         is used.
     )
 
-
-    $(P In order to be executed at compile time, the function
-    must appear in a context where it must be so executed, for
-    example:)
-
-    $(UL
-    $(LI initialization of a static variable or a manifest constant)
-    $(LI dimension of a static array)
-    $(LI argument for a template value parameter)
-    )
-
-$(SPEC_RUNNABLE_EXAMPLE_COMPILE
----
-template eval( A... )
-{
-    const typeof(A[0]) eval = A[0];
-}
-
-int square(int i)
-{
-    return i * i;
-}
-
-void foo()
-{
-    static j = square(3);      // compile time
-    writeln(j);
-    writeln(square(4));        // run time
-    writeln(eval!(square(5))); // compile time
-}
----
-)
-
-    $(P Executing functions at compile time can take considerably
+    $(P Executing functions via CTFE can take considerably
     longer than executing it at run time.
     If the function goes into an infinite loop, it will hang at
     compile time (rather than hanging at run time).
@@ -2321,7 +2576,7 @@ void foo()
     throw exceptions; instead, they end interpretation immediately.
     )
 
-    $(P Functions executed at compile time can give different results
+    $(P Functions executed via CTFE can give different results
     from run time in the following scenarios:
     )
 
@@ -2339,14 +2594,14 @@ void foo()
 
 $(H3 $(LNAME2 string-mixins, String Mixins and Compile Time Function Execution))
 
-        $(P Any functions that execute at compile time must also
+        $(P Any functions that execute in CTFE must also
         be executable at run time. The compile time evaluation of
         a function does the equivalent of running the function at
         run time. This means that the semantics of a function cannot
         depend on compile time values of the function. For example:)
 
 ---
-int foo(char[] s)
+int foo(string s)
 {
     return mixin(s);
 }
@@ -2354,11 +2609,13 @@ int foo(char[] s)
 const int x = foo("1");
 ---
 
-        $(P is illegal, because the runtime code for foo() cannot be
+        $(COMMENT Intentionally not a $(P ...) so that it doesn't get a
+        paragraph number, because this continues the paragraph above.)
+        is illegal, because the runtime code for `foo` cannot be
         generated. A function template would be the appropriate
-        method to implement this sort of thing.)
+        method to implement this sort of thing.
 
-$(H3 $(LNAME2 nogc-functions, No-GC Functions))
+$(H2 $(LNAME2 nogc-functions, No-GC Functions))
 
         $(P No-GC functions are functions marked with the $(D @nogc) attribute.
             Those functions do not allocate memory on the GC heap,
@@ -2373,7 +2630,6 @@ $(H3 $(LNAME2 nogc-functions, No-GC Functions))
         $(LI $(DDSUBLINK expression, IndexExpression, indexing) an associative array
             (because it may throw $(D RangeError) if the specified key is not present))
         $(LI $(DDSUBLINK expression, NewExpression, allocating an object) on the heap)
-        $(LI $(DDSUBLINK expression, DeleteExpression, deleting an object) on the heap)
         )
 
             ---
@@ -2388,7 +2644,6 @@ $(H3 $(LNAME2 nogc-functions, No-GC Functions))
                 aa["abc"];         // error, indexing may allocate and throws
 
                 auto p = new int;  // error, operator new allocates
-                delete p;          // error, operator delete deallocates
             }
             ---
 
@@ -2435,6 +2690,10 @@ $(H3 $(LNAME2 nogc-functions, No-GC Functions))
             }
             ---
 
+        $(P To ease debugging,
+            in a $(GLINK2 version, ConditionalStatement)
+            controlled by a $(GLINK2 version, DebugCondition)
+            `@nogc` functions can call functions that are not `@nogc`.)
 
 $(H2 $(LNAME2 function-safety, Function Safety))
 
@@ -2467,6 +2726,8 @@ $(H3 $(LNAME2 safe-functions, Safe Functions))
         $(LI No explicit casting of shared objects to thread local.)
         $(LI No taking the address of a local variable or function parameter.)
         $(LI Cannot access $(D __gshared) variables.)
+        $(LI Cannot use $(D void) initializers for pointers.)
+        $(LI Cannot use $(D void) initializers for class or interface references.)
         )
 
         $(P When indexing and slicing an array, an out of bounds access

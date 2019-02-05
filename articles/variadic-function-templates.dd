@@ -1,0 +1,258 @@
+Ddoc
+
+$(D_S Variadic Templates,
+
+$(HEADERNAV_TOC)
+
+        $(P The problem statement is simple: write a function that
+        takes an arbitrary number of values of arbitrary types,
+        and print those values out one per line in a manner
+        appropriate to the type. For example, the code:
+        )
+
+----
+print(7, 'a', 6.8);
+----
+
+        $(P should output:
+        )
+
+$(CONSOLE
+7
+'a'
+6.8
+)
+
+        $(P We'll explore how this can
+        be done in C++.
+        Then, we'll do it the various ways the D programming
+        language makes possible.
+        )
+
+$(H2 $(LNAME2 cpp-solutions, C++ Solutions))
+
+$(H3 The Overload Solution)
+
+        $(P The straightforward way to do this in standard C++
+        is to use a series of function templates, one for
+        each number of arguments:
+        )
+
+$(CCODE
+#include &lt;iostream&gt;
+using namespace::std;
+
+void print()
+{
+}
+
+template&lt;class T1&gt; void print(T1 a1)
+{
+    cout &lt;&lt; a1 &lt;&lt; endl;
+}
+
+template&lt;class T1, class T2&gt; void print(T1 a1, T2 a2)
+{
+    cout &lt;&lt; a1 &lt;&lt; endl;
+    cout &lt;&lt; a2 &lt;&lt; endl;
+}
+
+template&lt;class T1, class T2, class T3&gt; void print(T1 a1, T2 a2, T3 a3)
+{
+    cout &lt;&lt; a1 &lt;&lt; endl;
+    cout &lt;&lt; a2 &lt;&lt; endl;
+    cout &lt;&lt; a3 &lt;&lt; endl;
+}
+
+... etc ...
+)
+
+        $(P This poses significant problems:
+        )
+
+        $(P One, the function
+        implementor must decide in advance what the maximum number
+        of arguments the function will have. The implementor will
+        usually err on the side of excess, and ten, or even twenty
+        overloads of print() will be written. Yet inevitably, some
+        user somewhere will require just one more argument.
+        So this solution is never quite thoroughly right.
+        )
+
+        $(P Two, the logic of the function template body must be
+        cut and paste duplicated, then carefully modified,
+        for every one of those function templates. If the logic
+        needs to be adjusted, all of those function templates must
+        receive the same adjustment, which is tedious and error
+        prone.
+        )
+
+        $(P Three, as is typical for function overloads, there is no
+        obvious visual connection between them, they stand independently.
+        This makes it more difficult to understand the code,
+        especially if the implementor isn't careful to place them
+        and format them in a consistent style.
+        )
+
+        $(P Four, it leads to source code bloat which slows down
+        compilation.
+        )
+
+$(H3 C++ Variadic Templates)
+
+        $(P C++11 supports variadic templates:
+        )
+
+$(CCODE
+void print()
+{
+}
+
+template&lt;class T, class... U&gt; void print(T a1, U... an)
+{
+    cout &lt;&lt; a1 &lt;&lt; newline;
+    print(an...);
+}
+)
+
+        $(P It uses recursive function template instantiation
+        to pick off the arguments one by one.
+        A specialization with no arguments ends the recursion.
+        )
+
+$(H2 $(LNAME2 d-solutions, D Programming Language Solutions))
+
+$(H3 The D Look Ma No Templates Solution)
+
+        $(P It is not practical to solve this problem in C++ without
+        using templates. In D, one can because D supports typesafe
+        variadic function parameters.
+        )
+
+------
+import core.vararg;
+import core.stdc.stdio;
+import std.format;
+
+void print(...)
+{
+    void putc(dchar c)
+    {
+        fputc(c, stdout);
+    }
+
+    std.format.doFormat(&putc, _arguments, _argptr);
+}
+------
+
+        $(P It isn't elegant or the most efficient,
+        but it does work. However it is not the recommended way to write variadic functions.
+        (It relies on the parameters `_argptr` and `_arguments` imported from `core.vararg`
+        which give a pointer to the values and their types, respectively.)
+        )
+
+$(H3 Translating the Variadic C++ Solution into D)
+
+        $(P Variadic templates in D enable a straightforward translation
+        of the C++11 variadic solution:
+        )
+
+---
+void print()
+{
+}
+
+void print(T, A...)(T t, A a)
+{
+    import std.stdio;
+    writeln(t);
+    print(a);
+}
+---
+
+        $(P There are two overloads. The first provides the
+        degenerate case of no arguments, and a terminus for the
+        recursion of the second. The second has two arguments:
+        `t` for the first value and `a` for any remaining values.
+        `A...` says the parameter is a sequence, and
+        $(GLOSSARY2 ifti, Implicit Function Template Instantiation)
+        will fill in `A` with all the types of any
+        arguments supplied following `t`. So, `print(7, 'a', 6.8)` will
+        fill in `int` for `T`, and a type sequence `(char, double)` for `A`.
+        The parameter `a` is an lvalue sequence of any
+        arguments supplied after `t`. See
+        $(DDLINK articles/ctarguments, Compile-time Sequences, Compile-time Sequences)
+        for more information.
+        )
+
+        $(P The function works by printing the first parameter `t`,
+        and then recursively calling itself with the remaining arguments
+        `a`. The recursion terminates when there are no longer any
+        arguments by calling `print()`.
+        )
+
+$(H3 The Static If Solution)
+
+        $(P It would be nice to encapsulate all the logic into a
+        single function. One way to do that is by using
+        $D(static if)s, which provide for conditional compilation:
+        )
+
+---
+void print(A...)(A a)
+{
+    static if (a.length)
+    {
+        writeln(a[0]);
+        static if (a.length > 1)
+            print(a[1 .. $]);
+    }
+}
+---
+
+        $(P Sequences can be manipulated much like arrays.
+        So `a.length` resolves to the number of elements
+        in the sequence `a`. `a[0]` gives the first element
+        in the sequence. `a[1 .. $]` creates a new sequence
+        from any remaining elements in the original sequence.
+        )
+
+$(H3 The Foreach Solution)
+
+        $(P But since sequences can be manipulated like arrays,
+        we can use a `foreach` statement to iterate over
+        the sequence's elements:
+        )
+
+---
+void print(A...)(A a)
+{
+    foreach(t; a)
+        writeln(t);
+}
+---
+
+        $(P The end result is remarkably simple, self-contained, compact
+        and efficient.
+        )
+
+$(H3 Acknowledgments)
+
+        $(OL
+
+        $(LI Thanks to Andrei Alexandrescu for explaining to me how
+        variadic templates need to work and why they are so important.
+        )
+
+        $(LI Thanks to Douglas Gregor, Jaakko Jaervi, and Gary Powell
+        for their inspirational work
+        on C++ variadic templates.
+        )
+
+        )
+
+)
+
+Macros:
+        TITLE=Variadic Templates
+        SUBNAV=$(SUBNAV_ARTICLES)

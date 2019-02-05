@@ -101,6 +101,7 @@ var backends = {
     requestTransform: function(data) {
         var req = {
             source: data.code,
+            args: "-unittest",
             compiler: dmdCompilerBranch
         }
         // only send set attributes
@@ -117,13 +118,14 @@ var backends = {
       if (data.success === "undefined") {
         return null;
       }
-      r.cout = data.success === false ? data.output : "";
-      r.stdout = data.success === true ? data.output : "";
-      r.stderr = "";
+      var success = !(data.errors && data.errors.length > 0);
+      r.cout = !success ? data.output : "";
+      r.stdout = success ? data.output : "";
+      r.stderr = !success ? data.output : "";
       r.ctime = "";
       r.rtime = "";
-      r.cstatus = data.errors.length === 0 ? 0 : 1;
-      r.rstatus = data.success === true ? 0 : 1;
+      r.cstatus = success ? 0 : 1;
+      r.rstatus = 0; // not supported
       r.cerr = "";
       r.rerr = "";
       r.defaultOutput = data.output || opts.defaultOutput;
@@ -232,7 +234,8 @@ $(document).ready(function()
             + (args.length > 0 ? '<input type="button" class="argsButton" value="Args">' : '')
             + (stdin.length > 0 ? '<input type="button" class="inputButton" value="Input">' : '')
             + '<input type="button" class="runButton" value="Run">'
-            + '<input type="button" class="resetButton" value="Reset"></div>'
+            + '<input type="button" class="resetButton" value="Reset">'
+            + '<input type="button" class="openInEditorButton" value="Open in IDE"></div>'
         );
     });
 
@@ -280,18 +283,13 @@ function setupTextarea(el, opts)
 
     var prepareForMain = function()
     {
-        var src = $.browser.msie && $.browser.version < 9.0 ? orgSrc[0].innerText : orgSrc.text();
+        var src = orgSrc.text();
         var arr = src.split("\n");
         var str = "";
-        for ( i = 0; i < arr.length; i++)
+        for (var i = 0; i < arr.length; i++)
         {
             str += arr[i]+"\n";
         }
-        if ($.browser.msie && $.browser.version < 9.0)
-            str = str.substr(0, str.length - 1);
-        else
-            str = str.substr(0, str.length - 2);
-
         return str;
     };
 
@@ -453,7 +451,7 @@ function setupTextarea(el, opts)
     });
     openInEditorBtn.click(function(){
       var text = (editor && editor.getValue()) || prepareForMain();
-      var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&source=" + encodeURIComponent(opts.transformOutput(text));
+      var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&args=-unittest&source=" + encodeURIComponent(opts.transformOutput(text));
       window.open(url, "_blank");
     });
     return editor;

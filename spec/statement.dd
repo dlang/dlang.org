@@ -4,8 +4,11 @@ $(SPEC_S Statements,
 
 $(HEADERNAV_TOC)
 
-C and C++ programmers will find the D statements very familiar, with a few
-interesting additions.
+    $(P The order of execution within a function is controlled by $(GLINK Statement)s.
+    A function's body consists of a sequence of zero or more $(I Statement)s.
+    Execution occurs in lexical order, though certain statements may have deferred effects.
+    A $(I Statement) has no value; it is executed for its effects.
+    )
 
 $(GRAMMAR
 $(GNAME Statement):
@@ -67,7 +70,7 @@ $(GNAME NonEmptyStatementNoCaseNoDefault):
         $(P Any ambiguities in the grammar between $(I Statement)s and
         $(GLINK2 declaration, Declaration)s are
         resolved by the declarations taking precedence.
-        If a $(I Statement) is desired instead, wrapping it in parentheses will
+        Wrapping such a statement in parentheses will
         disambiguate it in favor of being a $(I Statement).
         )
 
@@ -114,11 +117,9 @@ void func1(int x)
 }
 --------------
 
-$(P
-        The idea is to avoid bugs in complex functions caused by
-        scoped declarations inadvertently hiding previous ones.
-        Local names should all be unique within a function.
-)
+    $(BEST_PRACTICE Local declarations within a function should
+    all have unique names, even if they are in non-overlapping scopes.
+    )
 
 
 $(H2 $(LEGACY_LNAME2 ScopeBlockStatement, scope-block-statement, Scope Block Statements))
@@ -140,9 +141,9 @@ $(P     Statements can be labeled. A label is an identifier that
 
 $(GRAMMAR
 $(GNAME LabeledStatement):
-    $(I Identifier) $(D :)
-    $(I Identifier) $(D :) $(PSSEMI)
-    $(I Identifier) $(D :) $(PSSEMI_PSCURLYSCOPE)
+    $(GLINK_LEX Identifier) $(D :)
+    $(GLINK_LEX Identifier) $(D :) $(PSSEMI)
+    $(GLINK_LEX Identifier) $(D :) $(PSSEMI_PSCURLYSCOPE)
 )
 
 $(P
@@ -164,6 +165,9 @@ $(P
         inside a block statement is accessible from outside that block.
 )
 
+    $(P Labels in one function cannot be referenced from another function.)
+
+
 $(H2 $(LEGACY_LNAME2 BlockStatement, block-statement, Block Statement))
 
 $(GRAMMAR
@@ -176,10 +180,13 @@ $(GNAME StatementList):
     $(PSSEMI_PSCURLYSCOPE) $(I StatementList)
 )
 
-$(P
-        A block statement is a sequence of statements enclosed
-        by { }. The statements are executed in lexical order.
-)
+    $(P A block statement is a sequence of statements enclosed by `{ }`.
+    The statements are executed in lexical order,
+    until the end of the block is reached or
+    a statement transfers control elsewhere.
+    )
+
+
 $(H2 $(LEGACY_LNAME2 ExpressionStatement, expression-statement, Expression Statement))
 
 $(GRAMMAR
@@ -190,10 +197,8 @@ $(GNAME ExpressionStatement):
         $(P The expression is evaluated.)
 
         $(P Expressions that have no effect, like $(D (x + x)),
-        are illegal
-        in expression statements.
-        If such an expression is needed, casting it to $(D_KEYWORD void) will
-        make it legal.)
+        are illegal as expression statements unless the are cast
+        to $(D_KEYWORD void).)
 
         ----
         int x;
@@ -203,9 +208,13 @@ $(GNAME ExpressionStatement):
         cast(void)(x + x); // ok
         ----
 
+
 $(H2 $(LEGACY_LNAME2 DeclarationStatement, declaration-statement, Declaration Statement))
 
-        Declaration statements declare variables and types.
+    $(P Declaration statements define variables,
+    and declare types, templates, functions, imports,
+    conditionals, static foreaches, and static asserts.
+    )
 
 $(GRAMMAR
 $(GNAME DeclarationStatement):
@@ -231,8 +240,8 @@ $(GNAME IfStatement):
 
 $(GNAME IfCondition):
     $(EXPRESSION)
-    $(D auto) $(I Identifier) $(D =) $(EXPRESSION)
-    $(GLINK2 declaration, TypeCtors) $(I Identifier) $(D =) $(EXPRESSION)
+    $(D auto) $(GLINK_LEX Identifier) $(D =) $(EXPRESSION)
+    $(GLINK2 declaration, TypeCtors) $(GLINK_LEX Identifier) $(D =) $(EXPRESSION)
     $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(D =) $(EXPRESSION)
 
 $(GNAME ThenStatement):
@@ -247,13 +256,19 @@ $(GNAME ElseStatement):
         $(I ThenStatement) is transferred to, else the $(I ElseStatement)
         is transferred to.)
 
-        $(P The 'dangling else' parsing problem is solved by associating the
-        else with the nearest if statement.)
+        $(P The $(I ElseStatement)is associated with the innermost if
+        statement which does not already have an associated $(I ElseStatement).)
 
         $(P If an $(D auto) $(I Identifier) is provided, it is declared and
         initialized
         to the value
         and type of the $(EXPRESSION). Its scope extends from when it is
+        initialized to the end of the $(I ThenStatement).)
+
+        $(P If a $(I TypeCtors) $(I Identifier) is provided, it is declared
+        to be of the type specified by $(I TypeCtors)
+        and is initialized with the value of the $(EXPRESSION).
+        Its scope extends from when it is
         initialized to the end of the $(I ThenStatement).)
 
         $(P If a $(I Declarator) is provided, it is declared and
@@ -286,7 +301,7 @@ $(GNAME WhileStatement):
     $(D while $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
 )
 
-$(P While statements implement simple loops.)
+$(P A $(I While Statement) implements a simple loop.)
 
 $(P $(EXPRESSION) is evaluated and must have a type that can be converted to a
 boolean. If it's true the $(PSSCOPE) is executed. After the $(PSSCOPE) is
@@ -298,12 +313,19 @@ int i = 0;
 while (i < 10)
 {
     foo(i);
-    i++;
+    ++i;
 }
 ---
 
-$(P A $(GLINK BreakStatement) will exit the loop. A $(GLINK ContinueStatement)
-will transfer directly to evaluating $(EXPRESSION) again.)
+    $(P A $(GLINK BreakStatement) will exit the loop.)
+
+    $(P A $(GLINK ContinueStatement) will transfer directly to evaluating $(EXPRESSION) again.)
+
+    $(P A $(I While Statement) is equivalent to:)
+
+    ---
+    for (; Expression; ) ScopeStatement
+    ---
 
 $(H2 $(LEGACY_LNAME2 DoStatement, do-statement, Do Statement))
 
@@ -400,8 +422,15 @@ for (int i = 0; i < 10; i++)
 }
 --------------
 
-$(P The $(I Initialize) may be omitted. $(I Test) may also be omitted, and if
-so, it is treated as if it evaluated to true.)
+    $(P The $(I Initialize) may be omitted (although the trailing $(D ;) is still required).
+    $(I Test) may also be omitted, and if
+    so, it is treated as if it evaluated to true.)
+
+    $(BEST_PRACTICE Consider replacing $(I ForStatements) with
+    $(DDSUBLINK spec/statement, foreach-statement, Foreach Statements) or
+    $(DDSUBLINK spec/statement, ForeachRangeStatement, Foreach Range Statements).
+    Foreach loops are easier to understand, less prone to error, and easier to refactor.
+    )
 
 $(H2 $(LEGACY_LNAME2 ForeachStatement, foreach-statement, Foreach Statement))
 
@@ -424,8 +453,8 @@ $(GNAME ForeachTypeList):
 
 $(GNAME ForeachType):
     $(GLINK ForeachTypeAttributes)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
-    $(GLINK ForeachTypeAttributes)$(OPT) $(I Identifier)
-    $(GLINK ForeachTypeAttributes)$(OPT) $(D alias) $(I Identifier)
+    $(GLINK ForeachTypeAttributes)$(OPT) $(GLINK_LEX Identifier)
+    $(GLINK ForeachTypeAttributes)$(OPT) $(D alias) $(GLINK_LEX Identifier)
 
 $(GNAME ForeachTypeAttributes)
     $(GLINK ForeachTypeAttribute)
@@ -443,7 +472,7 @@ $(GNAME ForeachAggregate):
 $(P
         $(I ForeachAggregate) is evaluated. It must evaluate to an expression
         of type static array, dynamic array, associative array,
-        struct, class, delegate, or tuple.
+        struct, class, delegate, or sequence.
         The $(PS0) is executed, once for each element of the
         aggregate.
         At the start of each iteration, the variables declared by
@@ -470,9 +499,9 @@ $(P
         If there are
         two variables declared, the first is said to be the $(I index)
         and the second is said to be the $(I value). The $(I index)
-        must be of type $(D size_t) for dynamic arrays. Static arrays may use 
+        must be of type `size_t` for dynamic arrays. Static arrays may use 
         any integral type that spans the length of the array.
-        $(I index) cannot be $(I ref).
+        $(I index) cannot be `ref`.
         It is set to be the index of the array element.
 )
 --------------
@@ -571,7 +600,7 @@ $(H3 $(LNAME2 foreach_over_associative_arrays, Foreach over Associative Arrays))
         two variables declared, the first is said to be the $(I index)
         and the second is said to be the $(I value). The $(I index)
         must be of the same type as the indexing type of the associative
-        array. It cannot be $(I ref),
+        array. It cannot be `ref`,
         and it is set to be the index of the array element.
         The order in which the elements of the array are iterated over is unspecified
         for $(D foreach). $(D foreach_reverse) for associative arrays
@@ -605,7 +634,7 @@ $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes 
 
     $(P where $(I Type) matches the $(I Type) used in the $(I ForeachType)
         declaration of $(I Identifier). Multiple $(I ForeachType)s
-        correspond with multiple $(I Type)'s in the delegate type
+        correspond with multiple $(I Type)s in the delegate type
         passed to $(D opApply) or $(D opApplyReverse).
         There can be multiple $(D opApply) and $(D opApplyReverse) functions,
         one is selected
@@ -821,51 +850,53 @@ void main()
         that is confusing to read. Therefore, using $(D foreach_reverse) with a
         delegate is now deprecated, and will be rejected in the future.)
 
-$(H3 $(LNAME2 foreach_over_tuples, Foreach over Tuples))
+$(H3 $(LNAME2 foreach_over_tuples, Foreach over Sequences))
 
 $(P
-        If the aggregate expression is a tuple, there
-        can be one or two variables declared. If one, then the variable
-        is said to be the $(I value) set to the elements of the tuple,
-        one by one. If the type of the
-        variable is given, it must match the type of the tuple contents.
-        If it is not given, the type of the variable is set to the type
-        of the tuple element, which may change from iteration to iteration.
-        If there are
-        two variables declared, the first is said to be the $(I index)
-        and the second is said to be the $(I value). The $(I index)
-        must be of $(D int) or $(D uint) type, it cannot be $(I ref),
-        and it is set to be the index of the tuple element.
-)
-
-$(P
-        If the tuple is a list of types, then the foreach statement
-        is executed once for each type, and the value is aliased to that
+        If the aggregate expression is a sequence, there
+        can be one or two iteration symbols declared. If one, then the symbol
+        is an $(I element alias) of each element in the sequence in turn.
+)$(P
+        If the sequence is a $(I TypeSeq), then the foreach statement
+        is executed once for each type, and the element alias is set to each
         type.
+)$(P
+        When the sequence is a $(I ValueSeq), the element alias is a variable
+        and is set to each value in the sequence. If the type of the
+        variable is given, it must match the type of the sequence contents.
+        If no type is given, the type of the variable is set to the type
+        of the sequence element, which may change from iteration to iteration.
+)$(P
+        If there are
+        two symbols declared, the first is the $(I index variable)
+        and the second is the $(I element alias). The index
+        must be of `int`, `uint`, `long` or `ulong` type,
+        it cannot be `ref`,
+        and it is set to the index of each sequence element.
 )
-
+        $(P Example:)
 -----
-import std.stdio;
 import std.meta : AliasSeq;
 
 void main()
 {
-    alias TL = AliasSeq!(int, long, double);
+    alias Seq = AliasSeq!(int, "literal", main);
 
-    foreach (T; TL)
+    foreach (sym; Seq)
     {
-        writeln(typeid(T));
+        pragma(msg, sym.stringof);
     }
 }
 -----
-
-        $(P Prints:)
+        $(P Output:)
 
 $(CONSOLE
 int
-long
-double
+"literal"
+main()
 )
+
+        $(P See also: $(DDSUBLINK spec/version, staticforeach, Static Foreach).)
 
 $(H3 $(LNAME2 foreach_ref_parameters, Foreach Ref Parameters))
 
@@ -1125,7 +1156,7 @@ switch (number)
         )
 
 --------------
-char[] name;
+string name;
 ...
 switch (name)
 {
@@ -1173,7 +1204,7 @@ $(H2 $(LEGACY_LNAME2 ContinueStatement, continue-statement, Continue Statement))
 
 $(GRAMMAR
 $(GNAME ContinueStatement):
-    $(D continue) $(I Identifier)$(OPT) $(D ;)
+    $(D continue) $(GLINK_LEX Identifier)$(OPT) $(D ;)
 )
 
 $(P `continue` aborts the current iteration of its enclosing loop statement, and
@@ -1207,7 +1238,7 @@ $(H2 $(LEGACY_LNAME2 BreakStatement, break-statement, Break Statement))
 
 $(GRAMMAR
 $(GNAME BreakStatement):
-    $(D break) $(I Identifier)$(OPT) $(D ;)
+    $(D break) $(GLINK_LEX Identifier)$(OPT) $(D ;)
 )
 
 $(P `break` exits the innermost enclosing while, for, foreach, do, or switch
@@ -1284,7 +1315,7 @@ $(H2 $(LEGACY_LNAME2 GotoStatement, goto-statement, Goto Statement))
 
 $(GRAMMAR
 $(GNAME GotoStatement):
-    $(D goto) $(I Identifier) $(D ;)
+    $(D goto) $(GLINK_LEX Identifier) $(D ;)
     $(D goto) $(D default) $(D ;)
     $(D goto) $(D case) $(D ;)
     $(D goto) $(D case) $(EXPRESSION) $(D ;)
@@ -1396,7 +1427,7 @@ with (Foo)
 
         $(P Use of with object symbols that shadow local symbols with
         the same identifier are not allowed.
-        This is to reduce the risk of inadvertant breakage of with
+        This is to reduce the risk of inadvertent breakage of with
         statements when new members are added to the object declaration.
         )
 ---
@@ -1548,7 +1579,7 @@ $(GNAME Catch):
     $(D catch $(LPAREN)) $(GLINK CatchParameter) $(D $(RPAREN)) $(PS0)
 
 $(GNAME CatchParameter):
-    $(GLINK2 declaration, BasicType) $(I Identifier)
+    $(GLINK2 declaration, BasicType) $(GLINK_LEX Identifier)
 
 $(GNAME FinallyStatement):
     $(D finally) $(PS0)
@@ -1843,11 +1874,13 @@ $(H2 $(LEGACY_LNAME2 MixinStatement, mixin-statement, Mixin Statement))
 
 $(GRAMMAR
 $(GNAME MixinStatement):
-    $(D mixin) $(D $(LPAREN)) $(ASSIGNEXPRESSION) $(D $(RPAREN)) $(D ;)
+    $(D mixin) $(D $(LPAREN)) $(GLINK2 expression, ArgumentList) $(D $(RPAREN)) $(D ;)
 )
 
-        $(P The $(ASSIGNEXPRESSION) must evaluate at compile time
-        to a constant string.
+    $(P Each $(GLINK2 expression, AssignExpression) in the $(I ArgumentList) is
+        evaluated at compile time, and the result must be representable
+        as a string.
+        The resulting strings are concatenated to form a string.
         The text contents of the string must be compilable as a valid
         $(GLINK StatementList), and is compiled as such.
         )
@@ -1864,16 +1897,18 @@ void main()
             writeln(x + i, ++j);
         ");    // ok
 
-    const char[] s = "int y;";
+    string s = "int y;";
     mixin(s);  // ok
     y = 4;     // ok, mixin declared y
 
-    char[] t = "y = 3;";
+    string t = "y = 3;";
     mixin(t);  // error, t is not evaluatable at compile time
 
     mixin("y =") 4; // error, string must be complete statement
 
     mixin("y =" ~ "4;");  // ok
+
+    mixin("y =", 2+2, ";");  // ok
 }
 ---
 

@@ -5,9 +5,9 @@ $(SPEC_S Interfacing to Objective-C,
 $(HEADERNAV_TOC)
 
     $(P
-        D has limited support for interfacing with Objective-C. It supports
-        external classes and calling instance methods. It is only available on
-        OS X, compiling for 64bit.
+        D has some support for interfacing with Objective-C. It supports
+        classes, subclasses, instance variables, instance and class methods.
+        It is only available on macOS, compiling for 64bit.
     )
 
     $(P
@@ -15,26 +15,115 @@ $(HEADERNAV_TOC)
         $(LINK2 #usage-example, the bottom).
     )
 
-    $(SECTION2 $(LNAME2 external-class, Declaring an External Class))
+    $(SECTION2 $(LNAME2 classes, Classes))
+
+    $(SECTION3 $(LNAME2 external-class, Declaring an External Class))
 
     ---
     extern (Objective-C)
-    interface NSString
+    class NSString
     {
         const(char)* UTF8String() @selector("UTF8String");
     }
     ---
 
     $(P
-        Currently all Objective-C classes need to be declared as interfaces in
-        D. All Objective-C classes that should be accessible from within D
-        need to be declared with the $(LINK2 #objc-linkage, Objective-C linkage).
+        All Objective-C classes that should be accessible from within D need to
+        be declared with the $(LINK2 #objc-linkage, Objective-C linkage). If all
+        methods inside an Objective-C class are without a body the class is
+        expected to be defined externally.
     )
 
     $(P
         The $(LINK2 #selector-attribute, `@selector`) attribute indicates which
-        Objective-C selector should be used when calling this method from D.
-        This attribute needs to be attached to all methods.
+        Objective-C selector should be used when calling this method.
+        This attribute needs to be attached to all methods with the
+        `Objective-C` linkage.
+    )
+
+    $(SECTION3 $(LNAME2 defining-class, Defining a Class))
+
+    ---
+    // externally defined
+    extern (Objective-C)
+    class NSObject
+    {
+        static NSObject alloc() @selector("alloc");
+        NSObject init() @selector("init");
+    }
+
+    extern (Objective-C)
+    class Foo : NSObject
+    {
+        override static Foo alloc() @selector("alloc");
+        override Foo init() @selector("init");
+
+        final int bar(int a) @selector("bar:")
+        {
+            return a;
+        }
+    }
+
+    void main()
+    {
+        assert(Foo.alloc.init.bar(3) == 3);
+    }
+    ---
+
+    $(P
+        Defining an Objective-C class is exactly the same as declaring an
+        external class but it needs to have at least one method with a body.
+    )
+
+    $(P
+        To match the Objective-C semantics, `static` and `final` methods are
+        virtual. `static` methods are overridable as well.
+    )
+
+    $(SECTION2 $(LNAME2 instance-variables, Instance Variables))
+
+    ---
+    // externally defined
+    extern (Objective-C)
+    class NSObject
+    {
+        static NSObject alloc() @selector("alloc");
+        NSObject init() @selector("init");
+    }
+
+    extern (Objective-C)
+    class Foo : NSObject
+    {
+        int bar_;
+
+        override static Foo alloc() @selector("alloc");
+        override Foo init() @selector("init");
+
+        int bar() @selector("bar")
+        {
+            return bar_;
+        }
+    }
+
+    void main()
+    {
+        auto foo = Foo.alloc.init;
+        foo.bar_ = 3;
+        assert(foo.bar == 3);
+    }
+    ---
+
+    $(P
+        Declaring an instance variable looks exactly the same as for a regular
+        D class.
+    )
+
+    $(P
+        To solve the fragile base class problem, instance variables in
+        Objective-C has a dynamic offset. That means that the base class can
+        change (add or remove instance variables) without the subclasses needing
+        to recompile or relink. Thanks to this feature it's not necessary to
+        declare instance variables when creating bindings to Objective-C classes.
     )
 
     $(SECTION2 $(LNAME2 instance-method, Calling an Instance Method))
@@ -73,7 +162,7 @@ $(HEADERNAV_TOC)
 
     ---
     extern (Objective-C)
-    interface NSString
+    class NSString
     {
         NSString initWith(in char*) @selector("initWithUTF8String:");
         NSString initWith(NSString) @selector("initWithString:");
@@ -89,8 +178,8 @@ $(HEADERNAV_TOC)
 
     $(P
         The attribute is defined in druntime in
-        $(LINK2 ../phobos/core_attribute.html, `core.attribute`) and aliased in
-        $(LINK2 ../phobos/object.html, `object`), meaning it will be implicitly
+        $(DPLLINK phobos/core_attribute.html, `core.attribute`) and aliased in
+        $(DPLLINK phobos/object.html, `object`), meaning it will be implicitly
         imported. The attribute is only defined when the version identifier
         $(LINK2 #objc-version-identifier, `D_ObjectiveC`) is enabled.
     )
@@ -133,19 +222,19 @@ $(HEADERNAV_TOC)
 
     $(P
         Objective-C linkage is achieved by attaching the `extern (Objective-C)`
-        attribute to an interface. Example:
+        attribute to a class. Example:
     )
 
     ---
     extern (Objective-C)
-    interface NSObject
+    class NSObject
     {
         NSObject init() @selector("init");
     }
     ---
 
     $(P
-        All methods inside an interface declared as `extern (Objective-C)` will
+        All methods inside a class declared as `extern (Objective-C)` will
         get implicit Objective-C linkage.
     )
 
@@ -191,7 +280,7 @@ $(HEADERNAV_TOC)
         where `<Framework>` is the name of the framework to link with, without
         the `.framework` extension. The two `-L` flags are required because the
         linker expects a space between the `-framework` flag and the name of
-        the framework. DMD cannot handle this and will instead interpet the
+        the framework. DMD cannot handle this and will instead interpret the
         name of the framework as a separate flag.
 
     $(SECTION3 $(LNAME2 framework-paths, Framework Paths))
@@ -223,58 +312,29 @@ $(HEADERNAV_TOC)
     $(SECTION2 $(LNAME2 usage-example, Full Usage Example))
 
     $(P
-        Since the only parts of Objective-C that is currently supported is
-        calling instance methods, this example demonstrates how the Objective-C
-        runtime can be used to achieve a running example.
-    )
-
-    $(P
         This example will create an Objective-C string, `NSString`, and log the
         message using `NSLog` to stderr.
     )
 
     ---
     extern (Objective-C)
-    interface Class
+    class NSString
     {
-        NSString alloc() @selector("alloc");
-    }
-    ---
-
-    $(P
-        This interface is used to emulate the $(LINK2 https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ObjCRuntimeRef/#//apple_ref/c/tdef/Class, `Class`)
-        type available in the Objective-C runtime. The instance method `alloc`
-        will be used to emulate a class method in `NSObject`,
-        $(LINK2 https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Classes/NSObject_Class/#//apple_ref/occ/clm/NSObject/alloc, alloc).
-    )
-
-    ---
-    extern (Objective-C)
-    interface NSString
-    {
+        static NSString alloc() @selector("alloc");
         NSString initWithUTF8String(in char* str) @selector("initWithUTF8String:");
         void release() @selector("release");
     }
     ---
 
     $(P
-        This is a simplified declaration of the $(LINK2 https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Classes/NSString_Class/, `NSString`)
-        class. The $(LINK2 https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Classes/NSString_Class/#//apple_ref/occ/instm/NSString/initWithUTF8String:, `initWithUTF8String:`)
+        This is a simplified declaration of the $(LINK2 https://developer.apple.com/documentation/foundation/nsstring?language=objc, `NSString`)
+        class. The $(LINK2 https://developer.apple.com/documentation/objectivec/nsobject/1571958-alloc?language=objc, `alloc`)
+        method allocates an instance of the class. The $(LINK2 https://developer.apple.com/documentation/foundation/nsstring/1412128-initwithutf8string?language=objc, `initWithUTF8String:`)
         method will be used to convert a C string in UTF-8 to an Objective-C
-        string, `NSString`. The $(LINK2 https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Protocols/NSObject_Protocol/index.html#//apple_ref/occ/intfm/NSObject/release, `release`)
+        string, `NSString`. The $(LINK2 https://developer.apple.com/documentation/objectivec/1418956-nsobject/1571957-release?language=objc, `release`)
         method is used to release an deallocate the string. Since D doesn't
         support $(LINK2 https://developer.apple.com/library/mac/releasenotes/ObjectiveC/RN-TransitioningToARC/Introduction/Introduction.html, ARC)
         it's needed to manually release Objective-C instances.
-    )
-
-    ---
-    extern (C) Class objc_lookUpClass(in char* name)
-    ---
-
-    $(P
-        The $(LINK2 https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ObjCRuntimeRef/#//apple_ref/c/func/objc_lookUpClass, `objc_lookUpClass`)
-        function is used to get the class definition of the class with the
-        given name.
     )
 
     ---
@@ -288,13 +348,7 @@ $(HEADERNAV_TOC)
     )
 
     ---
-    auto cls = objc_lookUpClass("NSString");
-    ---
-
-    $(P Get the class definition of `NSString`.)
-
-    ---
-    auto str = cls.alloc();
+    auto str = NSString.alloc();
     ---
 
     $(P Allocate an instance of the class, `NSString`.)
@@ -330,25 +384,18 @@ $(HEADERNAV_TOC)
     module main;
 
     extern (Objective-C)
-    interface Class
+    class NSString
     {
-        NSString alloc() @selector("alloc");
-    }
-
-    extern (Objective-C)
-    interface NSString
-    {
+        static NSString alloc() @selector("alloc");
         NSString initWithUTF8String(in char* str) @selector("initWithUTF8String:");
         void release() @selector("release");
     }
 
     extern (C) void NSLog(NSString, ...);
-    extern (C) Class objc_lookUpClass(in char* name);
 
     void main()
     {
-        auto cls = objc_lookUpClass("NSString");
-        auto str = cls.alloc().initWithUTF8String("Hello World!");
+        auto str = NSString.alloc().initWithUTF8String("Hello World!");
         NSLog(str);
         str.release();
     }

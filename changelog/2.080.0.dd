@@ -1,0 +1,839 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION May 01, 2018, =================================================,
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 deprecate_class_allocators,Class allocators and deallocators have been deprecated))
+$(LI $(RELATIVE_LINK2 deprecate_double_initialization,Deprecate double initialization of immutable fields inside constructor))
+$(LI $(RELATIVE_LINK2 fix18736,Issue 18736 - constructor calls allowed after case labels))
+$(LI $(RELATIVE_LINK2 fix5227,fix Issue 5227 - X ^^ FP at compile-time))
+$(LI $(RELATIVE_LINK2 isReturnOnStack,add __traits(isReturnOnStack, func)))
+$(LI $(RELATIVE_LINK2 objc_class_methods,Support for calling Objective-C class (static) methods has been added.))
+$(LI $(RELATIVE_LINK2 postblitQualifiers,Deprecate the use of a `const`/`immutable`/`shared` postblit))
+$(LI $(RELATIVE_LINK2 rwm-shared-error,The deprecation for read-modify-write operations on `shared` variables has ended))
+$(LI $(RELATIVE_LINK2 switch-skip-declaration,The deprecation for `switch` cases which skip the declaration of a variable has ended))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 bitflags-property-opdispatch,`std.typecons.BitFlags` now supports opDispatch-based property access))
+$(LI $(RELATIVE_LINK2 rndtonl-deprecated,std.math.rndtonl has been deprecated))
+$(LI $(RELATIVE_LINK2 shared-bitmapped-block,Added the SharedBitmappedBlock, as the thread-safe version of the regular BitmappedBlock.))
+$(LI $(RELATIVE_LINK2 std-aligned-block-list,Implemented a new allocator, `AlignedBlockList` and its thread-safe version `SharedAlignedBlockList`))
+$(LI $(RELATIVE_LINK2 std-exception-enforceEx,`std.exception.enforceEx` was deprecated in favor of `std.exception.enforce`))
+$(LI $(RELATIVE_LINK2 std-format-fixDigitGrouping,Fixed digits grouping for floating point number without decimal part))
+$(LI $(RELATIVE_LINK2 std-functional-binaryReverseArgs,`std.functional.binaryReverseArgs` was deprecated in favor of `std.functional.reverseArgs`))
+$(LI $(RELATIVE_LINK2 std-typecons-nullable-apply,`apply` was added to `std.typecons`.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Tools changes,
+
+$(LI $(RELATIVE_LINK2 rdmdMakefiles,rdmd can now be used as a shell in makefiles))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 deprecate_class_allocators,Class allocators and deallocators have been deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecate_class_allocators.dd)
+$(P
+Class allocators and deallocators have been planned for deprecation for years.  Starting with this release the following code will emit deprecation messages.
+)
+
+---
+class C
+{
+    new(size_t size)         // deprecation message
+    {
+        return malloc(size);
+    }
+
+    delete(void* obj)        // deprecation message
+    {
+        free(obj);
+    }
+}
+---
+
+$(P
+See the $(LINK2 $(ROOT_DIR)deprecate.html#Class%20allocators%20and%20deallocators, Deprecated Features) for more information.
+)
+
+$(P
+Many alternatives for class allocators/deallcators exist. Among them is the generic $(REF make, std,experimental,allocator) and $(REF dispose, std,experimental,allocator) from the allocator package. For other alternatives, see $(LINK2 https://dlang.org/blog/the-gc-series, the recent article about memory allocation on the DBlog) and $(LINK2 https://wiki.dlang.org/Memory_Management, the D Wiki memory management article).
+)
+
+$(P
+Users have leveraged allocators in order to disable GC allocation, as illustrated in the following example:
+)
+
+---
+class C
+{
+    @disable new(size_t size);
+}
+
+void main()
+{
+    auto c = new C();  // Error: allocator `new` is not callable because it is annotated with `@disable`
+}
+---
+
+$(P
+That idiom will remain, but has been enhanced with this release to no longer require the `size_t` argument.  That is, starting with this release, the following syntax is also permitted:
+)
+
+---
+class C
+{
+    @disable new();
+}
+
+void main()
+{
+    auto c = new C();  // Error: allocator `new` is not callable because it is annotated with `@disable`
+}
+---
+)
+
+$(LI $(LNAME2 deprecate_double_initialization,Deprecate double initialization of immutable fields inside constructor)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecate_double_initialization.dd)
+$(P
+Inside a constructor scope, assigning to aggregate declaration (class/struct)
+members is done by considering the first assignment as initialization and
+subsequent assignments as modifications of the initially constructed object.
+For `const`/`immutable` fields the initialization is accepted in the constructor,
+but subsequent modifications are not. Example:
+)
+
+---
+struct A
+{
+    int a;
+    immutable int b;
+    this(int a, int b)
+    {
+        this.a = a;
+        this.b = b;
+
+        this.a = 7; // OK, a is mutable
+        this.b = 9; // Error: immutable field b initialized multiple times
+    }
+}
+---
+
+$(P
+However, $(BUGZILLA 18719) shows that this rule does not apply when inside
+a constructor scope there is a call to a different constructor:
+)
+
+---
+struct A
+{
+    immmutable int a;
+    this()
+    {
+        this(42);
+        this.a = 5;  // second initialization of immutable field
+    }
+
+    this(int a)
+    {
+        this.a = a;
+    }
+}
+---
+
+$(P
+The above code wrongfully compiled succesfully before this patch, accepting the double
+initialization of the `immutable` field `a`. After this patch, `this.a = 5` will issue
+a deprecation warning stating that `a` is initialized multiple times.
+)
+)
+
+$(LI $(LNAME2 fix18736,Issue 18736 - constructor calls allowed after case labels)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/fix18736.dd)
+$(P
+Delegating constructor calls are not allowed after labels,
+but case labels and default labels should also count as labels.
+)
+
+---
+class A
+{
+    this(char c) { }
+
+    this(int i)
+    {
+        switch (i)
+        {
+            case 1:  break;
+            default: break;
+        }
+        this('c'); // now gives an error
+    }
+}
+---
+
+$(P
+This is necessary so the compiler can guarantee that each
+field is initialized exactly once. To get code like the above
+to pass the compiler, replace it with an if-then sequence.
+)
+)
+
+$(LI $(LNAME2 fix5227,fix Issue 5227 - X ^^ FP at compile-time)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/fix5227.dd)
+$(P
+The pow operator `^^` can now be used by CTFE.
+)
+
+$(P
+Adds these std.math functions to those that can be used by CTFE:
+)
+
+$(P
+round
+floor
+ceil
+trunc
+log
+log2
+log10
+pow
+expm1
+exp2
+fmin
+fmax
+copysign
+fma
+)
+)
+
+$(LI $(LNAME2 isReturnOnStack,add __traits(isReturnOnStack, func))
+$(CHANGELOG_SOURCE_FILE dmd, changelog/isReturnOnStack.dd)
+$(P
+Determines if a function's return value is placed on the stack,
+or is returned via registers.
+For more details, see $(LINK2 $(ROOT_DIR)spec/traits.html#isReturnOnStack, isReturnOnStack).
+)
+)
+
+$(LI $(LNAME2 objc_class_methods,Support for calling Objective-C class (static) methods has been added.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/objc_class_methods.dd)
+$(P
+Previously to call an Objective-C class method it was necessary to make explicit
+calls to the Objective-C runtime. The following code is an example of the old
+way to call a class method:
+)
+
+---
+extern (C) Class objc_lookUpClass(in char* name);
+
+extern (Objective-C)
+interface Class
+{
+    NSObject alloc() @selector("alloc");
+}
+
+extern (Objective-C)
+interface NSObject
+{
+    NSObject init() @selector("init");
+}
+
+void main()
+{
+    auto cls = objc_lookUpClass("NSObject");
+    auto o = cls.alloc().init();
+}
+---
+
+$(P
+The above code can now be replaced with the following:
+)
+
+---
+extern (Objective-C)
+interface NSObject
+{
+    static NSObject alloc() @selector("alloc");
+    NSObject init() @selector("init");
+}
+
+void main()
+{
+    auto o = NSObject.alloc().init();
+}
+---
+
+$(P
+Note the use of the `static` attribute in the method declaration.
+)
+)
+
+$(LI $(LNAME2 postblitQualifiers,Deprecate the use of a `const`/`immutable`/`shared` postblit)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/postblitQualifiers.dd)
+$(P
+Before this patch, if a postblit was declared `const`/`immutable`/`shared`
+the compiler would have accepted the declaration but there would have
+been no way of calling the postblit succesfully, except for const due
+to the implicit conversion mutable -> const. Even though calling a
+const posblit is possible, there is no way to modify the fields of the
+newly copied struct:
+)
+
+---
+struct S
+{
+    int n
+    this(this) const
+    {
+        ++n;   // Error: cannot modify this.n in const method
+    }
+}
+
+void main()
+{
+    S a;
+    auto a2 = a;
+}
+---
+
+$(P
+With this release, if a postblit contains `const`/`immutable`/`shared` in
+its signature, a deprecation message will be emitted.
+)
+)
+
+$(LI $(LNAME2 rwm-shared-error,The deprecation for read-modify-write operations on `shared` variables has ended)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/rwm-shared-error.dd)
+$(P
+Read-modify-write operations are not allowed for `shared` variables:
+)
+
+---
+shared int i;
+i++; // Error: read-modify-write operations are not allowed for shared variables
+---
+
+$(P
+Use $(REF atomicOp, core, atomic) instead:
+)
+
+---
+import core.atomic : atomicOp;
+shared int i;
+atomicOp!"+="(i, 1);
+---
+)
+
+$(LI $(LNAME2 switch-skip-declaration,The deprecation for `switch` cases which skip the declaration of a variable has ended)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/switch-skip-declaration.dd)
+$(P
+Usage of a variable which is declared in another `switch` case now results in an error.
+)
+
+---
+int i = 2;
+switch (i)
+{
+    case 1:
+    {
+        int j;
+    case 2:
+        j++;
+        j.writeln; // BUG: j is not initialized and e.g. prints -321532879
+        break;
+    }
+    default:
+        break;
+}
+---
+
+$(P
+If this behavior is wanted, it can explicitly requested by using `void` initialization:
+)
+
+---
+int i = 2;
+switch (i)
+{
+    case 1:
+    {
+        int j = void;
+    case 2:
+        j = 2;
+        j.writeln;
+        break;
+    }
+    default:
+        break;
+}
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 bitflags-property-opdispatch,`std.typecons.BitFlags` now supports opDispatch-based property access)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/bitflags-property-opdispatch.dd)
+$(P
+$(REF BitFlags, std, typecons) was extended so that enum members can be set and tested directly on the
+`BitFlags` instead of having to `&` with the underlying enum.
+)
+
+-------
+enum Features
+{
+    fast = 1 << 0,
+    size = 1 << 1,
+}
+
+void run(BitFlags!Features features)
+{
+    // get
+    if (features.fast && !features.size) {} // new new new
+    if ((features & Features.fast) && !(features & Features.size)) {} // old old old
+    // set
+    features.fast = true; // new new new
+    features.fast = false; // new new new
+    features.fast |= Features.fast; // old old old
+    features.fast &= ~Features.fast; // old old old
+}
+-------
+
+$(P
+This also works for unsafe `BitFlags` where the property get access tests for an exact
+match of all bits of the unsafe `BitFlags` combination.
+Analogously, the property set access clears or sets all bits of the unsafe `BitFlags` combination.
+)
+
+-------
+enum Features
+{
+    fast = 1 << 0,
+    size = 1 << 1,
+    combined = fast | size,
+}
+
+void run(BitFlags!(Features, Yes.unsafe) features)
+{
+    // get
+    if (features.combined) {} // new new new
+    if ((features & Features.combined) == BitFlags!(Features, Yes.unsafe)(Features.combined)) {} // old old old
+    // set
+    features.combined = true; // new new new
+    features.combined = false; // new new new
+    features.combined |= Features.combined; // old old old
+    features.combined &= ~Features.combined; // old old old
+}
+-------
+)
+
+$(LI $(LNAME2 rndtonl-deprecated,std.math.rndtonl has been deprecated)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/rndtonl-deprecated.dd)
+$(P
+$(REF rndtonl, std, math) is a rounding function only available when using the
+Digital Mars C Runtime on Windows. As this function is not cross-platform, it
+has been deprecated, and will be removed on version 2.089. Please use
+$(REF round, std, math) instead.
+)
+)
+
+$(LI $(LNAME2 shared-bitmapped-block,Added the SharedBitmappedBlock, as the thread-safe version of the regular BitmappedBlock.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/shared-bitmapped-block.dd)
+$(P
+The new $(REF SharedBitmappedBlock, std,experimental,allocator,building_blocks,bitmapped_block) and its single-threaded version can now be instantiated with `Yes.multiblock` or `No.multiblock`.
+If instantiated with `Yes.multiblock` (the default behavior), each allocation can return an arbitrary number of blocks.
+With `No.multiblock` however, any allocation request can't exceed the block size. This allows for greater performance on both single and multithreaded environments.
+)
+
+---
+// The 'BitmappedBlock' is implicitly instantiated with Yes.multiblock
+auto a = BitmappedBlock!(blockSize, 8, Mallocator, Yes.multiblock)(numBlocks * blockSize);
+
+// Instantiated with Yes.multiblock, can allocate more than one block at a time
+void[] buf = a.allocate(2 * blockSize);
+assert(buf.length == 2 * blockSize);
+assert(a.deallocate(buf));
+---
+
+---
+// Instantate the 'BitmappedBlock' with No.multiblock
+auto a = BitmappedBlock!(blockSize, 8, Mallocator, No.multiblock)(1024 * blockSize);
+
+// Since instantiated with No.multiblock, can only allocate at most the block size
+void[] buf = a.allocate(blockSize + 1);
+assert(buf is null);
+---
+
+$(P
+For shared the same rules apply, we only need to replace `BitmappedBlock` with `SharedBitmappedBlock`.
+)
+)
+
+$(LI $(LNAME2 std-aligned-block-list,Implemented a new allocator, `AlignedBlockList` and its thread-safe version `SharedAlignedBlockList`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-aligned-block-list.dd)
+$(P
+$(REF AlignedBlockList, std,experimental,allocator,building_blocks, aligned_block_list) represents
+a list of allocators which allows for deallocations in constant time.
+Although allocations are in theory served in linear searching time, `deallocate` calls take
+$(BIGOH 1) time, by using aligned allocations. The `ParentAllocator` must implement `alignedAllocate`.
+)
+
+$(P
+$(REF SharedAlignedBlockList, std,experimental,allocator,building_blocks, aligned_block_list) has the
+same semantics as its single threaded version, however the internal allocators must be in addition marked
+as shared.
+)
+)
+
+$(LI $(LNAME2 std-exception-enforceEx,`std.exception.enforceEx` was deprecated in favor of `std.exception.enforce`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-exception-enforceEx.dd)
+$(P
+With 2.079 $(REF enforce, std,exception) became a complete super set of
+$(REF enforceEx, std,exception)
+)
+
+$(P
+$(H3 Corrective action)
+)
+
+$(P
+Replace:
+)
+
+---
+import std.exception;
+alias enf = enforceEx!Exception;
+assertNotThrown(enf(true));
+assertThrown(enf(false, "blah"));
+---
+
+$(P
+with:
+)
+
+---
+import std.exception;
+alias enf = enforce!Exception;
+assertNotThrown(enf(true));
+assertThrown(enf(false, "blah"));
+---
+)
+
+$(LI $(LNAME2 std-format-fixDigitGrouping,Fixed digits grouping for floating point number without decimal part)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-format-fixDigitGrouping.dd)
+$(P
+$(REF formatValue, std, format) now correctly groups digits in the output string
+by inserting a group separator character (,) every n characters specified
+by the $(LINK2 https://dlang.org/library/std/format/formatted_write.html#format-string, Separator)
+grammar rule in cases with zero decimal precision specified in the format string
+for floating point numbers.
+)
+
+$(P
+No group separators at all are inserted for floating point numbers when formatted
+with zero precision (i.e. no decimal digits) in Phobos before this fix,
+regardless of the respective decimal part of the formatted number.
+)
+
+-------
+import std.format;
+
+assert(format("%,3.2f", 1172.009) == "1,172.01");
+assert(format("%,3.0f", 1172.009) == "1,172");
+assert(format("%#,3.4f", 1303.2508) == "1,303.250,8");
+assert(format("%#,3.0f", 1303.2508) == "1,303.");
+
+// original (buggy) behaviour before this fix
+//assert(format("%,3.0f", 1303.2508) == "1303");
+//assert(format("%,3.0f", 1303.) == "1303");
+
+// original (correct) behaviour before this fix
+//assert(format("%,3.1f", 1303.2508) == "1,303.3");
+//assert(format("%,3.2f", 1303.) == "1,303.00");
+//assert(format("%,3f", 1303.) == "1,303.000,000");
+-------
+)
+
+$(LI $(LNAME2 std-functional-binaryReverseArgs,`std.functional.binaryReverseArgs` was deprecated in favor of `std.functional.reverseArgs`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-functional-binaryReverseArgs.dd)
+$(P
+$(REF reverseArgs, std,functional) is a full super set of $(REF binaryReverseArgs, std,functional).
+)
+
+$(P
+Correct action: replace `binaryReverseArgs` with `reverseArgs`.
+)
+)
+
+$(LI $(LNAME2 std-typecons-nullable-apply,`apply` was added to `std.typecons`.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-typecons-nullable-apply.dd)
+$(P
+`apply` is an operation for $(REF Nullable, std, typecons) values that "unpacks" the `Nullable`, performs some
+operation (that is passed as a template parameter), then packs the result into another `Nullable` if necessary.
+When the initial `Nullable` is `null`, the resulting `Nullable` is also `null` and the function is not
+called.
+)
+
+-----
+Nullable!int n;
+alias square = i => i * i;
+n = n.apply!square; // does nothing if isNull
+assert(n.isNull);
+n = 2;
+assert(n.apply!square.get == 4);
+-----
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Tools changes,
+
+$(LI $(LNAME2 rdmdMakefiles,rdmd can now be used as a shell in makefiles)
+$(CHANGELOG_SOURCE_FILE tools, ../tools/changelog/rdmdMakefiles.dd)
+$(P
+With gnu make(3.82 or higher), rdmd can now be used in makefiles.
+This is accomplished by setting the SHELL and .SHELLFLAGS to /usr/bin/rdmd and --eval respectively.
+)
+---
+.ONESHELL:
+SHELL = /usr/bin/rdmd
+.SHELLFLAGS = --eval
+hello.txt:
+$(TAB)import std.file;
+$(TAB)write("$@","hello world\n");
+---
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 16243): wrong C++ argument passing with empty struct when interfacing with Clang)
+$(LI $(BUGZILLA 18197): [REG2.073] Internal error: backend\cgcod.c 1659)
+$(LI $(BUGZILLA 18489): [REG 2.073]Internal error: dmd/backend/cgcod.c 1688)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 5212): no escape analysis for typesafe variadic function arguments)
+$(LI $(BUGZILLA 5227): X ^^ FP at compile-time)
+$(LI $(BUGZILLA 9433): Deprecate delete)
+$(LI $(BUGZILLA 12486): Function returning struct isn't called if `enum` of its result is accessed)
+$(LI $(BUGZILLA 14997): __ctor present in error message)
+$(LI $(BUGZILLA 15653): IFTI fails for immutable parameter)
+$(LI $(BUGZILLA 15660): break immutable with pure function and mutable reference params)
+$(LI $(BUGZILLA 16107): [ICE] - Internal error: backend/cgcod.c 2297)
+$(LI $(BUGZILLA 16189): Optimizer bug, with simple test case)
+$(LI $(BUGZILLA 16555): Stack corruption when calling multi-parameter outer function from nested function)
+$(LI $(BUGZILLA 16578): bogus deprecation - switch skips declaration of variable)
+$(LI $(BUGZILLA 17284): Template function attribute inference wrongly infers @safe for accessing overlapping pointer fields in unions)
+$(LI $(BUGZILLA 17423): pointer assignment to `this` in member function is not accounted for)
+$(LI $(BUGZILLA 17874): Segmentation fault when constructing a struct with a static array of structs containing floats)
+$(LI $(BUGZILLA 17892): Scope analysis with -dip1000 fails for templated structs)
+$(LI $(BUGZILLA 17918): [Reg 2.072] ICE with unknown symbol in base class)
+$(LI $(BUGZILLA 17959): [DIP1000] Can store scope delegate in non-scope member)
+$(LI $(BUGZILLA 17991): ICE with imports without module)
+$(LI $(BUGZILLA 18000): [scope] auto-generated opAssign not scope aware)
+$(LI $(BUGZILLA 18034): SIMD optimization issues)
+$(LI $(BUGZILLA 18130): ICE on zero-length `out` array parameter)
+$(LI $(BUGZILLA 18199): Error with lambda in struct initializer)
+$(LI $(BUGZILLA 18242): DMD Segmentation fault.)
+$(LI $(BUGZILLA 18282): [Scope][DIP1000]Assignment of local variable to `scope` variable not recognized by compiler)
+$(LI $(BUGZILLA 18459): The static array ABI doesn't match the struct ABI)
+$(LI $(BUGZILLA 18461): codegen bug - OPbt expressions and assignments to ambiguous symbols)
+$(LI $(BUGZILLA 18474): Postblit not working in shared structs)
+$(LI $(BUGZILLA 18484): [dip1000] Subtype allows reference to escape with implicit casting)
+$(LI $(BUGZILLA 18504): Assert in synchronized crashes with SIGILL on exit)
+$(LI $(BUGZILLA 18505): delete deprecation message is misleading)
+$(LI $(BUGZILLA 18534): Wrong code for ?: operator when compiling with -O)
+$(LI $(BUGZILLA 18553): Inline assembler: CR2, CR3 control registers not available in 64-bit code)
+$(LI $(BUGZILLA 18554): `tupleof` ignoring `private` shouldn't be accepted in @safe code)
+$(LI $(BUGZILLA 18568): partially overlapping assignments have undefined behavior but are accepted in @safe code)
+$(LI $(BUGZILLA 18575): making delegate from member function can lead to unsafe code)
+$(LI $(BUGZILLA 18576): Compiler not doing RVO with auto returns)
+$(LI $(BUGZILLA 18597): more unsafe unaligned pointer errors)
+$(LI $(BUGZILLA 18607): using labelled continue in tuple foreach can break pure and @safe)
+$(LI $(BUGZILLA 18644): [dip1000] escape of outer local not detected)
+$(LI $(BUGZILLA 18661): auto ref and return attribute inference)
+$(LI $(BUGZILLA 18708): Flow analysis in constructors not done correctly for if, ||, &&)
+$(LI $(BUGZILLA 18719): Doubly-called constructor against member when using forwarding constructors)
+$(LI $(BUGZILLA 18736): constructor calls allowed after case labels)
+$(LI $(BUGZILLA 18737): An assert$(LPAREN)0$(RPAREN) should be a leaf in constructor flow analysis)
+$(LI $(BUGZILLA 18753): chunkBy compile error causes ICE)
+$(LI $(BUGZILLA 18762): DMD should use a unique path/filename for __stdin.o)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 15624): opApply with @safe and @system variants can't be used with foreach syntax)
+$(LI $(BUGZILLA 16037): assigning delegate to a scope variable shouldn't allocate closure)
+$(LI $(BUGZILLA 17784): [scope][DIP1000] Confusing error message for escaping local via new-expression)
+$(LI $(BUGZILLA 18417): Make const and immutable postblit constructors illegal)
+$(LI $(BUGZILLA 18460): Improve error message for missing 'new' for class instantiation)
+$(LI $(BUGZILLA 18503): Confusing error message for erroneous postblit)
+$(LI $(BUGZILLA 18551): Improve hint for "does not override any function)
+$(LI $(BUGZILLA 18574): Unclear error message when trying to inherit from multiple classes)
+$(LI $(BUGZILLA 18578): First enum value assigned 0 instead of EnumBaseType.init)
+$(LI $(BUGZILLA 18591): DMD should allow access to mixin template declarations)
+$(LI $(BUGZILLA 18694): pure functions using static/global structs with no fields should pass compilation)
+$(LI $(BUGZILLA 18767): __xtoHash memberwise hashing shouldn't just sum the member hashes)
+)
+$(BUGSTITLE_BUGZILLA Phobos regressions,
+
+$(LI $(BUGZILLA 17961): std.uni does not compile with -unittest -dip1000)
+$(LI $(BUGZILLA 18800): [REG2.080.0-beta.1] Array.length setter segfaults for payloads with indirections)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 7879): format of class with not const toString$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 13642): std.container.Array: change of length reallocates without notifying GC)
+$(LI $(BUGZILLA 15768): std.stdio.File does not support __gshared semantics of stdout/err/in)
+$(LI $(BUGZILLA 17862): std.random.XorshiftEngine.min is wrong when bits == 32)
+$(LI $(BUGZILLA 17982): Support for const$(LPAREN)Class$(RPAREN) in algorithm.searching.extremum)
+$(LI $(BUGZILLA 18133): BitArray constructors are poorly documented.)
+$(LI $(BUGZILLA 18134): BitArray >>= broken when length % $(LPAREN)8 * size_t.sizeof$(RPAREN) == 0)
+$(LI $(BUGZILLA 18452): std.zip has size limit of 2 GB)
+$(LI $(BUGZILLA 18524): std.range.Zip.moveBack instead performs moveFront)
+$(LI $(BUGZILLA 18579): No group separators for floating point number formatted with zero decimal digits)
+$(LI $(BUGZILLA 18615): Rebindable!A doesn't use class A's opEquals $(LPAREN)returns a is b instead$(RPAREN))
+$(LI $(BUGZILLA 18634): std.container.rbtree does not work with delegate comparators)
+$(LI $(BUGZILLA 18663): std.random.isSeedable has false positives)
+$(LI $(BUGZILLA 18669): isNestedFunction does not check if parameter is a function)
+$(LI $(BUGZILLA 18689): std.format should always throw FormatException on bad specs/arguments)
+$(LI $(BUGZILLA 18704): std/datetime/stopwatch.d$(LPAREN)452$(RPAREN) assertion failure on auto-tester)
+$(LI $(BUGZILLA 18714): Phobos calls localtime, which is not threadsafe)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 4591): Concat of std.typecons.Tuples)
+$(LI $(BUGZILLA 8341): topN$(LPAREN)zip$(LPAREN)$(RPAREN)$(RPAREN) too?)
+$(LI $(BUGZILLA 10828): datetime toString functions should accept sink)
+$(LI $(BUGZILLA 13880): nothrow @nogc std.algorithm.reduce on fixed-size arrays)
+$(LI $(BUGZILLA 14637): Array operations should work on tuples)
+$(LI $(BUGZILLA 18158): std.file.getcwd should be usable in @safe)
+$(LI $(BUGZILLA 18166): std.array.replace should be usable in @safe for dstrings)
+$(LI $(BUGZILLA 18168): std.base64.encode for output ranges should be usable in @safe)
+$(LI $(BUGZILLA 18174): std.math.equalsDigit should be usable in @safe)
+$(LI $(BUGZILLA 18182): std.uri should be usable in @safe)
+$(LI $(BUGZILLA 18223): std.experimental.allocator uninitializedFillDefault could use memset)
+$(LI $(BUGZILLA 18438): hasStaticMember fails with a T* while hasMember passes)
+$(LI $(BUGZILLA 18501): randomShuffle and partialShuffle should return their input argument)
+$(LI $(BUGZILLA 18596): std.random.unpredictableSeed could use something better than MinstdRand0)
+$(LI $(BUGZILLA 18600): Regex performance enhancement for repeated matchFirst calls)
+$(LI $(BUGZILLA 18638): The main override of std.range.zip could infer @nogc and nothrow)
+)
+$(BUGSTITLE_BUGZILLA Druntime regressions,
+
+$(LI $(BUGZILLA 18652): hashOf example doesn't compile)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 18482): wincrypt functions should be `@nogc` `nothrow`)
+$(LI $(BUGZILLA 18536): Bad stack traces when building with -m32mscoff)
+$(LI $(BUGZILLA 18537): Cannot pass absolute path to coverage options)
+$(LI $(BUGZILLA 18547): Win32: throwing exception in fiber crashes application)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bugs,
+
+$(LI $(BUGZILLA 18602): [Better C] docs)
+$(LI $(BUGZILLA 18603): Illegal instruction: 4 on Mac OS 10.7.5 Leopard)
+$(LI $(BUGZILLA 18702): FAQ item "What does D have that C++ doesn't?" comparison link $(LPAREN)https://dlang.org/articles/comparison.html$(RPAREN) returns 404)
+$(LI $(BUGZILLA 18709): DDOC_AUTO_PSYMBOL and friends are wrong)
+$(LI $(BUGZILLA 18747): [Structs, Unions])
+)
+$(BUGSTITLE_BUGZILLA Installer bugs,
+
+$(LI $(BUGZILLA 18649): curl on Ubuntu 18.04 depends on libcurl4, .deb installer depends on libcurl3)
+)
+)
+$(D_CONTRIBUTORS_HEADER 65)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Alexandru Caciulescu)
+    $(D_CONTRIBUTOR Alexandru Jercaianu)
+    $(D_CONTRIBUTOR Ali Akhtarzada)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Andrei-Cristian VASILE (87585))
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Brad Roberts)
+    $(D_CONTRIBUTOR byebye)
+    $(D_CONTRIBUTOR carblue)
+    $(D_CONTRIBUTOR cedretaber)
+    $(D_CONTRIBUTOR crimaniak)
+    $(D_CONTRIBUTOR David Nadlinger)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Diederik de Groot)
+    $(D_CONTRIBUTOR Dmitry Olshansky)
+    $(D_CONTRIBUTOR drug007)
+    $(D_CONTRIBUTOR Eduard Staniloiu)
+    $(D_CONTRIBUTOR FeepingCreature)
+    $(D_CONTRIBUTOR Giles Bathgate)
+    $(D_CONTRIBUTOR Harry T. Vennik)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jack Stouffer)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR Joakim Noah)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR John Belmonte)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR Jonathan Marler)
+    $(D_CONTRIBUTOR Joseph Rushton Wakeling)
+    $(D_CONTRIBUTOR Kai Nacke)
+    $(D_CONTRIBUTOR kinke)
+    $(D_CONTRIBUTOR LemonBoy)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR MetaLang)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR n8sh)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Lindsay Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Oleg Nykytenko)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Radu Racariu)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Roman Chistokhodov)
+    $(D_CONTRIBUTOR rracariu)
+    $(D_CONTRIBUTOR Ryan Frame)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Simon Naarmann)
+    $(D_CONTRIBUTOR skl131313)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Superstar64)
+    $(D_CONTRIBUTOR Thomas Mader)
+    $(D_CONTRIBUTOR Timothee Cour)
+    $(D_CONTRIBUTOR Unknown)
+    $(D_CONTRIBUTOR viktor)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Ľudovít Lučenič)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.080.0
+    TITLE=Change Log: $(VER)

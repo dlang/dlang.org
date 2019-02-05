@@ -1,0 +1,878 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jul 01, 2018, =================================================,
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 deprecate_ctor_in_static_block,Deprecate allowing a constructor declaration in a static block))
+$(LI $(RELATIVE_LINK2 deprecate_this_super_as_types,Deprecate usage of `this` and `super` as types))
+$(LI $(RELATIVE_LINK2 expression-based_contract_syntax,Implement DIP 1009 - Add Expression-Based Contract Syntax))
+$(LI $(RELATIVE_LINK2 extern_cpp_overhaul,`extern (C++)` construction, destruction, operators and other mangling improvements))
+$(LI $(RELATIVE_LINK2 fix16206,Support for iterating template overloads))
+$(LI $(RELATIVE_LINK2 getlinkage_for_classes,__traits(getLinkage, ...) now works on structs, classes, and interfaces.))
+$(LI $(RELATIVE_LINK2 implicit_catch_error,Implicit `catch` statements will now result in an error))
+$(LI $(RELATIVE_LINK2 implicit_enum_comparison_error,Implicit comparison of different enums will now result in an error))
+$(LI $(RELATIVE_LINK2 implicit_string_concatenation_error,Implicit string concatenation will now result in an error))
+$(LI $(RELATIVE_LINK2 iretq,`IRETQ` is now supported in inline assembler.))
+$(LI $(RELATIVE_LINK2 min_runtime_classes,Interfaces and classes can be used without the runtime if only static fields are utilized))
+$(LI $(RELATIVE_LINK2 redundant_stc_error,Specifying redundant storage classes will now result in a compiler error))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 backtrace_debug_info_macos,Filenames and line numbers have been added to stacktraces on macOS))
+$(LI $(RELATIVE_LINK2 cpp_destroy,`object.destroy()` supports `extern(C++)` classes.))
+$(LI $(RELATIVE_LINK2 getsect,Add missing declarations to `core.sys.darwin.mach.getsect`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 remove_std_c,The deprecated `std.c` package has been removed.))
+$(LI $(RELATIVE_LINK2 std-algorithm-iteration-joiner,The performance of `std.algorithm.iteration.joiner` has been improved))
+$(LI $(RELATIVE_LINK2 std-algorithm-mutation-remove,`std.algorithm.mutation.remove` now only accepts integral values or pair of integral values as offset))
+$(LI $(RELATIVE_LINK2 std-math-fminmax,Changed semantics of std.math.{fmin,fmax} wrt. NaNs.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 customCachePaths,DUB supports "customCachePaths" for providing read-only package paths))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 deprecate_ctor_in_static_block,Deprecate allowing a constructor declaration in a static block)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecate_ctor_in_static_block.dd)
+$(P
+Before patch:
+The language specification states that a static constructor is
+defined using the construction "static this()". Defining a
+constructor inside a static block does not have any effect
+on the constructor. The following code samples do not affect
+the constructor in any way:
+)
+
+---
+static:
+    this() {}
+---
+
+---
+static
+{
+    this() {}
+}
+---
+
+$(P
+The compiler does not issue any warning/error on the above code
+samples and generates a normal constructor which is not ran before
+the main() function. This leads to situations in which the
+compiler is not able to correctly indicate the problem:
+)
+
+---
+class A
+{
+    static
+    {
+        this() {}
+    }
+
+    this() {}
+}
+
+void main()
+{
+    new A();
+}
+---
+
+$(P
+This code will result in an error message indicating that
+there is a multiple definition of the constructor this()
+which is a misleading message.
+)
+
+$(P
+After patch:
+Whenever a constructor is encountered in a static context a
+deprecation message is issued stating that the `static`
+keyword does not have any effect on the constructor.
+The solution is to declare the constructor outside the
+static block either as a normal constructor or a static
+one (`static this()`).
+)
+)
+
+$(LI $(LNAME2 deprecate_this_super_as_types,Deprecate usage of `this` and `super` as types)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecate_this_super_as_types.dd)
+$(P
+Prior to this release, `this` and `super` could be used as both data or types
+depending on the context.  Starting with this release using `this` or `super`
+as a type will result in a compiler error.
+)
+
+---
+class C
+{
+    shared(this) x;    // Deprecation: Using `this` as a type is deprecated. Use `typeof(this)` instead
+}
+
+class D : C
+{
+    shared(super) a;   // Deprecation: Using `super` as a type is deprecated. Use `typeof(super)` instead
+    super b;           // Deprecation: Using `super` as a type is deprecated. Use `typeof(super)` instead
+}
+---
+
+$(P
+Use `typeof(super)` or `typeof(this)` instead.
+)
+
+---
+class C
+{
+    shared(typeof(this)) x;
+}
+
+class D : C
+{
+    shared(typeof(super)) a;
+    typeof(super) b;
+}
+---
+)
+
+$(LI $(LNAME2 expression-based_contract_syntax,Implement DIP 1009 - Add Expression-Based Contract Syntax)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/expression-based_contract_syntax.dd)
+$(P
+Expression-based contract syntax has been added: Contracts that consist of a single assertion can now be written more succinctly and multiple `in` or `out` contracts can be specified for the same function.
+)
+
+$(P
+Example:
+)
+
+---
+class C {
+    private int x;
+    invariant(x >= 0);
+    // ...
+}
+
+int fun(ref int a, int b)
+    in(a > 0)
+    in(b >= 0, "b cannot be negative")
+    out(r; r > 0, "return must be positive")
+    out(; a != 0)
+{
+    // ...
+}
+---
+)
+
+$(LI $(LNAME2 extern_cpp_overhaul,`extern (C++)` construction, destruction, operators and other mangling improvements)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/extern_cpp_overhaul.dd)
+$(P
+Many improvements have been made to the `extern(C++)` experience in this release cycle.
+)
+
+$(P
+Mangling improvements include:
+)
+
+$(P
+$(UL
+  $(LI  Constructor/destructor mangling matches C++)
+  $(LI  Compatible D style operators now mangle as C++ operators)
+  $(LI  `nullptr_t` mangles correctly)
+  $(LI  Various mangling bugs have been fixed)
+)
+)
+
+$(P
+`extern(C++)` APIs that use `nullptr_t` can use `typeof(null)` on the D side:
+)
+---
+alias nullptr_t = typeof(null);
+extern (C++) void fun(nullptr_t);
+---
+
+$(P
+`extern (C++)` mangling of operators is working for all operators that are semantically equivalent.
+This list includes all instantiations of `opUnary`, `opBinary`, `opAssign`, `opOpAssign`, `opCast`, `opEquals`, `opIndex`, `opCall`.
+Two notable exceptions are `opCmp`, and C++ `operator !`, which don't have compatible implementations.
+)
+
+$(P
+Mangling of `extern (C++) class` constructors and destructor are working.
+)
+
+$(P
+This release also includes ABI fixes where destructors are now correctly added to the virtual table, and constructor/destructor calling semantics now match C++.
+With this, mixed-language class hierarchies are working, with construction/destruction being supported in either language.
+)
+)
+
+$(LI $(LNAME2 fix16206,Support for iterating template overloads)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/fix16206.dd)
+$(P
+`__traits(getOverloads)` has been extended to return template overloads when passed an optional parameter with a true value.
+)
+
+---
+struct S
+{
+    static int foo()() { return 0; }
+    static int foo()(int n) { return 1; }
+    static int foo(string s) { return 2; }
+    enum foo(int[] arr) = arr.length;
+}
+
+alias AliasSeq(T...) = T;
+
+alias allFoos = AliasSeq!(__traits(getOverloads, S, "foo", true));
+
+static assert(allFoos.length == 4);
+
+static assert(allFoos[0]("") == 2);
+static assert(allFoos[1]() == 0);
+static assert(allFoos[2](1) == 1);
+alias foo3 = allFoos[3];
+static assert(foo3!([]) == 0);
+---
+)
+
+$(LI $(LNAME2 getlinkage_for_classes,__traits(getLinkage, ...) now works on structs, classes, and interfaces.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/getlinkage_for_classes.dd)
+$(P
+It is now possible to detect the language ABI specified for a struct, class, or interface.
+)
+
+---
+class MyClass {}
+extern (C++) struct MyCPPStruct {}
+extern (C++) interface MyCPPInterface {}
+extern (Objective-C) interface MyObjcInterface {}
+static assert(__traits(getLinkage, MyClass) == "D");
+static assert(__traits(getLinkage, MyCPPStruct) == "C++");
+static assert(__traits(getLinkage, MyCPPInterface) == "C++");
+static assert(__traits(getLinkage, MyObjcInterface) == "Objective-C");
+---
+)
+
+$(LI $(LNAME2 implicit_catch_error,Implicit `catch` statements will now result in an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/implicit_catch_error.dd)
+$(P
+See the $(LINK2 $(ROOT_DIR)deprecate.html#Implicit catch statement, Deprecated Features)
+for more information.
+)
+
+$(P
+Implicit `catch` statements were deprecated in 2.072.  Starting with this release, implicit
+`catch` statements will cause the compiler to emit an error.
+)
+
+---
+import std.stdio;
+
+void main()
+{
+    int[] arr = new int[](10);
+    // This will throw a RangeError
+    try { arr[42]++; }
+    catch  // Error: `catch` statement without an exception specification is deprecated;
+           // use `catch(Throwable)` for old behavior
+    {
+        writeln("An error was caught and ignored");
+    }
+}
+---
+)
+
+$(LI $(LNAME2 implicit_enum_comparison_error,Implicit comparison of different enums will now result in an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/implicit_enum_comparison_error.dd)
+$(P
+See the $(LINK2 $(ROOT_DIR)deprecate.html#Implicit comparison of different enums, Deprecated Features) for more information.
+)
+
+$(P
+Implicit comparison of different enums was deprecated in 2.075.  Starting with this release, implicit comparison of different
+enums will cause the compiler to emit an error.
+)
+
+---
+enum Status
+{
+    good,
+    bad
+}
+enum OtherStatus
+{
+    ok,
+    no
+}
+static assert(Status.good == OtherStatus.ok); // Error: Comparison between different enumeration types `Status` and `OtherStatus`;
+                                              // If this behavior is intended consider using `std.conv.asOriginalType`
+---
+)
+
+$(LI $(LNAME2 implicit_string_concatenation_error,Implicit string concatenation will now result in an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/implicit_string_concatenation_error.dd)
+$(P
+See the $(LINK2 $(ROOT_DIR)deprecate.html#Implicit%20string%20concatenation, Deprecated Features) for more information.
+)
+
+$(P
+Implicit string concatenation was deprecated in 2.072.  Starting with this release, implicit string concatenation will cause the compiler
+to emit an error.
+)
+
+---
+void main()
+{
+    string s = "Hello" ", World!";  // Error: Implicit string concatenation is deprecated, use "" ~ "" instead
+}
+---
+)
+
+$(LI $(LNAME2 iretq,`IRETQ` is now supported in inline assembler.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/iretq.dd)
+$(P
+`IRETQ` is the 64-bit version of the already supported `IRET` instruction. With
+its inclusion, it is now possible to write 64-bit interrupt service routines
+in pure D.
+)
+
+---
+void isr()
+{
+    asm
+    {
+        naked;
+        // ...
+        iretq;
+    }
+}
+---
+)
+
+$(LI $(LNAME2 min_runtime_classes,Interfaces and classes can be used without the runtime if only static fields are utilized)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/min_runtime_classes.dd)
+$(P
+Prior to this release any attempt to use interfaces and/or classes without the runtime would result
+in compile-time errors due to the lack of `TypeInfo`.  However, as long as classes are not instantiated
+there is no need for `TypeInfo`.
+)
+
+$(P
+Beginning with this release the compiler will no longer emit errors about missing `TypeInfo` when
+using interfaces and/or classes as long as they are not instantiated and only `shared static` members are
+utilized.
+)
+
+$(P
+$(B Example 1)
+)
+---
+module object
+
+private alias extern(C) int function(char[][] args) MainFunc;
+private extern (C) int _d_run_main(int argc, char** argv, MainFunc mainFunc)
+{
+    return mainFunc(null);  // assumes `void main()` for simplicity
+}
+---
+
+---
+interface I
+{
+    shared static int i;
+}
+
+class A : I
+{
+    shared static int a;
+}
+
+class B : A
+{
+    shared static int b;
+}
+
+void main()
+{
+    B.b = B.a + B.i;
+}
+---
+
+$(P
+$(CONSOLE
+dmd -conf= -defaultlib= main.d object.d -of=main
+size main
+   text    data     bss     dec     hex filename
+   1867    1208      32    3107     c23 main
+)
+)
+
+$(P
+Non-shared static members can also be used, but will require a thread-local storage (TLS) implementation.
+For example, on Linux the TLS implementation is already supplied by the C runtime and C
+standard library, so, since dmd automatically calls gcc to link the final executable, it will automatically
+bring in the TLS implementation.
+)
+
+$(P
+$(B Example 2)
+)
+---
+module object
+
+private alias extern(C) int function(char[][] args) MainFunc;
+private extern (C) int _d_run_main(int argc, char** argv, MainFunc mainFunc)
+{
+    return mainFunc(null);  // assumes `void main()` for simplicity
+}
+---
+
+---
+interface I
+{
+    static int i;
+}
+
+class A : I
+{
+    static int a;
+}
+
+class B : A
+{
+    static int b;
+}
+
+void main()
+{
+    B.b = B.a + B.i;
+}
+---
+
+$(P
+$(CONSOLE
+dmd -conf= -defaultlib= main.d object.d -of=main
+size main
+   text    data     bss     dec     hex filename
+   2123    1296      28    3447     d77 main
+)
+)
+
+$(P
+Some platforms may require some TLS implementation code or some specialized build procedures to link
+in a TLS implementation.
+)
+
+$(P
+This will hopefully reduce friction for those using D without the runtime, porting D to new platforms,
+or using D from other langauges, while enabling more features and idioms of D to be used in those use cases.
+)
+)
+
+$(LI $(LNAME2 redundant_stc_error,Specifying redundant storage classes will now result in a compiler error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/redundant_stc_error.dd)
+$(P
+Specifying redundant storage classes was deprecated long ago and was originally scheduled to emit a compiler error beginning with the 2.068 release.
+That promise has been fulfilled with this release.
+)
+
+---
+@safe void f() @safe {}   // Error: redundant attribute `@safe`
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 backtrace_debug_info_macos,Filenames and line numbers have been added to stacktraces on macOS)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/backtrace_debug_info_macos.dd)
+$(P
+When an exception is throw and not caught, a stacktrace is printed. On Linux,
+FreeBSD and DragonFlyBSD this stacktrace includes the filenames and line numbers,
+if the application was built with debug info enabled. This feature has now been
+added to macOS.
+)
+
+$(P
+This requires support from the compiler since debug info is stripped by the
+linker on macOS.
+)
+
+$(P
+Example:
+)
+
+---
+void bar()
+{
+    throw new Exception("bar");
+}
+
+void foo()
+{
+    bar();
+}
+
+void main()
+{
+    foo();
+}
+---
+
+$(P
+Compiling the above code, with debug info enabled, by running: `dmd -g main.d`.
+When running the application it will produce an output similar to:
+)
+
+$(P
+$(CONSOLE
+object.Exception@main.d(3): bar
+main.d:3 void main.bar() [0x71afdfb]
+main.d:8 void main.foo() [0x71afe0c]
+main.d:13 _Dmain [0x71afd78]
+)
+)
+)
+
+$(LI $(LNAME2 cpp_destroy,`object.destroy()` supports `extern(C++)` classes.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/cpp_destroy.dd)
+$(P
+`object.destroy()` was crashing when called with an `extern(C++)` class. It now correctly destructs and resets the object to `init`.
+)
+)
+
+$(LI $(LNAME2 getsect,Add missing declarations to `core.sys.darwin.mach.getsect`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/getsect.dd)
+$(P
+Declarations that were missing from $(LINK2 https://opensource.apple.com/source/cctools/cctools-895/include/mach-o/getsect.h.auto.html, mach-o/getsect.h) has been added to `core.sys.darwin.mach.getsect`.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 remove_std_c,The deprecated `std.c` package has been removed.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/remove_std_c.dd)
+$(P
+Use the `core.stdc` package instead.
+)
+)
+
+$(LI $(LNAME2 std-algorithm-iteration-joiner,The performance of `std.algorithm.iteration.joiner` has been improved)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-algorithm-iteration-joiner.dd)
+$(P
+$(H4 DMD)
+)
+
+$(P
+$(CONSOLE
+> dmd -O -inline -release ./joiner.d && ./joiner
+before.joiner   = 57 secs, 834 ms, 289 μs, and 3 hnsecs
+new.joiner      = 44 secs, 936 ms, 706 μs, and 5 hnsecs
+)
+)
+
+$(P
+$(H4 LDC)
+)
+
+$(P
+$(CONSOLE
+> ldmd -O3 -release -inline joiner.d && ./joiner
+before.joiner   = 5 secs, 180 ms, 193 μs, and 7 hnsecs
+new.joiner      = 3 secs, 168 ms, 560 μs, and 6 hnsecs
+)
+)
+
+$(P
+The benchmark code can be found $(LINK2 https://gist.github.com/wilzbach/ffd5d20639766a831fd4b1962572897a, here).
+)
+)
+
+$(LI $(LNAME2 std-algorithm-mutation-remove,`std.algorithm.mutation.remove` now only accepts integral values or pair of integral values as offset)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-algorithm-mutation-remove.dd)
+$(P
+Previously, without being stated in the documentation,
+$(REF remove, std,algorithm) used to accept any values as `offset`.
+This behavior was very error-prone:
+)
+
+---
+import std.algorithm, std.stdio;
+[0, 1, 2, 3, 4].remove(1, 3).writeln; // 0, 2, 4  -- correct
+[0, 1, 2, 3, 4].remove([1, 3]).writeln; // 0, 3, 4  -- incorrect
+---
+
+$(P
+With this release, using arrays as individual elements is no longer valid.
+$(REF tuple, std,typecons) can be used to explicitly indicate that a range
+from `start` to `stop` (non-enclosing) should be removed:
+)
+
+---
+import std.algorithm, std.stdio, std.typecons;
+[0, 1, 2, 3, 4].remove(tuple(1, 3)).writeln; // 0, 3, 4
+---
+
+$(P
+However, only 2-tuples are allowed to avoid this un-intuitive scenario:
+)
+
+---
+import std.algorithm, std.stdio, std.typecons;
+[0, 1, 2, 3, 4].remove(tuple(1, 3, 4)).writeln; // 0, 4?
+---
+)
+
+$(LI $(LNAME2 std-math-fminmax,Changed semantics of std.math.{fmin,fmax} wrt. NaNs.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-math-fminmax.dd)
+$(P
+The semantics of $(REF fmin, std, math) and $(REF fmax, std, math) have been
+streamlined with the C functions: if one of the arguments is a NaN, return the
+other. This involves an additional $(REF isNaN, std, math) check. Use
+$(REF min, std, algorithm, comparison) and $(REF max, std, algorithm, comparison)
+for the previous semantics performing a single comparison.
+)
+
+---
+import std.math;
+assert(fmin(real.nan, 2.0L) == 2.0L);
+assert(fmin(2.0L, real.nan) == 2.0L); // previously: NaN
+assert(isNaN(fmin(real.nan, real.nan)));
+
+import std.algorithm.comparison;
+assert(min(real.nan, 2.0L) == 2.0L);
+assert(isNaN(min(2.0L, real.nan)));
+assert(isNaN(min(real.nan, real.nan)));
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 customCachePaths,DUB supports "customCachePaths" for providing read-only package paths)
+$(CHANGELOG_SOURCE_FILE dub, changelog/customCachePaths.dd)
+$(P
+With this release DUB allows defining additional paths that contain packages in subfolders with the pattern "(name)-(version)/(name)/" by defining a "customCachePaths" field in `/etc/dub/settings.json` or `~/.dub/settings.json.`
+)
+
+$(P
+"customCachePaths" can be used to provide prebuilt DUB libraries (e.g. for distribution package maintainers).
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 18068): No file names and line numbers in stack trace)
+$(LI $(BUGZILLA 18821): DMD segfault when doing unsafe operation outside of any function)
+$(LI $(BUGZILLA 18905): [Reg 2.079] C++ classes can no longer be used with -betterC)
+$(LI $(BUGZILLA 18936): Internal error: dmd/backend/cgxmm.c 684)
+$(LI $(BUGZILLA 19024): [REG 2.081-beta] AssertError@dmd/dsymbolsem.d$(LPAREN)4317$(RPAREN): Assertion failure)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 5153): Struct pointer to struct variable assign error message)
+$(LI $(BUGZILLA 7443): Better diagnostic on wrongly written static constructor)
+$(LI $(BUGZILLA 11742): cannot inizialize void initialized static variable in static constructor.)
+$(LI $(BUGZILLA 12764): Disabled struct default construction circumvented when field is written to)
+$(LI $(BUGZILLA 12807): UFCS checks "alias this" attributes even when not called)
+$(LI $(BUGZILLA 13435): Strange error if struct is a class member and opAssign applied)
+$(LI $(BUGZILLA 13741): std.traits.moduleName & packageName do not work with functions that have parameters)
+$(LI $(BUGZILLA 14178): C++ linux name mangling does not handle standard abbreviations for const types)
+$(LI $(BUGZILLA 14739): Immutable alias to template triggers dmd assert)
+$(LI $(BUGZILLA 15068): wrong error message on attempting to use type as template)
+$(LI $(BUGZILLA 15388): extern$(LPAREN)C++$(RPAREN) - typeof$(LPAREN)null$(RPAREN) should mangle as nullptr_t)
+$(LI $(BUGZILLA 15475): Ddoc code sample with unbalanced paren comes out as macro)
+$(LI $(BUGZILLA 15574): wrong order of linker arguments)
+$(LI $(BUGZILLA 15755): DMD segfault upon alias on alias on __trait$(LPAREN)getAttributes, ...$(RPAREN))
+$(LI $(BUGZILLA 15869): RVO can overwrite argument)
+$(LI $(BUGZILLA 16088): Parse error for import expression in statement)
+$(LI $(BUGZILLA 16206): traits getOverloads fails when one of the overload is a templatized function)
+$(LI $(BUGZILLA 17373): traits getOverloads + multiple interface inheritance only see one of the interfaces' overloads)
+$(LI $(BUGZILLA 18228): this$(LPAREN)this a$(RPAREN){} doesn't generate postblit ctor; this$(LPAREN)this$(RPAREN){} does)
+$(LI $(BUGZILLA 18236): Invalid line reported on error casting enum)
+$(LI $(BUGZILLA 18266): ICE: should allow reusing identifier in declarations in disjoint scopes in a function)
+$(LI $(BUGZILLA 18365): header file generation doesn't include the return attribute)
+$(LI $(BUGZILLA 18584): Undefined identifier when not specifying 'this')
+$(LI $(BUGZILLA 18730): dmd miscompiles core.bitop.bt with -O)
+$(LI $(BUGZILLA 18746): function returning empty struct isn't called if used in equality expression)
+$(LI $(BUGZILLA 18775): DMD falsely reports deprecation for deprecated implicit casts that were not used in UFCS)
+$(LI $(BUGZILLA 18803): just "static if" in nested import crashes dmd)
+$(LI $(BUGZILLA 18828): [-betterC] helpless error in object.d)
+$(LI $(BUGZILLA 18858): switch 'skips declaration' test only checks last declaration)
+$(LI $(BUGZILLA 18868): Separate compilation generates two static this functions, runs it twice)
+$(LI $(BUGZILLA 18888): extern$(LPAREN)C++$(RPAREN) template arg/alias arg mangling issue)
+$(LI $(BUGZILLA 18890): extern$(LPAREN)C++$(RPAREN) mangles all destructors the same)
+$(LI $(BUGZILLA 18891): extern$(LPAREN)C++$(RPAREN) destructor prototype should just link; not generate field/aggregate dtor)
+$(LI $(BUGZILLA 18892): Wrong type in error message for static members and alias this)
+$(LI $(BUGZILLA 18916): ICE using Typedef and __LINE__)
+$(LI $(BUGZILLA 18922): dmd doesn't do substitutions for C++ namespaces in different module/file)
+$(LI $(BUGZILLA 18928): extern$(LPAREN)C++$(RPAREN) bad codegen, wrong calling convention)
+$(LI $(BUGZILLA 18951): package static method masked by public static method in class)
+$(LI $(BUGZILLA 18953): Win32: extern$(LPAREN)C++$(RPAREN) struct destructor not called correctly through runtime)
+$(LI $(BUGZILLA 18957): extern$(LPAREN)C++$(RPAREN) doesn't mangle 'std' correctly on posix systems)
+$(LI $(BUGZILLA 18966): extern$(LPAREN)C++$(RPAREN) constructor should match C++ semantics assigning vtable)
+$(LI $(BUGZILLA 18970): DMD segfault due to opDispatch)
+$(LI $(BUGZILLA 18976): Inconsistency in overload merging with aliases)
+$(LI $(BUGZILLA 18984): Debugging stack structs which are returned causes incorrect debuginfo.)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 14086): Invalid extern C++ name for constructor / destructor)
+$(LI $(BUGZILLA 15589): extern$(LPAREN)C++$(RPAREN) virtual destructors are not put in vtbl[])
+$(LI $(BUGZILLA 15691): Improve error message for struct member initializer)
+$(LI $(BUGZILLA 18859): Silence class allocator/deallocator deprecation warning if they are marked "deprecated")
+$(LI $(BUGZILLA 18963): Relax restrictions on 'return' parameters when parameter is not a pointer)
+)
+$(BUGSTITLE_BUGZILLA Phobos regressions,
+
+$(LI $(BUGZILLA 18937): [REG 2.080.0] std.experimental.allocator: compiling `make` needs an unreasonable amount of memory for structs that contain static arrays)
+$(LI $(BUGZILLA 18993): toLower is broken for UTF chars)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 12086): std.algorithm.remove + range of indices produces wrong results)
+$(LI $(BUGZILLA 17084): Can't sort array of structs with alias this: swap can't call non-@nogc function doesPointTo)
+$(LI $(BUGZILLA 17806): processAllocator getter will override set value if it was set before getter was called at least once)
+$(LI $(BUGZILLA 18415): Typedef ignores @disabled default constructor)
+$(LI $(BUGZILLA 18470): std.algorithm.splitter has frame access problems for custom preds)
+$(LI $(BUGZILLA 18525): Constraint on std.algorithm.mutation.remove fails with char[])
+$(LI $(BUGZILLA 18760): theAllocator should hold a reference to the allocator that it uses)
+$(LI $(BUGZILLA 18847): std.allocator: Region uses .parent before it can be set)
+$(LI $(BUGZILLA 18934): std.concurrency receive throws assertion failure if message is a struct containing const data)
+$(LI $(BUGZILLA 18940): [std.net.curl]Can't run examples on page. cannot implicitly convert expression ... `char[]` to `string`)
+$(LI $(BUGZILLA 18952): std.experimental.checkedint.Saturate prints integral promotion deprecation message)
+$(LI $(BUGZILLA 19020): findSkip, findSplit and findSplitBefore return wrong results)
+$(LI $(BUGZILLA 19023): findSplitBefore and findSplitAfter give wrong bool result)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 18178): std.path should be usable in @safe)
+$(LI $(BUGZILLA 18593): std.datetime.stopwatch.benchmark shouldn't optimize away its functions)
+$(LI $(BUGZILLA 18766): std.typecons.Tuple.toHash could be improved)
+$(LI $(BUGZILLA 18813): fromStringz should work with char, wchar and dchar)
+$(LI $(BUGZILLA 18837): MMFile should have opDollar)
+$(LI $(BUGZILLA 18948): std.uni.toLower and std.uni.toUpper should work with random access ranges)
+)
+$(BUGSTITLE_BUGZILLA Druntime regressions,
+
+$(LI $(BUGZILLA 18996): Inserting a type containing indirections into an std.container Array causes SIGILL$(LPAREN)4$(RPAREN). Illegal Instruction.)
+$(LI $(BUGZILLA 19005): [REG2.081-b1] object.hashOf no longer works for std.datetime.date.Date)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 14536): Calling destroy$(LPAREN)$(RPAREN) on a on an extern$(LPAREN)C++$(RPAREN) class causes a segfault)
+$(LI $(BUGZILLA 18932): core.internal.hash.hashOf$(LPAREN)val, seed$(RPAREN) ignores `seed` when val is a raw pointer)
+$(LI $(BUGZILLA 18989): On OSX32, core.stdc.time.clock$(LPAREN)$(RPAREN) should resolve to clock$UNIX2003$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 19008): core.internal.convert.toUbyte doesn't work on enums)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 18768): object.getArrayHash with custom toHash shouldn't just sum hashes of array elements)
+$(LI $(BUGZILLA 18920): core.internal.hash of array of scalars should be `@safe`)
+$(LI $(BUGZILLA 18924): Use addition rather than XOR for order-independent hash combination)
+$(LI $(BUGZILLA 18925): core.internal.hash auto-hash for structs of scalar fields should be `@safe`)
+$(LI $(BUGZILLA 18943): core.internal.hash remove outdated special case for DMD unaligned reads)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bugs,
+
+$(LI $(BUGZILLA 18752): std.file.read runnable example fails)
+$(LI $(BUGZILLA 18761): Page for assumeUnique documentation displays incorrectly)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 14099): Promote DPaste $(LPAREN)dpaste.dzfl.pl$(RPAREN) to run.dlang.org)
+$(LI $(BUGZILLA 18869): Add Jumia Food to organizations using D)
+$(LI $(BUGZILLA 18874): Add thatneedle.com to organizations using D)
+$(LI $(BUGZILLA 18959): [Change Log: 2.079.0] substitute was added in std.algorithm.iteration but the changelog points to std.algorithm.searching)
+)
+)
+$(D_CONTRIBUTORS_HEADER 51)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Alexandru Jercaianu)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR BBasile)
+    $(D_CONTRIBUTOR carblue)
+    $(D_CONTRIBUTOR David Bennett)
+    $(D_CONTRIBUTOR David Gileadi)
+    $(D_CONTRIBUTOR Diederik de Groot)
+    $(D_CONTRIBUTOR Dmitry Olshansky)
+    $(D_CONTRIBUTOR Eduard Staniloiu)
+    $(D_CONTRIBUTOR Giles Bathgate)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jack Stouffer)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR jercaianu)
+    $(D_CONTRIBUTOR Joakim Noah)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR John Colvin)
+    $(D_CONTRIBUTOR Jonathan Marler)
+    $(D_CONTRIBUTOR kinke)
+    $(D_CONTRIBUTOR Leandro Lucarella)
+    $(D_CONTRIBUTOR leitimmel)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Lindsay Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Radosław Rusiniak)
+    $(D_CONTRIBUTOR Radu Racariu)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Remi Thebault)
+    $(D_CONTRIBUTOR Roman Chistokhodov)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Simen Kjærås)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Tero Hänninen)
+    $(D_CONTRIBUTOR thaven)
+    $(D_CONTRIBUTOR Thibaut CHARLES)
+    $(D_CONTRIBUTOR Timon Gehr)
+    $(D_CONTRIBUTOR Timoses)
+    $(D_CONTRIBUTOR Tomáš Chaloupka)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.081.0
+    TITLE=Change Log: $(VER)

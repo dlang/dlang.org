@@ -1,0 +1,249 @@
+Ddoc
+
+$(HEADERNAV_TOC)
+
+$(D_S Rationale,
+
+        $(P Questions about the reasons for various design decisions for
+        D often come up. This addresses many of them.
+        )
+
+$(H2 $(LNAME2 operator-overloading, Operator Overloading))
+
+$(H3 $(LNAME2 why-not-operator, Why not name them operator+(), operator*(), etc.?))
+
+        $(P This is the way C++ does it, and it is appealing to be able
+        to refer to overloading $(SINGLEQUOTE +) with $(SINGLEQUOTE operator+). The trouble is
+        things don't quite fit. For example, there are the
+        comparison operators <, <=, >, and >=. In C++, all four must
+        be overloaded to get complete coverage. In D, only an opCmp()
+        function must be defined, and the comparison operations are
+        derived from that by semantic analysis.
+        )
+
+        $(P Further, binary operators on number-based types are largely uniformly
+        implemented so a single opBinary template allows one to just mixin the
+        operator the user used, whereas in C++ each operator will need to be separately
+        defined. For example:)
+
+------
+import std.stdio;
+struct MyInt
+{
+    int i;
+    MyInt opBinary(string op)(in MyInt other) if(op == "+" || op == "-")
+    {
+        mixin ("return MyInt(i " ~ op ~ "other.i);");
+    }
+}
+void main()
+{
+    MyInt a = MyInt(3), b = MyInt(1), c = a + b, d = a - b;
+    writeln(a.i, ' ', b.i, ' ', c.i, ' ', d.i); // prints 3 1 4 2
+}
+------
+
+        $(P Overloading operator/() also provides no symmetric way, as a member
+        function, to overload the reverse operation. For example,
+        )
+
+------
+class A
+{
+    int operator/(int i);           // overloads (a/i)
+    static operator/(int i, A a)    // overloads (i/a)
+}
+------
+
+        $(P The second overload does the reverse overload, but
+        it cannot be virtual, and so has a confusing asymmetry with
+        the first overload.
+        )
+
+$(H3 $(LNAME2 why-no-global-operator-functions, Why not allow globally defined operator overload functions?))
+
+        $(OL
+        $(LI Operator overloading can only be done with an argument
+        as an object, so they logically belong as member functions
+        of that object. That does leave the case of what to do
+        when the operands are objects of different types:
+
+------
+class A { }
+class B { }
+int opAdd(class A, class B);
+------
+
+        Should opAdd() be in class A or B? The obvious stylistic solution
+        would be to put it in the class of the first operand,
+
+------
+class A
+{
+    int opAdd(class B) { }
+}
+------
+        )
+
+        $(LI Operator overloads usually need access to private members
+        of a class, and making them global breaks the object oriented
+        encapsulation of a class.
+        )
+
+        $(LI (2) can be addressed by operator overloads automatically gaining
+        "friend" access, but such unusual behavior is at odds with D
+        being simple.
+        )
+
+        )
+
+$(H3 $(LNAME2 no-user-definable-operators, Why not allow user definable operators?))
+
+        $(P These can be very useful for attaching new infix operations
+        to various unicode symbols. The trouble is that in D,
+        the tokens are supposed to be completely independent of the
+        semantic analysis. User definable operators would break that.
+        )
+
+$(H3 $(LNAME2 no-user-defined-precedence, Why not allow user definable operator precedence?))
+
+        $(P The trouble is this affects the syntax analysis, and the syntax
+        analysis is supposed to be completely independent of the
+        semantic analysis in D.
+        )
+
+$(H3 $(LNAME2 no-operator-names, Why not use operator names like __add__ and __div__ instead
+ of opAdd, opDiv, etc.?))
+
+        $(P __ keywords should indicate a proprietary language extension,
+        not a basic part of the language.
+        )
+
+$(H3 $(LNAME2 binary-operator-overloads, Why not have binary operator overloads be static members, so both
+arguments are specified, and there no longer is any issue with the reverse
+operations?))
+
+        $(P This means that the operator overload cannot be virtual, and
+        so likely would be implemented as a shell around another
+        virtual function to do the real work. This will wind up looking
+        like an ugly hack. Secondly, the opCmp() function is already
+        an operator overload in Object, it needs to be virtual for several
+        reasons, and making it asymmetric with the way other operator
+        overloads are done is unnecessary confusion.
+        )
+
+$(H2 $(LNAME2 properties, Properties))
+
+$(H3 $(LNAME2 properties-infinity, Why does D have properties like T.infinity in the core language to give the
+infinity of a floating point type, rather than doing it in a library like C++:
+        $(CODE std::numeric_limits$(LT)T$(GT)::infinity)
+?))
+
+        Let's rephrase that as $(DOUBLEQUOTE if there's a way to express it in the existing
+        language, why build it in to the core language?)
+        In regards to T.infinity:
+
+        $(OL
+        $(LI Building it in to the core language means the core language knows
+        what a floating point infinity is. Being layered in templates, typedefs,
+        casts, const bit patterns, etc., it doesn't know what it is, and is
+        unlikely to give sensible error messages if misused.
+        )
+
+        $(LI A side effect of (1) is it is unlikely to be able to use it
+        effectively in constant folding and other optimizations.
+        )
+
+        $(LI Instantiating templates, loading $(CODE #include) files, etc., all costs
+        compile time and memory.
+        )
+
+        $(LI The worst, though, is the lengths gone to just to get at infinity,
+        implying $(DOUBLEQUOTE the language and compiler don't know anything about IEEE 754
+        floating point - so it cannot be relied on.) And in fact
+        many otherwise excellent C++ compilers
+        do not handle NaNs correctly in floating point comparisons.
+        (Digital Mars C++ does do it correctly.)
+        C++98 doesn't say anything about NaN or Infinity handling in expressions
+        or library functions. So it must be assumed it doesn't work.
+        )
+
+        )
+
+        $(P To sum up, there's a lot more to supporting NaNs and infinities than
+        having a template that returns a bit pattern. It has to be built in to
+        the compiler's core logic, and it has to permeate all the library code
+        that deals with floating point. And it has to be in the Standard.
+        )
+
+        $(P To illustrate, if either op1 or op2 or both are NaN, then:)
+
+------
+(op1 < op2)
+------
+        $(P does not yield the same result as:)
+------
+!(op1 >= op2)
+------
+        $(P if the NaNs are done correctly.)
+
+$(H2 $(LNAME2 static-if-0, Why use $(D static if(0)) rather than $(D if (0)?)))
+
+    $(P Some limitations are:)
+
+    $(OL
+    $(LI if (0) introduces a new scope, static if(...) does not. Why does this
+    matter? It matters if one wants to conditionally declare a new variable:
+
+------
+static if (...) int x; else long x;
+x = 3;
+------
+
+    whereas:
+
+------
+if (...) int x; else long x;
+x = 3;    // error, x is not defined
+------
+    )
+
+    $(LI False static if conditionals don't have to semantically work. For
+    example, it may depend on a conditionally compiled declaration somewhere
+    else:
+
+------
+static if (...) int x;
+int test()
+{
+    static if (...) return x;
+    else return 0;
+}
+------
+    )
+
+    $(LI Static ifs can appear where only declarations are allowed:
+
+------
+class Foo
+{
+    static if (...)
+        int x;
+}
+------
+    )
+
+    $(LI Static ifs can declare new type aliases:
+
+------
+static if (0 || is(int T)) T x;
+------
+    )
+    )
+
+)
+
+Macros:
+        TITLE=Rationale
+        SUBNAV=$(SUBNAV_ARTICLES)
+

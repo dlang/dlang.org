@@ -6,6 +6,7 @@ LATEST=prerelease
 
 DMD=dmd
 DDOC=macros.ddoc html.ddoc dlang.org.ddoc windows.ddoc doc.ddoc $(NODATETIME)
+W=web
 
 CHMTARGETS=d.hhp d.hhc d.hhk d.chm
 HHC=$(ProgramFiles)\HTML Help Workshop\hhc.exe
@@ -14,11 +15,11 @@ HHC=$(ProgramFiles)\HTML Help Workshop\hhc.exe
 
 chm : d.chm
 
-chmgen.exe : chmgen.d
+chmgen.exe : tools\chmgen.d
 	$(DMD) -g chmgen
 
 chm\d.hhp chm\d.hhc chm\d.hhk : chmgen.exe chm-nav-release.json $(TARGETS)
-	chmgen --target release
+	chmgen --root=$W --target release
 
 chm\d.chm : chm\d.hhp chm\d.hhc chm\d.hhk
 	-cmd /C "cd chm && "$(HHC)" d.hhp"
@@ -29,12 +30,7 @@ d.chm : chm\d.chm
 chm-nav-release.json : $(DDOC) std.ddoc spec\spec.ddoc modlist-release.ddoc changelog\changelog.ddoc chm-nav.dd
 	$(DMD) -o- -c -Df$@ $**
 
-d.tag : chmgen.exe $(TARGETS)
-	chmgen --only-tags
-
-d-tags.json : d.tag
-
-modlist-release.ddoc : modlist.d
+modlist-release.ddoc : tools\modlist.d
 # need + to run as sub-cmd, redirect doesn't work otherwise
 	+$(DMD) -run modlist.d ..\druntime ..\phobos $(MOD_EXCLUDES_RELEASE) >$@
 

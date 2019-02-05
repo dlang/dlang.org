@@ -1,0 +1,539 @@
+Ddoc
+
+$(D_S Writing Shared Libraries With D On Linux,
+
+$(HEADERNAV_TOC)
+
+$(P For comparison purposes and looking at the mechanics, here's how it's done in C first.
+)
+
+$(H2 $(LNAME2 dso1, Statically Linking C))
+
+$(P To statically link a C module with a C program,
+)
+
+main.c:
+
+$(CCODE
+#include &lt;stdio.h&gt;
+
+extern int dll();
+
+int main()
+{
+    printf("+main()\n");
+    dll();
+    printf("-main()\n");
+    return 0;
+}
+)
+
+dll.c:
+
+$(CCODE
+#include &lt;stdio.h&gt;
+
+int dll()
+{
+    printf("dll()\n");
+    return 0;
+}
+)
+
+Build:
+
+$(CONSOLE
+gcc -c dll.c
+gcc -c main.c
+gcc -o main main.o dll.o
+
+./main
+)
+
+Results:
+
+$(CONSOLE
++main()
+dll()
+-main()
+)
+
+$(H2 $(LNAME2 dso2, Statically Loading a Shared library in C))
+
+Build:
+
+$(CONSOLE
+gcc -c dll.c -fpic
+gcc -shared -o libdll.so dll.o
+gcc -c main.c
+gcc -L/home/username/tmp -Wl,-rpath=/home/username/tmp main.o -o main -ldll
+)
+
+$(P (The source files, run, and results should be identical.)
+)
+
+$(P -rpath is used to embed the path to libdll.so into main, so that it can be found
+at runtime. Other ways to do it are (but are not discussed further here):
+)
+
+$(OL
+$(LI Setting the environment variable LD_LIBRARY_PATH.)
+$(LI Copy shared library to a standard location and use ldconfig to modify ld.so.)
+)
+
+
+$(H2 $(LNAME2 dso3, Dynamically Loading a Shared library in C))
+
+$(P Add code to main.c to load the library at runtime:
+)
+
+main.c:
+
+$(CCODE
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;dlfcn.h&gt;
+
+int main()
+{
+    printf("+main()\n");
+
+    void *lh = dlopen("/home/walter/tmp/libdll.so", RTLD_LAZY);
+    if (!lh)
+    {
+        fprintf(stderr, "dlopen error: %s\n", dlerror());
+        exit(1);
+    }
+    printf("libdll.so is loaded\n");
+
+    int (*fn)() = dlsym(lh, "dll");
+    char *error = dlerror();
+    if (error)
+    {
+        fprintf(stderr, "dlsym error: %s\n", error);
+        exit(1);
+    }
+    printf("dll() function is found\n");
+
+    (*fn)();
+
+    printf("unloading libdll.so\n");
+    dlclose(lh);
+
+    printf("-main()\n");
+    return 0;
+}
+)
+
+Build:
+
+$(CONSOLE
+gcc -c dll.c -fpic
+gcc -shared -o libdll.so dll.o
+gcc -c main.c
+gcc -rdynamic main.o -o main -ldl
+
+./main
+)
+
+Results:
+
+$(CONSOLE
++main()
+libdll.so is loaded
+dll() function is found
+dll()
+unloading libdll.so
+-main()
+)
+
+$(H2 $(LNAME2 dso4, Dynamically Loading a C++ Shared library in C))
+
+$(P The complication here is noting when the shared library's static constructors
+and destructors are run. Instrument dll.c, which is now C++ code, with those
+static constructors and destructors:
+)
+
+dll.c:
+
+$(CCODE
+#include &lt;stdio.h&gt;
+
+extern "C" int dll()
+{
+    printf("dll()\n");
+    return 0;
+}
+
+struct S
+{
+    S() { printf("libdll.so construction\n"); }
+    ~S() { printf("~libdll.so destruction\n"); }
+};
+
+S ss;
+)
+
+Build:
+
+$(CONSOLE
+g++ -c dll.c -fpic
+g++ -shared -o libdll.so dll.o
+gcc -c main.c
+gcc -rdynamic main.o -o main -ldl
+
+./main
+)
+
+Results:
+
+$(CONSOLE
++main()
+libdll.so construction
+libdll.so is loaded
+dll() function is found
+dll()
+unloading libdll.so
+libdll.so destruction
+-main()
+)
+
+$(H2 $(LNAME2 dso5, Statically Linking D Program With libphobos2.a))
+
+main.d:
+
+---
+import core.stdc.stdio;
+import dll;
+
+int main()
+{
+    printf("+main()\n");
+    dll.dll();
+    printf("-main()\n");
+    return 0;
+}
+---
+
+dll.d:
+
+---
+import core.stdc.stdio;
+
+extern (C) int dll()
+{
+    printf("dll()\n");
+    return 0;
+}
+---
+
+Build:
+
+$(CONSOLE
+dmd -c dll.d
+dmd -c main.d
+dmd  main.o dll.o
+
+./main
+)
+
+Results:
+
+$(CONSOLE
++main()
+dll()
+-main()
+)
+
+$(H2 $(LNAME2 dso6, Statically Linking D Program With libphobos2.so))
+
+Build:
+
+$(CONSOLE
+dmd -c dll.d
+dmd -c main.d
+dmd  main.o dll.o -defaultlib=libphobos2.so -L-rpath=/path/to/where/shared/library/is
+
+./main
+)
+
+$(H2 $(LNAME2 dso7, Creating a D Shared Library and Statically Linking With libphobos2.so))
+
+$(P When using D shared libraries, the code must be linked with libphobos2.so,
+not libphobos2.a. This is so that there will be only one instance of the
+garbage collector.
+)
+
+Build:
+
+$(CONSOLE
+dmd -c dll.d -fPIC
+dmd -oflibdll.so dll.o -shared -defaultlib=libphobos2.so -L-rpath=/path/to/where/shared/library/is
+dmd -c main.d
+dmd main.o -L-l:libdll.so -defaultlib=libphobos2.so -L-rpath=.:/path/to/where/shared/library/is
+
+./main
+)
+
+$(H2 $(LNAME2 dso8, Dynamically Loading a C++ DLL From a D Program))
+
+main.d:
+
+---
+import core.stdc.stdio;
+import core.stdc.stdlib;
+import core.sys.posix.dlfcn;
+
+extern (C) int dll();
+
+int main()
+{
+    printf("+main()\n");
+
+    void* lh = dlopen("libdll.so", RTLD_LAZY);
+    if (!lh)
+    {
+        fprintf(stderr, "dlopen error: %s\n", dlerror());
+        exit(1);
+    }
+    printf("libdll.so is loaded\n");
+
+    int function() fn = cast(int function())dlsym(lh, "dll");
+    char* error = dlerror();
+    if (error)
+    {
+        fprintf(stderr, "dlsym error: %s\n", error);
+        exit(1);
+    }
+    printf("dll() function is found\n");
+
+    fn();
+
+    printf("unloading libdll.so\n");
+    dlclose(lh);
+
+    printf("-main()\n");
+    return 0;
+}
+---
+
+dll.c:
+
+$(CCODE
+#include &lt;stdio.h&gt;
+
+extern "C" int dll()
+{
+    printf("dll()\n");
+    return 0;
+}
+
+struct S
+{
+    S() { printf("libdll.so construction\n"); }
+    ~S() { printf("libdll.so destruction\n"); }
+};
+
+S ss;
+)
+
+Build:
+
+$(CONSOLE
+g++ -c dll.c -fpic
+g++ -shared -o libdll.so dll.o
+dmd -c main.d
+dmd main.o -L-ldl -L-rpath=.
+
+./main
+)
+
+Results:
+
+$(CONSOLE
++main()
+libdll.so construction
+libdll.so is loaded
+dll() function is found
+dll()
+unloading libdll.so
+libdll.so destruction
+-main()
+)
+
+$(H2 $(LNAME2 dso9, Dynamically Loading a D DLL From a C Program))
+
+main.c:
+
+$(CCODE
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;dlfcn.h&gt;
+
+int main()
+{
+    printf("+main()\n");
+
+    void *lh = dlopen("/home/walter/tmp/libdll.so", RTLD_LAZY);
+    if (!lh)
+    {
+        fprintf(stderr, "dlopen error: %s\n", dlerror());
+        exit(1);
+    }
+    printf("libdll.so is loaded\n");
+
+    int (*fn)() = dlsym(lh, "dll");
+    char *error = dlerror();
+    if (error)
+    {
+        fprintf(stderr, "dlsym error: %s\n", error);
+        exit(1);
+    }
+    printf("dll() function is found\n");
+
+    (*fn)();
+
+    printf("unloading libdll.so\n");
+    dlclose(lh);
+
+    printf("-main()\n");
+    return 0;
+}
+)
+
+dll.d:
+
+---
+import core.stdc.stdio;
+
+extern (C) int dll()
+{
+    printf("dll()\n");
+    return 0;
+}
+
+shared static this()
+{
+    printf("libdll.so shared static this\n");
+}
+
+shared static ~this()
+{
+    printf("libdll.so shared static ~this\n");
+}
+---
+
+Build:
+
+$(CONSOLE
+dmd -c dll.d -fPIC
+dmd -oflibdll.so dll.o -shared -defaultlib=libphobos2.so -L-rpath=/path/to/where/shared/library/is
+
+gcc -c main.c
+gcc -rdynamic main.o -o main -ldl
+
+./main
+)
+
+Results:
+
+$(CONSOLE
++main()
+libdll.so shared static this
+libdll.so is loaded
+dll() function is found
+dll()
+unloading libdll.so
+libdll.so shared static ~this
+-main()
+)
+
+$(P Note that libphobos2.so gets automatically dynamically loaded as well.
+)
+
+$(H2 $(LNAME2 dso10, Dynamically Loading a D DLL From a D Program))
+
+$(P It is important to link the main program with libphobos2.so, not libphobos2.a. Otherwise,
+the result will be multiple instances of the D runtime conflicting with each other.
+)
+
+main.d:
+
+---
+import core.stdc.stdio;
+import core.stdc.stdlib;
+import core.sys.posix.dlfcn;
+
+extern (C) int dll();
+
+int main()
+{
+    printf("+main()\n");
+
+    void* lh = dlopen("libdll.so", RTLD_LAZY);
+    if (!lh)
+    {
+        fprintf(stderr, "dlopen error: %s\n", dlerror());
+        exit(1);
+    }
+    printf("libdll.so is loaded\n");
+
+    int function() fn = cast(int function())dlsym(lh, "dll");
+    char* error = dlerror();
+    if (error)
+    {
+        fprintf(stderr, "dlsym error: %s\n", error);
+        exit(1);
+    }
+    printf("dll() function is found\n");
+
+    fn();
+
+    printf("unloading libdll.so\n");
+    dlclose(lh);
+
+    printf("-main()\n");
+    return 0;
+}
+
+shared static this() { printf("main shared static this\n"); }
+
+shared static ~this() { printf("main shared static ~this\n"); }
+---
+
+Build:
+
+$(CONSOLE
+dmd -c dll.d -fPIC
+dmd -oflibdll.so dll.o -shared -defaultlib=libphobos2.so -L-rpath=/path/to/where/shared/library/is
+
+dmd -c main.d
+dmd main.o -L-ldl -defaultlib=libphobos2.so -L-rpath=.:/path/to/where/shared/library/is -map
+
+./main
+)
+
+Results:
+
+$(CONSOLE
+main shared static this
++main()
+libdll.so shared static this
+libdll.so is loaded
+dll() function is found
+dll()
+unloading libdll.so
+libdll.so shared static ~this
+-main()
+main shared static ~this
+)
+
+$(P Note how the DLL's static constructors are called before dlopen() returns,
+and the static destructors are called by dlclose().
+)
+
+)
+
+Macros:
+        TITLE=Writing Shared Libraries With D On Linux
+        SUBNAV=$(SUBNAV_ARTICLES)
