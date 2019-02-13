@@ -1316,6 +1316,20 @@ void main()
 ---
 )
 
+        $(P If the two arguments are identical types, which includes the same
+        type qualifiers and the same type suffixes, true is returned.)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+void main()
+{
+    // similarly to `is(T1 == T2)`, types with qualifiers and suffixes
+    static assert(__traits(isSame, immutable(char)[], string));
+    static assert(!__traits(isSame, const(char)[], string));
+}
+---
+)
+
         $(P If the two arguments are expressions made up of literals
         or enums that evaluate to the same value, true is returned.)
 
@@ -1349,6 +1363,7 @@ void test(alias pred)()
 
 void main()
 {
+    // lambdas, common cases
     static assert(__traits(isSame, (a, b) => a + b, (c, d) => c + d));
     static assert(__traits(isSame, a => ++a, b => ++b));
     static assert(!__traits(isSame, (int a, int b) => a + b, (a, b) => a + b));
