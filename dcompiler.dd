@@ -85,21 +85,62 @@ C:\&gt;unzip dmc.zip
 
     $(INSTALLATION_SCRIPT_HINT)
 
-    It will create
-    a $(D ~/dmd) directory with all the files in it.
+    Unzip the archive into your home directory.
+    It will create a $(D ~/dmd) directory with all the files in it.
 
     All the tools are command line tools, which means
-    they are run from a console window.)
-    $(LI All tools can be run directly from the archive:
+    they are run from a console window.
+    All tools can be run directly from the archive:
 $(CONSOLE
 ~/dmd/linux/bin64/dmd
 )
-    To install $(D dmd) globally, add this bin folder to your $(B PATH).
+    To install $(D dmd) globally, add the `~/dmd/linux/bin64` folder to your $(B PATH).
+$(CONSOLE
+export PATH="$HOME/dmd/linux/bin64:$PATH"
+)
+
+    Alternatively, you can install dmd locally yourself by:
+    $(P $(UL
+
+    $(LI Create a configuration file in $(D /etc/dmd.conf):
+
+---
+[Environment64]
+DFLAGS=-I/usr/local/include/d/dmd -L-L/usr/local/lib -L--export-dynamic -fPIC
+---
+
+    )
+
+    $(LI Copy binaries to $(D /usr/local/bin):
+
+$(CONSOLE
+sudo cp $(DMDDIR)/linux/bin64/{dmd,$(DUMPOBJ),$(OBJ2ASM),rdmd,ddemangle,dub,dustmite} /usr/local/bin
+)
+    )
+
+    $(LI Copy the library to $(D /usr/local/lib):
+
+$(CONSOLE
+sudo cp $(DMDDIR)/linux/lib64/$(LIB) /usr/local/lib
+)
+    )
+
+    $(LI Copy the standard library and runtime sources to $(D /usr/include/d/dmd):
+
+$(CONSOLE
+sudo mkdir -p /usr/include/d/dmd
+sudo cp $(DMDDIR)/{phobos/std,phobos/etc,druntime/import} /usr/include/d/dmd
+)
+
+    )
+    ))
     )
 
     $(FREEBSD
 
     $(INSTALLATION_SCRIPT_HINT)
+
+    $(P $(UL
 
     $(LI Unzip the archive into your home directory.
     It will create
@@ -107,27 +148,45 @@ $(CONSOLE
     All the tools are command line tools, which means
     they are run from a console window.)
 
-    $(LI Copy $(D $(DMD_CONF)) to $(D /etc):
+    $(LI Create a configuration file in $(D /etc/dmd.conf):
 
-$(CONSOLE
-cp $(DMDDIR)/freebsd/bin/dmd.conf /etc
-)
+---
+[Environment64]
+DFLAGS=-I/usr/local/include/d/dmd -L-L/usr/local/lib -L--export-dynamic -fPIC
+---
+
     )
+
 
     $(LI Put $(D $(DMDDIR)/freebsd/bin) on your $(B PATH),
     or copy the FreeBSD executables
-    to $(D /usr/local/bin))
+    to $(D /usr/local/bin):)
+
+$(CONSOLE
+sudo cp $(DMDDIR)/linux/bin64/{dmd,$(DUMPOBJ),$(OBJ2ASM),rdmd,ddemangle,dub,dustmite} /usr/local/bin
+)
 
     $(LI Copy the library to $(D /usr/lib):
 
 $(CONSOLE
-cp $(DMDDIR)/freebsd/lib/$(LIB) /usr/lib
+sudo cp $(DMDDIR)/freebsd/lib/$(LIB) /usr/lib
 )
     )
+
+    $(LI Copy the standard library and runtime sources to $(D /usr/include/d/dmd):
+
+$(CONSOLE
+sudo mkdir -p /usr/include/d/dmd
+sudo cp $(DMDDIR)/{phobos/std,phobos/etc,druntime/import} /usr/include/d/dmd
+)
+    )
+    ))
     )
     $(OSX
 
     $(INSTALLATION_SCRIPT_HINT)
+
+    $(P $(UL
 
     $(LI Put the dmd zip file into your home directory,
     and unzip it:
@@ -169,7 +228,7 @@ hello world!
     $(LI Copy binaries to $(D /usr/local/bin):
 
 $(CONSOLE
-sudo cp $(DMDDIR)/osx/bin/{dmd,$(DUMPOBJ),$(OBJ2ASM),$(SHELL),rdmd} /usr/local/bin
+sudo cp $(DMDDIR)/osx/bin/{dmd,$(DUMPOBJ),$(OBJ2ASM),rdmd,dub,ddemangle,dustmite} /usr/local/bin
 sudo cp $(DMDDIR)/osx/bin/dmdx.conf /usr/local/bin/$(DMD_CONF)
 )
     )
@@ -180,6 +239,16 @@ $(CONSOLE
 sudo cp $(DMDDIR)/osx/lib/$(LIB) /usr/local/lib
 )
     )
+
+    $(LI Copy the standard library and runtime sources to $(D /usr/local/include/d/dmd):
+
+$(CONSOLE
+sudo mkdir -p /usr/include/d/dmd
+sudo cp $(DMDDIR)/{phobos/std,phobos/etc,druntime/import} /usr/include/d/dmd
+)
+    )
+
+    ))
     )
 
 $(WINDOWS
@@ -879,7 +948,6 @@ Macros:
     DMD_CONF=$(RELATIVE_LINK2 dmd-conf, dmd.conf)
     SC_INI=$(RELATIVE_LINK2 sc-ini, $(DMDDIR)\windows\bin\sc.ini)
     DMC=$(LINK2 http://www.digitalmars.com/ctg/sc.html, dmc)
-    LIB=$(LINK2 http://www.digitalmars.com/ctg/lib.html, lib)
     OPTLINK=$(LINK2 http://www.digitalmars.com/ctg/optlink.html, link.exe)
     DUB=$(LINK2 https://github.com/dlang/dub, dub$(BINEXT))
     RDMD=$(LINK2 $(ROOT_DIR)rdmd.html, rdmd$(BINEXT))
@@ -891,10 +959,10 @@ Macros:
         SUBNAV=$(SUBNAV_CLI_REFERENCE)
     INSTALLATION_SCRIPT_HINT=
 $(P
-$(MESSAGE_BOX gray, $(B Hint) - The official $(LINK2 $(ROOT_DIR)download.sh, packages)
+$(MESSAGE_BOX gray, $(B Hint) - The official $(LINK2 $(ROOT_DIR)download.html, packages)
 performs these steps automatically.
 Alternatively, you can install DMD in your user directory with
-the $(LINK2 $(ROOT_DIR)install.sh, install script).
-))
+the $(LINK2 $(ROOT_DIR)install.html, install script).
+)
 )
     _ =

@@ -180,7 +180,7 @@ DRUNTIME_LATEST_DIR=$G/druntime-${LATEST}
 PHOBOS_LATEST_DIR=$G/phobos-${LATEST}
 
 # stable dub and dmd versions used to build dpl-docs
-STABLE_DMD_VER=2.083.0
+STABLE_DMD_VER=2.084.0
 STABLE_DMD_VER_SUFFIX=
 STABLE_DMD_VER_PREFIX=
 STABLE_DMD_ROOT=$(GENERATED)/stable_dmd-$(STABLE_DMD_VER)$(STABLE_DMD_VER_SUFFIX)
@@ -342,7 +342,7 @@ ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
 # $(SPEC_ROOT), the list is sorted alphabetically.
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 	ascii-table bugstats $(CHANGELOG_FILES) calendar community comparison concepts \
-	D1toD2 deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
+	deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys glossary \
 	gsoc2011 gsoc2012 gsoc2012-template howto-promote htod index install \
 	menu orgs-using-d overview rdmd resources search security tuple wc windbg \
