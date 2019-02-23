@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Mar 01, 2019, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 25 major changes and 54 fixed Bugzilla issues.
+$(VER) comes with 26 major changes and 57 fixed Bugzilla issues.
                             A huge thanks goes to the 49 contributors who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
@@ -20,6 +20,7 @@ $(LI $(RELATIVE_LINK2 error-context,dmd now supports expressive diagnostic error
 $(LI $(RELATIVE_LINK2 no-cmpsb,`memcmp()` compares are no longer performed for struct equality tests, memberwise comparisons are done instead, per the spec))
 $(LI $(RELATIVE_LINK2 osx-32bit,OSX 32-bit is no longer supported))
 $(LI $(RELATIVE_LINK2 preview-flags,`-preview` and `-revert` command line switches have been introduced))
+$(LI $(RELATIVE_LINK2 stdcpp,Transition to C++11 character types))
 
 )
 
@@ -294,7 +295,7 @@ assert(dlang != dlang); // ERROR: "d2" == "d2"
 struct S { int s; }
 assert(S(0) == S(1)); // ERROR: "S(0) !is S(1)"
 
-int a = 1, b = 2);
+int a = 1, b = 2;
 assert(a > b); // ERROR: 1 <= 2
 ---
 
@@ -567,6 +568,89 @@ to use `-preview` or `-revert` where applicable.
 )
 )
 
+$(LI $(LNAME2 stdcpp,Transition to C++11 character types)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/stdcpp.dd)
+$(P
+With C++11 comes the advent of changed character type mangling.
+D's default behavior will be to conform to this after a one
+release transition period. A new switch -extern-std={c++98,c++11} is
+added to control the version that compatibility is set to.
+This switch sets `__traits(getTargetInfo, "cppStd")` to the value of
+`__cplusplus` that the corresponding version of the C++ standard defines.
+)
+
+$(P
+Of particular note is the new difference between wchar and wchar_t on
+Windows. This will manifest itself as compile errors when
+interfacing wchar* with wchar_t* code when calling the Windows API.
+A cast will resolve the issue.
+)
+
+$(P
+Going forward we recommend using WCHAR instead of wchar or wchar_t
+when interfacing to Windows API functions. (WCHAR is Microsoft
+Windows' 16 bit character type.)
+)
+
+$(P
+$(H3 C++ Type Equivalence)
+)
+
+$(P
+$(H4 c++98 behavior:)
+)
+
+$(P
+   $(TABLE
+   $(THEAD D       , Posix           , DMC++ Windows   , VC++ Windows)
+   $(TROW  wchar   , unsigned short  , wchar_t         , wchar_t)
+   $(TROW  dchar   , wchar_t         , unsigned        , unsigned)
+   $(TROW  wchar_t , wchar_t         , wchar_t         , wchar_t)
+   $(TROW  WCHAR   , --              , wchar_t         , wchar_t))
+)
+
+$(P
+$(H4 c++11:)
+)
+
+$(P
+   $(TABLE
+   $(THEAD D       , Posix           , DMC++ Windows   , VC++ Windows)
+   $(TROW  wchar   , char16_t        , wchar_t         , char16_t)
+   $(TROW  dchar   , char32_t        , unsigned        , char32_t)
+   $(TROW  wchar_t , wchar_t         , wchar           , wchar_t)
+   $(TROW  WCHAR   , --              , wchar           , wchar_t))
+)
+
+$(P
+$(H3 Name Mangling:)
+)
+
+$(P
+$(H4 c++98 behavior:)
+)
+
+$(P
+   $(TABLE
+   $(THEAD D       , Posix   , DMC++ Windows   , VC++ Windows)
+   $(TROW  wchar   , t       , _Y              , _W)
+   $(TROW  dchar   , w       , I               , I)
+   $(TROW  wchar_t , w       , _Y              , _W))
+)
+
+$(P
+$(H4 c++11:)
+)
+
+$(P
+   $(TABLE
+   $(THEAD D       , Posix   , DMC++ Windows   , VC++ Windows)
+   $(TROW  wchar   , Ds      , _Y              , _S)
+   $(TROW  dchar   , Di      , I               , _U)
+   $(TROW  wchar_t , w       , _Y              , _W))
+)
+)
+
 
 )
 
@@ -765,7 +849,7 @@ dub.json:
 {
     "toolchainRequirements": {
         "dub": "~>1.10",
-        "frontend": ">=2.068|<2.083"
+        "frontend": ">=2.068 <2.083"
     }
 }
 ---
@@ -789,9 +873,11 @@ $(UL
 )
 
 $(P
-Each can be assigned to one or more version specifications, separated by `|`.
-For compilers, instead of a version specification, the keyword `no` can also be
-used to indicate that the compiler should not be used for this package.
+Each can contain a
+$(LINK2 https://dub.pm/package-format-sdl.html#version-specs, version specification),
+where DMD-like versions are supported in addition to SemVer versions. For
+compilers, instead of a version specification, the keyword `no` can also be used
+to indicate that the compiler should not be used for this package.
 )
 
 $(P
@@ -837,8 +923,10 @@ $(LI $(BUGZILLA 19499): __c_long_double has exact match with double)
 $(LI $(BUGZILLA 19523): "undefined identifier" causes DMD crash)
 $(LI $(BUGZILLA 19618): Incorrect conversion of function returning `typeof$(LPAREN)null$(RPAREN)` to function returning an associative array)
 $(LI $(BUGZILLA 19639): Initializing static array with slice enum of different length crashes the compiler)
+$(LI $(BUGZILLA 19652): [REG2.084] alias this chain no longer works)
 $(LI $(BUGZILLA 19654): [REG master] cannot have final methods in objc interfaces)
 $(LI $(BUGZILLA 19672): Function uses the stack to read a static array parameter but it is passed in the registers)
+$(LI $(BUGZILLA 19685): Nested aggregate overlaps not detected)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bugs,
 
@@ -856,6 +944,7 @@ $(LI $(BUGZILLA 19627): [CTFE][SIMD] Error: cannot cast `int` to `int[4]`)
 $(LI $(BUGZILLA 19628): [CTFE][SIMD] ICE indexing vector array)
 $(LI $(BUGZILLA 19630): [CTFE][SIMD] Error: cannot determine length of vector slice at compile time)
 $(LI $(BUGZILLA 19676): Destructor not called for returned temporary that was cast to void)
+$(LI $(BUGZILLA 19687): Wrong error for overloaded opDispatch + UFCS with non-existing function)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
