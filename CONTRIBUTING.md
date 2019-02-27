@@ -36,7 +36,7 @@ make -f posix.mak html
 
 This builds the `dmd` compiler itself first and then uses it to build the
 website pages. You may see warnings while the compiler is built. After `make`
-ended with error code 0, directory `web` contains the produced HTML
+ends with error code 0, directory `web` should contain the produced HTML
 files. Take a moment to open `web/index.html` in a browser.
 
 ## Building the standard library documentation
