@@ -72,7 +72,13 @@ class TestVisitor(Out) : ASTVisitor
             return;
 
         // only look at `a == b` within the AssertExpression
-        if (typeid(expr.assertion) != typeid(CmpExpression))
+        // we need to support the old libdparse 0.8 (for ddox)
+        static if (__traits(compiles, expr.assertion)) {
+            const args = expr; // libdparse 0.8
+        } else {
+            const args = expr.assertArguments; // newer libdparse
+        }
+        if (typeid(args.assertion) != typeid(CmpExpression))
             return;
 
         lastAssert = expr;
