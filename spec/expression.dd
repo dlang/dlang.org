@@ -119,12 +119,13 @@ void function(int a, int b, int c) fun()
     static void r(int a, int b, int c) { writeln("callee called"); }
     return &r;
 }
-int g() { writeln("g() called"); return 1; }
-int h(int x) { writeln("h() called"); return x + 1; }
-int i() { writeln("i() called"); return 2; }
-int j() { writeln("j() called"); return 3; }
-fun()(g(), h(j()), i()); // evaluates fun() then g() then j() then h() then i()
-                         // after which control is transferred to the callee
+int f4() { writeln("f4() called"); return 1; }
+int f3(int x) { writeln("f3() called"); return x + 1; }
+int f1() { writeln("f1() called"); return 2; }
+int f2() { writeln("f2() called"); return 3; }
+// evaluates fun() then f1() then f2() then f3() then f4()
+// after which control is transferred to the callee
+fun()(f1(), f3(f2()), f4()); 
 ---
 )
 
@@ -183,7 +184,7 @@ import std.stdio;
 struct S
 {
     int x;
-    this(int n) { x = n; writefln("~S(%s)", x); }
+    this(int n) { x = n; writefln("S(%s)", x); }
     ~this() { writefln("~S(%s)", x); }
 }
 bool b = (S(1) == S(2) || S(3) != S(4)) && S(5) == S(6);
