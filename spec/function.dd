@@ -173,124 +173,315 @@ int foo();
 
 $(H2 $(LNAME2 pure-functions, Pure Functions))
 
-        $(P Pure functions are functions that cannot directly access global or static
-            mutable state. `pure` guarantees that a pure function call
-            won't access or modify any implicit state in the program.
-        )
+$(P The `pure` attribute can be specified with the declaration of functions and methods. The
+definition of a pure function is statically checked for additional restrictions as specified
+in this section.)
 
-        $(P Unlike other functional programming languages, D's `pure`
-            functions allow modification of the caller state through their mutable
-            parameters.
-        )
+$(P A function annotated with `pure` cannot contain reads or writes of global or static mutable
+state. Example:)
 
-            ---
-            pure int foo(int[] arr) { arr[] += 1; return arr.length; }
-            int[] a = [1, 2, 3];
-            foo(a);
-            assert(a == [2, 3, 4]);
-            ---
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
+---
+static int a;
+static immutable int b = 42;
+pure int f1(int x) { return x + a; } // error, reads mutable global
+pure int f2(int x) { ++a; return x; } // error, reads/writes mutable global
+pure int f3(int x) { return x + b; } // fine, reads immutable global
+---
+)
 
-        $(P A `pure` function accepting parameters with mutable indirections offers
-            what's called "weak purity" because it can change program state
-            transitively through its arguments. A `pure` function that has
-            no parameter with mutable indirections is called "strongly pure"
-            and fulfills the purity definition in traditional functional languages.
-            Weakly `pure` functions are useful as reusable building blocks for strongly pure functions.
-        )
+$(P A pure function cannot contain calls to functions that are not pure (Note: I/O functions
+such as $(REF writeln,std,stdio) are not pure.) Example:)
 
-        $(P To prevent mutation, D offers the `immutable` type qualifier.
-            If all of a `pure` function's parameters are `immutable` or
-            copied values without any indirections (e.g. `int`),
-            the type system guarantees no side effects.
-        )
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
+---
+pure int f1(int x) { return x + 1; }
+pure int f2(int x) { return f1(x) - 1; } // fine
+extern int f3(int x);
+pure int f4(int x) { return true ? 42 : f3(x); } // error, calls impure function
+---
+)
 
-            ---
-            struct S { double x; }
-            pure int foo(immutable(int)[] arr, int num, S val)
-            {
-                //arr[num] = 1; // compile error
-                num = 2;        // has no side effect to the caller side
-                val.x = 3.14;   // ditto
-                return arr.length;
-            }
-            ---
+$(P If a function signature `f1` is covariant with a function signature `f2`, adding the `pure`
+attribute to `f1` preserves the covariance relationship. This implies that a pure method may
+override a non-pure method, but not vice versa. Example:)
 
-        $(P The maximum guarantee of `pure` is called "strong purity". It can enable
-            optimizations based on the fact
-            that a function is guaranteed to not mutate anything which isn't passed to it.
-            For cases where the compiler can guarantee that a pure function cannot
-            alter its arguments, it can enable full, functional purity (i.e. the guarantee
-            that the function will always return the same result for the same arguments).
-            To that end, a pure function:
-        )
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+class Base
+{
+    pure int fun(int x) { return x + 1; }
+    pure int gun(int x) { return x + 2; }
+    pure int hun(int x) { return x + 3; }
+}
+class Derived : Base
+{
+    override pure int fun(int x) { return x + 4; } // fine, same signature
+    override pure int gun(int x) { return x + 5; } // fine, covariant
+    //override int hun(int x) { return x + 6; } // error
+}
+---
+)
 
-        $(UL
-        $(LI does not read or write any global or static mutable state)
-        $(LI cannot call functions that are not pure)
-        $(LI can override an impure function, but cannot be overridden by an impure function)
-        $(LI is covariant with an impure function)
-        $(LI cannot perform I/O)
-        )
+$(P Another consequence of covariance is that a pointer to a pure function (or delegate) is
+implicitly convertible to a pointer to a non-pure function (or delegate respectively). Example:)
 
-        $(P This definition of mutable functions is more general than the one
-        traditionally employed by pure functional languages because it allows a
-        D pure function to use state mutation, as long as all state is created
-        internally or reachable through its arguments. In particular, a pure
-        function may allocate memory by means of e.g. `new` or `malloc` without
-        these being special cases. A pure function is allowed to loop
-        indefinitely or terminate the program.)
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+alias PureFun = pure int function(int);
+alias Fun = int function(int);
+PureFun f1;
+Fun f2 = f1;
+// f1 = f2; // error
+---
+)
 
-        $(P As a concession to practicality, a pure function can also:)
+$(P As a concession to practicality, a pure function is allowed (with implementation-defined
+behavior) to:)
 
-        $(UL
-        $(LI read and write the floating point exception flags)
-        $(LI read and write the floating point mode flags, as long as those
-        flags are restored to their initial state upon function entry)
-        $(LI perform impure operations in statements that are in a
-        $(GLINK2 version, ConditionalStatement)
-        controlled by a $(GLINK2 version, DebugCondition).)
-        )
+$(UL
+$(LI read and write the floating point exception flags;)
+$(LI read and write the floating point mode flags, as long as those
+flags are restored to their initial state upon function entry;)
+$(LI perform impure operations in statements that are in a $(GLINK2 version, ConditionalStatement)
+controlled by a $(GLINK2 version, DebugCondition). Example:)
+)
 
-        $(P A pure function can throw exceptions.)
-
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
-int x;
-immutable int y;
-const int* pz;
-
-pure int foo(int i,
-             char* p,
-             const char* q,
-             immutable int* s)
+static uint cubeCalls;
+pure int cube(int i)
 {
-    debug writeln("in foo()"); // ok, impure code allowed in debug statement
-    x = i;   // error, modifying global state
-    i = x;   // error, reading mutable global state
-    i = y;   // ok, reading immutable global state
-    i = *pz; // error, reading const global state
-    return i;
+    debug writeln("cube() called %s times", ++cubeCalls);
+    return i * i * i;
+}
+writeln(cube(3));
+---
+)
+
+$(P A pure function can throw exceptions (unless it has the `nothrow` attribute).)
+
+$(P Note: The rules above do not preclude modification of data obtained through parameters. Unlike
+traditional functional programming languages, D's pure functions allow modification of the caller's
+state through their mutable parameters. This definition of mutable functions is relaxed
+because it allows a pure function to use state mutation, as long as all state is created internally
+or reachable through its arguments. In particular, a pure function may allocate memory by means of
+e.g. `new` or `malloc` without these being special cases. Example:)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+pure size_t foo(int[] arr) { arr[] += 1; return arr.length; }
+int[] a = [1, 2, 3];
+assert(foo(a) == 3);
+assert(a == [2, 3, 4]);
+---
+)
+
+$(P Pure functions fall in exactly one of two categories: $(I strongly pure) and $(I weakly pure).
+There are no dedicated annotations for these; instead, a set of rules applied to the function
+declaration determines its category.)
+
+$(H3 Strong Purity)
+
+$(P A function annotated with `pure` is strongly pure if and only if it meets $(I all) of the
+following conditions:)
+
+$(OL
+
+$(LI All parameter types are completely defined, transitively.)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+struct S; // defined elsewhere
+struct T
+{
+    int x;
+    S* s;
+}
+// These functions are NOT strongly pure:
+pure int fun(S* object);
+pure int gun(immutable S* pointer, int x);
+pure int hun(immutable T value);
+---
+)
+
+$(LI All `ref` parameters refer to `immutable` data, and all by-value parameters allow indirect
+access only to `immutable` data. Note: `out` parameters are allowed in strongly pure functions.
+Example:)
+
+---
+// These functions are strongly pure:
+pure int fun(int x, out double* y);
+pure int fun(immutable Object obj);
+pure int fun(ref immutable int x, immutable int* y);
+struct S { double x; string s; }
+pure int foo(immutable(int)[] arr, int num, S val)
+{
+    num = 2;        // has no side effect to the caller side
+    val.x = 3.14;   // ditto
+    val.s = "pi";   // ditto
+    return arr.length;
 }
 ---
 
-    $(P An implementation may assume that a `pure` function that (a) accepts
-    only parameters without mutable indirections, and (b) returns a result
-    without mutable indirections, will have the same effect for all invocation
-    with equivalent arguments, and is allowed to memoize the result of the
-    function under the assumption that equivalent parameters always produce
-    equivalent results. Such functions are termed $(I strongly `pure`) functions
-    in this document. Note that a strongly pure function may still have behavior
-    inconsistent with memoization by e.g. using `cast`s or by changing behavior
-    depending on the address of its parameters. An implementation is currently
-    not required to enforce validity of memoization in all cases.)
+$(LI The function returns a non-`void` type.)
 
-    $(P A pure function that accepts only parameters without mutable
-    indirections and returns a result that has mutable indirections is called a
-    $(I pure factory function). An implementation may assume that all mutable
-    memory returned by the call is not referenced by any other part of the
-    program, i.e. it is newly allocated by the function. Conversely, the mutable
-    references of the result may be assumed to not refer to any object that
-    existed before the function call. For example:)
+$(LI The function's returned type allows indirect access only to `immutable` data. If the function
+returns by `ref`, the type referenced must be `immutable`.)
+
+$(LI The function is not a constructor or a destructor.)
+)
+
+$(H3 Weak Purity)
+
+$(P A function annotated with `pure` is weakly pure if and only if it passes the `pure` checks
+but not the strong purity checks. Explicitly, weakly pure meet $(I at least one) of the
+following conditions:)
+
+$(OL
+$(LI One or more parameter types are incompletely defined, transitively.)
+
+$(LI One or more parameters allow indirect access$(MDASH)through `ref` parameters and/or by
+transitively following class references, dynamic arrays, or pointers$(MDASH)to unqualified data or
+data with qualifiers other than `immutable`. Example:)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+// These functions are weakly pure:
+pure int f1(Object obj);
+pure int f2(int* x);
+pure int f3(const int[] x);
+struct S
+{
+    const int x;
+}
+pure int f4(S* object);
+---
+)
+
+$(LI The function returns `void`.)
+
+$(LI The returned type allows indirect access$(MDASH)through `ref` return and/or by transitively
+following class references, dynamic arrays, or pointers$(MDASH)to unqualified data or data with
+qualifiers other than `immutable`. Example:)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+// These functions are weakly pure:
+pure Object f1(int);
+pure int* f2(int);
+pure const(int[]) f3(int);
+struct S
+{
+    const int x;
+}
+pure S* f4(int);
+---
+)
+
+$(LI The function is a constructor or destructor.)
+)
+
+$(H3 Strongly Pure Functions and Optimizations)
+
+$(P Strong purity enables optimizations based on their inability to read or modify data outside
+their parameters. In turn, that guarantees the function always returns the same result for the
+same arguments.)
+
+$(P A strongly pure function that accepts and returns by value can be assumed to return the same
+value for the same inputs. The compiler is allowed to memoize the result and reuse it for
+subsequent calls with identical arguments. Example:)
+
+---
+pure double fun(double);
+auto x = fun(1) + fun(1);
+// Code generated may be:
+// auto __t = fun(1);
+// auto x = __t + __t;
+---
+
+$(P For the purpose of deeming two calls to a strongly pure function equivalent, all arguments must
+be bitwise equal (as per the `is` operator), not logically equal (as per the `==` operator).
+Example:)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+pure double fun(double x) { return x * 42; }
+pure int gun(int x) { return x ^ 42; }
+pure string hun(string s) { return s; }
+auto a = fun(1.0) + fun(1.0); // can memoize
+assert(-0.0 == 0.0 && -0.0 !is 0.0);
+auto b = fun(-0.0) + fun(0.0); // can NOT memoize, -0.0 and 0.0 have different bit patterns
+auto c = hun("ab") ~ hun("ab"); // can memoize ONLY if the two strings are interned
+---
+)
+
+$(P An implementation may not evaluate a strongly pure function speculatively. This is because a
+strongly pure function may abort the program, throw, or never terminate. Example:)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+pure double fun(double x) { return x + 42; }
+pure double gun(size_t n)
+{
+    double result = 0;
+    foreach (i; 0 .. 100)
+    {
+        if (i == n) break;
+        result += fun(42);
+    }
+    return result;
+/*
+This code is NOT equivalent because it evaluates fun speculatively for n == 0:
+    double result = 0;
+    double __t = fun(42);
+    foreach (i; 0 .. 100)
+    {
+        if (i == n) break;
+        result += __t;
+    }
+    return result;
+*/
+}
+---
+)
+
+$(P A call to a `nothrow` strongly pure function that accepts and returns by value can be moved
+relative to its surrounding code, as long as its data dependencies are respected and there is no
+change in control flow. Example:)
+
+---
+pure double fun(double);
+pure double gun(double);
+void hun(double x)
+{
+    auto y = fun(x) + gun(x); // evaluate fun(x) and gun(x) in any order
+    foreach (i; 0 .. 100)
+    {
+        y += fun(10); // may hoist fun(10) outside the loop
+    }
+}
+---
+
+$(P If a strongly pure function throws, the assumptions related to memoization and references do
+not carry to the thrown object.)
+
+$(P Note: a strongly pure function may still have behavior inconsistent with memoization by e.g.
+using `cast`s or by changing behavior depending on the address of its parameters. An implementation
+is currently not required to enforce validity of memoization in all cases.)
+
+$(P Note: Any `pure` function that is not strongly pure cannot be assumed to be memoizable, and
+calls to it may not be elided. Function calls may still be elided, or results be memoized, by means
+of traditional inlining and optimization techniques available for all functions.)
+
+$(H4 Pure Factory Functions)
+
+$(P A pure function that passes all tests for strongly pure functions except (4) is called a
+$(I pure factory function). An implementation may assume that all mutable memory returned by the
+call is not referenced by any other part of the program, i.e. it is newly allocated by the
+function. Conversely, the mutable references of the result may be assumed to not refer to any
+object that existed before the function call. Example:)
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
@@ -304,23 +495,9 @@ pure List* make(int a, int b)
 ---
 )
 
-    $(P Here, an implementation may assume (without having knowledge of the body
-    of `make`) that all references in `make`'s result refer to other `List`
-    objects created by `make`, and that no other part of the program refers to
-    any of these objects.)
-
-    $(P Any `pure` function that is not strongly pure cannot be assumed to be
-    memoizable, and calls to it may not be elided even if it returns `void`
-    (save for compiler optimizations that prove the function has no effect).
-    Function calls may still be elided, or results be memoized, by means of
-    traditional inlining and optimization techniques available for all
-    functions.)
-
-    $(P If a strongly pure function throws an exception or an error, the
-    assumptions related to memoization and references do not carry to the thrown
-    exception.)
-
-    $(P Pure destructors do not benefit of special elision.)
+$(P Here, an implementation may assume (without having knowledge of the body of `make`) that all
+references in `make`'s result refer to other `List` objects created by `make`, and that no other
+part of the program refers to any of these objects.)
 
 $(H2 $(LNAME2 nothrow-functions, Nothrow Functions))
 
