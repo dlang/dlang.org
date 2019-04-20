@@ -177,16 +177,17 @@ $(P The `pure` attribute can be specified with the declaration of functions and 
 definition of a pure function is statically checked for additional restrictions as specified
 in this section.)
 
-$(P A function annotated with `pure` cannot contain reads or writes of global or static mutable
-state. Example:)
+$(P A function annotated with `pure` cannot contain reads or writes of global and/or static
+data that is not `immutable`. (Immediate values defined with `enum` are allowed.) Example:)
 
 $(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---
 static int a;
 static immutable int b = 42;
+enum int c = 20;
 pure int f1(int x) { return x + a; } // error, reads mutable global
 pure int f2(int x) { ++a; return x; } // error, reads/writes mutable global
-pure int f3(int x) { return x + b; } // fine, reads immutable global
+pure int f3(int x) { return x * c + b; } // fine, reads enum and immutable global
 ---
 )
 
