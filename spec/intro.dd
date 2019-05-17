@@ -10,59 +10,51 @@ to create native libraries or executables.)
 $(P This document is the reference manual for the D Programming Language. For more information and
 other documents$(COMMA) see $(LINK2 https://dlang.org/, The D Language Website).)
 
-$(H2 Phases of Compilation)
+$(H2 Conceptual models)
 
-$(P The process of compiling is divided into multiple phases. Each phase has no
-dependence on subsequent phases. For example, the scanner is not perturbed by
-the semantic analyzer. This separation of the passes makes language tools like
-syntax directed editors relatively easy to produce. It also is possible to
-compress D source by storing it in $(SINGLEQUOTE tokenized) form.)
+$(H3 Environments)
+
+$(P The data-processing-system in which a D program is translated from source to executable format
+will be called the translation environment and the data-processing-system in which the translated
+D program is executed will be called the execution environment. The translation environment and
+the execution environment need not have the same system architecture.)
+
+$(H3 Program Structure)
+
+$(P A D program is kept in units called source files. Each source file contains a unit of translation
+called the module. D modules need not all be translated at the same time. Previously translated
+D modules may be individually preserved or in libraries. The separate modules of a program communicate
+by calls to functions whose identifers have external linkage, manipulation of objects whose identifers
+have external linkage, or manipulation of data files. Modules may be separately translated and then
+later linked to produce an executable program.)
+
+$(H3 Translation Phases)
+
+$(P D programs are translated in multiple phases.)
 
 $(OL
-        $(LI $(B source character set)$(BR)
 
-        The source file is checked to see what character set it is,
-        and the appropriate scanner is loaded. ASCII and UTF
-        formats are accepted.
+        $(LI $(B Lexical analysis)$(BR)
+
+        The source file is translated into a sequence of tokens.
         )
 
-        $(LI $(B script line) $(BR)
-
-        If the first line starts with "$(HASH)!", then that line
-        is ignored.
-        )
-
-        $(LI $(B lexical analysis)$(BR)
-
-        The source file is divided up into a sequence of tokens.
-        $(DDSUBLINK spec/lex, specialtokens, Special tokens)
-        are replaced with other tokens.
-        $(GLINK_LEX SpecialTokenSequence)s
-        are processed and removed.
-        )
-
-        $(LI $(B syntax analysis)$(BR)
+        $(LI $(B Syntax analysis)$(BR)
 
         The sequence of tokens is parsed to form syntax trees.
         )
 
-        $(LI $(B semantic analysis)$(BR)
+        $(LI $(B Semantic analysis)$(BR)
 
         The syntax trees are traversed to declare variables, load symbol tables, assign
         types, and in general determine the meaning of the program.
         )
 
-        $(LI $(B optimization)$(BR)
+        $(LI $(B Code generation)$(BR)
 
-        Optimization is an optional pass that tries to rewrite the program
-        in a semantically equivalent, but faster executing, version.
-        )
-
-        $(LI $(B code generation)$(BR)
-
-        Instructions are selected from the target architecture to implement
-        the semantics of the program. The typical result will be
-        an object file, suitable for input to a linker.
+        Following optional optimizations, instructions targetted for the execution
+        environment are emitted to implement the semantics of the D program.
+        The result is an object file suitable for input to a linker.
         )
 )
 
