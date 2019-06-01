@@ -10,59 +10,47 @@ to create native libraries or executables.)
 $(P This document is the reference manual for the D Programming Language. For more information and
 other documents$(COMMA) see $(LINK2 https://dlang.org/, The D Language Website).)
 
+$(H2 Program Structure)
+
+$(P A D program's unit of compilation is a module; each D source file corresponds to a single D module.
+D modules need not all be compiled at the same time. Previously compiled modules may be individually
+preserved as object files or in libraries, and later linked to produce an executable program.)
+
 $(H2 Phases of Compilation)
 
-$(P The process of compiling is divided into multiple phases. Each phase has no
-dependence on subsequent phases. For example, the scanner is not perturbed by
-the semantic analyzer. This separation of the passes makes language tools like
-syntax directed editors relatively easy to produce. It also is possible to
-compress D source by storing it in $(SINGLEQUOTE tokenized) form.)
+$(P D modules are compiled in multiple phases.)
 
 $(OL
-        $(LI $(B source character set)$(BR)
 
-        The source file is checked to see what character set it is,
-        and the appropriate scanner is loaded. ASCII and UTF
-        formats are accepted.
+        $(LI $(B Lexical analysis)$(BR)
+
+        The source file is converted into a sequence of tokens. In particular, D programs
+        are not pre-processed prior to compilation.
         )
 
-        $(LI $(B script line) $(BR)
+        $(LI $(B Syntax analysis)$(BR)
 
-        If the first line starts with "$(HASH)!", then that line
-        is ignored.
+        The sequence of tokens is parsed to form syntax trees. The syntax analysis
+        phase requires arbitrary lookahead of tokens.
         )
 
-        $(LI $(B lexical analysis)$(BR)
-
-        The source file is divided up into a sequence of tokens.
-        $(DDSUBLINK spec/lex, specialtokens, Special tokens)
-        are replaced with other tokens.
-        $(GLINK_LEX SpecialTokenSequence)s
-        are processed and removed.
-        )
-
-        $(LI $(B syntax analysis)$(BR)
-
-        The sequence of tokens is parsed to form syntax trees.
-        )
-
-        $(LI $(B semantic analysis)$(BR)
+        $(LI $(B Semantic analysis)$(BR)
 
         The syntax trees are traversed to declare variables, load symbol tables, assign
         types, and in general determine the meaning of the program.
         )
 
-        $(LI $(B optimization)$(BR)
+        $(LI $(B Optimization)$(BR)
 
-        Optimization is an optional pass that tries to rewrite the program
-        in a semantically equivalent, but faster executing, version.
+        Optimization is an optional phase during which a D program is converted into a
+        semantically equivalent, but more time and/or space efficient version.
         )
 
-        $(LI $(B code generation)$(BR)
+        $(LI $(B Code generation)$(BR)
 
-        Instructions are selected from the target architecture to implement
-        the semantics of the program. The typical result will be
-        an object file, suitable for input to a linker.
+        Instructions targeted for the execution environment are selected to implement the
+        semantics of the D program. The typical result is an object file suitable for input
+        to a linker.
         )
 )
 
