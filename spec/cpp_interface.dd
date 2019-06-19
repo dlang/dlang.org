@@ -178,6 +178,61 @@ void main()
 }
 ------
 
+    $(P C++ can open the same namespace in multiple files. In D, this
+    can be done as follows:)
+
+---
+module a; extern (C++, ns) { int foo() { return 1; } }
+---
+---
+module b; extern (C++, ns) { int bar() { return 2; } }
+---
+---
+import a, b;
+static assert(foo() == 1 && bar() == 2);
+---
+
+    $(P This is much like using the `using` C++ directive.)
+
+    $(P Alternatively, if it is desired that the namespace members be
+    qualified by the namespace identifier:)
+
+---
+module a; extern (C++, ns) { int foo() { return 1; } }
+---
+---
+module b; extern (C++, ns) { int bar() { return 2; } }
+---
+---
+module ns;
+import a, b;
+alias foo = a.ns.foo;
+alias bar = b.ns.bar;
+---
+---
+import ns;
+static assert(ns.foo() == 1 && ns.bar() == 2);
+---
+
+    $(P A third alternative is to use the string version of namespaces, which
+    does not introduce a scope, relying on the scope of the module it's in:)
+
+---
+module a; extern (C++, `ns`) { int foo() { return 1; } }
+---
+---
+module b; extern (C++, `ns`) { int bar() { return 2; } }
+---
+---
+module ns;
+public import a, b;
+---
+---
+import ns;
+static assert(ns.foo() == 1 && ns.bar() == 2);
+---
+
+
 $(H2 $(LNAME2 classes, Classes))
 
     $(P C++ classes can be declared in D by using the $(CODE extern (C++))
