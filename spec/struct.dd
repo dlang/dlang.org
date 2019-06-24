@@ -17,8 +17,8 @@ $(GNAME AggregateDeclaration):
     $(GLINK UnionDeclaration)
 
 $(GNAME StructDeclaration):
-    $(D struct) $(I Identifier) $(D ;)
-    $(D struct) $(I Identifier) $(GLINK AggregateBody)
+    $(D struct) $(GLINK_LEX Identifier) $(D ;)
+    $(D struct) $(GLINK_LEX Identifier) $(GLINK AggregateBody)
     $(GLINK2 template, StructTemplateDeclaration)
     $(GLINK AnonStructDeclaration)
 
@@ -26,8 +26,8 @@ $(GNAME AnonStructDeclaration):
     $(D struct) $(GLINK AggregateBody)
 
 $(GNAME UnionDeclaration):
-    $(D union) $(I Identifier) $(D ;)
-    $(D union) $(I Identifier) $(GLINK AggregateBody)
+    $(D union) $(GLINK_LEX Identifier) $(D ;)
+    $(D union) $(GLINK_LEX Identifier) $(GLINK AggregateBody)
     $(GLINK2 template, UnionTemplateDeclaration)
     $(GLINK AnonUnionDeclaration)
 
@@ -119,6 +119,8 @@ $(H2 $(LNAME2 opaque_struct_unions, Opaque Structs and Unions))
 ---
 struct S;
 union U;
+struct V(T);
+union W(T);
 ---
 
         $(P The members are completely hidden to the user, and so the only operations
@@ -808,6 +810,179 @@ $(H2 $(LNAME2 field-init, Field initialization inside constructor))
         ---
         )
 
+$(H2 $(LEGACY_LNAME2 StructCopyConstructor, struct-copy-constructor, Struct Copy Constructors))
+
+    $(P Copy constructors are used to initialize a `struct` instance from
+    another `struct` of the same type.)
+
+    $(P A constructor declaration is a copy constructor declaration if and only if it is a constructor
+    declaration that takes only one non-default parameter by reference that is
+    of the same type as `typeof(this)`, followed by any number of default parameters:)
+
+    ---
+    struct A
+    {
+        this(ref return scope A rhs) {}                        // copy constructor
+        this(ref return scope const A rhs, int b = 7) {}       // copy constructor with default parameter
+    }
+    ---
+
+    $(P The copy constructor is type checked as a normal constructor.)
+
+    $(P If a copy constructor is defined, implicit calls to it will be inserted
+    in the following situations:)
+
+    $(OL
+    $(LI When a variable is explicitly initialized:)
+    ---
+    struct A
+    {
+        this(ref return scope A rhs) {}
+    }
+
+    void main()
+    {
+        A a;
+        A b = a; // copy constructor gets called
+    }
+    ---
+
+    $(LI When a parameter is passed by value to a function:)
+    ---
+    struct A
+    {
+        this(ref return scope A another) {}
+    }
+
+    void fun(A a) {}
+
+    void main()
+    {
+        A a;
+        fun(a);    // copy constructor gets called
+    }
+    ---
+
+    $(LI When a parameter is returned by value from a function and Named Returned Value Optiomization (NRVO)
+    cannot be performed:)
+    ---
+    struct A
+    {
+        this(ref return scope A another) {}
+    }
+
+    A fun()
+    {
+        A a;
+        return a;       // NRVO, no copy constructor call
+    }
+
+    A a;
+    A gun()
+    {
+        return a;       // cannot perform NRVO, rewrite to: return (A __tmp; __tmp.copyCtor(a));
+    }
+
+    void main()
+    {
+        A a = fun();
+        A b = gun();
+    }
+    ---
+    )
+
+    $(P When a copy constructor is defined for a `struct`, all
+    implicit blitting is disabled for that `struct`:
+    )
+    ---
+    struct A
+    {
+        int[] a;
+        this(ref return scope A rhs) {}
+    }
+
+    void fun(immutable A) {}
+
+    void main()
+    {
+        immutable A a;
+        fun(a);          // error: copy constructor cannot be called with types (immutable) immutable
+    }
+    ---
+
+    $(P The copy constructor can be overloaded with different qualifiers applied
+    to the parameter (copying from a qualified source) or to the copy constructor
+    itself (copying to a qualified destination):
+    )
+    ---
+    struct A
+    {
+        this(ref return scope A another) {}                        // 1 - mutable source, mutable destination
+        this(ref return scope immutable A another) {}              // 2 - immutable source, mutable destination
+        this(ref return scope A another) immutable {}              // 3 - mutable source, immutable destination
+        this(ref return scope immutable A another) immutable {}    // 4 - immutable source, immutable destination
+    }
+
+    void main()
+    {
+        A a;
+        immutable A ia;
+
+        A a2 = a;      // calls 1
+        A a3 = ia;     // calls 2
+        immutable A a4 = a;     // calls 3
+        immutable A a5 = ia;    // calls 4
+    }
+    ---
+
+    $(P The `inout` qualifier may be applied to the copy constructor parameter in
+    order to specify that mutable, `const`, or `immutable` types are treated the same:
+    )
+    ---
+    struct A
+    {
+        this(ref return scope inout A rhs) immutable {}
+    }
+
+    void main()
+    {
+        A r1;
+        const(A) r2;
+        immutable(A) r3;
+
+        // All call the same copy constructor because `inout` acts like a wildcard
+        immutable(A) a = r1;
+        immutable(A) b = r2;
+        immutable(A) c = r3;
+    }
+    ---
+
+    $(P A copy constructor is generated implicitly by the compiler for a `struct S`
+    if all of the following conditions are met:)
+
+    $(OL
+    $(LI `S` does not explicitly declare any copy constructors;)
+    $(LI `S` defines at least one direct member that has a copy constructor, and that
+    member is not overlapped (by means of `union`) with any other member.)
+    )
+
+    $(P If the restrictions above are met, the following copy constructor is generated:)
+    ---
+    this(ref return scope inout(S) src) inout
+    {
+        foreach (i, ref inout field; src.tupleof)
+            this.tupleof[i] = field;
+    }
+    ---
+
+    $(P If the generated copy constructor fails to type check, it will receive the `@disable` attribute.)
+
+    $(P f an `union S` has fields that define a copy constructor, whenever an object of type `S`
+    is initialized by copy, an error will be issued. The same rule applies to overlapped fields
+    (anonymous unions).)
+
+    $(P A `struct` that defines a copy constructor is not a POD.)
+
 $(H2 $(LEGACY_LNAME2 StructPostblit, struct-postblit, Struct Postblits))
 
 $(GRAMMAR
@@ -815,6 +990,10 @@ $(GNAME Postblit):
     $(D this $(LPAREN) this $(RPAREN)) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(D ;)
     $(D this $(LPAREN) this $(RPAREN)) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(GLINK2 function, FunctionBody)
 )
+
+    $(P WARNING: The postblit is considered legacy and is not recommended for new code. Code should use copy
+    constructors defined in the previous section. For backward compatibility reasons, a `struct` that defines
+    both a copy constructor and a postblit will only use the postblit for implicit copying.)
 
         $(P $(I Copy construction) is defined as initializing
          a struct instance from another struct of the same type.
@@ -1144,10 +1323,10 @@ void main()
         $(P The postblits `__fieldPostblit` and `__aggrPostblit`
         are generated without any implicit qualifiers and are not considered
         struct members. This leads to the situation where qualifying an
-        entire struct declaration does not have any impact on the above
-        mentioned postblits. However, since `__xpostblit` is a member of
-        the struct and an alias of one of the other postblits, the qualifiers
-        applied to the struct will affect the aliased postblit:)
+        entire struct declaration with `const` or `immutable` does not have
+        any impact on the above-mentioned postblits. However, since `__xpostblit`
+        is a member of the struct and an alias of one of the other postblits,
+        the qualifiers applied to the struct will affect the aliased postblit.)
 
 $(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---
@@ -1186,33 +1365,70 @@ immutable struct C2
 {
     S a;
 }
-
-// Similar to B
-shared struct D
-{
-    // error: non-shared method S.__postblit is not callable using a shared object
-    // error: non-shared method D.__fieldPostblit is not callable using a shared object
-    S a;
-    this(this)
-    { }
-}
-
-// Unlike B2, this example also does not work due to additional restrictions on shared.
-shared struct D2
-{
-    // error: non-shared method S.__postblit is not callable using a shared object
-    S a;
-}
 ---
 )
 
         $(P In the above situations the errors do not contain line numbers because
-        the errors are regarding generated code. In the case of the `shared` struct,
-        the first error message can be suppressed by qualifying the postblit of `S`
-        with `shared`.
+        the errors are regarding generated code.
         )
 
-        $(P Unions may not have fields that have postblits.)
+        $(P Qualifying an entire struct as `shared` correctly propagates the attribute
+        to the generated postblits:)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+shared struct A
+{
+    this(this)
+    {
+        import std.stdio : writeln;
+        writeln("the shared postblit was called");
+    }
+}
+
+struct B
+{
+    A a;
+}
+
+void main()
+{
+    shared B b1;
+    auto b2 = b1;
+}
+---
+)
+
+        $(P Unions may have fields that have postblits. However, a union itself never has
+        a postblit. Copying a union does not result in postblit calls for any fields.
+        If those calls are desired, they must be inserted explicitly by the programmer:)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+struct S
+{
+    int count;
+    this(this)
+    {
+        ++count;
+    }
+}
+
+union U
+{
+    S s;
+}
+
+void main()
+{
+    U a = U.init;
+    U b = a;
+    assert(b.s.count == 0);
+    b.s.__postblit;
+    assert(b.s.count == 1);
+}
+---
+)
 
 $(H2 $(LEGACY_LNAME2 StructDestructor, struct-destructor, Struct Destructors))
 
@@ -1221,14 +1437,54 @@ $(H2 $(LEGACY_LNAME2 StructDestructor, struct-destructor, Struct Destructors))
         object.
         )
 
-        $(P Unions may not have fields that have destructors.)
+        $(P Unions may have fields that have destructors. However, a union itself never has
+        a destructor. When a union goes out of scope, destructors for it's fields are not called.
+        If those calls are desired, they must be inserted explicitly by the programmer:)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+struct S
+{
+    ~this()
+    {
+        import std.stdio;
+        writeln("S is being destructed");
+    }
+}
+
+union U
+{
+    S s;
+}
+
+void main()
+{
+    import std.stdio;
+    {
+        writeln("entering first scope");
+        U u = U.init;
+        scope (exit) writeln("exiting first scope");
+    }
+    {
+        writeln("entering second scope");
+        U u = U.init;
+        scope (exit)
+        {
+            writeln("exiting second scope");
+            destroy(u.s);
+        }
+    }
+}
+---
+)
 
 $(H2 $(LNAME2 StructInvariant, Struct Invariants))
 
 $(GRAMMAR
 $(GNAME StructInvariant):
-    $(D invariant ( )) $(GLINK2 statement, BlockStatement)
+    $(D invariant $(LPAREN) $(RPAREN)) $(GLINK2 statement, BlockStatement)
     $(D invariant) $(GLINK2 statement, BlockStatement)
+    $(D invariant $(LPAREN)) $(GLINK2 expression, AssertArguments) $(D $(RPAREN) ;)
 )
 
     $(P $(I StructInvariant)s specify the relationships among the members of a struct instance.
@@ -1334,9 +1590,9 @@ $(H2 $(LEGACY_LNAME2 AssignOverload, assign-overload, Identity Assignment Overlo
 
         $(P While copy construction takes care of initializing
         an object from another object of the same type,
-        or elaborate destruction is needed for the type,
-        assignment is defined as copying the contents of one
-        object over another, already initialized, type:
+        assignment is defined as copying the contents of a source
+        object over those of a destination object, calling the
+        destination object's destructor if it has one in the process:
         )
 
         ---
@@ -1394,7 +1650,7 @@ $(H2 $(LEGACY_LNAME2 AssignOverload, assign-overload, Identity Assignment Overlo
             int[] buf;
             int a;
 
-            ref S opAssign(ref const S s)
+            ref S opAssign(ref const S s) return
             {
                 a = s.a;
                 return this;

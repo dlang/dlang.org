@@ -28,7 +28,7 @@ function wrapIntoMain(code) {
         var codeOut = "void main()\n{\n";
         codeOut += "    import " + currentPackage + ";\n";
         // writing to the stdout is probably often used
-        codeOut += "    import std.stdio: write, writeln, writef, writefln;\n    ";
+        codeOut += (currentPackage == "std.file") ? "    import std.stdio: writeln, writef, writefln;\n    " : "    import std.stdio: write, writeln, writef, writefln;\n    ";
         codeOut += code.split("\n").join("\n    ");
         codeOut += "\n}";
     }

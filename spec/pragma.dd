@@ -6,8 +6,8 @@ $(HEADERNAV_TOC)
 
 $(GRAMMAR
 $(GNAME Pragma):
-    $(D pragma) $(D $(LPAREN)) $(I Identifier) $(D $(RPAREN))
-    $(D pragma) $(D $(LPAREN)) $(I Identifier) $(D ,) $(GLINK2 expression, ArgumentList) $(D $(RPAREN))
+    $(D pragma) $(D $(LPAREN)) $(GLINK_LEX Identifier) $(D $(RPAREN))
+    $(D pragma) $(D $(LPAREN)) $(GLINK_LEX Identifier) $(D ,) $(GLINK2 expression, ArgumentList) $(D $(RPAREN))
 )
 
 
@@ -62,6 +62,7 @@ $(P All implementations must support these, even if by just ignoring them:)
 $(UL
     $(LI $(LINK2 #inline, pragma inline))
     $(LI $(LINK2 #lib, pragma lib))
+    $(LI $(LINK2 #linkerDirective, pragma linkerDirective))
     $(LI $(LINK2 #mangle, pragma mangle))
     $(LI $(LINK2 #msg, pragma msg))
     $(LI $(LINK2 #startaddress, pragma startaddress))
@@ -137,11 +138,30 @@ pragma(lib, "foo.lib");
     so the linker automatically links in that library.
     )
 
+$(H3 $(LNAME2 linkerDirective, $(D pragma linkerDirective)))
+
+    $(P There must be one $(ASSIGNEXPRESSION) and it must evaluate at compile time to a string literal.
+    )
+-----------------
+pragma(linkerDirective, "/FAILIFMISMATCH:_ITERATOR_DEBUG_LEVEL=2");
+-----------------
+
+    $(IMPLEMENTATION_DEFINED
+    $(P The string literal specifies a linker directive to be embedded in the generated object file.)
+
+    $(P Linker directives are only supported for MS-COFF output.)
+    )
+
 $(H3 $(LNAME2 mangle, $(D pragma mangle)))
 
     $(P Overrides the default mangling for a symbol.)
 
     $(P There must be one $(ASSIGNEXPRESSION) and it must evaluate at compile time to a string literal.
+    )
+
+    $(IMPLEMENTATION_DEFINED On macOS and Win32, an extra underscore (`_`) is prepended to the string
+        since 2.079, as is done by the C/C++ toolchain. This allows using the same `pragma(mangle)`
+        for all compatible (POSIX in one case, win64 in another) platforms instead of having to special-case.
     )
 
     $(IMPLEMENTATION_DEFINED It's only effective

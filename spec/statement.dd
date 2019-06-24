@@ -141,9 +141,9 @@ $(P     Statements can be labeled. A label is an identifier that
 
 $(GRAMMAR
 $(GNAME LabeledStatement):
-    $(I Identifier) $(D :)
-    $(I Identifier) $(D :) $(PSSEMI)
-    $(I Identifier) $(D :) $(PSSEMI_PSCURLYSCOPE)
+    $(GLINK_LEX Identifier) $(D :)
+    $(GLINK_LEX Identifier) $(D :) $(PSSEMI)
+    $(GLINK_LEX Identifier) $(D :) $(PSSEMI_PSCURLYSCOPE)
 )
 
 $(P
@@ -240,8 +240,8 @@ $(GNAME IfStatement):
 
 $(GNAME IfCondition):
     $(EXPRESSION)
-    $(D auto) $(I Identifier) $(D =) $(EXPRESSION)
-    $(GLINK2 declaration, TypeCtors) $(I Identifier) $(D =) $(EXPRESSION)
+    $(D auto) $(GLINK_LEX Identifier) $(D =) $(EXPRESSION)
+    $(GLINK2 declaration, TypeCtors) $(GLINK_LEX Identifier) $(D =) $(EXPRESSION)
     $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator) $(D =) $(EXPRESSION)
 
 $(GNAME ThenStatement):
@@ -422,8 +422,15 @@ for (int i = 0; i < 10; i++)
 }
 --------------
 
-$(P The $(I Initialize) may be omitted. $(I Test) may also be omitted, and if
-so, it is treated as if it evaluated to true.)
+    $(P The $(I Initialize) may be omitted (although the trailing $(D ;) is still required).
+    $(I Test) may also be omitted, and if
+    so, it is treated as if it evaluated to true.)
+
+    $(BEST_PRACTICE Consider replacing $(I ForStatements) with
+    $(DDSUBLINK spec/statement, foreach-statement, Foreach Statements) or
+    $(DDSUBLINK spec/statement, ForeachRangeStatement, Foreach Range Statements).
+    Foreach loops are easier to understand, less prone to error, and easier to refactor.
+    )
 
 $(H2 $(LEGACY_LNAME2 ForeachStatement, foreach-statement, Foreach Statement))
 
@@ -446,8 +453,8 @@ $(GNAME ForeachTypeList):
 
 $(GNAME ForeachType):
     $(GLINK ForeachTypeAttributes)$(OPT) $(GLINK2 declaration, BasicType) $(GLINK2 declaration, Declarator)
-    $(GLINK ForeachTypeAttributes)$(OPT) $(I Identifier)
-    $(GLINK ForeachTypeAttributes)$(OPT) $(D alias) $(I Identifier)
+    $(GLINK ForeachTypeAttributes)$(OPT) $(GLINK_LEX Identifier)
+    $(GLINK ForeachTypeAttributes)$(OPT) $(D alias) $(GLINK_LEX Identifier)
 
 $(GNAME ForeachTypeAttributes)
     $(GLINK ForeachTypeAttribute)
@@ -492,9 +499,10 @@ $(P
         If there are
         two variables declared, the first is said to be the $(I index)
         and the second is said to be the $(I value). The $(I index)
-        must be of `int`, `uint`, `long` or `ulong` type,
-        it cannot be `ref`,
-        and it is set to be the index of the array element.
+        must be of type `size_t` for dynamic arrays. Static arrays may use
+        any integral type that spans the length of the array.
+        $(I index) cannot be `ref`.
+        It is set to be the index of the array element.
 )
 --------------
 char[] a;
@@ -626,7 +634,7 @@ $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes 
 
     $(P where $(I Type) matches the $(I Type) used in the $(I ForeachType)
         declaration of $(I Identifier). Multiple $(I ForeachType)s
-        correspond with multiple $(I Type)'s in the delegate type
+        correspond with multiple $(I Type)s in the delegate type
         passed to $(D opApply) or $(D opApplyReverse).
         There can be multiple $(D opApply) and $(D opApplyReverse) functions,
         one is selected
@@ -1148,7 +1156,7 @@ switch (number)
         )
 
 --------------
-char[] name;
+string name;
 ...
 switch (name)
 {
@@ -1196,7 +1204,7 @@ $(H2 $(LEGACY_LNAME2 ContinueStatement, continue-statement, Continue Statement))
 
 $(GRAMMAR
 $(GNAME ContinueStatement):
-    $(D continue) $(I Identifier)$(OPT) $(D ;)
+    $(D continue) $(GLINK_LEX Identifier)$(OPT) $(D ;)
 )
 
 $(P `continue` aborts the current iteration of its enclosing loop statement, and
@@ -1230,7 +1238,7 @@ $(H2 $(LEGACY_LNAME2 BreakStatement, break-statement, Break Statement))
 
 $(GRAMMAR
 $(GNAME BreakStatement):
-    $(D break) $(I Identifier)$(OPT) $(D ;)
+    $(D break) $(GLINK_LEX Identifier)$(OPT) $(D ;)
 )
 
 $(P `break` exits the innermost enclosing while, for, foreach, do, or switch
@@ -1307,7 +1315,7 @@ $(H2 $(LEGACY_LNAME2 GotoStatement, goto-statement, Goto Statement))
 
 $(GRAMMAR
 $(GNAME GotoStatement):
-    $(D goto) $(I Identifier) $(D ;)
+    $(D goto) $(GLINK_LEX Identifier) $(D ;)
     $(D goto) $(D default) $(D ;)
     $(D goto) $(D case) $(D ;)
     $(D goto) $(D case) $(EXPRESSION) $(D ;)
@@ -1419,7 +1427,7 @@ with (Foo)
 
         $(P Use of with object symbols that shadow local symbols with
         the same identifier are not allowed.
-        This is to reduce the risk of inadvertant breakage of with
+        This is to reduce the risk of inadvertent breakage of with
         statements when new members are added to the object declaration.
         )
 ---
@@ -1571,7 +1579,7 @@ $(GNAME Catch):
     $(D catch $(LPAREN)) $(GLINK CatchParameter) $(D $(RPAREN)) $(PS0)
 
 $(GNAME CatchParameter):
-    $(GLINK2 declaration, BasicType) $(I Identifier)
+    $(GLINK2 declaration, BasicType) $(GLINK_LEX Identifier)$(OPT)
 
 $(GNAME FinallyStatement):
     $(D finally) $(PS0)
@@ -1866,11 +1874,13 @@ $(H2 $(LEGACY_LNAME2 MixinStatement, mixin-statement, Mixin Statement))
 
 $(GRAMMAR
 $(GNAME MixinStatement):
-    $(D mixin) $(D $(LPAREN)) $(ASSIGNEXPRESSION) $(D $(RPAREN)) $(D ;)
+    $(D mixin) $(D $(LPAREN)) $(GLINK2 expression, ArgumentList) $(D $(RPAREN)) $(D ;)
 )
 
-        $(P The $(ASSIGNEXPRESSION) must evaluate at compile time
-        to a constant string.
+    $(P Each $(GLINK2 expression, AssignExpression) in the $(I ArgumentList) is
+        evaluated at compile time, and the result must be representable
+        as a string.
+        The resulting strings are concatenated to form a string.
         The text contents of the string must be compilable as a valid
         $(GLINK StatementList), and is compiled as such.
         )
@@ -1887,16 +1897,18 @@ void main()
             writeln(x + i, ++j);
         ");    // ok
 
-    const char[] s = "int y;";
+    string s = "int y;";
     mixin(s);  // ok
     y = 4;     // ok, mixin declared y
 
-    char[] t = "y = 3;";
+    string t = "y = 3;";
     mixin(t);  // error, t is not evaluatable at compile time
 
     mixin("y =") 4; // error, string must be complete statement
 
     mixin("y =" ~ "4;");  // ok
+
+    mixin("y =", 2+2, ";");  // ok
 }
 ---
 

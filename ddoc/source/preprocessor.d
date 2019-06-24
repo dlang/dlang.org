@@ -346,7 +346,13 @@ auto genChangelogVersion(string fileName, string fileText)
             }
             else
             {
-                macros ~="\n$(CHANGELOG_NAV %s, %s)".format(versions[el.index - 1], versions[el.index + 1]);
+                const prevVersion = versions[el.index - 1].to!string;
+                auto nextVersion = versions[el.index + 1].to!string;
+                // the next version is the beta release
+                if (el.index == versions.length - 2 && hasPrerelease)
+                    nextVersion = std.array.replace(nextVersion, "_pre", "");
+
+                macros ~="\n$(CHANGELOG_NAV %s, %s)".format(prevVersion, nextVersion);
             }
             macros ~= "\n_=";
         }

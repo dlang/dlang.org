@@ -1,0 +1,145 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jun 15, 2019, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 1 major change and 41 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 19 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 interface_contracts,Interface contracts retrieve arguments correctly))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 interface_contracts,Interface contracts retrieve arguments correctly)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/interface_contracts.dd)
+$(P
+Fixed regression $(LINK2 https://issues.dlang.org/show_bug.cgi?id=15984, 15984).
+)
+
+$(P
+As a side effect, contracts are not ABI compatible with previous releases.
+)
+
+---
+interface I
+{
+    void fun(int i)
+    out { assert(i == 5); } // succeeds
+}
+
+class C : I
+{
+    void fun(int i)
+    do { }
+}
+
+unittest
+{
+    auto c = new C;
+    c.fun(5);
+}
+---
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 19584): Illegal optimization: Shift-or -> imul)
+$(LI $(BUGZILLA 19631): Segfault on simple nested templated struct)
+$(LI $(BUGZILLA 19871): Copy constructor rejects valid code if default construction is disabled)
+$(LI $(BUGZILLA 19887): Segfault with void tuple default parameter)
+$(LI $(BUGZILLA 19901): importing export symbols causes link errors)
+$(LI $(BUGZILLA 19936): Deprecated alias get this falsely triggers on appending to array)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 12950): Lexer interprets UFCS on hex integer as hex float literal)
+$(LI $(BUGZILLA 13819): ICE: backend\cg87.c with -O: "a % 2 != 0" for a double)
+$(LI $(BUGZILLA 17258): Pass by name doesn't work reliably and can sometimes lead to memory corruption)
+$(LI $(BUGZILLA 17793): [ICE] Internal error: ddmd/backend/cod1.c 3976 using simd.double4)
+$(LI $(BUGZILLA 18439): Error: cannot use operator ~= in @nogc delegate 'main.test.__lambda1')
+$(LI $(BUGZILLA 18772): [ICE] Internal error: dmd\backend\cgcod.c 607 no optimizations)
+$(LI $(BUGZILLA 18784): Segfault due to dmd codegen interfacing with C++)
+$(LI $(BUGZILLA 19002): __FUNCTION__ and __PRETTY_FUNCTION__ cannot be used as C string literals)
+$(LI $(BUGZILLA 19386): Destructor not called when constructed inside if condition, leading to memory leak)
+$(LI $(BUGZILLA 19557): extern$(LPAREN)C++, ns$(RPAREN) and extern$(LPAREN)C++, class$(RPAREN) interact weird)
+$(LI $(BUGZILLA 19713): dmd crashes generating code for C++ template function)
+$(LI $(BUGZILLA 19825): Memory corruption involving lazy variadic, stdio and json)
+$(LI $(BUGZILLA 19831): throw/catch in scope$(LPAREN)exit$(RPAREN) crashes with illegal instruction)
+$(LI $(BUGZILLA 19857): Name mangling mismatch when compiling with -dip1000)
+$(LI $(BUGZILLA 19881): Escaping reference to local through return scope with -dip1000 and @safe)
+$(LI $(BUGZILLA 19888): default parameters in templates with tuple parameters+defaults are thrown away)
+$(LI $(BUGZILLA 19895): Floating point exception casting zero length array)
+$(LI $(BUGZILLA 19897): dinterpret.d:6439: Internal Compiler Error: null field)
+$(LI $(BUGZILLA 19898): ICE: in sizemask at dmd/mtype.d$(LPAREN)2563$(RPAREN): Assertion failure)
+$(LI $(BUGZILLA 19911): ICE: Segmentation fault with struct object and variadic function)
+$(LI $(BUGZILLA 19912): [module] No implicit import of object module when an object declaration exists.)
+$(LI $(BUGZILLA 19913): ICE: Segmentation fault with mixin and enum)
+$(LI $(BUGZILLA 19914): ICE: Segmentation fault with mixin and templated class)
+$(LI $(BUGZILLA 19915): ICE: Segmentation fault with alias and templated class)
+$(LI $(BUGZILLA 19922): ICE: Segmentation fault with typeid$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 19923): ICE: typesem.d$(LPAREN)3809$(RPAREN): Assertion failure with .classinfo)
+$(LI $(BUGZILLA 19941): [ICE] Segmentation fault in ImplicitConvTo::visit$(LPAREN)AddrExp*$(RPAREN) at dmd/dcast.d$(LPAREN)980$(RPAREN))
+$(LI $(BUGZILLA 19942): [ICE] Segmentation fault in resolvePropertiesX at dmd/expressionsem.d:1112)
+$(LI $(BUGZILLA 19954): ICE: Casting AliasSeq to array and passing to a function)
+$(LI $(BUGZILLA 19955): [ICE] Segmentation fault in StatementSemanticVisitor::visit$(LPAREN)SwitchStatement*$(RPAREN) at dmd/statementsem.d:2558)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 19837): std.random.isUniformRNG$(LPAREN)Rng, ElementType$(RPAREN) should not require Rng.front to be annotated `@property`)
+$(LI $(BUGZILLA 19850): double nested joiner .back falsely thinks the range is empty)
+)
+$(BUGSTITLE_BUGZILLA Druntime regressions,
+
+$(LI $(BUGZILLA 19701): undefined reference to `_D6object__T6hashOf)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 17248): Multiple wrong function definitions in core.sys.windows.winldap $(LPAREN)causing runtime issues$(RPAREN))
+$(LI $(BUGZILLA 19847): no GC memory above 4GB reported with --DRT-gcopt=profile:1)
+)
+)
+$(D_CONTRIBUTORS_HEADER 19)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Eugen Wissner)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jan Jurzitza)
+    $(D_CONTRIBUTOR kinke)
+    $(D_CONTRIBUTOR Les De Ridder)
+    $(D_CONTRIBUTOR look-at-me)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Spoov)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR سليمان السهمي (Suleyman Sahmi))
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.086.1
+    TITLE=Change Log: $(VER)

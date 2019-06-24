@@ -1,0 +1,406 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Nov 01, 2018, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 11 major changes and 47 fixed Bugzilla issues.
+                            A huge thanks goes to the 51 contributors who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 cppVersions,Add `CppRuntime_*` version identifiers.))
+$(LI $(RELATIVE_LINK2 deprecated_switch_gc,Deprecated CLI switch `-gc` have been removed))
+$(LI $(RELATIVE_LINK2 isZeroInit,Expose `__traits(isZeroInit, T)`))
+$(LI $(RELATIVE_LINK2 mangle_cpp,Implement new C++ mangling syntax))
+$(LI $(RELATIVE_LINK2 pragmaLinkerDirective,Add `pragma(linkerDirective)`, to emit linker directives into object files.))
+$(LI $(RELATIVE_LINK2 reboot14246,fix Issue 14246 - RAII - proper destruction of partially constructed objects))
+$(LI $(RELATIVE_LINK2 targetinfo,Add `__traits(getTargetInfo, "key")` to query details about the compilation target.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 std-algorithm-iteration-each-early-stopping,`std.algorithm.iteration.each` is now capable of early-stopping))
+$(LI $(RELATIVE_LINK2 std-experimental-checkedint-toHash,`toHash` function has been added to `std.experimental.checkedint.Checked`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 betterC_build_option,betterC build option has been added))
+$(LI $(RELATIVE_LINK2 env_var_package_version,Environment variable DUB_PACKAGE_VERSION added))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 cppVersions,Add `CppRuntime_*` version identifiers.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/cppVersions.dd)
+$(P
+In order to link against C++ code, it is important to know what C++ runtime the ABI targets.
+)
+
+$(P
+Supported version identifiers include:
+$(UL
+ $(LI `CppRuntime_Clang`)
+ $(LI `CppRuntime_DigitalMars`)
+ $(LI `CppRuntime_Gcc`)
+ $(LI `CppRuntime_Microsoft`)
+ $(LI `CppRuntime_Sun`)
+)
+)
+
+$(P
+The C++ runtime in use generally depends on the C++ compiler used to build the C++ code that will be linked against.
+This is contrast to the C runtime, which generally depends on the target system.
+)
+)
+
+$(LI $(LNAME2 deprecated_switch_gc,Deprecated CLI switch `-gc` have been removed)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecated_switch_gc.dd)
+$(P
+This switch was deprecated in v2.075.0 and is now removed,
+meaning DMD will complain about an unrecognized switch.
+`-gc` used to pretend to be C, but debuggers have been
+D-aware for around a decade.
+)
+)
+
+$(LI $(LNAME2 isZeroInit,Expose `__traits(isZeroInit, T)`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/isZeroInit.dd)
+$(P
+Takes one argument which must be a type. If the type's
+$(DDSUBLINK spec/property, init, default initializer) has no non-zero
+bits then `true` is returned, otherwise `false`. `isZeroInit` will
+always return `true` for a class `C` because `C.init` is a null
+reference.
+)
+
+$(P
+This property was already being computed internally by the compiler
+so exposing it via `__traits` is more efficient than re-implementing
+it in library code.
+)
+
+---
+struct S1
+{
+    int x;
+}
+
+struct S2
+{
+    int x = -1;
+}
+
+static assert(__traits(isZeroInit, S1));
+static assert(!__traits(isZeroInit, S2));
+
+void test()
+{
+    int x = 3;
+    static assert(__traits(isZeroInit, typeof(x)));
+}
+---
+)
+
+$(LI $(LNAME2 mangle_cpp,Implement new C++ mangling syntax)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/mangle_cpp.dd)
+$(P
+The new syntax allows for keywords to be used for mangling
+and only changes the mangle of a symbol. It does not provide any
+feature resembling C++ namespaces. This allows users to structure
+their C++ in traditional D fashion, utilizing modules. The old syntax
+`extern(C++, foo)` would occupy the symbol `foo`. This meant modules
+couldn't use this name and match the C++ namespace.
+)
+
+---
+extern(C++, "__traits") void foo();
+
+extern(C++, "std", "chrono") void bar(); // multiple namespace syntax
+
+int std; // no symbol clashing with above extern(C++, "std", ...)
+---
+)
+
+$(LI $(LNAME2 pragmaLinkerDirective,Add `pragma(linkerDirective)`, to emit linker directives into object files.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/pragmaLinkerDirective.dd)
+$(P
+Emits a custom linker directive to the object file, eg:
+)
+---
+pragma(linkerDirective, "/alternatename:_pWeakValue=_pDefaultWeakValue");
+---
+
+$(P
+This is only supported for MS-COFF output.
+)
+)
+
+$(LI $(LNAME2 reboot14246,fix Issue 14246 - RAII - proper destruction of partially constructed objects)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/reboot14246.dd)
+$(P
+Since destructors for object fields can now get called by the constructor for that
+object if the constructor fails, the attributes of the destructors must be covariant
+with the attributes for the constructor.
+)
+
+$(P
+I.e. if the constructor is marked @safe, the fields' destructors must also be @safe
+or @trusted.
+)
+
+$(P
+Since this behavior was never checked before, this fix causes breakage of existing
+code. Hence, enabling this behavior is behind the new `transition=dtorfields` compiler
+switch. It will eventually become the default behavior, so it is recommended to
+fix any of these destructor attribute issues.
+)
+)
+
+$(LI $(LNAME2 targetinfo,Add `__traits(getTargetInfo, "key")` to query details about the compilation target.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/targetinfo.dd)
+$(P
+`getTargetInfo` accepts a string key as argument to select the target detail of interest.
+)
+
+---
+static if (__traits(getTargetInfo, "cppRuntimeLibrary") == "msvcrtd") { ... }
+
+static assert (__traits(getTargetInfo, "not_a_target_info") == "??"); // <- error: no such targetInfo "not_a_target_info"!
+---
+
+$(P
+`getTargetInfo` keys are implementation defined, allowing relevant data for exotic targets. A reliable subset which are always available shall be mentioned in the spec.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 std-algorithm-iteration-each-early-stopping,`std.algorithm.iteration.each` is now capable of early-stopping)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-algorithm-iteration-each-early-stopping.dd)
+$(P
+$(REF each, std,algorithm,iteration) is now capable of exiting early.
+When a `No.each` $(REF Flag, std,typecons) is returned from the function that
+is called by `each`, the iteration will be aborted early.
+Analogously, returning `Yes.each` will continue the iteration.
+For example:
+)
+
+---
+auto arr = [10, 20, 30];
+arr.each!((n) { arr ~= n; return (n == 20) ? No.each : Yes.each; }); // aborts after the second iteration
+assert(arr == [10, 20, 30, 10, 20]);
+---
+)
+
+$(LI $(LNAME2 std-experimental-checkedint-toHash,`toHash` function has been added to `std.experimental.checkedint.Checked`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-experimental-checkedint-toHash.dd)
+$(P
+Custom hashing can be implemented in a `Hook`. If no hashing is specified, then
+the built-in function will be used. Checked can now be used with associative
+arrays.
+)
+
+-------
+import std.experimental.checkedint;
+
+static struct MyHook
+{
+    static size_t hookToHash(T)(T payload)
+    {
+        auto h = typeid(payload).getHash(&payload);
+        return h + 0x9e3779b9 + (h << 6) + (h >> 2);
+    }
+}
+
+auto h = checked!MyHook(142).toHash();
+-------
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 betterC_build_option,betterC build option has been added)
+$(CHANGELOG_SOURCE_FILE dub, changelog/betterC_build_option.dd)
+$(P
+This build option can be used to pass `-betterC` argument to DMD or LDC:
+)
+
+$(P
+dub.json:
+)
+---
+"buildOptions": ["betterC"]
+---
+
+$(P
+dub.sdl:
+)
+---
+buildOptions "betterC"
+---
+)
+
+$(LI $(LNAME2 env_var_package_version,Environment variable DUB_PACKAGE_VERSION added)
+$(CHANGELOG_SOURCE_FILE dub, changelog/env_var_package_version.dd)
+$(P
+When executing external commands, DUB will now set the environment variable `DUB_PACKAGE_VERSION`.
+The variable will contain the version of the package being built, as it appears in the output of `dub describe`.
+)
+$(P
+One application of this addition is to use a pre-build command to save the package version to a source file,
+in order to compile the version string into the application being built.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 19248): Wrong mangle for C++ const STL classes/structs)
+$(LI $(BUGZILLA 19304): [Reg 2.081.0] Linker arguments order changed in issue 15574 hinders using --whole-archive linker directive)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 11538): [ICE] stack overflow with recursive NullableRef fails)
+$(LI $(BUGZILLA 14246): RAII - proper destruction of partially constructed objects/structs)
+$(LI $(BUGZILLA 15374): [internal] Nothing should import ddmd.mars)
+$(LI $(BUGZILLA 18457): betterC - struct destructor is always called at function return)
+$(LI $(BUGZILLA 18771): Identical overload sets in different modules have different identities)
+$(LI $(BUGZILLA 18955): extern$(LPAREN)C++$(RPAREN) default struct mangling is overridden when interacting with a `cppmangle = class` template)
+$(LI $(BUGZILLA 19098): Improve error for non-assignable struct)
+$(LI $(BUGZILLA 19181): Semantic errors in opDispatch argument lead to "no property X")
+$(LI $(BUGZILLA 19182): missing semicolon crashes compiler)
+$(LI $(BUGZILLA 19185): [ICE] Nested struct segfaults when using variable from outer scope)
+$(LI $(BUGZILLA 19201): Error: func called with argument types $(LPAREN)ulong$(RPAREN) matches both: __c_long and __c_ulong)
+$(LI $(BUGZILLA 19209): [ICE] Overriding a field in a baseclass issues an ICE)
+$(LI $(BUGZILLA 19225): Confusing error message on `static else`)
+$(LI $(BUGZILLA 19251): Alias this does not get called on struct qualified type)
+$(LI $(BUGZILLA 19284): alias this not used in nested functions of a method)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 15512): extern$(LPAREN)C++, ns$(RPAREN) should consider taking a string)
+$(LI $(BUGZILLA 19180): Expose dmd.mtype.Type.isZeroInit as __traits$(LPAREN)isZeroInit, T$(RPAREN))
+$(LI $(BUGZILLA 19194): version for `-mscrtlib` specification)
+$(LI $(BUGZILLA 19195): Support pragma to specify linker directives)
+$(LI $(BUGZILLA 19199): Use core.bitops intrinsics during CTFE)
+$(LI $(BUGZILLA 19203): alias this to a bool behaves both inconsistently and incorrectly with static assert)
+$(LI $(BUGZILLA 19212): Add versions for C++ runtimes.)
+$(LI $(BUGZILLA 19292): Mixin expressions should take an argument list the same as pragma$(LPAREN)msg$(RPAREN) does)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 11431): std.file.slurp fails with Windows newlines)
+$(LI $(BUGZILLA 11959): Phobos should not declare public symbols in version$(LPAREN)unittest$(RPAREN) blocks)
+$(LI $(BUGZILLA 17276): BaseClassesTuple fails on extern C++ classes that implement an interface without a base class)
+$(LI $(BUGZILLA 18675): std.experimental.checkedint.Checked has opEquals but no toHash)
+$(LI $(BUGZILLA 18683): std.containers.rbtree.RedBlackTree has opEquals but no toHash)
+$(LI $(BUGZILLA 18838): Formatting the number zero with separator doesn't obey width specifier)
+$(LI $(BUGZILLA 19085): std.experimental.allocator.makeArray should work with void)
+$(LI $(BUGZILLA 19200): Variant operators don't overload correctly)
+$(LI $(BUGZILLA 19228): hasAliasing fails on static arrays)
+$(LI $(BUGZILLA 19240): std.typecons.Tuple should check for reserved identifiers)
+$(LI $(BUGZILLA 19275): std.process: redirecting output in a non-console application fails)
+$(LI $(BUGZILLA 19289): std.range.transposed with enforceNotJagged not throwing)
+$(LI $(BUGZILLA 19297): JSONValue of signed and unsigned equal values is not equal)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 18142): checkedint opOpAssign doesn't accept a checkedint)
+$(LI $(BUGZILLA 19236): Replace runtime `typeid$(LPAREN)T$(RPAREN).initializer$(LPAREN)$(RPAREN).ptr is null` checks with compile-time `__traits$(LPAREN)isZeroInit, T$(RPAREN)`)
+$(LI $(BUGZILLA 19257): std.array.join does not handle const fields that cannot be converted to mutable)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 19250): DWARF Backtraces with very long symbol names read out of bounds when printing)
+$(LI $(BUGZILLA 19262): hashOf associative array should infer nothrow)
+$(LI $(BUGZILLA 19282): hashOf segfaults for non-null C++ objects)
+$(LI $(BUGZILLA 19314): Thread object destruction may result in UB)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 19280): Remove unnecessary error checks in core.time.currSystemTick and currTime)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bugs,
+
+$(LI $(BUGZILLA 18104): Alias example compiles where it states that it should be illegal)
+)
+)
+$(D_CONTRIBUTORS_HEADER 51)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR 0xEAB)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Alexandru ermicioi)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Arun Chandrasekaran)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR BBasile)
+    $(D_CONTRIBUTOR Carsten Schlote)
+    $(D_CONTRIBUTOR devel)
+    $(D_CONTRIBUTOR deviator)
+    $(D_CONTRIBUTOR dhasenan)
+    $(D_CONTRIBUTOR Diederik de Groot)
+    $(D_CONTRIBUTOR Dragos Carp)
+    $(D_CONTRIBUTOR Erik van Velzen)
+    $(D_CONTRIBUTOR Eugen Wissner)
+    $(D_CONTRIBUTOR GoaLitiuM)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Ilya Yaroshenko)
+    $(D_CONTRIBUTOR Ionut)
+    $(D_CONTRIBUTOR Joakim Noah)
+    $(D_CONTRIBUTOR Johannes Loher)
+    $(D_CONTRIBUTOR Johannes Pfau)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR kinke)
+    $(D_CONTRIBUTOR look-at-me)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mihails Strasuns)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Márcio Martins)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Lindsay Wilson)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Pjotr Prins)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Ryan David Sheasby)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR shove70)
+    $(D_CONTRIBUTOR Simen Kjærås)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Thomas Mader)
+    $(D_CONTRIBUTOR Vlad Vitan)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR wolframw)
+    $(D_CONTRIBUTOR Ľudovít Lučenič)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.083.0
+    TITLE=Change Log: $(VER)

@@ -6,8 +6,8 @@ $(HEADERNAV_TOC)
 
 $(GRAMMAR
 $(GNAME EnumDeclaration):
-    $(D enum) $(I Identifier) $(GLINK EnumBody)
-    $(D enum) $(I Identifier) $(D :) $(GLINK EnumBaseType) $(GLINK EnumBody)
+    $(D enum) $(GLINK_LEX Identifier) $(GLINK EnumBody)
+    $(D enum) $(GLINK_LEX Identifier) $(D :) $(GLINK EnumBaseType) $(GLINK EnumBody)
     $(GLINK AnonymousEnumDeclaration)
 
 $(GNAME EnumBaseType):
@@ -22,9 +22,18 @@ $(GNAME EnumMembers):
     $(GLINK EnumMember) $(D ,)
     $(GLINK EnumMember) $(D ,) $(GLINK EnumMembers)
 
+$(GNAME EnumMemberAttributes):
+    $(GLINK EnumMemberAttribute)
+    $(GLINK EnumMemberAttribute) $(GLINK EnumMemberAttributes)
+
+$(GNAME EnumMemberAttribute):
+    $(GLINK2 attribute, DeprecatedAttribute)
+    $(GLINK2 attribute, UserDefinedAttribute)
+    $(D @)$(GLINK2 attribute, disable)
+
 $(GNAME EnumMember):
-    $(I Identifier)
-    $(I Identifier) $(D =) $(ASSIGNEXPRESSION)
+    $(GLINK EnumMemberAttributes)$(OPT) $(GLINK_LEX Identifier)
+    $(GLINK EnumMemberAttributes)$(OPT) $(GLINK_LEX Identifier) $(D =) $(ASSIGNEXPRESSION)
 
 $(GNAME AnonymousEnumDeclaration):
     $(D enum) $(D :) $(GLINK EnumBaseType) $(D {) $(GLINK EnumMembers) $(D })
@@ -38,7 +47,7 @@ $(GNAME AnonymousEnumMembers):
 
 $(GNAME AnonymousEnumMember):
     $(GLINK EnumMember)
-    $(GLINK2 declaration, Type) $(I Identifier) $(D =) $(ASSIGNEXPRESSION)
+    $(GLINK2 declaration, Type) $(GLINK_LEX Identifier) $(D =) $(ASSIGNEXPRESSION)
 )
 
         $(P Enum declarations are used to define a group of constants.

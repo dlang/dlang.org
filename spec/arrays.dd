@@ -165,7 +165,10 @@ $(H2 $(LNAME2 slicing, Slicing))
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-void foo(int);
+void foo(int value)
+{
+  writeln("value=", value);
+}
 
 int[10] a;   // declare array of 10 ints
 int[] b;
@@ -182,14 +185,20 @@ foo(b[1]);   // equivalent to foo(3)
         For example, the assignments to b:
         )
 
-$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
-int[10] a;
-int[] b;
+int[10] a = [ 1,2,3,4,5,6,7,8,9,10 ];
+int[] b1, b2, b3, b4;
 
-b = a;
-b = a[];
-b = a[0 .. a.length];
+b1 = a;
+b2 = a[];
+b3 = a[0 .. a.length];
+b4 = a[0 .. $];
+writeln(b1);
+writeln(b2);
+writeln(b3);
+writeln(b4);
+
 ---------
 )
 
@@ -201,10 +210,17 @@ b = a[0 .. a.length];
         but for converting pointers into bounds-checked arrays:
         )
 
-$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
-int* p;
+int[10] a = [ 1,2,3,4,5,6,7,8,9,10 ];
+
+int* p = &a[2];
 int[] b = p[0..8];
+writeln(b);
+writeln(p[7]);      // 10
+writeln(p[8]);      // undefined behaviour
+writeln(b[7]);      // 10
+//writeln(b[8]);    // range error
 ---------
 )
 
@@ -435,22 +451,31 @@ double[][] matrix;
         pointers to the array data.) Since the arrays can have varying sizes (being dynamically
         sized), this is sometimes called "jagged" arrays. Even worse for optimizing the code, the
         array rows can sometimes point to each other! Fortunately, D static arrays, while using
-        the same syntax, are implemented as a fixed rectangular layout:
+        the same syntax, are implemented as a fixed rectangular layout in a contiguous block of
+        memory:
         )
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-double[3][3] matrix;
+double[6][3] matrix = 0; // Sets all elements to 0.
+writeln(matrix); // [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
 ---------
 )
 
-        $(P declares a rectangular matrix with 3 rows and 3 columns, all contiguously in memory. In
-        other languages, this would be called a multidimensional array and be declared as:
+        $(P Note that dimensions and indices appear in opposite orders. Dimensions in the
+        $(RELATIVE_LINK2 declarations, declaration) are read right to left whereas indices are read
+        left to right:
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-double matrix[3,3];
+double[6][3] matrix = 0;
+matrix[2][5] = 3.14; // Assignment to bottom right element.
+writeln(matrix); // [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 3.14]]
+
+static assert(!__traits(compiles, matrix[5][2])); // Array index out of bounds.
 ---------
+)
 
 $(H2 $(LNAME2 array-length, Array Length))
 
@@ -720,7 +745,7 @@ int x = foo[3]; // error, out of bounds
         with a compile time switch.
         )
 
-        $(P An out of bounds memory access will cause undefined behavior,
+        $(UNDEFINED_BEHAVIOR An out of bounds memory access will cause undefined behavior,
             therefore array bounds check is normally enabled in `@safe` functions.
             The runtime behavior is part of the language semantics.
         )
@@ -763,6 +788,10 @@ $(H3 $(LNAME2 void-initialization, Void Initialization))
         Void initializations are an advanced technique and should only be used
         when profiling indicates that it matters.
         )
+        $(P to void initialise the elements of dynamic array use
+        $(REF uninitializedArray, std,array).
+        )
+
 
 $(H3 $(LNAME2 static-init-static, Static Initialization of Statically Allocated Arrays))
 
@@ -785,7 +814,7 @@ $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
 enum Color { red, blue, green };
 
-int value[Color.max + 1] =
+int[Color.max + 1] value =
   [ Color.blue :6,
     Color.green:2,
     Color.red  :5 ];

@@ -36,7 +36,7 @@ make -f posix.mak html
 
 This builds the `dmd` compiler itself first and then uses it to build the
 website pages. You may see warnings while the compiler is built. After `make`
-ended with error code 0, directory `web` contains the produced HTML
+ends with error code 0, directory `web` should contain the produced HTML
 files. Take a moment to open `web/index.html` in a browser.
 
 ## Building the standard library documentation
@@ -70,22 +70,22 @@ make -f posix.mak phobos-prerelease
 
 The output is in `web/phobos-prerelease` and `library-prerelease`.
 
-### Building the `release` libraries
+### Building the `latest` release libraries
 
 Fortunately there's no need to fumble with version numbers and git tags etc.;
 all is automated. Run this command:
 
 ```
-make -f posix.mak docs-release
+make -f posix.mak docs-latest
 ```
 
 If you only want to build a specific part (e.g. Phobos), run:
 
 ```
-make -f posix.mak phobos-release
+make -f posix.mak phobos-latest
 ```
 
-(`docs-release` is a shorthand for `dmd-release`, `druntime-release`, `phobos-releas` and `apidocs-release`)
+(`docs-latest` is a shorthand for `dmd-latest`, `druntime-latest`, `phobos-latest` and `apidocs-latest`)
 
 These commands tell you the release being built in their first line of output.
 Then they proceed and clone the appropriate release for `dmd`, `druntime`, and
@@ -95,6 +95,15 @@ be present in `$R`: `dlang.org`, `dmd`, `dmd-2.083.2`, `druntime-2.083.2`, and
 should be the same for all three directories.
 
 The output is in `web/phobos` and `web/library`.
+
+### Avoid building dmd
+
+By default, the dlang.org build downloads a stable DMD compiler which is used to build the documentation pages.
+If you prefer to use an installed `dmd` binary, set `STABLE_DMD` and `STABLE_DMD_CONF`:
+
+```
+make -f posix.mak html -j4 STABLE_DMD=dmd STABLE_DMD_CONF=/etc/dmd.conf
+```
 
 ### Learning more about DDoc
 

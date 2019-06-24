@@ -41,31 +41,31 @@ $(GNAME DeclaratorIdentifier):
     $(GLINK AltDeclaratorIdentifier)
 
 $(GNAME VarDeclaratorIdentifier):
-    $(I Identifier)
-    $(I Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
+    $(GLINK_LEX Identifier)
+    $(GLINK_LEX Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
 
 $(GNAME AltDeclaratorIdentifier):
-    $(GLINK BasicType2) $(I Identifier) $(GLINK AltDeclaratorSuffixes)$(OPT)
-    $(GLINK BasicType2) $(I Identifier) $(GLINK AltDeclaratorSuffixes)$(OPT) $(D =) $(GLINK Initializer)
-    $(GLINK BasicType2)$(OPT) $(I Identifier) $(GLINK AltDeclaratorSuffixes)
-    $(GLINK BasicType2)$(OPT) $(I Identifier) $(GLINK AltDeclaratorSuffixes) $(D =) $(GLINK Initializer)
+    $(GLINK BasicType2) $(GLINK_LEX Identifier) $(GLINK AltDeclaratorSuffixes)$(OPT)
+    $(GLINK BasicType2) $(GLINK_LEX Identifier) $(GLINK AltDeclaratorSuffixes)$(OPT) $(D =) $(GLINK Initializer)
+    $(GLINK BasicType2)$(OPT) $(GLINK_LEX Identifier) $(GLINK AltDeclaratorSuffixes)
+    $(GLINK BasicType2)$(OPT) $(GLINK_LEX Identifier) $(GLINK AltDeclaratorSuffixes) $(D =) $(GLINK Initializer)
 
 $(GNAME Declarator):
     $(GLINK VarDeclarator)
     $(GLINK AltDeclarator)
 
 $(GNAME VarDeclarator):
-    $(GLINK BasicType2)$(OPT) $(I Identifier)
+    $(GLINK BasicType2)$(OPT) $(GLINK_LEX Identifier)
 
 $(GNAME AltDeclarator):
-    $(GLINK BasicType2)$(OPT) $(I Identifier) $(GLINK AltDeclaratorSuffixes)
+    $(GLINK BasicType2)$(OPT) $(GLINK_LEX Identifier) $(GLINK AltDeclaratorSuffixes)
     $(GLINK BasicType2)$(OPT) $(D $(LPAREN)) $(I AltDeclaratorX) $(D $(RPAREN))
     $(GLINK BasicType2)$(OPT) $(D $(LPAREN)) $(I AltDeclaratorX) $(D $(RPAREN)) $(GLINK AltFuncDeclaratorSuffix)
     $(GLINK BasicType2)$(OPT) $(D $(LPAREN)) $(I AltDeclaratorX) $(D $(RPAREN)) $(GLINK AltDeclaratorSuffixes)
 
 $(GNAME AltDeclaratorX):
-    $(GLINK BasicType2)$(OPT) $(I Identifier)
-    $(GLINK BasicType2)$(OPT) $(I Identifier) $(GLINK AltFuncDeclaratorSuffix)
+    $(GLINK BasicType2)$(OPT) $(GLINK_LEX Identifier)
+    $(GLINK BasicType2)$(OPT) $(GLINK_LEX Identifier) $(GLINK AltFuncDeclaratorSuffix)
     $(GLINK AltDeclarator)
 
 $(GNAME AltDeclaratorSuffixes):
@@ -102,7 +102,14 @@ $(GNAME BasicType):
     $(GLINK Typeof)
     $(GLINK Typeof) $(D .) $(GLINK IdentifierList)
     $(GLINK TypeCtor) $(D $(LPAREN)) $(GLINK Type) $(D $(RPAREN))
-    $(GLINK2 grammar, TypeVector)
+    $(GLINK Vector)
+    $(GLINK2 grammar, Traits)
+
+$(GNAME Vector):
+    $(D __vector) $(D $(LPAREN)) $(GLINK VectorBaseType) $(D $(RPAREN))
+
+$(GNAME VectorBaseType):
+    $(GLINK Type)
 
 $(GNAME BasicTypeX):
 $(MULTICOLS 5,
@@ -144,11 +151,12 @@ $(GNAME BasicType2X):
     $(D function) $(GLINK2 function, Parameters) $(GLINK2 function, FunctionAttributes)$(OPT)
 
 $(GNAME IdentifierList):
-    $(I Identifier)
-    $(I Identifier) $(D .) $(I IdentifierList)
+    $(GLINK_LEX Identifier)
+    $(GLINK_LEX Identifier) $(D .) $(I IdentifierList)
     $(GLINK2 template, TemplateInstance)
     $(GLINK2 template, TemplateInstance) $(D .) $(I IdentifierList)
-    $(I Identifier) $(D [) $(GLINK2 expression, AssignExpression) $(D].) $(I IdentifierList)
+    $(GLINK_LEX Identifier) $(D [) $(GLINK2 expression, AssignExpression) $(D])
+    $(GLINK_LEX Identifier) $(D [) $(GLINK2 expression, AssignExpression) $(D].) $(I IdentifierList)
 )
 
 $(GRAMMAR
@@ -215,7 +223,7 @@ $(GNAME StructMemberInitializers):
 
 $(GNAME StructMemberInitializer):
     $(GLINK NonVoidInitializer)
-    $(I Identifier) $(D :) $(GLINK NonVoidInitializer)
+    $(GLINK_LEX Identifier) $(D :) $(GLINK NonVoidInitializer)
 )
 
 $(H2 $(LNAME2 declaration_syntax, Declaration Syntax))
@@ -291,7 +299,7 @@ $(GNAME AutoDeclarationX):
     $(I AutoDeclarationX) $(D ,) $(GLINK AutoDeclarationY)
 
 $(GNAME AutoDeclarationY):
-    $(I Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
+    $(GLINK_LEX Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
 )
 
         $(P If a declaration starts with a $(I StorageClass) and has
@@ -338,8 +346,9 @@ $(GNAME AliasDeclarationX):
     $(I AliasDeclarationX) $(D ,) $(GLINK AliasDeclarationY)
 
 $(GNAME AliasDeclarationY):
-    $(I Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK StorageClasses)$(OPT) $(GLINK Type)
-    $(I Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK2 expression, FunctionLiteral)
+    $(GLINK_LEX Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK StorageClasses)$(OPT) $(GLINK Type)
+    $(GLINK_LEX Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK2 expression, FunctionLiteral)
+    $(GLINK_LEX Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK StorageClasses)$(OPT) $(GLINK BasicType) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT)
 )
 
     $(P $(I AliasDeclaration)s create a symbol that is an alias for another type,
@@ -390,6 +399,15 @@ t1.t v1;  // v1 is type int
 t2 v2;    // v2 is type int
 t3 v3;    // v3 is type int
 t4 v4;    // v4 is type int
+
+alias Fun = int(string p);
+int fun(string){return 0;}
+static assert(is(typeof(fun) == Fun));
+
+alias MemberFun1 = int() const;
+alias MemberFun2 = const int();
+// leading attributes apply to the func, not the return type
+static assert(is(MemberFun1 == MemberFun2));
 --------------------
 
         $(P
@@ -470,12 +488,17 @@ alias abc = foo.bar; // is it a type or a symbol?
         $(P Aliases cannot be used for expressions:)
 
 -----------
-struct S { static int i; }
-S s;
+struct S
+{
+    static int i;
+    static int j;
+}
 
-alias a = s.i; // illegal, s.i is an expression
-alias b = S.i; // ok
-b = 4;         // sets S.i to 4
+alias a = S.i; // OK, `S.i` is a symbol
+alias b = S.j; // OK. `S.j` is also a symbol
+alias c = a + b; // illegal, `a + b` is an expression
+a = 2;         // sets `S.i` to `2`
+b = 4;         // sets `S.j` to `4`
 -----------
 
 $(H2 $(LNAME2 extern, Extern Declarations))

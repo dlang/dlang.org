@@ -193,7 +193,7 @@ $(H2 $(LNAME2 pointers_and_gc, Pointers and the Garbage Collector))
         to enable the maximum flexibility in garbage collector design.
         )
 
-        $(P Undefined behavior:)
+        $(UNDEFINED_BEHAVIOR
 
         $(UL
 
@@ -304,6 +304,7 @@ struct Foo
         )
 
         )
+        )
 
         $(P Things that are reliable and can be done:)
 
@@ -400,13 +401,21 @@ $(H2 $(LNAME2 gc_config, Configuring the Garbage Collector))
         $(UL
         $(LI disable:0|1    - start disabled)
         $(LI profile:0|1    - enable profiling with summary when terminating program)
-        $(LI gc:conservative|manual - select gc implementation (default = conservative))
+        $(LI gc:conservative|precise|manual - select gc implementation (default = conservative))
         $(LI initReserve:N  - initial memory to reserve in MB)
         $(LI minPoolSize:N  - initial and minimum pool size in MB)
         $(LI maxPoolSize:N  - maximum pool size in MB)
         $(LI incPoolSize:N  - pool size increment MB)
+        $(LI parallel:N     - number of additional threads for marking)
         $(LI heapSizeFactor:N - targeted heap size to used memory ratio)
-        )
+        $(LI cleanup:none|collect|finalize - how to treat live objects when terminating
+          $(UL
+            $(LI collect: run a collection (the default for backward compatibility))
+            $(LI none: do nothing)
+            $(LI finalize: all live objects are finalized unconditionally)
+          )
+        ))
+
 
     $(P In addition, --DRT-gcopt=help will show the list of options and their current settings.
     )
@@ -414,7 +423,7 @@ $(H2 $(LNAME2 gc_config, Configuring the Garbage Collector))
         so the program will not see them. They are still available via `rt_args`.
     )
     $(P Configuration via the command line can be disabled by declaring a variable for the
-        linker to pick up before using it's default from the runtime:)
+        linker to pick up before using its default from the runtime:)
         ---------
         extern(C) __gshared bool rt_cmdline_enabled = false;
         ---------
@@ -434,6 +443,34 @@ $(H2 $(LNAME2 gc_config, Configuring the Garbage Collector))
     $(P Evaluation order of options is `rt_options`, then environment variables, then command
         line arguments, i.e. if command line arguments are not disabled, they can override
         options specified through the environment or embedded in the executable.
+    )
+
+$(H2 $(LNAME2 precise_gc, Precise Heap Scanning))
+
+    $(P If you select `precise` as the garbage collector via the options above, type
+        information will be used to identify actual or possible pointers or
+        references within heap allocated data objects. Non-pointer data will not
+        be interpreted as a reference to other memory as a "false pointer". The collector
+        has to make pessimistic assumptions if a memory slot can contain both a pointer or
+        an integer value, it will still be scanned (e.g. in a `union`).
+    )
+
+    $(P If you use the GC memory functions from `core.memory`, and plan to use it
+        for data with a mixture of pointers and non-pointer data you should pass the
+        TypeInfo of your allocated struct, class or type as the optional parameter.
+        The default `null` is interpreted as memory that might contain pointers everywhere.)
+        ---------
+        struct S { size_t hash; Data* data; }
+        S* s = cast(S*)GC.malloc(S.sizeof, 0, typeid(S));
+        ---------
+
+    $(P $(RED Attention:) Enabling precise scanning needs slightly more caution with
+        type declarations. For example, if you reserve a buffer as part of a struct and later
+        emplace an object instance with references to other allocations into this memory,
+        you must not use basic integer types to reserve the space. Doing so will cause the
+        garbage collector not to detect the references. Instead, use an array type that
+        will scan this area conservatively. Using `void*` is usually the best option as it also
+        ensures proper alignment for pointers being scanned by the GC.
     )
 
 $(H2 $(LNAME2 precise_dataseg, Precise Scanning of the DATA and TLS segment))
@@ -481,6 +518,60 @@ $(H2 $(LNAME2 precise_dataseg, Precise Scanning of the DATA and TLS segment))
         shared static this() { singleton.mem = allocateSharedMem(); }
         ---------
         This doesn't work for TLS memory, though.
+
+$(H2 $(LNAME2 gc_parallel, Parallel marking))
+
+    $(P By default the garbage collector uses all available CPU cores to mark the heap.)
+
+    $(P This might affect your application if it has threads that are not suspended
+        during the mark phase of the collection. You can configure the number of
+        additional threads used for marking by GC option `parallel`,
+        e.g. by passing `--DRT-gcopt=parallel:2` on the command
+        line or embedding the option into the binary via `rt_options`.
+        The number of threads actually created is limited to
+        $(LINK2 $(ROOT_DIR)library/core/cpuid/threads_per_cpu.html, `core.cpuid.threadsPerCPU-1`).
+        A value of `0` disables parallel marking completely.)
+
+$(H2 $(LNAME2 gc_registry, Adding your own Garbage Collector))
+
+    $(P GC implementations are added to a registry that allows to supply
+        more implementations by just linking them into
+        the binary. To do so add a function that is executed before the
+        D runtime initialization using `pragma(crt_constructor)`:)
+        ---
+        import core.gc.gcinterface, core.gc.registry;
+        extern (C) pragma(crt_constructor) void registerMyGC()
+        {
+            registerGCFactory("mygc", &createMyGC);
+        }
+
+        GC createMyGC()
+        {
+            __gshared instance = new MyGC;
+            instance.initialize();
+            return instance;
+        }
+
+        class MyGC : GC { /*...*/ }
+        ---
+
+    $(P [The GC modules defining the interface (gc.interface) and registration
+        (gc.registry) are currently not public and are subject to
+        change from version to version. Add an import search path to the
+        druntime/src path to compile the example.])
+
+    $(P The new GC is added to the list of available garbage collectors that
+        can be selected via the usual configuration options, e.g. by embedding
+        `rt_options` into the binary:)
+        ---
+        extern (C) __gshared string[] rt_options = ["gcopt=gc:mygc"];
+        ---
+
+    $(P You can also remove the standard GC implementation from a statically
+        linked binary by redefining the function `extern(C) void* register_default_gcs()`.
+        If no custom garbage collector has been registered
+        all attempts to allocate GC managed memory will terminate
+        the application with an appropriate message.)
 
 $(H2 $(LNAME2 references, References))
 

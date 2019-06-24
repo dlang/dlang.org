@@ -9,15 +9,13 @@ $(BUGSTITLE_TEXT_HEADER Compiler changes,
 $(LI $(RELATIVE_LINK2 deprecate_ctor_in_static_block,Deprecate allowing a constructor declaration in a static block))
 $(LI $(RELATIVE_LINK2 deprecate_this_super_as_types,Deprecate usage of `this` and `super` as types))
 $(LI $(RELATIVE_LINK2 expression-based_contract_syntax,Implement DIP 1009 - Add Expression-Based Contract Syntax))
+$(LI $(RELATIVE_LINK2 extern_cpp_overhaul,`extern (C++)` construction, destruction, operators and other mangling improvements))
 $(LI $(RELATIVE_LINK2 fix16206,Support for iterating template overloads))
 $(LI $(RELATIVE_LINK2 getlinkage_for_classes,__traits(getLinkage, ...) now works on structs, classes, and interfaces.))
 $(LI $(RELATIVE_LINK2 implicit_catch_error,Implicit `catch` statements will now result in an error))
 $(LI $(RELATIVE_LINK2 implicit_enum_comparison_error,Implicit comparison of different enums will now result in an error))
 $(LI $(RELATIVE_LINK2 implicit_string_concatenation_error,Implicit string concatenation will now result in an error))
 $(LI $(RELATIVE_LINK2 iretq,`IRETQ` is now supported in inline assembler.))
-$(LI $(RELATIVE_LINK2 mangle_ctor,`extern (C++)` now mangles class constructor's correctly.))
-$(LI $(RELATIVE_LINK2 mangle_nullptr_t,`extern (C++)` is now able to mangle `typeof(null)` (aka: `nullptr_t`) which often appears in C++ API's.))
-$(LI $(RELATIVE_LINK2 mangle_operators,`extern (C++)` operators now mangle correctly.))
 $(LI $(RELATIVE_LINK2 min_runtime_classes,Interfaces and classes can be used without the runtime if only static fields are utilized))
 $(LI $(RELATIVE_LINK2 redundant_stc_error,Specifying redundant storage classes will now result in a compiler error))
 
@@ -34,6 +32,7 @@ $(LI $(RELATIVE_LINK2 getsect,Add missing declarations to `core.sys.darwin.mach.
 $(BUGSTITLE_TEXT_HEADER Library changes,
 
 $(LI $(RELATIVE_LINK2 remove_std_c,The deprecated `std.c` package has been removed.))
+$(LI $(RELATIVE_LINK2 std-algorithm-iteration-joiner,The performance of `std.algorithm.iteration.joiner` has been improved))
 $(LI $(RELATIVE_LINK2 std-algorithm-mutation-remove,`std.algorithm.mutation.remove` now only accepts integral values or pair of integral values as offset))
 $(LI $(RELATIVE_LINK2 std-math-fminmax,Changed semantics of std.math.{fmin,fmax} wrt. NaNs.))
 
@@ -182,6 +181,49 @@ int fun(ref int a, int b)
 ---
 )
 
+$(LI $(LNAME2 extern_cpp_overhaul,`extern (C++)` construction, destruction, operators and other mangling improvements)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/extern_cpp_overhaul.dd)
+$(P
+Many improvements have been made to the `extern(C++)` experience in this release cycle.
+)
+
+$(P
+Mangling improvements include:
+)
+
+$(P
+$(UL
+  $(LI  Constructor/destructor mangling matches C++)
+  $(LI  Compatible D style operators now mangle as C++ operators)
+  $(LI  `nullptr_t` mangles correctly)
+  $(LI  Various mangling bugs have been fixed)
+)
+)
+
+$(P
+`extern(C++)` APIs that use `nullptr_t` can use `typeof(null)` on the D side:
+)
+---
+alias nullptr_t = typeof(null);
+extern (C++) void fun(nullptr_t);
+---
+
+$(P
+`extern (C++)` mangling of operators is working for all operators that are semantically equivalent.
+This list includes all instantiations of `opUnary`, `opBinary`, `opAssign`, `opOpAssign`, `opCast`, `opEquals`, `opIndex`, `opCall`.
+Two notable exceptions are `opCmp`, and C++ `operator !`, which don't have compatible implementations.
+)
+
+$(P
+Mangling of `extern (C++) class` constructors and destructor are working.
+)
+
+$(P
+This release also includes ABI fixes where destructors are now correctly added to the virtual table, and constructor/destructor calling semantics now match C++.
+With this, mixed-language class hierarchies are working, with construction/destruction being supported in either language.
+)
+)
+
 $(LI $(LNAME2 fix16206,Support for iterating template overloads)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/fix16206.dd)
 $(P
@@ -221,9 +263,11 @@ It is now possible to detect the language ABI specified for a struct, class, or 
 class MyClass {}
 extern (C++) struct MyCPPStruct {}
 extern (C++) interface MyCPPInterface {}
+extern (Objective-C) interface MyObjcInterface {}
 static assert(__traits(getLinkage, MyClass) == "D");
 static assert(__traits(getLinkage, MyCPPStruct) == "C++");
 static assert(__traits(getLinkage, MyCPPInterface) == "C++");
+static assert(__traits(getLinkage, MyObjcInterface) == "Objective-C");
 ---
 )
 
@@ -321,31 +365,6 @@ void isr()
     }
 }
 ---
-)
-
-$(LI $(LNAME2 mangle_ctor,`extern (C++)` now mangles class constructor's correctly.)
-$(CHANGELOG_SOURCE_FILE dmd, changelog/mangle_ctor.dd)
-$(P
-`extern (C++)` mangling of class constructor is working, also virtual and non-virtual destructors mangle correctly too.
-C++ semantics are not yet perfectly matching, but some simple cases are working.
-)
-)
-
-$(LI $(LNAME2 mangle_nullptr_t,`extern (C++)` is now able to mangle `typeof(null)` (aka: `nullptr_t`) which often appears in C++ API's.)
-$(CHANGELOG_SOURCE_FILE dmd, changelog/mangle_nullptr_t.dd)
----
-alias nullptr_t = typeof(null);
-extern (C++) void fun(nullptr_t);
----
-)
-
-$(LI $(LNAME2 mangle_operators,`extern (C++)` operators now mangle correctly.)
-$(CHANGELOG_SOURCE_FILE dmd, changelog/mangle_operators.dd)
-$(P
-`extern (C++)` mangling of operators is working for all operators that are semantically equivalent.
-This list includes all instantiations of `opUnary`, `opBinary`, `opAssign`, `opOpAssign`, `opCast`, `opEquals`, `opIndex`, `opCall`.
-Two notable exceptions are `opCmp`, and C++ `operator !`, which don't have compatible implementations.
-)
 )
 
 $(LI $(LNAME2 min_runtime_classes,Interfaces and classes can be used without the runtime if only static fields are utilized)
@@ -528,9 +547,6 @@ When running the application it will produce an output similar to:
 $(P
 $(CONSOLE
 object.Exception@main.d(3): bar
-)
-
-$(P
 main.d:3 void main.bar() [0x71afdfb]
 main.d:8 void main.foo() [0x71afe0c]
 main.d:13 _Dmain [0x71afd78]
@@ -561,6 +577,37 @@ $(LI $(LNAME2 remove_std_c,The deprecated `std.c` package has been removed.)
 $(CHANGELOG_SOURCE_FILE phobos, changelog/remove_std_c.dd)
 $(P
 Use the `core.stdc` package instead.
+)
+)
+
+$(LI $(LNAME2 std-algorithm-iteration-joiner,The performance of `std.algorithm.iteration.joiner` has been improved)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-algorithm-iteration-joiner.dd)
+$(P
+$(H4 DMD)
+)
+
+$(P
+$(CONSOLE
+> dmd -O -inline -release ./joiner.d && ./joiner
+before.joiner   = 57 secs, 834 ms, 289 μs, and 3 hnsecs
+new.joiner      = 44 secs, 936 ms, 706 μs, and 5 hnsecs
+)
+)
+
+$(P
+$(H4 LDC)
+)
+
+$(P
+$(CONSOLE
+> ldmd -O3 -release -inline joiner.d && ./joiner
+before.joiner   = 5 secs, 180 ms, 193 μs, and 7 hnsecs
+new.joiner      = 3 secs, 168 ms, 560 μs, and 6 hnsecs
+)
+)
+
+$(P
+The benchmark code can be found $(LINK2 https://gist.github.com/wilzbach/ffd5d20639766a831fd4b1962572897a, here).
 )
 )
 
@@ -645,9 +692,11 @@ $(CHANGELOG_SEP_TEXT_BUGZILLA)
 
 $(BUGSTITLE_BUGZILLA DMD Compiler regressions,
 
+$(LI $(BUGZILLA 18068): No file names and line numbers in stack trace)
 $(LI $(BUGZILLA 18821): DMD segfault when doing unsafe operation outside of any function)
 $(LI $(BUGZILLA 18905): [Reg 2.079] C++ classes can no longer be used with -betterC)
 $(LI $(BUGZILLA 18936): Internal error: dmd/backend/cgxmm.c 684)
+$(LI $(BUGZILLA 19024): [REG 2.081-beta] AssertError@dmd/dsymbolsem.d$(LPAREN)4317$(RPAREN): Assertion failure)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bugs,
 
@@ -659,6 +708,7 @@ $(LI $(BUGZILLA 12807): UFCS checks "alias this" attributes even when not called
 $(LI $(BUGZILLA 13435): Strange error if struct is a class member and opAssign applied)
 $(LI $(BUGZILLA 13741): std.traits.moduleName & packageName do not work with functions that have parameters)
 $(LI $(BUGZILLA 14178): C++ linux name mangling does not handle standard abbreviations for const types)
+$(LI $(BUGZILLA 14739): Immutable alias to template triggers dmd assert)
 $(LI $(BUGZILLA 15068): wrong error message on attempting to use type as template)
 $(LI $(BUGZILLA 15388): extern$(LPAREN)C++$(RPAREN) - typeof$(LPAREN)null$(RPAREN) should mangle as nullptr_t)
 $(LI $(BUGZILLA 15475): Ddoc code sample with unbalanced paren comes out as macro)
@@ -670,6 +720,7 @@ $(LI $(BUGZILLA 16206): traits getOverloads fails when one of the overload is a 
 $(LI $(BUGZILLA 17373): traits getOverloads + multiple interface inheritance only see one of the interfaces' overloads)
 $(LI $(BUGZILLA 18228): this$(LPAREN)this a$(RPAREN){} doesn't generate postblit ctor; this$(LPAREN)this$(RPAREN){} does)
 $(LI $(BUGZILLA 18236): Invalid line reported on error casting enum)
+$(LI $(BUGZILLA 18266): ICE: should allow reusing identifier in declarations in disjoint scopes in a function)
 $(LI $(BUGZILLA 18365): header file generation doesn't include the return attribute)
 $(LI $(BUGZILLA 18584): Undefined identifier when not specifying 'this')
 $(LI $(BUGZILLA 18730): dmd miscompiles core.bitop.bt with -O)
@@ -683,12 +734,16 @@ $(LI $(BUGZILLA 18888): extern$(LPAREN)C++$(RPAREN) template arg/alias arg mangl
 $(LI $(BUGZILLA 18890): extern$(LPAREN)C++$(RPAREN) mangles all destructors the same)
 $(LI $(BUGZILLA 18891): extern$(LPAREN)C++$(RPAREN) destructor prototype should just link; not generate field/aggregate dtor)
 $(LI $(BUGZILLA 18892): Wrong type in error message for static members and alias this)
+$(LI $(BUGZILLA 18916): ICE using Typedef and __LINE__)
 $(LI $(BUGZILLA 18922): dmd doesn't do substitutions for C++ namespaces in different module/file)
 $(LI $(BUGZILLA 18928): extern$(LPAREN)C++$(RPAREN) bad codegen, wrong calling convention)
 $(LI $(BUGZILLA 18951): package static method masked by public static method in class)
+$(LI $(BUGZILLA 18953): Win32: extern$(LPAREN)C++$(RPAREN) struct destructor not called correctly through runtime)
 $(LI $(BUGZILLA 18957): extern$(LPAREN)C++$(RPAREN) doesn't mangle 'std' correctly on posix systems)
+$(LI $(BUGZILLA 18966): extern$(LPAREN)C++$(RPAREN) constructor should match C++ semantics assigning vtable)
 $(LI $(BUGZILLA 18970): DMD segfault due to opDispatch)
 $(LI $(BUGZILLA 18976): Inconsistency in overload merging with aliases)
+$(LI $(BUGZILLA 18984): Debugging stack structs which are returned causes incorrect debuginfo.)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
@@ -697,6 +752,11 @@ $(LI $(BUGZILLA 15589): extern$(LPAREN)C++$(RPAREN) virtual destructors are not 
 $(LI $(BUGZILLA 15691): Improve error message for struct member initializer)
 $(LI $(BUGZILLA 18859): Silence class allocator/deallocator deprecation warning if they are marked "deprecated")
 $(LI $(BUGZILLA 18963): Relax restrictions on 'return' parameters when parameter is not a pointer)
+)
+$(BUGSTITLE_BUGZILLA Phobos regressions,
+
+$(LI $(BUGZILLA 18937): [REG 2.080.0] std.experimental.allocator: compiling `make` needs an unreasonable amount of memory for structs that contain static arrays)
+$(LI $(BUGZILLA 18993): toLower is broken for UTF chars)
 )
 $(BUGSTITLE_BUGZILLA Phobos bugs,
 
@@ -711,6 +771,8 @@ $(LI $(BUGZILLA 18847): std.allocator: Region uses .parent before it can be set)
 $(LI $(BUGZILLA 18934): std.concurrency receive throws assertion failure if message is a struct containing const data)
 $(LI $(BUGZILLA 18940): [std.net.curl]Can't run examples on page. cannot implicitly convert expression ... `char[]` to `string`)
 $(LI $(BUGZILLA 18952): std.experimental.checkedint.Saturate prints integral promotion deprecation message)
+$(LI $(BUGZILLA 19020): findSkip, findSplit and findSplitBefore return wrong results)
+$(LI $(BUGZILLA 19023): findSplitBefore and findSplitAfter give wrong bool result)
 )
 $(BUGSTITLE_BUGZILLA Phobos enhancements,
 
@@ -721,11 +783,17 @@ $(LI $(BUGZILLA 18813): fromStringz should work with char, wchar and dchar)
 $(LI $(BUGZILLA 18837): MMFile should have opDollar)
 $(LI $(BUGZILLA 18948): std.uni.toLower and std.uni.toUpper should work with random access ranges)
 )
+$(BUGSTITLE_BUGZILLA Druntime regressions,
+
+$(LI $(BUGZILLA 18996): Inserting a type containing indirections into an std.container Array causes SIGILL$(LPAREN)4$(RPAREN). Illegal Instruction.)
+$(LI $(BUGZILLA 19005): [REG2.081-b1] object.hashOf no longer works for std.datetime.date.Date)
+)
 $(BUGSTITLE_BUGZILLA Druntime bugs,
 
 $(LI $(BUGZILLA 14536): Calling destroy$(LPAREN)$(RPAREN) on a on an extern$(LPAREN)C++$(RPAREN) class causes a segfault)
 $(LI $(BUGZILLA 18932): core.internal.hash.hashOf$(LPAREN)val, seed$(RPAREN) ignores `seed` when val is a raw pointer)
 $(LI $(BUGZILLA 18989): On OSX32, core.stdc.time.clock$(LPAREN)$(RPAREN) should resolve to clock$UNIX2003$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 19008): core.internal.convert.toUbyte doesn't work on enums)
 )
 $(BUGSTITLE_BUGZILLA Druntime enhancements,
 
@@ -748,7 +816,7 @@ $(LI $(BUGZILLA 18874): Add thatneedle.com to organizations using D)
 $(LI $(BUGZILLA 18959): [Change Log: 2.079.0] substitute was added in std.algorithm.iteration but the changelog points to std.algorithm.searching)
 )
 )
-$(D_CONTRIBUTORS_HEADER 52)
+$(D_CONTRIBUTORS_HEADER 51)
 $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR aG0aep6G)
     $(D_CONTRIBUTOR Alexandru Jercaianu)
@@ -783,7 +851,6 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Nathan Sashihara)
     $(D_CONTRIBUTOR Nicholas Lindsay Wilson)
     $(D_CONTRIBUTOR Nick Treleaven)
-    $(D_CONTRIBUTOR Q. F. Schroll)
     $(D_CONTRIBUTOR Quirin F. Schroll)
     $(D_CONTRIBUTOR Radosław Rusiniak)
     $(D_CONTRIBUTOR Radu Racariu)
