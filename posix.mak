@@ -193,8 +193,8 @@ DUB=$(STABLE_DMD_BIN_ROOT)/dub
 
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
-	core.internal. core.stdc.config core.sys. \
-	std.algorithm.internal std.c. std.internal. std.regex.internal. \
+	core.internal core.stdc.config core.sys \
+	std.algorithm.internal std.c std.internal std.regex.internal \
 	std.digest.digest \
 	std.windows.registry etc.linux.memoryerror \
 	std.typetuple \
@@ -205,6 +205,7 @@ MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
 	dmd.scanmach dmd.scanmscoff)
 
 MOD_EXCLUDES_LATEST=$(MOD_EXCLUDES_PRERELEASE)
+MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE)
 
 # rdmd must fetch the model, imports, and libs from the specified version
 DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)
@@ -409,18 +410,21 @@ ${GENERATED}/${LATEST}.ddoc :
 
 ${GENERATED}/modlist-${LATEST}.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) $< $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR) $(MOD_EXCLUDES_LATEST) \
-		$(addprefix --dump , object std etc core dmd rt) >$@
+	$(STABLE_RDMD) $< $(DRUNTIME_LATEST_DIR)/src $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)/src $(MOD_EXCLUDES_LATEST) \
+		$(addprefix --internal=, dmd rt core.internal) \
+		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
 
 ${GENERATED}/modlist-release.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) $< $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_RELEASE) \
-		$(addprefix --dump , object std etc core dmd rt) >$@
+	$(STABLE_RDMD) $< $(DRUNTIME_DIR)/src $(PHOBOS_DIR) $(DMD_DIR)/src $(MOD_EXCLUDES_RELEASE) \
+		$(addprefix --internal=, dmd rt core.internal) \
+		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) $< $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR) $(MOD_EXCLUDES_PRERELEASE) \
-		$(addprefix --dump , object std etc core dmd rt) >$@
+	$(STABLE_RDMD) $< $(DRUNTIME_DIR)/src $(PHOBOS_DIR) $(DMD_DIR)/src $(MOD_EXCLUDES_PRERELEASE) \
+		$(addprefix --internal=, dmd rt core.internal) \
+		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
