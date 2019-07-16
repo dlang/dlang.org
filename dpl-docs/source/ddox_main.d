@@ -176,12 +176,12 @@ int cmdFilterDocs(string[] args)
 		auto n = m["name"].get!string;
 		bool include = true;
 		foreach (ex; excluded)
-			if (n.startsWith(ex)) {
+			if (n == ex || n.startsWith(ex ~ ".")) {
 				include = false;
 				break;
 			}
 		foreach (inc; included)
-			if (n.startsWith(inc)) {
+			if (n == inc || n.startsWith(inc ~ ".")) {
 				include = true;
 				break;
 			}
