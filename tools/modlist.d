@@ -122,22 +122,34 @@ int main(string[] args)
 
         foreach (pkg; packages)
         {
-            TreeWriter writer;
+            Tree modules; // filtered copy of tree
 
-            void dump(ref Tree tree, string[] mod, bool inInternal, bool inIncluded)
+            void scan(ref Tree tree, string[] mod, bool inInternal, bool inIncluded)
             {
                 inInternal = inInternal || mod in internalSet;
                 inIncluded = mod in includedSet ? true : mod in excludedSet ? false : inIncluded;
                 if (tree.exists && inInternal == dumpingInternal && inIncluded)
                     if (mod.length > 1 || !tree.children) // std/package.d is currently unreachable!
-                        writer.put(mod, tree.children !is null);
+                        mod.fold!((subtree, name) => &subtree.children.require(name))(&modules).exists = true;
                 foreach (child; tree.children.keys.sort)
-                    dump(tree.children[child], mod ~ child, inInternal, inIncluded);
+                    scan(tree.children[child], mod ~ child, inInternal, inIncluded);
+            }
+
+            TreeWriter writer;
+            void dump(ref Tree tree, string[] mod)
+            {
+                if (tree.exists)
+                    writer.put(mod, tree.children !is null);
+                foreach (child; tree.children.keys.sort)
+                    dump(tree.children[child], mod ~ child);
             }
 
             auto subTree = pkg in root.children;
             if (subTree)
-                dump(*subTree, [pkg], false, false);
+            {
+                scan(*subTree, [pkg], false, false);
+                dump(modules, null);
+            }
         }
     }
 
