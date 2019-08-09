@@ -136,7 +136,7 @@ $(P A key design goal is: it should be possible to write code such that, regardl
 
 $(P (Footnote: $(D real) is close to $(SINGLEQUOTE indigenous) in the Borneo proposal for the Java programming language[Ref Borneo]).)
 
-$(P Consider evaluating $(D x*y + z*w), where $(D x, y, z) and $(D w) are double.)
+$(P Consider evaluating `x*y + z*w`, where $(D x, y, z) and $(D w) are double.)
 
 $(OL
 $(LI double r1 = x * y + z * w;)
@@ -215,10 +215,10 @@ $(LI Multiplication and division are $(I always) at risk of overflow or underflo
 )
 $(LI $(D x*x) will overflow if $(D abs(x)>sqrt(F.max)), and underflow to zero if $(D abs(x) < sqrt(F.min_normal*F.epsilon))  )
 $(LI Multiplication is commutative. $(D a * b == b * a)).
-$(LI Multiplication is not associative in general: $(D a*(b*c) != (a*b)*c), because (1) there is a risk of overflow or underflow and (2) $(D b*c) may be an exact calculation, so that $(D a*(b*c)) contains only one round-off error, whereas $(D (a*b)*c) contains two. The roundoff errors may therefore accumulate at the rate of just under 1 ulp per multiplication.)
-$(LI However, a limited form of associativity is possible if the type used for intermediate results is larger than any of the operands (which happens on x87 and Itanium machines). If $(D R) is the intermediate type, and $(D F) is the type being multiplied, up to $(D min(R.max_exp/F.max_exp, R.epsilon/F.epsilon)) values of type $(D F) can be multiplied together in any order without influencing the result. For example, if $(D R) is $(D double), multiplication of 8 floats $(D f1*f2*f3*f4*f5*f6*f7*f8) is completely associative. On x87, 130 floats can be safely multiplied together in any order, and 16 doubles can similarly be multiplied together safely.
+$(LI Multiplication is not associative in general: `a*(b*c) != (a*b)*c`, because (1) there is a risk of overflow or underflow and (2) $(D b*c) may be an exact calculation, so that $(D a*(b*c)) contains only one round-off error, whereas $(D (a*b)*c) contains two. The roundoff errors may therefore accumulate at the rate of just under 1 ulp per multiplication.)
+$(LI However, a limited form of associativity is possible if the type used for intermediate results is larger than any of the operands (which happens on x87 and Itanium machines). If $(D R) is the intermediate type, and $(D F) is the type being multiplied, up to $(D min(R.max_exp/F.max_exp, R.epsilon/F.epsilon)) values of type $(D F) can be multiplied together in any order without influencing the result. For example, if $(D R) is $(D double), multiplication of 8 floats `f1*f2*f3*f4*f5*f6*f7*f8` is completely associative. On x87, 130 floats can be safely multiplied together in any order, and 16 doubles can similarly be multiplied together safely.
 Strict distributivity does not hold even under these circumstances, as it may destroy the sign of -0.)
-$(LI The distributive law almost never holds. For example, $(D 4*x + 6*x != 10*x) if $(D x==nextDown(1.5)). $(D a*x + b*x == (a+b)*x) for all $(D x) only if the operations $(D a*x, b*x), and $(D (a+b)) are all exact operations, which is true only if $(D a) and $(D b) are exact powers of 2. Even then, if $(D a==-b) and $(D x==-0), then $(D a*x+b*x==0.0, (a+b)*x==-0.0).)
+$(LI The distributive law almost never holds. For example, `4*x + 6*x != 10*x` if $(D x==nextDown(1.5)). `a*x + b*x == (a+b)*x` for all $(D x) only if the operations `a*x, b*x`, and $(D (a+b)) are all exact operations, which is true only if $(D a) and $(D b) are exact powers of 2. Even then, if $(D a==-b) and $(D x==-0), then `a*x+b*x==0.0, (a+b)*x==-0.0`.)
 $(LI Performing a division by multiplication by the reciprocal returns a result which (in round-to-nearest mode) is at most 1.5 ulps from the correctly rounded result. For almost any denominator, the rounding is incorrect (>0.5ulps) for 27% of numerators. [Ref: N. Brisebarre, J-M Muller, and S.K. Raina, "Accelerating Correctly Rounded Floating-Point Division when the Divisor Is Known in Advance", IEEE Trans. on Computers, Vol 53, pp 1069-1072 (2004)].)
 )
 
