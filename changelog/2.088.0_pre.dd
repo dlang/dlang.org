@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Sep 01, 2019, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 25 major changes and 56 fixed Bugzilla issues.
+$(VER) comes with 27 major changes and 58 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 58 contributors)
         who made $(VER) possible.)
@@ -28,6 +28,7 @@ $(LI $(RELATIVE_LINK2 atomic-msync,`core.atomic : msync` has been removed))
 $(LI $(RELATIVE_LINK2 atomic_cas,Added overloads for `core.atomic.cas` which don't discard their result.))
 $(LI $(RELATIVE_LINK2 atomic_exchange,Added `core.atomic.atomicExchange`.))
 $(LI $(RELATIVE_LINK2 clock-monotonic,Non-POSIX `CLOCK` enum members have been removed from `core.sys.posix.time`))
+$(LI $(RELATIVE_LINK2 deprecate-callStructDtorsDuringGC,The druntime option `callStructDtorsDuringGC` has been deprecated.))
 $(LI $(RELATIVE_LINK2 dlfcn-posix,`core.sys.posix.dlfcn : dladdr, dlvsym, Dl_info` have been removed))
 $(LI $(RELATIVE_LINK2 exception-hiddenfunc,core.exception: Remove `onHiddenFuncError` / `HiddenFuncError`))
 $(LI $(RELATIVE_LINK2 exception-setasserthandler,`core.exception : setAssertHandler` has been removed))
@@ -46,6 +47,12 @@ $(LI $(RELATIVE_LINK2 errnoexception-errno-attributes,ErrnoException.errno is no
 $(LI $(RELATIVE_LINK2 remove-nullable-alias-get-this,`Nullable` `alias get this` has been deprecated))
 $(LI $(RELATIVE_LINK2 std-file-getAvailableDiskSpace,Added the `std.file.getAvailableDiskSpace` functionality.))
 $(LI $(RELATIVE_LINK2 std_json_trailing_comma,Allow std.json to overlook trailing comma))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Installer changes,
+
+$(LI $(RELATIVE_LINK2 update-curl,Bundled libcurl is now built with `DONT_USE_RECV_BEFORE_SEND_WORKAROUND`))
 
 )
 
@@ -386,6 +393,14 @@ They are available on their respective platform modules.
 )
 )
 
+$(LI $(LNAME2 deprecate-callStructDtorsDuringGC,The druntime option `callStructDtorsDuringGC` has been deprecated.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/deprecate-callStructDtorsDuringGC.dd)
+$(P
+Starting with this release utilizing the `callStructDtorsDuringGC` runtime option will result in a
+deprecation message printed to `stderr`.  The option will be removed in a future release.
+)
+)
+
 $(LI $(LNAME2 dlfcn-posix,`core.sys.posix.dlfcn : dladdr, dlvsym, Dl_info` have been removed)
 $(CHANGELOG_SOURCE_FILE druntime, changelog/dlfcn-posix.dd)
 $(P
@@ -552,6 +567,19 @@ assertNotThrown(parseJSON(`{ "a" : { } , }`));
 
 )
 
+$(BUGSTITLE_TEXT_BODY Installer changes,
+
+$(LI $(LNAME2 update-curl,Bundled libcurl is now built with `DONT_USE_RECV_BEFORE_SEND_WORKAROUND`)
+$(CHANGELOG_SOURCE_FILE installer, changelog/update-curl.dd)
+$(P
+The bundled libcurl is now build with
+`DONT_USE_RECV_BEFORE_SEND_WORKAROUND`. See [#399](https://github.com/dlang/installer/pull/399) for details.
+)
+)
+
+
+)
+
 $(BUGSTITLE_TEXT_BODY Dub changes,
 
 $(LI $(LNAME2 project-settings.file,Support for dub global settings file at the root package level)
@@ -569,7 +597,9 @@ $(CHANGELOG_SEP_TEXT_BUGZILLA)
 
 $(BUGSTITLE_BUGZILLA DMD Compiler regressions,
 
+$(LI $(BUGZILLA 20021): `static if` doesn't evaluate `opCast$(LPAREN)T : bool$(RPAREN)`)
 $(LI $(BUGZILLA 20057): compiler hang on conflicting local and imported template)
+$(LI $(BUGZILLA 20136): opEquals not recognized for AA key)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bugs,
 
