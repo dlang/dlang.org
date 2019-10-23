@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Nov 01, 2019, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 10 major changes and 60 fixed Bugzilla issues.
+$(VER) comes with 11 major changes and 64 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 44 contributors)
         who made $(VER) possible.)
@@ -15,6 +15,7 @@ $(BUGSTITLE_TEXT_HEADER Compiler changes,
 $(LI $(RELATIVE_LINK2 deprecate_foreach_shadowing,Deprecate allowing shadowing in foreach loops))
 $(LI $(RELATIVE_LINK2 isexpression-const-inout-shared,$(I IsExpression)s now correctly match combinations of `const`, `inout`, and `shared`.))
 $(LI $(RELATIVE_LINK2 mixin_template_mangling,`extern(C)` declarations in template mixins now mangle as C symbols when mixed in at global scope))
+$(LI $(RELATIVE_LINK2 optlink,The default linker for the Digital Mars tool chain is now optlink.exe))
 $(LI $(RELATIVE_LINK2 xcc,New `-Xcc` compiler flag to address issue 6952))
 
 )
@@ -171,6 +172,16 @@ mixin template GenPrintCallback(string text) {
 -------
 )
 
+$(LI $(LNAME2 optlink,The default linker for the Digital Mars tool chain is now optlink.exe)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/optlink.dd)
+$(P
+The default linker when building with -m32 under Windows has been changed
+from link.exe to optlink.exe to avoid calling the wrong linker when both
+the Digital Mars tool chain and the Microsoft compiler tools are found in
+the PATH environment variable.
+)
+)
+
 $(LI $(LNAME2 xcc,New `-Xcc` compiler flag to address issue 6952)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/xcc.dd)
 $(P
@@ -314,12 +325,14 @@ $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 $(LI $(BUGZILLA 809): Should be possible to convert lazy argument to delegate)
 $(LI $(BUGZILLA 1547): Default parameter values should use implicit static opCall)
 $(LI $(BUGZILLA 3004): [patch] Better handling of ignored pragmas)
+$(LI $(BUGZILLA 15118): Have dmd on Win32 look for optlink.exe instead of link.exe)
 $(LI $(BUGZILLA 18272): missing changelog entry and no doc for -gf $(LPAREN)besides cryptic emit debug info for all referenced types$(RPAREN))
 $(LI $(BUGZILLA 18617): need __traits$(LPAREN)deprecated, expr$(RPAREN) to check whether an expression would trigger deprecation)
 )
 $(BUGSTITLE_BUGZILLA Phobos regressions,
 
 $(LI $(BUGZILLA 20186): File size of "Hello, world" executable increased by 185KB)
+$(LI $(BUGZILLA 20295): std.zip: zip64 with 0xff bytes in end of central dir record do not work)
 )
 $(BUGSTITLE_BUGZILLA Phobos bugs,
 
@@ -334,6 +347,8 @@ $(LI $(BUGZILLA 20239): chameleon zip-file should be rejected by std.zip)
 $(LI $(BUGZILLA 20240): BitArray inconsistently preserves bits past length)
 $(LI $(BUGZILLA 20241): BitArray.bitsSet ignores length)
 $(LI $(BUGZILLA 20287): std.zip: Wrong compressed data)
+$(LI $(BUGZILLA 20301): std.regex.regex doesn't accept a const/immutable array of patterns)
+$(LI $(BUGZILLA 20302): std.functional.memoize doesn't accept a functions with const/immutable parameters)
 )
 $(BUGSTITLE_BUGZILLA Phobos enhancements,
 
