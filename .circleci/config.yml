@@ -1,9 +1,22 @@
-version: 2
+version: 2.1
+workflows:
+  build_and_deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
 jobs:
   build:
     working_directory: ~/dlang.org
     docker:
-      - image: circleci/node:4.8.2
+      - image: circleci/node
     parallelism: 1
     steps:
       - checkout
@@ -19,3 +32,21 @@ jobs:
       - run:
           command: ./.circleci/run.sh run-make
           name: Make the release target
+      - persist_to_workspace:
+          root: ~/dlang.org
+          paths:
+            - web
+  deploy:
+    working_directory: ~/dlang.org
+    docker:
+      - image: circleci/node
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ~/dlang.org
+
+      - run:
+          command: |
+            npm i netlify-cli
+            npx netlify deploy --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_ACCESS_TOKEN" --prod --dir=web
+          name: Deploy to Netlify
