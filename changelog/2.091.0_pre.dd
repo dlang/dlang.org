@@ -5,14 +5,13 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Mar 08, 2020, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 19 major changes and 63 fixed Bugzilla issues.
+$(VER) comes with 18 major changes and 64 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 55 contributors)
         who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
-$(LI $(RELATIVE_LINK2 d1-operator-deprecation,D1-style operator now have a lower priority than D2-style))
 $(LI $(RELATIVE_LINK2 deallocator,Class deallocator have been removed from the language))
 $(LI $(RELATIVE_LINK2 gnu-error-style,Can now report line numbers in GNU error style))
 $(LI $(RELATIVE_LINK2 headers,Added experimental `C++` header generation from `extern(C|C++)` declarations))
@@ -60,39 +59,11 @@ $(CHANGELOG_SEP_HEADER_TEXT)
 
 $(BUGSTITLE_TEXT_BODY Compiler changes,
 
-$(LI $(LNAME2 d1-operator-deprecation,D1-style operator now have a lower priority than D2-style)
-$(CHANGELOG_SOURCE_FILE dmd, changelog/d1-operator-deprecation.dd)
-$(P
-D1 operator overloads have been deprecated in $(LINK2 https://dlang.org/changelog/2.088.0.html v2.088.0).
-They historically had priority over D2 operator overload, and that priority was kept as is even after deprecating them.
-)
-
-$(P
-One main difference between D1 and D2 operator overload is that D1's are `virtual` by default,
-while the D2 operator overloading scheme relies on template, and so cannot be virtual.
-Code relying on virtuality of operator can be trivially adapted by providing a D2-style operator
-overload that forwards to a virtual method.
-)
-
-$(P
-However, as D1 operator overloads take priority, the deprecation message will be issued even if a D2
-operator overload is present.
-This means that code relying on virtual operators would need not only to introduce the aforementioned
-D2-style overload, but also to rename their method not to match the reserved D1 names.
-This in turns forces libraries to introduce a breaking change in order to silence the deprecation.
-)
-
-$(P
-Starting from this release, D2-style operator overloads take priority over D1-style,
-making it trivial to forward the former to the later.
-)
-)
-
 $(LI $(LNAME2 deallocator,Class deallocator have been removed from the language)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/deallocator.dd)
 $(P
 Class deallocator have been deprecated in v2.080.0
-(see $(LINK2 https://dlang.org/changelog/2.080.0.html#deprecate_class_allocators the changelog entry)),
+(see $(LINK2 https://dlang.org/changelog/2.080.0.html#deprecate_class_allocators, the changelog entry)),
 and turned into an error in v2.087.0.
 They have now been completely removed from the language, and the parser won't recognize them anymore.
 )
@@ -439,6 +410,7 @@ $(LI $(BUGZILLA 20545): Segfault/Assertion failure when parsing invalid AA liter
 $(LI $(BUGZILLA 20547): Wrong error message when trying to "new" an associative array)
 $(LI $(BUGZILLA 20551): In @safe code and using delegates, it's possible to escape references to function frame)
 $(LI $(BUGZILLA 20592): [GCC ASM] [ICE] dmd/iasmgcc.d$(LPAREN)332$(RPAREN): Assertion failure)
+$(LI $(BUGZILLA 20613): String switch in -betterC fails for 7+ labels)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
