@@ -3,7 +3,6 @@
 
 [![GitHub tag](https://img.shields.io/github/tag/dlang/dlang.org.svg?maxAge=86400)](https://github.com/dlang/dlang.org/releases)
 [![Bugzilla Issues](https://img.shields.io/badge/issues-Bugzilla-green.svg)](https://issues.dlang.org/buglist.cgi?component=dlang.org&list_id=220150&product=D&resolution=---)
-[![Issue Stats](https://img.shields.io/issuestats/p/github/dlang/dlang.org.svg?maxAge=2592000)](http://www.issuestats.com/github/dlang/dlang.org)
 [![license](https://img.shields.io/github/license/dlang/dlang.org.svg)](https://github.com/dlang/dlang.org/blob/master/LICENSE.txt)
 
 This repository contains the source files for the [D Language
