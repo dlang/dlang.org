@@ -347,7 +347,8 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 	ascii-table bugstats $(CHANGELOG_FILES) calendar community comparison concepts \
 	deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys glossary \
-	gsoc2011 gsoc2012 gsoc2012-template howto-promote htod index install \
+	gsoc2011 gsoc2012 gsoc2012-template gsoc2013 gsoc2013-template \
+	howto-promote htod index install \
 	menu orgs-using-d overview rdmd resources search security tuple wc windbg \
 	$(addprefix foundation/, index about donate sponsors upb-scholarship)
 
