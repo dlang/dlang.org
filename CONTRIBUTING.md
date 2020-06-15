@@ -9,7 +9,6 @@ Make sure you have these prerequisites working:
 * The `git` command line utility
 * The `make` utility (GNU version)
 * The C++ compiler for your platform (invokable as `gcc`)
-* Optional: `latex` for building the pdf documentation
 * Optional: `kindlegen` for building the Kindle documentation
 
 ## Getting the code
