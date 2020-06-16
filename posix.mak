@@ -322,10 +322,10 @@ SPEC_ROOT=$(addprefix spec/, \
 	const3 function operatoroverloading template template-mixin contracts \
 	version traits errors unittest garbage float iasm ddoc \
 	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
-	abi simd betterc)
+	abi simd betterc ob)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
-CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd))) changelog/release-schedule
+CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 ifneq (1,$(ENABLE_RELEASE))
  CHANGELOG_FILES+=changelog/pending
 endif
@@ -347,7 +347,8 @@ PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 	ascii-table bugstats $(CHANGELOG_FILES) calendar community comparison concepts \
 	deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys glossary \
-	gsoc2011 gsoc2012 gsoc2012-template howto-promote htod index install \
+	gsoc2011 gsoc2012 gsoc2012-template gsoc2013 gsoc2013-template \
+	howto-promote htod index install \
 	menu orgs-using-d overview rdmd resources search security tuple wc windbg \
 	$(addprefix foundation/, index about donate sponsors upb-scholarship)
 
@@ -737,7 +738,7 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
 	find ${PHOBOS_LATEST_DIR}/etc ${PHOBOS_LATEST_DIR}/std -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
-	${DMD_LATEST} -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
+	${DMD_LATEST} -J$(DMD_LATEST_DIR)/src/dmd/res -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
 		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
 		-Xf$@ -I${PHOBOS_LATEST_DIR} @$G/.latest-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
@@ -751,7 +752,7 @@ $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} | dpl-docs
 		sed -e /unittest/d >> $G/.prerelease-files.txt
 	find ${PHOBOS_DIR}/etc ${PHOBOS_DIR}/std -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.prerelease-files.txt
-	${DMD} -J$(DMD_DIR)/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
+	${DMD} -J$(DMD_DIR)/res -J$(DMD_DIR)/src/dmd/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
 		-version=StdDdoc -Df$G/.prerelease-dummy.html \
 		-Xf$@ -I${PHOBOS_DIR} @$G/.prerelease-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
