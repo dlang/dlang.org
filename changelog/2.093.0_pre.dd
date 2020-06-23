@@ -1,0 +1,340 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jul 01, 2020, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 11 major changes and 0 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 53 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 add_traits_isCopyable,Add new builtin `__traits(isCopyable, T)` for some type `T`))
+$(LI $(RELATIVE_LINK2 check_interface_implementations,Properly check interface implementations))
+$(LI $(RELATIVE_LINK2 shared-init,Allow initialization of shared variables.))
+$(LI $(RELATIVE_LINK2 vtemplates,Add -vtemplates switch to collect and list template statistics))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 add_exit_group,add `exit_group` to `core.sys.linux.unistd`))
+$(LI $(RELATIVE_LINK2 darwin_bindings,Added module `core.sys.darwin.mach.nlist` and `core.sys.darwin.mach.stab`))
+$(LI $(RELATIVE_LINK2 depercate_object_selector,Deprecated `object.selector`))
+$(LI $(RELATIVE_LINK2 gc_suffixes,Memory releated GC options can now be specified with higher accuracy))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Installer changes,
+
+$(LI $(RELATIVE_LINK2 install_sh_windows,The install script now also works on the Windows command prompt.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 dub_root_package_target_env_vars_added,Dub root package target environment variables added))
+$(LI $(RELATIVE_LINK2 improved_cli_extensibility,Improved CLI extensibility))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 add_traits_isCopyable,Add new builtin `__traits(isCopyable, T)` for some type `T`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/add_traits_isCopyable.dd)
+$(P
+Changing Phobos' `std.traits.isCopyable` to make use of this new builtin trait
+will reduce memory usage and, in turn, improve the performance of the compiler
+checking whether a type is copyable or not.
+)
+)
+
+$(LI $(LNAME2 check_interface_implementations,Properly check interface implementations)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/check_interface_implementations.dd)
+$(P
+In previous releases the check to verify that a class implements all methods of
+the interfaces it implements was performed late in the compilation phase. This
+caused the check to not be performed when code generation was skipped
+(compiling with the `-o-` flag).
+)
+
+$(P
+In this release the check has been moved to an earlier phase of the compilation,
+causing errors to be reported even when the `-o-` flag is used. This can cause
+some breakage if a piece of code has only been compiled with the `-o-` flag.
+)
+
+$(P
+The compiler will now properly report an error for the following code when the
+`-o-` flag is used:
+)
+
+```
+interface Foo
+{
+    void foo();
+}
+
+class Bar : Foo
+{
+
+}
+```
+)
+
+$(LI $(LNAME2 shared-init,Allow initialization of shared variables.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/shared-init.dd)
+$(P
+Shared variables can now be initialized when the `-preview=nosharedaccess`
+switch is used.
+)
+
+---
+void test()
+{
+    shared int x;
+    shared int y = 3;
+}
+---
+)
+
+$(LI $(LNAME2 vtemplates,Add -vtemplates switch to collect and list template statistics)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/vtemplates.dd)
+$(P
+Template instantiations can consume lots of time and memory.
+By passing the -vtemplates switch to the compiler,
+the compiler will collect and print statistics about template usage
+in the code being compiled.
+)
+
+$(P
+For each template that was instantiated, a list of how many
+times it is instantiated, and how many of those instantiations
+are unique, is printed.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 add_exit_group,add `exit_group` to `core.sys.linux.unistd`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/add_exit_group.dd)
+$(P
+add `exit_group` to `core.sys.linux.unistd`, exits all threads in a process, present since linux 2.5.35
+)
+)
+
+$(LI $(LNAME2 darwin_bindings,Added module `core.sys.darwin.mach.nlist` and `core.sys.darwin.mach.stab`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/darwin_bindings.dd)
+$(P
+Those modules contains bindings for the 64 bits part of Mac OSX's
+`<mach-o/nlish.h>` and `<mach-o/stab.h>`, respectively,
+and can be used by users wishing to inspect binary data of Mach-O object files.
+)
+)
+
+$(LI $(LNAME2 depercate_object_selector,Deprecated `object.selector`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/depercate_object_selector.dd)
+$(P
+The public import of `selector` in the module `object` has been deprecated.
+Please explicitly import `selector` instead using: `import core.attribute : selector;`
+)
+
+$(P
+The following code has been deprecated:
+)
+
+```
+extern (Objective-C)
+extern class NSObject
+{
+    static NSObject alloc() @selector("alloc");
+}
+```
+
+$(P
+Replace with:
+)
+
+```
+import core.attribute : selector;
+
+extern (Objective-C)
+extern class NSObject
+{
+    static NSObject alloc() @selector("alloc");
+}
+```
+)
+
+$(LI $(LNAME2 gc_suffixes,Memory releated GC options can now be specified with higher accuracy)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/gc_suffixes.dd)
+$(P
+Memory-related GC options stored in bytes instead of megabytes to
+provide fine-tune GC on low memory devices.
+)
+
+$(P
+Added ability to use suffixes B, K, M or G:
+)
+---
+extern(C) __gshared string[] rt_options =
+    [ "gcopt=minPoolSize:4K maxPoolSize:2M incPoolSize:8K" ];
+---
+
+$(P
+Values without suffix treated as megabytes.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Installer changes,
+
+$(LI $(LNAME2 install_sh_windows,The install script now also works on the Windows command prompt.)
+$(CHANGELOG_SOURCE_FILE installer, changelog/install_sh_windows.dd)
+$(P
+The official D version manager ($(LINK2 https://dlang.org/install.sh, install.sh),
+documented at $(LINK2 https://dlang.org/install.html, dlang.org/install.html))
+used to require a POSIX environment. On Windows, prior to this release, this
+meant running the script and the compilers that it installed from within a
+POSIX terminal emulator as provided by MSYS2 or Cygwin. With this release it is
+now possible to install and activate compilers from the Windows command prompt
+directly.
+)
+
+$(P
+Assuming an MSYS2 installation is present in `C:\msys64`, necessary decompression
+tools can be installed from the Windows command prompt:
+)
+-------
+C:\msys64\usr\bin\pacman.exe --sync unzip p7zip
+-------
+
+$(P
+The following will invoke the script directly from dlang.org and install the
+latest dmd compiler in the `%USERPROFILE%\dlang` folder:
+)
+-------
+C:\msys64\usr\bin\curl.exe https://dlang.org/install.sh | \msys64\usr\bin\bash.exe -s
+-------
+$(P
+This process will end with a message showing the location of `activate.bat`,
+which can be used to add the installed compiler to your `PATH`.
+)
+
+$(P
+The script itself will also be installed locally. This will show you its other
+uses:
+)
+-------
+C:\msys64\usr\bin\bash.exe %USERPROFILE%\dlang\install.sh --help
+-------
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 dub_root_package_target_env_vars_added,Dub root package target environment variables added)
+$(CHANGELOG_SOURCE_FILE dub, changelog/dub_root_package_target_env_vars_added.dd)
+$(P
+Environment variables `DUB_ROOT_PACKAGE_TARGET_TYPE`, `DUB_ROOT_PACKAGE_TARGET_PATH`
+and `DUB_ROOT_PACKAGE_TARGET_NAME` have been added and exposed.
+)
+)
+
+$(LI $(LNAME2 improved_cli_extensibility,Improved CLI extensibility)
+$(CHANGELOG_SOURCE_FILE dub, changelog/improved_cli_extensibility.dd)
+$(P
+The code from the runDubCommandLine was moved to some other structs. The new
+CommandLineHandler structure takes care of the CLI state and commands, which
+allows DUB commands to be extended in other projects.
+)
+
+$(P
+The CommandArgs class now has new `hasAppArgs` and `appArgs` methods which
+allows you to get the app arguments. In addition, the `extractAllRemainingArgs`
+method will return all unused arguments and the app arguments.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+)
+$(D_CONTRIBUTORS_HEADER 53)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Alexandru Militaru)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Anton Oks)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR blackbird)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR BthereDthat)
+    $(D_CONTRIBUTOR Cristian Creteanu)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR drug007)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR guai)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR John Colvin)
+    $(D_CONTRIBUTOR Kazuya Takahashi)
+    $(D_CONTRIBUTOR Luhrel)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Nils Lankila)
+    $(D_CONTRIBUTOR Patrick Schlüter)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Pierre Grimaud)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Sergei Akhmatdinov)
+    $(D_CONTRIBUTOR Simen Kjærås)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Tomoya Tanjo)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Walter Waldron)
+    $(D_CONTRIBUTOR welkam)
+    $(D_CONTRIBUTOR Witold Baryluk)
+    $(D_CONTRIBUTOR wolframw)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.093.0
+    TITLE=Change Log: $(VER)
