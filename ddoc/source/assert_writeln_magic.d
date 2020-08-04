@@ -1,6 +1,6 @@
 #!/usr/bin/env dub
 /++ dub.sdl:
-dependency "libdparse" version="0.7.2-alpha.4"
+dependency "libdparse" version="0.15.1"
 name "assert_writeln_magic"
 +/
 /*
@@ -76,7 +76,8 @@ class TestVisitor(Out) : ASTVisitor
             return;
 
         // only look at `a == b` within the AssertExpression
-        if (typeid(expr.assertion) != typeid(CmpExpression))
+        if (!expr.assertArguments ||
+            typeid(expr.assertArguments.assertion) != typeid(CmpExpression))
             return;
 
         lastAssert = expr;
@@ -180,7 +181,7 @@ private:
 void parseString(Visitor)(ubyte[] sourceCode, Visitor visitor)
 {
     import dparse.lexer;
-    import dparse.parser : parseModule;
+    import dparse.parser : parseModule, ParserConfig;
     import dparse.rollback_allocator : RollbackAllocator;
 
     LexerConfig config;
@@ -188,7 +189,7 @@ void parseString(Visitor)(ubyte[] sourceCode, Visitor visitor)
     const(Token)[] tokens = getTokensForParser(sourceCode, config, &cache).array;
 
     RollbackAllocator rba;
-    auto m = parseModule(tokens, "magic.d", &rba);
+    auto m = parseModule(ParserConfig(tokens, "magic.d", &rba));
     visitor.visit(m);
 }
 
