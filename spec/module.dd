@@ -19,8 +19,6 @@ $(GNAME DeclDef):
     $(GLINK2 class, Constructor)
     $(GLINK2 class, Destructor)
     $(GLINK2 struct, Postblit)
-    $(GLINK2 class, Allocator)
-    $(GLINK2 class, Deallocator)
     $(GLINK2 class, ClassInvariant)
     $(GLINK2 struct, StructInvariant)
     $(GLINK2 unittest, UnitTest)
@@ -37,6 +35,7 @@ $(GNAME DeclDef):
     $(GLINK2 template-mixin, TemplateMixinDeclaration)
     $(GLINK2 template-mixin, TemplateMixin)
     $(GLINK MixinDeclaration)
+    $(GLINK AllocatorRelic)
     $(D ;)
 )
 
@@ -634,6 +633,27 @@ $(GNAME MixinDeclaration):
         $(GLINK DeclDefs), and is compiled as such.
         )
 
+$(H2 $(LEGACY_LNAME2 AllocatorRelic, allocator-relic, Allocator Relic))
+
+$(GRAMMAR
+$(GNAME AllocatorRelic):
+    $(D new) $(D $(LPAREN)) $(D $(RPAREN)) $(D ;)
+)
+
+    $(P This is a relic of the old D1-style class and struct custom $(D new) operator.
+        Its sole purpose is to be prefixed with $(D @disable) so that $(D new) operator
+        is not permited for the aggregate that contains the allocator relic, for example
+        to enforce the usage of $(D std.allocators.make()) on classes or encourage
+        stack allocation for structs.)
+
+---------
+class NewNotAllowed
+{
+    @disable new();
+}
+
+with (new NewNotAllowed()) {} // Error: the `new` operator is disabled for type `main.NewNotAllowed`
+---------
 
 $(H2 $(LEGACY_LNAME2 PackageModule, package-module, Package Module))
 

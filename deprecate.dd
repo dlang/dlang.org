@@ -12,7 +12,6 @@ $(SPEC_S Deprecated Features,
         $(THEAD Feature,                                                          Spec,  Dep,    Error,  Gone)
         $(TROW $(DEPLINK body keyword),                                           2.075, &nbsp;, &nbsp;, &nbsp;)
         $(TROW $(DEPLINK Hexstring literals),                                     2.079, 2.079, 2.086, &nbsp;)
-        $(TROW $(DEPLINK Class allocators and deallocators),                      &nbsp;, 2.080, 2.087, &nbsp;)
         $(TROW $(DEPLINK Implicit comparison of different enums),                 2.075,  2.075, 2.081, &nbsp;)
         $(TROW $(DEPLINK Implicit string concatenation),                          2.072,  2.072, 2.081, &nbsp;)
         $(TROW $(DEPLINK Using the result of a comma expression),                 2.072,  2.072,  2.079, &nbsp;)
@@ -114,56 +113,6 @@ $(H4 Corrective Action)
     )
 $(H4 Rationale)
     $(P Hexstrings are used so seldom that they don't warrant a language feature.
-    )
-
-$(H3 $(DEPNAME Class allocators and deallocators))
-    $(P D classes can have members customizing the (de)allocation strategy.
-        ---
-        class Foo
-        {
-            new(uint size, ...)
-            {
-                return malloc(size);
-            }
-
-            delete(void* obj)
-            {
-                free(obj);
-            }
-        }
-
-        Foo foo = new(...) Foo();
-        delete foo;
-        ---
-    )
-$(H4 Corrective Action)
-    $(P Move the (de)allocation strategy out of the class
-        ---
-        class Foo
-        {
-        }
-
-        T make(T, Args...)(auto ref Args args) if (is(T == Foo))
-        {
-            enum size = __traits(classInstanceSize, T);
-            void* mem = malloc(size);
-            scope (failure) free(mem);
-            return mem !is null ? emplace!T(mem[0..size], args) : null;
-        }
-
-        void dispose(T)(T obj)
-        {
-            auto mem = cast(void*) obj;
-            scope (exit) free(mem);
-            destroy(obj);
-        }
-
-        Foo foo = make!Foo();
-        if (foo !is null) dispose(foo);
-        ---
-    )
-$(H4 Rationale)
-    $(P Classes should not be responsible for their own (de)allocation strategy.
     )
 
 $(H3 $(DEPNAME Implicit comparison of different enums))
