@@ -268,7 +268,7 @@ DDOC_VARS_PRERELEASE_VERBATIM=$(DDOC_VARS_PRERELEASE) \
 	DOC_OUTPUT_DIR="$W/phobos-prerelease-verbatim" \
 	STDDOC="$(PWD)/verbatim.ddoc"
 
-DDOCFLAGS=-c -o- -preview=markdown
+DDOCFLAGS=-c -o-
 
 ################################################################################
 # Ddoc binaries
