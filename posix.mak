@@ -84,14 +84,13 @@
 #                               (This is based on references Bugzilla issues and files
 #                               in the `/changelog` folders)
 #       rebase                  Rebase all DLang repos to upstream/master
-#       pdf                     Generates the D specification as a PDF
 #       kindle                  Generates the D specification as an ebook (Amazon mobi)
 #       verbatim                Copies the Ddoc plaintext files to .verbatim files
 #                               (i.e. doesn't run Ddoc on them)
 #       rsync                   Publishes the built website to dlang.org
 #       test                    Runs several sanity checks
 #       clean                   Removes the .generated folder
-#       diffable-intermediaries Adds intermediary PDF/eBook files to the output, useful for diffing
+#       diffable-intermediaries Adds intermediary eBook files to the output, useful for diffing
 #       dautotest               Special target called by the DAutoTestCI and deployment
 #
 #  Ddoc vs. Ddox
@@ -269,7 +268,7 @@ DDOC_VARS_PRERELEASE_VERBATIM=$(DDOC_VARS_PRERELEASE) \
 	DOC_OUTPUT_DIR="$W/phobos-prerelease-verbatim" \
 	STDDOC="$(PWD)/verbatim.ddoc"
 
-DDOCFLAGS=-c -o- -preview=markdown
+DDOCFLAGS=-c -o-
 
 ################################################################################
 # Ddoc binaries
@@ -392,9 +391,7 @@ verbatim : html-verbatim phobos-prerelease-verbatim
 
 kindle : $W/dlangspec.mobi
 
-pdf : $W/dlangspec.pdf
-
-diffable-intermediaries : $W/dlangspec.tex $W/dlangspec.html
+diffable-intermediaries : $W/dlangspec.html
 
 $W/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	cp -f sitemap-template.dd $G/sitemap.dd
@@ -439,13 +436,13 @@ clean:
 
 RSYNC_FILTER=-f 'P /Usage' -f 'P /.dpl_rewrite*' -f 'P /install.sh*'
 
-rsync : all kindle pdf
+rsync : all kindle
 	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $W/ $(REMOTE_DIR)/
 
 rsync-only :
 	rsync -avzO --chmod=u=rwX,g=rwX,o=rX --delete $(RSYNC_FILTER) $W/ $(REMOTE_DIR)/
 
-dautotest: all verbatim pdf diffable-intermediaries d-latest.tag d-prerelease.tag
+dautotest: all verbatim diffable-intermediaries d-latest.tag d-prerelease.tag
 
 ################################################################################
 # Pattern rulez
@@ -537,25 +534,6 @@ $W/dlangspec.mobi : \
 		trap "rm -f dlangspec.html" EXIT; \
 		kindlegen dlangspec.opf
 	mv dlangspec.mobi $@
-
-################################################################################
-# LaTeX
-################################################################################
-
-$G/dlangspec-consolidated.d : $(SPEC_DD) ${STABLE_DMD}
-	$(STABLE_RDMD) --force $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
-
-$G/dlangspec.tex : $G/dlangspec-consolidated.d $(DDOC_BIN) $(DDOC) spec/latex.ddoc $(NODATETIME)
-	$(DDOC_BIN_DMD) -conf= -Df$@ $(DDOC) spec/latex.ddoc $(NODATETIME) $<
-
-# Run twice to fix multipage tables and \ref uses
-$W/dlangspec.pdf : $G/dlangspec.tex | $W
-	pdflatex -output-directory=$G -draftmode $^
-	pdflatex -output-directory=$G $^
-	mv $G/dlangspec.pdf $@
-
-$W/dlangspec.tex: $G/dlangspec.tex | $W
-	cp $< $@
 
 $W/dlangspec.html: $G/dlangspec.html | $W
 	cp $< $@

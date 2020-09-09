@@ -114,7 +114,12 @@ auto compile(R)(R buffer, string[] arguments, string inputFile, string[string] m
     import std.process : execute;
     auto ret = execute(args);
     if (ret.status != 0)
+    {
+        stderr.writeln("File content:");
+        stderr.writeln(buffer);
+        stderr.writeln("----------------------------------------");
         stderr.writeln(ret.output);
+    }
     return ret.status;
 }
 

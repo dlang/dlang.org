@@ -45,6 +45,18 @@ $(UL
         $(LI `gdc` - latest stable version, Linux only)
     )
  )
+ $(LI For `dub`, installation of the following versions is supported:
+    $(UL
+        $(LI `dub` - latest stable version)
+        $(LI `dub-<version>` - specific official release (including beta releases))
+    )
+ )
+ $(LI For all compilers optionally installing a different version to the bundled dub is supported:
+    $(UL
+        $(LI `<compiler>,dub` - selected compiler and latest stable DUB version)
+        $(LI `<compiler>,dub-<version>` - selected compiler and a specific stable DUB version)
+    )
+ )
 )
 
 $(H3 Content)
@@ -70,6 +82,7 @@ $(UL
         $(LI $(RELATIVE_LINK2 uninstall, Uninstallation))
         $(LI $(RELATIVE_LINK2 list, Listing available compilers))
         $(LI $(RELATIVE_LINK2 update, Update))
+        $(LI $(RELATIVE_LINK2 get-path, Get compiler executable path))
     )
 )
 
@@ -162,6 +175,7 @@ $(UL
     $(LI $(RELATIVE_LINK2 uninstall, Uninstallation))
     $(LI $(RELATIVE_LINK2 list, Listing available compilers))
     $(LI $(RELATIVE_LINK2 update, Update))
+    $(LI $(RELATIVE_LINK2 get-path, Get compiler executable path))
 )
 
 $(H3 $(LNAME2 global_options, Global options))
@@ -202,6 +216,14 @@ $(DL
             Installs DMD nightly)
         $(SWITCH $(SWNAME dmd-2017-02-10),
             Installs specific DMD nightly)
+        $(SWITCH $(SWNAME dub),
+            Installs the latest version of a dub)
+        $(SWITCH $(SWNAME dub-&lt;version&gt;),
+            Installs a specific version of a dub (e.g. dub.1.23.0))
+        $(SWITCH $(SWNAME &lt;compiler&gt,&lt;dub&gt;),
+            Installs a version of compiler and a version of dub.
+            All compiler and version strings listed above are supported.
+        )
     )
 )
 
@@ -215,6 +237,17 @@ $(EXAMPLES
 ~/dlang/install.sh install dmd-nightly
 )
 
+By default, the `dub` binary bundled in the compiler installation will be exposed.
+Optionally, a different dub version can be installed standalone or as part of the compiler
+installation:
+
+$(EXAMPLES
+~/dlang/install.sh install dub
+~/dlang/install.sh install dub-1.22.0
+~/dlang/install.sh install dmd-2.071.1,dub-1.23.0
+~/dlang/install.sh install ldc-1.23.0,dub
+)
+
 An installed compiler can be used directly, but the exact path varies between
 compiler vendors:
 
@@ -224,7 +257,8 @@ $(CONSOLE
 )
 
 Therefore it is recommended to $(RELATIVE_LINK2 activate, activate) a compiler
-after installation.
+after installation. For scripting needs the path to compiler executable can be
+queried with [`get-path`](#get-path).
 
 $(H3 $(LNAME2 activate, Activate))
 
@@ -284,6 +318,45 @@ set INSTALL=%BASH% %USERPROFILE%\dlang\install.sh install %COMPILER%
 for /f "usebackq tokens=*" %%a in (`%INSTALL% -a`) do call %%a
 )
 
+$(H3 $(LNAME2 get-path, Get compiler executable path))
+
+$(CONSOLE
+~/dlang/install.sh get-path &lt;compiler&gt;
+)
+
+Returns the path to the selected compiler executable.
+The command fails if the compiler is not installed locally and `--install`
+hasn't been passed.
+
+$(H4 Options)
+
+$(DL
+    $(DT
+        $(SWITCH $(SWNAME --dmd),
+            Prints the path to the DMD-alike executable)
+        $(SWITCH $(SWNAME --dub),
+            Prints the path to the DUB executable)
+        $(SWITCH $(SWNAME --install),
+            Installs the compiler if it is not installed)
+    )
+)
+
+$(EXAMPLES
+$ ~/dlang/install.sh get-path dmd
+/home/user/dlang/dmd-2.094.0/linux/bin64/dmd
+$ ~/dlang/install.sh get-path dmd-2.093.0 --install
+/home/user/dlang/dmd-2.093.0/linux/bin64/dmd
+$ ~/dlang/install.sh get-path ldc-1.23.0
+/home/user/dlang/ldc-1.23.0/bin/ldc2
+$ ~/dlang/install.sh get-path --dmd ldc-1.23.0
+/home/user/dlang/ldc-1.23.0/bin/ldmd2
+$ ~/dlang/install.sh get-path --dub ldc-1.23.0
+/home/user/dlang/ldc-1.23.0/bin/dub
+$ ~/dlang/install.sh get-path --dub dub-1.21.0
+/home/user/dlang/dub-1.21.0/bin/dub
+$ ~/dlang/install.sh get-path --dub ldc-1.23.0,dub-1.21.0
+/home/user/dlang/dub-1.21.0/bin/dub
+)
 
 $(H3 $(LNAME2 uninstall, Uninstall))
 
