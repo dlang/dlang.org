@@ -63,13 +63,22 @@ $(GNAME TemplateInstance):
     $(GLINK_LEX Identifier) $(GLINK TemplateArguments)
 
 $(GNAME TemplateArguments):
-    $(D ! $(LPAREN)) $(GLINK TemplateArgumentList)$(OPT) $(D $(RPAREN))
+    $(D ! $(LPAREN)) $(GLINK NamedTemplateArgumentList)$(OPT) $(D $(RPAREN))
     $(D !) $(GLINK TemplateSingleArgument)
 
 $(GNAME TemplateArgumentList):
     $(GLINK TemplateArgument)
-    $(GLINK TemplateArgument) ,
-    $(GLINK TemplateArgument) , $(I TemplateArgumentList)
+    $(GLINK TemplateArgument) $(D ,)
+    $(GLINK TemplateArgument) $(D ,) $(I TemplateArgumentList)
+
+$(GNAME NamedTemplateArgumentList):
+    $(GLINK NamedTemplateArgument)
+    $(GLINK NamedTemplateArgument) $(D ,)
+    $(GLINK NamedTemplateArgument) $(D ,) $(I NamedTemplateArgumentList)
+
+$(GNAME NamedTemplateArgument):
+    $(GLINK_LEX Identifier) $(D :) $(GLINK TemplateArgument)
+    $(GLINK TemplateArgument)
 
 $(GNAME TemplateArgument):
     $(GLINK2 declaration, Type)
@@ -125,7 +134,7 @@ $(GNAME TemplateSingleArgument):
         ------
 
     $(P Multiple instantiations of a $(I TemplateDeclaration) with the same
-        $(I TemplateArgumentList) will all refer to the same instantiation.
+        $(I NamedTemplateArgumentList) will all refer to the same instantiation.
         For example:)
 
         ------
@@ -254,7 +263,7 @@ $(H2 $(LNAME2 argument_deduction, Argument Deduction))
         $(LI If after all the type arguments are examined, there are any
         type parameters left with no type assigned, they are assigned
         types corresponding to the template argument in the same position
-        in the $(I TemplateArgumentList).)
+        in the $(I NamedTemplateArgumentList).)
 
         $(LI If applying the above rules does not result in exactly one
         type for each template parameter, then it is an error.)
@@ -343,7 +352,7 @@ $(H3 $(LNAME2 parameters_specialization, Specialization))
         ------
 
     $(P The template picked to instantiate is the one that is most specialized
-        that fits the types of the $(I TemplateArgumentList).
+        that fits the types of the $(I NamedTemplateArgumentList).
         If the result is ambiguous, it is an error.
     )
 
@@ -1053,20 +1062,20 @@ $(H2 $(LNAME2 function-templates, Function Templates))
         ------
 
     $(P Function templates can be explicitly instantiated with a
-        !($(I TemplateArgumentList)):)
+        !($(I NamedTemplateArgumentList)):)
 
         ----
         writefln("The square of %s is %s", 3, Square!(int)(3));
         ----
 
-    or implicitly, where the $(I TemplateArgumentList) is deduced
+    or implicitly, where the $(I NamedTemplateArgumentList) is deduced
         from the types of the function arguments:
 
         ----
         writefln("The square of %s is %s", 3, Square(3));  // T is deduced to be int
         ----
 
-    $(P If there are fewer arguments supplied in the $(I TemplateArgumentList)
+    $(P If there are fewer arguments supplied in the $(I NamedTemplateArgumentList)
         than parameters in the $(I TemplateParameterList), the arguments fulfill
         parameters from left to right, and the rest of the parameters are then deduced
         from the function arguments.

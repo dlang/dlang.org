@@ -904,7 +904,7 @@ $(GNAME NewExpression):
 
 $(GNAME NewExpressionWithArgs):
     $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(D [) $(GLINK AssignExpression) $(D ])
-    $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
+    $(D new) $(I AllocatorArguments)$(OPT) $(GLINK2 declaration, Type) $(D $(LPAREN)) $(GLINK NamedArgumentList)$(OPT) $(D $(RPAREN))
     $(GLINK2 class, NewAnonClassExpression)
 
 $(GNAME AllocatorArguments):
@@ -914,7 +914,17 @@ $(GNAME ArgumentList):
     $(GLINK AssignExpression)
     $(GLINK AssignExpression) $(D ,)
     $(GLINK AssignExpression) $(D ,) $(I ArgumentList)
+
+$(GNAME NamedArgumentList):
+    $(GLINK NamedArgument)
+    $(GLINK NamedArgument) $(D ,)
+    $(GLINK NamedArgument) $(D ,) $(I NamedArgumentList)
+
+$(GNAME NamedArgument):
+    $(IDENTIFIER) $(D :) $(GLINK AssignExpression)
+    $(GLINK AssignExpression)
 )
+
 
     $(P $(I NewExpression)s are used to allocate memory on the garbage
         collected heap (default) or using a class or struct specific allocator.
@@ -1187,8 +1197,8 @@ $(GNAME PostfixExpression):
     $(I PostfixExpression) $(D .) $(GLINK NewExpression)
     $(I PostfixExpression) $(D ++)
     $(I PostfixExpression) $(D --)
-    $(I PostfixExpression) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
-    $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
+    $(I PostfixExpression) $(D $(LPAREN)) $(GLINK NamedArgumentList)$(OPT) $(D $(RPAREN))
+    $(GLINK2 declaration, TypeCtors)$(OPT) $(GLINK2 declaration, BasicType) $(D $(LPAREN)) $(GLINK NamedArgumentList)$(OPT) $(D $(RPAREN))
     $(GLINK IndexExpression)
     $(GLINK SliceExpression)
 )
@@ -1348,9 +1358,9 @@ $(GNAME PrimaryExpression):
     $(GLINK ImportExpression)
     $(GLINK NewExpressionWithArgs)
     $(GLINK2 declaration, BasicTypeX) $(D .) $(IDENTIFIER)
-    $(GLINK2 declaration, BasicTypeX) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
+    $(GLINK2 declaration, BasicTypeX) $(D $(LPAREN)) $(GLINK NamedArgumentList)$(OPT) $(D $(RPAREN))
     $(GLINK2 declaration, TypeCtor) $(D $(LPAREN)) $(GLINK Type) $(D $(RPAREN)) $(D .) $(IDENTIFIER)
-    $(GLINK2 declaration, TypeCtor) $(D $(LPAREN)) $(GLINK Type) $(D $(RPAREN)) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
+    $(GLINK2 declaration, TypeCtor) $(D $(LPAREN)) $(GLINK Type) $(D $(RPAREN)) $(D $(LPAREN)) $(GLINK NamedArgumentList)$(OPT) $(D $(RPAREN))
     $(GLINK2 declaration, Typeof)
     $(GLINK TypeidExpression)
     $(GLINK IsExpression)
