@@ -2,7 +2,7 @@ Ddoc
 
 $(CHANGELOG_NAV_INJECT)
 
-$(VERSION Sep 20, 2020, =================================================,
+$(VERSION Sep 22, 2020, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
 $(VER) comes with 21 major changes and 119 fixed Bugzilla issues.
@@ -13,8 +13,8 @@ $(VER) comes with 21 major changes and 119 fixed Bugzilla issues.
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
 $(LI $(RELATIVE_LINK2 add_traits_child,Add `__traits(child, parent, member)`))
-$(LI $(RELATIVE_LINK2 allMembers_import,The allMembers trait behaves more correctly with imports))
 $(LI $(RELATIVE_LINK2 array-literal-inference,Improve type determination for array literals))
+$(LI $(RELATIVE_LINK2 better-vtemplates,Template usage diagnostics via `-vtemplates` has been improved.))
 $(LI $(RELATIVE_LINK2 cxx-header-modes,C++ header generation omits `Ignored ...` comments by default))
 $(LI $(RELATIVE_LINK2 debug-nothrow,Exception-throwing code can now be used in debug blocks))
 $(LI $(RELATIVE_LINK2 hasAlwaysInlines,Always inline `pragma(inline, true)` functions regardless of -inline compiler switch.))
@@ -88,35 +88,6 @@ void main()
 ---
 )
 
-$(LI $(LNAME2 allMembers_import,The allMembers trait behaves more correctly with imports)
-$(CHANGELOG_SOURCE_FILE dmd, changelog/allMembers_import.dd)
-$(P
-1. `import`s are represented using their fully qualified name. Previously only the first identifier of the import chain was present in the list,
-)
-
----
-module test;
-import std.algorithm;
-static assert ([__traits(allMembers, test)] == ["object", "std.algorithm"]);
----
-
-$(P
-2. members of a package, e.g `std.algorithm` or `std.range` can be retrieved, previously an empty tuple was returned
-)
-
----
-module test;
-import std.algorithm;
-static assert ([__traits(allMembers, std.algorithm)] ==[
-                    "object",
-                    "std.algorithm.comparison", "std.algorithm.iteration",
-                    "std.algorithm.mutation", "std.algorithm.searching",
-                    "std.algorithm.setops", "std.algorithm.sorting",
-                    "std.functional"
-                ]) ;
----
-)
-
 $(LI $(LNAME2 array-literal-inference,Improve type determination for array literals)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/array-literal-inference.dd)
 $(P
@@ -124,6 +95,62 @@ There were some cases where DMD wasn't able to determine the common type for
 array literal elements. Mismatched enums and literals containing only mutable
 and immutable elements should now be correctly inferred.
 )
+)
+
+$(LI $(LNAME2 better-vtemplates,Template usage diagnostics via `-vtemplates` has been improved.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/better-vtemplates.dd)
+$(P
+Every template having at least one instantiation is now printed using standard
+compiler diagnostics formatting for easy navigation to the point of its
+declaration.
+)
+
+$(P
+All messages of this kind are sorted by descending unique instantiation count.
+)
+
+$(P
+If the flag argument `list-instances` is passed (such as `-vtemplates=list-instances`),
+each location where a template was instantiated is printed along with the reason for
+the instantiation (implicit or explicit).
+)
+
+$(P
+For instance, a D source file named `main.d` containing
+)
+
+---
+void foo(int I)() { }
+void goo1(int I)() { }
+void goo2(int I)() { goo1!(I); }
+
+void test()
+{
+    foo!(1)();
+    foo!(1)();
+    foo!(2)();
+
+    goo1!(1)();
+
+    goo2!(1)();
+}
+---
+
+$(P
+compiled with `-vtemplates=list-instances` will output
+)
+
+---
+main.d(1): vtemplate: 3 (2 unique) instantiation(s) of template `foo(int I)()` found, they are:
+main.d(7): vtemplate: explicit instance `foo!1`
+main.d(8): vtemplate: explicit instance `foo!1`
+main.d(9): vtemplate: explicit instance `foo!2`
+main.d(2): vtemplate: 2 (1 unique) instantiation(s) of template `goo1(int I)()` found, they are:
+main.d(11): vtemplate: explicit instance `goo1!1`
+main.d(3): vtemplate: implicit instance `goo1!1`
+main.d(3): vtemplate: 1 (1 unique) instantiation(s) of template `goo2(int I)()` found, they are:
+main.d(13): vtemplate: explicit instance `goo2!1`
+---
 )
 
 $(LI $(LNAME2 cxx-header-modes,C++ header generation omits `Ignored ...` comments by default)
@@ -688,6 +715,7 @@ $(LI $(BUGZILLA 21088): std.meta.staticMap no longer works for typeid)
 $(LI $(BUGZILLA 21091): [ICE] Segmentation fault: Module::importAll$(LPAREN)Scope*$(RPAREN) $(LPAREN)this=0x0, prevsc=0x0$(RPAREN) at dmd/dmodule.d:1124)
 $(LI $(BUGZILLA 21163): Scope lambda argument in struct initializer causes parsing error)
 $(LI $(BUGZILLA 21196): [REG 2.092] Deprecation for language feature triggered inside of deprecated block)
+$(LI $(BUGZILLA 21258): Tuple parameters with defaults use the first tuple element for all defaults since 2.094.0-beta.1)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bugs,
 
@@ -721,7 +749,6 @@ $(LI $(BUGZILLA 17965): Usage of the FPU while function result already in right 
 $(LI $(BUGZILLA 18373): The inline assembler parser allows strange constructs)
 $(LI $(BUGZILLA 18748): bt instruction with immediate offset uses 64-bit variant for 32-bit data)
 $(LI $(BUGZILLA 18749): bt instruction using 64-bit register for 32-bit offset)
-$(LI $(BUGZILLA 19179): extern$(LPAREN)C++$(RPAREN) small-struct by-val uses wrong ABI)
 $(LI $(BUGZILLA 19210): Poor error message for `return` function parameter that is not `ref`)
 $(LI $(BUGZILLA 19384): [Codegen] Address of stack temporary is returned)
 $(LI $(BUGZILLA 19590): __traits allMembers should put fully qualified names for imports)
