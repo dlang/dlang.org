@@ -407,14 +407,15 @@ auto genSwitches(string fileText)
         with(TargetOS)
         switch(option.os)
         {
-            case windows:
+            case Windows:
                 currentFlag = text("$(WINDOWS ", currentFlag, ")");
                 break;
             case linux:
-            case macOS:
-            case freeBSD:
-            case solaris:
-            case dragonFlyBSD:
+            case OSX:
+            case OpenBSD:
+            case FreeBSD:
+            case Solaris:
+            case DragonFlyBSD:
                 currentFlag = text("$(UNIX ", currentFlag, ")");
                 break;
             case all:
