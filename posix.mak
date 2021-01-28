@@ -716,7 +716,7 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
 	find ${PHOBOS_LATEST_DIR}/etc ${PHOBOS_LATEST_DIR}/std -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
-	${DMD_LATEST} -J$(DMD_LATEST_DIR)/src/dmd/res -J$(DMD_LATEST_DIR)/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
+	${DMD_LATEST} -J$(DMD_LATEST_DIR)/src/dmd/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
 		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
 		-Xf$@ -I${PHOBOS_LATEST_DIR} @$G/.latest-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
