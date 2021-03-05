@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Mar 08, 2021, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 16 major changes and 70 fixed Bugzilla issues.
+$(VER) comes with 17 major changes and 77 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 53 contributors)
         who made $(VER) possible.)
@@ -22,6 +22,7 @@ $(LI $(RELATIVE_LINK2 dtoh-improvements,Improvements for the C++ header generati
 $(LI $(RELATIVE_LINK2 dwarf-switch,Add `-gdwarf=<version>` switch for the DMD compiler.))
 $(LI $(RELATIVE_LINK2 getVisibility,Introduced `__traits(getVisibility, Sym)` as an alias to `getProtection`))
 $(LI $(RELATIVE_LINK2 runtime-synchronized,Plain `synchronized` statements now use run-time allocated mutexes.))
+$(LI $(RELATIVE_LINK2 shortfunctions,Allow shortened function implementations for single-expresssion functions.))
 
 )
 
@@ -252,6 +253,23 @@ section lazily at run-time, moving all logic out of the compiler to druntime.
 )
 )
 
+$(LI $(LNAME2 shortfunctions,Allow shortened function implementations for single-expresssion functions.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/shortfunctions.dd)
+$(P
+`-preview=shortenedMethods` is added. This allows functions to be written in a similar form to lambda functions:
+)
+
+---
+// these 2 are equivalent
+int foo() { return 1; }
+int foo() => 1;
+---
+
+$(P
+The syntax allows the form `=> expr` to replace the function body `{ return expr; }`
+)
+)
+
 
 )
 
@@ -355,13 +373,17 @@ $(CHANGELOG_SEP_TEXT_BUGZILLA)
 
 $(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
 
+$(LI $(BUGZILLA 20661): opEquals not recognized for AA key $(LPAREN)take two$(RPAREN))
+$(LI $(BUGZILLA 21319): DMD crashes on immutable circular reference)
 $(LI $(BUGZILLA 21547): Oder of constructor declaration affects struct initializer)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
 
 $(LI $(BUGZILLA 5713): Broken final switch on ints)
+$(LI $(BUGZILLA 10619): Wrong local variable passed as alias arguments to templates)
 $(LI $(BUGZILLA 11717): CTFE: non-constant value with array and vector ops.)
 $(LI $(BUGZILLA 13667): ICE: stack overflow using self-referencing cast inside recursive alias this method)
+$(LI $(BUGZILLA 14831): Each function local symbols should have unique mangled name)
 $(LI $(BUGZILLA 15225): cannot overload directly aliased function literals)
 $(LI $(BUGZILLA 16635): Alias this for implicit conversion to "ref const$(LPAREN)typeof$(LPAREN)this$(RPAREN)$(RPAREN)" causes dmd to segfault)
 $(LI $(BUGZILLA 17105): [ICE] SIMD Internal error with optimizations: backend\cod3.c 6807)
@@ -398,6 +420,7 @@ $(LI $(BUGZILLA 21640):  @live not working with templates)
 $(LI $(BUGZILLA 21647): pragma$(LPAREN)msg$(RPAREN) should be able to print a void type)
 $(LI $(BUGZILLA 21659): [OSX] core.stdc.config.__c_ulonglong is forward referenced while looking for sizeof)
 $(LI $(BUGZILLA 21662): Extern linkage variables cannot be of types with disabled default construction)
+$(LI $(BUGZILLA 21668): Cannot declare ref parameter of opaque type)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
@@ -407,6 +430,10 @@ $(LI $(BUGZILLA 19632): [SIMD] Error: invalid foreach aggregate)
 $(LI $(BUGZILLA 20788): Difference between colored and non colored output)
 $(LI $(BUGZILLA 21527): Unnecessary store to memory in SIMD code)
 $(LI $(BUGZILLA 21593): Only update file time if file to be written already exists)
+)
+$(BUGSTITLE_BUGZILLA Phobos regression fixes,
+
+$(LI $(BUGZILLA 21663): std.concurrency.receiveOnly doesn't work with tuples)
 )
 $(BUGSTITLE_BUGZILLA Phobos bug fixes,
 
@@ -435,6 +462,7 @@ $(LI $(BUGZILLA 21638): std.typecons.RefCounted!$(LPAREN)T, RefCountedAutoInitia
 $(BUGSTITLE_BUGZILLA Druntime regression fixes,
 
 $(LI $(BUGZILLA 21309): Missing core.thread.threadbase documentation)
+$(LI $(BUGZILLA 21642): [REG 2.084] hashOf will fail to compile for some structs/unions that recursively contain shared enums)
 )
 $(BUGSTITLE_BUGZILLA Druntime bug fixes,
 
