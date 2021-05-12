@@ -34,13 +34,15 @@ $(LI It can be used to track down why a particular section of code
 
 $(LI Since execution counts are given for each line, it is possible
      to use the coverage analysis to reorder the basic blocks in
-     a function to minimize jmps in the most used path, thus
-     optimizing it.)
-)
+     a function to minimize branches in the most used path, reducing stress
+     on the processor's pipeline (a run-of-the-mill X86 processor can usually handle 48 branches in its pipeline). This technique
+     is a special case of $(LINK2 https://en.wikipedia.org/wiki/Profile-guided_optimization, profile-guided optimization), which can
+     be performed automatically if either the `LLVM` or `GCC` backend is utilized.
+))
 
 $(P Experience with code coverage analyzers show that they dramatically
 reduce the number of bugs in shipping code.
-But it isn't a panacea, a code coverage analyzer won't help with:)
+But it isn't a panacea, a code coverage analyzer won't help (unlike Valgrind or the sanitizers available in GCC and LLVM) with:)
 
 $(OL
 $(LI Identifying race conditions.)
@@ -51,18 +53,18 @@ $(LI Verifying that the program got the correct result.)
 
 $(P Code coverage analysers are available for many popular languages,
 but they are often third party products that integrate
-poorly with the compiler, and are often very expensive.
+poorly with the compiler.
 A big problem with third party products is, in order to instrument
-the source code, they must include what is essentially a full blown
+the source code, they must include what is essentially a full-blown
 compiler front end for the same language. Not only is this an expensive
 proposition, it often winds up out of step with the various compiler
 vendors as their implementations change and as they evolve various extensions.
 ($(LINK2 http://gcc.gnu.org/onlinedocs/gcc-3.0/gcc_8.html, gcov),
-the Gnu coverage analyzer, is an exception as it is both free
+the Gnu coverage analyzer is an exception as it is both free
 and is integrated into gcc.)
 )
 
-$(P The D code coverage analyser is built in as part of the D compiler.
+$(P The D code coverage analyser is part of the D compiler.
 Therefore, it is always in perfect synchronization with the language
 implementation. It's implemented by establishing a counter for each
 line in each module compiled with the $(DDSUBLINK dmd,switch-cov, $(B -cov)) switch.
@@ -78,7 +80,7 @@ $(P For example, consider the Sieve program:)
 
 import std.stdio;
 
-bool flags[8191];
+bool[8191] flags;
 
 int main()
 {
@@ -124,7 +126,7 @@ $(CONSOLE
        |
        |import std.stdio;
        |
-       |bool flags[8191];
+       |bool[8191] flags;
        |
        |int main()
        |{
@@ -163,13 +165,13 @@ as the execution count.
 At the end of the .lst file, the percent coverage is given.
 )
 
-$(P There are 3 lines with an exection count
+$(P There are 3 lines with an execution count
 of 1, these were each executed once. The declaration line for $(D i, prime),
 etc., has 5 because there are 5 declarations, and the initialization of
 each declaration counts as one statement.)
 
 $(P The first $(D for) loop shows 22. This is the sum of the 3 parts
-of the for header. If the for header is broken up into 3 lines, the
+of the for-header. If the for-header is broken up into 3 lines, the
 data is similarly divided:)
 
 $(CONSOLE
@@ -263,7 +265,7 @@ sieve --DRT-covopt="merge:1 dstpath:reports"
 
 $(H3 References)
 
-$(LINK2 https://en.wikipedia.org/wiki/Code_coverage, Wikipedia)
+$(LINK2 https://en.wikipedia.org/wiki/Code_coverage, Wikipedia: "Code Coverage")
 
 )
 
