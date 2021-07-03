@@ -55,6 +55,9 @@ $(TABLEC download-compilers,
       $(DIVC download-link, $(LINK2 https://wiki.dlang.org/LDC, About) &middot; $(LINK2 https://github.com/ldc-developers/ldc#installation, Download))
     )
   )
+  $(TR
+    $(DONATE_BUTTON)
+  )
 )
 
 $(DIVC download_channels,
@@ -84,8 +87,8 @@ $(DIVC download_channels,
         $(SBTN $(SUSE32), i386) $(SBTN $(SUSE64), x86_64) $(SBTN $(ARCH linux, tar.xz), tar.xz)
     )
 
-    $(DOWNLOAD FreeBSD, $(FREEBSD), linux, Linux,
-         $(SBTN $(ARCH freebsd-32, tar.xz), i386) $(SBTN $(ARCH freebsd-64, tar.xz), x86_64)
+    $(DOWNLOAD FreeBSD, $(FREEBSD), freebsd, FreeBSD,
+         $(SBTN $(ARCH freebsd-64, tar.xz), x86_64)
     )
 
     $(INSTALL_SCRIPT curl -fsS https://dlang.org/install.sh | bash -s dmd)
@@ -118,44 +121,12 @@ $(DIVC download_channels,
         $(SBTN $(B_SUSE32), i386) $(SBTN $(B_SUSE64), x86_64) $(SBTN $(B_ARCH linux, tar.xz), tar.xz)
     )
 
-    $(DOWNLOAD FreeBSD, $(FREEBSD), linux, Linux,
-        $(SBTN $(B_ARCH freebsd-32, tar.xz), i386) $(SBTN $(B_ARCH freebsd-64, tar.xz), x86_64)
+    $(DOWNLOAD FreeBSD, $(FREEBSD), freebsd, FreeBSD,
+        $(SBTN $(B_ARCH freebsd-64, tar.xz), x86_64)
     )
 
     $(INSTALL_SCRIPT curl -fsS https://dlang.org/install.sh | bash -s dmd-beta)
     )
-  )
-
-  $(DIVC download_channel,
-    $(H2 $(LNAME2 dmd-nightly,DMD Nightly))
-
-    $(BR)$(BR)
-
-    $(DOWNLOAD Windows, $(WINDOWS), windows, Windows,
-        $(SBTN $(N_ARCH windows, 7z), 7z)
-    )
-
-    $(DOWNLOAD macOS, $(OSX), osx, macOS,
-        $(SBTN $(N_ARCH osx, tar.xz), tar.xz)
-    )
-
-    $(DOWNLOAD Ubuntu/Debian, $(UBUNTU) &nbsp; $(DEBIAN), linux, Linux,
-        $(SBTN $(N_ARCH linux, tar.xz), tar.xz)
-    )
-
-    $(DOWNLOAD Fedora/CentOS, $(FEDORA) &nbsp; $(CENTOS), linux, Linux,
-        $(SBTN $(N_ARCH linux, tar.xz), tar.xz)
-    )
-
-    $(DOWNLOAD openSUSE, $(OPENSUSE), linux, Linux,
-        $(SBTN $(N_ARCH linux, tar.xz), tar.xz)
-    )
-
-    $(DOWNLOAD FreeBSD, $(FREEBSD), linux, Linux,
-        $(SBTN $(N_ARCH freebsd-32, tar.xz), i386) $(SBTN $(N_ARCH freebsd-64, tar.xz), x86_64)
-    )
-
-    $(INSTALL_SCRIPT curl -fsS https://dlang.org/install.sh | bash -s dmd-nightly)
   )
 )
 
@@ -178,7 +149,7 @@ $(DOWNLOAD_OTHER $(GENTOO), $(LINK2 https://wiki.gentoo.org/wiki/Dlang, Gentoo),
 
 $(DOWNLOAD_OTHER $(HOMEBREW), $(LINK2 https://formulae.brew.sh/formula/dmd, Homebrew), $(CONSOLE brew install dmd))
 
-$(DOWNLOAD_OTHER $(NIX), Nix/NixOS, $(CONSOLE nix-env -i dmd))
+$(DOWNLOAD_OTHER $(NIX), $(LINK2 https://search.nixos.org/packages?show=dmd&query=dmd, Nix/NixOS), $(CONSOLE nix-env -iA nixpkgs.dmd))
 
 $(DOWNLOAD_OTHER $(UBUNTU) $(DEBIAN), Ubuntu/Debian, $(LINK2 http://d-apt.sourceforge.net/, APT repository)
 $(CONSOLE sudo wget https://netcologne.dl.sourceforge.net/project/d-apt/files/d-apt.list -O /etc/apt/sources.list.d/d-apt.list
@@ -220,7 +191,7 @@ Macros:
 
     BETA=$(COMMENT $0)
     _=BETA=$0
-    B_DMDV2=2.093.0
+    B_DMDV2=2.097.0
     B_SUFFIX=rc.1
 
         DEB32=$(DLSITE dmd_$(DMDV2)-0_i386.deb)
@@ -242,8 +213,6 @@ Macros:
     B_OSXDMG=$(B_DLSITE dmd.$(B_DMDV2)-$(B_SUFFIX).dmg)
     B_WINEXE=$(B_DLSITE dmd-$(B_DMDV2)-$(B_SUFFIX).exe)
     B_ARCH=$(B_DLSITE dmd.$(B_DMDV2)-$(B_SUFFIX).$1.$2)
-
-    N_ARCH=$(N_DLSITE dmd.master.$1.$2)
 
         LOGO=<img src="images/$1_logo.png" alt="$2" style="max-height: 40px">
         CENTOS=$(LOGO centos, CentOS)
@@ -267,9 +236,8 @@ Macros:
     SBTN=$(SPANC sig_btn,$(BTN $1,$+)<br>$(BTN $1.sig,sig))
     BTN=<a href="$1" class="btn">$+</a>
     H3I=<h3 class="download">$0</h3>
-    DLSITE=http://downloads.dlang.org/releases/2.x/$(DMDV2)/$0
-    B_DLSITE=http://downloads.dlang.org/pre-releases/2.x/$(B_DMDV2)/$0
-    N_DLSITE=http://downloads.dlang.org/nightlies/dmd-master/$0
+    DLSITE=https://s3.us-west-2.amazonaws.com/downloads.dlang.org/releases/2021/$0
+    B_DLSITE=https://s3.us-west-2.amazonaws.com/downloads.dlang.org/pre-releases/2021/$0
     DOWNLOAD =
     $(DIV,
         $(DIVC download_image, $2)
@@ -305,5 +273,9 @@ Macros:
         $(PRE $(CODE $1)))
     CONSOLE=$(PRE $(CODE $1))
     IMG=<img src="images/$1">
+    DONATE_BUTTON =<td colspan="3" style="padding-bottom:20px">
+      $(DIV style="border-radius:5px 5px 5px 5px;font-weight:normal; border:1px solid #000000;box-shadow:none;left: 50%; margin-left: -107.5px;display: block;clear: both; width:215px; height:70px; line-height:2.9; position:relative; font-size:24px; text-align:center;",
+      $(LINK2 https://www.flipcause.com/secure/cause_pdetails/NDMzMzE=, Leave a Tip!)$(BR)$(BR))
+    </td>
 
     _= for sidebard subnavigation

@@ -1,0 +1,833 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jan 01, 2021, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 27 major changes and 78 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 61 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 deprecate_visibility,Deprecate bypassing of symbol visibility when doing overload resolution))
+$(LI $(RELATIVE_LINK2 deprecation-context,Deprecation triggered inside of templates now show instantiation trace))
+$(LI $(RELATIVE_LINK2 dtoh-improvements,Improvements for the C++ header generation))
+$(LI $(RELATIVE_LINK2 duplicate-implementations-deprecation,Diagnostics for conflicting function definitions within a module))
+$(LI $(RELATIVE_LINK2 extern-pascal,`extern(Pascal)` has been removed))
+$(LI $(RELATIVE_LINK2 extern-std-cpp20,The compiler now accepts `-extern-std=c++20`))
+$(LI $(RELATIVE_LINK2 extern-std-standard,C++ compability standard now c++11 by default))
+$(LI $(RELATIVE_LINK2 inclusive-incontracts,Add `-preview=inclusiveincontracts`: `in` contracts must be an explicit superset of the parent `in` contracts.))
+$(LI $(RELATIVE_LINK2 objc_protocols,Add support for Objective-C protocols))
+$(LI $(RELATIVE_LINK2 pragma_inline_ctfe,Allow any compile-time argument in pragma(inline)))
+$(LI $(RELATIVE_LINK2 traits-getcppnamespaces,Add `__traits(getCppNamespaces, symbol)` to retrieve the C++ namespaces a symbol resides in.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 accidentally-exposed-sigs,Variables `suspendSignalNumber` and `resumeSignalNumber` are now private))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 conv_parse_count,Return the number of characters consumed by `std.conv.parse`))
+$(LI $(RELATIVE_LINK2 deprecate-stdio-bindings,Deprecate `std.stdio.getdelim` and `std.stdio.getline`))
+$(LI $(RELATIVE_LINK2 jsonvalue-get-integer-conv,Add integer conversions in `JSONValue.get`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 add-ability-for-specify-version-range-for-commandline-commands,All commands now accept a version specification))
+$(LI $(RELATIVE_LINK2 auto-exclude-main-from-other-configs,Dub will now automatically exclude `mainSourceFile` from other configurations))
+$(LI $(RELATIVE_LINK2 betterc-generated-in-visuald,Add support for -betterC compiler flag to the visuald project generator))
+$(LI $(RELATIVE_LINK2 cache-generated-test-config,Caching of generated unittest runner (dub test)))
+$(LI $(RELATIVE_LINK2 dependency-build-settings,Allow custom build settings to be defined for dependencies))
+$(LI $(RELATIVE_LINK2 dont-propagate-flags,`DFLAGS` and `LFLAGS` no longer propagate to nested `dub` invocations))
+$(LI $(RELATIVE_LINK2 env-d-compiler,Use DC environment variable as default D compiler))
+$(LI $(RELATIVE_LINK2 fix-2051,Fix #2051 "Running unit tests from DUB single file packages fails"))
+$(LI $(RELATIVE_LINK2 improved-ldc-cross-compile,Improve ldc cross compilation))
+$(LI $(RELATIVE_LINK2 improved-list-command,Filter ability for list command))
+$(LI $(RELATIVE_LINK2 support-for-.netrc-file-added,Support for .netrc file added))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 deprecate_visibility,Deprecate bypassing of symbol visibility when doing overload resolution)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecate_visibility.dd)
+$(P
+If an aggregate declaration contains a private method and a public method in the
+same overload set it is possible to call the private method from a different module.
+)
+
+$(P
+Example:
+)
+```
+==============================
+module foo;
+
+struct Foo
+{
+  import std : writeln;
+
+  private int _x;
+
+  private ref int x() return
+  {
+    writeln("ref int");
+    return _x;
+  }
+
+  int x() const
+  {
+    writeln("int");
+    return _x;
+  }
+}
+============================
+
+---
+$(P
+module main;
+)
+
+$(P
+void main()
+{
+  import std : writeln;
+  import foo : Foo;
+)
+
+$(P
+  auto f = Foo();
+  f.x = 3;              // ok to call private method
+  writeln(f);
+}
+===========================
+)
+```
+
+Starting from this version a deprecation message will be issued
+in such situations.
+)
+
+$(LI $(LNAME2 deprecation-context,Deprecation triggered inside of templates now show instantiation trace)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecation-context.dd)
+$(P
+A common issue when dealing with deprecations is to have it trigger in library code,
+for example having a `deprecated` `alias this`, or a hook (`opApply`, range primitives...)
+being called by a function deeply nested inside Phobos.
+)
+
+$(P
+In such cases, finding out where the instantiation comes from can be quite tedious.
+From this release, if a deprecation is triggered inside a template, the compiler
+will show the template instantiation trace, just like it already does on error.
+The same limit apply (6 frames, recursive templates are compressed), and `-v`
+can be used to lift it.
+)
+)
+
+$(LI $(LNAME2 dtoh-improvements,Improvements for the C++ header generation)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dtoh-improvements.dd)
+$(P
+The following features/bugfixes/improvements were implemented for the
+experimental C++ header generator:
+)
+
+$(P
+- Enums are no longer emitted in macros and `enum class` is used when the
+  C++ standard set from `-extern-std=` is c++11 or later.
+- Forward referenced declarations are now properly indented.
+- Default functions parameters are properly emitted
+- Tuple members/parameters/variables are emitted as individual variables
+  using the compiler internal names instead of causing an assertion failure.
+- Interfaces are now emitted as base classes.
+- Aggregate members will be emitted with proper protection levels
+- Protected enums in aggregates are emitted again
+- Private member methods are no longer emitted
+- No auto-generated default constructor for unions
+- No longer ignores declarations nested inside an extern block,
+  e.g. `extern(D) extern(C++) void foo() {} `
+- Opaque enums no longer cause segfaults & are properly exported for C++ 11
+- C++11 constructs are avoided when compiling with `-extern-std=c++98`.
+- Using `typeof(null)` type no longer causes an assertion failure.
+- The base type of floating point literals is propagated into the header
+- `NaN`, `Infinity` are emitted using `NAN`/`INFINITY` from `math.h`.
+- Final classes are marked as `final`
+- `immutable` is emitted as `const` instead of mutable
+- Identifier chains in templates are printed completely
+- Proper vtable layout is ensured by emitting hidden placeholders for
+  virtual functions that are not `extern(C|C++)`.
+- Fixed missing `const` for class members/methods
+- Templated class declarations are now emitted
+- Manifest constants that are not `extern(C|C++)` are no longer emitted.
+)
+
+$(P
+Note: The header generator is still considerer experimental, so please submit
+      any bugs encountered to [the bug tracker](https://issues.dlang.org).
+)
+)
+
+$(LI $(LNAME2 duplicate-implementations-deprecation,Diagnostics for conflicting function definitions within a module)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/duplicate-implementations-deprecation.dd)
+$(P
+Previously, multiple definitions of identical functions within a module were not
+recognized, although they have the same mangling. This was problematic because a
+binary cannot contain multiple definitions of a symbol, which caused undefined
+behavior depending on the compiler backend.
+)
+
+$(P
+DMD will now raise an error message if there are conflicting implementations
+within a single module:
+)
+
+---
+void foo() {}
+void foo() {} // error
+---
+
+$(P
+Multiple declarations are still allowed as long as there is at most one definition:
+)
+
+---
+void bar(int);
+void bar(int) { }
+void bar(int);
+---
+
+$(P
+DMD will issue a deprecation for mangling schemes that don't support overloading
+(`extern(C|Windows|System)`):
+)
+
+---
+extern(C):
+void foo(int) { }
+void foo(double) { } // deprecation
+---
+
+$(P
+This deprecation will become an error in 2.105.
+)
+)
+
+$(LI $(LNAME2 extern-pascal,`extern(Pascal)` has been removed)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/extern-pascal.dd)
+$(P
+This unused linkage was deprecated in $(LINK2 v2.084.0, https://dlang.org/changelog/2.084.0.html#deprecated_extern_pascal) and has now been removed.
+)
+)
+
+$(LI $(LNAME2 extern-std-cpp20,The compiler now accepts `-extern-std=c++20`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/extern-std-cpp20.dd)
+$(P
+The compiler now accepts c++20 as a supported standard for `-extern-std=`.
+Currently this only changes the value of `__traits(getTargetInfo, "cppStd")`,
+though new types may be added in the future.
+)
+)
+
+$(LI $(LNAME2 extern-std-standard,C++ compability standard now c++11 by default)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/extern-std-standard.dd)
+$(P
+The default setting for `-extern-std=` has been updated to c++11.
+)
+
+$(P
+Declarations with `extern(C++)` linkage are no longer guaranteed to link with
+code compiled by a C++98 compiler. Additionally, C++ headers generated by `-HC`
+will use constructs only available from C++11 onwards.
+)
+
+$(P
+If compatibility with older C++ compilers is required, you must now pass
+`-extern-std=c++98` on the command-line.
+)
+)
+
+$(LI $(LNAME2 inclusive-incontracts,Add `-preview=inclusiveincontracts`: `in` contracts must be an explicit superset of the parent `in` contracts.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/inclusive-incontracts.dd)
+$(P
+As per Liskov, `in` contracts can only loosen the conditions placed on the method they appear on.
+Currently this is enforced by automatically "oring" together the `in` contract with the `in` contract
+on the parent method, creating a combined contract that is necessarily looser than the parent.
+)
+
+$(P
+However, this leads to odd behavior like this code passing:
+)
+
+```
+class A
+{
+    void foo(int i) in (i > 0) { }
+}
+class B : A
+{
+    void foo(int i) in (i < 0) { }
+}
+unittest { (new B).foo(5); }
+```
+
+$(P
+That is because the `in` contract of `B.foo` is $(I implicitly) `super.in() || i < 0`, ie. `i > 0 || i < 0`
+)
+
+$(P
+With `-preview=inclusiveincontracts`, this code will now fail with an `AssertError`.
+To reach the previous behavior, you would have to write out `in (i > 0 || i < 0)`;
+that is, you explicitly include the parent's `in` contract in the child's.
+)
+)
+
+$(LI $(LNAME2 objc_protocols,Add support for Objective-C protocols)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/objc_protocols.dd)
+$(P
+It's now possible to declare [Objective-C protocols][objc_protocol]. In D, this
+is declared using the `interface` keyword.
+)
+
+$(P
+To match the behavior of protocols in Objective-C, some additional changes have
+been made:
+)
+
+$(P
+* It's possible to declare optional methods in an interface. This is done
+with the `@optional` User Defined Attribute, available in the `core.attributes`
+module. An optional method is a method that does **not** have to be implemented
+in the class that implements the interface. To safely call an optional method,
+a runtime check should be performed to make sure the receiver implements the
+method.
+)
+
+$(P
+* It's possible to have `static` methods in an interface. This method is
+required to be implemented in the class that implements the interface (unless
+it's declared optional). Unlike in `extern (D)` interfaces, `static` methods in
+`extern (Objective-C)` cannot have a body.
+)
+
+$(P
+Example:
+)
+
+---
+import core.attribute : optional, selector;
+import std.stdio : writeln;
+
+struct objc_selector;
+alias SEL = objc_selector*;
+
+extern (C) SEL sel_registerName(in char* str);
+
+extern (Objective-C)
+extern class NSObject
+{
+    static NSObject alloc() @selector("alloc");
+    NSObject init() @selector("init");
+}
+
+extern (Objective-C)
+interface Foo
+{
+    bool respondsToSelector(SEL sel) @selector("respondsToSelector:");
+    void foo() @selector("foo");
+
+    // this is an optional method
+    @optional void bar() @selector("bar");
+}
+
+extern (Objective-C)
+class Bar : NSObject, Foo
+{
+    override static Bar alloc() @selector("alloc");
+    override Bar init() @selector("init");
+
+    bool respondsToSelector(SEL sel) @selector("respondsToSelector:");
+
+    void foo() @selector("foo")
+    {
+        writeln("foo");
+    }
+}
+
+void main()
+{
+    Foo f = Bar.alloc.init;
+
+    // check, at runtime, if the instance `f` implements the method `bar`
+    if (f.respondsToSelector(sel_registerName("bar")))
+        f.bar();
+    else
+        f.foo();
+}
+---
+
+$(P
+[objc_protocol][https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/WorkingwithProtocols/WorkingwithProtocols.html]
+)
+)
+
+$(LI $(LNAME2 pragma_inline_ctfe,Allow any compile-time argument in pragma(inline))
+$(CHANGELOG_SOURCE_FILE dmd, changelog/pragma_inline_ctfe.dd)
+$(P
+Previously only `true` or `false` literals were allowed (the spec stated that integers worked, but they did not).
+)
+
+$(P
+Now the `pragma` can receive any compile-time expression convertible to `bool`, this expression will be evaluated only when the target function is actually used.
+)
+
+$(P
+For example, in the following code all three functions should be inlined:
+)
+
+---
+pragma(inline, canInline("func1"))
+void func1() {}
+
+void func2()
+{
+    pragma(inline, canInline(__traits(identifier, __traits(parent, {}))));
+}
+
+pragma(inline, canInline("func3") || true)
+void func3() {}
+
+int canInline(string fname)
+{
+    switch (fname)
+    {
+        case "func1":
+        case "func2":
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+void main()
+{
+    func1();
+    func2();
+    func3();
+}
+---
+)
+
+$(LI $(LNAME2 traits-getcppnamespaces,Add `__traits(getCppNamespaces, symbol)` to retrieve the C++ namespaces a symbol resides in.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/traits-getcppnamespaces.dd)
+$(P
+This new trait returns a tuple of strings representing the namespace(s) the symbol resides in.
+This enables determining what namespaces a given symbol resides in for use in reflection, and can be used directly with an `extern(C++)` declaration as demonstrated below.
+)
+
+```
+extern(C++, "ns")
+struct Foo {}
+static assert(__traits(getCppNamespaces, Foo)[0] == "ns");
+struct Bar {}
+static assert(!__traits(getCppNamespaces, Foo).length);
+extern(C++, __traits(getCppNamespaces, Foo)) struct Baz {}
+static assert(__traits(getCppNamespaces, Foo) ==  __traits(getCppNamespaces, Baz));
+```
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 accidentally-exposed-sigs,Variables `suspendSignalNumber` and `resumeSignalNumber` are now private)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/accidentally-exposed-sigs.dd)
+$(P
+These variables, which are in `core.thread.osthread`, were accidentally exposed.
+They shouldn't be accessed directly and have been made private.
+In order to set GC signals, one should call `thread_setGCSignals` instead.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 conv_parse_count,Return the number of characters consumed by `std.conv.parse`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/conv_parse_count.dd)
+$(P
+By setting the flag `doCount` to `Yes.doCount`, the function returns a named tuple.
+The tuple contains the fields `data` and `count`.
+The field `data` is of type `Target` and it contains the result of the original function.
+The field `count` is of type `size_t` and it contains the number of characters consumed.
+The function is keeping its original behaviour otherwise.
+Example:
+)
+-------
+import std.typecons : Flag, Yes, No;
+
+string s1 = "123";
+auto a1 = parse!(int, string, Yes.doCount)(s1);
+assert(a1.data == 123 && a1.count == 3);
+-------
+)
+
+$(LI $(LNAME2 deprecate-stdio-bindings,Deprecate `std.stdio.getdelim` and `std.stdio.getline`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/deprecate-stdio-bindings.dd)
+$(P
+The publicly available `extern(C)` bindings for `getdelim` and `getline` in
+`std.stdio` have been deprecated. Any code that still needs it can import the
+symbol from `core.sys.posix.stdio` in druntime instead.
+)
+)
+
+$(LI $(LNAME2 jsonvalue-get-integer-conv,Add integer conversions in `JSONValue.get`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/jsonvalue-get-integer-conv.dd)
+$(P
+`JSONValue.get` now allows to convert a stored `uinteger` or `integer` into any
+signed or unsigned integer. The conversion is performed with `std.conv.to`, and
+throws a `ConvException` in case of an integer overflow;
+)
+
+-------
+auto json = parseJSON(`{"a": 123}`);
+writeln(json["a"].get!ubyte);
+-------
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 add-ability-for-specify-version-range-for-commandline-commands,All commands now accept a version specification)
+$(CHANGELOG_SOURCE_FILE dub, changelog/add-ability-for-specify-version-range-for-commandline-commands.dd)
+$(P
+Before this release dub could only get an exact version for some commands
+(`describe`, `generate`, `fetch`, etc...). All commands now accept a version specification,
+such as can be found in `dub.json` / `dub.sdl`:
+)
+
+$(P
+    dub fetch 'foo@>0.2.0'
+    dub describe foo@'>=0.3.0 <1.0.0'
+)
+
+$(P
+Note that commands such as `describe` will still not fetch from the network.
+)
+)
+
+$(LI $(LNAME2 auto-exclude-main-from-other-configs,Dub will now automatically exclude `mainSourceFile` from other configurations)
+$(CHANGELOG_SOURCE_FILE dub, changelog/auto-exclude-main-from-other-configs.dd)
+$(P
+By default, Dub uses all files it can find under its `sourcePaths`.
+However, a common pattern when dealing with multiple targets is to use
+configurations to represent said targets. In the case those targets are executables,
+users would be forced to add main files from other configurations to the
+`excludedSourceFiles` list, or store the main in a different directory outside of
+the sourcePaths.
+)
+
+$(P
+To simplify this workflow, Dub will now exclude files listed in mainSourceFile
+for other configuration. In case this is not desirable, the files need to be manually
+added to the `sourceFiles` list.
+)
+)
+
+$(LI $(LNAME2 betterc-generated-in-visuald,Add support for -betterC compiler flag to the visuald project generator)
+$(CHANGELOG_SOURCE_FILE dub, changelog/betterc-generated-in-visuald.dd)
+$(P
+If betterC is specified in the buildOptions, visuald project files will also be
+configured to use betterC.
+)
+)
+
+$(LI $(LNAME2 cache-generated-test-config,Caching of generated unittest runner (dub test))
+$(CHANGELOG_SOURCE_FILE dub, changelog/cache-generated-test-config.dd)
+$(P
+For projects without a user-defined unittest configuration `dub test` generates a main file automatically.
+This main file is now being cached and won't be regenerated won subsequent runs without file changes.
+)
+)
+
+$(LI $(LNAME2 dependency-build-settings,Allow custom build settings to be defined for dependencies)
+$(CHANGELOG_SOURCE_FILE dub, changelog/dependency-build-settings.dd)
+$(P
+For example:
+)
+---
+{
+    "name": "example",
+    "dependencies": {
+        "vibe-d": { "version" : "~>0.9.2", "dflags" : ["-preview=in"] }
+    }
+}
+---
+
+$(P
+In this example, `-preview=in` will be applied to `vibe-d` and all of its dependencies.
+Any $(LINK2 build settings, https://dub.pm/package-format-json.html#build-settings) field will be parsed,
+however only `dflags` is taken into account when compiling for now.
+)
+)
+
+$(LI $(LNAME2 dont-propagate-flags,`DFLAGS` and `LFLAGS` no longer propagate to nested `dub` invocations)
+$(CHANGELOG_SOURCE_FILE dub, changelog/dont-propagate-flags.dd)
+$(P
+`DFLAGS` and `LFLAGS` will no longer be exported as environment variables by default
+when invoking pre-generate, pre-build, pre-run, post-generate, post-build, or post-run commands.
+)
+
+$(P
+If the previous behavior is still desired, they can be accessed using `$DFLAGS` and `$LFLAGS` in dub.json
+E.g.:
+`preGenerateCommands : ["DFLAGS=$DFLAGS env | grep DFLAGS"]`
+)
+
+$(P
+will output DFLAGS environment variable with all the dflags used.
+)
+)
+
+$(LI $(LNAME2 env-d-compiler,Use DC environment variable as default D compiler)
+$(CHANGELOG_SOURCE_FILE dub, changelog/env-d-compiler.dd)
+$(P
+dub now respects the `DC` environment variable, meaning that `DC=ldc2 dub build` will behave as `dub build --compiler=ldc2`.
+In case both are supplied, the `--compiler` switch still has priority.
+Note that when DUB recursively invokes itself, for example in `preGenerateCommands`,
+it sets the `DC` variable to the compiler it is using, meaning that nested dub invocation will now use the same compiler.
+)
+)
+
+$(LI $(LNAME2 fix-2051,Fix #2051 "Running unit tests from DUB single file packages fails")
+$(CHANGELOG_SOURCE_FILE dub, changelog/fix-2051.dd)
+$(P
+Now dub is capable run test command in single mode like: `dub test --single yoursinglefile.d`
+)
+)
+
+$(LI $(LNAME2 improved-ldc-cross-compile,Improve ldc cross compilation)
+$(CHANGELOG_SOURCE_FILE dub, changelog/improved-ldc-cross-compile.dd)
+$(P
+Enables co-existence and parallel compilation of the same project with different settings (e.g. cross compilation) by moving `.dub/obj` to `$DUB_TARGET_PATH/obj`.
+)
+)
+
+$(LI $(LNAME2 improved-list-command,Filter ability for list command)
+$(CHANGELOG_SOURCE_FILE dub, changelog/improved-list-command.dd)
+$(P
+For list command added optional filtration by name and version specification:
+)
+
+$(P
+    dub list foo
+    dub list foo@'>=0.1.0 <1.0.0'
+)
+)
+
+$(LI $(LNAME2 support-for-.netrc-file-added,Support for .netrc file added)
+$(CHANGELOG_SOURCE_FILE dub, changelog/support-for-.netrc-file-added.dd)
+$(P
+Basic authentication credentials defined in .netrc file
+will now be taken into account while connecting to secured
+repositories.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 20608): [REG2.087] Cannot pass tuple.expand to auto ref T... template argument pack)
+$(LI $(BUGZILLA 21282): mixin of AliasSeq "cannot alias an expression")
+$(LI $(BUGZILLA 21294): [REG 2.095]: DMD fails to link since PR11743)
+$(LI $(BUGZILLA 21312): [REG 2.095] Newly triggered <expr> is not an lvalue and cannot be modified)
+$(LI $(BUGZILLA 21325): Flags not set for ?: evaluation with floating point operands)
+$(LI $(BUGZILLA 21328): Forwarding static float array element inside a lambda crashes dmd backend)
+$(LI $(BUGZILLA 21357): [REG2.093] postblit aliases old and new struct pointers)
+$(LI $(BUGZILLA 21364): Improperly aligned struct when one member is a GPR and the other is an XMM)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 3713): Tail call optimization not enabled with the ?: operator)
+$(LI $(BUGZILLA 8156): Very slow compilation with string-imported file ~100 MiB)
+$(LI $(BUGZILLA 10664): Win64: exception handling does not work with COMDAT folding)
+$(LI $(BUGZILLA 11049): array bounds error uses module file name rather than file name modified by #line directive)
+$(LI $(BUGZILLA 11435): Pushing indirect ref to byte or short can read beyond edge of valid memory)
+$(LI $(BUGZILLA 14708): destructor for temporary not called during stack unwinding)
+$(LI $(BUGZILLA 15909): Duplicate case error reports characters as numbers)
+$(LI $(BUGZILLA 19754): cast$(LPAREN)$(RPAREN) sometimes yields lvalue, sometimes yields rvalue)
+$(LI $(BUGZILLA 19970): [CTFE] 0 ptr is not null)
+$(LI $(BUGZILLA 20195):  -preview=nosharedaccess has some access problems)
+$(LI $(BUGZILLA 20604): [ICE] dtoh ICE with nested template structs $(LPAREN)and probably most templates)
+$(LI $(BUGZILLA 20652): extern$(LPAREN)C++$(RPAREN) doesn't seem to mangle the types in core.simd right)
+$(LI $(BUGZILLA 20714): Struct with postblitting member does not call it's copy constructor)
+$(LI $(BUGZILLA 20716): Wrong code/ABI for extern$(LPAREN)C++$(RPAREN) interface method that returns non-POD)
+$(LI $(BUGZILLA 20916): hard to find where a deprecation comes from)
+$(LI $(BUGZILLA 20965): Implicitly generated postblit overrides disabled copy ctor)
+$(LI $(BUGZILLA 20970): Test Suite Azure Pipelines Windows_LDC_Debug x64-debug-ldc failed due to heisenbug)
+$(LI $(BUGZILLA 21218): dtoh: protection attributes should be emitted to headers)
+$(LI $(BUGZILLA 21227): import$(LPAREN)".\\file"$(RPAREN) doesn't work on Windows)
+$(LI $(BUGZILLA 21234): Import expression can read files outside of -J path in case of symlink/hardlink)
+$(LI $(BUGZILLA 21246): Compiler must show mismatching types when functions do not properly override)
+$(LI $(BUGZILLA 21255): "overload alias ... forward declaration" when overload set of imported template functions is passed to alias template parameter)
+$(LI $(BUGZILLA 21271): C++ header generation ignores extern$(LPAREN)D$(RPAREN) class methods affecting vtable layout)
+$(LI $(BUGZILLA 21283): [C++] Wrong mangling for ref of parameter pack)
+$(LI $(BUGZILLA 21293): dtoh: segfault when encountering opaque enum)
+$(LI $(BUGZILLA 21299): [LINK] undefined reference to dmd.root.stringtable.StringValue!$(LPAREN)Type$(RPAREN).StringValue.lstring$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 21300): C++ header generation produce nonsense code on enum with enum as parent)
+$(LI $(BUGZILLA 21320):  @live mistakes borrowed pointer for owner in parameter)
+$(LI $(BUGZILLA 21424): Variable is incremented twice)
+$(LI $(BUGZILLA 21464): Superfluous module-level import affects attribute inference)
+$(LI $(BUGZILLA 21479): ternary operator returns wrong val with ref return)
+$(LI $(BUGZILLA 21514): [ICE] cod1.d:4015: Assertion `retregs || !*pretregs' failed with -m32)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 8044): Print names, not casted values when using enum template parameter)
+$(LI $(BUGZILLA 21204): Error in generated copy constructor gives confusing message)
+$(LI $(BUGZILLA 21259): struct initialization with deprecated fields should issue deprecation warnings)
+$(LI $(BUGZILLA 21275): Overload resolution bypasses private access)
+$(LI $(BUGZILLA 21340): extern$(LPAREN)C++,$(LPAREN)emptyTuple$(RPAREN)$(RPAREN) should result in no namespace not an error)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 13930): std.concurrency can't send immutable AA to another thread)
+$(LI $(BUGZILLA 15425): std.traits.hasIndirections fails to recognize nested structs)
+$(LI $(BUGZILLA 18789): std.stdio messes up UTF conversions on output)
+$(LI $(BUGZILLA 18801): std.stdio.File doesn't work with MSVCRT's UTF-8 mode)
+$(LI $(BUGZILLA 20924): std.numeric.gcd cannot be used with const BigInt)
+$(LI $(BUGZILLA 21231): Unreachable warning for empty struct in VariantN with preview=fieldwise)
+$(LI $(BUGZILLA 21249): clamp$(LPAREN)$(RPAREN) is not stable and is not constrained)
+$(LI $(BUGZILLA 21253): Can't compile Variant.visit!$(LPAREN)...$(RPAREN) with generic function)
+$(LI $(BUGZILLA 21296): std.variant.Variant cannot be initialized with immutable AA)
+$(LI $(BUGZILLA 21302): std.uni's documentation contains a dead link to its source file)
+$(LI $(BUGZILLA 21452): isCallable erroneously returns false on function templates)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 6484): compose can't take multi arg functions)
+$(LI $(BUGZILLA 20869): `std.algorithm.mutation : move` is overly trusting of `opPostMove`)
+$(LI $(BUGZILLA 20980): std.bigint.BigInt: special case x & non-negative int to avoid unnecessary allocation)
+$(LI $(BUGZILLA 21233): std.conv.parse doesn't report the number of characters consumed)
+$(LI $(BUGZILLA 21237): isLvalueAssignable and isRvalueAssignable should be public)
+$(LI $(BUGZILLA 21347): std.functional.adjoin should work in BetterC)
+$(LI $(BUGZILLA 21407): Make std.math.NaN and std.math.getNaNPayload work in CTFE)
+$(LI $(BUGZILLA 21408): Make std.math.nextUp and nextDown and nextafter work in CTFE for extended-precision real)
+$(LI $(BUGZILLA 21430): Add `const` to front, save, & length properties of range returned by std.bitmanip.bitsSet)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 14226): invalid Runtime.traceHandler setup)
+$(LI $(BUGZILLA 21421): core.stdcpp.new_.cpp_delete does not work with classes)
+$(LI $(BUGZILLA 21441): TypeInfo_Enum.destroy and TypeInfo_Enum.postblit not calling destroy and postblit of base type)
+$(LI $(BUGZILLA 21442): Calling AA.remove from a destructor might lead to InvalidMemoryOperationError)
+$(LI $(BUGZILLA 21468): Inscrutable template error when core.stdcpp.vector of a struct with a core.stdcpp.vector field is referenced before the struct's definition)
+$(LI $(BUGZILLA 21484): Infinite recursion in core.memory : GC.{get,set,clr}Attr$(LPAREN)const scope void*...$(RPAREN))
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 21030): Reduce template function instantiations related to array equality)
+$(LI $(BUGZILLA 21417): core.stdcpp.new_.cpp_delete unnecessarily requires destruction to be @nogc)
+$(LI $(BUGZILLA 21426): `dup`, `idup` for arrays plus `keys`, `values` for associative arrays: call postblits directly instead of via TypeInfo function pointer)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bugs,
+
+$(LI $(BUGZILLA 21189): Plain Old Data and copy constructors)
+$(LI $(BUGZILLA 21273): [spec] Inexistent contrast for shell snippets make them unreadable $(LPAREN)CSS$(RPAREN))
+)
+$(BUGSTITLE_BUGZILLA Installer bugs,
+
+$(LI $(BUGZILLA 21433): "bash: line 952: --list-keys: command not found" when running install.sh on Catalina)
+$(LI $(BUGZILLA 21439): install.sh is disabled for LDC on FreeBSD)
+)
+)
+$(D_CONTRIBUTORS_HEADER 61)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adela Vais)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Andrey Zherikov)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Brian Schott)
+    $(D_CONTRIBUTOR Crom (Thibaut CHARLES))
+    $(D_CONTRIBUTOR Daniel Graczer)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Dimitar Nestorov)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Ezneh)
+    $(D_CONTRIBUTOR godmyoh)
+    $(D_CONTRIBUTOR Guillaume Piolat)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR Harry T. Vennik)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Imperatorn)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR James Gray)
+    $(D_CONTRIBUTOR James Thompson)
+    $(D_CONTRIBUTOR jmh530)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR K)
+    $(D_CONTRIBUTOR Lio李歐)
+    $(D_CONTRIBUTOR Lorenzo Gabriele)
+    $(D_CONTRIBUTOR Luhrel)
+    $(D_CONTRIBUTOR Luís Ferreira)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mihaela Chirea)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR nordlow)
+    $(D_CONTRIBUTOR Panke)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR phebert5009)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Remi Thebault)
+    $(D_CONTRIBUTOR Roman Chistokhodov)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Simen Kjærås)
+    $(D_CONTRIBUTOR Simon Naarmann)
+    $(D_CONTRIBUTOR starcanopy)
+    $(D_CONTRIBUTOR Tobias Pankrath)
+    $(D_CONTRIBUTOR Tomoya Tanjo)
+    $(D_CONTRIBUTOR Tomáš Chaloupka)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Yanis Zafirópulos)
+    $(D_CONTRIBUTOR Ömer Faruk IRMAK)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.095.0
+    TITLE=Change Log: $(VER)
