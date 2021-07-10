@@ -5,18 +5,29 @@ import std.algorithm;
 import std.file;
 import std.stdio;
 import std.exception;
-
+import std.path;
 void compileToPath(string compileThis, string outputPath, bool loud = false)
 {
+    import std.compiler;
     import core.stdc.stdlib;
+    string[string] contextMacros;
+    contextMacros["DVER"] = format!"%u.%03u"(version_major, version_minor);
     if(outputPath.indexOf("cozum") == -1)
     {
-        if(loud)
-            writeln(outputPath.replace(".html", ".cozum.html"));
+        //We need to build a little .ddoc file to set the right predefined build macros - these are context dependant.
+        
+        const cozumHtml = outputPath.baseName.replace(".html", ".cozum.html");
+        contextMacros["COZUM_HTML"] = cozumHtml;
         //exit(0);
     }
+    auto macroOut = File("contextMacros.ddoc", "w");
     
-    const compileString = format!"dmd -revert=markdown -D  macros.ddoc html.ddoc dlang.org.ddoc doc.ddoc aliBook.ddoc %s -Df%s "(compileThis, outputPath);
+    foreach(key, value; contextMacros)
+    {
+        macroOut.writefln!"%s = %s"(key, value);
+    }
+    macroOut.flush();
+    const compileString = format!"dmd -revert=markdown -D  contextMacros.ddoc macros.ddoc html.ddoc dlang.org.ddoc doc.ddoc aliBook.ddoc %s -Df%s "(compileThis, outputPath);
     if(loud)
         writefln!"%s:%s |> %s"(compileThis, outputPath, compileString);
     const res = executeShell(compileString);
@@ -36,7 +47,6 @@ int main(string[] args)
     const jobs = args.length == 2 ? args[1].to!ubyte : 1;
     const outDir = "../web/book";
     writeln("Building the book at ", outDir);
-    //scope(failure) return 1;
 
     enforce(executeShell("which dmd").output != "", "dmd doesn't seem to be present");
     if(outDir.exists) {
@@ -44,7 +54,7 @@ int main(string[] args)
     }
     dirEntries("d.en", "*.d", SpanMode.shallow)
         .map!(dFile => tuple(dFile.name, buildPath(outDir, baseName(dFile).setExtension("html"))))
-        .parallel(jobs)
+        //.parallel(jobs)
         .each!(elem => compileToPath(elem.tupleof));
     dirEntries("d.en", "*.png", SpanMode.shallow)
         .each!(p => copy(p, buildPath(outDir, baseName(p).setExtension("png"))));
