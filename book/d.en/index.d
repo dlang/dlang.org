@@ -1,5 +1,11 @@
 Ddoc
 
+$(I
+This is Ali Çehreli's book on D programming. Ali's pedagogical skills are renowned in the D community, for good reason. This book has hooks for many 
+different fish - as well as being a careful and paced guide for programmers who are new to the D Programming language, it is also a useful reference 
+for D practitioners, and even a perspicacious tutorial for people new to programming entirely. If you enjoy this book and would like to 
+thank Ali financially, a Gumroad link is included below where you can buy this book on a pay-what-you-want basis. Enjoy!
+)
 $(DERS_BOLUMU Programming in D)
 
 <div style="overflow: auto;">
@@ -29,8 +35,6 @@ $(LINK_DOWNLOAD /Programming_in_D_code_samples.zip, Click here to download code 
 )
 
 $(H5 Online version)
-
-$(P $(LINK2 ix.html, $(B The Index Section)) (useful for keyword searches))
 
 $(UL
 $(WORK_IN_PROCESS
