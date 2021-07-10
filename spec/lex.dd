@@ -340,7 +340,7 @@ $(GNAME StringPostfix):
     $(B d)
 
 $(GNAME DelimitedString):
-    $(B q") $(GLINK Delimiter) $(GLINK WysiwygCharacters)$(OPT) $(GLINK MatchingDelimiter) $(B ")
+    $(B q") $(GLINK Delimiter) $(GLINK EndOfLine) $(GLINK IdentifierDelimitedLines)$(OPT) $(GLINK MatchingDelimiter) $(B ")
     $(B q"$(LPAREN)) $(GLINK ParenDelimitedCharacters)$(OPT) $(B $(RPAREN)")
     $(B q"[) $(GLINK BracketDelimitedCharacters)$(OPT) $(B ]")
     $(B q"{) $(GLINK BraceDelimitedCharacters)$(OPT) $(B }")
@@ -351,6 +351,14 @@ $(GNAME Delimiter):
 
 $(GNAME MatchingDelimiter):
     $(GLINK Identifier)
+
+$(GNAME IdentifierDelimitedLines):
+    $(GLINK IdentifierDelimitedLine)
+    $(GLINK IdentifierDelimitedLine) $(GSELF IdentifierDelimitedLines)
+
+$(GNAME IdentifierDelimitedLine):
+    $(GLINK EndOfLine)
+    $(GLINK WysiwygCharacter) $(GSELF IdentifierDelimitedLine)
 
 $(GNAME ParenDelimitedCharacters):
     $(GLINK WysiwygCharacter)
