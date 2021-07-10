@@ -1,5 +1,11 @@
 module book.build;
-import std;
+import std.string;
+import std.process;
+import std.algorithm;
+import std.file;
+import std.stdio;
+import std.exception;
+
 void compileToPath(string compileThis, string outputPath, bool loud = false)
 {
     import core.stdc.stdlib;
@@ -23,6 +29,10 @@ void compileToPath(string compileThis, string outputPath, bool loud = false)
 }
 int main(string[] args)
 {
+    import std.typecons;
+    import std.path;
+    import std.parallelism;
+    import std.conv : to;
     const jobs = args.length == 2 ? args[1].to!ubyte : 1;
     const outDir = "../web/book";
     writeln("Building the book at ", outDir);
