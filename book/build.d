@@ -42,7 +42,7 @@ int main(string[] args)
     if(outDir.exists) {
         executeShell("rm -rf " ~ outDir);
     }
-    auto rng = dirEntries("d.en", "*.d", SpanMode.shallow)
+    dirEntries("d.en", "*.d", SpanMode.shallow)
         .map!(dFile => tuple(dFile.name, buildPath(outDir, baseName(dFile).setExtension("html"))))
         .parallel(jobs)
         .each!(elem => compileToPath(elem.tupleof));
