@@ -660,9 +660,14 @@ $(GNAME IntegerSuffix):
     $(B UL)
 
 $(GNAME DecimalInteger):
-    $(B 0)
+    $(GLINK ZeroDigits)
+    $(GLINK ZeroDigits) $(GLINK OctalDigit)
     $(GLINK NonZeroDigit)
     $(GLINK NonZeroDigit) $(GLINK DecimalDigitsUS)
+
+$(GNAME ZeroDigits):
+    $(B 0)
+    $(B 0) $(GSELF ZeroDigits)
 
 $(GNAME BinaryInteger):
     $(GLINK BinPrefix) $(GLINK BinaryDigitsNoSingleUS)
@@ -787,7 +792,8 @@ $(GNAME HexLetter):
         )
 
         $(P C-style octal integer notation was deemed too easy to mix up with decimal notation;
-        it is only fully supported in string literals.
+        it is only fully supported in string literals or when the decimal interpretation would be equivalent
+        (e.g. $(D 007) is accepted)
         D still supports octal integer literals interpreted at compile time through the $(REF octal, std,conv)
         template, as in $(D octal!167).)
         $(P Hexadecimal integers are a sequence of hexadecimal digits preceded
@@ -861,12 +867,12 @@ $(GNAME Float):
     $(GLINK HexFloat)
 
 $(GNAME DecimalFloat):
-    $(GLINK LeadingDecimal) $(B .)
-    $(GLINK LeadingDecimal) $(B .) $(GLINK DecimalDigits)
-    $(GLINK DecimalDigits) $(B .) $(GLINK DecimalDigitsNoStartingUS) $(GLINK DecimalExponent)
-    $(B .) $(GLINK DecimalInteger)
-    $(B .) $(GLINK DecimalInteger) $(GLINK DecimalExponent)
-    $(GLINK LeadingDecimal) $(GLINK DecimalExponent)
+    $(GLINK DecimalDigitsNoStartingUS) $(B .)
+    $(GLINK DecimalDigitsNoStartingUS) $(B .) $(GLINK DecimalDigitsNoStartingUS)
+    $(GLINK DecimalDigitsNoStartingUS) $(B .) $(GLINK DecimalDigitsNoStartingUS) $(GLINK DecimalExponent)
+    $(B .) $(GLINK DecimalDigitsNoStartingUS)
+    $(B .) $(GLINK DecimalDigitsNoStartingUS) $(GLINK DecimalExponent)
+    $(GLINK DecimalDigitsNoStartingUS) $(GLINK DecimalExponent)
 
 $(GNAME DecimalExponent):
     $(GLINK DecimalExponentStart) $(GLINK DecimalDigitsNoSingleUS)
@@ -916,10 +922,6 @@ $(GNAME RealSuffix):
 
 $(GNAME ImaginarySuffix):
     $(B i)
-
-$(GNAME LeadingDecimal):
-    $(GLINK DecimalInteger)
-    $(B 0) $(GLINK DecimalDigitsNoSingleUS)
 )
 
         $(P Floats can be in decimal or hexadecimal format.)
