@@ -6,18 +6,21 @@ $(D_S $(TITLE),
 $(H2 Introduction)
 
 The $(LINK2 https://dlang.org/install.sh, `dlang.org/install.sh`) script is the
-official D version manager for DMD, GDC and LDC on FreeBSD, Linux and macOS.
-It provides a convenient way to fetch and install a D compiler
-without requiring administrative privileges nor external dependencies.
+official D compiler version manager. It supports DMD, GDC and LDC on FreeBSD,
+Linux, macOS and Windows (although not every combination is available). It
+provides a convenient way to fetch and install a D compiler, and switch between
+installed versions, without requiring administrative privileges.
+
 Its features include:
 
 $(UL
- $(LI Maintaining one or more portable compiler installations in the user's home directory (`~/dlang`))
- $(LI Maintaining the latest stable version of the D package manager, $(LINK2 http://code.dlang.org/docs/commandline, `dub`))
- $(LI Self-updating via `~/dlang/install.sh update`)
- $(LI Supporting nested activation of compilers. Activating a compiler
-      will setup the `PATH`, `LIBRARY_PATH`, `LD_LIBRARY_PATH`, `DMD`, `DC`, `PS1` environment variables,
-      and a `deactivate` command, which reverts the modified variables to their old values.)
+ $(LI Maintaining one or more portable compiler installations in a directory of choice
+      (default `~/dlang` on POSIX, `%USERPROFILE%/dlang` on Windows).)
+ $(LI Maintaining the latest stable version of the D package manager, $(LINK2 http://code.dlang.org/docs/commandline, `dub`).)
+ $(LI Self-updating via `install.sh update`.)
+ $(LI Supporting nested activation of compilers. Activating a compiler will set
+      up the relevant environment variables, and offer means to revert the
+      modified variables to their prior values.)
  $(LI Supporting the Fish shell, in addition to Bash-compatible shells.)
  $(LI Verifying binary signatures via the $(LINK2 $(ROOT_DIR)gpg_keys.html,D keyring) (automatic if `gpg` is installed))
  $(LI For `dmd`, installation of the following versions is supported:
@@ -39,7 +42,19 @@ $(UL
  )
  $(LI For `gdc`, installation of the following versions is supported:
     $(UL
-        $(LI `gdc` - latest stable version)
+        $(LI `gdc` - latest stable version, Linux only)
+    )
+ )
+ $(LI For `dub`, installation of the following versions is supported:
+    $(UL
+        $(LI `dub` - latest stable version)
+        $(LI `dub-<version>` - specific official release (including beta releases))
+    )
+ )
+ $(LI For all compilers optionally installing a different version to the bundled dub is supported:
+    $(UL
+        $(LI `<compiler>,dub` - selected compiler and latest stable DUB version)
+        $(LI `<compiler>,dub-<version>` - selected compiler and a specific stable DUB version)
     )
  )
 )
@@ -48,16 +63,41 @@ $(H3 Content)
 
 $(UL
     $(LI $(RELATIVE_LINK2 get, Downloading the installer))
+    $(UL
+        $(LI $(RELATIVE_LINK2 get_posix, On FreeBSD, Linux and macOS))
+        $(LI $(RELATIVE_LINK2 get_windows, On Windows))
+        $(UL
+            $(LI $(RELATIVE_LINK2 get_git, Using Git BASH))
+            $(LI $(RELATIVE_LINK2 get_msys, Using MSYS BASH))
+        )
+    )
     $(LI $(RELATIVE_LINK2 usage, Usage))
     $(UL
         $(LI $(RELATIVE_LINK2 install, Installation))
+        $(LI $(RELATIVE_LINK2 activate, Activation))
+        $(UL
+            $(LI $(RELATIVE_LINK2 activate_posix, On POSIX))
+            $(LI $(RELATIVE_LINK2 activate_windows, On Windows))
+        )
         $(LI $(RELATIVE_LINK2 uninstall, Uninstallation))
         $(LI $(RELATIVE_LINK2 list, Listing available compilers))
         $(LI $(RELATIVE_LINK2 update, Update))
+        $(LI $(RELATIVE_LINK2 get-path, Get compiler executable path))
     )
 )
 
 $(H2 $(LNAME2 get, Downloading the installer))
+
+$(UL
+    $(LI $(RELATIVE_LINK2 get_posix, On FreeBSD, Linux and macOS))
+    $(LI $(RELATIVE_LINK2 get_windows, On Windows))
+    $(UL
+        $(LI $(RELATIVE_LINK2 get_git, Using Git BASH))
+        $(LI $(RELATIVE_LINK2 get_msys, Using MSYS BASH))
+    )
+)
+
+$(H3 $(LNAME2 get_posix, Downloading on FreeBSD, Linux and macOS))
 
 $(CONSOLE
 mkdir -p ~/dlang && wget https://dlang.org/install.sh -O ~/dlang/install.sh
@@ -69,9 +109,55 @@ $(CONSOLE
 curl https://dlang.org/install.sh | bash -s
 )
 
-$(P If no arguments are provided, the latest DMD compiler will be installed.)
+In this case the installer makes a copy of itself at `~/dlang/install.sh`.
+If no arguments are provided, the latest DMD compiler will be installed.
 
-$(P The installer also makes a copy of itself at `~/dlang/install.sh`.)
+$(H3 $(LNAME2 get_windows, Downloading on Windows))
+
+The instructions above work unaltered when using a POSIX-like environment on
+Windows, such as Cygwin or MSYS2, but then compilers are installed inside that
+environment. For better integration with a typical Windows development
+environment, you may follow the instructions below instead, which makes
+compilers available from the Windows Command Prompt.
+
+$(CONSOLE
+mkdir %USERPROFILE%\dlang
+powershell.exe -Command "wget https://dlang.org/install.sh -OutFile %USERPROFILE%\dlang\install.sh"
+)
+
+The script is interpreted by `bash.exe`, which comes as part of MSYS2 as well
+as Git for Windows. The following two sections provide two alternatives for
+defining `%BASH%` so that the POSIX-tailored examples further down will work
+from the Windows command prompt by replacing "`~/dlang/install.sh`" with
+"`%BASH% %USERPROFILE%\dlang\install.sh`". With either one of these
+alternatives, this will work:
+
+$(CONSOLE
+%BASH% %USERPROFILE%\dlang\install.sh --help
+)
+
+$(H4 $(LNAME2 get_git, Using Git BASH))
+
+Download and install $(LINK2 https://gitforwindows.org/, Git for Windows) to
+"`C:\Program Files\Git`" and $(LINK2 https://www.7-zip.org/, 7-Zip) to
+"`C:\Program Files\7-Zip`". `7z.exe` needs to be in the `PATH`:
+
+$(CONSOLE
+set PATH=%PATH%;C:\Program Files\7-Zip
+set BASH="\Program Files\Git\usr\bin\bash.exe"
+)
+
+$(H4 $(LNAME2 get_msys, Using MSYS BASH))
+
+Follow the $(LINK2 https://www.msys2.org, installation instructions for MSYS2).
+We'll assume MSYS2 is now available in `C:\msys64`, which is the default for
+the 64-bit installer. This will install the necessary decompression tools:
+
+$(CONSOLE
+C:\msys64\usr\bin\pacman.exe --sync unzip p7zip
+set BASH=C:\msys64\usr\bin\bash.exe
+)
+
 
 $(H2 $(LNAME2 usage, Usage))
 
@@ -81,9 +167,15 @@ $(CONSOLE
 
 $(UL
     $(LI $(RELATIVE_LINK2 install, Installation))
+    $(LI $(RELATIVE_LINK2 activate, Activation))
+    $(UL
+        $(LI $(RELATIVE_LINK2 activate_posix, On POSIX))
+        $(LI $(RELATIVE_LINK2 activate_windows, On Windows))
+    )
     $(LI $(RELATIVE_LINK2 uninstall, Uninstallation))
     $(LI $(RELATIVE_LINK2 list, Listing available compilers))
     $(LI $(RELATIVE_LINK2 update, Update))
+    $(LI $(RELATIVE_LINK2 get-path, Get compiler executable path))
 )
 
 $(H3 $(LNAME2 global_options, Global options))
@@ -91,9 +183,9 @@ $(H3 $(LNAME2 global_options, Global options))
 $(DL
     $(DT
         $(SWITCH $(SWNAME -p) $(SWNAME --path),
-            Changes the install location (default `~/dlang`))
+            Changes the install location (default `~/dlang` on POSIX, `%USERPROFILE/dlang` on Windows))
         $(SWITCH $(SWNAME -v),
-            Activates more verbose output)
+            Produces more verbose output)
         $(SWITCH $(SWNAME -h),
             Displays a help page)
     )
@@ -112,8 +204,8 @@ $(H4 Options)
 
 $(DL
     $(DT
-        $(SWITCH $(SWNAME -a) $(SWNAME --active),
-            Only prints the path to the activate script)
+        $(SWITCH $(SWNAME -a) $(SWNAME --activate),
+            Prints the path to the activate script)
         $(SWITCH $(SWNAME dmd|ldc|gdc),
             Installs the latest version of a compiler)
         $(SWITCH $(SWNAME dmd|ldc|gdc-&lt;version&gt;),
@@ -124,6 +216,14 @@ $(DL
             Installs DMD nightly)
         $(SWITCH $(SWNAME dmd-2017-02-10),
             Installs specific DMD nightly)
+        $(SWITCH $(SWNAME dub),
+            Installs the latest version of a dub)
+        $(SWITCH $(SWNAME dub-&lt;version&gt;),
+            Installs a specific version of a dub (e.g. dub.1.23.0))
+        $(SWITCH $(SWNAME &lt;compiler&gt,&lt;dub&gt;),
+            Installs a version of compiler and a version of dub.
+            All compiler and version strings listed above are supported.
+        )
     )
 )
 
@@ -137,14 +237,52 @@ $(EXAMPLES
 ~/dlang/install.sh install dmd-nightly
 )
 
+By default, the `dub` binary bundled in the compiler installation will be exposed.
+Optionally, a different dub version can be installed standalone or as part of the compiler
+installation:
+
+$(EXAMPLES
+~/dlang/install.sh install dub
+~/dlang/install.sh install dub-1.22.0
+~/dlang/install.sh install dmd-2.071.1,dub-1.23.0
+~/dlang/install.sh install ldc-1.23.0,dub
+)
+
+An installed compiler can be used directly, but the exact path varies between
+compiler vendors:
+
+$(CONSOLE
+~/dlang/&lt;installed-dmd-compiler&gt;/bin64/dmd
+~/dlang/&lt;installed-ldc-compiler&gt;/ldc2
+)
+
+Therefore it is recommended to $(RELATIVE_LINK2 activate, activate) a compiler
+after installation. For scripting needs the path to compiler executable can be
+queried with [`get-path`](#get-path).
+
+$(H3 $(LNAME2 activate, Activate))
+
 Once a compiler is installed, it can be activated for the current session.
-Run the respective `activate` script in a shell to use a compiler by default:
+Supplying the `-a` or `--activate` option to the `install` command will print
+the path to the appropriate activation script: either a
+$(RELATIVE_LINK2 activate_posix, shell script) or a
+$(RELATIVE_LINK2 activate_windows, Windows batch file).
+
+$(H4 $(LNAME2 activate_posix, In POSIX environments))
+
+$(CONSOLE
+~/dlang/install.sh install &lt;compiler&gt; -a
+)
+
+This will show where to find the `activate` script (or `activate.fish` for
+users of the $(LINK2 https://fishshell.com, Fish shell).) The script should be
+executed $(I in the current shell):
 
 $(CONSOLE
 source ~/dlang/&lt;installed-compiler&gt;/activate
 )
 
-This will setup the `PATH`, `LIBRARY_PATH`, `LD_LIBRARY_PATH`, `DMD`, `DC`,
+This will set up the `PATH`, `LIBRARY_PATH`, `LD_LIBRARY_PATH`, `DMD`, `DC`,
 and `PS1` environment variables.
 It's also possible to combine this into one command:
 
@@ -159,20 +297,66 @@ $(CONSOLE
 deactivate
 )
 
-Alternatively, it is also possible to call the compiler binary directly.
-Note that the exact path varies between the compiler vendors:
+$(H4 $(LNAME2 activate_windows, On the Windows command line))
 
 $(CONSOLE
-~/dlang/&lt;installed-dmd-compiler&gt;/bin64/dmd
-~/dlang/&lt;installed-ldc-compiler&gt;/ldc2
+%BASH% %USERPROFILE%\dlang\install.sh install &lt;compiler&gt; -a
 )
 
-Users of the $(LINK2 https://fishshell.com, Fish shell) can `activate.fish`:
+This will show where to find the `activate.bat` file. Calling it will change
+the `PATH` environment variable, and show how to restore its prior value.
 
 $(CONSOLE
-source ~/dlang/&lt;installed-compiler&gt;/activate.fish
+%USERPROFILE%\dlang$(BACKSLASH)&lt;installed-compiler&gt;\activate.bat
 )
 
+To install and activate `%COMPILER%` in a batch file, this will do:
+
+$(CONSOLE
+set INSTALL=%BASH% %USERPROFILE%\dlang\install.sh install %COMPILER%
+%INSTALL%
+for /f "usebackq tokens=*" %%a in (`%INSTALL% -a`) do call %%a
+)
+
+$(H3 $(LNAME2 get-path, Get compiler executable path))
+
+$(CONSOLE
+~/dlang/install.sh get-path &lt;compiler&gt;
+)
+
+Returns the path to the selected compiler executable.
+The command fails if the compiler is not installed locally and `--install`
+hasn't been passed.
+
+$(H4 Options)
+
+$(DL
+    $(DT
+        $(SWITCH $(SWNAME --dmd),
+            Prints the path to the DMD-alike executable)
+        $(SWITCH $(SWNAME --dub),
+            Prints the path to the DUB executable)
+        $(SWITCH $(SWNAME --install),
+            Installs the compiler if it is not installed)
+    )
+)
+
+$(EXAMPLES
+$ ~/dlang/install.sh get-path dmd
+/home/user/dlang/dmd-2.094.0/linux/bin64/dmd
+$ ~/dlang/install.sh get-path dmd-2.093.0 --install
+/home/user/dlang/dmd-2.093.0/linux/bin64/dmd
+$ ~/dlang/install.sh get-path ldc-1.23.0
+/home/user/dlang/ldc-1.23.0/bin/ldc2
+$ ~/dlang/install.sh get-path --dmd ldc-1.23.0
+/home/user/dlang/ldc-1.23.0/bin/ldmd2
+$ ~/dlang/install.sh get-path --dub ldc-1.23.0
+/home/user/dlang/ldc-1.23.0/bin/dub
+$ ~/dlang/install.sh get-path --dub dub-1.21.0
+/home/user/dlang/dub-1.21.0/bin/dub
+$ ~/dlang/install.sh get-path --dub ldc-1.23.0,dub-1.21.0
+/home/user/dlang/dub-1.21.0/bin/dub
+)
 
 $(H3 $(LNAME2 uninstall, Uninstall))
 
@@ -198,7 +382,7 @@ $(CONSOLE
 
 $(H3 $(LNAME2 update, Update))
 
-Update the installer itself.
+Update the installer itself and the keyring.
 
 $(CONSOLE
 ~/dlang/install.sh update
@@ -212,3 +396,4 @@ Macros:
     SWITCH=$(DT $1)$(DD $+)
     EXAMPLES=$(H4 Examples)$(CONSOLE $0)
     SUBNAV=$(SUBNAV_CLI_REFERENCE)
+    BACKSLASH = \

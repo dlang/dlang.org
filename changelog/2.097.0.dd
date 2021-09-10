@@ -1,0 +1,944 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jun 03, 2021, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 29 major changes and 144 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 54 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 ambiguous-ternary,Deprecation period for ambiguous ternary expressions has ended))
+$(LI $(RELATIVE_LINK2 body-deprecation,Usage of the `body` keyword has been deprecated))
+$(LI $(RELATIVE_LINK2 fqn-bypass-deprecation,Deprecate a case of using fully-qualified names to bypass imports))
+$(LI $(RELATIVE_LINK2 package-visibility,Explicit package visibility attribute is now always applied to new scopes))
+$(LI $(RELATIVE_LINK2 pragma-mangle-aggregate,`pragma(mangle)` can now be applied to aggregates))
+$(LI $(RELATIVE_LINK2 transition-complex,Complex and imaginary types are now deprecated))
+$(LI $(RELATIVE_LINK2 while-condition-assignment,`while (auto n = expression)` is now supported))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 add_centering_flag,Centering formatted output.))
+$(LI $(RELATIVE_LINK2 add_conversion_target,`AllImplicitConversionTargets` replaces `ImplicitConversionTargets`))
+$(LI $(RELATIVE_LINK2 add_format_integers_as_floats,Formatting integers with `%e`, `%f`, `%g` and `%a` is now possible.))
+$(LI $(RELATIVE_LINK2 bugfix_for_pow,Implementation of `pow(f, -2)` and `f ^^ -2` changed))
+$(LI $(RELATIVE_LINK2 deprecate_enforceValidFormatSpec,Deprecate std.format : enforceValidFormatSpec))
+$(LI $(RELATIVE_LINK2 deprecate_formatElement,Deprecate std.format : formatElement))
+$(LI $(RELATIVE_LINK2 deprecate_unformatElement,Deprecate std.format : unformatElement))
+$(LI $(RELATIVE_LINK2 fieldnametuple_interface,`FieldnameTuple` now returns an empty tuple for interfaces))
+$(LI $(RELATIVE_LINK2 fields_interface,`Fields` (formerly `FieldTypeTuple`) now returns an empty tuple for interfaces))
+$(LI $(RELATIVE_LINK2 formatting_floats_in_CTFE,Floating point numbers can be formatted at compile time))
+$(LI $(RELATIVE_LINK2 formatting_floats_nogc,Formatting floating point numbers don't allocate with the GC anymore.))
+$(LI $(RELATIVE_LINK2 formatting_some_reals_as_doubles,Some reals will be downcast to double when used with `std.format`.))
+$(LI $(RELATIVE_LINK2 nullable-remove-alias-get-this,`std.typecons.Nullable`: Remove deprecated `alias get this`.))
+$(LI $(RELATIVE_LINK2 rework_format_docs,Documentation of `std.format` has been completely reworked.))
+$(LI $(RELATIVE_LINK2 splitting_format,Module `std.format` has been split into smaller modules))
+$(LI $(RELATIVE_LINK2 splitting_math,Module `std.math` has been split into smaller modules))
+$(LI $(RELATIVE_LINK2 splitwhen,splitWhen added to std.algorithm.iteration))
+$(LI $(RELATIVE_LINK2 std-datetime,The old benchmarking functionality in `std.datetime` has been removed.))
+$(LI $(RELATIVE_LINK2 std-exception,`std.exception.enforceEx` has been removed.))
+$(LI $(RELATIVE_LINK2 std-sumtype,New module: `std.sumtype`))
+$(LI $(RELATIVE_LINK2 transposed-remove-save,`std.range.Transposed`: Remove deprecated member `save`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 add_lowmem,Added support for low memory compilation option to the $(LINK2 https://dub.pm/settings, dub settings file).))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 ambiguous-ternary,Deprecation period for ambiguous ternary expressions has ended)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/ambiguous-ternary.dd)
+$(P
+In D, the ternary operator (`?:`) has a higher precedence than
+the assignment operator (`=`), hence:
+)
+---
+true ? stt = "AA" : stt = "BB"
+---
+
+$(P
+actually means:
+)
+---
+(true ? (stt = "AA") : stt) = "BB",
+---
+
+$(P
+This is in line with C, and many other languages (except C++),
+but comes at a surprise to many, which is why this specific combination
+of ternary and assignment was deprecated in v2.082.0 (2018-09-01).
+)
+
+$(P
+The deprecation instructs the user to use parenthesis to make the
+intent explicit, so the above snippet should read as:
+)
+---
+true ? (stt = "AA") : (stt = "BB")
+---
+
+$(P
+This deprecation period has now ended and the compiler will now issue
+an error for ambiguous code.
+)
+)
+
+$(LI $(LNAME2 body-deprecation,Usage of the `body` keyword has been deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/body-deprecation.dd)
+$(P
+Using `body` to indicate the body of a function or method
+in the presence of contracts is now deprecated.
+Any leftover usage of `body` can be replaced with `do`.
+This replacement, introduced by $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/accepted/DIP1003.md, DIP1003),
+has been available since $(LINK2 https://github.com/dlang/dmd/pull/6855, DMD v2.075.0 (July 2017)).
+)
+)
+
+$(LI $(LNAME2 fqn-bypass-deprecation,Deprecate a case of using fully-qualified names to bypass imports)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/fqn-bypass-deprecation.dd)
+$(P
+Since v2.084 it is no longer possible to bypass private imports by using fully-qualified names,
+this was deprecated in v2.071 but when fully-qualified names are used as a type
+(vs an expression) the code is accepted without any warning.
+)
+
+$(P
+Starting with this release the compiler will now properly deprecate the previous omitted case.
+)
+
+$(P
+The issue is best described in the following example:
+)
+
+```d
+import std.algorithm;
+
+// deprecated in v2.071, error since v2.084
+auto a = std.range.Take!(int[]); // Error: undefined identifier `range` in package `std`...
+
+// now it's deprecated, will be error from v2.106
+std.range.Take!(int[]) s;
+
+````
+)
+
+$(LI $(LNAME2 package-visibility,Explicit package visibility attribute is now always applied to new scopes)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/package-visibility.dd)
+$(P
+If a less restrictive package attribute appeared within the scope of another
+package attribute, the more restrictive parent would override any explicit
+child visibility.
+)
+
+$(P
+Example:
+)
+---
+module pkg.foo;
+
+package(pkg.foo):           // analogous to "private" or plain "package"
+
+package(pkg) int bar();     // package(pkg) was being ignored
+---
+
+$(P
+Starting from this version, the package visibility attribute is now always
+applied as long as it is valid.  In the given example, this allows any module
+in the package `pkg` to import and use the symbol `bar`.
+)
+)
+
+$(LI $(LNAME2 pragma-mangle-aggregate,`pragma(mangle)` can now be applied to aggregates)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/pragma-mangle-aggregate.dd)
+$(P
+The syntax is `pragma(mangle, str_or_decl [, str] ) declaration;` where `str_or_decl` is either:
+a string expression to substitute the name of `declaration`;
+or a `class`, `struct`, or `union` declaration or template instance to use instead of `declaration`s for mangling.
+If the optional second argument is present, use that as a name instead but keep the namespaces and template parameters of
+`str_or_decl` (if any).
+)
+
+$(P
+This enables binding with functions that take classes by value or reference and to classes that are D keywords.
+)
+
+$(P
+To bind C++'s `std::function` by value:
+)
+---
+extern(C++, "std")
+{
+    template std_function(F)
+    {
+        pragma(mangle, "function")
+        class std_function
+        {
+            // member variables and functions
+        }
+    }
+}
+
+template ScopeClass(C , string name)
+{
+    enum ns = __traits(getCppNamespaces,C);
+    extern(C++, class) extern(C++,(ns))
+    {
+        pragma(mangle, C, name)
+        struct ScopeClass
+        {
+            char[__traits(classInstanceSize, C)] buffer;
+            // member variables and functions
+        }
+    }
+}
+
+alias FuncType = void function(int);
+alias RawFuncType = typeof(*FuncType.init);
+// Mangles as `void funk(std::function<void(int)> a)`
+extern(C++) void funk( ScopeClass!(std_function!(RawFuncType)),"function") a );
+---
+)
+
+$(LI $(LNAME2 transition-complex,Complex and imaginary types are now deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/transition-complex.dd)
+$(P
+D previously supported complex and imaginary versions of all floating point
+types as part of the language.
+)
+---
+float a = 2;
+ifloat b = 4i;
+cfloat c = a + b;
+assert(c == 2 + 4i);
+---
+
+$(P
+However these types are too specialized to be a part of the core language, and
+the same functionalities can be implemented as part of a library type.  As
+such, older versions of DMD provided the `-transition=complex` switch to warn
+when those builtin types were used.  This transition phase has finished, and
+those deprecations are now turned on by default.
+)
+
+$(P
+Users should use $(LINK2 https://dlang.org/phobos/std_complex.html#Complex, `std.complex.Complex`) instead.
+)
+---
+import std.complex;
+float a = 2;
+float b = 4;
+auto c = complex(a, b);
+assert(c == complex(2, 4));
+---
+
+$(P
+The `-transition=complex` switch that previously turn on deprecation warnings
+no longer has an effect and has also been deprecated.
+)
+)
+
+$(LI $(LNAME2 while-condition-assignment,`while (auto n = expression)` is now supported)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/while-condition-assignment.dd)
+$(P
+Up until this release, `while (auto n = expression)` was not
+supported, although the `if` counterpart: `if (auto n = expression)`
+compiled succesfully. Starting with the current compiler version,
+`while (auto n = expression)` is accepted, having the exact
+same semantics as:
+)
+
+---
+while (true)
+{
+    if (auto n = expression)
+    { /* loop body */ }
+    else
+    { break; }
+}
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 add_centering_flag,Centering formatted output.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/add_centering_flag.dd)
+$(P
+A new flag $(B '=') has been added to the format specifier, which
+allows to center the output:
+)
+
+```
+assert(format!"|%=8d|"(1234) == "|  1234  |");
+```
+
+$(P
+In case the output cannot be centered exactly it is moved slightly to
+the left if $(B '-') flag is present too and to the right else:
+)
+
+```
+assert(format!"|%=-8d|"(123) == "|  123   |");
+assert(format!"|%=8d|"(123) == "|   123  |");
+```
+)
+
+$(LI $(LNAME2 add_conversion_target,`AllImplicitConversionTargets` replaces `ImplicitConversionTargets`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/add_conversion_target.dd)
+$(P
+The function `ImplicitConversionTargets` in module `std.traits` has a
+design flaw: The list of conversion targets contains some, but not all
+unsafe conversion targets. To overcome this, a new function
+`AllImplicitConversionTargets` has been added and
+`ImplicitConversionTargets` has been deprecated.
+)
+)
+
+$(LI $(LNAME2 add_format_integers_as_floats,Formatting integers with `%e`, `%f`, `%g` and `%a` is now possible.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/add_format_integers_as_floats.dd)
+$(P
+The formatting posibilities of integers have been expanded to the
+specifiers that are typical for floating point numbers: Integers can
+now be formatted using `%e`, `%f`, `%g` and `%a`. The result is
+similar to the result expected for the corresponding floating point
+value.
+)
+
+```
+assert(format!"%.3e"(ulong.max) == "1.845e+19");
+assert(format!"%.3,3f"(ulong.max) == "18,446,744,073,709,551,615.000");
+assert(format!"%.3g"(ulong.max) == "1.84e+19");
+assert(format!"%.3a"(ulong.max) == "0x1.000p+64");
+```
+)
+
+$(LI $(LNAME2 bugfix_for_pow,Implementation of `pow(f, -2)` and `f ^^ -2` changed)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/bugfix_for_pow.dd)
+$(P
+We noticed that the implementation of `pow(f, -2)` and `f ^^ -2` with
+`f` being a floating point value, was buggy for some values of `f`.
+Unfortunately the fix implies small changes for other values for `f`
+(with exponent `-2`) too: The least significant bits of the result might
+differ from the current implementation. (This is due to the
+peculiarities of floating point numbers and cannot be avoided with
+reasonable means.)
+)
+
+$(P
+To avoid problems, make sure, that your algorithms do not rely on the
+least significant bits of floating point calculations, for example by
+using `isClose` instead of `==`.
+)
+)
+
+$(LI $(LNAME2 deprecate_enforceValidFormatSpec,Deprecate std.format : enforceValidFormatSpec)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/deprecate_enforceValidFormatSpec.dd)
+$(P
+`enforceValidFormatSpec` from `std.format` has been accidentally made
+public and will be removed from public view in 2.107.0.
+)
+)
+
+$(LI $(LNAME2 deprecate_formatElement,Deprecate std.format : formatElement)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/deprecate_formatElement.dd)
+$(P
+`formatElement` from `std.format` has been accidentally made public and
+will be removed from public view in 2.107.0.
+)
+
+$(P
+Please use instead of `formatElement(sink, value, fmt)`:
+)
+
+```
+import std.range : only;
+
+sink.put(format!("%("~fmt~"%)")(only(value)));
+```
+)
+
+$(LI $(LNAME2 deprecate_unformatElement,Deprecate std.format : unformatElement)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/deprecate_unformatElement.dd)
+$(P
+`unformatElement` from `std.format` has been accidentally made public and
+will be removed from public view in 2.107.0.
+)
+
+$(P
+Please use instead for strings and characters `parseElement` from
+`std.conv` and for all else `unformatValue` from `std.format.read`.
+)
+)
+
+$(LI $(LNAME2 fieldnametuple_interface,`FieldnameTuple` now returns an empty tuple for interfaces)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/fieldnametuple_interface.dd)
+$(P
+Previously `FieldNameTuple` returned `AliasSeq!""` for interfaces as done for
+non-aggregate types like `int`, `char*`, ... . This behaviour was surprising
+because an instance of that interface *may* have members that just are not
+known at compile time.
+)
+
+$(P
+`FieldNameTuple` will now return an empty `AliasSeq!()` for interfaces.
+)
+)
+
+$(LI $(LNAME2 fields_interface,`Fields` (formerly `FieldTypeTuple`) now returns an empty tuple for interfaces)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/fields_interface.dd)
+$(P
+Previously `Fields` returned `AliasSeq!(Interface)` for interfaces as done for
+non-aggregate types like `int`, `char*`, ... . This behaviour was surprising
+because an instance of an interface *may* have members that just are not
+known at compile time.
+)
+
+$(P
+`Fields` will now return an empty `AliasSeq!()` for interfaces.
+)
+)
+
+$(LI $(LNAME2 formatting_floats_in_CTFE,Floating point numbers can be formatted at compile time)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/formatting_floats_in_CTFE.dd)
+$(P
+Example:
+)
+------
+import std.format : format;
+import std.math : sqrt;
+
+enum pi = format!"%s"(3.1415926f);
+static assert(pi == "3.14159");
+
+enum golden_ratio = format!"|%+-20.10E|"((1 + sqrt(5.0)) / 2);
+static assert(golden_ratio == "|+1.6180339887E+00   |");
+------
+)
+
+$(LI $(LNAME2 formatting_floats_nogc,Formatting floating point numbers don't allocate with the GC anymore.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/formatting_floats_nogc.dd)
+$(P
+The implementation of formatting floating point numbers has been
+reworked. We made sure that working examples never allocate with the
+GC, however, we are still using exceptions which are GC managed.
+Therefore, code that uses formatting correctly will never allocate,
+but in the case of exceptions, the GC will be used to allocate the
+exception. We are working on DIP 1008 to solve this issue.
+)
+)
+
+$(LI $(LNAME2 formatting_some_reals_as_doubles,Some reals will be downcast to double when used with `std.format`.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/formatting_some_reals_as_doubles.dd)
+$(P
+In the internals of `std.format` we replaced a call to `snprintf` of
+`libc` with routines written in D for formatting floating point
+values. These functions only work for floats, doubles, 64-bit-reals
+and 80-bit-reals (x87-reals) yet.
+)
+
+$(P
+All other reals are handled by downcasting them to doubles before
+being formatted. This might result in a loss of precision in the
+output. Further, numbers larger than `double.max` will be formatted like
+`double.max` and numbers large than zero but smaller than the smallest
+positive double will be formatted like the smallest positive double.
+Likewise for negative values.
+)
+)
+
+$(LI $(LNAME2 nullable-remove-alias-get-this,`std.typecons.Nullable`: Remove deprecated `alias get this`.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/nullable-remove-alias-get-this.dd)
+$(P
+`Nullable` no longer implicitly converts to its member.
+This feature was problematic because a simple use of a value could
+invisibly cause an assertion due to type conversion.
+To restore the previous behavior, replace uses of a `Nullable` value
+`n` with `n.get`.
+)
+)
+
+$(LI $(LNAME2 rework_format_docs,Documentation of `std.format` has been completely reworked.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/rework_format_docs.dd)
+$(P
+In the last years, the documentation of `std.format` was outdated
+little by little and therefore needed a complete rework. The whole
+package was reviewed and all documentations, including examples,
+improved and extended.
+)
+
+$(P
+Some highlights:
+)
+
+$(P
+$(UL
+$(LI The grammar of the format string was updated.)
+$(LI A detailed description of format specifiers was provided.)
+$(LI Several examples on how to use the functions and the format
+     strings were added.)
+)
+)
+)
+
+$(LI $(LNAME2 splitting_format,Module `std.format` has been split into smaller modules)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/splitting_format.dd)
+$(P
+The module `std.format` has been split into submodules:
+)
+
+$(P
+$(UL
+    $(LI `std.format.spec`: Symbols concerning the format string, mainly
+         the `struct FormatSpec` and the `template singleSpec`)
+    $(LI `std.format.read`: Symbols concerning reading input, mainly
+         the `template formattedRead` and the `template unformatValue`)
+    $(LI `std.format.write`: Symbols concerning writing output, mainly
+         the `template formattedWrite` and the `template formatValue`)
+)
+)
+
+$(P
+All public symbols are still accessible using std.format as usual.
+)
+)
+
+$(LI $(LNAME2 splitting_math,Module `std.math` has been split into smaller modules)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/splitting_math.dd)
+$(P
+The module `std.math` has been split into submodules:
+)
+
+$(P
+$(UL
+    $(LI `std.math.constants`: Mathematical constants, like `PI`.)
+    $(LI `std.math.algebraic`: Basic algebraic functions, like `abs` and `sqrt`.)
+    $(LI `std.math.trigonometry`: Trigonometric functions, like `sin` and `cos`.)
+    $(LI `std.math.rounding`: Functions concerned about rounding, like `ceil` and `floor`.)
+    $(LI `std.math.exponential`: Exponential and logarithmic functions, like `pow`, `exp` and `log`.)
+    $(LI `std.math.remainder`: Function calculating the remainder, like `fmod`.)
+    $(LI `std.math.operations`: Floating-point operations, like `isClose`, `nextUp` and `fmin`.)
+    $(LI `std.math.traits`: Floating-point introspection, like `isNaN` and `isSubnormal`.)
+    $(LI `std.math.hardware`: Hardware control: `IeeeFlags` and `FloatingPointControl`.)
+)
+)
+
+$(P
+All public symbols are still accessible using `std.math` as usual.
+)
+)
+
+$(LI $(LNAME2 splitwhen,splitWhen added to std.algorithm.iteration)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/splitwhen.dd)
+$(P
+$(REF splitWhen, std, algortihm, iteration) is a variant of the existing $(REF
+chunkBy, std, algortihm, iteration) function that does not require its predicate
+to be an equivalence relation, allowing it to be used in ways that chunkBy
+cannot. For example:
+)
+-------
+// Grouping by maximum adjacent difference:
+import std.math : abs;
+import std.algorithm;
+auto r3 = [1, 3, 2, 5, 4, 9, 10].splitWhen!((a, b) => abs(a-b) >= 3);
+assert(r3.equal!equal([
+    [1, 3, 2],
+    [5, 4],
+    [9, 10]
+]));
+-------
+
+$(P
+This would have an undefined result with chunkBy, because it requires that if
+pred(a,b) and pred(b,c) return true, pred(a,c) must also return true.
+)
+)
+
+$(LI $(LNAME2 std-datetime,The old benchmarking functionality in `std.datetime` has been removed.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-datetime.dd)
+$(P
+It had been deprecated in 2.077.0 in favor of
+`std.datetime.stopwatch`, which uses `core.time.MonoTime` and
+`core.time.Duration`.
+)
+)
+
+$(LI $(LNAME2 std-exception,`std.exception.enforceEx` has been removed.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-exception.dd)
+$(P
+It had been deprecated in 2.079 in favor of `std.exception.enforce`.
+)
+)
+
+$(LI $(LNAME2 std-sumtype,New module: `std.sumtype`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-sumtype.dd)
+$(P
+The [`sumtype` package](https://code.dlang.org/packages/sumtype) from
+code.dlang.org has been added to the standard library as `std.sumtype`.
+)
+
+$(P
+It provides `SumType`, a generic discriminated union implementation that uses
+[design-by-introspection](https://www.youtube.com/watch?v=HdzwvY8Mo-w) to
+generate safe and efficient code, and is intended to serve as a replacement for
+the legacy `std.variant.Algebraic`.
+)
+
+$(P
+Features of `SumType` include:
+)
+
+$(P
+* Pattern matching.
+* Support for self-referential types.
+* Full compatibility with `pure`, `@safe`, `@nogc`, `nothrow`, and `scope`.
+* No dependency on runtime type information (`TypeInfo`).
+* Compatibility with BetterC.
+)
+
+$(P
+Example usage:
+)
+
+---
+import std.sumtype;
+import std.math : isClose;
+
+struct Fahrenheit { double degrees; }
+struct Celsius { double degrees; }
+struct Kelvin { double degrees; }
+
+alias Temperature = SumType!(Fahrenheit, Celsius, Kelvin);
+
+// Construct from any of the member types.
+Temperature t1 = Fahrenheit(98.6);
+Temperature t2 = Celsius(100);
+Temperature t3 = Kelvin(273);
+
+// Use pattern matching to access the value.
+Fahrenheit toFahrenheit(Temperature t)
+{
+    return Fahrenheit(
+        t.match!(
+            (Fahrenheit f) => f.degrees,
+            (Celsius c) => c.degrees * 9.0/5 + 32,
+            (Kelvin k) => k.degrees * 9.0/5 - 459.4
+        )
+    );
+}
+
+assert(toFahrenheit(t1).degrees.isClose(98.6));
+assert(toFahrenheit(t2).degrees.isClose(212));
+assert(toFahrenheit(t3).degrees.isClose(32));
+
+// Use ref to modify the value in place.
+void freeze(ref Temperature t)
+{
+    t.match!(
+        (ref Fahrenheit f) => f.degrees = 32,
+        (ref Celsius c) => c.degrees = 0,
+        (ref Kelvin k) => k.degrees = 273
+    );
+}
+
+freeze(t1);
+assert(toFahrenheit(t1).degrees.isClose(32));
+
+// Use a catch-all handler to give a default result.
+bool isFahrenheit(Temperature t)
+{
+    return t.match!(
+        (Fahrenheit f) => true,
+        _ => false
+    );
+}
+
+assert(isFahrenheit(t1));
+assert(!isFahrenheit(t2));
+assert(!isFahrenheit(t3));
+---
+)
+
+$(LI $(LNAME2 transposed-remove-save,`std.range.Transposed`: Remove deprecated member `save`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/transposed-remove-save.dd)
+$(P
+`Transposed` never worked as forward range.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 add_lowmem,Added support for low memory compilation option to the $(LINK2 https://dub.pm/settings, dub settings file).)
+$(CHANGELOG_SOURCE_FILE dub, changelog/add_lowmem.dd)
+$(P
+To enable, set `defaultLowMemory` to `true`. For dmd and ldc, the `-lowmem` command-line option is added when compiling.
+)
+
+```
+{
+    "defaultLowMemory": true
+}
+```
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 21752): Template constraint breaks nested eponymeous template)
+$(LI $(BUGZILLA 21802): opAssign and opOpAssign treat lazy void parameters inconsistently)
+$(LI $(BUGZILLA 21880): [REG 2.095] scope variable assigned to non-scope parameter calling function)
+$(LI $(BUGZILLA 21898): Qualifier ignored in alias definition if parentheses are not present)
+$(LI $(BUGZILLA 21914): naked assembler functions get wrong offset to parameters)
+$(LI $(BUGZILLA 21936): [REG 2.080.1] Segfault when compiled with -dip1000)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 2450): Error using operators from named template mixin)
+$(LI $(BUGZILLA 13815): Inconsistent goto jump behavior between compile-time and runtime)
+$(LI $(BUGZILLA 14114): Allow volatileLoad/Store to access null location)
+$(LI $(BUGZILLA 14145): opDispatch not considered when function body doesn't compile)
+$(LI $(BUGZILLA 14740): __traits$(LPAREN)allMembers$(RPAREN) returns erroneous 'this' member for types declared in functions.)
+$(LI $(BUGZILLA 14954): extern opaque struct instance doesn't compile)
+$(LI $(BUGZILLA 15478): cases of missed CTFE evaluation when defining arrays dimensions)
+$(LI $(BUGZILLA 16472): Spurious "is used as a type" when aliasing enum template as default parameter)
+$(LI $(BUGZILLA 17146): Internal error: tk.c 266 with -O -inline)
+$(LI $(BUGZILLA 18251): deprecate + transition=complex shouldn't look at functions with non-matching if constraints)
+$(LI $(BUGZILLA 19387): [dip1000] __fieldPostblit should be scope or deduce scope qualifier)
+$(LI $(BUGZILLA 19443): core.simd generates MOVLPS instead of MOVHLPS)
+$(LI $(BUGZILLA 19783): Fail to emplace struct with betterC)
+$(LI $(BUGZILLA 20460): [OSX] DMD writes the same address everywhere in DWARF debug infos)
+$(LI $(BUGZILLA 20581): DIP1000 wrongly flags hidden ref temporary)
+$(LI $(BUGZILLA 20599): cpp_long as enum type doesn't work)
+$(LI $(BUGZILLA 20704): `-preview=rvaluerefparam` does not work with `init` as default parameter)
+$(LI $(BUGZILLA 20855): stack overflow when compiling large file)
+$(LI $(BUGZILLA 21403): dmd/backend/cgcs.d:375 assert failed)
+$(LI $(BUGZILLA 21651): Unimported package doesn't error out when used as part of fully qualified type)
+$(LI $(BUGZILLA 21661): Can't use fully-qualified name of the current module inside an expression)
+$(LI $(BUGZILLA 21665): Void initialization should not be allowed for instances of struct with invariant)
+$(LI $(BUGZILLA 21668): Cannot declare ref parameter of opaque type)
+$(LI $(BUGZILLA 21672): [REG][ICE][SIMD] accessing SIMD type as a short causes compiler ice)
+$(LI $(BUGZILLA 21680): inconsistent error on `typeof$(LPAREN){ return field; }$(LPAREN)$(RPAREN)$(RPAREN)`)
+$(LI $(BUGZILLA 21684): Assert fail for Win32 with a struct larger than 64k in size)
+$(LI $(BUGZILLA 21699): Duplicate error for index out of bounds at compile time)
+$(LI $(BUGZILLA 21726): Wrong comparison in package$(LPAREN)...$(RPAREN) visibilities)
+$(LI $(BUGZILLA 21739): debug case can access variable from other case)
+$(LI $(BUGZILLA 21742): dot template expressions don't have the void type like any template)
+$(LI $(BUGZILLA 21743): getOverloads fails to propagate 'this' expression for template member)
+$(LI $(BUGZILLA 21753): Struct literal with function literal member not allowed as template value argument)
+$(LI $(BUGZILLA 21765): Assignment-as-condition error with checkaction=context)
+$(LI $(BUGZILLA 21779): assert not omitted for -release  -checkaction=context)
+$(LI $(BUGZILLA 21785): Cannot declare variable of opaque enum with base type)
+$(LI $(BUGZILLA 21791): Stack overflow for forward-referenced enum initializer)
+$(LI $(BUGZILLA 21792): Enum using itself as base type crashes dmd)
+$(LI $(BUGZILLA 21793): Cannot initialize shared member with -preview=nosharedaccess)
+$(LI $(BUGZILLA 21797): Stack overflow for forward-referenced enum min / max)
+$(LI $(BUGZILLA 21812): __traits$(LPAREN)allMembers$(RPAREN) on types with value tuples return ghost members)
+$(LI $(BUGZILLA 21816): testing XMM for nan does not work)
+$(LI $(BUGZILLA 21822): Optimizer flowlv$(LPAREN)$(RPAREN) does not account for OPmemcmp and OPstrcmp)
+$(LI $(BUGZILLA 21825): DIP1034: Do not spuriously warn "calling XXX without side effects discards return value of type 'noreturn'")
+$(LI $(BUGZILLA 21826): MSCOFF output for Win32 should not use EBP for anything other than the frame pointer)
+$(LI $(BUGZILLA 21827): Null pointer exception in elToPair$(LPAREN)$(RPAREN) in backend/cgelem.d)
+$(LI $(BUGZILLA 21828): Enum forward-references just assume int base type)
+$(LI $(BUGZILLA 21830): Wrong deprecation message when non-deprecated template in static condition)
+$(LI $(BUGZILLA 21831): Wrong deprecation message in template parameters before evaluating constraints)
+$(LI $(BUGZILLA 21832): Wrong deprecation message when importing non-deprecated template in static condition)
+$(LI $(BUGZILLA 21833): Optimizer incorrectly rewrites integer comparison to unsigned short comparison)
+$(LI $(BUGZILLA 21849): UTF8: -verrors=context doesn't respect multibyte characters)
+$(LI $(BUGZILLA 21861): ctfe fails when a nested enum or function has a UDA)
+$(LI $(BUGZILLA 21870): Property/method not invoked and requires $(LPAREN)$(RPAREN) when used in static array length)
+$(LI $(BUGZILLA 21874): The test suite fails with most recent GDB versions)
+$(LI $(BUGZILLA 21876): Zero-length static arrays "cannot be read at compile time")
+$(LI $(BUGZILLA 21878): "ref" lost when indexing array in CTFE)
+$(LI $(BUGZILLA 21882): [ICE][dip1021] src/dmd/escape.d$(LPAREN)1850$(RPAREN): Assertion failure)
+$(LI $(BUGZILLA 21883): poor error message when swapping order of base class and interface)
+$(LI $(BUGZILLA 21918): segfault in getParameterStorageClasses on auto function with error)
+$(LI $(BUGZILLA 21927): ICE $(LPAREN)illegal instruction$(RPAREN) with static foreach over empty member template)
+$(LI $(BUGZILLA 21940): Compiler flags -check=on/off not recognized)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 16140): while$(LPAREN)auto x = y$(RPAREN) does not behave like if$(LPAREN)auto x = y$(RPAREN))
+$(LI $(BUGZILLA 20068): Union initialization in constructors should be @safe)
+$(LI $(BUGZILLA 21203): Accept pragma$(LPAREN)mangle$(RPAREN) on aggregate types)
+$(LI $(BUGZILLA 21585): add __traits$(LPAREN)totype, string$(RPAREN) to convert mangled type string to an existing type)
+$(LI $(BUGZILLA 21630): assert$(LPAREN)0$(RPAREN) and assert$(LPAREN)false$(RPAREN) should not be marked for coverage)
+$(LI $(BUGZILLA 21835): Operation on float should use XMM register, not x87)
+)
+$(BUGSTITLE_BUGZILLA Phobos regression fixes,
+
+$(LI $(BUGZILLA 21716): std.regex performance regression $(LPAREN)additional GC allocation$(RPAREN))
+$(LI $(BUGZILLA 21725): Specifying null as bitfields variable name now fails)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 8424): Compile time conversions of double/floats to strings)
+$(LI $(BUGZILLA 9297): Formatting of floating point values in std.format truncates reals to double)
+$(LI $(BUGZILLA 15227): std.format undocumented grammar)
+$(LI $(BUGZILLA 15348): std.stdio.writef format specifier error message)
+$(LI $(BUGZILLA 15386): std.format.formatValue usage hangs)
+$(LI $(BUGZILLA 15888): std.format should not produce deprecated hexstrings)
+$(LI $(BUGZILLA 16432): JSON incorrectly parses to string)
+$(LI $(BUGZILLA 17381): Checked format string is permissive after floating point argument)
+$(LI $(BUGZILLA 18780): Inconsistent behavior with Variant holding int converting to unsigned types)
+$(LI $(BUGZILLA 20320): format$(LPAREN)"%f"$(RPAREN) leeds to wrong output)
+$(LI $(BUGZILLA 20371): std.format limited to 500 characters for floats)
+$(LI $(BUGZILLA 20502): Converting std.typecons.RefCounted!T to a string gives T's storage location instead of T's fields when T is a struct without an explicit toString)
+$(LI $(BUGZILLA 20534): std.format: %r on boolean gives wrong result)
+$(LI $(BUGZILLA 20536): std.format: %a on reals is inconsistent with %a on float/double)
+$(LI $(BUGZILLA 21456): std.format does not accept enum member with string base type as template parameter)
+$(LI $(BUGZILLA 21512): RedBlackTree!Tid treats any values as duplicated except for Tid.init)
+$(LI $(BUGZILLA 21575): Child processes spawned by std.process.spawnProcess accidentally inherit signal masks in parent process)
+$(LI $(BUGZILLA 21592): two stack traces if high surrogate is printed)
+$(LI $(BUGZILLA 21601): std.math : pow$(LPAREN)float/double, -2$(RPAREN) produces sometimes wrong result)
+$(LI $(BUGZILLA 21627): macOS:  std.stdio.File.sync does not guarantee to be written to disk)
+$(LI $(BUGZILLA 21641): std.format: %g produces in rare circumstances inconsistent result)
+$(LI $(BUGZILLA 21679): Assertion failure in Base64.encoder for empty input range of ranges)
+$(LI $(BUGZILLA 21700): Long deprecated Stopwatch std.datetime is still not removed)
+$(LI $(BUGZILLA 21702): avoid quadratic template expansion in constraints of multiple search term versions of std.algorithm.searching.startsWith & endsWith)
+$(LI $(BUGZILLA 21704): Nullable fails to destroy static array elements)
+$(LI $(BUGZILLA 21705): Nullable!T.opEquals fails for T with non-const opEquals overload)
+$(LI $(BUGZILLA 21707): std.base64: Faulty input creates range error instead of Base64Exception)
+$(LI $(BUGZILLA 21708): SumType.opEquals gives confusing error message)
+$(LI $(BUGZILLA 21721): casting std.BigInts to built-in floating point types doesn't work without -preview=dip1000)
+$(LI $(BUGZILLA 21722): toString$(LPAREN)sink, string format$(RPAREN) does not work with non-"%s" strings)
+$(LI $(BUGZILLA 21724): std.algorithm.mutation.copy fails on overlapping arrays if the source array's pointer is less than the destination array's pointer)
+$(LI $(BUGZILLA 21728): rawRead calls fread with NULL if invoked on closed readEnd of Pipe $(LPAREN)segfault$(RPAREN))
+$(LI $(BUGZILLA 21729): rawRead derefences null pointer if invoked on closed File $(LPAREN)segfault$(RPAREN))
+$(LI $(BUGZILLA 21730): null ptr dereferenced in ChunksImpl.opApply $(LPAREN)SIGSEGV$(RPAREN))
+$(LI $(BUGZILLA 21738): std.format.spec: singleSpec should throw on "%%")
+$(LI $(BUGZILLA 21758): std.experimental.checkedint opBinaryRight with integer left-hand side does not compile for any operators except + and -)
+$(LI $(BUGZILLA 21777): std.format: several issues when formatting integers with precision)
+$(LI $(BUGZILLA 21814): std.format: grouping with width 0 causes floating point exception)
+$(LI $(BUGZILLA 21817): std.format: %u on integer does not print unsigned value)
+$(LI $(BUGZILLA 21820): std.format: formatting zero should never lead to empty string)
+$(LI $(BUGZILLA 21834): std.numeric.gcd can't handle negative values)
+$(LI $(BUGZILLA 21836): std.format: grouping may cause RangeError)
+$(LI $(BUGZILLA 21838): std.format: Grouping garbles up %a output)
+$(LI $(BUGZILLA 21840): std.format: grouping ignores space flag with %e)
+$(LI $(BUGZILLA 21841): std.format: grouping produces strange result with zero precision and %e)
+$(LI $(BUGZILLA 21842): std.format: "%-+05,g" adds extra comma)
+$(LI $(BUGZILLA 21846): std.format: provided format string for toString does not work with grouping)
+$(LI $(BUGZILLA 21853): std.format: formatting real.max in CTFE fails)
+$(LI $(BUGZILLA 21863): FieldNameTuple returns emptry string for interfaces)
+$(LI $(BUGZILLA 21875): std.format: wrong number of format specifiers in nested format string of associative arrays should be detected)
+$(LI $(BUGZILLA 21900): std.format: round to even does not work for hex integers with letters)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 13595): Extend std.algorithm.groupBy to support non-equivalence relations)
+$(LI $(BUGZILLA 16200): Faster pow implementation for integral exponents)
+$(LI $(BUGZILLA 18024): checkedint.Abort and checkedint.Warn should be @safe)
+$(LI $(BUGZILLA 18627): std.complex is a lot slower than builtin complex types at number crunching)
+$(LI $(BUGZILLA 20756): ImplicitConversionTargets ignores interface inheritance)
+$(LI $(BUGZILLA 21759): std.experimental.checkedint.Checked is not compatible with "%d" and "%x" integer format specifiers)
+$(LI $(BUGZILLA 21760): std.conv.to does not know how to convert a string to a std.experimental.checkedint.Checked!T)
+$(LI $(BUGZILLA 21761): make std.experimental.checkedint.Checked!T.toHash callable when Checked!T is shared)
+$(LI $(BUGZILLA 21808): std.format: It should be possible to change the order of key and value of AAs.)
+$(LI $(BUGZILLA 21847): std.format: %e, %g and %a should be supported for integers too)
+$(LI $(BUGZILLA 21858): std.format: centering output)
+)
+$(BUGSTITLE_BUGZILLA Druntime regression fixes,
+
+$(LI $(BUGZILLA 21097): [REG2.083] Stack exhaustion upon large struct .destroy)
+$(LI $(BUGZILLA 21363): [REG2.094] Implementation of core.bitop.ror$(LPAREN)x,0$(RPAREN) is using UB)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 21764): checkaction=context doesn't work for empty tuples)
+$(LI $(BUGZILLA 21857): TypeInfo_Array.compare can give wrong result when either array exceeds 2GB)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 21789): Codecov should use default umask for file permissions)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 21161): [Variadic Templates] uses outdated example from D1 / Tango)
+$(LI $(BUGZILLA 21869): Invalid hyperlink to doxygen)
+)
+)
+$(D_CONTRIBUTORS_HEADER 54)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Airbus5717)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Andrej Petrović)
+    $(D_CONTRIBUTOR Arne)
+    $(D_CONTRIBUTOR Ate Eskola)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR berni44)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Brian Callahan)
+    $(D_CONTRIBUTOR Chigusa0w0)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR DoctorNoobingstoneIPresume)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Imperatorn)
+    $(D_CONTRIBUTOR Jason B. Cox)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR Jon Degenhardt)
+    $(D_CONTRIBUTOR linkrope)
+    $(D_CONTRIBUTOR Lucien Perregaux)
+    $(D_CONTRIBUTOR Luhrel)
+    $(D_CONTRIBUTOR Luís Ferreira)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Max Haughton)
+    $(D_CONTRIBUTOR MetaLang)
+    $(D_CONTRIBUTOR mhh)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR nordlow)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Robert Aron)
+    $(D_CONTRIBUTOR Robert Schadek)
+    $(D_CONTRIBUTOR Roy Margalit)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Stefan Koch)
+    $(D_CONTRIBUTOR Tobias Pankrath)
+    $(D_CONTRIBUTOR Tomoya Tanjo)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Witold Baryluk)
+    $(D_CONTRIBUTOR wolframw)
+    $(D_CONTRIBUTOR Ömer Faruk IRMAK)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.097.0
+    TITLE=Change Log: $(VER)

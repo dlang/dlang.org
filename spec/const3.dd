@@ -4,7 +4,7 @@ $(D_S Type Qualifiers,
 
 $(HEADERNAV_TOC)
 
-        $(P Type qualifiers modify a type by applying a $(GLINK2 declaration, TypeCtor).
+        $(P Type qualifiers modify a type by applying a $(GLINK2 type, TypeCtor).
         $(I TypeCtor)s are: $(D const), $(D immutable), $(D shared), and $(D inout).
         Each applies transitively to all subtypes.
         )
@@ -262,14 +262,25 @@ char[] p = "world"; // error, cannot implicitly convert immutable
 
         $(P
         The second way is to cast data to immutable.
-        When doing so, it is up to the programmer to ensure that no
-        other mutable references to the same data exist.
+        When doing so, it is up to the programmer to ensure that any mutable
+        references to the same data are not used to modify the data after the
+        cast.
         )
 
 ---
-char[] s = ...;
-immutable(char)[] p = cast(immutable)s;     // undefined behavior
-immutable(char)[] p = cast(immutable)s.dup; // ok, unique reference
+char[] s = ['a'];
+s[0] = 'b'; // ok
+immutable(char)[] p = cast(immutable)s; // ok, if data is not mutated
+                                        // through s anymore
+s[0] = 'c'; // undefined behavior
+immutable(char)[] q = cast(immutable)s.dup; // always ok, unique reference
+
+char[][] s2 = [['a', 'b'], ['c', 'd']];
+immutable(char[][]) p2 = cast(immutable)s2.dup; // dangerous, only the first
+                                                // level of elements is unique
+s2[0] = ['x', 'y']; // ok, doesn't affect p2
+s2[1][0] = 'z'; // undefined behavior
+immutable(char[][]) q2 = [s2[0].dup, s2[1].dup]; // always ok, unique references
 ---
 
         $(P
@@ -359,7 +370,7 @@ struct S
     }
 }
 ---
-    $(P To make the return type $(D_KEYWORD immutable), you need to surround the return type with parentheses:
+    $(P To make the return type $(D_KEYWORD immutable), surround it with parentheses:
     )
 
 ---
@@ -370,7 +381,7 @@ struct S
     }
 }
 ---
-    $(P To make both the return type and the method $(D_KEYWORD immutable), you can write:
+    $(P To make both the return type and the method $(D_KEYWORD immutable), write:
     )
 ---
 struct S
@@ -457,8 +468,10 @@ $(LATEX
 )
 
 $(P In the graph above, any directed path is a legal implicit conversion. No
-other qualifier combinations than the ones shown is valid. The same information
-is shown below in tabular format:)
+other qualifier combinations than the ones shown is valid. If a directed path
+exists between two sets of qualifiers, the types thus qualified are called
+$(GLOSSARY qualifier-convertible). The same information is shown below in tabular
+format:)
 
     $(TABLE_10 $(ARGS Implicit Conversion of Reference Types),
     $(VERTROW from/to, $(I mutable), $(D const), $(D shared), $(D const shared), $(D inout), $(D const inout), $(D inout shared), $(D const inout shared), $(D immutable)),

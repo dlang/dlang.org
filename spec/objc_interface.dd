@@ -5,9 +5,9 @@ $(SPEC_S Interfacing to Objective-C,
 $(HEADERNAV_TOC)
 
     $(P
-        D has some support for interfacing with Objective-C. It supports
-        classes, subclasses, instance variables, instance and class methods.
-        It is only available on macOS, compiling for 64bit.
+        D supports interfacing with Objective-C. It supports protocols, classes,
+        subclasses, instance variables, instance methods and class methods.
+        Platform support might vary between different compilers.
     )
 
     $(P
@@ -20,8 +20,10 @@ $(HEADERNAV_TOC)
     $(SECTION3 $(LNAME2 external-class, Declaring an External Class))
 
     ---
+    import core.attribute : selector;
+
     extern (Objective-C)
-    class NSString
+    extern class NSString
     {
         const(char)* UTF8String() @selector("UTF8String");
     }
@@ -29,9 +31,9 @@ $(HEADERNAV_TOC)
 
     $(P
         All Objective-C classes that should be accessible from within D need to
-        be declared with the $(LINK2 #objc-linkage, Objective-C linkage). If all
-        methods inside an Objective-C class are without a body the class is
-        expected to be defined externally.
+        be declared with the $(LINK2 #objc-linkage, Objective-C linkage). If the
+        class is declared as `extern` (in addition to `extern (Objective-C)`) it
+        is expected to be defined externally.
     )
 
     $(P
@@ -44,9 +46,11 @@ $(HEADERNAV_TOC)
     $(SECTION3 $(LNAME2 defining-class, Defining a Class))
 
     ---
+    import core.attribute : selector;
+
     // externally defined
     extern (Objective-C)
-    class NSObject
+    extern class NSObject
     {
         static NSObject alloc() @selector("alloc");
         NSObject init() @selector("init");
@@ -72,7 +76,7 @@ $(HEADERNAV_TOC)
 
     $(P
         Defining an Objective-C class is exactly the same as declaring an
-        external class but it needs to have at least one method with a body.
+        external class but it should not be declared as `extern`.
     )
 
     $(P
@@ -80,12 +84,127 @@ $(HEADERNAV_TOC)
         virtual. `static` methods are overridable as well.
     )
 
+    $(SECTION2 $(LNAME2 protocols, Protocols))
+
+    $(SECTION3 $(LNAME2 declaring-protocol, Declaring a Protocol))
+
+    ---
+    import core.attribute : selector;
+    import core.stdc.stdio : printf;
+
+    extern (Objective-C)
+    interface Foo
+    {
+        static void foo() @selector("foo");
+        void bar() @selector("bar");
+    }
+
+    extern (Objective-C)
+    class Bar : Foo
+    {
+        static void foo() @selector("foo")
+        {
+            printf("foo\n");
+        }
+
+        void bar() @selector("bar")
+        {
+            printf("bar\n");
+        }
+    }
+    ---
+
+    $(P
+        Objective-C protocols are represented as interfaces in D and are
+        declared using the `interface` keyword.
+    )
+
+    $(P
+        All Objective-C protocols that should be accessible from within D need
+        to be declared with the [Objective-C linkage](#objc-linkage).
+    )
+
+    $(P
+        Objective-C protocols support virtual class (static) methods. These
+        methods must be implemented by the class that implements the protocol
+        (unless they are [optional](#optional-methods)). To match these
+        semantics, `static` methods are virtual. That also means that static
+        methods with Objective-C linkage, inside an interface cannot have a body.
+    )
+
+    $(SECTION3 $(LNAME2 optional-methods, Optional Methods))
+
+    ---
+    import core.attribute : optional, selector;
+    import core.stdc.stdio : printf;
+
+    struct objc_selector;
+    alias SEL = objc_selector*;
+
+    extern (C) SEL sel_registerName(in char* str);
+
+    extern (Objective-C)
+    extern class NSObject
+    {
+        static NSObject alloc() @selector("alloc");
+        NSObject init() @selector("init");
+    }
+
+    extern (Objective-C)
+    interface Foo
+    {
+        bool respondsToSelector(SEL sel) @selector("respondsToSelector:");
+        void foo() @selector("foo");
+
+        // this is an optional method
+        @optional void bar() @selector("bar");
+    }
+
+    extern (Objective-C)
+    class Bar : NSObject, Foo
+    {
+        override static Bar alloc() @selector("alloc");
+        override Bar init() @selector("init");
+
+        bool respondsToSelector(SEL sel) @selector("respondsToSelector:");
+
+        void foo() @selector("foo")
+        {
+            printf("foo\n");
+        }
+    }
+
+    void main()
+    {
+        Foo f = Bar.alloc.init;
+
+        // check, at runtime, if the instance `f` implements the method `bar`
+        if (f.respondsToSelector(sel_registerName("bar")))
+            f.bar();
+        else
+            f.foo();
+    }
+    ---
+    $(P
+        Objective-C protocols support optional methods. Optional methods are
+        **not** required to be implemented by the class that implements the
+        protocol. To safely call an optional method, a runtime check should be
+        performed to make sure the receiver implements the method.
+    )
+
+    $(P
+        In D, optional methods are represented using the
+        [`@optional`](#optional-attribute) attribute.
+    )
+
     $(SECTION2 $(LNAME2 instance-variables, Instance Variables))
 
     ---
+    import core.attribute : selector;
+
     // externally defined
     extern (Objective-C)
-    class NSObject
+    extern class NSObject
     {
         static NSObject alloc() @selector("alloc");
         NSObject init() @selector("init");
@@ -161,8 +280,10 @@ $(HEADERNAV_TOC)
     )
 
     ---
+    import core.attribute : selector;
+
     extern (Objective-C)
-    class NSString
+    extern class NSString
     {
         NSString initWith(in char*) @selector("initWithUTF8String:");
         NSString initWith(NSString) @selector("initWithString:");
@@ -178,9 +299,8 @@ $(HEADERNAV_TOC)
 
     $(P
         The attribute is defined in druntime in
-        $(DPLLINK phobos/core_attribute.html, `core.attribute`) and aliased in
-        $(DPLLINK phobos/object.html, `object`), meaning it will be implicitly
-        imported. The attribute is only defined when the version identifier
+        $(DPLLINK phobos/core_attribute.html, `core.attribute`). The attribute
+        is only defined when the version identifier
         $(LINK2 #objc-version-identifier, `D_ObjectiveC`) is enabled.
     )
 
@@ -208,6 +328,42 @@ $(HEADERNAV_TOC)
 
     $(P If any of the checks fail, a compile error will occur.)
 
+    $(SECTION2 $(LNAME2 optional-attribute, The `@optional` Attribute))
+
+    $(P
+        The `@optional` attribute is a compiler recognized
+        $(LINK2 attribute.html#uda, UDA). It is used to tell the compiler that a
+        method, with Objective-C linkage, declared inside an interface is
+        optional. That means that the class that implements the interface does
+        **not** have to implement the method.
+    )
+
+    $(P
+        To safely call an optional method, a runtime check should be performed
+        to make sure the receiver implements the method.
+    )
+
+    $(P
+        The attribute is defined in druntime in
+        $(DPLLINK phobos/core_attribute.html, `core.attribute`). The attribute
+        is only defined when the version identifier
+        [`D_ObjectiveC`](#objc-version-identifier) is enabled.
+    )
+
+    $(SECTION3 $(LNAME2 compiler-checks, Compiler Checks))
+
+    $(P
+        The compiler performs the following checks to enforce the correct usage
+        of the `@optional` attribute:
+    )
+
+    * The attribute can only be attached to methods with Objective-C linkage
+    * The attribute can only be attached to a method inside an interface
+    * The attribute can only be attached once to a method
+    * The attribute cannot be attached to a template method
+
+    $(P If any of the checks fail, a compile error will occur.)
+
     $(SECTION2
         $(LNAME2 objc-version-identifier, The `D_ObjectiveC` Version Identifier)
     )
@@ -226,8 +382,10 @@ $(HEADERNAV_TOC)
     )
 
     ---
+    import core.attribute : selector;
+
     extern (Objective-C)
-    class NSObject
+    extern class NSObject
     {
         NSObject init() @selector("init");
     }
@@ -317,8 +475,10 @@ $(HEADERNAV_TOC)
     )
 
     ---
+    import core.attribute : selector;
+
     extern (Objective-C)
-    class NSString
+    extern class NSString
     {
         static NSString alloc() @selector("alloc");
         NSString initWithUTF8String(in char* str) @selector("initWithUTF8String:");
@@ -383,8 +543,10 @@ $(HEADERNAV_TOC)
     ---
     module main;
 
+    import core.attribute : selector;
+
     extern (Objective-C)
-    class NSString
+    extern class NSString
     {
         static NSString alloc() @selector("alloc");
         NSString initWithUTF8String(in char* str) @selector("initWithUTF8String:");

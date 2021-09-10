@@ -9,7 +9,6 @@ Make sure you have these prerequisites working:
 * The `git` command line utility
 * The `make` utility (GNU version)
 * The C++ compiler for your platform (invokable as `gcc`)
-* Optional: `latex` for building the pdf documentation
 * Optional: `kindlegen` for building the Kindle documentation
 
 ## Getting the code
@@ -36,7 +35,7 @@ make -f posix.mak html
 
 This builds the `dmd` compiler itself first and then uses it to build the
 website pages. You may see warnings while the compiler is built. After `make`
-ended with error code 0, directory `web` contains the produced HTML
+ends with error code 0, directory `web` should contain the produced HTML
 files. Take a moment to open `web/index.html` in a browser.
 
 ## Building the standard library documentation

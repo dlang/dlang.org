@@ -1,0 +1,910 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Sep 22, 2020, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 21 major changes and 119 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 49 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 add_traits_child,Add `__traits(child, parent, member)`))
+$(LI $(RELATIVE_LINK2 array-literal-inference,Improve type determination for array literals))
+$(LI $(RELATIVE_LINK2 better-vtemplates,Template usage diagnostics via `-vtemplates` has been improved.))
+$(LI $(RELATIVE_LINK2 cxx-header-modes,C++ header generation omits `Ignored ...` comments by default))
+$(LI $(RELATIVE_LINK2 debug-nothrow,Exception-throwing code can now be used in debug blocks))
+$(LI $(RELATIVE_LINK2 hasAlwaysInlines,Always inline `pragma(inline, true)` functions regardless of -inline compiler switch.))
+$(LI $(RELATIVE_LINK2 implicit-override-deprecation-end-17349,The deprecation period for implicit override has ended))
+$(LI $(RELATIVE_LINK2 implicit-vector-conversions,Strict implicit conversion rules for Vector types))
+$(LI $(RELATIVE_LINK2 in-identity,Parameters marked as `in` will now be properly displayed))
+$(LI $(RELATIVE_LINK2 markdown-default,DDoc Markdown support has been enabled by default))
+$(LI $(RELATIVE_LINK2 preview-in,Added support for input parameters (`in` parameter, `-preview=in`)))
+$(LI $(RELATIVE_LINK2 vector-operation-support,Usage of vector types and operations on an unsupported `-mcpu=` will now error))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 array_equality,Equality of arrays of structs is consistent again, as before v2.078))
+$(LI $(RELATIVE_LINK2 faster_profilegc,`core.memory.GC.allocatedInCurrentThread()` was added, which makes `-profile=gc` faster))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Installer changes,
+
+$(LI $(RELATIVE_LINK2 install-dmd-dc,Installation script now supports `get-path <compiler>`))
+$(LI $(RELATIVE_LINK2 ldc-built-releases,DMD binary releases are now built with LDC))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 add_x86_omf,Added architecture x86_omf for windows-dmd))
+$(LI $(RELATIVE_LINK2 dub-remove,`dub remove --non-interactive` will now remove all packages by default))
+$(LI $(RELATIVE_LINK2 enforce_proper_package_loading,Running `dub upgrade` on a package-less folder is now a no-op))
+$(LI $(RELATIVE_LINK2 git-paths,Support dependencies as git url with exact commit))
+$(LI $(RELATIVE_LINK2 version,All commands now support `package[@<version-spec>]`, `--version` is deprecated))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 add_traits_child,Add `__traits(child, parent, member)`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/add_traits_child.dd)
+$(P
+Takes two arguments. The first must be a symbol or expression and the second
+must be a symbol, such as an alias to a member of `parent`. The result is
+`member` interpreted with its `this` context set to `parent`. This is the
+inverse of `__traits(parent, member)`.
+)
+
+---
+struct A
+{
+    int i;
+    int foo(int j) {
+        return i * j;
+    }
+}
+
+alias Ai = A.i;
+
+void main()
+{
+    A a;
+
+    __traits(child, a, Ai) = 3;
+    assert(a.i == 3);
+    assert(__traits(child, a, A.foo)(2) == 6);
+}
+---
+)
+
+$(LI $(LNAME2 array-literal-inference,Improve type determination for array literals)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/array-literal-inference.dd)
+$(P
+There were some cases where DMD wasn't able to determine the common type for
+array literal elements. Mismatched enums and literals containing only mutable
+and immutable elements should now be correctly inferred.
+)
+)
+
+$(LI $(LNAME2 better-vtemplates,Template usage diagnostics via `-vtemplates` has been improved.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/better-vtemplates.dd)
+$(P
+Every template having at least one instantiation is now printed using standard
+compiler diagnostics formatting for easy navigation to the point of its
+declaration.
+)
+
+$(P
+All messages of this kind are sorted by descending unique instantiation count.
+)
+
+$(P
+If the flag argument `list-instances` is passed (such as `-vtemplates=list-instances`),
+each location where a template was instantiated is printed along with the reason for
+the instantiation (implicit or explicit).
+)
+
+$(P
+For instance, a D source file named `main.d` containing
+)
+
+---
+void foo(int I)() { }
+void goo1(int I)() { }
+void goo2(int I)() { goo1!(I); }
+
+void test()
+{
+    foo!(1)();
+    foo!(1)();
+    foo!(2)();
+
+    goo1!(1)();
+
+    goo2!(1)();
+}
+---
+
+$(P
+compiled with `-vtemplates=list-instances` will output
+)
+
+---
+main.d(1): vtemplate: 3 (2 unique) instantiation(s) of template `foo(int I)()` found, they are:
+main.d(7): vtemplate: explicit instance `foo!1`
+main.d(8): vtemplate: explicit instance `foo!1`
+main.d(9): vtemplate: explicit instance `foo!2`
+main.d(2): vtemplate: 2 (1 unique) instantiation(s) of template `goo1(int I)()` found, they are:
+main.d(11): vtemplate: explicit instance `goo1!1`
+main.d(3): vtemplate: implicit instance `goo1!1`
+main.d(3): vtemplate: 1 (1 unique) instantiation(s) of template `goo2(int I)()` found, they are:
+main.d(13): vtemplate: explicit instance `goo2!1`
+---
+)
+
+$(LI $(LNAME2 cxx-header-modes,C++ header generation omits `Ignored ...` comments by default)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/cxx-header-modes.dd)
+$(P
+The C++ header generated used to write comments when it encountered
+non-`extern(C++)` declarations, e.g.
+)
+
+---
+// test.d
+void foo() {}
+---
+---
+// test.h
+[...]
+// ignoring function test.foo because of linkage
+---
+
+$(P
+This caused a lot of bloat in the generated header file and is now
+customizable via the `-HC=<mode> switch which accepts either
+`verbose` (write comments) and `silent` (omit comments). The default
+was changed to `silent`.
+)
+
+$(P
+Note: The header generator is still considerer experimental, so please
+      submit any bugs encountered to [the bug tracker](https://issues.dlang.org).
+)
+)
+
+$(LI $(LNAME2 debug-nothrow,Exception-throwing code can now be used in debug blocks)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/debug-nothrow.dd)
+$(P
+When writing debug code, one isn't interested statically ensuring that a function block doesn't `throw`,
+but a pleasant debugging experience as e.g. writing to the console or logfiles typically can't be `nothrow`.
+DMD already allowed to escape `pure` and `@nogc` within `debug` statement.
+With this release, exception-throwing code can be called from `debug` statements too:
+)
+
+---
+import std.stdio;
+void main() nothrow
+{
+    debug writeln("Your throwing log statement.");
+}
+---
+)
+
+$(LI $(LNAME2 hasAlwaysInlines,Always inline `pragma(inline, true)` functions regardless of -inline compiler switch.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/hasAlwaysInlines.dd)
+$(P
+Marking a function with `pragma(inline, true)` will now cause it to be always inlined
+when called, and a compile error will result if it cannot be inlined.
+)
+
+$(P
+If the `pragma(inline, true)` is embedded in the function body rather than
+outside it, it may not always take effect. (It depends on whether the function
+body is analyzed before it is called or not.)
+)
+
+$(P
+If a function marked with `pragma(inline, true)` cannot be inlined it will now
+issue a warning if and only if the -wi command line switch is given. Previously,
+it would issue an error.
+)
+)
+
+$(LI $(LNAME2 implicit-override-deprecation-end-17349,The deprecation period for implicit override has ended)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/implicit-override-deprecation-end-17349.dd)
+$(P
+Implicit overrides of base classes methods were deprecated in 2.075.0
+(released 2017-07-19) when [issue 17349](https://issues.dlang.org/show_bug.cgi?id=17349)
+was fixed by [PR 6731](https://github.com/dlang/dmd/pull/6731).
+)
+
+$(P
+The deprecation period has now ended and the following code will always error from now:
+)
+---
+class Base
+{
+    void myFunction();
+    void myOtherFunction(void* ptr);
+}
+
+class Child : Base
+{
+    // Error: Implicitly overriding `Base.myFunction`
+    void myFunction() const;
+    // Error: Implicitly overriding `Base.myOtherFunction(void*)`
+    void myOtherFunction(const void* ptr);
+}
+---
+)
+
+$(LI $(LNAME2 implicit-vector-conversions,Strict implicit conversion rules for Vector types)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/implicit-vector-conversions.dd)
+$(P
+Previously, the compiler allowed any `__vector` type to be implicitly
+convertible with any other `__vector` type.
+)
+
+---
+int4 x = 2;
+float8 y = x;
+short8 z = y / 3;
+---
+
+$(P
+In this release, `__vector` types now, like static arrays, can only be
+implicitly converted to either qualified types of itself, or void.
+)
+
+---
+const int4 a = 5;
+int4 b = a;         // OK, both are int4
+void16 c = a;       // OK, cast to void of same size.
+float4 d = b;       // Error, cannot implicitly convert int4 to float4.
+---
+
+$(P
+Explicit conversions between `__vector` types can be done, but only between
+vectors of the same size.
+)
+
+---
+long2 a = 8;
+short8 b = cast(short8)a;   // OK
+short16 c = cast(short16)b; // Error, cannot cast because of different sizes.
+---
+
+$(P
+Users of the `__simd` and `__simd_sto` intrinsics will have to either add
+explicit casts from void16 to the appropriate type at each use, or operate
+strictly with void16 vectors until a value is required to be peeked.
+)
+
+---
+float4 fun1(float4 a, float4 b)
+{
+    a = cast(float4)__simd(XMM.ADDPD, a, b);
+    a = cast(float4)__simd(XMM.ADDSS, a, b);
+    return a;
+}
+
+float4 fun2(void16 a, void16 b)
+{
+    a = __simd(XMM.ADDPD, a, b);
+    a = __simd(XMM.ADDSS, a, b);
+    return cast(float4)a;
+}
+---
+)
+
+$(LI $(LNAME2 in-identity,Parameters marked as `in` will now be properly displayed)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/in-identity.dd)
+$(P
+In earlier releases, using `in` on parameters would be lowered too early,
+leading to confusing display: error messages would show the parameter
+as `const` (or `scope const` if `-preview=in` was used),
+and so would header generations or stack traces.
+The header generation was problematic, as a header generated with `-preview=in`
+would be different from one generated without.
+From this release, `in` will now display correctly in every message.
+As this requires an update to the mangling, some older debuggers or tools
+might not be able to properly demangle functions that uses `in` parameters.
+)
+)
+
+$(LI $(LNAME2 markdown-default,DDoc Markdown support has been enabled by default)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/markdown-default.dd)
+$(P
+Ddoc's [Markdown](https://daringfireball.net/projects/markdown/syntax) has now been enabled by default.
+The full list of supported Markdown features (headings, emphasized text, links, and more) is described in [the Ddoc documentation page](https://dlang.org/spec/ddoc.html#highlighting).
+)
+
+$(P
+For the more cautious, a list of all instances of Markdown features can be logged with `-transition=vmarkdown`.
+If you encounter issues with this transition, you can temporarily disable the processing of the Markdown features with `-revert=markdown` and report an issue.
+)
+
+$(P
+A huge thanks goes to David Gileadi for championing this issue!
+)
+)
+
+$(LI $(LNAME2 preview-in,Added support for input parameters (`in` parameter, `-preview=in`))
+$(CHANGELOG_SOURCE_FILE dmd, changelog/preview-in.dd)
+$(P
+D has supported the `in`, `ref`, and `out` storage classes on parameters
+since its inception. `out` and `ref` are commonly used,
+however `in` was usually left behind, as, while it was originally intended
+as an alias to `const scope`, it was made an alias to `const` when
+support for `scope` was introduced (DIP1000).
+)
+
+$(P
+DMD v2.092.0 rectified this by adding `-preview=in` to mean `const scope`,
+as it was originally intended, instead of `const` without the switch.
+)
+
+$(P
+However, this didn't really capture the intended meaning of `in`:
+the be applied on input parameters.
+Input parameters are parameters that a function intend to only examine,
+without modifying it, nor keeping a reference to them around.
+This is covered by `const scope`. However, some input parameters can
+be pretty large, or copying them can have side effects (postblit, copy constructor),
+hence those should be passed by reference to avoid runtime overhead.
+Which prompts a new issue: D doesn't support passing rvalues by references.
+Hence, when designing an API accepting an input parameter, a common
+practice was to have both an `in`-accepting overload, and an `in ref`-accepting one.
+While this works well for a single parameter, it also suffers from combinatorial explosion.
+)
+
+$(P
+This release reworks the meaning of `in` to properly support all those use cases.
+`in` parameters will now be passed by reference when optimal, and will accept rvalue.
+When using the switch, `in ref` parameters will also trigger an error.
+)
+
+$(P
+Note that the rules for passing by reference are as follow:
+- If the type has an elaborate copy or destruction (postblit, copy constructor, destructor),
+the type is always passed by reference.
+- If the type is not copy-able, it will always be passed by reference.
+- Reference types (dynamic arrays, function pointers, delegates, associative arrays, classes)
+  do not get passed by `ref`. This allows for covariance on delegates.
+- Otherwise, if the type's size requires it, it will be passed by reference.
+  Currently, types which are over twice the machine word size will be passed by reference,
+  however this is controlled by the backend and can be changed based on the platform's ABI.
+)
+)
+
+$(LI $(LNAME2 vector-operation-support,Usage of vector types and operations on an unsupported `-mcpu=` will now error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/vector-operation-support.dd)
+$(P
+Previously, the compiler accepted the following code as being supported by all
+`-mcpu=` types on both OSX 32-bit and all 64-bit targets.
+)
+
+---
+__vector(long[4]) x;    // AVX type
+x += 1;                 // AVX2 operation
+---
+
+$(P
+In this release, all `__vector` types and operations now check the current CPU
+being targeted for, and will issue an error if there is insufficient support.
+)
+
+$(P
+This also allows for conditional compilation using `__traits(compiles)` to
+probe which operations are supported at compile-time.
+)
+
+---
+static if (__traits(compiles, long4))
+{
+    // Compiled in if `-mcpu=avx` or higher
+}
+
+static if (__traits(compiles, { int4 x; x += 1; }))
+{
+    // Compiled in if `-mcpu=baseline` or higher
+}
+
+static if (__traits(compiles, { int4 x; x *= 1; }))
+{
+    // Compiled in if `-mcpu=avx` or higher
+}
+
+static if (__traits(compiles, { int8 x; x += 1; }))
+{
+    // Compiled in if `-mcpu=avx2` or higher
+}
+---
+
+$(P
+The following tables describe what minimum `-mcpu=` level is required.
+)
+
+$(P
+$(TABLE2 Minimum Required `-mcpu=` for 128-bit Vector Types
+$(THEAD void16,byte16,ubyte16,short8,ushort8,int4,uint4,long2,ulong2,float4,double2)
+$(TROW baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline)
+)
+)
+
+$(P
+$(TABLE2 Minimum Required `-mcpu=` for 128-bit Vector Operators,
+$(THEAD Operator,byte16,ubyte16,short8,ushort8,int4,uint4,long2,ulong2,float4,double2)
+$(TROW +,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline)
+$(TROW -,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline)
+$(TROW *,$(NDASH),$(NDASH),baseline,baseline,avx,avx,$(NDASH),$(NDASH),baseline,baseline)
+$(TROW /,$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),baseline,baseline)
+$(TROW $(CODE_AMP),baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,$(NDASH),$(NDASH))
+$(TROW |,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,$(NDASH),$(NDASH))
+$(TROW $(D ^),baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,$(NDASH),$(NDASH))
+$(TROW +=,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline)
+$(TROW -=,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline)
+$(TROW *=,$(NDASH),$(NDASH),baseline,baseline,avx,avx,$(NDASH),$(NDASH),baseline,baseline)
+$(TROW /=,$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),baseline,baseline)
+$(TROW $(CODE_AMP)=,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,$(NDASH),$(NDASH))
+$(TROW |=,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,$(NDASH),$(NDASH))
+$(TROW $(D ^=),baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,$(NDASH),$(NDASH))
+$(TROW $(I unary)$(D ~),baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,$(NDASH),$(NDASH))
+$(TROW $(I unary)+,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline)
+$(TROW $(I unary)-,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline)
+)
+)
+
+$(P
+$(TABLE2 Minimum Required `-mcpu=` for 256-bit Vector Types
+$(THEAD void32,byte32,ubyte32,short16,ushort16,int8,uint8,long4,ulong4,float8,double4)
+$(TROW avx,avx,avx,avx,avx,avx,avx,avx,avx,avx,avx)
+)
+)
+
+$(P
+$(TABLE2 Minimum Required `-mcpu=` for 256-bit Vector Operators,
+$(THEAD Operator,byte32,ubyte32,short16,ushort16,int8,uint8,long4,ulong4,float8,double4)
+$(TROW +,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx,avx)
+$(TROW -,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx,avx)
+$(TROW *,$(NDASH),$(NDASH),avx2,avx2,avx2,avx2,$(NDASH),$(NDASH),avx,avx)
+$(TROW /,$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),avx,avx)
+$(TROW $(CODE_AMP),avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,$(NDASH),$(NDASH))
+$(TROW |,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,$(NDASH),$(NDASH))
+$(TROW $(D ^),avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,$(NDASH),$(NDASH))
+$(TROW +=,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx,avx)
+$(TROW -=,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx,avx)
+$(TROW *=,$(NDASH),$(NDASH),avx2,avx2,avx2,avx2,$(NDASH),$(NDASH),avx,avx)
+$(TROW /=,$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),$(NDASH),avx,avx)
+$(TROW $(CODE_AMP)=,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,$(NDASH),$(NDASH))
+$(TROW |=,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,$(NDASH),$(NDASH))
+$(TROW $(D ^=),avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,$(NDASH),$(NDASH))
+$(TROW $(I unary)$(D ~),avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,$(NDASH),$(NDASH))
+$(TROW $(I unary)+,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline,baseline)
+$(TROW $(I unary)-,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx2,avx,avx)
+)
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 array_equality,Equality of arrays of structs is consistent again, as before v2.078)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/array_equality.dd)
+$(P
+Since v2.078, some array equality comparisons (e.g., if both arrays are
+dynamic arrays) have been wrongly using a `.tupleof` comparison for
+structs without custom `opEquals`, basically enforcing
+`-preview=fieldwise` for these array comparisons.
+)
+
+---
+union U
+{
+    string s;
+}
+
+void main()
+{
+    static immutable from = "from", from2 = "from2";
+    U[] a = [{ s : from }];
+    U[1] b = [{ s : from2[0..4] }];
+    assert(a[0] != b[0]);
+    assert(a != b);
+    assert(a != b[]); // worked before v2.078, been failing since, now working again
+}
+---
+)
+
+$(LI $(LNAME2 faster_profilegc,`core.memory.GC.allocatedInCurrentThread()` was added, which makes `-profile=gc` faster)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/faster_profilegc.dd)
+$(P
+The new function `core.memory.GC.allocatedInCurrentThread()` returns
+the same as `core.memory.GC.stats().allocatedInCurrentThread`, but
+is faster, because it avoids calculating other statistics.
+It is used for `-profile=gc` and makes it faster, too.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Installer changes,
+
+$(LI $(LNAME2 install-dmd-dc,Installation script now supports `get-path <compiler>`)
+$(CHANGELOG_SOURCE_FILE installer, changelog/install-dmd-dc.dd)
+$(P
+`get-path <compiler>` has been added as a new action to the install script.
+This action allows printing information about a compiler binary.
+The behavior of `get-path` can be changed with the following additional options:
+)
+
+$(P
+$(UL
+    $(LI `--install` install compiler if not found locally)
+    $(LI `--dmd` returns the path of a specific compiler executable (DMD-alike interface))
+    $(LI `--dub` returns the path of the DUB executable)
+)
+)
+
+$(P
+$(H4 Examples)
+)
+
+$(P
+$(CONSOLE curl https://dlang.org/install.sh | bash -s get-path --install
+/home/user/dlang/dmd-2.093.0/linux/bin64/dmd
+)
+)
+
+$(P
+$(CONSOLE ~/dlang/install.sh get-path ldc-1.23.0 --install
+/home/user/dlang/ldc-1.23.0/bin/ldc2
+)
+)
+
+$(P
+$(CONSOLE ~/dlang/install.sh get-path --dmd ldc --install
+/home/user/dlang/ldc-1.23.0/bin/ldmd2
+)
+)
+
+$(P
+$(CONSOLE ~/dlang/install.sh get-path --dub ldc --install
+/home/user/dlang/ldc-1.23.0/bin/dub
+)
+)
+
+$(P
+$(CONSOLE ~/dlang/install.sh get-path --dub dub-1.22.0 --install
+/home/user/dlang/dub-1.22.0/dub
+)
+)
+
+$(P
+$(CONSOLE ~/dlang/install.sh get-path --dub ldc,dub-1.22.0 --install
+/home/user/dlang/dub-1.22.0/dub
+)
+)
+
+$(P
+If a compiler installation isn't found and `--install` has not been passed, an error will be issued.
+)
+)
+
+$(LI $(LNAME2 ldc-built-releases,DMD binary releases are now built with LDC)
+$(CHANGELOG_SOURCE_FILE installer, changelog/ldc-built-releases.dd)
+$(P
+Binary releases for Linux, OSX, and FreeBSD are now built with
+LDC. This follows the switch to LDC as host compiler for Windows
+releases with 2.091.0.
+)
+
+$(P
+Building DMD with LDC should provide a significant speedup of the compiler (20-30%).
+)
+
+$(P
+This change comes with the following limitations:
+- no more FreeBSD 32-bit binary releases (no 32-bit LDC host compiler)
+- additional binary tools copied over from previous dmd releases are no longer included
+  (see [c0de0295e6b1f9a802bb04a97cca9f06c5b0dccd](https://github.com/dlang/installer/commit/c0de0295e6b1f9a802bb04a97cca9f06c5b0dccd) (optlink still included))
+  They are still available via https://digitalmars.com/ or from older dmd releases.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 add_x86_omf,Added architecture x86_omf for windows-dmd)
+$(CHANGELOG_SOURCE_FILE dub, changelog/add_x86_omf.dd)
+$(P
+On windows dmd the x86_omf architecture can now be used as platform
+specification using `--arch=x86_omf`. This is currently equivalent to
+the previously existing `--arch=x86` argument.
+)
+)
+
+$(LI $(LNAME2 dub-remove,`dub remove --non-interactive` will now remove all packages by default)
+$(CHANGELOG_SOURCE_FILE dub, changelog/dub-remove.dd)
+$(P
+When calling a command with a package name and no version specification,
+the latest version is usually assumed.
+While this behavior makes sense for `dub fetch` or `dub run`,
+it can come  as a surprise when cleaning up local packages through `dub remove`,
+and so previous version would simply error out when more than one version was available.
+From this version, `dub remove -n $PKGNAME` will just remove all cached versions
+of the package named `$PKGNAME`, without asking you to use `$PKGNAME@*`.
+)
+)
+
+$(LI $(LNAME2 enforce_proper_package_loading,Running `dub upgrade` on a package-less folder is now a no-op)
+$(CHANGELOG_SOURCE_FILE dub, changelog/enforce_proper_package_loading.dd)
+$(P
+Prior to this change, accidentally running `dub upgrade` in a folder
+where no `dub.json` / `dub.sdl` was present would leave you with a
+`dub.selections.json` and, in some instances, an empty `.dub` folder.
+This has been fixed and running `dub upgrade` where one shouldn't
+will now only generate a friendly error message.
+)
+)
+
+$(LI $(LNAME2 git-paths,Support dependencies as git url with exact commit)
+$(CHANGELOG_SOURCE_FILE dub, changelog/git-paths.dd)
+$(P
+Git repositories can be directly used by dub as dependencies.
+)
+
+$(P
+dub.json:
+)
+-------
+{
+    "name": "git-dependency",
+    "dependencies": {
+        "gitcompatibledubpackage": {
+            "repository": "git+https://github.com/dlang-community/gitcompatibledubpackage.git",
+            "version": "ccb31bf6a655437176ec02e04c2305a8c7c90d67"
+        }
+    }
+}
+-------
+)
+
+$(LI $(LNAME2 version,All commands now support `package[@<version-spec>]`, `--version` is deprecated)
+$(CHANGELOG_SOURCE_FILE dub, changelog/version.dd)
+$(P
+`dub` commands had some disparity in their version handling.
+Most commands accepting a package name (e.g. `dub fetch` or `dub run`) supported
+either `package[@version-spec]`, or supported only `package` and accepted an
+option `--version=<version-spec>`.
+The latter form has now been deprecated and all commands now accept `package[@<version-spec>]`.
+Note that the absence of `@<package-spec>` still means "latest version" (except for `remove`).
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 18412): [REG2.077.0] immutable array in library becomes null when referenced in static constructor)
+$(LI $(BUGZILLA 19476): explicit mixin template function call results in recursive call instead)
+$(LI $(BUGZILLA 20296): Segfault when using variadic D functions with extern$(LPAREN)C++$(RPAREN) linkage)
+$(LI $(BUGZILLA 20620): dmd version has -dirty suffix)
+$(LI $(BUGZILLA 20958): incomplete semantic analysis when generating code for function)
+$(LI $(BUGZILLA 20981): Runtime segfault for inlined __simd_sto)
+$(LI $(BUGZILLA 21088): std.meta.staticMap no longer works for typeid)
+$(LI $(BUGZILLA 21091): [ICE] Segmentation fault: Module::importAll$(LPAREN)Scope*$(RPAREN) $(LPAREN)this=0x0, prevsc=0x0$(RPAREN) at dmd/dmodule.d:1124)
+$(LI $(BUGZILLA 21163): Scope lambda argument in struct initializer causes parsing error)
+$(LI $(BUGZILLA 21196): [REG 2.092] Deprecation for language feature triggered inside of deprecated block)
+$(LI $(BUGZILLA 21258): Tuple parameters with defaults use the first tuple element for all defaults since 2.094.0-beta.1)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 2617): asm silently accepts ambiguous-sized operations)
+$(LI $(BUGZILLA 5570): 64 bit C ABI not followed for passing structs and complex numbers as function parameters)
+$(LI $(BUGZILLA 5922): inline assembler - referencing immutable variable values fails)
+$(LI $(BUGZILLA 6166): Named return value optimization not dealt with in inline assembler)
+$(LI $(BUGZILLA 6459): Inline assembler does not work well for 64 bit registers R8..R15)
+$(LI $(BUGZILLA 7387): call instruction does not understand $)
+$(LI $(BUGZILLA 10966): Optimizer generates wrong code with try-catch)
+$(LI $(BUGZILLA 12490): No "Error: , has no effect" Error for comma expression LHS)
+$(LI $(BUGZILLA 12730): lea instruction accepts subtraction of scaling register but actually adds)
+$(LI $(BUGZILLA 12832): asm movdqu accepts wrong operand size)
+$(LI $(BUGZILLA 13215): Error message with static this array assignment)
+$(LI $(BUGZILLA 13957): 64 bit C ABI not followed for passing structs with floating+integer types)
+$(LI $(BUGZILLA 14203): Return of floating point values from extern$(LPAREN)C++$(RPAREN) member functions does not match dmc)
+$(LI $(BUGZILLA 14458): very slow ubyte[] assignment $(LPAREN)dmd doesn't use memset$(RPAREN))
+$(LI $(BUGZILLA 14872): [2.068.2] Label address in asm [x86-64])
+$(LI $(BUGZILLA 15103): Improve declaration / initialization syntax error message)
+$(LI $(BUGZILLA 15257): __traits$(LPAREN)compiles, …$(RPAREN) with malformed inline asm silently ends compilation)
+$(LI $(BUGZILLA 15745): Inline Assembly stomped on by Profiling)
+$(LI $(BUGZILLA 16044): __traits$(LPAREN)allMembers$(RPAREN) returns empty tuple for subpackages)
+$(LI $(BUGZILLA 16092): AVX registers YMM0-YMM7 are inaccessible to 32-bit asm)
+$(LI $(BUGZILLA 16268): Wrong loop optimization in code with integer overflow)
+$(LI $(BUGZILLA 16317): Wrong binop evaluation/load order when optimizing)
+$(LI $(BUGZILLA 16857): inline assembler reverses operands of VPEXTRW instruction)
+$(LI $(BUGZILLA 16963): Forward reference label name resolution in asm statement)
+$(LI $(BUGZILLA 17617): No RIP relative addressing available in x64 inline assembly $(LPAREN)iasm$(RPAREN))
+$(LI $(BUGZILLA 17720): Wrong code using vector extensions with different types)
+$(LI $(BUGZILLA 17965): Usage of the FPU while function result already in right XMM registers)
+$(LI $(BUGZILLA 18373): The inline assembler parser allows strange constructs)
+$(LI $(BUGZILLA 18748): bt instruction with immediate offset uses 64-bit variant for 32-bit data)
+$(LI $(BUGZILLA 18749): bt instruction using 64-bit register for 32-bit offset)
+$(LI $(BUGZILLA 19210): Poor error message for `return` function parameter that is not `ref`)
+$(LI $(BUGZILLA 19384): [Codegen] Address of stack temporary is returned)
+$(LI $(BUGZILLA 19590): __traits allMembers should put fully qualified names for imports)
+$(LI $(BUGZILLA 19729): Constructor overloads coming from mixin are not resolved)
+$(LI $(BUGZILLA 19846): zero size function parameter such as byte[0] causes code to not be executed)
+$(LI $(BUGZILLA 20017): JSON $(LPAREN)-X$(RPAREN) compilerInfo.architectures generation depends on params.isXXX for CPU detection)
+$(LI $(BUGZILLA 20162): Sign Extension for ?: optimization done wrong)
+$(LI $(BUGZILLA 20363): painting XMM registers as integers leads to codegen bugs)
+$(LI $(BUGZILLA 20422): confusing error "new can only create structs, dynamic arrays or class objects, not int[]'s")
+$(LI $(BUGZILLA 20761): __traits$(LPAREN)isSame$(RPAREN) for alias tuples is broken and underspecified)
+$(LI $(BUGZILLA 20831): __traits$(LPAREN)getAttributes$(RPAREN) failes to compile when used on a parameter with no name)
+$(LI $(BUGZILLA 20911): Documentation for test/unit is non-existant)
+$(LI $(BUGZILLA 20934): preview=dtorfields segfaults for disabled/extern constructors)
+$(LI $(BUGZILLA 20938): Cannot create const arrays mixing immutable and mutable structs with indirections)
+$(LI $(BUGZILLA 20963): wrong code for cast$(LPAREN)double$(RPAREN)anUlong)
+$(LI $(BUGZILLA 20995): Range violation with -preview=dip1021)
+$(LI $(BUGZILLA 21001): Private alias becomes public if used before declaration)
+$(LI $(BUGZILLA 21019): Azure pipelines Windows_VisualD win32-ldc fails with Heisenbug)
+$(LI $(BUGZILLA 21037): AVX code sometimes fails to set VEX prefix)
+$(LI $(BUGZILLA 21038): wchar and dchar string alignment should be 2 and 4, respectively)
+$(LI $(BUGZILLA 21040): SIMD: illegal instruction using 32-byte operations on AVX)
+$(LI $(BUGZILLA 21050): __traits$(LPAREN)getOverloads$(RPAREN) for templates returns incorrect symbol for the first overload)
+$(LI $(BUGZILLA 21053): Test Suite run.d is built with compiler under test, must be build with bootstrap dmd)
+$(LI $(BUGZILLA 21058): __traits$(LPAREN)getOverloads$(RPAREN) forgets "this" with third argument or if first overload is a template)
+$(LI $(BUGZILLA 21082): Testsuite fails on OSX $(LPAREN)runnable/test16096.sh with asserts on$(RPAREN))
+$(LI $(BUGZILLA 21089): With vm.overcommit_memory=0, DMD can't link if it uses more than half the total $(LPAREN)ram+swap$(RPAREN) memory in the system.)
+$(LI $(BUGZILLA 21092): [ICE] Segmentation fault in ExpressionPrettyPrintVisitor::visit$(LPAREN)CommaExp*$(RPAREN) at dmd/hdrgen.d:2293)
+$(LI $(BUGZILLA 21117): When compiler segfaults running autotester, cannot tell which file it was testing)
+$(LI $(BUGZILLA 21120): Inconsistent mangling of __init symbol)
+$(LI $(BUGZILLA 21153): DWARF: DMD emits the mangled name for DW_AT_name)
+$(LI $(BUGZILLA 21154): DWARF: shared types are not represented)
+$(LI $(BUGZILLA 21164): segfault on incomplete static if)
+$(LI $(BUGZILLA 21181): Inline Assmbler compiles long ptr as a byte operation for 32 bit compiles)
+$(LI $(BUGZILLA 21198): Inout copy constructor on union field does not prevent copy-initialization of union)
+$(LI $(BUGZILLA 21208): [ICE] dtoh with enums)
+$(LI $(BUGZILLA 21213): preview=dtorfields with strict attributes in base class constructor)
+$(LI $(BUGZILLA 21217): C++ header generator shouldn't emit private enums)
+$(LI $(BUGZILLA 21219): Invalid C++ header generated for extern$(LPAREN)C++, [class|struct]$(RPAREN))
+$(LI $(BUGZILLA 21225): preview=dtorfields inserts unnecessary dtor call in nothrow ctors)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 1995): invalid paths feed to -J option should be warned)
+$(LI $(BUGZILLA 12223): __traits$(LPAREN)getMember,...$(RPAREN) needed for aliases)
+$(LI $(BUGZILLA 14120): iasm is missing pause instruction)
+$(LI $(BUGZILLA 14697): Add support for pclmulqdq instruction to dmd's inline assembler)
+$(LI $(BUGZILLA 14936): Dividing by a power of 2 slow on 32bit)
+$(LI $(BUGZILLA 19277): storage class used in alias statement has no effect)
+$(LI $(BUGZILLA 19663): On x86_64 the fabs intrinsic should use SSE)
+$(LI $(BUGZILLA 19705): Static foreach slow for numeric ranges)
+$(LI $(BUGZILLA 20931): code which was executed at ctfe should be accounted for in coverage)
+$(LI $(BUGZILLA 20990): Optimizer should move cold branches to the end of the function)
+$(LI $(BUGZILLA 21060): ICE in semantic, at d/dmd/dstruct.c:1224)
+$(LI $(BUGZILLA 21159): DWARF: DW_AT_pure should be emitted for pure functions)
+)
+$(BUGSTITLE_BUGZILLA Phobos regressions,
+
+$(LI $(BUGZILLA 21129): [REG2.090] std.range.only broken for reference conversions of local copies of parameters)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 7033): File.rawWrite is slow on Windows)
+$(LI $(BUGZILLA 12521): std.getopt does not conform to documentation)
+$(LI $(BUGZILLA 20370): On POSIX, std.file.copy only copies the file times at second precision)
+$(LI $(BUGZILLA 20765): Can't run processes with relative paths when specifying a working directory)
+$(LI $(BUGZILLA 20929): std.experimental.allocator.expandArray's range-based overload fails to instantiate for char and wchar arrays.)
+$(LI $(BUGZILLA 20949): std.range.popFront is unsafe in release mode)
+$(LI $(BUGZILLA 20984): Heisenbug: FreeBSD64 Phobos random test suite failure in std/process)
+$(LI $(BUGZILLA 21021): std.variant confused by alias this when struct larger than maxDataSize)
+$(LI $(BUGZILLA 21148): Semaphoreci: core.exception.AssertError@std/file.d$(LPAREN)1929$(RPAREN): unittest failure)
+$(LI $(BUGZILLA 21182): asm code is missing `int ptr` and so defaults to byte op)
+$(LI $(BUGZILLA 21183): schwartzSort does not strip const)
+$(LI $(BUGZILLA 21191): min should be stable: when in doubt, return the first argument)
+$(LI $(BUGZILLA 21199): Nullable.apply should take string expression like rest of Phobos)
+$(LI $(BUGZILLA 21210): std.traits : isAssignable false positive on disabled copy struct)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 20889): Support construction of std.bigint.BigInt from a sign and a byte-array magnitude)
+$(LI $(BUGZILLA 21113): std.file.thisExePath on NetBSD depends upon the /proc filesystem)
+$(LI $(BUGZILLA 21131): Appender with string does not process UTF input ranges properly)
+$(LI $(BUGZILLA 21201): let std.uuid.parseUUID accept input ranges whose elements are char or wchar, not just dchar)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 19554): [2.084.0] Confusing message - Warning: struct Foo has method toHash)
+$(LI $(BUGZILLA 20910): Default unittest runner reports wrong unittest count)
+$(LI $(BUGZILLA 21029): Remove __ArrayEq which the compiler no longer uses as of DMD PR #11212)
+$(LI $(BUGZILLA 21055): core.stdc.stdarg is not @nogc)
+$(LI $(BUGZILLA 21116): onArrayCastError is horribly unsafe)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 21026): add core.bitop.byteswap$(LPAREN)ushort$(RPAREN))
+$(LI $(BUGZILLA 21070):  -profile=gc makes the program much slower)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bugs,
+
+$(LI $(BUGZILLA 13569): Inconsistent integer divide by zero behavior and spec)
+)
+)
+$(D_CONTRIBUTORS_HEADER 49)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR Adela Vais)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Andrej Mitrovic)
+    $(D_CONTRIBUTOR Andrey Zherikov)
+    $(D_CONTRIBUTOR Anton Oks)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR canopyofstars)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR Euan Torano)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR Harry Gillanders)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR John Colvin)
+    $(D_CONTRIBUTOR Lance Bachmeier)
+    $(D_CONTRIBUTOR Lucien Perregaux)
+    $(D_CONTRIBUTOR Luhrel)
+    $(D_CONTRIBUTOR Mark)
+    $(D_CONTRIBUTOR Markus Laker)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Nils Lankila)
+    $(D_CONTRIBUTOR nordlow)
+    $(D_CONTRIBUTOR Olivier Léobal)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Richard Manthorpe)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Simen Kjærås)
+    $(D_CONTRIBUTOR Stefan Koch)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Vlad Nastase)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR سليمان السهمي (Suleyman Sahmi))
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.094.0
+    TITLE=Change Log: $(VER)

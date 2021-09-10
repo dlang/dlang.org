@@ -1,0 +1,548 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Mar 11, 2021, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 17 major changes and 81 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 54 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 abi-fix-creal,D ABI change on x86_64 Posix targets))
+$(LI $(RELATIVE_LINK2 complex_types,Added `__c_complex_float`, `__c_complex_double`, and `__c_complex_real` types))
+$(LI $(RELATIVE_LINK2 copy-constructor-priority,Having both a copy constructor and a generated postblit is now deprecated))
+$(LI $(RELATIVE_LINK2 ddoc-always-visibility,DMD's JSON output will now always include the protection level))
+$(LI $(RELATIVE_LINK2 ddoc-shared-static-ctor,DMD's JSON output now have distinct types for [shared] module constructor/destructor))
+$(LI $(RELATIVE_LINK2 deprecate_dualcontext,Deprecate local templates that receive local symbols by alias))
+$(LI $(RELATIVE_LINK2 dtoh-improvements,Improvements for the C++ header generation))
+$(LI $(RELATIVE_LINK2 dwarf-switch,Add `-gdwarf=<version>` switch for the DMD compiler.))
+$(LI $(RELATIVE_LINK2 getVisibility,Introduced `__traits(getVisibility, Sym)` as an alias to `getProtection`))
+$(LI $(RELATIVE_LINK2 runtime-synchronized,Plain `synchronized` statements now use run-time allocated mutexes.))
+$(LI $(RELATIVE_LINK2 shortfunctions,Allow shortened function implementations for single-expression functions.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 callStructDtorsDuringGC,The druntime option `callStructDtorsDuringGC` has been removed))
+$(LI $(RELATIVE_LINK2 freebsd-statvfs,FreeBSD declarations from statvfs that belong in mount have been removed))
+$(LI $(RELATIVE_LINK2 libunwind,Experimental llvm-libunwind based backtrace printing was added))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 deprecate-approxEqual,Deprecate `std.math : approxEqual`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 dmd-linker-dflags,More 'linker dflags' with DMD))
+$(LI $(RELATIVE_LINK2 visuald-copyfiles,copyFiles can now be used in VisualD projects.))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 abi-fix-creal,D ABI change on x86_64 Posix targets)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/abi-fix-creal.dd)
+$(P
+The compiler has been updated to return the real part of `creal` numbers in
+ST0, and the imaginary part in ST1, to match the x86_64 System V ABI.
+)
+
+$(P
+This is an ABI breaking change and requires recompiling libraries that make use
+of the `creal` type.
+)
+)
+
+$(LI $(LNAME2 complex_types,Added `__c_complex_float`, `__c_complex_double`, and `__c_complex_real` types)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/complex_types.dd)
+$(P
+This allows code interfacing with C and C++ to maintain ABI compatibility with
+`_Complex` types.  It replaces the built-in types `cfloat`, `cdouble`, and
+`creal` which are due to be deprecated.
+)
+)
+
+$(LI $(LNAME2 copy-constructor-priority,Having both a copy constructor and a generated postblit is now deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/copy-constructor-priority.dd)
+$(P
+Up until this release, the postblit had priority over the copy constructor,
+no matter if the former was user-defined or generated. This prevented new
+code that uses the copy constructor to interact with library code that uses
+the postblit. To enable this interaction, having a generated postblit
+and a copy constructor (user-defined or generated) is now deprecated.
+For example:
+)
+
+---
+// library code using postblit
+struct A
+{
+    this(this) {}
+}
+
+// new code using copy constructor
+struct B
+{
+    A a;
+    this(const scope ref B) {}
+}
+---
+
+$(P
+Up until this release, in the above code, `struct B` had a generated postblit
+that had priority over the user defined copy constructor. With this release,
+a deprecation will be issued at the definition of ` structB`, stating that the
+postblit is going to be preferred to the copy constructor. If `B` has both a
+user-defined postblit and a copy constructor (generated or user-defined),
+the postblit will continue to have priority.
+)
+
+$(P
+To get rid of the deprecation, the user can either:
+)
+
+$(P
+1. Explicitly `@disable this(this)` in `struct B`. That will instruct
+the compiler that the copy constructor is preferred over the postblit.
+)
+
+$(P
+2. Define a postblit for `struct B`. That will instruct the compiler
+that the postblit is preferred over the postblit.
+)
+
+$(P
+3. Remove all copy constructors from `struct B`. In this case the postblit
+will be used for copy constructing instances of `struct B`.
+)
+)
+
+$(LI $(LNAME2 ddoc-always-visibility,DMD's JSON output will now always include the protection level)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/ddoc-always-visibility.dd)
+$(P
+In previous release, the JSON output the compiler generates did not include
+the protection level if it was `public`. It is now always included.
+)
+)
+
+$(LI $(LNAME2 ddoc-shared-static-ctor,DMD's JSON output now have distinct types for [shared] module constructor/destructor)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/ddoc-shared-static-ctor.dd)
+$(P
+Previously, module constructors and destructors (shared or not) would be output as
+functions, and the only way for documentation generators to recognize them was
+to search for the pattern that was used for their naming.
+This means that external tools would need to depend on internal compiler details
+for generating documentation.
+From this release, 4 new values have been introduced for `kind`:
+`shared static constructor`, `shared static destructor`, `static constructor`, `static destructor`.
+)
+)
+
+$(LI $(LNAME2 deprecate_dualcontext,Deprecate local templates that receive local symbols by alias)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecate_dualcontext.dd)
+$(P
+Support for instantiating local and member templates with local
+symbols was implemented in DMD 2.087.0. However, the implementation
+was incompatible with GDC and LDC backends.
+)
+
+$(P
+In order to maintain feature parity among D implementations, this
+improvement has been deprecated, and may be removed from a future DMD
+release.
+)
+)
+
+$(LI $(LNAME2 dtoh-improvements,Improvements for the C++ header generation)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dtoh-improvements.dd)
+$(P
+The following features/bugfixes/improvements were implemented for the
+experimental C++ header generator:
+)
+
+$(P
+- Generate fieldwise constructors for aggregates
+- Don't emit instantiated classes as unique class declarations
+- Emit template arguments for instantiated base classes
+- Don't emit enums for opaque types specially handled by the compiler
+)
+
+$(P
+Note: The header generator is still considerer experimental, so please submit
+      any bugs encountered to [the bug tracker](https://issues.dlang.org).
+)
+)
+
+$(LI $(LNAME2 dwarf-switch,Add `-gdwarf=<version>` switch for the DMD compiler.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dwarf-switch.dd)
+$(P
+Emit DWARF symbolic debug info (non-Windows machines only).
+Supported versions are 3, 4, and 5.
+)
+
+$(P
+Once added, the `-g` switch is implicitly activated.
+)
+
+$(P
+Note: DWARF Version 5 is experimental.
+)
+)
+
+$(LI $(LNAME2 getVisibility,Introduced `__traits(getVisibility, Sym)` as an alias to `getProtection`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/getVisibility.dd)
+$(P
+Since the changes in v2.071.0, attributes such as `private`, `protected`, `public`,
+etc... are visibility attributes, and not protection attributes.
+However, the name of this trait predates such change and was thus inconsistent with
+all the other documentation.
+This change only introduce the new name, and `getProtection` has been left un-deprecated,
+and while using the new name is reccommended for users that only supports the latest
+version of the language, there is no plan to deprecate it.
+)
+)
+
+$(LI $(LNAME2 runtime-synchronized,Plain `synchronized` statements now use run-time allocated mutexes.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/runtime-synchronized.dd)
+$(P
+Synchronized statements have two forms, `synchronized` and `synchronized(exp)`.
+When there is no expression argument, a global mutex is created using a static
+buffer big enough to store the platform dependant critical section type and a
+pointer field.
+)
+
+$(P
+Example:
+)
+```
+void main()
+{
+    synchronized {
+        // __gshared byte[40 + 8] __critsec;
+        // _d_criticalenter(&__critsec[0]);
+        // scope(exit) _d_criticalexit(&__critsec[0]);
+        (cast() counter) += 1;
+    }
+}
+```
+
+$(P
+This implementation suffers from a couple deficiencies. Neither the size nor
+alignment of the `critsec` buffer are obtained from the OS critical section
+type defined in druntime. As a result, if the size allocated by the compiler is
+too small, or the platform has strict alignment requirements, then the program
+run-time will crash on entering the synchronized statement.
+)
+
+$(P
+This code will now call a new implementation that allocates the critical
+section lazily at run-time, moving all logic out of the compiler to druntime.
+)
+)
+
+$(LI $(LNAME2 shortfunctions,Allow shortened function implementations for single-expresssion functions.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/shortfunctions.dd)
+$(P
+`-preview=shortenedMethods` is added. This allows functions to be written in a similar form to lambda functions:
+)
+
+---
+// these 2 are equivalent
+int foo() { return 1; }
+int foo() => 1;
+---
+
+$(P
+The syntax allows the form `=> expr` to replace the function body `{ return expr; }`
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 callStructDtorsDuringGC,The druntime option `callStructDtorsDuringGC` has been removed)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/callStructDtorsDuringGC.dd)
+$(P
+It had been deprecated in 2.088.
+)
+)
+
+$(LI $(LNAME2 freebsd-statvfs,FreeBSD declarations from statvfs that belong in mount have been removed)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/freebsd-statvfs.dd)
+$(P
+It had been deprecated in 2.082 in favor of `core.sys.freebsd.sys.mount`.
+)
+)
+
+$(LI $(LNAME2 libunwind,Experimental llvm-libunwind based backtrace printing was added)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/libunwind.dd)
+$(P
+Currently, druntime uses the `backtrace` and `backtrace_symbols` functions
+to provide debug informations (addresses and function names, respectively).
+)
+
+$(P
+This can create issues for target that do not provide `backtrace`, such as Musl libc.
+Additionally, the `backtrace` interface is inherently limited, as it only allow
+to get up to `X` frames (where `X` is the size of the buffer), and forces them
+to be stored continuously in memory. The same apply to `backtrace_symbols`.
+)
+
+$(P
+On the other hand, libunwind is an industry standard for unwinding and stack trace inspection.
+It has been ported to a variety of platform, has a simple yet flexible API,
+and is part of GCC, and a similar library is part of LLVM.
+)
+
+$(P
+Starting from this release, druntime includes a way to use LLVM's libunwind as a backtrace provider.
+The support is limited to LLVM's version of libunwind, as it is available on Alpine Linux,
+and easier to interface with.
+)
+
+$(P
+For packagers, one can define `DRuntime_Use_Libunwind` when building druntime,
+enabling the support by default.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 deprecate-approxEqual,Deprecate `std.math : approxEqual`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/deprecate-approxEqual.dd)
+$(P
+The template `approxEqual` for comparing floating point numbers has
+been deprecated.
+)
+
+$(P
+Please use the template `isClose` instead, which has better default
+values and is symmetric in its arguments.
+)
+
+$(P
+To (almost) keep the current behaviour of `approxEqual(a, b)` use
+`isClose(a, b, 1e-2, 1e-2)`, but we recommend to adjust the code to
+make it work with `isClose(a, b)`.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 dmd-linker-dflags,More 'linker dflags' with DMD)
+$(CHANGELOG_SOURCE_FILE dub, changelog/dmd-linker-dflags.dd)
+$(P
+`-betterC`, `-L…` and `-Xcc=…` `dflags` are now used for linking too.
+)
+)
+
+$(LI $(LNAME2 visuald-copyfiles,copyFiles can now be used in VisualD projects.)
+$(CHANGELOG_SOURCE_FILE dub, changelog/visuald-copyfiles.dd)
+$(P
+Files that are needed for the application to run can be specified in the `copyFiles` build option,
+which causes these files to be copied to the target path. The dub generator for VisualD now replicates
+this behaviour, so that this kind of applications can be successfully debugged in Visual Studio.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 20661): opEquals not recognized for AA key $(LPAREN)take two$(RPAREN))
+$(LI $(BUGZILLA 21319): DMD crashes on immutable circular reference)
+$(LI $(BUGZILLA 21547): Order of constructor declaration affects struct initializer)
+$(LI $(BUGZILLA 21678): "_d_arraysetlengthT is not callable using argument types" on chained array length assignment)
+$(LI $(BUGZILLA 21696): DMD 2.095.1 Compilation Crash)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 5713): Broken final switch on ints)
+$(LI $(BUGZILLA 10619): Wrong local variable passed as alias arguments to templates)
+$(LI $(BUGZILLA 11717): CTFE: non-constant value with array and vector ops.)
+$(LI $(BUGZILLA 13667): ICE: stack overflow using self-referencing cast inside recursive alias this method)
+$(LI $(BUGZILLA 14831): Each function local symbols should have unique mangled name)
+$(LI $(BUGZILLA 15225): cannot overload directly aliased function literals)
+$(LI $(BUGZILLA 16635): Alias this for implicit conversion to "ref const$(LPAREN)typeof$(LPAREN)this$(RPAREN)$(RPAREN)" causes dmd to segfault)
+$(LI $(BUGZILLA 17105): [ICE] SIMD Internal error with optimizations: backend\cod3.c 6807)
+$(LI $(BUGZILLA 18867): backend/cgcod.c crash on assignment to vector element)
+$(LI $(BUGZILLA 19788): compiler crash on slicing a enum typed as vector)
+$(LI $(BUGZILLA 20041): CTFE incorrect result with __vector)
+$(LI $(BUGZILLA 20111): asm VCVTPS2PH is not encoded correctly)
+$(LI $(BUGZILLA 20235): C++ ABI doesn't destruct struct arguments in the callee)
+$(LI $(BUGZILLA 20565): Local template declarations in different scopes produce uncaught name collisions)
+$(LI $(BUGZILLA 20695): Copy constructor disable default struct constructor)
+$(LI $(BUGZILLA 20821): Aliased template method confuses overload resolution)
+$(LI $(BUGZILLA 20868): DIP1000: scope delegate triggers error in unsafe code and it shouldn't)
+$(LI $(BUGZILLA 21214): simd: wrong diagnostic with unsupported vectors)
+$(LI $(BUGZILLA 21352): enum members should not be given UDAs of its parent enum declaration)
+$(LI $(BUGZILLA 21469): ICE core.simd when implementing _mm_set1_epi16)
+$(LI $(BUGZILLA 21471): Backend assertion triggered with `-checkation=context` and `-inline`)
+$(LI $(BUGZILLA 21472): `-checkaction=context` doesn't work with `tupleof`)
+$(LI $(BUGZILLA 21474): ICE with core.simd and -O $(LPAREN)Illegal Instruction$(RPAREN))
+$(LI $(BUGZILLA 21481): functions in overloaded template are lost when the template overloads an alias)
+$(LI $(BUGZILLA 21489): Duplicated template instantiation using mixin inside alias declaration)
+$(LI $(BUGZILLA 21490): Optimizer can add SSE integer multiply for machines less than SSE4.1 which do not have it)
+$(LI $(BUGZILLA 21501): [REG 2.089.1] undefined identifier in package when using mixin and cyclic imports)
+$(LI $(BUGZILLA 21508): private class p in file p.d visible outside the file $(LPAREN)module$(RPAREN))
+$(LI $(BUGZILLA 21515): extern$(LPAREN)C$(RPAREN) and extern$(LPAREN)C++$(RPAREN) returns creal in wrong order)
+$(LI $(BUGZILLA 21518): delegates not checked for attribute match in const arrays)
+$(LI $(BUGZILLA 21522): function gets lost when aliasing an overloaded function template)
+$(LI $(BUGZILLA 21526): x87 not rounding to precision on assignment on some platforms)
+$(LI $(BUGZILLA 21530): dtoh: Identifiers need to be sanitized wrt. reserved C++ keywords)
+$(LI $(BUGZILLA 21534): dtoh: Default params for default ctor missing template args)
+$(LI $(BUGZILLA 21543): dmd infinite loop on alias this and std.typecons.Nullable)
+$(LI $(BUGZILLA 21553): incorrect call to expressionSemantic$(LPAREN)$(RPAREN) in statementsem.d)
+$(LI $(BUGZILLA 21598): checkaction=context reruns pure functions with debug blocks on failure)
+$(LI $(BUGZILLA 21640):  @live not working with templates)
+$(LI $(BUGZILLA 21647): pragma$(LPAREN)msg$(RPAREN) should be able to print a void type)
+$(LI $(BUGZILLA 21659): [OSX] core.stdc.config.__c_ulonglong is forward referenced while looking for sizeof)
+$(LI $(BUGZILLA 21662): Extern linkage variables cannot be of types with disabled default construction)
+$(LI $(BUGZILLA 21668): Cannot declare ref parameter of opaque type)
+$(LI $(BUGZILLA 21682): checkaction=context fails for expressions using static operator overloads)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 7176): Lambda => syntax for function and methods too)
+$(LI $(BUGZILLA 10445): add .min, .max, etc. properties for vector types)
+$(LI $(BUGZILLA 19632): [SIMD] Error: invalid foreach aggregate)
+$(LI $(BUGZILLA 20788): Difference between colored and non colored output)
+$(LI $(BUGZILLA 21527): Unnecessary store to memory in SIMD code)
+$(LI $(BUGZILLA 21593): Only update file time if file to be written already exists)
+)
+$(BUGSTITLE_BUGZILLA Phobos regression fixes,
+
+$(LI $(BUGZILLA 21663): std.concurrency.receiveOnly doesn't work with tuples)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 13663): Comparison of Tuples with floating point fields)
+$(LI $(BUGZILLA 15136): If we want toStringz to be fully correct, it needs to stop checking for '\0')
+$(LI $(BUGZILLA 17269): formattedWrite of struct with Nullable string fails)
+$(LI $(BUGZILLA 20508): std.math.pow$(LPAREN)-infinity, y$(RPAREN) does not return NaN for imaginary or complex results)
+$(LI $(BUGZILLA 20539): std.conv.to: internal overload conflict for enums with base types that have a catch-all opEquals overload $(LPAREN)?$(RPAREN))
+$(LI $(BUGZILLA 20848): Bug in formatValueImpl)
+$(LI $(BUGZILLA 21103): isDynamicArray instantiates unecessary templates)
+$(LI $(BUGZILLA 21444): bad string concat in static assert message)
+$(LI $(BUGZILLA 21555): std.container.array: insertBack is wrong and should be tested for Array!bool)
+$(LI $(BUGZILLA 21556): std.container.array: insertAfter is wrong and should be tested)
+$(LI $(BUGZILLA 21609): LinearCongruentialEngine fails for m = 0)
+$(LI $(BUGZILLA 21634): std.bitmanip: bitfields may generate invalid variable)
+$(LI $(BUGZILLA 21635): std.bitmanip: bitfields should produce better error messages with wrong parameters)
+$(LI $(BUGZILLA 21636): std.bitmanip: bitfields size of bitfield should be checked against size of used type)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 21523): Microsoft Windows std.stdio.File.lock$(LPAREN)$(RPAREN), tryLock$(LPAREN)$(RPAREN), unlock$(LPAREN)$(RPAREN): do not allocate memory for error messages when they are not needed)
+$(LI $(BUGZILLA 21559): Speed up walkLength for narrow strings)
+$(LI $(BUGZILLA 21629): std.csv report one record on empty input)
+$(LI $(BUGZILLA 21638): std.typecons.RefCounted!$(LPAREN)T, RefCountedAutoInitialize.no$(RPAREN) should still work when T.this$(LPAREN)$(RPAREN) is annotated with `@disable`)
+)
+$(BUGSTITLE_BUGZILLA Druntime regression fixes,
+
+$(LI $(BUGZILLA 21309): Missing core.thread.threadbase documentation)
+$(LI $(BUGZILLA 21642): [REG 2.084] hashOf will fail to compile for some structs/unions that recursively contain shared enums)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 8046): simd.d needs some documentation)
+$(LI $(BUGZILLA 21544):  -checkaction=context formats enum members as their base type)
+$(LI $(BUGZILLA 21666): wrong printf format specifier for `real` with -checkaction=context on Win64)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 14790): coverage merge should detect changed source code)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 21292): Chrome by default now blocks downloading .dmg or .exe files via HTTP)
+$(LI $(BUGZILLA 21493): Documentation broken hyperlink std.stdio)
+)
+)
+$(D_CONTRIBUTORS_HEADER 54)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Bartosz Wójcik)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR Bernhard Seckinger)
+    $(D_CONTRIBUTOR berni42)
+    $(D_CONTRIBUTOR berni44)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR brianush1)
+    $(D_CONTRIBUTOR Cameron Ross)
+    $(D_CONTRIBUTOR Crom (Thibaut CHARLES))
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR Eugen Wissner)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR Lucien Perregaux)
+    $(D_CONTRIBUTOR Luhrel)
+    $(D_CONTRIBUTOR Luís Ferreira)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR mhh)
+    $(D_CONTRIBUTOR Mihaela Chirea)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR nordlow)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR rkulhanek)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Roman Kashitsyn)
+    $(D_CONTRIBUTOR Roy Margalit)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Stefan Koch)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Tomáš Chaloupka)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Witold Baryluk)
+    $(D_CONTRIBUTOR سليمان السهمي (Suleyman Sahmi))
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.096.0
+    TITLE=Change Log: $(VER)

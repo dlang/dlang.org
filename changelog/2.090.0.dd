@@ -1,0 +1,397 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jan 05, 2020, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 10 major changes and 71 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 48 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 lazy-delegate,Can now extract delegate from `lazy` parameter))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 gc_in_finalizer,$(REF GC.inFinalizer, core, memory) was added))
+$(LI $(RELATIVE_LINK2 platform_dependent_execinfo,Platform dependent execinfo introspection added))
+$(LI $(RELATIVE_LINK2 to-prec,Added intrinsic `toPrec` to round to a specific float precision))
+$(LI $(RELATIVE_LINK2 unittest-default,Unittest default mode))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 appender-toString,Deprecated `std.array.Appender.toString` was removed))
+$(LI $(RELATIVE_LINK2 binaryReverseArgs,Deprecated `std.functional.binaryReverseArgs` was removed))
+$(LI $(RELATIVE_LINK2 bitmanip-toString,Deprecated `std.bitmanip.BitArray.toString` was removed))
+$(LI $(RELATIVE_LINK2 experimental-all,Deprecated module `std.experimental.all` was removed))
+$(LI $(RELATIVE_LINK2 json_number_conversion,Added get!(T) getter to std.json))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 lazy-delegate,Can now extract delegate from `lazy` parameter)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/lazy-delegate.dd)
+$(P
+The underlying delegate of the `lazy` parameter may be extracted
+using the `&` operator:
+)
+
+---
+void test(lazy int dg)
+{
+    int delegate() dg_ = &dg;
+    assert(dg_() == 7);
+    assert(dg == dg_());
+}
+
+void main()
+{
+    int a = 7;
+    test(a);
+}
+---
+
+$(P
+Previously this caused a compile error.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 gc_in_finalizer,$(REF GC.inFinalizer, core, memory) was added)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/gc_in_finalizer.dd)
+$(P
+A new function exposing information about the state of the GC was added.
+It returns `true` if the current thread is executing destructors (finalizers)
+of objects allocated on the GC heap that are either:
+* no longer being referenced
+* to whose finalizers an explicit call to `GC.runFinalizers`
+  was made (usually as part of shared library unloading).
+)
+
+$(P
+Destructors of objects allocated on the GC heap presently have several
+limitations or oddities:
+* As destructors of all unreachable objects are ran in indeterministic order,
+  there's no guarantee that object members are alive during the object's
+  finalization
+* Allocation during finalization is disallowed
+* In contrast to stack allocated objects, partially constructed objects (object
+  whose constructor threw an exception) may be finalized
+)
+
+$(P
+$(REF GC.inFinalizer, core, memory) can be used to efficiently guard against
+programming errors such as the above, or to detect whether certain
+objects were left to be destroyed by the GC.
+)
+)
+
+$(LI $(LNAME2 platform_dependent_execinfo,Platform dependent execinfo introspection added)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/platform_dependent_execinfo.dd)
+$(P
+A new module (core.internal.execinfo) has been added for platform dependent
+execinfo detection. On every POSIX system which provides an execinfo
+implementation as part of its C runtime the appropriate implementation-
+dependent execinfo module will be imported automatically.
+)
+
+$(P
+Besides that, there is an opportunity for using external execinfo
+implementations built as separated libraries and linking DRuntime with them.
+)
+
+$(P
+$(B IMPORTANT:) On platforms with C runtime not providing execinfo
+functionality one should decide whether an external lib (e.g. libexecinfo)
+will be used, or not. If not, DRuntime should be built normally without any
+additional version ID, but with external lib exactly one of the following
+version IDs should be chosen at compile time. That means, the selected
+external format cannot be changed later without rebuilding DRuntime.
+)
+
+$(P
+It could be really important to keep this in mind when someone is packaging
+DRuntime for such OSs (e.g. ones using musl libc) and provide packages with
+and without execinfo support (with the specific external library as
+dependency) or in the case of source based packages, make this build option
+selectable (e.g. portage).
+)
+
+$(P
+$(TABLE
+$(THEAD Version ID, Backtrace format)
+$(TROW $(B ExtExecinfo_BSDFmt), 0x00000000 <_D6module4funcAFZv+0x78> at module)
+$(TROW $(B ExtExecinfo_DarwinFmt),
+1  module    0x00000000 D6module4funcAFZv + 0)
+$(TROW $(B ExtExecinfo_GNUFmt), module(_D6module4funcAFZv) [0x00000000] $(B or)
+module(_D6module4funcAFZv+0x78) [0x00000000]
+$(B or) module(_D6module4funcAFZv-0x78) [0x00000000])
+$(TROW $(B ExtExecinfo_SolarisFmt), object'symbol+offset [pc])
+)
+)
+
+$(P
+These formats above cover most of the "classic" backtrace outputs but as a new
+important format emerges, it can be easily added.
+)
+)
+
+$(LI $(LNAME2 to-prec,Added intrinsic `toPrec` to round to a specific float precision)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/to-prec.dd)
+$(P
+The intrinsic $(REF toPrec, core,math) forces rounding of it
+floating point argument to the precision of `float`,
+`double`, or `real`.
+)
+
+$(P
+Some floating point algorithms, such as
+Kahan-Babuska-Neumaier Summation, require rounding
+to specific precisions. Rounding to precision after
+every operation, however, loses overall precision in
+the general case and is a runtime performance problem.
+)
+
+$(P
+Adding these functions guarantee the rounding at required
+points in the code, and document where in the algorithm
+the requirement exists.
+)
+)
+
+$(LI $(LNAME2 unittest-default,Unittest default mode)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/unittest-default.dd)
+$(P
+Switched the default for unittests to only run the tests by default. Use `--DRT-testmode=run-main` for the original behavior (run unittests then main).
+)
+
+$(P
+The feature to control unit testing was added in $(LINK2 $(ROOT_DIR)/changelog/2.078.0.html#core-runtime-unittestEnhancement, 2.078.0), and the switch above will work for all versions since then.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 appender-toString,Deprecated `std.array.Appender.toString` was removed)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/appender-toString.dd)
+$(P
+The overload accepting a callable was deprecated since 2.079
+and has now been removed. Use the overload accepting an output
+range instead.
+)
+)
+
+$(LI $(LNAME2 binaryReverseArgs,Deprecated `std.functional.binaryReverseArgs` was removed)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/binaryReverseArgs.dd)
+$(P
+This specialisation of `reverseArgs` accepting exactly two arguments was
+deprecated since 2.079 and has now been removed. Use `reverseArgs` instead.
+)
+)
+
+$(LI $(LNAME2 bitmanip-toString,Deprecated `std.bitmanip.BitArray.toString` was removed)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/bitmanip-toString.dd)
+$(P
+The overload accepting a callable was deprecated since 2.079
+and has now been removed. Use the overload accepting an output
+range instead.
+)
+)
+
+$(LI $(LNAME2 experimental-all,Deprecated module `std.experimental.all` was removed)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/experimental-all.dd)
+$(P
+All symbols contained in Phobos can now be used with `import std`
+)
+)
+
+$(LI $(LNAME2 json_number_conversion,Added get!(T) getter to std.json)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/json_number_conversion.dd)
+$(P
+This getter will try to return underlying json type as T if possible.
+It is convenient for automatic integer conversion like this:
+)
+-------
+import std.json;
+string s = `{ "a": 123 }`;
+auto json = parseJSON(s);
+
+// This will throw with json["a"].floating
+assert(json["a"].get!double == 123.0);
+-------
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 20383): [REG 2.084.z] illegal conversion from int[] to ubyte[] is accepted)
+$(LI $(BUGZILLA 20418): Unittest failure in bitarray.d on Win32)
+$(LI $(BUGZILLA 20465): Dynamic + static array declaration fail)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 6592): di header file created even if errors occur)
+$(LI $(BUGZILLA 8684): Missing '$(RPAREN)' in argument list creates a sea of error messages)
+$(LI $(BUGZILLA 9490): 'this' is not found when expression is in parentheses)
+$(LI $(BUGZILLA 10562): Cannot initialize arrays by an element value when the elements are fixed-length arrays)
+$(LI $(BUGZILLA 14696): destructor for temporary called before statement is complete with conditional operator)
+$(LI $(BUGZILLA 17125): Header Generation Incorrectly Formats Floating Point Number)
+$(LI $(BUGZILLA 19432): Cannot initialize ulong with decimal value above signed long range)
+$(LI $(BUGZILLA 20151): particular directory layout causes DMD to crash with an access violation)
+$(LI $(BUGZILLA 20220): pragma$(LPAREN)crt_constructor$(RPAREN) does not work with clang 9)
+$(LI $(BUGZILLA 20318): Illegal instruction $(LPAREN)core dumped$(RPAREN))
+$(LI $(BUGZILLA 20326): stringof on opaque type results in forward reference error)
+$(LI $(BUGZILLA 20367): Postblit cannot be disabled when copy ctor is defined)
+$(LI $(BUGZILLA 20400): CTFE increasing length of array of characters changes its value)
+$(LI $(BUGZILLA 20401): ref variable copied before return)
+$(LI $(BUGZILLA 20406): Copy constructor requires default constructor)
+$(LI $(BUGZILLA 20413): C++ mangling bug with templates & the std namespace)
+$(LI $(BUGZILLA 20417): __traits$(LPAREN)compiles$(RPAREN) returns false result if expression is not wrapped inside a lambda while typeof works correctly)
+$(LI $(BUGZILLA 20419): is$(LPAREN)missing == module/package$(RPAREN) results in unknown identifier)
+$(LI $(BUGZILLA 20466): Optimizer clobbering msw register when testing it for 0)
+$(LI $(BUGZILLA 20475): Struct of static array of strings is bitwise-compared instead of member-wise)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 4544): Better error-message when expecting string but got a character constant)
+$(LI $(BUGZILLA 11038): static has no effect as a block attribute for imports)
+$(LI $(BUGZILLA 18809): Improve error message on nonexistent property)
+$(LI $(BUGZILLA 20334): posix.mak clean target does not remove all generated files)
+$(LI $(BUGZILLA 20448): Error: unknown when mutating an escaped member reference from a template function)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 9588): format prints context pointer for struct)
+$(LI $(BUGZILLA 9592): Justified Tuple printing)
+$(LI $(BUGZILLA 10126): Make TaskPool terminate on its own or improve docs to make it clear that it won't)
+$(LI $(BUGZILLA 10448): min and max are not NaN aware)
+$(LI $(BUGZILLA 10902): some phobos unittests take an excessive amount of time)
+$(LI $(BUGZILLA 11013): ignoring variable inside the predicate of findSplitBefore)
+$(LI $(BUGZILLA 11782): format pointer to range prints range)
+$(LI $(BUGZILLA 15405): FormatSpec.writeUpToNextSpec$(LPAREN)$(RPAREN) not documented)
+$(LI $(BUGZILLA 15940): ImplicitConversionTargets and class alias in struct)
+$(LI $(BUGZILLA 16223): BigUint: undefined shift for small instantiation type)
+$(LI $(BUGZILLA 18248): radix overload of std.conv.parse fails to throw on non-empty range without number)
+$(LI $(BUGZILLA 18446): Wrong curl onProgress examples)
+$(LI $(BUGZILLA 19283): [std.mathspecial] documentation for normal distribution doesn't list parameters)
+$(LI $(BUGZILLA 19626): RedBlackTree of an enum fails in unittest mode)
+$(LI $(BUGZILLA 19733): expi documentation links broken)
+$(LI $(BUGZILLA 20160): ThreadInfo.cleanup$(LPAREN)$(RPAREN) clears local thread's registered names instead of "this"'s)
+$(LI $(BUGZILLA 20260): CustomFloat with 0 precision/exponentWidth)
+$(LI $(BUGZILLA 20261): CustomFloat.epsilon yields infinity)
+$(LI $(BUGZILLA 20263): Wrong value for CustomFloat.min_exp)
+$(LI $(BUGZILLA 20281): CustomFloat is limited to 64 bit)
+$(LI $(BUGZILLA 20282): CustomFloat.dig fails at some values.)
+$(LI $(BUGZILLA 20283): CustomFloat.max_exp not working in some cases)
+$(LI $(BUGZILLA 20284): CustomFloat.max_10_exp does not work for types with too many digits in exponent)
+$(LI $(BUGZILLA 20286): CustomFloat.min_normal fails, when not allowDenorm)
+$(LI $(BUGZILLA 20313): Inconsistent behavior of wouldHaveBlocked on Windows)
+$(LI $(BUGZILLA 20314): passing const variables to `only` forces const range element type)
+$(LI $(BUGZILLA 20357): format should obey space flag when printing nan or inf)
+$(LI $(BUGZILLA 20396): format!"%a" leeds to wrong result for denormalized float)
+$(LI $(BUGZILLA 20398): Wrong number of totalEntries in std.zip)
+$(LI $(BUGZILLA 20408): style checker should not check backup files)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 20198): Make std.math.nextUp and nextDown and nextafter work in CTFE for float and double)
+$(LI $(BUGZILLA 20288): std.format double with NaN fails with range violation on comma)
+$(LI $(BUGZILLA 20425): Proxy opCmp fails to compile with types that overloaded opCmp)
+$(LI $(BUGZILLA 20439): memoize fails with types that have a void opAssign)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 20299): checkaction=context not working with temporary destructors)
+$(LI $(BUGZILLA 20303): Memory leak in core.thread)
+$(LI $(BUGZILLA 20315): checkaction=context fails for const$(LPAREN)void[]$(RPAREN) argument)
+$(LI $(BUGZILLA 20322): checkaction=context fails for wstring/dstring arguments)
+$(LI $(BUGZILLA 20323): checkaction=context fails for non-copyable arguments)
+$(LI $(BUGZILLA 20346): std.uuid does not compile with checkaction=context)
+$(LI $(BUGZILLA 20364): [REG2.069] changing length for typeof$(LPAREN)null$(RPAREN)[] array seg faults in _d_arraysetlengthiT$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 20440): Associative arrays with values whose opAssign doesn't return a ref don't support require function)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 17563): gc_inFinalizer should be public)
+)
+)
+$(D_CONTRIBUTORS_HEADER 48)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR 0l-l0)
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR Alexandru Militaru)
+    $(D_CONTRIBUTOR Ali Akhtarzada)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR Bernhard Seckinger)
+    $(D_CONTRIBUTOR berni44)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Cristian Creteanu)
+    $(D_CONTRIBUTOR Damian Ziemba)
+    $(D_CONTRIBUTOR Diederik de Groot)
+    $(D_CONTRIBUTOR drug007)
+    $(D_CONTRIBUTOR Eduard Staniloiu)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Fangrui Song)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR Florian Brandt)
+    $(D_CONTRIBUTOR GoaLitiuM)
+    $(D_CONTRIBUTOR GrimMaple)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Joan Piles)
+    $(D_CONTRIBUTOR Jonathan Marler)
+    $(D_CONTRIBUTOR Jonathan Samson)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Rasmus Thomsen)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Robert Schadek)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Stian Gulpen)
+    $(D_CONTRIBUTOR StianGulpen)
+    $(D_CONTRIBUTOR tastyminerals)
+    $(D_CONTRIBUTOR Victor Porton)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR سليمان السهمي (Suleyman Sahmi))
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.090.0
+    TITLE=Change Log: $(VER)

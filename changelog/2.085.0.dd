@@ -1,0 +1,1054 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Mar 01, 2019, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 26 major changes and 58 fixed Bugzilla issues.
+                            A huge thanks goes to the 49 contributors who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 1_objc_class,Add support for Objective-C classes))
+$(LI $(RELATIVE_LINK2 2_objc_instance_variable,Add support for Objective-C instance variable))
+$(LI $(RELATIVE_LINK2 3_objc_super_call,Add support for Objective-C super calls))
+$(LI $(RELATIVE_LINK2 4_deprecated_objc_interfaces,Deprecate Objective-C interfaces))
+$(LI $(RELATIVE_LINK2 assert,Context-aware assertion error messages))
+$(LI $(RELATIVE_LINK2 const_cast_dont_construct_structs,Avoid calling the struct constructor from const-casts))
+$(LI $(RELATIVE_LINK2 error-context,dmd now supports expressive diagnostic error messages with `-verrors=context`))
+$(LI $(RELATIVE_LINK2 no-cmpsb,`memcmp()` compares are no longer performed for struct equality tests, memberwise comparisons are done instead, per the spec))
+$(LI $(RELATIVE_LINK2 osx-32bit,OSX 32-bit is no longer supported))
+$(LI $(RELATIVE_LINK2 preview-flags,`-preview` and `-revert` command line switches have been introduced))
+$(LI $(RELATIVE_LINK2 stdcpp,Transition to C++11 character types))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 core-memory-gc-profile-stats,Added `GC.profileStats()` to `core.memory`))
+$(LI $(RELATIVE_LINK2 cpp_new,Added `core.stdcpp.new_`))
+$(LI $(RELATIVE_LINK2 cpu_count,Added `core.sys.linux.sched.CPU_COUNT`.))
+$(LI $(RELATIVE_LINK2 cpu_isset,Added `core.sys.linux.sched.CPU_ISSET`.))
+$(LI $(RELATIVE_LINK2 emplace,Moved `std.conv.emplace`, `std.algorithm.mutation.move`, `std.algorithm.mutation.moveEmplace`, and `std.functional.forward` to core/lifetime.d))
+$(LI $(RELATIVE_LINK2 gc_cleanup,GC cleanup can now be configured as a DRT GC option))
+$(LI $(RELATIVE_LINK2 gc_precise,A garbage collector with precise heap scanning can now be selected))
+$(LI $(RELATIVE_LINK2 gc_realloc,GC.realloc is now more consistent and robust))
+$(LI $(RELATIVE_LINK2 gc_registry,User supplied garbage collectors can now be linked with the runtime))
+$(LI $(RELATIVE_LINK2 std_allocator,Added `core.stdcpp.allocator`))
+$(LI $(RELATIVE_LINK2 zero_init,`char`/`wchar` fields in most D runtime (`core.*` and `rt.*`) structs are now zero-initialized))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 dub-fetch-shortcut,`dub fetch` now supports `<package>@<version>` as a shortcut))
+$(LI $(RELATIVE_LINK2 extraDependencyFiles-attribute-added,extraDependencyFiles attribute added))
+$(LI $(RELATIVE_LINK2 file-system-supplier,File system supplier enabled))
+$(LI $(RELATIVE_LINK2 toolchain_requirements,`toolchainRequirements` recipe entry))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 1_objc_class,Add support for Objective-C classes)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/1_objc_class.dd)
+$(P
+Prior to this release D interfaces were used to represent Objective-C classes.
+Now proper support for Objective-C classes has been added and D classes can
+be used instead to represent Objective-C classes. It's preferred to use D
+classes to represent Objective-C classes.
+)
+
+$(P
+This release also adds support for implementing Objective-C subclasses and
+methods in D.
+)
+
+$(P
+To match the behavior in Objective-C some additional changes have been made:
+)
+
+$(P
+$(UL
+    $(LI `static` and `final` methods are virtual. Although `final` methods are
+         virtual it's not possible to override a `final` method in a subclass)
+    $(LI `static` methods are overridable in subclasses)
+)
+)
+
+$(P
+Example:
+)
+
+---
+extern (Objective-C)
+class NSObject
+{
+    static NSObject alloc() @selector("alloc");
+    NSObject init() @selector("init");
+    void release() @selector("release");
+}
+
+extern (Objective-C)
+class Foo : NSObject
+{
+    override static Foo alloc() @selector("alloc");
+    override Foo init() @selector("init");
+
+    int bar(int a) @selector("bar:")
+    {
+        return a;
+    }
+}
+
+void main()
+{
+    auto foo = Foo.alloc.init;
+    scope (exit) foo.release();
+
+    assert(foo.bar(3) == 3);
+}
+---
+)
+
+$(LI $(LNAME2 2_objc_instance_variable,Add support for Objective-C instance variable)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/2_objc_instance_variable.dd)
+$(P
+It's now possible to declare instance variables in Objective-C classes.
+)
+
+$(P
+Instance variables in Objective-C are non-fragile. That means that the base
+class can change (add or remove instance variables) without the subclasses
+needing to recompile or relink. Thanks to this feature it's not necessary to
+declare instance variables when creating bindings to Objective-C classes.
+)
+
+$(P
+Example:
+)
+
+---
+extern (Objective-C)
+class NSObject {}
+
+extern (Objective-C)
+class Foo : NSObject
+{
+    int bar;
+
+    static Foo alloc() @selector("alloc");
+    Foo init() @selector("init");
+    void release() @selector("release");
+
+    void getBar() @selector("getBar")
+    {
+        return bar;
+    }
+}
+
+void main()
+{
+    auto foo = Foo.alloc.init;
+    scope (exit) foo.release();
+    foo.bar = 3;
+
+    assert(foo.getBar() == 3);
+}
+---
+)
+
+$(LI $(LNAME2 3_objc_super_call,Add support for Objective-C super calls)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/3_objc_super_call.dd)
+$(P
+It's now possible to implement an Objective-C method and make a super call to
+a method in the base class.
+)
+
+$(P
+Example:
+)
+
+---
+extern (Objective-C)
+class NSObject
+{
+    void release() @selector("release");
+}
+
+extern (Objective-C)
+class Foo : NSObject
+{
+    int foo() @selector("foo")
+    {
+        return 3;
+    }
+}
+
+extern (Objective-C)
+class Bar : Foo
+{
+    static Bar alloc() @selector("alloc");
+    Bar init() @selector("init");
+
+    override int foo() @selector("foo")
+    {
+        return super.foo() + 1;
+    }
+}
+
+void main()
+{
+    auto bar = Bar.alloc.init;
+    scope (exit) bar.release();
+
+    assert(bar.foo() == 4);
+}
+---
+)
+
+$(LI $(LNAME2 4_deprecated_objc_interfaces,Deprecate Objective-C interfaces)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/4_deprecated_objc_interfaces.dd)
+$(P
+Prior to this release, it was necessary to represent an Objective-C class
+as a D interface. Now support for Objective-C classes has been implemented and
+the `class` keyword should be used instead.
+)
+
+$(P
+The reason for this deprecation is to allow `extern (Objective-C)` interfaces
+to be repurposed for representing Objective-C protocols in the future.
+)
+
+$(P
+Deprecated:
+)
+---
+extern (Objective-C) interface NSObject {} // deprecated
+---
+
+$(P
+Replace with:
+)
+---
+extern (Objective-C) class NSObject {}
+---
+)
+
+$(LI $(LNAME2 assert,Context-aware assertion error messages)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/assert.dd)
+$(P
+With this release DMD supports generating context-aware assertion error messages
+when no error message has been provided by the user.
+For example, currently the following file:
+)
+
+---
+void main()
+{
+    int a, b = 2;
+    assert(a == b);
+}
+---
+
+$(P
+would yield this error when compiled and run:
+)
+
+$(P
+$(CONSOLE
+\> dmd -run main.d
+core.exception.AssertError@main.d(4): Assertion failure
+$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)
+??:? _d_assertp [0x1c4eae48]
+onlineapp.d:4 _Dmain [0x1c4ead85]
+)
+)
+
+$(P
+However, with the new experimental compiler switch `-checkaction=context` it yields:
+)
+
+$(P
+$(CONSOLE
+\> dmd -checkaction=context -run main.d
+core.exception.AssertError@main.d(4): 0 != 2
+$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)
+??:? _d_assert_msg [0x4a3f9cf0]
+??:? _Dmain [0x4a3f8fc4]
+)
+)
+
+$(P
+The new switch already supports a variety of assertion messages:
+)
+
+---
+string dlang = "d2";
+assert(dlang != dlang); // ERROR: "d2" == "d2"
+
+struct S { int s; }
+assert(S(0) == S(1)); // ERROR: "S(0) !is S(1)"
+
+int a = 1, b = 2;
+assert(a > b); // ERROR: 1 <= 2
+---
+
+$(P
+Also if no error message can be generated, it will now fallback to displaying
+the text of the `assert` expression. For example, for this more complicated
+assert expression:
+)
+
+---
+void main()
+{
+    int a, b = 2;
+    assert(a && (a == b));
+}
+---
+
+$(P
+Compiling and running with `-checkaction=context` will now result in:
+)
+
+$(P
+$(CONSOLE
+\> dmd -checkaction=context -run main.d
+core.exception.AssertError@main.d(4): assert(a && (a == b)) failed
+$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)
+??:? _d_assert_msg [0xb7e5fdfc]
+??:? _Dmain [0xb7e5fd40]
+)
+)
+
+$(P
+This switch for context-aware assertion error messages is still experimental
+and feedback is welcome.
+)
+)
+
+$(LI $(LNAME2 const_cast_dont_construct_structs,Avoid calling the struct constructor from const-casts)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/const_cast_dont_construct_structs.dd)
+$(P
+In previous versions of DMD, there was an undocumented interaction of const-cast with
+regular cast, ie. `cast()`, `cast(const)` and `cast(immutable)`, where these casts would
+be expressed as `cast(const(typeof(expr))) expr`; hence if `expr` was of type `Struct`,
+these casts could potentially call its constructor `Struct(expr)`, as per spec.
+)
+
+$(P
+The dangerous part however, was if this occurred with structs that used their first field
+as `alias this`, the implicit conversion via `alias this` would potentially satisfy an
+implicit struct constructor, leaving the other fields set to `init` and leading to apparent
+data corruption from a mere `cast()`.
+)
+
+$(P
+In other words, `cast() s` to `S(s)` to `S(s.implicitCast)`.
+)
+
+$(P
+This can no longer occur, since $(B `cast()`, `cast(const)` and `cast(immutable)` will
+no longer generate an implicit constructor call.)
+Implicit constructor calls to `S()` will only occur when one explicitly uses `cast(S)`.
+)
+)
+
+$(LI $(LNAME2 error-context,dmd now supports expressive diagnostic error messages with `-verrors=context`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/error-context.dd)
+$(P
+With the new CLI option `-verrors=context` dmd will now show the offending line directly in its error messages.
+Consider this faulty program `test.d`:
+)
+
+---
+void foo()
+{
+    a = 1;
+}
+---
+
+$(P
+Now run it with `-verrors=context`:
+)
+
+$(P
+$(CONSOLE
+\> dmd -verrors=context test.d
+test.d(4): $(RED Error): undefined identifier a
+    a = 1;
+    ^
+)
+)
+)
+
+$(LI $(LNAME2 no-cmpsb,`memcmp()` compares are no longer performed for struct equality tests, memberwise comparisons are done instead, per the spec)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/no-cmpsb.dd)
+$(P
+The compiler would sometimes generate code for struct equality tests using
+`memcmp()` across the whole struct object. This assumed that:
+)
+
+$(P
+$(OL
+$(LI alignment holes were filled with 0, which is not always the case)
+$(LI there were no floating point NaN values, which should compare as not equal
+even if the bit patterns match)
+)
+)
+
+$(P
+The spec requires that the comparison be done in a memberwise manner.
+This brings the implementation in line with this.
+)
+
+$(P
+$(LINK2 https://dlang.org/spec/expression.html#equality_expressions, Equality Expressions)
+)
+
+$(P
+This can break existing code that relied on the former erroneous behavior.
+To correct such code, use one of the following:
+)
+
+$(P
+$(OL
+$(LI define an `opEquals()` operator overload to achieve the desired behavior)
+$(LI use `is` instead of `==`, as `is` will do a bit compare of the struct object.)
+)
+)
+
+$(P
+This new behavior is enabled with the `-preview=fieldwise` compiler switch. It
+will eventually become the default behavior.
+)
+)
+
+$(LI $(LNAME2 osx-32bit,OSX 32-bit is no longer supported)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/osx-32bit.dd)
+$(P
+With this release, the DMD compiler will no longer officially support
+building 32-bit applications for OSX. For legacy purposes, older releases
+can be used.
+)
+
+$(P
+$(B Motivation:) The latest macOS release $(I Mojave) is the last version of OSX
+with support for running 32-bit applications. The D development team wants to
+focus its efforts and build/test infrastructure on active and important platforms.
+)
+)
+
+$(LI $(LNAME2 preview-flags,`-preview` and `-revert` command line switches have been introduced)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/preview-flags.dd)
+$(P
+Command line switches adding or subtracting features of the D language have been normally added on an ad-hoc basis.
+Over time this has grown to:
+)
+
+$(P
+$(UL
+    $(LI `-dip25`)
+    $(LI `-dip1000`)
+    $(LI `-dip1000`)
+    $(LI `-dip1008`)
+)
+)
+
+$(P
+Moreover, in parallel `-transition` has been introduced and the following DMD
+example is only a subset of the transitional features that DMD supports at the moment:
+)
+
+$(P
+$(CONSOLE
+dmd -transition=3449 -transition=10378 -transition=14246 -transition=14888 -transition=16997
+)
+)
+
+$(P
+While these transitions also have a name alias, it's still not clear for the user
+whether the transition is (a) an experimental feature or an upcoming breaking change,
+(b) a warning or help on an upcoming change, or (c) revert of a change for users
+who don't want to deal with the breaking change for now.
+)
+
+$(P
+With this release, DMD gained a `-preview` command line switch which can be used to test upcoming features or potentially breaking changes.
+For example, with this release the list of upcoming features is:
+)
+
+$(P
+$(UL
+    $(LI `-preview=dip25`: Implements $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/archive/DIP25.md, DIP25) (Sealed references))
+    $(LI `-preview=dip1000`: Implements $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/DIP1000.md, DIP1000) (Scoped Pointers))
+    $(LI `-preview=dip1008`: Implements $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/DIP1008.md, DIP1008) (`@nogc` Throwables))
+    $(LI `-preview=markdown`: Enables Markdown replacements in Ddoc)
+    $(LI `-preview=fixAliasThis`: Enables a potentially breaking fix for `alias this` with which DMD will first check the this scope before searching in upper scopes)
+    $(LI `-preview=intpromote`: Enables integral promotion for the unary `+`, `-` and `~` operators)
+    $(LI `-preview=dtorfields`: Enables a potentially breaking fix which enables to destruct fields of partially constructed objects)
+)
+)
+
+$(P
+Adding new features can be disruptive to existing code bases. By initially putting them behind
+a `-preview` switch users will have ample opportunity to adapt to them at their own pace.
+)
+
+$(P
+Therefore, for end users the new `-preview` interface allows a glimpse into the future.
+As always, feedback and bug reports for all `-preview` features is $(I very welcome) and encouraged,
+so that potential problems or breakages can be caught early.
+)
+
+$(P
+Whenever a `-preview` feature gets enabled by default,
+it $(I must) pass on all Continuous Integrations, pass the $(LINK2 https://buildkite.com/dlang, test suite of about 50 of the most popular D packages)
+and be without any other known major real-world issues on Bugzilla.
+)
+
+$(P
+However, as the behavior of DMD could still deviate slightly from previous versions, sometimes a `-revert` switch might be introduced by the D development team which allows an easy opt-out of a new feature for users in case they run into issues.
+As of now, DMD offers these reverts:
+)
+
+$(P
+$(UL
+    $(LI `-revert=dip25`: Reverts $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/archive/DIP25.md, DIP25) changes)
+    $(LI `-revert=import`: Revert to single phase name lookup)
+)
+)
+
+$(P
+Transitioning to new features (or fixing an important bug) is very often not trivial which is why an additional `-transition` exists.
+The `-transition` options are $(I informational only) and intended to help gauge the problems of an upcoming change or assist debugging these changes.
+For example, DMD currently supports these transitions:
+)
+
+$(P
+$(UL
+    $(LI `-transition=field`: List all non-mutable fields which occupy an object instance)
+    $(LI `-transition=checkimports`: Emit deprecation messages about 10378 anomalies)
+    $(LI `-transition=complex`: Emit deprecation messages for all usages of complex or imaginary types)
+    $(LI `-transition=tls`: List all variables going into the thread local storage)
+    $(LI `-transition=vmarkdown`: List instances of Markdown replacements in Ddoc)
+)
+)
+
+$(P
+`-transition` command line switches might be turned into actual deprecations if the importance of a change is considered high enough (compared to the impact on real-world code),
+but they are only intended as information for developers on where they would be affected by a certain transition.
+)
+
+$(P
+As all of this information will be updated continuously with each release, all three command line switches support a help page with either `h`, `help` or `?` option listing all currently available options:
+)
+
+$(P
+$(CONSOLE
+\> dmd -preview=help
+...
+\> dmd -revert=help
+...
+\> dmd -transition=help
+...
+)
+)
+
+$(P
+$(B IMPORTANT): All old command line switches will continue to work and won't be deprecated.
+However, they were removed from the documentation and new code is encouraged
+to use `-preview` or `-revert` where applicable.
+)
+)
+
+$(LI $(LNAME2 stdcpp,Transition to C++11 character types)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/stdcpp.dd)
+$(P
+With C++11 comes the advent of changed character type mangling.
+D's default behavior will be to conform to this after a one
+release transition period. A new switch -extern-std={c++98,c++11} is
+added to control the version that compatibility is set to.
+This switch sets `__traits(getTargetInfo, "cppStd")` to the value of
+`__cplusplus` that the corresponding version of the C++ standard defines.
+)
+
+$(P
+Of particular note is the new difference between wchar and wchar_t on
+Windows. This will manifest itself as compile errors when
+interfacing wchar* with wchar_t* code when calling the Windows API.
+A cast will resolve the issue.
+)
+
+$(P
+Going forward we recommend using WCHAR instead of wchar or wchar_t
+when interfacing to Windows API functions. (WCHAR is Microsoft
+Windows' 16 bit character type.)
+)
+
+$(P
+$(H3 C++ Type Equivalence)
+)
+
+$(P
+$(H4 c++98 behavior:)
+)
+
+$(P
+   $(TABLE
+   $(THEAD D       , Posix           , DMC++ Windows   , VC++ Windows)
+   $(TROW  wchar   , unsigned short  , wchar_t         , wchar_t)
+   $(TROW  dchar   , wchar_t         , unsigned        , unsigned)
+   $(TROW  wchar_t , wchar_t         , wchar_t         , wchar_t)
+   $(TROW  WCHAR   , --              , wchar_t         , wchar_t))
+)
+
+$(P
+$(H4 c++11:)
+)
+
+$(P
+   $(TABLE
+   $(THEAD D       , Posix           , DMC++ Windows   , VC++ Windows)
+   $(TROW  wchar   , char16_t        , wchar_t         , char16_t)
+   $(TROW  dchar   , char32_t        , unsigned        , char32_t)
+   $(TROW  wchar_t , wchar_t         , wchar           , wchar_t)
+   $(TROW  WCHAR   , --              , wchar           , wchar_t))
+)
+
+$(P
+$(H3 Name Mangling:)
+)
+
+$(P
+$(H4 c++98 behavior:)
+)
+
+$(P
+   $(TABLE
+   $(THEAD D       , Posix   , DMC++ Windows   , VC++ Windows)
+   $(TROW  wchar   , t       , _Y              , _W)
+   $(TROW  dchar   , w       , I               , I)
+   $(TROW  wchar_t , w       , _Y              , _W))
+)
+
+$(P
+$(H4 c++11:)
+)
+
+$(P
+   $(TABLE
+   $(THEAD D       , Posix   , DMC++ Windows   , VC++ Windows)
+   $(TROW  wchar   , Ds      , _Y              , _S)
+   $(TROW  dchar   , Di      , I               , _U)
+   $(TROW  wchar_t , w       , _Y              , _W))
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 core-memory-gc-profile-stats,Added `GC.profileStats()` to `core.memory`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/core-memory-gc-profile-stats.dd)
+$(P
+Allows access to current GC profiling information.
+See $(REF GC.ProfileStats, core,memory) for a list of profile stats.
+)
+)
+
+$(LI $(LNAME2 cpp_new,Added `core.stdcpp.new_`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/cpp_new.dd)
+$(P
+Added `core.stdcpp.new_`, which exposes interfaces for C++ global new/delete operators.
+This allows D programs to conveniently allocate from the C++ heap, which is useful when sharing memory between languages.
+)
+)
+
+$(LI $(LNAME2 cpu_count,Added `core.sys.linux.sched.CPU_COUNT`.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/cpu_count.dd)
+$(P
+Added `core.sys.linux.sched.CPU_COUNT`, which returns the number of CPUs in set.
+)
+)
+
+$(LI $(LNAME2 cpu_isset,Added `core.sys.linux.sched.CPU_ISSET`.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/cpu_isset.dd)
+$(P
+Added `core.sys.linux.sched.CPU_ISSET`, which tests to see if cpu is a member of set.
+)
+)
+
+$(LI $(LNAME2 emplace,Moved `std.conv.emplace`, `std.algorithm.mutation.move`, `std.algorithm.mutation.moveEmplace`, and `std.functional.forward` to core/lifetime.d)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/emplace.dd)
+$(P
+`emplace` is the counterpart to `destroy`, so it has been moved to also live in druntime (core/lifetime.d) where it is accessible by projects that use a shallow runtime library stack.
+`move`, `moveEmplace`, and `forward` are related low-level construction machinery which also belong in `core.lifetime`.
+)
+)
+
+$(LI $(LNAME2 gc_cleanup,GC cleanup can now be configured as a DRT GC option)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/gc_cleanup.dd)
+$(P
+The default cleanup method for the GC is to unconditionally run a
+collection before runtime termination to finalize objects
+that are still alive and hold resources that affect system state outside
+the current process. This combines the worst of possible alternatives:
+it can cause a considerable delay and does not guarantee finalization
+of all objects as roots might still exist.
+)
+
+$(P
+The cleanup behaviour can now be configured by a DRT option to the
+$(LINK2 $(ROOT_DIR)spec/garbage.html, GC configuration),
+e.g. by passing `--DRT-gcopt=cleanup:none` on the command
+line. Three options are provided:
+)
+
+$(P
+$(UL
+  $(LI collect: run a collection (the default for backward compatibility))
+  $(LI none: do nothing)
+  $(LI finalize: all live objects are finalized unconditionally)
+)
+)
+
+$(P
+As usual, you can also embed the configuration into the application by
+redefining `rt_options`, e.g.
+)
+
+-------
+extern(C) __gshared string[] rt_options = [ "gcopt=cleanup:none" ];
+-------
+)
+
+$(LI $(LNAME2 gc_precise,A garbage collector with precise heap scanning can now be selected)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/gc_precise.dd)
+$(P
+Precise heap scanning can now be enabled by a DRT option to the
+$(LINK2 $(ROOT_DIR)spec/garbage.html, GC configuration),
+e.g. by passing `--DRT-gcopt=gc:precise` on the command
+line or by redefining `rt_options`. See the
+$(LINK2 $(ROOT_DIR)spec/garbage.html#precise_gc, documentation)
+for details.
+)
+)
+
+$(LI $(LNAME2 gc_realloc,GC.realloc is now more consistent and robust)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/gc_realloc.dd)
+$(P
+The specification of $(REF GC.realloc, core, memory) has changed slightly:
+)
+
+$(P
+$(UL
+ $(LI `GC.realloc` now returns `null` for failure. (It used to return the original pointer but
+   that is is not a good indication of failure as it might also be returned on success. It can
+   lead to overwriting memory if an enlargement was requested.))
+ $(LI as with `GC.free`, the caller has to ensure that there are no other live pointers to the
+   memory passed to `GC.realloc` (This used to be required only when passing a new size `0`).)
+ $(LI as a consequence the GC is allowed to free the memory immediately (the previous
+   implementation did this for objects larger than 4kB when shrinking).)
+ $(LI block attribute bits on the existing block are only set if it is reused (the previous
+   implementation didn't set bits if it reused a small block).)
+)
+)
+
+$(P
+The implementation now properly verifies that pointers are actually base pointers to allocated
+GC memory (passing other pointers could have crashed immediately or corrupt the GC).
+)
+)
+
+$(LI $(LNAME2 gc_registry,User supplied garbage collectors can now be linked with the runtime)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/gc_registry.dd)
+$(P
+A GC registry has been implemented that allows to add
+garbage collector implementations by just linking them into
+the binary.  See the
+$(LINK2 $(ROOT_DIR)spec/garbage.html#gc_registry, documentation)
+for details.
+)
+)
+
+$(LI $(LNAME2 std_allocator,Added `core.stdcpp.allocator`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/std_allocator.dd)
+$(P
+Added `core.stdcpp.allocator`, which exposes the C++ `std::allocator<T>` class.
+This is a required foundation for any of the allocating STL container types.
+)
+)
+
+$(LI $(LNAME2 zero_init,`char`/`wchar` fields in most D runtime (`core.*` and `rt.*`) structs are now zero-initialized)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/zero_init.dd)
+$(P
+Fields that are single `char`/`wchar` or fixed-length arrays of such are now initialized to all zero bits instead of all one bits for most structs in the D runtime (`core.*` and `rt.*` modules). This simplifies initialization and removes the need to store init data when it makes the entire struct zero-initialized. Most affected structs are used for interoperability with C APIs.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 dub-fetch-shortcut,`dub fetch` now supports `<package>@<version>` as a shortcut)
+$(CHANGELOG_SOURCE_FILE dub, changelog/dub-fetch-shortcut.dd)
+$(P
+`dub fetch <package>@<version>` is a shortcut for
+`dub fetch <package> --version=<version>`:
+)
+
+$(P
+$(CONSOLE
+\> dub fetch gitcompatibledubpackage@1.0.4
+Fetching gitcompatibledubpackage 1.0.4...
+)
+)
+)
+
+$(LI $(LNAME2 extraDependencyFiles-attribute-added,extraDependencyFiles attribute added)
+$(CHANGELOG_SOURCE_FILE dub, changelog/extraDependencyFiles-attribute-added.dd)
+$(P
+Using attribute `extraDependencyFiles` a list of files can be specified
+causing rebuild on change.
+)
+)
+
+$(LI $(LNAME2 file-system-supplier,File system supplier enabled)
+$(CHANGELOG_SOURCE_FILE dub, changelog/file-system-supplier.dd)
+$(P
+Existing file system supplier is enabled for usage.
+It searches a certain directory for files with names of
+the form "[package name]-[version].zip".
+)
+
+$(P
+Example `dub fetch mypackage --registry=file:///etc/dub/packages/`
+)
+)
+
+$(LI $(LNAME2 toolchain_requirements,`toolchainRequirements` recipe entry)
+$(CHANGELOG_SOURCE_FILE dub, changelog/toolchain_requirements.dd)
+$(P
+DUB now supports a new entry in `dub.json` or `dub.sdl` to restrict the versions of
+DUB and of compilers supported by a package.
+)
+
+$(P
+dub.json:
+)
+---
+{
+    "toolchainRequirements": {
+        "dub": "~>1.10",
+        "frontend": ">=2.068 <2.083"
+    }
+}
+---
+
+$(P
+dub.sdl:
+)
+---
+toolchainRequirements dub="~>1.10" frontend=">=2.068|<2.083"
+---
+
+$(P
+Supported entries in `toolchainRequirements` are:
+$(UL
+    $(LI dub)
+    $(LI frontend)
+    $(LI dmd)
+    $(LI ldc)
+    $(LI gdc)
+)
+)
+
+$(P
+Each can contain a
+$(LINK2 https://dub.pm/package-format-sdl.html#version-specs, version specification),
+where DMD-like versions are supported in addition to SemVer versions. For
+compilers, instead of a version specification, the keyword `no` can also be used
+to indicate that the compiler should not be used for this package.
+)
+
+$(P
+Example scenario:$(BR)
+Package that needs DUB>=1.12, and that will only build with LDC>=1.10:
+)
+
+$(P
+dub.json:
+)
+---
+{
+    "toolchainRequirements": {
+        "dub": ">=1.12",
+        "dmd": "no",
+        "gdc": "no",
+        "ldc": ">=1.10"
+    }
+}
+---
+
+$(P
+dub.sdl:
+)
+---
+toolchainRequirements dub=">=1.12" dmd="no" gdc="no" ldc=">=1.10"
+---
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 16214): [REG2.069] ICE: Assertion `fd->semanticRun == PASSsemantic3done' failed.)
+$(LI $(BUGZILLA 16652): [Reg 2.071] returned rvalue destroyed too early)
+$(LI $(BUGZILLA 17518): [Reg 2.063] confusing error message with inout constructor/ctor)
+$(LI $(BUGZILLA 18372): REG$(LPAREN)2.072$(RPAREN): error missing line number: Error: undefined identifier __va_list_tag)
+$(LI $(BUGZILLA 19494): [REG 2.080.0][objc] interface `main.NSObject.Class` conflicts with interface `main.NSObject.Class`)
+$(LI $(BUGZILLA 19499): __c_long_double has exact match with double)
+$(LI $(BUGZILLA 19523): "undefined identifier" causes DMD crash)
+$(LI $(BUGZILLA 19618): Incorrect conversion of function returning `typeof$(LPAREN)null$(RPAREN)` to function returning an associative array)
+$(LI $(BUGZILLA 19639): Initializing static array with slice enum of different length crashes the compiler)
+$(LI $(BUGZILLA 19652): [REG2.084] alias this chain no longer works)
+$(LI $(BUGZILLA 19654): [REG master] cannot have final methods in objc interfaces)
+$(LI $(BUGZILLA 19672): Function uses the stack to read a static array parameter but it is passed in the registers)
+$(LI $(BUGZILLA 19685): Nested aggregate overlaps not detected)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 12001): __traits$(LPAREN)isSame$(RPAREN) does not work with the basic types)
+$(LI $(BUGZILLA 16098): align$(LPAREN)32$(RPAREN) not respected for stack variables)
+$(LI $(BUGZILLA 17090): `dmd -transition=?` needs quoting => make it `-transition=help`)
+$(LI $(BUGZILLA 17181): Local imports in templates should be added to imported modules list of module that instantiated it)
+$(LI $(BUGZILLA 18545): Casting away const with cast$(LPAREN)$(RPAREN) triggers alias this, but returns the supertype anyway)
+$(LI $(BUGZILLA 19223): core.simd __vector.array compiler crash)
+$(LI $(BUGZILLA 19224): core.simd __vector.array "__r2.length cannot be evaluated at compile time")
+$(LI $(BUGZILLA 19574): DMD crashes with templated structs in two identical extern$(LPAREN)C++, ""$(RPAREN) blocks)
+$(LI $(BUGZILLA 19608): [ICE] dmd/backend/cod1.d$(LPAREN)3826$(RPAREN): Assertion `0' failed.)
+$(LI $(BUGZILLA 19609): [ICE] dmd/expression.d$(LPAREN)2790$(RPAREN): Segmentation fault)
+$(LI $(BUGZILLA 19627): [CTFE][SIMD] Error: cannot cast `int` to `int[4]`)
+$(LI $(BUGZILLA 19628): [CTFE][SIMD] ICE indexing vector array)
+$(LI $(BUGZILLA 19630): [CTFE][SIMD] Error: cannot determine length of vector slice at compile time)
+$(LI $(BUGZILLA 19676): Destructor not called for returned temporary that was cast to void)
+$(LI $(BUGZILLA 19687): Wrong error for overloaded opDispatch + UFCS with non-existing function)
+$(LI $(BUGZILLA 19699): [2.085.0-beta.2] Obj-C segfault - in objc_glue.getClassName)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 16360): DMD fails to inline functions that contain a type)
+$(LI $(BUGZILLA 19097): Extend Return Scope Semantics)
+$(LI $(BUGZILLA 19552):  -transition is non-intuitive to use - the flag should list options by default)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 18519): freebsd 11 + phobos + curl, timing out)
+$(LI $(BUGZILLA 18913): Cannot move static array of non-copyable type)
+$(LI $(BUGZILLA 19532): chunkBy assert error involving non-forward input ranges.)
+$(LI $(BUGZILLA 19572): std.array.Appender.put invokes struct constructor via cast)
+$(LI $(BUGZILLA 19580): [non-DMD] std.random seed bootstrap: don't count on reading an uninitialized variable being treated as an ordinary read)
+$(LI $(BUGZILLA 19644): std.range.takeOne opSlice asserts incorrectly when operating on non-forward input range)
+$(LI $(BUGZILLA 19647): std.range.takeOne opSlice incorrect for empty slice of non-forward input range)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 19453): Remove unnecessary error checks in std.datetime.systime.currStdTime$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 19526): make std.typecons.RefCounted work in betterC)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 11393): [GC] GC realloc and free don't ignore interior pointers)
+$(LI $(BUGZILLA 11446): [GC] GC realloc doesn't ignore non-GC owned pointers)
+$(LI $(BUGZILLA 12843): Unit tests fail when GC is compiled with SENTINEL)
+$(LI $(BUGZILLA 15393): Debug versions in GC code doesn't compile.)
+$(LI $(BUGZILLA 17431): GCBits should be @nogc to prevent deadlocks)
+$(LI $(BUGZILLA 19281): GC mishandles allocations >= 4GB)
+$(LI $(BUGZILLA 19522): [GC] GC.query/addrOf/sizeOf fail for freed memory)
+$(LI $(BUGZILLA 19562): core.internal.hash.hashOf array of pointers or delegates should be `@safe`)
+$(LI $(BUGZILLA 19568): hashOf should not unnecessarily call a struct's fields' postblits & dtors in CTFE)
+$(LI $(BUGZILLA 19571): Incorrect definition of DTM_FIRST in core.sys.windows.commctrl)
+$(LI $(BUGZILLA 19582): Make core.internal.convert.toUbyte in CTFE for arrays work with reference type elements and not call postblits/dtors)
+$(LI $(BUGZILLA 19593): dstrcmp with -profile causes stack overflow)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 16377): Make --DRT GC profile information available outside of GC destruction)
+$(LI $(BUGZILLA 19128): argument to alloca may be too large)
+$(LI $(BUGZILLA 19455): GC wastes too much memory)
+$(LI $(BUGZILLA 19524): Make core.checkedint work in betterC)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bugs,
+
+$(LI $(BUGZILLA 19592): Rule for IdentifierList is wrong)
+)
+)
+$(D_CONTRIBUTORS_HEADER 48)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR 0xEAB)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Andrej Mitrovic)
+    $(D_CONTRIBUTOR Arun Chandrasekaran)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR BBasile)
+    $(D_CONTRIBUTOR Cameron Ross)
+    $(D_CONTRIBUTOR David Gileadi)
+    $(D_CONTRIBUTOR Eduard Staniloiu)
+    $(D_CONTRIBUTOR FeepingCreature)
+    $(D_CONTRIBUTOR Flying-Toast)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR hatf0)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR Jacob Jensen)
+    $(D_CONTRIBUTOR Joakim Noah)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR Johannes Pfau)
+    $(D_CONTRIBUTOR John)
+    $(D_CONTRIBUTOR Jon Degenhardt)
+    $(D_CONTRIBUTOR Jonathan Marler)
+    $(D_CONTRIBUTOR jsatellite)
+    $(D_CONTRIBUTOR kinke)
+    $(D_CONTRIBUTOR look-at-me)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Maya Rashish)
+    $(D_CONTRIBUTOR MetaLang)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Márcio Martins)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Radu Racariu)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Ryan Boggs)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Stefan Koch)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR سليمان السهمي  (Soolaïman Sahmi))
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.085.0
+    TITLE=Change Log: $(VER)

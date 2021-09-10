@@ -1,0 +1,442 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Nov 02, 2019, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 11 major changes and 66 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 44 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 deprecate_foreach_shadowing,Deprecate allowing shadowing in foreach loops))
+$(LI $(RELATIVE_LINK2 isexpression-const-inout-shared,$(I IsExpression)s now correctly match combinations of `const`, `inout`, and `shared`.))
+$(LI $(RELATIVE_LINK2 mixin_template_mangling,`extern(C)` declarations in template mixins now mangle as C symbols when mixed in at global scope))
+$(LI $(RELATIVE_LINK2 optlink,The default linker for the Digital Mars tool chain is now optlink.exe))
+$(LI $(RELATIVE_LINK2 xcc,New `-Xcc` compiler flag to address issue 6952))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 atomic_fetch_add,Added `core.atomic.atomicFetchAdd` and `core.atomic.atomicFetchSub`.))
+$(LI $(RELATIVE_LINK2 wait_attributes,Make wstatus predicates pure and @safe))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 unconst,Added std.traits.Unconst))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 ldc2,Improved support for LDC, incl. cross-compilation))
+$(LI $(RELATIVE_LINK2 lint,Lint command added))
+$(LI $(RELATIVE_LINK2 semver-compatibility-operator,Added SemVer compatibility operator "^"))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 deprecate_foreach_shadowing,Deprecate allowing shadowing in foreach loops)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecate_foreach_shadowing.dd)
+$(P
+Up until this version it was allowed to shadow a variable in a `foreach` loop, although
+it is dissallowed in a normal `for` loop. This patch makes the behavior of the `foreach`
+loop consistent with the `for` loop one. To fix any issues encountered, rename the variable
+inside the `foreach` body that shadows the one from the upper scope.
+)
+)
+
+$(LI $(LNAME2 isexpression-const-inout-shared,$(I IsExpression)s now correctly match combinations of `const`, `inout`, and `shared`.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/isexpression-const-inout-shared.dd)
+$(P
+With $(BUGZILLA 20138) fixed,
+$(LINK2 $(ROOT_DIR)spec/expression.html#is_expression, $(I IsExpression)s) now
+correctly match combinations of the qualifiers `const`, `inout`, and `shared`.
+)
+
+$(P
+Examples that failed previously but pass now:
+)
+
+----
+static assert(is(shared(const int) U == shared U) && is(U == const int));
+static assert(is(shared(inout int) U == inout U) && is(U == shared int));
+----
+
+$(P
+Note that the behavior of code like the following changes:
+)
+
+----
+static if (is(T U == const U) { ...}
+else static if (is(T U == shared const U)) { ... }
+----
+
+$(P
+The second case will never be reached, because the first one now matches when
+`T` is `shared const`. To get the old behavior, switch the order.
+)
+)
+
+$(LI $(LNAME2 mixin_template_mangling,`extern(C)` declarations in template mixins now mangle as C symbols when mixed in at global scope)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/mixin_template_mangling.dd)
+$(P
+This was already true for string mixins, but since template mixins introduce a new scope, symbols inside them got mangled as D symbols.
+However, users often use `extern(C)` inside a mixin template to automatically generate boilerplate code that should be accessible from C.
+)
+
+-------
+// library code
+mixin template WasmEntryPoint() {
+    extern(C) export void _start() {
+        // boilerplate code
+    }
+}
+
+mixin template UseGpuInsteadOfIntegratedGraphics() {
+    extern(C) export uint NvOptimusEnablement = 0x00000001;
+    extern(C) export int AmdPowerXpressRequestHighPerformance = 1;
+}
+
+// application code
+mixin WasmEntryPoint;
+mixin UseGpuInsteadOfIntegratedGraphics;
+
+static assert(_start.mangleof == "_start");
+static assert(NvOptimusEnablement.mangleof == "NvOptimusEnablement");
+-------
+
+$(P
+Previously, _start would be mangled like `_D9onlineapp8__mixin46_startUkZv` and users had to manually add `pragma(mangle, "_start")` or use a string mixin instead.
+With the new behavior this is not necessary anymore for `extern(C)`, as well as `extern(Windows)` and `extern(Objective-C)`.
+`extern(C++)` remains unchanged since it already always mangles to C++, even in nested scopes.
+)
+
+$(P
+There is a possibility this breaks code if you mix in different `extern(C)` declarations with the same name in the global scope of multiple modules.
+)
+
+-------
+import core.stdc.stdio;
+
+mixin template GenPrintCallback(string text) {
+    extern(C):
+
+    auto textLength = text.length;
+    auto textPointer = text.ptr;
+
+    void callBackOnly() {
+        printf("%.*s\n", textLength, textPointer);
+    }
+
+    mixin(`auto `, text, ` = &callBackOnly;`);
+}
+
+mixin GenPrintCallback!"foo";
+
+// in a different module:
+mixin GenPrintCallback!"bar";
+-------
+
+$(P
+In this case textLength, textPointer and callBackOnly will be defined multiple times, so the linker either picks one or raises and error.
+The solution is to not make variables `extern(C)` and make C callback functions anonymous:
+)
+
+-------
+import core.stdc.stdio;
+
+mixin template GenPrintCallback(string text) {
+
+    auto textLength = text.length; // not below an extern(C): anymore
+    auto textPointer = text.ptr;
+
+    alias FunT = extern(C) void function();
+    enum FunT callBackOnly = () {
+        printf("%.*s\n", textLength, textPointer);
+    };
+
+    mixin(`auto `, text, ` = callBackOnly;`);
+}
+-------
+)
+
+$(LI $(LNAME2 optlink,The default linker for the Digital Mars tool chain is now optlink.exe)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/optlink.dd)
+$(P
+The default linker when building with -m32 under Windows has been changed
+from link.exe to optlink.exe to avoid calling the wrong linker when both
+the Digital Mars tool chain and the Microsoft compiler tools are found in
+the PATH environment variable.
+)
+)
+
+$(LI $(LNAME2 xcc,New `-Xcc` compiler flag to address issue 6952)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/xcc.dd)
+$(P
+On POSIX, `dmd` passes `-L`-prefixed compiler flags through the linker driver (`cc` by default) to
+the linker (e.g. `ld`) by prepending them with `-Xlinker`.  Therefore, it was not possible to pass
+flags directly to the linker driver.
+)
+
+$(P
+This release adds a new compiler flag, `-Xcc`, which specifies a flag to pass to the linker driver.
+This switch has already existed in the LDC compiler for several releases.  Some use cases for it
+would be `-nostartfiles`, `-pthread`, and `-static`, which can now be specified as
+`-Xcc=-nostartfiles`, `-Xcc=-pthread`, and `-Xcc=-static` respectively.
+)
+
+$(P
+Note that it was previously also possible to specify linker driver options by setting the `CC`
+environment variable, e.g. `CC='cc -pthread' dmd ...`, or by setting the `CC` variable to point to a
+custom linker driver wrapper script. `-Xcc` improves on this through composability and better
+opportunities for integration into build systems.
+)
+
+$(P
+See also:
+- $(LINK2 https://issues.dlang.org/show_bug.cgi?id=6952, Issue 6952)
+- $(LINK2 https://gcc.gnu.org/onlinedocs/gcc/Link-Options.html, GCC Link Options)
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 atomic_fetch_add,Added `core.atomic.atomicFetchAdd` and `core.atomic.atomicFetchSub`.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/atomic_fetch_add.dd)
+$(P
+Added `core.atomic.atomicFetchAdd` and `core.atomic.atomicFetchSub` to the atomic suite.
+)
+)
+
+$(LI $(LNAME2 wait_attributes,Make wstatus predicates pure and @safe)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/wait_attributes.dd)
+$(P
+The predicates that operate on the wstatus value reported by wait(2) are now
+marked pure and @safe, allowing them to be used in functions with those
+attributes.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 unconst,Added std.traits.Unconst)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/unconst.dd)
+$(P
+$(REF Unconst, std, traits) works like $(REF Unqual, std, traits), but removes
+only `const`, `inout` and `immutable` qualifiers from a type.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 ldc2,Improved support for LDC, incl. cross-compilation)
+$(CHANGELOG_SOURCE_FILE dub, changelog/ldc2.dd)
+$(P
+The ldc2 driver now supports
+* some more command-line options (coverage, profiling, keeping stack frame),
+* separate linking,
+* cross-compilation by specifying the target triple (LDC `-mtriple`) as `--arch`, e.g., `--arch=x86_64-pc-windows-msvc`.
+  Check out https://wiki.dlang.org/Cross-compiling_with_LDC for how to setup LDC.
+)
+)
+
+$(LI $(LNAME2 lint,Lint command added)
+$(CHANGELOG_SOURCE_FILE dub, changelog/lint.dd)
+$(P
+Dub supports now command `lint`, which will execute D-Scanner on the dub package.
+By default `dub lint` will execute style check. Import paths to dependent dub
+packages will be passed to D-Scanner.
+)
+
+$(P
+$(CONSOLE
+> dub lint
+)
+)
+)
+
+$(LI $(LNAME2 semver-compatibility-operator,Added SemVer compatibility operator "^")
+$(CHANGELOG_SOURCE_FILE dub, changelog/semver-compatibility-operator.dd)
+$(P
+Dub now supports version specifications of the form `^x.y.z`.
+This corresponds to a "semver compatible version", ie. any version up from
+`x.y.z` with the same major number. If the major number is 0, only the same
+version matches. This corresponds to the versions listed on https://semver.org/ as
+compatible with the public API of the version given.
+`^x.y` is equivalent to `^x.y.0`.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 20126): codegen reloads parameter from register when iasm changed the backing memory)
+$(LI $(BUGZILLA 20212): invalid debug info with enum type in library)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 982): Codeview: symbols of enum type are declared integer)
+$(LI $(BUGZILLA 1104): CodeView: char is marked 0x20 $(LPAREN)T_UCHAR$(RPAREN) instead of 0x10 $(LPAREN)T_CHAR$(RPAREN))
+$(LI $(BUGZILLA 2195): Variable shadowing in foreach is not detected and reported)
+$(LI $(BUGZILLA 2450): Error using operators from named template mixin)
+$(LI $(BUGZILLA 3831): writeln of a delegate typeid)
+$(LI $(BUGZILLA 4372): type of enumerator values reduced to base type in debug info)
+$(LI $(BUGZILLA 6952): Static Linking on Linux)
+$(LI $(BUGZILLA 13582): Deprecated modules imported from other deprecated modules shouldn't be warned about)
+$(LI $(BUGZILLA 16047): Range violation in setting multi-dimensional AA entries)
+$(LI $(BUGZILLA 19965): [DIP1000] Template allows to escape internal pointer)
+$(LI $(BUGZILLA 20012): extern$(LPAREN)C$(RPAREN) functions inside template mixins are not mangled as C functions)
+$(LI $(BUGZILLA 20089): FPU stack not cleaned up properly)
+$(LI $(BUGZILLA 20131): Bad codegen from inline asm LOCK CMPXCHG; possible REX prefix missing)
+$(LI $(BUGZILLA 20138): is expression not evaluating correctly?)
+$(LI $(BUGZILLA 20163): Deprecated import in string mixin does not output diagnostic message)
+$(LI $(BUGZILLA 20164): Importing deprecated module at function-local scope does not output diagnostic message)
+$(LI $(BUGZILLA 20181): [nightly 2019-08-29] internal compiler error when static foreach iterating property method of struct)
+$(LI $(BUGZILLA 20244): New dmd option -preview=noXlinker does not work on Linux to build a simple D application)
+$(LI $(BUGZILLA 20267): Error: `string` is used as a type - and similar “smart” error messages)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 809): Should be possible to convert lazy argument to delegate)
+$(LI $(BUGZILLA 1547): Default parameter values should use implicit static opCall)
+$(LI $(BUGZILLA 3004): [patch] Better handling of ignored pragmas)
+$(LI $(BUGZILLA 15118): Have dmd on Win32 look for optlink.exe instead of link.exe)
+$(LI $(BUGZILLA 18272): missing changelog entry and no doc for -gf $(LPAREN)besides cryptic emit debug info for all referenced types$(RPAREN))
+$(LI $(BUGZILLA 18617): need __traits$(LPAREN)deprecated, expr$(RPAREN) to check whether an expression would trigger deprecation)
+)
+$(BUGSTITLE_BUGZILLA Phobos regressions,
+
+$(LI $(BUGZILLA 20186): File size of "Hello, world" executable increased by 185KB)
+$(LI $(BUGZILLA 20295): std.zip: zip64 with 0xff bytes in end of central dir record do not work)
+$(LI $(BUGZILLA 20328): [REG 2.089 beta] deprecation message about Nullable.get in isInputRange)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 15230): Inconsistent std.range.SortedRange predicate checks)
+$(LI $(BUGZILLA 17705): std.math.isFinite cannot run at compile-time)
+$(LI $(BUGZILLA 19514): gcd$(LPAREN)BigInt$(LPAREN)2$(RPAREN), BigInt$(LPAREN)1$(RPAREN)$(RPAREN) fails)
+$(LI $(BUGZILLA 20027): std.zip susceptible to zip malware attacks)
+$(LI $(BUGZILLA 20145): Random unittest failures inf std.datetime.stopwatch)
+$(LI $(BUGZILLA 20205): std.math: Wrong result for abs$(LPAREN)int.min$(RPAREN))
+$(LI $(BUGZILLA 20218): Checked format string takes infinite time for infinite ranges)
+$(LI $(BUGZILLA 20239): chameleon zip-file should be rejected by std.zip)
+$(LI $(BUGZILLA 20240): BitArray inconsistently preserves bits past length)
+$(LI $(BUGZILLA 20241): BitArray.bitsSet ignores length)
+$(LI $(BUGZILLA 20287): std.zip: Wrong compressed data)
+$(LI $(BUGZILLA 20301): std.regex.regex doesn't accept a const/immutable array of patterns)
+$(LI $(BUGZILLA 20302): std.functional.memoize doesn't accept a functions with const/immutable parameters)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 20147): Enable comparison $(LPAREN)==, >, >=, <=, <$(RPAREN) between std.bigint.BigInt and floating point numbers)
+$(LI $(BUGZILLA 20159): Make std.math.scalbn work in CTFE)
+$(LI $(BUGZILLA 20192): Make std.math.isSubnormal work in CTFE)
+$(LI $(BUGZILLA 20196): Make std.math.isNormal work in CTFE)
+$(LI $(BUGZILLA 20199): Make std.math.frexp work in CTFE)
+$(LI $(BUGZILLA 20200): Make std.math.isPowerOf2 work for floating point numbers in CTFE)
+$(LI $(BUGZILLA 20201): Make std.math.scalbn pure)
+$(LI $(BUGZILLA 20202): Make std.math.signbit work in CTFE)
+$(LI $(BUGZILLA 20203): Make std.math.copysign work in CTFE)
+$(LI $(BUGZILLA 20242): BitArray constructor should not modify input data)
+)
+$(BUGSTITLE_BUGZILLA Druntime regressions,
+
+$(LI $(BUGZILLA 20270): [REG2.087] Deadlock in garbage collection when running processes in parallel)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 13821): fiber + exception + win server 2012 failures)
+$(LI $(BUGZILLA 16380): no bindings for err.h)
+$(LI $(BUGZILLA 18643): Compiling error when combining CAS and numeric literal.)
+$(LI $(BUGZILLA 19481): Aborting from local/libphobos/libdruntime/core/sync/mutex.d$(LPAREN)95$(RPAREN) Error: pthread_mutex_init failed.)
+$(LI $(BUGZILLA 20155): Allocating a struct with dtor on the GC heap can produce false pointers)
+$(LI $(BUGZILLA 20214): GC: realloc can result in false pointers if address doesn't change)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 8831): core.atomic: add compare-and-swap function with other result type)
+$(LI $(BUGZILLA 13826): Move volatileLoad/Store to core.volatile when the volatile keyword is removed)
+$(LI $(BUGZILLA 15007): core.atomic match C++11)
+$(LI $(BUGZILLA 20105): core.atomic 'cas' function is incomplete)
+$(LI $(BUGZILLA 20106): core.atomic : atomicFence doesn't accept MemoryOrder)
+$(LI $(BUGZILLA 20107): core.atomic : Memory order is missing keys)
+)
+)
+$(D_CONTRIBUTORS_HEADER 44)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR 0xEAB)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Andrej Mitrovic)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Bernhard Seckinger)
+    $(D_CONTRIBUTOR Berni)
+    $(D_CONTRIBUTOR Cameron Ross)
+    $(D_CONTRIBUTOR Chloé)
+    $(D_CONTRIBUTOR Dan Printzell)
+    $(D_CONTRIBUTOR devel)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR drug007)
+    $(D_CONTRIBUTOR Eduard Staniloiu)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Feldwor)
+    $(D_CONTRIBUTOR Harry T. Vennik)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jon Degenhardt)
+    $(D_CONTRIBUTOR Jonathan Marler)
+    $(D_CONTRIBUTOR Les De Ridder)
+    $(D_CONTRIBUTOR look-at-me)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Robert Schadek)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Stefanos Baziotis)
+    $(D_CONTRIBUTOR stefanos-baziotis)
+    $(D_CONTRIBUTOR Tobias Pankrath)
+    $(D_CONTRIBUTOR Tomoya Tanjo)
+    $(D_CONTRIBUTOR Viktor)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.089.0
+    TITLE=Change Log: $(VER)

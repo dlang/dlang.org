@@ -451,22 +451,31 @@ double[][] matrix;
         pointers to the array data.) Since the arrays can have varying sizes (being dynamically
         sized), this is sometimes called "jagged" arrays. Even worse for optimizing the code, the
         array rows can sometimes point to each other! Fortunately, D static arrays, while using
-        the same syntax, are implemented as a fixed rectangular layout:
+        the same syntax, are implemented as a fixed rectangular layout in a contiguous block of
+        memory:
         )
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-double[3][3] matrix;
+double[6][3] matrix = 0; // Sets all elements to 0.
+writeln(matrix); // [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
 ---------
 )
 
-        $(P declares a rectangular matrix with 3 rows and 3 columns, all contiguously in memory. In
-        other languages, this would be called a multidimensional array and be declared as:
+        $(P Note that dimensions and indices appear in opposite orders. Dimensions in the
+        $(RELATIVE_LINK2 declarations, declaration) are read right to left whereas indices are read
+        left to right:
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-double matrix[3,3];
+double[6][3] matrix = 0;
+matrix[2][5] = 3.14; // Assignment to bottom right element.
+writeln(matrix); // [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 3.14]]
+
+static assert(!__traits(compiles, matrix[5][2])); // Array index out of bounds.
 ---------
+)
 
 $(H2 $(LNAME2 array-length, Array Length))
 
@@ -657,14 +666,15 @@ array.length = i;
 ---------
 )
 
-        $(P Picking a good initial guess is an art, but you usually can
-        pick a value covering 99% of the cases.
+        $(P Base selection of the initial size on expected common
+        use cases, which can be determined by instrumenting the code,
+        or simply using good judgement.
         For example, when gathering user
         input from the console - it's unlikely to be longer than 80.
         )
 
-        $(P Also, you may wish to utilize the $(D reserve)
-        function to pre-allocate array data to use with the append operator.)
+        $(P The $(D reserve)
+        function expands an array's capacity for use by the append operator.)
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
@@ -770,6 +780,19 @@ $(H3 $(LNAME2 default-initialization, Default Initialization))
         $(LI Associative arrays are initialized to having 0 elements.)
         )
 
+$(H3 $(LNAME2 length-initialization, Length Initialization))
+        $(P The $(D new) expression can be used to start a dynamic array
+        with a specified length by specifying its type and then using the
+        () syntax:
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---------
+int[] i = new int[](5); //i.length == 5
+int[][] j = new int[][](10, 5); //j.length == 10, j[0].length == 5
+---------
+)
+
 $(H3 $(LNAME2 void-initialization, Void Initialization))
 
         $(P Void initialization happens when the $(I Initializer) for
@@ -779,6 +802,10 @@ $(H3 $(LNAME2 void-initialization, Void Initialization))
         Void initializations are an advanced technique and should only be used
         when profiling indicates that it matters.
         )
+        $(P to void initialise the elements of dynamic array use
+        $(REF uninitializedArray, std,array).
+        )
+
 
 $(H3 $(LNAME2 static-init-static, Static Initialization of Statically Allocated Arrays))
 
@@ -799,7 +826,7 @@ int[3] a = [ 1:2, 3 ]; // a[0] = 0, a[1] = 2, a[2] = 3
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-enum Color { red, blue, green };
+enum Color { red, blue, green }
 
 int[Color.max + 1] value =
   [ Color.blue :6,

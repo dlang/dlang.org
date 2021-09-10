@@ -10,9 +10,9 @@ $(GNAME AttributeSpecifier):
     $(GLINK Attribute) $(GLINK DeclarationBlock)
 
 $(GNAME Attribute):
-    $(RELATIVE_LINK2 linkage, $(I LinkageAttribute))
-    $(RELATIVE_LINK2 align, $(I AlignAttribute))
-    $(RELATIVE_LINK2 deprecated, $(I DeprecatedAttribute))
+    $(GLINK LinkageAttribute)
+    $(GLINK AlignAttribute)
+    $(GLINK DeprecatedAttribute)
     $(GLINK VisibilityAttribute)
     $(GLINK2 pragma, Pragma)
     $(RELATIVE_LINK2 static, $(D static))
@@ -29,14 +29,18 @@ $(GNAME Attribute):
     $(RELATIVE_LINK2 shared, $(D shared))
     $(RELATIVE_LINK2 gshared, $(D __gshared))
     $(GLINK AtAttribute)
-    $(RELATIVE_LINK2 nothrow, $(D nothrow))
-    $(RELATIVE_LINK2 pure, $(D pure))
+    $(GLINK FunctionAttributeKwd)
     $(RELATIVE_LINK2 ref, $(D ref))
     $(RELATIVE_LINK2 return, $(D return))
+
+$(GNAME FunctionAttributeKwd):
+    $(RELATIVE_LINK2 nothrow, $(D nothrow))
+    $(RELATIVE_LINK2 pure, $(D pure))
 
 $(GNAME AtAttribute):
     $(D @) $(RELATIVE_LINK2 disable, $(D disable))
     $(D @) $(RELATIVE_LINK2 nogc, $(D nogc))
+    $(D @) $(D live)
     $(GLINK Property)
     $(D @) $(RELATIVE_LINK2 safe, $(D safe))
     $(D @) $(RELATIVE_LINK2 safe, $(D system))
@@ -76,7 +80,9 @@ $(H2 $(LNAME2 linkage, Linkage Attribute))
 $(GRAMMAR
 $(GNAME LinkageAttribute):
     $(D extern) $(D $(LPAREN)) $(GLINK LinkageType) $(D $(RPAREN))
-    $(D extern) $(D $(LPAREN)) $(D C++), $(GLINK2 declaration, IdentifierList) $(D $(RPAREN))
+    $(D extern) $(D $(LPAREN)) $(D C++) $(D ,) $(D $(RPAREN))
+    $(D extern) $(D $(LPAREN)) $(D C++) $(D ,) $(GLINK2 type, QualifiedIdentifier) $(D $(RPAREN))
+    $(D extern) $(D $(LPAREN)) $(D C++) $(D ,) $(GLINK NamespaceList) $(D $(RPAREN))
 
 $(GNAME LinkageType):
     $(D C)
@@ -85,6 +91,11 @@ $(GNAME LinkageType):
     $(D Windows)
     $(D System)
     $(D Objective-C)
+
+$(GNAME NamespaceList):
+    $(GLINK2 expression, ConditionalExpression)
+    $(GLINK2 expression, ConditionalExpression)$(D ,)
+    $(GLINK2 expression, ConditionalExpression)$(D ,) $(GSELF NamespaceList)
 )
 
         $(P D provides an easy way to call C functions and operating
@@ -94,7 +105,7 @@ $(GNAME LinkageType):
         $(D C) and $(D D) must be supplied, the others are what
         makes sense for the implementation.
         $(D C++) offers limited compatibility with C++.
-        $(D Objective-C) offers limited compatibility with Objective-C,
+        $(D Objective-C) offers compatibility with Objective-C,
         see the $(LINK2 objc_interface.html, Interfacing to Objective-C)
         documentation for more information.
         $(D System) is the same as $(D Windows) on Windows platforms,
@@ -146,8 +157,8 @@ extern (Windows):
 
 $(H3 C++ $(LNAME2 namespace, Namespaces))
 
-        $(P The linkage form $(D extern $(LPAREN)C++, )$(I IdentifierList)$(D $(RPAREN))
-        creates C++ declarations that reside in C++ namespaces. The $(I IdentifierList)
+        $(P The linkage form $(D extern $(LPAREN)C++, )$(I QualifiedIdentifier)$(D $(RPAREN))
+        creates C++ declarations that reside in C++ namespaces. The $(I QualifiedIdentifier)
         specifies the namespaces.
         )
 
@@ -177,7 +188,7 @@ $(H3 C++ $(LNAME2 namespace, Namespaces))
         M.foo(); // ok
         ---
 
-        $(P Multiple identifiers in the $(I IdentifierList) create nested namespaces:)
+        $(P Multiple identifiers in the $(I QualifiedIdentifier) create nested namespaces:)
 
         ---
         extern (C++, N.M) { extern (C++) { extern (C++, R) { void foo(); } } }
@@ -220,7 +231,8 @@ struct S
     int b;    // placed at offset 4
     long c;   // placed at offset 8
 }
-auto sz = S.sizeof;  // 16
+static assert(S.alignof == 8);
+static assert(S.sizeof == 16);
 --------
 
         $(P $(I AssignExpression) specifies the alignment
@@ -240,12 +252,13 @@ struct S
     int b;    // placed at offset 1
     long c;   // placed at offset 5
 }
-auto sz = S.sizeof;  // 16
+static assert(S.alignof == 1);
+static assert(S.sizeof == 13);
 --------
 
-        $(P The alignment for the fields of an aggregate does not affect the alignment
-        of the aggregate itself - that is affected by the alignment setting outside
-        of the aggregate.)
+        $(P The natural alignment of an aggregate is the maximum alignment of its
+        fields. It can be overridden by setting the alignment outside of the
+        aggregate.)
 
 --------
 align (2) struct S
@@ -255,7 +268,8 @@ align (2) struct S
     int b;    // placed at offset 1
     long c;   // placed at offset 5
 }
-auto sz = S.sizeof;  // 14
+static assert(S.alignof == 2);
+static assert(S.sizeof == 14);
 --------
 
         $(P Setting the alignment of a field aligns it to that power of 2, regardless
@@ -264,12 +278,12 @@ auto sz = S.sizeof;  // 14
 --------
 struct S
 {
-  align (4):
-    byte a;   // placed at offset 0
-    byte b;   // placed at offset 4
-    short c;  // placed at offset 8
+               byte a;  // placed at offset 0
+    align (4)  byte b;  // placed at offset 4
+    align (16) short c; // placed at offset 16
 }
-auto sz = S.sizeof;  // 12
+static assert(S.alignof == 16);
+static assert(S.sizeof == 32);
 --------
 
 
@@ -349,7 +363,7 @@ $(GRAMMAR
 $(GNAME VisibilityAttribute):
     $(D private)
     $(D package)
-    $(D package) $(D $(LPAREN)) $(GLINK IdentifierList) $(D $(RPAREN))
+    $(D package) $(D $(LPAREN)) $(GLINK2 type, QualifiedIdentifier) $(D $(RPAREN))
     $(D protected)
     $(D public)
     $(D export)
@@ -739,16 +753,11 @@ pragma(msg, __traits(getAttributes, s)); // prints tuple('c')
         )
 
 ---
-template Tuple (T...)
-{
-    alias Tuple = T;
-}
-
 enum EEE = 7;
 @("hello") struct SSS { }
 @(3) { @(4) @EEE @SSS int foo; }
 
-alias TP = Tuple!(__traits(getAttributes, foo));
+alias TP = __traits(getAttributes, foo);
 
 pragma(msg, TP); // prints tuple(3, 4, 7, (SSS))
 pragma(msg, TP[2]); // prints 7

@@ -1,0 +1,432 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jul 07, 2020, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 11 major changes and 58 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 54 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 add_traits_isCopyable,Add new builtin `__traits(isCopyable, T)` for some type `T`))
+$(LI $(RELATIVE_LINK2 check_interface_implementations,Properly check interface implementations))
+$(LI $(RELATIVE_LINK2 shared-init,Allow initialization of shared variables.))
+$(LI $(RELATIVE_LINK2 vtemplates,Add -vtemplates switch to collect and list template statistics))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 add_exit_group,add `exit_group` to `core.sys.linux.unistd`))
+$(LI $(RELATIVE_LINK2 darwin_bindings,Added module `core.sys.darwin.mach.nlist` and `core.sys.darwin.mach.stab`))
+$(LI $(RELATIVE_LINK2 depercate_object_selector,Deprecated `object.selector`))
+$(LI $(RELATIVE_LINK2 gc_suffixes,Memory releated GC options can now be specified with higher accuracy))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Installer changes,
+
+$(LI $(RELATIVE_LINK2 install_sh_windows,The install script now also works on the Windows command prompt.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 dub_root_package_target_env_vars_added,Dub root package target environment variables added))
+$(LI $(RELATIVE_LINK2 improved_cli_extensibility,Improved CLI extensibility))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 add_traits_isCopyable,Add new builtin `__traits(isCopyable, T)` for some type `T`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/add_traits_isCopyable.dd)
+$(P
+Changing Phobos' `std.traits.isCopyable` to make use of this new builtin trait
+will reduce memory usage and, in turn, improve the performance of the compiler
+checking whether a type is copyable or not.
+)
+)
+
+$(LI $(LNAME2 check_interface_implementations,Properly check interface implementations)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/check_interface_implementations.dd)
+$(P
+In previous releases the check to verify that a class implements all methods of
+the interfaces it implements was performed late in the compilation phase. This
+caused the check to not be performed when code generation was skipped
+(compiling with the `-o-` flag).
+)
+
+$(P
+In this release the check has been moved to an earlier phase of the compilation,
+causing errors to be reported even when the `-o-` flag is used. This can cause
+some breakage if a piece of code has only been compiled with the `-o-` flag.
+)
+
+$(P
+The compiler will now properly report an error for the following code when the
+`-o-` flag is used:
+)
+
+```
+interface Foo
+{
+    void foo();
+}
+
+class Bar : Foo
+{
+
+}
+```
+)
+
+$(LI $(LNAME2 shared-init,Allow initialization of shared variables.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/shared-init.dd)
+$(P
+Shared variables can now be initialized when the `-preview=nosharedaccess`
+switch is used.
+)
+
+---
+void test()
+{
+    shared int x;
+    shared int y = 3;
+}
+---
+)
+
+$(LI $(LNAME2 vtemplates,Add -vtemplates switch to collect and list template statistics)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/vtemplates.dd)
+$(P
+Template instantiations can consume lots of time and memory.
+By passing the -vtemplates switch to the compiler,
+the compiler will collect and print statistics about template usage
+in the code being compiled.
+)
+
+$(P
+For each template that was instantiated, a list of how many
+times it is instantiated, and how many of those instantiations
+are unique, is printed.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 add_exit_group,add `exit_group` to `core.sys.linux.unistd`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/add_exit_group.dd)
+$(P
+add `exit_group` to `core.sys.linux.unistd`, exits all threads in a process, present since linux 2.5.35
+)
+)
+
+$(LI $(LNAME2 darwin_bindings,Added module `core.sys.darwin.mach.nlist` and `core.sys.darwin.mach.stab`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/darwin_bindings.dd)
+$(P
+Those modules contains bindings for the 64 bits part of Mac OSX's
+`<mach-o/nlish.h>` and `<mach-o/stab.h>`, respectively,
+and can be used by users wishing to inspect binary data of Mach-O object files.
+)
+)
+
+$(LI $(LNAME2 depercate_object_selector,Deprecated `object.selector`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/depercate_object_selector.dd)
+$(P
+The public import of `selector` in the module `object` has been deprecated.
+Please explicitly import `selector` instead using: `import core.attribute : selector;`
+)
+
+$(P
+The following code has been deprecated:
+)
+
+```
+extern (Objective-C)
+extern class NSObject
+{
+    static NSObject alloc() @selector("alloc");
+}
+```
+
+$(P
+Replace with:
+)
+
+```
+import core.attribute : selector;
+
+extern (Objective-C)
+extern class NSObject
+{
+    static NSObject alloc() @selector("alloc");
+}
+```
+)
+
+$(LI $(LNAME2 gc_suffixes,Memory releated GC options can now be specified with higher accuracy)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/gc_suffixes.dd)
+$(P
+Memory-related GC options stored in bytes instead of megabytes to
+provide fine-tune GC on low memory devices.
+)
+
+$(P
+Added ability to use suffixes B, K, M or G:
+)
+---
+extern(C) __gshared string[] rt_options =
+    [ "gcopt=minPoolSize:4K maxPoolSize:2M incPoolSize:8K" ];
+---
+
+$(P
+Values without suffix treated as megabytes.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Installer changes,
+
+$(LI $(LNAME2 install_sh_windows,The install script now also works on the Windows command prompt.)
+$(CHANGELOG_SOURCE_FILE installer, changelog/install_sh_windows.dd)
+$(P
+The official D version manager ($(LINK2 https://dlang.org/install.sh, install.sh),
+documented at $(LINK2 https://dlang.org/install.html, dlang.org/install.html))
+used to require a POSIX environment. On Windows, prior to this release, this
+meant running the script and the compilers that it installed from within a
+POSIX terminal emulator as provided by MSYS2 or Cygwin. With this release it is
+now possible to install and activate compilers from the Windows command prompt
+directly.
+)
+
+$(P
+Assuming an MSYS2 installation is present in `C:\msys64`, necessary decompression
+tools can be installed from the Windows command prompt:
+)
+-------
+C:\msys64\usr\bin\pacman.exe --sync unzip p7zip
+-------
+
+$(P
+The following will invoke the script directly from dlang.org and install the
+latest dmd compiler in the `%USERPROFILE%\dlang` folder:
+)
+-------
+C:\msys64\usr\bin\curl.exe https://dlang.org/install.sh | \msys64\usr\bin\bash.exe -s
+-------
+$(P
+This process will end with a message showing the location of `activate.bat`,
+which can be used to add the installed compiler to your `PATH`.
+)
+
+$(P
+The script itself will also be installed locally. This will show you its other
+uses:
+)
+-------
+C:\msys64\usr\bin\bash.exe %USERPROFILE%\dlang\install.sh --help
+-------
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 dub_root_package_target_env_vars_added,Dub root package target environment variables added)
+$(CHANGELOG_SOURCE_FILE dub, changelog/dub_root_package_target_env_vars_added.dd)
+$(P
+Environment variables `DUB_ROOT_PACKAGE_TARGET_TYPE`, `DUB_ROOT_PACKAGE_TARGET_PATH`
+and `DUB_ROOT_PACKAGE_TARGET_NAME` have been added and exposed.
+)
+)
+
+$(LI $(LNAME2 improved_cli_extensibility,Improved CLI extensibility)
+$(CHANGELOG_SOURCE_FILE dub, changelog/improved_cli_extensibility.dd)
+$(P
+The code from the runDubCommandLine was moved to some other structs. The new
+CommandLineHandler structure takes care of the CLI state and commands, which
+allows DUB commands to be extended in other projects.
+)
+
+$(P
+The CommandArgs class now has new `hasAppArgs` and `appArgs` methods which
+allows you to get the app arguments. In addition, the `extractAllRemainingArgs`
+method will return all unused arguments and the app arguments.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 19550): [REG 2.078] Massive compiler backend slowdown)
+$(LI $(BUGZILLA 20014): [REG 2.084] -transition=all, -preview=all, -revert=all is invalid)
+$(LI $(BUGZILLA 20833): Template members prevent __traits$(LPAREN)getOverloads$(RPAREN) from working properly)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 11292): Cannot re-initialize a const field in postblit)
+$(LI $(BUGZILLA 12504): Wrong 'cannot cover index range' error message)
+$(LI $(BUGZILLA 15235): inline asm: silent ICE $(LPAREN)segfault$(RPAREN) in asm_add_exp$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 16971): Misleading error messages "break is not inside scope$(LPAREN)exit$(RPAREN) bodies" "continue is not inside scope$(LPAREN)exit$(RPAREN) bodies")
+$(LI $(BUGZILLA 20183): Assigning statement scope of struct literal or temporary to variable with longer lifetime)
+$(LI $(BUGZILLA 20410): ReplaceTypeUnless replaces enums with their basetype)
+$(LI $(BUGZILLA 20709): Segmentation fault when importing nonexistent type)
+$(LI $(BUGZILLA 20719): Self referential struct definition causes stack overflow)
+$(LI $(BUGZILLA 20747):  @live tracking of non-pointer owners not done)
+$(LI $(BUGZILLA 20771): va_arg doesn't work for structs with postblits)
+$(LI $(BUGZILLA 20772): va_arg doesn't work for structs with copy constructors)
+$(LI $(BUGZILLA 20775): Missing fail compilation test for passing types that need destruction)
+$(LI $(BUGZILLA 20780): Function parameter UDA not accepted in nested function declarations)
+$(LI $(BUGZILLA 20789): is$(LPAREN)T: U$(RPAREN) doesn't exclude deprecated alias calls with -de)
+$(LI $(BUGZILLA 20800): Error: cannot implicitly convert expression with bad diagnostic.)
+$(LI $(BUGZILLA 20824): error messages generated by dmd build script can be prefixed with a non-standard "ERROR:")
+$(LI $(BUGZILLA 20825): the filename of the error messages generated by dmd build.d script miss the "src/" part of the path)
+$(LI $(BUGZILLA 20840): No deprecation when using template from deprecated selective import)
+$(LI $(BUGZILLA 20842): Structs with disabled default/copy ctors can't be initialized)
+$(LI $(BUGZILLA 20861): Interface implementations are not checked when code gen is skipped)
+$(LI $(BUGZILLA 20903): seg fault on long signed divide overflow)
+$(LI $(BUGZILLA 20906): unnecessary divide-by-zero errors when constant folding short circuits)
+$(LI $(BUGZILLA 20909): .offsetof fails on forward reference of field)
+$(LI $(BUGZILLA 20915): __traits$(LPAREN)allMembers$(RPAREN) results include custom version identifiers, which is unusable)
+$(LI $(BUGZILLA 20923): Redefinition of 'size_t' is affecting TypeStruct functions)
+$(LI $(BUGZILLA 20989): Checking array.ptr causes safety error with -checkaction=context)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 20791): extern$(LPAREN)C++ <strings>$(RPAREN) should allow a trailing comma)
+$(LI $(BUGZILLA 20796): protection attribute package$(LPAREN)x.y$(RPAREN) does not bind to one of ancestor packages of module x.y when declared in x/y/package.d)
+)
+$(BUGSTITLE_BUGZILLA Phobos regressions,
+
+$(LI $(BUGZILLA 20943): std.algorithm.setops.cartesianProduct fails for ranges with @system popFront)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 9298): some std.math functions not implemented for Win64)
+$(LI $(BUGZILLA 20426): doesPointTo with void[N] fails)
+$(LI $(BUGZILLA 20751): SortedRange with ref predicate parameters fails)
+$(LI $(BUGZILLA 20782): std.conv.to can't convert string to const enum)
+$(LI $(BUGZILLA 20783): std.string.lastIndexOf doesn't work correctly in CTFE)
+$(LI $(BUGZILLA 20836): std.math: reorder declarations from most visible to least)
+$(LI $(BUGZILLA 20850): Can't assign enum of Tuple)
+$(LI $(BUGZILLA 20874): std.json.assign requires '@safe' and 'pure')
+$(LI $(BUGZILLA 20928): Overloaded opIndex confuses MapResult)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 19525): Duration is not usable with zero-arg std.algorithm.sum)
+$(LI $(BUGZILLA 20496): chunkby should support ref predicates)
+$(LI $(BUGZILLA 20869): `std.algorithm.mutation : move` is overly trusting of `opPostMove`)
+$(LI $(BUGZILLA 20887): Improve speed of std.digest.digest!$(LPAREN)Hash, Range$(RPAREN) on non-array ranges)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 18011): core.sys.condition cannot be used as shared)
+$(LI $(BUGZILLA 20760): checkaction=context doesnt print floating point numbers correctly)
+$(LI $(BUGZILLA 20763): checkaction=context does not format pointers)
+$(LI $(BUGZILLA 20767): [DIP1014] __move_post_blt must only recursively call itself on a struct's fields not all members)
+$(LI $(BUGZILLA 20768): [DIP1014] __move_post_blt must recursively call itself on static arrays whose elements are structs or static arrays that recursively contain structs)
+$(LI $(BUGZILLA 20852): core.sys.posix.sys.wait missing definitions on FreeBSD)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 20746): Change LCG in garbage collector treap to use full 64 bits of state instead of 48)
+$(LI $(BUGZILLA 20787): Add module core.sys.darwin.sys.attr with getattrlist, setattrlist, searchfs, and related definitions)
+$(LI $(BUGZILLA 20844): DMD compiler should take care of data alignment, after seeing the 'cas' call)
+$(LI $(BUGZILLA 20859): Add overloads of core.sync.rwmutex.ReadWriteMutex.Reader/Writer.tryLock that take a timeout duration)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 20882): Outdated examples in the documentation $(LPAREN)std.stdio$(RPAREN))
+)
+$(BUGSTITLE_BUGZILLA Tools enhancements,
+
+$(LI $(BUGZILLA 13345): rdmd --eval doesn't support args)
+)
+$(BUGSTITLE_BUGZILLA Installer bugs,
+
+$(LI $(BUGZILLA 20826): CI breakage: create_dmd_release attempts to copy the complete dmd repo.)
+)
+)
+$(D_CONTRIBUTORS_HEADER 54)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Alexandru Militaru)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Anton Oks)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR blackbird)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR BthereDthat)
+    $(D_CONTRIBUTOR Cristian Creteanu)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR drug007)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR guai)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR John Colvin)
+    $(D_CONTRIBUTOR Kazuya Takahashi)
+    $(D_CONTRIBUTOR Luhrel)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Nils Lankila)
+    $(D_CONTRIBUTOR Patrick Schlüter)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Pierre Grimaud)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Richard Manthorpe)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Sergei Akhmatdinov)
+    $(D_CONTRIBUTOR Simen Kjærås)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Tomoya Tanjo)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Walter Waldron)
+    $(D_CONTRIBUTOR welkam)
+    $(D_CONTRIBUTOR Witold Baryluk)
+    $(D_CONTRIBUTOR wolframw)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.093.0
+    TITLE=Change Log: $(VER)

@@ -1,0 +1,747 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Sep 01, 2019, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 27 major changes and 58 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 58 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dep_d1_ops,D1 operator overloads have been deprecated.))
+$(LI $(RELATIVE_LINK2 deprecate_ctor_in_static_block,Deprecate allowing a constructor declaration in a static block))
+$(LI $(RELATIVE_LINK2 deprecated_alias_this,`deprecated` now applies to `alias this` as well))
+$(LI $(RELATIVE_LINK2 error_18719,Double initialization of immutable fields inside constructor is now obsolete))
+$(LI $(RELATIVE_LINK2 getloc,add `__traits(getLocation, symbol)`))
+$(LI $(RELATIVE_LINK2 no-readmodify-error-if-struct-class,Suppress the "read-modify-write" error if type is a struct or a class))
+$(LI $(RELATIVE_LINK2 union_members,Postblit and destructors are no longer called on members of anonymous unions.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 atomic-msync,`core.atomic : msync` has been removed))
+$(LI $(RELATIVE_LINK2 atomic_cas,Added overloads for `core.atomic.cas` which don't discard their result.))
+$(LI $(RELATIVE_LINK2 atomic_exchange,Added `core.atomic.atomicExchange`.))
+$(LI $(RELATIVE_LINK2 clock-monotonic,Non-POSIX `CLOCK` enum members have been removed from `core.sys.posix.time`))
+$(LI $(RELATIVE_LINK2 deprecate-callStructDtorsDuringGC,The druntime option `callStructDtorsDuringGC` has been deprecated.))
+$(LI $(RELATIVE_LINK2 dlfcn-posix,`core.sys.posix.dlfcn : dladdr, dlvsym, Dl_info` have been removed))
+$(LI $(RELATIVE_LINK2 exception-hiddenfunc,core.exception: Remove `onHiddenFuncError` / `HiddenFuncError`))
+$(LI $(RELATIVE_LINK2 exception-setasserthandler,`core.exception : setAssertHandler` has been removed))
+$(LI $(RELATIVE_LINK2 fiber-call,`core.thread : Fiber.call(bool)` has been removed))
+$(LI $(RELATIVE_LINK2 netinet-tcp,Module `core.sys.linux.sys.netinet.tcp` has been removed))
+$(LI $(RELATIVE_LINK2 runtime-initerm,`core.runtime : Runtime.initialize, Runtime.terminate` functions taking `ExceptionHandler` have been removed))
+$(LI $(RELATIVE_LINK2 std_string,Added `core.stdcpp.string`.))
+$(LI $(RELATIVE_LINK2 std_vector,Added `core.stdcpp.vector`.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 array-opslice,std.array.Appender and RefAppender: use .opSlice() instead of data()))
+$(LI $(RELATIVE_LINK2 errnoexception-errno-attributes,ErrnoException.errno is now nothrow pure @nogc @safe))
+$(LI $(RELATIVE_LINK2 remove-nullable-alias-get-this,`Nullable` `alias get this` has been deprecated))
+$(LI $(RELATIVE_LINK2 std-file-getAvailableDiskSpace,Added the `std.file.getAvailableDiskSpace` functionality.))
+$(LI $(RELATIVE_LINK2 std_json_trailing_comma,Allow std.json to overlook trailing comma))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Installer changes,
+
+$(LI $(RELATIVE_LINK2 update-curl,Bundled libcurl is now built with `DONT_USE_RECV_BEFORE_SEND_WORKAROUND`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 project-settings.file,Support for dub global settings file at the root package level))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dep_d1_ops,D1 operator overloads have been deprecated.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dep_d1_ops.dd)
+$(P
+The following D1 operator overloads have been deprecated in favor of `opUnary`:
+  * `opNeg`  Replace with `opUnary(string op)() if (op == "-")`
+  * `opCom`  Replace with `opUnary(string op)() if (op == "~")`
+  * `opPostInc` Replace with `opUnary(string op)() if (op == "++")`
+  * `opPostDec` Replace with `opUnary(string op)() if (op == "--")`
+  * `opStar` Replace with `opUnary(string op)() if (op == "*")`
+)
+
+$(P
+The following D1 operator overloads have been deprecated in favor of `opBinary`:
+  * `opAdd`  Replace with `opBinary(string op)(...) if (op == "+")`
+  * `opSub`  Replace with `opBinary(string op)(...) if (op == "-")`
+  * `opMul`  Replace with `opBinary(string op)(...) if (op == "*")`
+  * `opDiv`  Replace with `opBinary(string op)(...) if (op == "/")`
+  * `opMod`  Replace with `opBinary(string op)(...) if (op == "%")`
+  * `opAnd`  Replace with `opBinary(string op)(...) if (op == "&")`
+  * `opXor`  Replace with `opBinary(string op)(...) if (op == "^")`
+  * `opOr`  Replace with `opBinary(string op)(...) if (op == "|")`
+  * `opShl`  Replace with `opBinary(string op)(...) if (op == "<<")`
+  * `opShr`  Replace with `opBinary(string op)(...) if (op == ">>")`
+  * `opUShr`  Replace with `opBinary(string op)(...) if (op == ">>>")`
+  * `opCat`  Replace with `opBinary(string op)(...) if (op == "~")`
+  * `opIn`  Replace with `opBinary(string op)(...) if (op == "in")`
+)
+
+$(P
+The following D1 operator overloads have been deprecated in favor of `opBinaryRight`:
+  * `opAdd_r`  Replace with `opBinaryRight(string op)(...) if (op == "+")`
+  * `opSub_r`  Replace with `opBinaryRight(string op)(...) if (op == "-")`
+  * `opMul_r`  Replace with `opBinaryRight(string op)(...) if (op == "*")`
+  * `opDiv_r`  Replace with `opBinaryRight(string op)(...) if (op == "/")`
+  * `opMod_r`  Replace with `opBinaryRight(string op)(...) if (op == "%")`
+  * `opAnd_r`  Replace with `opBinaryRight(string op)(...) if (op == "&")`
+  * `opXor_r`  Replace with `opBinaryRight(string op)(...) if (op == "^")`
+  * `opOr_r`  Replace with `opBinaryRight(string op)(...) if (op == "|")`
+  * `opShl_r`  Replace with `opBinaryRight(string op)(...) if (op == "<<")`
+  * `opShr_r`  Replace with `opBinaryRight(string op)(...) if (op == ">>")`
+  * `opUShr_r`  Replace with `opBinaryRight(string op)(...) if (op == ">>>")`
+  * `opCat_r`  Replace with `opBinaryRight(string op)(...) if (op == "~")`
+  * `opIn_r`  Replace with `opBinaryRight(string op)(...) if (op == "in")`
+)
+
+$(P
+The following D1 operator overloads have been deprecated in favor of `opOpAssign`:
+  * `opAddAssign`  Replace with `opOpAssign(string op)(...) if (op == "+")`
+  * `opSubAssign`  Replace with `opOpAssign(string op)(...) if (op == "-")`
+  * `opMulAssign`  Replace with `opOpAssign(string op)(...) if (op == "*")`
+  * `opDivAssign`  Replace with `opOpAssign(string op)(...) if (op == "/")`
+  * `opModAssign`  Replace with `opOpAssign(string op)(...) if (op == "%")`
+  * `opAndAssign`  Replace with `opOpAssign(string op)(...) if (op == "&")`
+  * `opOrAssign`  Replace with `opOpAssign(string op)(...) if (op == "|")`
+  * `opXorAssign`  Replace with `opOpAssign(string op)(...) if (op == "^")`
+  * `opShlAssign`  Replace with `opOpAssign(string op)(...) if (op == "<<")`
+  * `opShrAssign`  Replace with `opOpAssign(string op)(...) if (op == ">>")`
+  * `opUShrAssign`  Replace with `opOpAssign(string op)(...) if (op == ">>>")`
+  * `opCatAssign`  Replace with `opOpAssign(string op)(...) if (op == "~")`
+)
+
+$(P
+Starting with this release, any D code that triggers a lowering to the D1 operator overloads will emit a deprecation warning.
+)
+
+$(P
+Example of deprecation warning:
+)
+---
+struct S
+{
+    int opAdd(int i) { ... }
+}
+
+void main()
+{
+    S s;
+    int i;
+    i = s + 1;  // Deprecation: `opAdd` is deprecated.  Use `opBinary` instead.
+}
+---
+
+$(P
+Example of corrective action:
+)
+---
+struct S
+{
+    int opBinary(string op)(int i) if (op == "+") { ... }
+}
+
+void main()
+{
+    S s;
+    int i;
+    i = s + 1;  // OK
+}
+---
+)
+
+$(LI $(LNAME2 deprecate_ctor_in_static_block,Deprecate allowing a constructor declaration in a static block)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecate_ctor_in_static_block.dd)
+$(P
+The language specification states that a static constructor is
+defined using the construction `static this()`. Defining a
+constructor inside a static block does not have any effect
+on the constructor. The following code does not affect
+the constructor in any way:
+)
+
+---
+static:
+    this() {}
+---
+
+---
+static
+{
+    this() {}
+}
+---
+
+$(P
+The compiler does not issue any warning/error on the above code
+samples and generates a normal constructor which is not ran before
+the `main` function. This leads to situations in which the
+compiler is not able to correctly indicate the problem:
+)
+
+---
+class A
+{
+    static
+    {
+        this() {}
+    }
+
+    this() {}
+}
+
+void main()
+{
+    new A();
+}
+---
+
+$(P
+This code will result in an error message indicating that
+there is a multiple definition of the constructor `this()`
+which is a misleading message.
+)
+
+$(P
+Beginning with this release, whenever a constructor
+is encountered in a static context an
+error message is emitted stating that the `static`
+keyword does not have any effect on the constructor.
+The solution is to declare the constructor outside the
+static block either as a normal constructor or a static
+one (`static this()`).
+)
+)
+
+$(LI $(LNAME2 deprecated_alias_this,`deprecated` now applies to `alias this` as well)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecated_alias_this.dd)
+$(P
+Before this release, `deprecated` on `alias this` was accepted by the parser
+but did not trigger a deprecation mesage on usage.
+)
+)
+
+$(LI $(LNAME2 error_18719,Double initialization of immutable fields inside constructor is now obsolete)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/error_18719.dd)
+$(P
+Inside a constructor scope, assigning to aggregate declaration (class/struct)
+members is done by considering the first assignment as initialization and
+subsequent assignments as modifications of the initially constructed object.
+For `const`/`immutable` fields the initialization is accepted in the constructor,
+but subsequent modifications are not. Example:
+)
+
+---
+class A
+{
+    int a;
+    immutable int b;
+    this(int a, int b)
+    {
+        this.a = a;
+        this.b = b;
+
+        this.a = 7; // OK, a is mutable
+        this.b = 9; // Error: immutable field b initialized multiple times
+    }
+}
+---
+
+$(P
+However, $(BUGZILLA 18719) shows that this rule does not apply when inside
+a constructor scope there is a call to a different constructor:
+)
+
+---
+class A
+{
+    immutable int a;
+    this()
+    {
+        this(42);
+        this.a = 5;  // second initialization of immutable field
+    }
+
+    this(int a)
+    {
+        this.a = a;
+    }
+}
+---
+
+$(P
+The above code wrongfully compiled succesfully before this patch, accepting the double
+initialization of the `immutable` field `a`. Starting with this release, `this.a = 5` will emit
+an error stating that `a` is initialized multiple times.
+)
+)
+
+$(LI $(LNAME2 getloc,add `__traits(getLocation, symbol)`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/getloc.dd)
+$(P
+Takes one argument which is a symbol. Returns a `tuple(string, int, int)` whose entries correspond to the filename, line number and column number where the argument
+was declared.
+)
+
+$(P
+To disambiguate between overloads, pass the result of getOverloads with the desired index, to getLocation:
+)
+---
+module m;
+int foo();
+int foo(int);
+enum loc = __traits(getLocation, __traits(getOverloads, m, "foo")[0]);
+---
+)
+
+$(LI $(LNAME2 no-readmodify-error-if-struct-class,Suppress the "read-modify-write" error if type is a struct or a class)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/no-readmodify-error-if-struct-class.dd)
+$(P
+If a struct or class with shared type implements the opUnary or opOpAssign
+operator then it is possible to perform "read-modify-write" operations
+because the operator's implementation is supposed to perform atomic operations.
+)
+
+$(P
+The purpose of this modification is to allow the creation of wrappers
+(with structs or classes) to run atomic operations silently, for example:
+)
+
+---
+shared struct Atomic {
+    int a;
+
+    int opUnary(string s)() if (s == "++")
+    {
+        import core.atomic : atomicOp;
+        return atomicOp!"+="(a, 1);
+    }
+}
+
+Atomic atomicvar;
+atomicvar++; // Safe! Atomic struct implements opUnary
+---
+)
+
+$(LI $(LNAME2 union_members,Postblit and destructors are no longer called on members of anonymous unions.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/union_members.dd)
+$(P
+Due to a bug in dmd, members of anonymous `unions` inside `struct` declarations
+had their postblits/destructors called when an object of the containing
+`struct` type was copied/destroyed. With this release, the postblit/destructor
+is no longer called in such situations.
+)
+
+$(P
+Fixes: https://issues.dlang.org/show_bug.cgi?id=19122
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 atomic-msync,`core.atomic : msync` has been removed)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/atomic-msync.dd)
+$(P
+It had been deprecated in 2.061 in favor of MemoryOrder.
+)
+)
+
+$(LI $(LNAME2 atomic_cas,Added overloads for `core.atomic.cas` which don't discard their result.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/atomic_cas.dd)
+$(P
+Existing `core.atomic.cas` functions discard the result, which make it impossible to implement certain operations.
+A new set of overloads was added which take `ifThis` by pointer and write the result back to the argument.
+)
+)
+
+$(LI $(LNAME2 atomic_exchange,Added `core.atomic.atomicExchange`.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/atomic_exchange.dd)
+$(P
+Added missing `core.atomic.atomicExchange` function to the atomic suite.
+)
+)
+
+$(LI $(LNAME2 clock-monotonic,Non-POSIX `CLOCK` enum members have been removed from `core.sys.posix.time`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/clock-monotonic.dd)
+$(P
+Namely `CLOCK_MONOTONIC_RAW`, `CLOCK_MONOTONIC_COARSE` (linux),
+`CLOCK_MONOTONIC_PRECISE`, `CLOCK_MONOTONIC_FAST` (FreeBSD, DragonflyBSD),
+and `CLOCK_MONOTONIC_COARSE` (CRuntime_Glibc).
+Those were deprecated in 2.067.
+They are available on their respective platform modules.
+)
+)
+
+$(LI $(LNAME2 deprecate-callStructDtorsDuringGC,The druntime option `callStructDtorsDuringGC` has been deprecated.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/deprecate-callStructDtorsDuringGC.dd)
+$(P
+Starting with this release utilizing the `callStructDtorsDuringGC` runtime option will result in a
+deprecation message printed to `stderr`.  The option will be removed in a future release.
+)
+)
+
+$(LI $(LNAME2 dlfcn-posix,`core.sys.posix.dlfcn : dladdr, dlvsym, Dl_info` have been removed)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/dlfcn-posix.dd)
+$(P
+They are linux extensions, not POSIX, and thus can be found in `core.sys.linux.dlfcn`.
+They had been deprecated since 2.063.
+)
+)
+
+$(LI $(LNAME2 exception-hiddenfunc,core.exception: Remove `onHiddenFuncError` / `HiddenFuncError`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/exception-hiddenfunc.dd)
+$(P
+Those have been deprecated since 2.068,
+and are related to a language feature that is long gone.
+)
+)
+
+$(LI $(LNAME2 exception-setasserthandler,`core.exception : setAssertHandler` has been removed)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/exception-setasserthandler.dd)
+$(P
+It had been deprecated in 2.064 in favor of `assertHandler`.
+)
+)
+
+$(LI $(LNAME2 fiber-call,`core.thread : Fiber.call(bool)` has been removed)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/fiber-call.dd)
+$(P
+This had been deprecated since 2.068 in favor of `Fiber.call(Rethrow.[Yes|No])`.
+)
+)
+
+$(LI $(LNAME2 netinet-tcp,Module `core.sys.linux.sys.netinet.tcp` has been removed)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/netinet-tcp.dd)
+$(P
+This module had been deprecated since 2.077.0.
+`core.sys.linux.netinet.tcp` should be imported instead.
+)
+)
+
+$(LI $(LNAME2 runtime-initerm,`core.runtime : Runtime.initialize, Runtime.terminate` functions taking `ExceptionHandler` have been removed)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/runtime-initerm.dd)
+$(P
+They were deprecated since 2.065 in favor of `rt_init` C functions,
+which allow to initialize the runtime from C code.
+)
+)
+
+$(LI $(LNAME2 std_string,Added `core.stdcpp.string`.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/std_string.dd)
+$(P
+Added `core.stdcpp.string`, which links against C++ `std::basic_string`
+)
+
+$(P
+Known issues:
+)
+
+$(P
+Currently, the GCC (`libstdc++`) implementation has a known issue with the modern `__cxx11` ABI, because the C++ struct contains an interior pointer which is illegal in D, and incompatible with D move semantics.
+To use `core.stdcpp.string` on linux/GCC, you must use the old string ABI by supplying `-D_GLIBCXX_USE_CXX11_ABI=0` to `g++`, and also `-version=_GLIBCXX_USE_CXX98_ABI` to your D compiler.
+Work to define D move constructors is ongoing and expected to resolve this issue when it arrives.
+)
+)
+
+$(LI $(LNAME2 std_vector,Added `core.stdcpp.vector`.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/std_vector.dd)
+$(P
+Added `core.stdcpp.vector`, which links against C++ `std::vector`
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 array-opslice,std.array.Appender and RefAppender: use .opSlice() instead of data())
+$(CHANGELOG_SOURCE_FILE phobos, changelog/array-opslice.dd)
+$(P
+Previonsly, Appender.data() was used to extract a slice of the Appender's array.
+Now use the [] slice operator instead.
+The same goes for RefAppender.
+)
+
+$(P
+$(REF Appender, std, array)
+$(REF RefAppender, std, array)
+)
+)
+
+$(LI $(LNAME2 errnoexception-errno-attributes,ErrnoException.errno is now nothrow pure @nogc @safe)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/errnoexception-errno-attributes.dd)
+$(P
+Before, it was just @system. As it turns out, all it does is return the value
+of an integer field, so it can have all these attributes.
+)
+)
+
+$(LI $(LNAME2 remove-nullable-alias-get-this,`Nullable` `alias get this` has been deprecated)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/remove-nullable-alias-get-this.dd)
+$(P
+`Nullable`'s feature of implicitly converting to its contained value has been marked deprecated.
+)
+
+$(P
+All sites where a `Nullable!T` is implicitly converted to `T`, potentially throwing an error at runtime,
+will now produce a deprecation warning or error with `-de`.
+)
+
+$(P
+To fix this, explicitly use `.get` to access the contained value of the `Nullable`.
+)
+
+$(P
+`alias get this` is the only implicit conversion in D that may throw an error. Since it is an implicit conversion,
+it can easily be used accidentally and lead to unexpected runtime errors. By explicitly invoking `get`,
+the developer acknowledges that the operation has a chance of error. Conversely, by not implicitly converting
+`Nullable!T` to `T`, the compiler gives the developer a chance to spot forgotten `isNull` checks.
+)
+
+$(P
+This feature will be removed after release 2.096.
+)
+)
+
+$(LI $(LNAME2 std-file-getAvailableDiskSpace,Added the `std.file.getAvailableDiskSpace` functionality.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std-file-getAvailableDiskSpace.dd)
+$(P
+$(REF getAvailableDiskSpace, std,file) receives as a parameter the path of a file or
+directory in the file system, and returns the available disk space on the mounted filesystem.
+If the given path is nonexistent, an exception is thrown.
+)
+
+---
+import std.file;
+ulong size = getAvailableDiskSpace(".");
+assert(size > 0);
+---
+
+---
+import std.file;
+assertThrown(getAvailableDiskSpace("NonExistentFile"));
+---
+)
+
+$(LI $(LNAME2 std_json_trailing_comma,Allow std.json to overlook trailing comma)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std_json_trailing_comma.dd)
+$(P
+The JSON grammar does not allow trailing commas, however they are accepted by many JSON parsers.
+$(MREF std,json) now ignores trailing commas as well. Use $(REF_SHORT JSONOptions.strictParsing, std,json) to disable this behavior.
+)
+
+-------
+import std.json;
+import std.exception : assertThrown, assertNotThrown;
+
+// before
+assertThrown(parseJSON(`{ "a" : { } , }`));
+
+// after
+assertNotThrown(parseJSON(`{ "a" : { } , }`));
+-------
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Installer changes,
+
+$(LI $(LNAME2 update-curl,Bundled libcurl is now built with `DONT_USE_RECV_BEFORE_SEND_WORKAROUND`)
+$(CHANGELOG_SOURCE_FILE installer, changelog/update-curl.dd)
+$(P
+The bundled libcurl is now build with
+`DONT_USE_RECV_BEFORE_SEND_WORKAROUND`. See [#399](https://github.com/dlang/installer/pull/399) for details.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 project-settings.file,Support for dub global settings file at the root package level)
+$(CHANGELOG_SOURCE_FILE dub, changelog/project-settings.file.dd)
+$(P
+Dub settings file can now also be added to project root folder
+and has the highest priority.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 20021): `static if` doesn't evaluate `opCast$(LPAREN)T : bool$(RPAREN)`)
+$(LI $(BUGZILLA 20057): compiler hang on conflicting local and imported template)
+$(LI $(BUGZILLA 20136): opEquals not recognized for AA key)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 1142): .stringof performs semantic analysis)
+$(LI $(BUGZILLA 7443): Better diagnostic on wrongly written static constructor)
+$(LI $(BUGZILLA 9884): Refused initialization of const array in the module static this$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 15795): bogus "conflicts with" error depending on order of declaration)
+$(LI $(BUGZILLA 15818): Multiple function declarations without definition cause ambiguity overloading error)
+$(LI $(BUGZILLA 18719): Doubly-called constructor against member when using forwarding constructors)
+$(LI $(BUGZILLA 18729): dmd -run executes in different environment)
+$(LI $(BUGZILLA 19122): Postblits and destructors called on members of anonymous unions)
+$(LI $(BUGZILLA 19315): #line inside token string affect outside code)
+$(LI $(BUGZILLA 19534): Wrong error message "only one index allowed to index int")
+$(LI $(BUGZILLA 19646): Initialization of globals not checked for @safe)
+$(LI $(BUGZILLA 19919): Incorrect initialization of union when first member isn't marked = void)
+$(LI $(BUGZILLA 19925): static opDispatch not considered in WithStatement)
+$(LI $(BUGZILLA 19931): Missing error message when defining postblit, rvalue constructor and copy constructor)
+$(LI $(BUGZILLA 19968):  @safe code can create invalid bools resulting in memory corruption)
+$(LI $(BUGZILLA 20001): Error: a struct is not a valid initializer for a _error_)
+$(LI $(BUGZILLA 20033): alias this does not support `deprecated` attribute)
+$(LI $(BUGZILLA 20047): call of static nested function ignores purity)
+$(LI $(BUGZILLA 20050): pure function should be able to return function pointer to impure static nested function)
+$(LI $(BUGZILLA 20073): Wrong implicit conversion for return type)
+$(LI $(BUGZILLA 20074): header file generation doesn't include attributes with CallExp)
+$(LI $(BUGZILLA 20096): error message 'cannot goto into try block' is followed by seg fault)
+$(LI $(BUGZILLA 20100): Segfault with checkaction=context on struct comparison)
+$(LI $(BUGZILLA 20108):  -dip1000 defeated by auto)
+$(LI $(BUGZILLA 20113): Cannot find source code for runtime library file 'object.d' when the path contains '~')
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 1252): Inline assembler could support BasicType properties)
+$(LI $(BUGZILLA 18665): Deprecate Undocumented Operator Overloads)
+$(LI $(BUGZILLA 19917): unions should require that all members are `= void` initialised)
+$(LI $(BUGZILLA 19969): Unhelpful error when attempting $(LPAREN)incorrectly$(RPAREN) to append to a string)
+$(LI $(BUGZILLA 20000): Casting to interfaces disallowed in @safe code)
+$(LI $(BUGZILLA 20024): "No property x for type Y" error not as helpful as it should be)
+$(LI $(BUGZILLA 20037): Imports in module info should be deduplicated)
+$(LI $(BUGZILLA 20053): add mixin types)
+$(LI $(BUGZILLA 20059): mismatched function return type inference should give location of inferred type)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 19823): std.algorithm.iteration.filter's popFront doesn't always pop the first element like it's supposed to)
+$(LI $(BUGZILLA 19980): File.byLine skips first line in some cases when used inside map!$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 19986): Can't assign large const T to std.Variant.VariantN)
+$(LI $(BUGZILLA 19987): std.variantN wastes space)
+$(LI $(BUGZILLA 20064): format separator fails with leading zeros)
+$(LI $(BUGZILLA 20097): SysTime cannot be used with std.concurrency.send)
+$(LI $(BUGZILLA 20129): AA require with File values gives "Error: `return` expression expected" in object.d)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 16487): Add function to obtain the available disk space)
+$(LI $(BUGZILLA 19834): File exception for [std.file.copy] on windows shows the target file rather than the source file)
+$(LI $(BUGZILLA 19979): std.regex should return null instead of zero-length slice for non-matched captures)
+$(LI $(BUGZILLA 19983): Add fast path using slice assignment to std.internal.cstring.tempCString)
+$(LI $(BUGZILLA 19994): Can't nest self-referential Algebraic types)
+$(LI $(BUGZILLA 20069): std.format digit grouping separator $(LPAREN)aka thousands separator$(RPAREN) needs to be revisited)
+$(LI $(BUGZILLA 20098): Improve result of printing std.regex compiled pattern)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 20066): Assertion on void[] does not compile with -checkaction=context)
+$(LI $(BUGZILLA 20088): void[] cast unusable in betterC due to new __ArrayCast template)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 19976): Simplify std.internal.convert.toUbyte CTFE path for float and double)
+$(LI $(BUGZILLA 20104): core.atomic has no exchange function)
+$(LI $(BUGZILLA 20122): core.atomic.cas discards result on failure)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bugs,
+
+$(LI $(BUGZILLA 19402): specs for promotion rule of shift exp is wrong)
+$(LI $(BUGZILLA 19944): Some examples on std.file docs page raise FileException)
+)
+)
+$(D_CONTRIBUTORS_HEADER 58)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Alexibu)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Basile-z)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Brian Kessler)
+    $(D_CONTRIBUTOR Cameron Ross)
+    $(D_CONTRIBUTOR Charles McAnany)
+    $(D_CONTRIBUTOR Chloé Kekoa)
+    $(D_CONTRIBUTOR Dan Printzell)
+    $(D_CONTRIBUTOR David Gileadi)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR Dmitry Olshansky)
+    $(D_CONTRIBUTOR Dragos Carp)
+    $(D_CONTRIBUTOR Eduard Staniloiu)
+    $(D_CONTRIBUTOR Elias Batek)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Francesco Mecca)
+    $(D_CONTRIBUTOR godmyoh)
+    $(D_CONTRIBUTOR Greg V)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jason Schroeder)
+    $(D_CONTRIBUTOR jercaianu)
+    $(D_CONTRIBUTOR John Colvin)
+    $(D_CONTRIBUTOR Jonathan Marler)
+    $(D_CONTRIBUTOR Kriyszig)
+    $(D_CONTRIBUTOR lenoil98)
+    $(D_CONTRIBUTOR Les De Ridder)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Marco de Wild)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Robert Schadek)
+    $(D_CONTRIBUTOR Sebastiaan Koppe)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR shove)
+    $(D_CONTRIBUTOR Stanislav Blinov)
+    $(D_CONTRIBUTOR TJesionowski)
+    $(D_CONTRIBUTOR Tomáš Chaloupka)
+    $(D_CONTRIBUTOR Viktor)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR سليمان السهمي (Suleyman Sahmi))
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.088.0
+    TITLE=Change Log: $(VER)

@@ -1,182 +1,59 @@
 Ddoc
 
-$(D_S Debugging D on Windows,
-
-$(P The Microsoft Windows debugger $(D $(DMDDIR)\windows\bin\windbg.exe) can be used to
-symbolically debug D programs, even though it is a C++ debugger.
-Versions of $(D windbg.exe) other than the one supplied may not work with D.
-(Jascha Wetzel's $(LINK2 http://ddbg.mainia.de/releases.html, Ddbg for Windows)
-is also available.)
-)
+The D reference compiler DMD and the LLVM-based LDC compiler can both output symbolic
+debug information that can be used by most Windows debuggers. With the exception of
+generating OMF object files when using -m32 with dmd, the linker will generate a PDB file
+containing the debug information of the executable.
 
 $(P To prepare a program for symbolic debugging, compile
-with the $(B -gc) switch:
+with the $(B -gf) switch:
 )
 
 $(CONSOLE
-dmd myprogram -gc
+dmd -gf -m64 myprogram.d
 )
 
-$(P To invoke the debugger on it:
+$(P How to start debugging the program depends on debugger being used. For example debugging with Visual Studio
+can be invoked by opening the "Developer Command Prompt for VS" and executing:
 )
 
 $(CONSOLE
-windbg myprogram args...
+devenv myprogram.exe
 )
 
-$(P
-where $(D args...) are the command line arguments to myprogram.exe.
+$(P If you want to pass arguments to the debuggee you have to use the /debugexe switch:
 )
-
-$(P When the debugger comes up, entering the command in the command window:)
 
 $(CONSOLE
-g _Dmain
+devenv /debugexe myprogram.exe args...
 )
 
-$(P will execute the program up until the entry into $(D main()).
-From thence, pressing the $(B F10) key will single step each line
-of code.)
-
-$(P Basic Commands:)
-
-$(DL
-
-$(DT F5)
-$(DD Go until breakpoint, an exception is thrown, or the end of the program.)
-
-$(DT F7)
-$(DD Continue until cursor.)
-
-$(DT F8)
-$(DD Single step, stepping into function calls.)
-
-$(DT F10)
-$(DD Single step, stepping over function calls.)
+$(P where $(D args...) are the command line arguments to myprogram.exe.
 )
 
-$(P For more comprehensive information on $(B windbg), consult the
-file $(D $(DMDDIR)\windows\bin\windbg.hlp).
+$(P When the debugger comes up, load myprogram.d and set a breakpoint at the beginning of your $(D main()) function.
+Running the program will stop at your breakpoint in $(D main()).
+The debugger should then allow you to step through the program, show local variables and watch expressions.
 )
 
-$(COMMENT
-$(H2 Sample Debug Session)
-
-$(P This is a walkthrough of a typical debugging session. Given the program:)
-
-----------
-import std.stdio;
-
-class Foo
-{
-    int x;
-}
-
-int main()
-{
-    Foo p;
-    bar(p);
-}
-
-void bar(Foo p)
-{
-    abc(p);
-}
-
-void abc(Foo p)
-{
-    p.x++;
-}
----------
-
-$(P It is compiled and run with the following commands:)
-
-$(CONSOLE
-C:\bug>dmd bug -g
-\dm\bin\link bug,,,user32+kernel32/co/noi;
-
-C:\bug>bug
-Error: Access Violation
-
-C:\bug>
+$(P If you have $(LINK2 $(VISUALD), Visual D) installed as an extension to Visual Studio, the debugger understands D expressions
+in watch expressions and is able to inspect D-specific language constructs like dynamic and associative arrays.
+This functionality might also be available in other debuggers if they support it through
+$(LINK2 https://github.com/rainers/mago/tree/master/MagoMI/mago-mi, mago-mi).
 )
 
-$(P It's obviously got a bug, so fire up the debugger with:)
-
-$(CONSOLE
-C:\bug>windbg bug.exe
+$(P Debuggers without these extensions will interpret your code as C/C++. Most debug information maps naturally
+to C data structures, but the respective syntax has to be used, e.g. `->` must be used instead of `.` to display
+a class member in a watch expression.
 )
 
-$(P and the debugger window comes up:)
-
-<img src="foo.bmp">
-
-$(P Advance to the beginning of $(D main()) by entering $(D g _Dmain):)
-
-<img src="windbg2.gif">
-
-$(P now were at the beginning of main(). The upper left black window shows
-the console output so far, the middle window shows the current location
-and next instruction (the $(D xor)), The lower right window shows the
-current location in the source code, highlighted in yellow.)
-
-$(P In order to run until the exception happens, use the $(D g) command:)
-
-<img src="windbg3.gif">
-
-$(P The $(D First chance exception) says an exception was thrown. The
-lower right window now shows the line on which the exception happened
-highlighted in yellow.)
-
-$(P Now click on the [Window] menu and Select [Calls]:)
-
-<img src="windbg4.gif">
-
-$(P and a window will appear showing the call stack:)
-
-<img src="windbg6.gif">
-
-$(P Clicking on the [Disassembly] command brings up
-the Disassembly window where the instruction that faulted is highlighted
-in yellow. Clicking on the [Registers] command brings up
-the register window, where EAX holds the value 00000000.)
-
-<img src="windbg7.gif">
-
-$(P The trouble is clearly that $(D p) is $(D null). Fix it by allocating
-an instance for $(D p):)
-
-----------
-import std.stdio;
-
-class Foo
-{
-    int x;
-}
-
-int main()
-{
-    Foo p = new Foo;   // the fix
-    bar(p);
-}
-
-void bar(Foo p)
-{
-    abc(p);
-}
-
-void abc(Foo p)
-{
-    p.x++;
-}
----------
-
-$(P and it should now compile and run without error.)
-)
-
+$(P When compiling the program with dmd without specifying an architecture (i.e. using the default -m32), the
+Digital Mars linker optlink.exe is used to produce the executable. The debug information format used is an
+ancient version of CodeView that is only partially supported by more recent debuggers. You can use
+$(LINK2 https://github.com/rainers/cv2pdb, cv2pdb)
+to convert the debug information to the ubiquitous PDB format.
 )
 
 Macros:
-        TITLE=windbg Debugger
-    DMDDIR=\dmd2
+    TITLE=Debugging D on Windows
     _=

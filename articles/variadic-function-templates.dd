@@ -124,16 +124,21 @@ $(H2 $(LNAME2 d-solutions, D Programming Language Solutions))
 
 $(H3 The D Look Ma No Templates Solution)
 
-        $(P It is not practical to solve this problem in C++ without
-        using templates. In D, one can because D supports typesafe
-        variadic function parameters.
+        $(P The current best practice, e.g. as espoused by the standard library, favours
+        the variadic template solution. However, if the template solution is not practical, D provides a runtime solution
+        utilizing the $(D TypeInfo) system (An example is shown below). There is a lexical similarity with the
+        non-template variadic functions provided by C and C++ ($(D va_list)), however the solution D provides is
+        typesafe whereas the aforementioned alternative is not.
         )
 
 ------
 import core.vararg;
 import core.stdc.stdio;
-import std.format;
-
+/*
+This function was part of D1.0, but does not exist anymore, it has been
+resurrected here to give a realistic example of how this feature could be used.
+*/
+void doFormat(void delegate(dchar) putc, TypeInfo[] arguments, va_list argptr);
 void print(...)
 {
     void putc(dchar c)
@@ -141,15 +146,9 @@ void print(...)
         fputc(c, stdout);
     }
 
-    std.format.doFormat(&putc, _arguments, _argptr);
+    doFormat(&putc, _arguments, _argptr);
 }
 ------
-
-        $(P It isn't elegant or the most efficient,
-        but it does work. However it is not the recommended way to write variadic functions.
-        (It relies on the parameters `_argptr` and `_arguments` imported from `core.vararg`
-        which give a pointer to the values and their types, respectively.)
-        )
 
 $(H3 Translating the Variadic C++ Solution into D)
 
@@ -195,7 +194,7 @@ $(H3 The Static If Solution)
 
         $(P It would be nice to encapsulate all the logic into a
         single function. One way to do that is by using
-        $D(static if)s, which provide for conditional compilation:
+        $(D static if)s, which provide for conditional compilation:
         )
 
 ---

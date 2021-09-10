@@ -1,0 +1,986 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION May 10, 2020, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 15 major changes and 44 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 47 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 bug10478-cli-switches,CLI switches `-revert=import` and `-transition=checkimports` have been removed))
+$(LI $(RELATIVE_LINK2 cpp_abi_tags,Added support for mangling C++'s GNU ABI tags))
+$(LI $(RELATIVE_LINK2 dep-non-externd-modulectordtors,Module constructors and destructors which are not extern(D) are deprecated))
+$(LI $(RELATIVE_LINK2 dip25,DIP25 violations will now issue deprecations by default))
+$(LI $(RELATIVE_LINK2 ob,Prototype Ownership/Borrowing System for Pointers))
+$(LI $(RELATIVE_LINK2 preview-in,Added `-preview=in` to make the `in` storage class mean `scope const`.))
+$(LI $(RELATIVE_LINK2 printfParams2,Validate printf and scanf (variants too) arguments against format specifiers))
+$(LI $(RELATIVE_LINK2 reproducible-builds,Environment variable `SOURCE_DATE_EPOCH` is now supported))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 isbaseof,Added TypeInfo_Class/TypeInfo_Interface.isBaseOf that works like C#/Java isAssignableFrom.))
+$(LI $(RELATIVE_LINK2 page_size,Add `core.memory.pageSize` and `minimumPageSize`.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 date-isoweek,Add `Date.isoWeekYear` and `Date.fromISOWeek` in `std.datetime.date`))
+$(LI $(RELATIVE_LINK2 deprecate-xml,Deprecated module `std.xml`))
+$(LI $(RELATIVE_LINK2 digest,The deprecated aliases in std.digest.digest were removed))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 ignoreHiddenDirectories,Hidden directories are now ignored.))
+$(LI $(RELATIVE_LINK2 lintReportFile,Dub lint now supports --report-file argument.))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 bug10478-cli-switches,CLI switches `-revert=import` and `-transition=checkimports` have been removed)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/bug10478-cli-switches.dd)
+$(P
+Those switched were already not doing anything and had been deprecated for a while.
+The compiler will no longer recognized them.
+)
+)
+
+$(LI $(LNAME2 cpp_abi_tags,Added support for mangling C++'s GNU ABI tags)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/cpp_abi_tags.dd)
+$(P
+GNU ABI tags are a feature that was added with C++11 in $(LINK2 https://gcc.gnu.org/gcc-5/changes.html#libstdcxx, GCC 5.1).
+In order for D to fully support the $(LINK2 http://www.cplusplus.com/reference/, standard C++ library),
+DMD now recognize the special UDA `gnuAbiTag`, declared in `core.attribute` and publicly aliased in `object`
+(so one need not import anything to use it).
+The ABI tags are a low level feature that most user will not need to interact with,
+but can be used to bind to C++ libraries that need it.
+In particular, it is required to bind $(LINK2 http://www.cplusplus.com/reference/string/, `std::string`)
+when targeting C++11 and higher (DMD switch `-extern-std={c++11,c++14,c++17}`).
+)
+
+$(P
+It can be used in the following way:
+)
+---
+extern(C++):
+@gnuAbiTag("tagOnStruct")
+struct MyStruct {}
+@gnuAbiTag("Multiple", "Tags", "On", "Function")
+MyStruct func();
+---
+
+$(P
+Only one `gnuAbiTag` can be present on a symbol at a time.
+The order of the array entries does not matter (they are sorted on output).
+The UDA will only have an effect if `-extern-std=c++11` or higher is passed
+to the compiler. The default (`-extern-std=c++98`) will ignore the UDA.
+This UDA can only be applied to `extern(C++)` symbols and cannot be applied to namespaces.
+)
+)
+
+$(LI $(LNAME2 dep-non-externd-modulectordtors,Module constructors and destructors which are not extern(D) are deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dep-non-externd-modulectordtors.dd)
+$(P
+Module constructors and destructors (shared or not) could be marked with
+a different linkage than `extern(D)`, which would affect their mangling.
+Since such a mangling is simple and predictable, there was a very small
+chance of conflict if two same kind of constructor/destructors
+were declared in similar condition, for example if the third
+module constructor in module `a` was on line 479 and the third
+module constructor in module `b` was also on line 479,
+they would have the same mangling.
+)
+
+$(P
+While it's unlikely that such a bug is triggered in practice,
+affected symbols will now trigger a deprecation message.
+)
+)
+
+$(LI $(LNAME2 dip25,DIP25 violations will now issue deprecations by default)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dip25.dd)
+$(P
+DIP25 has been available since $(LINK2 https://dlang.org/changelog/2.067.0.html#sealed-references, v2.067.0),
+first as its own switch, and more recently under the `-preview=dip25` switch.
+The feature is now fully functional and has been built on, for example by DIP1000.
+)
+
+$(P
+Starting from this release, code that would trigger errors when `-preview=dip25` is passed to the compiler
+will also trigger a deprecation message without `-preview=dip25`.
+The behavior of the switch is unchanged (errors will still be issued).
+)
+
+$(P
+DIP25 aims to make it impossible for `@safe` code to refer to destructed object.
+In practice, functions and methods returning a `ref` to their parameter might
+be required to qualify the method or the parameter as `return`, as hinted by the compiler.
+)
+---
+struct Foo
+{
+    int x;
+    // returning `this.x` escapes a reference to parameter `this`, perhaps annotate with `return`
+    ref int method() /* return */ { return this.x; }
+}
+// returning `v` escapes a reference to parameter `v`, perhaps annotate with `return`
+ref int identity(/* return */ ref int v) { return v; }
+---
+$(P
+In both cases, uncommenting the `return` annotation will appease the compiler.
+The complete description of DIP25 can be found $(LINK2 https://wiki.dlang.org/DIP25, here).
+)
+)
+
+$(LI $(LNAME2 ob,Prototype Ownership/Borrowing System for Pointers)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/ob.dd)
+$(P
+An Ownership/Borrowing (aka OB) system for pointers can guarantee that
+dereferenced pointers are pointing to a valid memory object.
+)
+
+
+$(P
+$(H3 Scope of Prototype OB System)
+)
+
+$(P
+This is a prototype OB system adapted to D. It is initially for pointers
+only, not dynamic arrays, class references, refs, or pointer fields
+of aggregates. Adding support for such adds complexity,
+but does not change the nature of it, hence it is deferred to later.
+RAII objects can safely manage their own memory, so are not covered
+by OB. Whether a pointer is allocates memory using the GC or some other
+storage allocator is immaterial to OB, they are not distinguished and are
+handled identically.
+)
+
+$(P
+The system is only active in functions annotated with the `@live` attribute.
+It is applied after semantic processing is done as purely a check
+for violations of the OB rules. No new syntax is added. No change is made
+to the code generated.
+If `@live` functions
+call non-`@live` functions, those called functions are expected to present
+an `@live` compatible interface, although it is not checked.
+if non-`@live` functions call `@live` functions, arguments passed are
+expected to follow `@live` conventions.
+)
+
+$(P
+The OB system will detect as errors:
+)
+
+$(P
+$(UL
+$(LI dereferencing pointers that are in an invalid state)
+$(LI more than one active pointer to a mutable memory object)
+)
+)
+
+$(P
+It will not detect attempts to dereference `null` pointers or possibly
+`null` pointers. This is unworkable because there is no current method
+of annotating a type as a non-`null` pointer.
+)
+
+
+$(P
+$(H3 Core OB Principle)
+)
+
+$(P
+The OB design follows from the following principle:
+)
+
+$(P
+For each memory object, there can exist either exactly one mutating pointer
+to it, or multiple non-mutating (read-only) pointers.
+)
+
+
+$(P
+$(H3 Design)
+)
+
+$(P
+The single mutating pointer is called the "owner" of the memory object.
+It transitively owns the memory object and all memory objects accessible
+from it (i.e. the memory object graph). Since it is the sole pointer to
+that memory object, it can safely
+manage the memory (change its shape, allocate, free and resize) without
+pulling the rug out from under any other pointers (mutating or not)
+that may point to it.
+)
+
+$(P
+If there are multiple read-only pointers to the memory object graph,
+they can safely read from it without being concerned about the memory
+object graph being changed underfoot.
+)
+
+$(P
+The rest of the design is concerned with how pointers become owners,
+read only pointers, and invalid pointers, and how the Core OB Principle
+is maintained at all times.
+)
+
+
+$(P
+$(H4 Tracked Pointers)
+)
+
+$(P
+The only pointers that are tracked are those declared in the `@live` function
+as `this`, function parameters or local variables. Variables from other
+functions are not tracked, even `@live` ones, as the analysis of interactions
+with other functions depends
+entirely on that function signature, not its internals.
+Parameters that are `const` are not tracked.
+)
+
+
+$(P
+$(H4 Pointer States)
+)
+
+$(P
+Each pointer is in one of the following states:
+)
+
+$(P
+$(DL
+$(DT Undefined)
+)
+
+$(P
+$(DD The pointer is in an invalid state. Dereferencing such a pointer is
+an error.)
+)
+
+$(P
+$(DT Owner)
+)
+
+$(P
+$(DD The owner is the sole pointer to a memory object graph.
+An Owner pointer normally does not have a `scope` attribute.
+If a pointer with the `scope` attribute is initialized
+with an expression not derived from a tracked pointer, it is an Owner.
+)
+
+$(P
+If an Owner pointer is assigned to another Owner pointer, the
+former enters the Undefined state.
+)
+)
+
+$(P
+$(DT Borrowed)
+)
+
+$(P
+$(DD A Borrowed pointer is one that temporarily becomes the sole pointer
+to a memory object graph. It enters that state via assignment
+from an owner pointer, and the owner then enters the Lent state
+until after the last use of the borrowed pointer.
+)
+
+$(P
+A Borrowed pointer must have the `scope` attribute and must
+be a pointer to mutable.
+)
+)
+
+$(P
+$(DT Readonly)
+)
+
+$(P
+$(DD A Readonly pointer acquires its value from an Owner.
+While the Readonly pointer is live, only Readonly pointers can
+be acquired from that Owner.
+A Readonly pointer must have the `scope` attribute and also
+must not be a pointer to mutable.
+)
+)
+)
+
+$(P
+$(H4 Lifetimes)
+)
+
+$(P
+The lifetime of a Borrowed or Readonly pointer value starts when it is
+first read (not when it is initialized or assigned a value), and ends at
+the last read of that value.
+)
+
+$(P
+This is also known as *Non-Lexical Lifetimes*.
+)
+
+
+$(P
+$(H4 Pointer State Transitions)
+)
+
+$(P
+A pointer changes its state when one of these operations is done to it:
+)
+
+$(P
+$(UL
+$(LI storage is allocated for it (such as a local variable on the stack),
+which places the pointer in the Undefined state)
+)
+
+$(P
+$(LI initialization (treated as assignment))
+)
+
+$(P
+$(LI assignment - the source and target pointers change state based on what
+states they are in and their types and storage classes)
+)
+
+$(P
+$(LI passed to an `out` function parameter (changes state after the function returns),
+treated the same as initialization)
+)
+
+$(P
+$(LI passed by `ref` to a function parameter, treated as an assignment to a Borrow or a Readonly
+depending on the storage class and type of the parameter)
+)
+
+$(P
+$(LI returned from a function)
+)
+
+$(P
+$(LI it is passed by value to a function parameter, which is
+treated as an assignment to that parameter.)
+)
+
+$(P
+$(LI it is implicitly passed by ref as a closure variable to a nested function)
+)
+
+$(P
+$(LI the address of the pointer is taken, which is treated as assignment to whoever
+receives the address)
+)
+
+$(P
+$(LI the address of any part of the memory object graph is taken, which is
+treated as assignment to whoever receives that address)
+)
+
+$(P
+$(LI a pointer value is read from any part of the memory object graph,
+which is treated as assignment to whoever receives that pointer)
+)
+
+$(P
+$(LI merging of control flow reconciles the state of each variable based on the
+states they have from each edge)
+)
+)
+
+$(P
+$(H3 Limitations)
+)
+
+$(P
+Being a prototype, there are a lot of aspects not dealt with yet, and
+won't be until the prototype shows that it is a good design.
+)
+
+$(P
+$(H4 Bugs)
+)
+
+$(P
+Expect lots of bugs. Please report them to bugzilla and tag with the "ob"
+keyword. It's not necessary to report the other limitations that are enumerated here.
+)
+
+$(P
+$(H4 Class References and Associative Array References are not Tracked)
+)
+
+$(P
+They are presumed to be managed by the garbage collector.
+)
+
+$(P
+$(H4 Borrowing and Reading from Non-Owner Pointers)
+)
+
+$(P
+Owners are tracked for leaks, not other pointers.
+Borrowers are considered Owners if they are initialized from other than
+a pointer.
+)
+
+---
+@live void uhoh()
+{
+    scope p = malloc();  // p is considered an Owner
+    scope const pc = malloc(); // pc is not considered an Owner
+} // dangling pointer pc is not detected on exit
+
+---
+$(P
+It doesn't seem to make much sense to have such pointers as
+`scope`, perhaps this can be resolved by making such an error.
+)
+
+$(P
+$(H4 Pointers Read/Written by Nested Functions)
+)
+
+$(P
+They're not tracked.
+)
+
+---
+@live void ohno()
+{
+    auto p = malloc();
+
+    void sneaky() { free(p); }
+
+    sneaky();
+    free(p);  // double free not detected
+}
+---
+
+$(P
+$(H4 Exceptions)
+)
+
+$(P
+The analysis assumes no exceptions are thrown.
+)
+
+---
+@live void leaky()
+{
+    auto p = malloc();
+    pitcher();  // throws exception, p leaks
+    free(p);
+}
+---
+
+$(P
+One solution is to use `scope(exit)`:
+)
+
+---
+@live void waterTight()
+{
+    auto p = malloc();
+    scope(exit) free(p);
+    pitcher();
+}
+---
+
+$(P
+or use RAII objects or call only `nothrow` functions.
+)
+
+$(P
+$(H4 Lazy Parameters)
+)
+
+$(P
+These are not considered.
+)
+
+$(P
+$(H4 Quadratic Behavior)
+)
+
+$(P
+The analysis exhibits quadratic behavior, so keeping the `@live` functions
+smallish will help.
+)
+
+$(P
+$(H4 Mixing Memory Pools)
+)
+
+$(P
+Conflation of different memory pools:
+)
+
+---
+void* xmalloc(size_t);
+void xfree(void*);
+
+void* ymalloc(size_t);
+void yfree(void*);
+
+auto p = xmalloc(20);
+yfree(p);  // should call xfree() instead
+---
+$(P
+is not detected.
+)
+
+$(P
+This can be mitigated by using type-specific pools:
+)
+
+---
+U* umalloc();
+void ufree(U*);
+
+V* vmalloc();
+void vfree(V*);
+
+auto p = umalloc();
+vfree(p);  // type mismatch
+---
+
+$(P
+and perhaps disabling implicit conversions to `void*` in `@live` functions.
+)
+
+$(P
+$(H4 Variadic Function Arguments)
+)
+
+$(P
+Arguments to variadict functions (like `printf`) are considered to be consumed.
+While safe, this doesn't seem to be very practical, and will likely need revisiting.
+)
+)
+
+$(LI $(LNAME2 preview-in,Added `-preview=in` to make the `in` storage class mean `scope const`.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/preview-in.dd)
+$(P
+Although technically defined to be `const scope`, the `in` storage
+class has never been implemented as such until this preview switch.
+With the implementation now done, `in` should be the storage class
+of choice for purely input function parameters.
+)
+
+$(P
+Without `-preview=in`, these two declarations are equivalent:
+)
+-------------
+void fun(in int x);
+void fun(const int x);
+-------------
+
+$(P
+With `-preview=in`, these two declarations are equivalent:
+)
+------------------
+void fun(in int x);
+void fun(scope const int x);
+------------------
+)
+
+$(LI $(LNAME2 printfParams2,Validate printf and scanf (variants too) arguments against format specifiers)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/printfParams2.dd)
+$(P
+Follows the C99 specification 7.19.6.1 for printf and 7.19.6.2 for scanf.
+)
+
+$(P
+For printf, it takes a generous, rather than strict, view of compatiblity.
+For example, an unsigned value can be formatted with a signed specifier.
+)
+
+$(P
+For scanf, it takes a strict view of compatiblity.
+)
+
+$(P
+Diagnosed incompatibilities are:
+)
+
+$(P
+1. incompatible sizes which will cause argument misalignment
+2. deferencing arguments that are not pointers
+3. insufficient number of arguments
+4. struct arguments
+5. array and slice arguments
+6. non-pointer arguments to `s` specifier
+7. non-standard formats
+8. undefined behavior per C99
+)
+
+$(P
+Per the C Standard, extra arguments are ignored.
+)
+
+$(P
+No attempt is made to fix the arguments or the format string.
+)
+
+$(P
+In order to use non-Standard printf/scanf formats, an easy workaround is:
+)
+
+---
+printf("%k\n", value);  // error: non-Standard format k
+---
+---
+const format = "%k\n";
+printf(format.ptr, value);  // no error
+---
+
+$(P
+Most of the errors detected are portability issues. For instance,
+)
+
+---
+string s;
+printf("%.*s\n", s.length, s.ptr);
+printf("%d\n", s.sizeof);
+ulong u;
+scanf("%lld%*c\n", &u);
+---
+$(P
+should be replaced with:
+)
+---
+string s;
+printf("%.*s\n", cast(int) s.length, s.ptr);
+printf("%zd\n", s.sizeof);
+ulong u;
+scanf("%llu%*c\n", &u);
+---
+
+$(P
+Printf-like and scanf-like functions are detected by prefixing them
+with `pragma(printf)` for printf-like functions or `pragma(scanf)` for scanf-like functions.
+)
+
+$(P
+In addition to
+the pragma, the functions must conform to the following characteristics:
+)
+
+$(P
+$(OL
+$(LI be `extern (C)` or `extern (C++)`)
+$(LI have the format parameter declared as `const(char)*`)
+$(LI have the format parameter immediately precede the `...` for non-v functions,
+or immediately precede the `va_list` parameter (which is the last parameter for "v"
+variants of `printf` and `scanf`))
+)
+)
+
+$(P
+which enables automatic detection of the format string argument and the argument list.
+)
+
+$(P
+Checking of "v" format strings is not implemented yet.
+)
+)
+
+$(LI $(LNAME2 reproducible-builds,Environment variable `SOURCE_DATE_EPOCH` is now supported)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/reproducible-builds.dd)
+$(P
+The environment variable `SOURCE_DATE_EPOCH` is used for
+$(LINK2 https://reproducible-builds.org/, reproducible builds).
+It is an UNIX timestamp (seconds since 1970-01-01 00:00:00),
+as described $(LINK2 https://reproducible-builds.org/docs/source-date-epoch/, here).
+DMD now correctly recognize it and will set the `__DATE__`,
+`__TIME__`, and `__TIMESTAMP__` tokens accordingly.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 isbaseof,Added TypeInfo_Class/TypeInfo_Interface.isBaseOf that works like C#/Java isAssignableFrom.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/isbaseof.dd)
+$(P
+`TypeInfo_Class.isBaseOf` returns true if the argument and the receiver
+are equal or if the class represented by the argument inherits from the
+class represented by the receiver. This is called `isBaseOf` instead of
+`isAssignableFrom` to avoid confusion for classes that overload
+`opAssign` and so may allow assignment from classes outside their
+inheritance hierarchy and to match existing terminology in the D
+runtime. `TypeInfo_Interface.isBaseOf` is similar with the addition
+that the argument may be either `TypeInfo_Class` or
+`TypeInfo_Interface`.
+)
+-------
+class ClassA {}
+class ClassB : ClassA {}
+
+auto a = new ClassA(), b = new ClassB();
+
+assert(typeid(a).isBaseOf(typeid(a)));
+assert(typeid(a).isBaseOf(typeid(b)));
+assert(!typeid(b).isBaseOf(typeid(a)));
+-------
+)
+
+$(LI $(LNAME2 page_size,Add `core.memory.pageSize` and `minimumPageSize`.)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/page_size.dd)
+$(P
+`pageSize` contains the size of a system page in bytes.
+)
+
+---
+import core.memory : pageSize;
+ubyte[] buffer = new ubyte[pageSize];
+---
+
+$(P
+`minimumPageSize` contains the minimum size of a system page in bytes.
+)
+
+$(P
+This is a compile time, platform specific value. This value might not
+be accurate, since it might be possible to change this value. Whenever possible,
+please use `pageSize` instead, which is initialized during runtime.
+)
+
+$(P
+The minimum size is useful when the context requires a compile time known value,
+like the size of a static array: `ubyte[minimumPageSize] buffer`.
+)
+
+---
+import core.memory : minimumPageSize;
+ubyte[minimumPageSize] buffer;
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 date-isoweek,Add `Date.isoWeekYear` and `Date.fromISOWeek` in `std.datetime.date`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/date-isoweek.dd)
+$(P
+It is now possible to convert from the ISO 8601 week calendar into the
+Gregorian calendar which is used by Date and DateTime.
+)
+
+$(P
+Dates are constructed from the year in the ISO week calendar, the week number
+and a day of week. `Date.fromISOWeek(2020, 11, DayOfWeek.mon)` will result in
+`Date(2020, 3, 9)`.
+)
+
+$(P
+As the year in the Gregorian calendar and the year in the ISO week calendar are
+not always the same there is a new `.isoWeekYear` property to get the year of
+the `Date` object in the ISO week calendar. If you convert between them often,
+consider using `.isoWeekAndYear` to compute both week number and year in one
+step.
+)
+)
+
+$(LI $(LNAME2 deprecate-xml,Deprecated module `std.xml`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/deprecate-xml.dd)
+$(P
+The module `std.xml` has been deprecated. Any code that still needs
+it can use [UndeaD](https://github.com/dlang/undeaD) instead.
+For parsing xml files, we recommend to use the dub package
+[dxml](https://code.dlang.org/packages/dxml).
+)
+)
+
+$(LI $(LNAME2 digest,The deprecated aliases in std.digest.digest were removed)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/digest.dd)
+$(P
+They were deprecated since 2.076.1 and have now been removed.
+Import `std.digest` or its submodules instead.
+)
+
+$(P
+Additionally the deprecation cycle for `std.digest.digest` was started
+and the module will be removed in 2.101.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 ignoreHiddenDirectories,Hidden directories are now ignored.)
+$(CHANGELOG_SOURCE_FILE dub, changelog/ignoreHiddenDirectories.dd)
+$(P
+A hidden directory on most Posix file systems starts with a period. e.g.
+`.dub`. By default, dub ignored hidden files (e.g. `.swap.file.d`), but not
+hidden directories. Some operating systems create hidden directories that dub
+would try to include for compilation. This release now will properly ignore
+hidden directories, unless those directories are specifically named in the dub
+recipe file.
+)
+
+$(P
+Note that this uses the directory name exclusively and does not check file
+attributes.
+)
+)
+
+$(LI $(LNAME2 lintReportFile,Dub lint now supports --report-file argument.)
+$(CHANGELOG_SOURCE_FILE dub, changelog/lintReportFile.dd)
+$(P
+Dub lint can now be called with --report-file argument:
+dub lint --report-file report.json
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 20596): [REG2.086] Error on missed stack allocation for closure for template)
+$(LI $(BUGZILLA 20597): [REG2.080] Wrong closure GC allocation with dip1000)
+$(LI $(BUGZILLA 20718): enum type mismatch causes wrong location on error)
+$(LI $(BUGZILLA 20742): dmd -X $(LPAREN)JSON output$(RPAREN) includes uncompiled symbols)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 14639): Assigning init value to struct uses stack, causing segfault)
+$(LI $(BUGZILLA 15867): Compiler reports wrong error location for immutability error)
+$(LI $(BUGZILLA 19949): C++ Mangling: no support for abi-tags from the Itanium ABI)
+$(LI $(BUGZILLA 20084): return by auto ref unsafe - and different code for inout ref and ref.)
+$(LI $(BUGZILLA 20461): [dip1000] Passing stack allocated string to assert compiles)
+$(LI $(BUGZILLA 20593): [GCC ASM] Parser syntax for asm operands differs from GCC)
+$(LI $(BUGZILLA 20637): spelling correction offers private members)
+$(LI $(BUGZILLA 20638): spelling correction offers private member of package on named package access)
+$(LI $(BUGZILLA 20643): printf without arguments aborts compilation)
+$(LI $(BUGZILLA 20644): Invalid printf deprecation for ubyte passed to "%hhu")
+$(LI $(BUGZILLA 20645): printf deprecation for width + precision)
+$(LI $(BUGZILLA 20653): Short-circuiting boolean logic not working)
+$(LI $(BUGZILLA 20658): can modify overlapped storage classes in @safe enum function)
+$(LI $(BUGZILLA 20675): dip1000 improper error about copying scope parameter into allocated memory)
+$(LI $(BUGZILLA 20682): [DIP1000] wrong error: scope variable may not be copied into allocated memory)
+$(LI $(BUGZILLA 20696): Should error when retrieving mangling while the type is not yet final)
+$(LI $(BUGZILLA 20779): Segfault when self-containing struct is accessed from inside in a __traits$(LPAREN)compiles$(RPAREN) context)
+$(LI $(BUGZILLA 20795): [dip1000] segfault on templated opEquals)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 20444): Make __DATE__ in dlang reproducible using SOURCE_DATE_EPOCH)
+$(LI $(BUGZILLA 20470): accessing an AliasSeq tuple loses `this`)
+$(LI $(BUGZILLA 20609): Disabled and deprecated functions show up as candidate)
+$(LI $(BUGZILLA 20625): Function literal diagnostic is not on par with other messages)
+$(LI $(BUGZILLA 20627): Module ctors / dtors should always have D linkage)
+$(LI $(BUGZILLA 20636): Support the RDSEED instruction in asm blocks)
+$(LI $(BUGZILLA 20734): Array literals as arguments to scope slice parameters should be stack-allocated)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 20589): typeof may give wrong result in case of classes defining `opCall` operator)
+$(LI $(BUGZILLA 20606): Cannot cast non-mutable BitArray to void[], size_t[])
+$(LI $(BUGZILLA 20733): Documentation for hasElaborateAssign says copy construction creates an opAssign)
+$(LI $(BUGZILLA 20743): Checked!$(LPAREN)int, Abort$(RPAREN) does not abort but raise SIGFPE)
+$(LI $(BUGZILLA 20755): ImplicitConversionTargets of const class are nonconst)
+$(LI $(BUGZILLA 20799): schwartzSort does not pin transformation results with indirections, leading to memory corruption)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 20723): std.random.unpredictableSeed: on x86/x86-64 try using RDRAND when there is no arc4random)
+$(LI $(BUGZILLA 20732): swap doesn't support types with impure gc or throwing copy constructors)
+)
+$(BUGSTITLE_BUGZILLA Druntime regressions,
+
+$(LI $(BUGZILLA 20748): Deprecation for assert using shared type and checkaction=context)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 20750): checkaction=context segfaults for null references)
+$(LI $(BUGZILLA 20757): checkaction=context prints characters as integers)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 19924): Make core.bitop.bswap$(LPAREN)ulong$(RPAREN) work in betterC)
+$(LI $(BUGZILLA 20178): Add TypeInfo_Class/TypeInfo_Interface.isBaseOf $(LPAREN)equivalent to C#/Java isAssignableFrom$(RPAREN))
+$(LI $(BUGZILLA 20711): object.update requires the "update" callback to wastefully return a copy of the updated value)
+$(LI $(BUGZILLA 20741): `dup`, `idup` for arrays plus `keys`, `values` for built-in associative arrays: if a type is known to have a postblit do not emit code for the non-postblit path and vice versa)
+)
+)
+$(D_CONTRIBUTORS_HEADER 47)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR Bernhard Seckinger)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Brian Schott)
+    $(D_CONTRIBUTOR David Abdurachmanov)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR Don.Clugston)
+    $(D_CONTRIBUTOR drug007)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR H Paterson)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR ivan.roubicek)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR Jan Jurzitza)
+    $(D_CONTRIBUTOR John Colvin)
+    $(D_CONTRIBUTOR Lucien Perregaux)
+    $(D_CONTRIBUTOR Luhrel)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Mark)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias L. Baumann)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Rasmus Thomsen)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Stefan Koch)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR wolframw)
+    $(D_CONTRIBUTOR سليمان السهمي (Suleyman Sahmi))
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.092.0
+    TITLE=Change Log: $(VER)

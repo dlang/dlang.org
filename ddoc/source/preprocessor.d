@@ -114,7 +114,12 @@ auto compile(R)(R buffer, string[] arguments, string inputFile, string[string] m
     import std.process : execute;
     auto ret = execute(args);
     if (ret.status != 0)
+    {
+        stderr.writeln("File content:");
+        stderr.writeln(buffer);
+        stderr.writeln("----------------------------------------");
         stderr.writeln(ret.output);
+    }
     return ret.status;
 }
 
@@ -402,14 +407,15 @@ auto genSwitches(string fileText)
         with(TargetOS)
         switch(option.os)
         {
-            case windows:
+            case Windows:
                 currentFlag = text("$(WINDOWS ", currentFlag, ")");
                 break;
             case linux:
-            case macOS:
-            case freeBSD:
-            case solaris:
-            case dragonFlyBSD:
+            case OSX:
+            case OpenBSD:
+            case FreeBSD:
+            case Solaris:
+            case DragonFlyBSD:
                 currentFlag = text("$(UNIX ", currentFlag, ")");
                 break;
             case all:

@@ -101,7 +101,9 @@ var backends = {
     requestTransform: function(data) {
         var req = {
             source: data.code,
+            // always execute unittests and main for backwards compatibility with examples
             args: "-unittest",
+            runtimeArgs: "--DRT-testmode=run-main",
             compiler: dmdCompilerBranch
         }
         // only send set attributes

@@ -1,0 +1,643 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jul 01, 2019, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 22 major changes and 44 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 63 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 aliasdecly_func,A new syntax is available to declare an alias to a function type))
+$(LI $(RELATIVE_LINK2 ddoc_markdown,Add Markdown-inspired features to Ddoc))
+$(LI $(RELATIVE_LINK2 dep_scope_class,`scope` as a type constraint on class declarations is deprecated.))
+$(LI $(RELATIVE_LINK2 dep_type_error,Usage of `this` and `super` as types is obsolete))
+$(LI $(RELATIVE_LINK2 error_invalid_integer_literal,Turn deprecation into error for some invalid integer literals.))
+$(LI $(RELATIVE_LINK2 fix16002,fix Issue 16002 - Add `is(sym == module)` and `is(sym == package)`))
+$(LI $(RELATIVE_LINK2 local_templates,Local templates can now receive local symbols.))
+$(LI $(RELATIVE_LINK2 msvcrt,Windows: The mingw based runtime and platform import libraries can now be selected explicitly))
+$(LI $(RELATIVE_LINK2 nan,Floating point types now use a quiet nan as the .init value))
+$(LI $(RELATIVE_LINK2 remove_alloc_dealloc,Class allocators and deallocators are now obsolete))
+$(LI $(RELATIVE_LINK2 remove_visibility,The deprecation phase for access checks is finished))
+$(LI $(RELATIVE_LINK2 static_this_immutable_initialization,Initialization of `immutable` global data from `static this` is deprecated))
+$(LI $(RELATIVE_LINK2 struct_ctor_default_params,Struct constructors with all-default parameter will now error))
+$(LI $(RELATIVE_LINK2 template_alias_matches_basic_types,Template alias parameters now match basic types as a conversion.))
+$(LI $(RELATIVE_LINK2 xmm-linux-changelog,32 Bit Linux now uses XMM registers for float and double rather than the x87.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 freebsd-ttycom,Convert FreeBSD's sys/ttycom.h into core.sys.posix.sys.ttycom))
+$(LI $(RELATIVE_LINK2 gc_parallel,GC now marks the heap with multiple threads))
+$(LI $(RELATIVE_LINK2 linux-clone-unshare,Add the clone and unshare functions to core.sys.linux.sched))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 asciicontroltable,Added a table of control characters in ASCII table))
+$(LI $(RELATIVE_LINK2 count_processors_via_sched_affinity_on_linux,Count processors via sched_getaffinity on Linux))
+$(LI $(RELATIVE_LINK2 new_schwartzSort_overload,Add overload `std.algorithm.sorting.schwartzSort!(alias transform, SwapStrategy ss, R)`))
+$(LI $(RELATIVE_LINK2 phobos-dip1000,Phobos is now compiled with -preview=dip1000))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 aliasdecly_func,A new syntax is available to declare an alias to a function type)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/aliasdecly_func.dd)
+$(P
+It's now possible to declare an alias to a function type using the `alias` syntax based on the assignment operator.
+The declaration consists of the return type, followed by parameters and ends with optional (member) function attributes. See the
+$(GLINK2 https://dlang.org/spec/grammar.html, AliasDeclarationY) rule for more details.
+)
+
+$(P
+Example:
+)
+
+---
+alias int OldStyleFunAlias(string);
+alias NewStyleFunAlias = int(string);
+
+int fun(string p){return 0;}
+static assert(is(typeof(fun) == NewStyleFunAlias));
+---
+
+$(P
+Note that an advantage compared to the old syntax is that the new allows a shortcut to function template types:
+)
+
+---
+alias SetterProto(T) = void(T t);
+alias GetterProto(T) = T() const;
+---
+)
+
+$(LI $(LNAME2 ddoc_markdown,Add Markdown-inspired features to Ddoc)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/ddoc_markdown.dd)
+$(P
+With the `-preview=markdown` flag to dmd, Ddoc now supports $(LINK2 https://daringfireball.net/projects/markdown/syntax, Markdown) features like headings, emphasized text, links and more. The full list of features is described in $(LINK2 https://dlang.org/spec/ddoc.html#highlighting, the Ddoc documentation page).
+)
+
+$(P
+Use the `-transition=vmarkdown` flag together with the `-preview=markdown` flag to log all instances of Markdown features as they're processed in your documentation.
+)
+)
+
+$(LI $(LNAME2 dep_scope_class,`scope` as a type constraint on class declarations is deprecated.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dep_scope_class.dd)
+$(P
+`scope` as a type constraint on class declarations has been deprecated for quite some time.  However,
+starting with this release, the compiler will emit a deprecation warning if used.
+)
+
+---
+scope class C { }  // Deprecation: `scope` as a type constraint is deprecated.  Use `scope` at the usage site.
+---
+
+$(P
+Note that this does not apply to structs.  Deprecation of `scope` as a type constraint on structs is still awaiting a decision.
+)
+)
+
+$(LI $(LNAME2 dep_type_error,Usage of `this` and `super` as types is obsolete)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dep_type_error.dd)
+$(P
+Prior to this release, `this` and `super` could be used as both data or types depending on the context, but
+was deprecated about a year ago. Starting with this release using `this` or `super` as a type will result in a compiler error.
+)
+
+---
+class C
+{
+    shared(this) x;    // Error: Using `this` as a type is obsolete. Use `typeof(this)` instead
+}
+
+class D : C
+{
+    shared(super) a;   // Error: Using `super` as a type is obsolete. Use `typeof(super)` instead
+    super b;           // Error: Using `super` as a type is obsolete. Use `typeof(super)` instead
+}
+---
+
+$(P
+Use `typeof(super)` or `typeof(this)` instead.
+)
+
+---
+class C
+{
+    shared(typeof(this)) x;
+}
+
+class D : C
+{
+    shared(typeof(super)) a;
+    typeof(super) b;
+}
+---
+)
+
+$(LI $(LNAME2 error_invalid_integer_literal,Turn deprecation into error for some invalid integer literals.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/error_invalid_integer_literal.dd)
+$(P
+With this release DMD will issue an error when some invalid integer literals like `0b` or `0x` are used. Example:
+)
+
+---
+auto a = 0b;  // Error: `0b` isn't a valid integer literal, use `0b0` instead
+auto a = 0x;  // Error: `0x` isn't a valid integer literal, use `0x0` instead
+---
+)
+
+$(LI $(LNAME2 fix16002,fix Issue 16002 - Add `is(sym == module)` and `is(sym == package)`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/fix16002.dd)
+$(P
+This enhancement adds two new forms of the `is()`, expression, which
+determine whether a given symbol represents a module or package.
+)
+
+$(P
+It also adds `__traits(isModule, sym)` and `__traits(isPackage, sym)`, which
+do the same thing.
+)
+)
+
+$(LI $(LNAME2 local_templates,Local templates can now receive local symbols.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/local_templates.dd)
+$(P
+With this release local and member templates can be instantiated with local symbols.
+)
+
+---
+struct S
+{
+    private int _m;
+    void exec(alias fun)()
+    {
+        fun(_m);
+    }
+}
+
+unittest
+{
+    int localVar;
+
+    void set(int i)
+    {
+        localVar = i;
+    }
+
+    auto obj = S(10);
+    obj.exec!set();
+
+    assert(localVar == 10);
+}
+---
+
+$(P
+This was a long-standing limitation that disturbed the metaprograming experience.
+)
+
+$(P
+See issue $(LINK2 https://issues.dlang.org/show_bug.cgi?id=5710, 5710).
+)
+)
+
+$(LI $(LNAME2 msvcrt,Windows: The mingw based runtime and platform import libraries can now be selected explicitly)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/msvcrt.dd)
+$(P
+When specifying `-mscrtlib=msvcrt100` explicitly on the command line to dmd, detection
+of a Visual Studio installation is skipped and the redistributable
+VC2010 dynamic runtime library and mingw based platform import libraries will be used
+unconditionally. The LLD linker (provided by the LLVM project) will be invoked
+instead of the Microsoft linker.
+)
+)
+
+$(LI $(LNAME2 nan,Floating point types now use a quiet nan as the .init value)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/nan.dd)
+$(P
+Prior to this release, `float.init`, `double.init` and `real.init` used a
+signalling nan. They now use a quiet nan, which is the same as the corresponding
+`.nan` value.
+)
+
+$(P
+Old behaviour:
+)
+---
+double a = double.init, b = double.nan;
+writefln("%x",*cast(ulong*)&a); // 7ff4000000000000
+writefln("%x",*cast(ulong*)&b); // 7ff8000000000000
+---
+
+$(P
+New behaviour:
+)
+---
+double a = double.init, b = double.nan;
+writefln("%x",*cast(ulong*)&a); // 7ff8000000000000
+writefln("%x",*cast(ulong*)&b); // 7ff8000000000000
+---
+)
+
+$(LI $(LNAME2 remove_alloc_dealloc,Class allocators and deallocators are now obsolete)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/remove_alloc_dealloc.dd)
+$(P
+Starting with this release any use of $(LINK2 https://dlang.org/spec/class.html#allocators, class allocators)
+or $(LINK2 https://dlang.org/spec/class.html#deallocators, deallocators) will result in a compilation error.
+)
+
+$(P
+See the $(LINK2 https://dlang.org/deprecate.html#Class%20allocators%20and%20deallocators, deprecated features page)
+for more information.
+)
+)
+
+$(LI $(LNAME2 remove_visibility,The deprecation phase for access checks is finished)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/remove_visibility.dd)
+$(P
+The `-transition=import` and `-transition=checkimports` switches no longer have an
+effect and are now deprecated. Symbols that are not visible in a particular
+scope will no longer be found by the compiler.
+)
+)
+
+$(LI $(LNAME2 static_this_immutable_initialization,Initialization of `immutable` global data from `static this` is deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/static_this_immutable_initialization.dd)
+$(P
+Prior to this release, the following code was possible:
+)
+
+---
+module foo;
+immutable int bar;
+static this()
+{
+    bar = 42;
+}
+---
+
+$(P
+However, module constructors (`static this`) run each time a thread is
+spawned, and `immutable` data is implicitly `shared`, which led to
+`immutable` value being overriden every time a new thread was spawned.
+The simple fix for this is to use `shared static this` over `static this`,
+as the former is only run once per process.
+)
+)
+
+$(LI $(LNAME2 struct_ctor_default_params,Struct constructors with all-default parameter will now error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/struct_ctor_default_params.dd)
+$(P
+Since 2.070.0, the following code has been giving deprecations:
+)
+---
+struct Oops
+{
+    this (int universe = 42) {}
+}
+---
+$(P
+It will now error out.
+)
+)
+
+$(LI $(LNAME2 template_alias_matches_basic_types,Template alias parameters now match basic types as a conversion.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/template_alias_matches_basic_types.dd)
+$(P
+With this release, templates with alias parameters can be instantiated with basic types,
+such as `int` or `void function()`.
+)
+
+---
+template Example(alias A) { alias Example = A[]; }
+alias IntArray = Example!int;
+
+template MatchType(T) { enum MatchType = "type"; }
+template MatchType(alias A) { enum MatchType = "alias"; }
+
+// alias matches, but type matches take priority.
+static assert (MatchType!int == "type");
+---
+
+$(P
+Templates with alias parameters already matched named types, lambdas, and even value literals. Templates with
+variadic parameters already matched basic types. This led to strange replacements for `alias` such as
+`template Template(T...) if (T.length == 1)`. Those replacements are no longer necessary.
+)
+
+$(P
+As a consequence, in some cases templates will match that did not used to. For instance, a template
+may have falsely relied on `alias` parameters being "something callable" vs. type parameters being
+"the type of something callable", such as
+)
+
+---
+void fun(T...)(T callable) { ... }
+void fun(alias A)() { ... }
+---
+
+$(P
+Such overloads may now need to explicitly check whether A is callable in the second case:
+)
+
+---
+void fun(alias A)() if (__traits(compiles, A())) { ... }
+// shorter, but may miss cases like structs with a static opCall
+void fun(alias A)() if (!isType!A) { ... }
+---
+)
+
+$(LI $(LNAME2 xmm-linux-changelog,32 Bit Linux now uses XMM registers for float and double rather than the x87.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/xmm-linux-changelog.dd)
+$(P
+This should substantially speed up routine float and double processing.
+SIMD vector operations, however, are still not support on 32 bit Linux code
+because of issues with 16 byte stack alignment.
+)
+
+$(P
+This means that generated code will no longer work on older x86 processors that
+do not have XMM registers. If this is an issue, please file a bug report.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 freebsd-ttycom,Convert FreeBSD's sys/ttycom.h into core.sys.posix.sys.ttycom)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/freebsd-ttycom.dd)
+$(P
+In FreeBSD, as in OSX, the tty part of ioctl is defined in
+sys/ttycom.h which is included by sys/ioctl.h.
+In druntime, there were OSX part of definitions in ttycom.d,
+but there were no FreeBSD equivalent.
+This change implements FreeBSD part of ttycom.d and ioccom.d,
+and public import core.sys.posix.sys.ttycom in ioctl.d.
+The OSX users and FreeBSD users can now use full ioctls related
+to tty by importing core.sys.posix.sys.ioctl, like including
+sys/ioctl.h in C language. (For example, TIOCGWINSZ ioctl was
+not provided in FreeBSD.)
+Since there are only version(OSX) and version(FreeBSD) part
+in ttycom.d, public import'ing core.sys.posix.sys.ttycom from
+ioctl.d will make no harm to other platforms.
+)
+)
+
+$(LI $(LNAME2 gc_parallel,GC now marks the heap with multiple threads)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/gc_parallel.dd)
+$(P
+The garbage collector now uses available CPU cores to mark the heap
+faster. This reduces pause times for a collection considerably.
+)
+
+$(P
+By default, the GC uses all available logical cores of your CPU. This
+might affect your application if it has threads that are not suspended
+during the mark phase of the collection. You can configure the number of
+additional threads used for marking by DRT option `parallel` to the
+$(LINK2 $(ROOT_DIR)spec/garbage.html, GC configuration),
+e.g. by passing `--DRT-gcopt=parallel:2` on the command
+line. A value of `0` disables parallel marking completely.
+)
+
+$(P
+As usual, you can also embed the configuration into the application by
+redefining `rt_options`, e.g.
+)
+
+-------
+extern(C) __gshared string[] rt_options = [ "gcopt=parallel:0" ];
+-------
+)
+
+$(LI $(LNAME2 linux-clone-unshare,Add the clone and unshare functions to core.sys.linux.sched)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/linux-clone-unshare.dd)
+$(P
+clone(2) and unshare(2) are Linux-specific system calls. Bindings have been
+added to the corresponding D module, as well as the CLONE_* constants that
+are used as flags to these functions.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 asciicontroltable,Added a table of control characters in ASCII table)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/asciicontroltable.dd)
+$(P
+There is a new enumerated type $(REF ControlChar, std, ascii). It has
+values for every control character in ASCII table and has a base type
+of `char`, allowing for alternative markup of strings with control
+characters:
+)
+-------
+import std.ascii, std.conv;
+with (ControlChar) assert(text("Phobos", us, "Deimos", us, "Tango", rs) == "Phobos\x1FDeimos\x1FTango\x1E");
+-------
+)
+
+$(LI $(LNAME2 count_processors_via_sched_affinity_on_linux,Count processors via sched_getaffinity on Linux)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/count_processors_via_sched_affinity_on_linux.dd)
+$(P
+On GNU/Linux usable number of processors may be restricted if a process runs in containers.
+In case it's better to use sched_getaffinity(2).
+)
+-------
+import std.parallelism;
+
+writeln(totalCPUs); // 4
+writeln(totalCPUs); // 1: runs on `taskset -c 0`
+-------
+)
+
+$(LI $(LNAME2 new_schwartzSort_overload,Add overload `std.algorithm.sorting.schwartzSort!(alias transform, SwapStrategy ss, R)`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/new_schwartzSort_overload.dd)
+$(P
+$(REF schwartzSort, std,algorithm,sorting) now has an overloaded version that can be
+used to provide a `SwapStrategy` without also explicitly specifying the predicate to
+sort by.
+)
+
+-------
+auto s1 = a.schwartzSort!(abs, SwapStrategy.stable);
+
+// The old syntax still works.
+auto s2 = a.schwartzSort!(abs, "a < b", SwapStrategy.stable);
+-------
+)
+
+$(LI $(LNAME2 phobos-dip1000,Phobos is now compiled with -preview=dip1000)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/phobos-dip1000.dd)
+$(P
+Phobos and Druntime are now compiled with -preview=dip1000.
+)
+
+$(P
+This is a major milestone in the transition to $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/other/DIP1000.md, DIP1000). Hence, end users can now start using `-preview=dip1000` in their own code bases.
+)
+
+$(P
+As always, any encountered issue should be reported to the $(LINK2 https://issues.dlang.org, issue tracker).
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regressions,
+
+$(LI $(BUGZILLA 19661): DMD 2.084.0 SIGSEGV in std.traits.isFunction)
+$(LI $(BUGZILLA 19758): $(LPAREN)0x01 & 0xFF$(RPAREN) == 0 by dmd 2.085.0$(LPAREN)-m64$(RPAREN) on Windows)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bugs,
+
+$(LI $(BUGZILLA 711): combining mixins and overriding causes inifite loops)
+$(LI $(BUGZILLA 1170): Cannot forward reference a type defined in a MixinStatement)
+$(LI $(BUGZILLA 4923): immutable module variables are modifiable in non-shared module constructors)
+$(LI $(BUGZILLA 5710): cannot use delegates as parameters to non-global template)
+$(LI $(BUGZILLA 6541): using synchronized on a templated method crashes the compiler)
+$(LI $(BUGZILLA 9029): Built-in types treated specially for alias parameters)
+$(LI $(BUGZILLA 10739): Struct defined by template mixin leads to order-sensitivity of declarations)
+$(LI $(BUGZILLA 13471): CTFE glitch when executing std.digest.crc.crc32Of$(LPAREN)$(RPAREN) and checking the result with enforce$(LPAREN)$(RPAREN). $(LPAREN)keyword: uninitialized variable$(RPAREN))
+$(LI $(BUGZILLA 13848): overlapping initialization for r)
+$(LI $(BUGZILLA 17141): Type Inference Incorrectly Converts Characters to Integers)
+$(LI $(BUGZILLA 18794): Compiling with -O causes runtime segfault)
+$(LI $(BUGZILLA 18958): extern$(LPAREN)C++$(RPAREN) wchar, dchar mangling not correct)
+$(LI $(BUGZILLA 19234): betterC TypeInfo error when using slice copy on Structs)
+$(LI $(BUGZILLA 19813): Generated bt instruction seg faults, high 32 bits of register is garbage)
+$(LI $(BUGZILLA 19814): Nested code blocks in Ddoc break formatting)
+$(LI $(BUGZILLA 19829): __traits$(LPAREN)isSame$(RPAREN) returns true for some non-local delegate lambdas even when they are different)
+$(LI $(BUGZILLA 19870): Generated Copy Constructor disables default construction)
+$(LI $(BUGZILLA 19890): ICE: Segmentation fault with negative array size)
+$(LI $(BUGZILLA 19891): Confusing error message for auto ref parameters with default values)
+$(LI $(BUGZILLA 19893): extern$(LPAREN)C++, "ns"$(RPAREN) should count as module scope for version declarations)
+$(LI $(BUGZILLA 19905): Floating point .init should be bitwise identical to .nan)
+$(LI $(BUGZILLA 19920): __trait$(LPAREN)parent, ...$(RPAREN) broken with extern$(LPAREN)C++,"ns"$(RPAREN) nested in scopes)
+$(LI $(BUGZILLA 19971): wrong string literals in "cannot pass argument" errors)
+$(LI $(BUGZILLA 19995): parameter attributes are accepted in parameter-less functions)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 10665): The documentation produced by ddoc should clearly list all public imports of a module)
+$(LI $(BUGZILLA 16002): Add __traits$(LPAREN)isModule$(RPAREN) and __traits$(LPAREN)isPackage$(RPAREN))
+$(LI $(BUGZILLA 16020): Allow AliasDeclarationY to express function types)
+$(LI $(BUGZILLA 19856): [aApplycd2]: foreach $(LPAREN)int$(RPAREN) doesn't work on BigEndian targets)
+)
+$(BUGSTITLE_BUGZILLA Phobos regressions,
+
+$(LI $(BUGZILLA 17358): [REG 2.074.0] std.stdio.File.lockingTextWriter.put no longer accepts chains of characters)
+$(LI $(BUGZILLA 19740): Incorrect result of BigInt * BigInt)
+)
+$(BUGSTITLE_BUGZILLA Phobos bugs,
+
+$(LI $(BUGZILLA 11061): std.variant.Variant equality comparison always returns false for static array literals.)
+$(LI $(BUGZILLA 19226): std.typecons.Nullable$(LPAREN)T, T nullValue$(RPAREN) doesn't fully handle non-self-equal nullValue)
+$(LI $(BUGZILLA 19781): etc.c.zlib should be @nogc)
+$(LI $(BUGZILLA 19836): Excessive probability of UUID collisions in std.uuid.randomUUID)
+$(LI $(BUGZILLA 19883): Cyclic constructor call for BigInt$(LPAREN)dstring$(RPAREN))
+$(LI $(BUGZILLA 19899): std.bitmanip.bitsSet should accept const arguments)
+$(LI $(BUGZILLA 19939): std.format %13,3.2f does not count width correctly)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 6657): dotProduct overload for small fixed size arrays)
+$(LI $(BUGZILLA 13965): More handy schwartzSort)
+$(LI $(BUGZILLA 19513): Use sched_getaffinity$(LPAREN)2$(RPAREN) to get the number of CPU cores if available)
+$(LI $(BUGZILLA 19892): Add CTFE support for std.bitmanip: nativeToBigEndian, bigEndianToNative, littleEndianToNative, nativeToLittleEndian)
+)
+$(BUGSTITLE_BUGZILLA Druntime bugs,
+
+$(LI $(BUGZILLA 19861): core.cpuid reports the wrong number of threads)
+)
+)
+$(D_CONTRIBUTORS_HEADER 63)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Aurélien Fredouelle)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Basile-z)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR Benjamin L. Merritt)
+    $(D_CONTRIBUTOR Cameron Ross)
+    $(D_CONTRIBUTOR Chloé)
+    $(D_CONTRIBUTOR dan)
+    $(D_CONTRIBUTOR Dan Printzell)
+    $(D_CONTRIBUTOR David Gileadi)
+    $(D_CONTRIBUTOR Dibyendu Majumdar)
+    $(D_CONTRIBUTOR Diederik de Groot)
+    $(D_CONTRIBUTOR dukc)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Eugen Wissner)
+    $(D_CONTRIBUTOR Flying-Toast)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Hiroo Ono)
+    $(D_CONTRIBUTOR hygonsoc)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Igor Stojković)
+    $(D_CONTRIBUTOR Ilya Yaroshenko)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR Johannes Pfau)
+    $(D_CONTRIBUTOR John Colvin)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR Jonathan Marler)
+    $(D_CONTRIBUTOR Joseph Rushton Wakeling)
+    $(D_CONTRIBUTOR Leandro Lucarella)
+    $(D_CONTRIBUTOR look-at-me)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Marco de Wild)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR MetaLang)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Radu Racariu)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Robert Schadek)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR shove)
+    $(D_CONTRIBUTOR Simen Kjærås)
+    $(D_CONTRIBUTOR stefanos-baziotis)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Tomáš Chaloupka)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Zevenberge)
+    $(D_CONTRIBUTOR سليمان السهمي (Suleyman Sahmi))
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.087.0
+    TITLE=Change Log: $(VER)
