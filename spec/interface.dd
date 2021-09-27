@@ -4,8 +4,9 @@ $(SPEC_S Interfaces,
 
 $(HEADERNAV_TOC)
 
-    $(P An $(I Interface) describes a list of functions that a class which inherits
-    from the interface must implement.)
+    $(P An $(I Interface) abstracts from a common set of behaviour. It's an abstract class
+    which doesn't expose implementation details of methods and object state.
+    Classes which inherit from an interface must implement the functions signatures.)
 
 $(GRAMMAR
 $(GNAME InterfaceDeclaration):
@@ -39,7 +40,7 @@ $(GNAME BaseInterfaceList):
     to that interface.)
 
     $(P Interfaces cannot derive from classes; only from other interfaces.
-    Classes cannot derive from an interface multiple times.
+    Classes cannot derive from the same interface multiple times.
     )
 
 ------
@@ -77,6 +78,19 @@ interface D
     void bar() { }  // error, implementation not allowed
     static void foo() { } // ok
     final void abc() { } // ok
+}
+------
+
+     $(P Non-static member fields may not be defined in interfaces.
+     )
+
+------
+interface D
+{
+    static immutable e = 2.71828f;   // ok
+    float f;  // error, variable `f` field not allowed in interface
+    immutable g = 3.81f;  // error, variable `g` field not allowed in interface
+    enum h = 6.626f;  // ok, compile-time-static symbols are considered static
 }
 ------
 
