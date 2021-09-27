@@ -198,8 +198,9 @@ $(H2 $(LNAME2 mixin_scope, Mixin Scope))
 
         $(P The declarations in a mixin are placed in a nested scope and then
         $(SINGLEQUOTE imported) into the surrounding
-        scope. If the name of a declaration in a mixin is the same
-        as a declaration in the surrounding scope, the surrounding declaration
+        scope. If the name of a symbol in a mixin is the same
+        as the name of a symbol in the surrounding scope – also with different
+        symbol types or parameter lists – then the surrounding declaration
         overrides the mixin one:)
 
 ------
@@ -209,6 +210,15 @@ mixin template Foo()
 {
     int x = 5;
     int y = 5;
+    int z(int n, int m)
+    {
+        return n*m;
+    }
+}
+
+int z(int n)
+{
+    return n;
 }
 
 $(CODE_HIGHLIGHT mixin Foo;)
@@ -218,11 +228,12 @@ void test()
 {
     writefln("x = %d", x);  // prints 3
     writefln("y = %d", y);  // prints 3
+    writefln("z(%d, %d) = %d", 11, 13, z(11, 13));   // error, takes only one parameter
 }
 ------
 
-        $(P If two different mixins are put in the same scope, and each
-        define a declaration with the same name, there is an ambiguity
+        $(P If two different mixins are put in the same scope, and both
+        define a symbol with the same name, there is an ambiguity
         error when the declaration is referenced:)
 
 ------
