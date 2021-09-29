@@ -2,10 +2,10 @@ Ddoc
 
 $(CHANGELOG_NAV_INJECT)
 
-$(VERSION Sep 15, 2021, =================================================,
+$(VERSION Oct 10, 2021, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 8 major changes and 135 fixed Bugzilla issues.
+$(VER) comes with 9 major changes and 152 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 62 contributors)
         who made $(VER) possible.)
@@ -21,6 +21,7 @@ $(LI $(RELATIVE_LINK2 remove_alloc,Class allocators have been removed from the l
 
 $(BUGSTITLE_TEXT_HEADER Runtime changes,
 
+$(LI $(RELATIVE_LINK2 UniqueTypeInfoNames,TypeInfo names for aggregates are fully qualified and hence unique now))
 $(LI $(RELATIVE_LINK2 forkgc,A concurrent GC for Posix systems))
 $(LI $(RELATIVE_LINK2 improve_posix_imports,Improve POSIX imports))
 
@@ -179,6 +180,28 @@ for more information.
 
 $(BUGSTITLE_TEXT_BODY Runtime changes,
 
+$(LI $(LNAME2 UniqueTypeInfoNames,TypeInfo names for aggregates are fully qualified and hence unique now)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/UniqueTypeInfoNames.dd)
+$(P
+Previously, template arguments weren't fully qualified; they now are,
+implying longer names in that case.
+)
+
+$(P
+`TypeInfo_Struct` instances now store the (potentially significantly shorter)
+mangled name only and demangle it lazily on the first `name` or `toString()`
+call (with a per-thread cache). So if you only need a unique string per
+struct TypeInfo, prefer `mangledName` over computed `name` (non-`@nogc` and
+non-`pure`).
+)
+
+$(P
+**Related breaking change**: `TypeInfo.toString()` isn't `pure` anymore to
+account for the `TypeInfo_Struct` demangled name cache.
+`TypeInfo_Class.toString()` and others are still `pure`.
+)
+)
+
 $(LI $(LNAME2 forkgc,A concurrent GC for Posix systems)
 $(CHANGELOG_SOURCE_FILE druntime, changelog/forkgc.dd)
 $(P
@@ -293,6 +316,7 @@ $(LI $(BUGZILLA 22118): Const union causes false multiple-initialization error i
 $(LI $(BUGZILLA 22121): [REG 2.097][ICE] Segmentation fault in in dmd.dsymbol.ScopeDsymbol.addAccessiblePackage)
 $(LI $(BUGZILLA 22122): [REG 2.097][ICE] Segmentation fault in in dmd.access.hasPackageAccess)
 $(LI $(BUGZILLA 22196): importC: Error: found `const` when expecting `$(RPAREN)`in __attribute__)
+$(LI $(BUGZILLA 22205): catch$(LPAREN)Exception$(RPAREN) not longer working in debug blocks)
 $(LI $(BUGZILLA 22214): Regression 2.097.0: __traits$(LPAREN)compiles$(RPAREN) doesn't notice invalid getMember that yields type)
 $(LI $(BUGZILLA 22224): [REG 2.097.0] compiler segfaults with -profile)
 $(LI $(BUGZILLA 22228): [CTFE] taking address of immutable in frame function causes ICE on Unix platforms)
@@ -366,9 +390,25 @@ $(LI $(BUGZILLA 22160): importC: Error: redeclaring `module test` as `struct tes
 $(LI $(BUGZILLA 22180): .alignof not working for globals)
 $(LI $(BUGZILLA 22182): importC: Error: expression expected, not `$(RPAREN)` when casting pointer with redundant parens.)
 $(LI $(BUGZILLA 22209): NRVO variable detection ignoring `alias this` conversion => segfaults)
+$(LI $(BUGZILLA 22246): importC: C11 does not allow _Alignof $(LPAREN)expression$(RPAREN))
+$(LI $(BUGZILLA 22250): ImportC: Array subscripts do not comply with C standard.)
 $(LI $(BUGZILLA 22252): ImportC: Array, Function parameter types should be converted to pointers)
+$(LI $(BUGZILLA 22253): ImportC expressions inadvertently supporting D properties)
 $(LI $(BUGZILLA 22262): importC: Error: incompatible types for '$(LPAREN)buf$(RPAREN) is $(LPAREN)0$(RPAREN)': 'ubyte*' and 'int')
+$(LI $(BUGZILLA 22263): ImportC: function and variable re-declarations should be allowed)
+$(LI $(BUGZILLA 22264): importC: Error: '=', ';' or ',' expected using K&R function syntax)
 $(LI $(BUGZILLA 22274): importC: [ICE]: 4 identifiers does not match 3 declarations using K&R syntax)
+$(LI $(BUGZILLA 22275): importC: Error: incompatible types for $(LPAREN)dest$(RPAREN) !is $(LPAREN)buf$(RPAREN): char* and char[1])
+$(LI $(BUGZILLA 22286): importC: $(LPAREN)identifier$(RPAREN)$(LPAREN)other_identifier$(RPAREN) incorrectly parsed as a cast-expression)
+$(LI $(BUGZILLA 22294): importC: enums aren’t placed in surrounding namespace.)
+$(LI $(BUGZILLA 22303): ImportC: pragma directives should be ignored)
+$(LI $(BUGZILLA 22304): importC: parsing gnu-style attributes fails if return type is pointer)
+$(LI $(BUGZILLA 22312): importC: redundant typedefs are rejected)
+$(LI $(BUGZILLA 22313): ImportC: account for $(LPAREN) $(RPAREN) when doing lookahead on assignment-expressions)
+$(LI $(BUGZILLA 22314): ImportC: fails to parse gnu attributes on enum members)
+$(LI $(BUGZILLA 22322): ImportC: struct with floating point members causes problems with generated toHash$(LPAREN)$(RPAREN) function)
+$(LI $(BUGZILLA 22326): ImportC: struct with flexible array member is incorrectly handled)
+$(LI $(BUGZILLA 22333): ImportC: fails to parse enumerators with = and gnu attributes)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
