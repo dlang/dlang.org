@@ -5,17 +5,25 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Oct 10, 2021, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 9 major changes and 152 fixed Bugzilla issues.
+$(VER) comes with 17 major changes and 157 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 62 contributors)
         who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
+$(LI $(RELATIVE_LINK2 AliasAssign,Add Alias Assignment))
+$(LI $(RELATIVE_LINK2 ImportC,Accessing C Declarations From D Via ImportC Compiler))
 $(LI $(RELATIVE_LINK2 ambiguous-lambda,Using the syntax `(args) => {}` now triggers a deprecation message))
 $(LI $(RELATIVE_LINK2 dtoh-improvements,Improvements for the C++ header generation))
+$(LI $(RELATIVE_LINK2 dtorfileds,-preview=dtorfields is now enabled by default))
+$(LI $(RELATIVE_LINK2 fix10445,Add .min, .max, etc. properties for vector types.))
 $(LI $(RELATIVE_LINK2 mutable-cases,Using a mutable variable as a switch case now triggers an error))
+$(LI $(RELATIVE_LINK2 range-error,Out of bounds array access now gives a better error message))
 $(LI $(RELATIVE_LINK2 remove_alloc,Class allocators have been removed from the language))
+$(LI $(RELATIVE_LINK2 static_this_immutable_initialization,Initialization of `immutable` global data from `static this` now triggers an error))
+$(LI $(RELATIVE_LINK2 target,Add `-target=<triple>` for operating system, c, and c++ runtime cross compilation))
+$(LI $(RELATIVE_LINK2 union_initialization,Default initialization of `union` field that isn't the first member now triggers an error))
 
 )
 
@@ -44,6 +52,532 @@ $(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
 $(CHANGELOG_SEP_HEADER_TEXT)
 
 $(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 AliasAssign,Add Alias Assignment)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/AliasAssign.dd)
+$(P
+This adds the ability for an alias declaration inside a template to be
+assigned a new value. For example, the recursive template:
+)
+
+---
+template staticMap(alias F, T...)
+{
+    static if (T.length == 0)
+        alias staticMap = AliasSym!();
+    else
+        alias staticMap = AliasSym!(F!(T[0]), staticMap!(T[0 .. T.length]));
+}
+---
+
+$(P
+can now be reworked into an iterative template:
+)
+
+---
+template staticMap(alias F, T...)
+{
+    alias A = AliasSeq!();
+    static foreach (t; T)
+        A = AliasSeq!(A, F!t); // alias assignment here
+    alias staticMap = A;
+}
+---
+
+$(P
+Using the iterative approach will eliminate the combinatorial explosion of recursive
+template instantiations, eliminating the associated high memory and runtime costs,
+as well as eliminating the issues with limits on the nesting depth of templates.
+It will eliminate the obtuse error messages generated when deep in recursion.
+)
+
+$(P
+The grammar:
+)
+
+---
+AliasAssign:
+    Identifier = Type;
+---
+
+$(P
+is added to the expansion of DeclDef. The Identifier must resolve to a lexically
+preceding AliasDeclaration:
+)
+
+---
+alias Identifier = Type;
+---
+
+$(P
+where the Identifier's match, and both are members of the same TemplateDeclaration.
+Upon semantic processing, when the AliasAssign is encountered the Type in the
+AliasAssign replaces the Type from the corresponding AliasDeclaration or any previous matching
+AliasAssign.
+)
+
+$(P
+The AliasAssign grammar was previously rejected by the parser, so adding it
+should not break existing code.
+)
+)
+
+$(LI $(LNAME2 ImportC,Accessing C Declarations From D Via ImportC Compiler)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/ImportC.dd)
+$(P
+One of D's best features is easy integration with C code.
+There's almost a one-to-one mapping between C and a subset
+of D code (known as DasBetterC). D and C code can call each
+other directly.
+)
+
+$(P
+But D cannot read C code directly. In particular, the interface
+to most C code comes in the form of a .h (or "header") file.
+To access the declarations in the .h file and make them
+available to D code, the C declarations in the .h file must somehow
+be translated into D.
+Although hand translating the .h files to D is not difficult,
+it is tedious, annoying, and definitely a barrier to using D
+with existing C code.
+)
+
+$(P
+Why can't the
+D compiler simply read the .h file and extract its declarations?
+Why doesn't it "just work"?
+D has had great success with integrating documentation
+generation into the language, as well as unit testing. Despite the
+existence of many documentation generators and testing frameworks,
+the simplicity of it being built in and "just working" is transformative.
+)
+
+$(P
+## The C Preprocessor
+)
+
+$(P
+Is its own language that is completely distinct from the C language
+itself. It has its own grammar, its own tokens, and its own rules.
+The C compiler is not even aware of the existence of the preprocessor.
+(The two can be integrated, but that doesn't change the fact
+that the two semantically know nothing about each other.)
+The preprocessor is different enough from D that there's no hope
+of translating preprocessor directives to D in anything but the most
+superficial manner, any more than the preprocessor directives can
+be replaced with C.
+)
+
+$(P
+## Previous Solutions
+)
+
+$(P
+### htod by Walter Bright
+)
+
+$(P
+[htod](https://dlang.org/htod.html) converts a C .h file
+to a D source file, suitable for importing into D code.
+htod is built from the front end of the Digital Mars C and C++ compiler.
+It works just like a C or C++ compiler except that its output is source
+code for a D module rather than object code.
+)
+
+$(P
+### DStep by Jacob Carlborg
+)
+
+$(P
+[DStep code](https://code.dlang.org/packages/dstep)
+)
+
+$(P
+[DStep Article](https://dlang.org/blog/2019/04/22/dstep-1-0-0/)
+)
+
+$(P
+From the Article: "DStep is a tool for automatically generating D
+bindings for C and Objective-C libraries. This is implemented by
+processing C or Objective-C header files and outputting D modules.
+DStep uses the Clang compiler as a library (libclang) to process the header files."
+)
+
+$(P
+### dpp by Átila Neves
+)
+
+$(P
+[dpp code](https://code.dlang.org/packages/dpp/0.2.1)
+)
+
+$(P
+[dpp Article](https://dlang.org/blog/2019/04/08/project-highlight-dpp/)
+)
+
+$(P
+From the Article: "dpp is a compiler wrapper that will parse a D source
+file with the .dpp extension and expand in place any #include directives
+it encounters, translating all of the C or C++ symbols to D, and then
+pass the result to a D compiler (DMD by default)."
+)
+
+$(P
+Like DStep, dpp relies on libclang.
+)
+
+$(P
+## Introducing ImportC, an ISO C11 Compiler
+)
+
+$(P
+Here is the next step:
+)
+
+$(P
+* Forget about the C preprocessor.
+* Overlook C++.
+* Put a real ISO C11 compiler in the D front end.
+* Call it ImportC to distinguish this unique capability.
+)
+
+$(P
+In detail:
+)
+
+$(P
+1. Compile C code directly, but *only* C code that has already been run through
+the C preprocessor. To import stdio.h into a D program,
+the build script would be:
+)
+
+$(P
+     gcc -E -P stdio.h >stdio.c
+)
+
+$(P
+and in the D source file:
+)
+
+$(P
+     import stdio;  // reads stdio.c and compiles it
+)
+
+$(P
+With gcc doing all the preprocessor work, it becomes 100% behavior compatible.
+)
+
+$(P
+2. A C compiler front end, stripped of its integrated preprocessor, is a simple
+beast. It could be compiled directly into dmd's internal data structure types.
+)
+
+$(P
+3. The D part of dmd will have no idea it originated as C code. It would be
+just another import. There is no change whatsoever to D.
+)
+
+$(P
+### Using ImportC As A C Compiler
+)
+
+$(P
+Instead of importing C code, dmd can be used to compile C code like a
+standalone C compiler.
+)
+
+$(P
+Create the file hello.c:
+)
+
+```
+int printf(const char*, ...);
+
+int main()
+{
+    printf("hello world\n");
+}
+```
+
+$(P
+Compile and run it:
+)
+
+```
+dmd hello.c
+./hello
+hello world!
+```
+
+$(P
+For C code using C includes you can preprocess the C source with a C
+preprocessor. Create the file testcode.c:
+)
+
+```
+#include <stdint.h>
+
+uint32_t someCodeInC(uint32_t a, uint32_t b)
+{
+    return a + b;
+}
+```
+
+$(P
+Preprocess the C code with the C preprocessor:
+)
+```
+gcc -E -P testcode.c >testcode.i
+```
+
+$(P
+Create D file d_main.d:
+)
+```
+import std.stdio;
+import testcode;
+
+void main()
+{
+    writeln("Result of someCodeInC(3,4) = ", someCodeInC(3, 4) );
+}
+```
+
+$(P
+Compile and run it:
+)
+```
+dmd d_main.d testcode.i
+./d_main
+Result of someCodeInC(3,4) = 7
+```
+
+$(P
+The '.i' file extension can be used instead of '.c'. This makes it clear, that
+preprocessed imtermediate C code is in use. The '.i' files can be created by
+some generator script or a Makefile.
+)
+
+$(P
+## Implementation Details
+)
+
+$(P
+### User Experience
+)
+
+$(P
+* Error messages are spare and utilitarian.
+)
+
+$(P
+* Recovering after encountering an error is not well developed.
+Only the first error message is likely to be on point.
+)
+
+$(P
+* Pretty-printing code is done in D syntax, not C. Also,
+differing precedence for Relational/Equality expressions.
+)
+
+$(P
+* No warnings are emitted. ImportC doesn't care about coding style,
+best practices or suspicious constructs. If ISO C says it's good, it passes.
+)
+
+$(P
+* If the ImportC code corrupts memory, overflows buffers, etc.,
+it will still compile. Use DasBetterC for a better way.
+)
+
+$(P
+* Symbolic debugging support is there.
+)
+
+
+$(P
+### Variance From ISO C11
+)
+
+$(P
+* Doesn't have a C Preprocessor.
+The C code must be run through a preprocessor before
+it can be processed by ImportC. Incorporating this into your build system
+is advisable.
+)
+
+$(P
+* Tag symbols are part of the global symbol table, not the special tag
+symbol table like they are supposed to reside in.
+)
+
+$(P
+* Multiple chars in char literal are not supported.
+)
+
+$(P
+* `_Atomic` as type qualifier is ignored.
+)
+
+$(P
+* `_Atomic` as type specifier is ignored.
+)
+
+$(P
+* `_Alignof` is ignored.
+)
+
+$(P
+* `_Generic` is not implemented.
+)
+
+$(P
+* `const` is transitive, as in D. A pointer to a const pointer to a mutable
+value can be declared, but it'll be treated as a pointer to a const pointer
+to a const value.
+)
+
+$(P
+* { initializer-list } is not implemented.
+)
+
+$(P
+* ( type-name ) { initializer-list } is not implemented.
+)
+
+$(P
+* Complex numbers are not implemented.
+)
+
+$(P
+* Forward referencing works in ImportC. All global symbols are visible
+during semantic processing,
+not just the ones lexically prior to the piece of code it is working on.
+)
+
+$(P
+* Semantics applied after C parsing are D semantics, not C semantics,
+although they are very close. For example, implicitly converting an
+`int` to a `char` will pass C without complaint, but the D semantic
+pass will issue an error.
+)
+
+$(P
+### Implementation Defined Behavior
+)
+
+$(P
+The C11 Standard allows for many instances of
+implementation defined behavior.
+)
+
+$(P
+* `volatile`, `restrict`, `register`, `_Noreturn` are accepted and ignored
+)
+
+$(P
+* `char` is unsigned
+)
+
+$(P
+* `inline` is ignored, as the D compiler inlines what it feels like inlining.
+)
+
+$(P
+* `long double` matches what the host C compiler does, which is not necessarily
+the same as D's `real` type.
+)
+
+
+$(P
+### Extensions
+)
+
+$(P
+Using a D compiler for semantic processing offers many temptations to add in
+better D semantics. Inventing yet another new dialect of C is not the point
+of ImportC. However, some things are useful:
+)
+
+$(P
+* Compile Time Function Execution
+)
+
+$(P
+This works. It comes in handy for writing test cases for ImportC using
+`_Static_assert`. It also means that the D compiler can execute the ImportC
+functions in imports just like it can for D.
+)
+
+$(P
+### Unimplemented Extensions
+)
+
+$(P
+* Much of C code makes use of extensions provided by the host C compiler.
+None of these are implemented.
+)
+
+$(P
+* Alternative keywords are not implemented. You can define the alternate
+  keywords as macros to remove or replace them with standard keywords.
+)
+
+```
+#define __attribute __attribute__
+#define __asm       asm
+#define __asm__     asm
+#define __const     const
+#define __const__   const
+#define __inline    inline
+#define __inline__  inline
+#define __extension__
+
+#include <stdlib.h>
+```
+
+$(P
+## Future Directions
+)
+
+$(P
+### C Preprocessor
+)
+
+$(P
+Some means of incorporating this may be practical. For now, use cpp,
+warp or spp.
+)
+
+$(P
+Translation of C macros to D needs to be done, as htod, DStep and dpp all
+do this.
+)
+
+$(P
+### ImportC++ ?
+)
+
+$(P
+No. Use dpp.
+)
+
+$(P
+### ImportObjective-C ?
+)
+
+$(P
+No. Use DStep.
+)
+
+$(P
+### Documentation
+)
+
+$(P
+More info on ImportC will be written on [its page in the specification](https://dlang.org/spec/importc.html).
+)
+)
 
 $(LI $(LNAME2 ambiguous-lambda,Using the syntax `(args) => {}` now triggers a deprecation message)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/ambiguous-lambda.dd)
@@ -104,6 +638,72 @@ Note: The header generator is still considerer experimental, so please submit
 )
 )
 
+$(LI $(LNAME2 dtorfileds,-preview=dtorfields is now enabled by default)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dtorfileds.dd)
+$(P
+This preview ensures that partially constructed objects are properly destroyed
+when an exception is thrown inside of an constructor. It was introduced in
+2.075 and is now enabled by default.
+)
+
+$(P
+Note that code may fail to compile if a constructor with strict attributes
+may call a less qualified destructor:
+)
+
+```d
+struct Array
+{
+    int[] _payload;
+    ~this()
+    {
+        import core.stdc.stdlib : free;
+        free(_payload.ptr);
+    }
+}
+
+class Scanner
+{
+    Array arr;
+    this() @safe {} // Might call arr.~this()
+}
+```
+
+$(P
+Such code should either make the constructor `nothrow` s.t. the destructor
+will never be called, or adjust the field destructors.
+)
+
+$(P
+The compiler will only issue a deprectation for attribute violations caused
+by the inserted destructor call unless the `-preview=dtorfields` flag is
+explicitly specified.
+)
+)
+
+$(LI $(LNAME2 fix10445,Add .min, .max, etc. properties for vector types.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/fix10445.dd)
+$(P
+For integral vector types, add the `.min` and `.max` properties.
+)
+
+$(P
+For floating point vector types, add the `.min`, `.max`, `.min_normal`,
+`.nan`, `.infinity`, and `.epsilon` properties.
+)
+
+$(P
+The value of those properties is the value corresponsing to the vector
+element type broadcast to the vector type. I.e.:
+)
+
+---
+import core.simd;
+
+static assert(float4.max == cast(float4)float.max);
+---
+)
+
 $(LI $(LNAME2 mutable-cases,Using a mutable variable as a switch case now triggers an error)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/mutable-cases.dd)
 $(P
@@ -123,6 +723,80 @@ void foo(int s, int x, const int y, immutable int z) {
 $(P
 It is advised to only use compile-time known values in `case` statements, because the presence of any run-time variable (even a `const` or `immutable` one) results in the entire switch being lowered to a series of if-else statements before code generation, instead of an efficient jump table.
 Prefer regular if-statements for comparing pairs of run-time known variables.
+)
+)
+
+$(LI $(LNAME2 range-error,Out of bounds array access now gives a better error message)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/range-error.dd)
+$(P
+Errors resulting from bad indexing will now contain the length of
+the array, as well as the offending index for `arr[bad]`,
+or offending indices `arr[bad1 .. bad2]` for bad slices.
+)
+
+$(P
+For example:
+)
+
+---
+void main()
+{
+    int[] a = [1, 2, 3];
+    int b = a[7];
+}
+---
+
+$(P
+Previously this would yield the following error when compiled and run:
+)
+
+$(P
+$(CONSOLE
+dmd -run main.d
+core.exception.RangeError@main.d(4): Range violation
+$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)
+??:? _d_arrayboundsp [0x555765c167f9]
+??:? _Dmain [0x555765c16752]
+)
+)
+
+$(P
+It now yields:
+)
+
+$(P
+$(CONSOLE
+dmd -run main.d
+core.exception.ArrayIndexError@main.d(4): index [7] exceeds array of length 3
+$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)
+??:? _d_arraybounds_indexp [0x5647250b980d]
+??:? _Dmain [0x5647250b9751]
+)
+)
+
+$(P
+Similarly, in case of out of bounds slice operations:
+)
+---
+void main()
+{
+    int[] a = [1, 2, 3];
+    int[] b = a[2 .. 4];
+}
+---
+
+$(P
+$(CONSOLE
+dmd -run main.d
+core.exception.ArraySliceError@main.d(4): slice [2 .. 4] extends past array of length 3
+$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)
+??:? _d_arraybounds_slicep [0x5647250b980d]
+??:? _Dmain [0x5647250b9751]
+)
+)
+
+$(P
+The error messages for an out of bounds slice copy (`arr[a..b] = arr[c..d]`) or indexing a non-existent key in an Associative Array (`table["bad"]`) have not been updated.
 )
 )
 
@@ -172,6 +846,158 @@ class C
 $(P
 See the $(LINK2 https://dlang.org/deprecate.html#Class%20allocators%20and%20deallocators, deprecated features page)
 for more information.
+)
+)
+
+$(LI $(LNAME2 static_this_immutable_initialization,Initialization of `immutable` global data from `static this` now triggers an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/static_this_immutable_initialization.dd)
+$(P
+The following code has been deprecated since 2.087.0.
+)
+
+```
+module foo;
+immutable int bar;
+static this()
+{
+    bar = 42;
+}
+```
+
+$(P
+This is problematic because module constructors (`static this`) run each time a
+thread is spawned, and `immutable` data is implicitly `shared`, which led to
+`immutable` value being overriden every time a new thread was spawned.
+)
+
+$(P
+The corrective action for any code that still does this is to use `shared
+static this` over `static this`, as the former is only run once per process.
+)
+)
+
+$(LI $(LNAME2 target,Add `-target=<triple>` for operating system, c, and c++ runtime cross compilation)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/target.dd)
+$(P
+The command line switch `-target=<triple>` can be used to specify the target the
+compiler should produce code for. The format for `<triple>` is `<arch>-[<vendor>-]<os>[-<cenv>[-<cppenv]]`. Specific values of the specifiers are
+shown in the tables below.
+)
+
+$(P
+`<arch>`
+___
+`<arch>` is an Architecture bitness, optionally followed by instruction set (which duplicates the functionality of the `-mcpu` flag)
+| `<arch>` | Architecture bitness       |
+|----------|----------------------------|
+| `x86_64` | 64 bit                     |
+| `x64`    | 64 bit                     |
+| `x86`    | 32 bit                     |
+| `x32`    | 64bit with 32 bit pointers |
+)
+
+$(P
+| subarch features | equivalent `-mcpu` flag |
+|------------------|-------------------------|
+| `+sse2`          | `baseline`              |
+| `+avx`           | `avx`                   |
+| `+avx2`          | `avx2`                  |
+)
+
+$(P
+The architecture and subarch features are concatenated, so `x86_64+avx2` is 64bit with `avx2` instructions.
+)
+
+
+$(P
+`<vendor>`
+___
+`<vendor>` is always ignored, but supported for easier interoperability with other compilers that report and consume target triples.
+)
+
+$(P
+`<os>`
+___
+)
+
+$(P
+`<os>` is the operating system specifier. It may be optionally followed by a version number as in `darwin20.3.0` or `freebsd12`. For Freebsd, this sets the corresponding predefined `version` identifier, e.g. `freebsd12` sets `version(FreeBSD12)`. For other operating systems this is for easier interoperability with other compilers.
+)
+
+$(P
+| `<os>`         | Operating system    |
+|----------------|---------------------|
+| `freestanding` | No operating system |
+| `darwin`       | MacOS               |
+| `dragonfly`    | DragonflyBSD        |
+| `freebsd`      | FreeBSD             |
+| `openbsd`      | OpenBSD             |
+| `linux`        | Linux               |
+| `solaris`      | Solaris             |
+| `windows`      | Windows             |
+)
+
+$(P
+`<cenv>`
+___
+`<cenv>` is the C runtime environment. This specifier is optional. For MacOS the C runtime environment is always assumed to be the system default.
+)
+
+$(P
+| `<cenv>`       | C runtime environment              | Default for OS |
+|----------------|------------------------------------|----------------|
+| `musl`         | musl-libc                          |                |
+| `msvc`         | MSVC runtime                       | Windows        |
+| `bionic`       | Andriod libc                       |                |
+| `digital_mars` | Digital Mars C runtime for Windows |                |
+| `glibc`        | GCC C runtime                      | linux          |
+| `newlib`       | Newlib Libc                        |                |
+| `uclibc`       | uclibc                             |                |
+)
+
+
+$(P
+`<cppenv>`
+___
+)
+
+$(P
+`<cppenv>` is the C++ runtime environment. This specifier is optional. If this specifier is present the `<cenv>` specifier must also be present.
+)
+
+$(P
+| `<cppenv>`     | C++ runtime environment              | Default for OS                        |
+|----------------|--------------------------------------|---------------------------------------|
+| `clang`        | LLVM C++ runtime                     | MacOS, FreeBSD, OpenBSD, DragonflyBSD |
+| `gcc`          | GCC  C++ runtime                     | linux                                 |
+| `msvc`         | MSVC runtime                         | Windows                               |
+| `digital_mars` | Digital Mars C++ runtime for Windows |                                       |
+| `sun`          | Sun C++ runtime                      | Solaris                               |
+)
+)
+
+$(LI $(LNAME2 union_initialization,Default initialization of `union` field that isn't the first member now triggers an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/union_initialization.dd)
+$(P
+The following code has been deprecated since 2.088.0
+)
+
+```
+union U
+{
+    int a;
+    long b = 4;
+}
+```
+
+$(P
+This is problematic because unions are default initialized to whatever the
+initializer for the first field is, any other initializers present are ignored.
+)
+
+$(P
+The corrective action is to declare the `union` field with the default
+initialization as the first field.
 )
 )
 
@@ -307,6 +1133,7 @@ $(CHANGELOG_SEP_TEXT_BUGZILLA)
 
 $(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
 
+$(LI $(BUGZILLA 13009): [REG2.064] inout overload conflicts with non-inout when used via alias this)
 $(LI $(BUGZILLA 21238):  -deps considers only the first instantiation site of a template for dependencies)
 $(LI $(BUGZILLA 22035): [REG 2.097][ICE] Segmentation fault parsing invalid case statement)
 $(LI $(BUGZILLA 22054): Referencing a fwd-declared field results in many error messages)
@@ -319,7 +1146,9 @@ $(LI $(BUGZILLA 22196): importC: Error: found `const` when expecting `$(RPAREN)`
 $(LI $(BUGZILLA 22205): catch$(LPAREN)Exception$(RPAREN) not longer working in debug blocks)
 $(LI $(BUGZILLA 22214): Regression 2.097.0: __traits$(LPAREN)compiles$(RPAREN) doesn't notice invalid getMember that yields type)
 $(LI $(BUGZILLA 22224): [REG 2.097.0] compiler segfaults with -profile)
+$(LI $(BUGZILLA 22226): [REG 2.095.1] __ctfe + function call in conditional expression used to initialize struct member in constructor causes ICE)
 $(LI $(BUGZILLA 22228): [CTFE] taking address of immutable in frame function causes ICE on Unix platforms)
+$(LI $(BUGZILLA 22292): REG[2.084.1] Recursive class literal segfaults compiler)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
 
@@ -406,8 +1235,10 @@ $(LI $(BUGZILLA 22304): importC: parsing gnu-style attributes fails if return ty
 $(LI $(BUGZILLA 22312): importC: redundant typedefs are rejected)
 $(LI $(BUGZILLA 22313): ImportC: account for $(LPAREN) $(RPAREN) when doing lookahead on assignment-expressions)
 $(LI $(BUGZILLA 22314): ImportC: fails to parse gnu attributes on enum members)
+$(LI $(BUGZILLA 22321): ImportC: non-static arrays can’t be initialized by an initializer list.)
 $(LI $(BUGZILLA 22322): ImportC: struct with floating point members causes problems with generated toHash$(LPAREN)$(RPAREN) function)
 $(LI $(BUGZILLA 22326): ImportC: struct with flexible array member is incorrectly handled)
+$(LI $(BUGZILLA 22329): DMD and LDC2 Segumentation Faults due to alias this on private field + special names)
 $(LI $(BUGZILLA 22333): ImportC: fails to parse enumerators with = and gnu attributes)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
