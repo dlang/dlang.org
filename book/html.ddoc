@@ -1,0 +1,440 @@
+_=General macros for HTML generation. Even predefined macros are present
+here for completeness. Macros defer wherever possible to style classes.
+
+_=Simple tags, ordered alphabetically
+
+A = <a href="$1">$+</a>
+ADEF = <span class="def-anchor" id="$0"></span>
+AHTTP = <a href="http://$1">$+</a>
+AHTTPS = <a class="https" href="https://$1">$+</a>
+ALOCAL = <a href="#$1">$+</a>
+BIG = $(EMC big, $0)
+BR = <br>
+CAPTION = $(T caption, $0)
+CHECKMARK = &#10004;
+DD = $(T dd, $0)
+DIV = <div $1>$+</div>
+DIVC = $(TC div, $1, $+)
+DIVCID = $(DIV class="$1" id="$2", $3)
+DIVID = $(DIV id="$1", $+)
+DL = $(T dl, $0)
+DOLLAR=&dollar;
+DOUBLEQUOTE = $(LDQUO)$0$(RDQUO)
+DT = $(T dt, $0)
+EMC = $(TC em, $1, $+)
+ENUMERATE = $(OL $(ITEMS_HELPER $1, $+))
+GREATER = &gt;
+ITEMIZE = $(UL $(ITEMS_HELPER $1, $+))
+ITEMS_HELPER = $(LI $1)$(ITEMS_HELPER $+)
+H1 = $(T h1, $0)
+H2 = $(T h2, $0)
+H3 = $(T h3, $0)
+H4 = $(T h4, $0)
+H5 = $(T h5, $0)
+HR = <hr>
+I = $(T i, $0)
+LI = $(T li, $0)
+LESS = &lt;
+OL = $(T ol, $0)
+P = $(T p, $0)
+PRE = $(T pre, $0)
+SCRIPT = <script type="text/javascript">$0</script>
+SINGLEQUOTE = $(LSQUO)$0$(RSQUO)
+SMALL = $(T small, $0)
+SPAN = <span $1>$+</span>
+SPANC = $(TC span, $1, $+)
+SPANID = $(SPAN id="$1", $+)
+SUBSCRIPT = $(T sub, $0)
+SUPERSCRIPT = $(T sup, $0)
+TABLE = $(T table, $0)
+TABLEC = $(TC table, $1, $+)
+T=<$1>$+</$1>
+TC=<$1 class="$2">$(TAIL $+)</$1>
+TD = $(T td, $0)
+TD_HELPER = $(TD $1)$(TD_HELPER $+)
+TH_HELPER = $(TH $1)$(TH_HELPER $+)
+THEAD = $(TR $(TH_HELPER $1, $+))
+TR = $(T tr, $0)
+TT = $(EMC tt, $0)
+U = $(EMC u, $0)
+UL = $(T ul, $0)
+_=
+
+_=Defining anchors and linking
+
+LINK = $(A $0, $0)
+LINK2 = $(A $1, $+)
+HTTP = $(LINK2 http://$1,$2)
+HTTPS = $(LINK2 https://$1,$2)
+WEB = $(HTTP $1,$2)
+_=
+
+_=Colors
+
+RED    = $(SPAN style="color:red", $0)
+GREEN  = $(SPAN style="color:green", $0)
+BLUE   = $(SPAN style="color:blue", $0)
+YELLOW = $(SPAN style="color:yellow", $0)
+BLACK  = $(SPAN style="color:black", $0)
+WHITE  = $(SPAN style="color:white", $0)
+_=
+
+_=Explanatory stuff of the kind "Throws: blah" or "Returns:
+blah". Note that if you want to make a SPAN-like (brief) explanation,
+you can do it with the DIV block using "display: inline-block;", see
+e.g. https://stackoverflow.com/questions/1611065/span-vs-div-inline-block
+
+DDOC_EXPLANATORY=$(DIVC explanatory, $(SPANC explanation_item, $1:) $(DIVC $1, $+))
+_=
+
+_=Predefined D-related stuff
+
+D_CODE = $(TC pre, d_code, $0)
+OTHER_CODE = $(TC pre, code $1, $+)
+D_COMMENT = $(SPANC d_comment, $0)
+D_STRING  = $(SPANC d_string, $0)
+D_KEYWORD = $(SPANC d_keyword, $0)
+D_PSYMBOL = $(SPANC d_psymbol, $0)
+D_PARAM   = $(SPANC d_param, $0)
+D_TITLE   = $(SPANC d_title, $0)
+_=
+
+_=Main entry point
+
+DDOC = $(T html,
+$(T head,
+  <META http-equiv="content-type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" type="text/css" href="css/html.css">
+  $(T title, $(TITLE))
+)
+$(T body, $(H1 $(TITLE))$(BODY)))$(LF)
+_=
+
+_=DDoc-related stuff
+
+DDOC_COMMENT   = <!--$0-->
+DDOC_MEMBER    = $0
+DDOC_MEMBER_HEADER =
+DDOC_HEADER_ANCHOR =
+DDOC_DECL      = $(DT $(BIG $0))
+DDOC_DECL_DD   = $(DD $0)
+DDOC_DITTO     = $(BR)$0
+DDOC_SECTIONS  = $0$(LF)
+DDOC_SUMMARY   = $0$(BR)$(BR)$(LF)
+DDOC_DESCRIPTION = $0$(BR)$(BR)$(LF)
+DDOC_AUTHORS   = $(B Authors:)$(BR)
+        $0$(BR)$(BR)
+DDOC_BUGS      = $(RED BUGS:)$(BR)
+        $0$(BR)$(BR)$(LF)
+DDOC_COPYRIGHT = $(B Copyright:)$(BR)
+        $0$(BR)$(BR)$(LF)
+DDOC_DATE      = $(B Date:)$(BR)
+        $0$(BR)$(BR)
+DDOC_DEPRECATED = $(RED Deprecated:)$(BR)
+        $0$(BR)$(BR)
+DDOC_EXAMPLES  = $(B Examples:)$(BR)
+        $0$(BR)$(BR)
+DDOC_HISTORY   = $(B History:)$(BR)
+        $0$(BR)$(BR)
+DDOC_LICENSE   = $(B License:)$(BR)
+        $0$(BR)$(BR)
+DDOC_RETURNS   = $(B Returns:)$(BR)
+        $0$(BR)$(BR)
+DDOC_SEE_ALSO  = $(B See Also:)$(BR)
+        $0$(BR)$(BR)
+DDOC_STANDARDS = $(B Standards:)$(BR)
+        $0$(BR)$(BR)
+DDOC_THROWS    = $(B Throws:)$(BR)
+        $0$(BR)$(BR)
+DDOC_VERSION   = $(B Version:)$(BR)
+        $0$(BR)$(BR)$(LF)
+DDOC_SECTION_H = $(B $0)$(BR)$(BR)$(LF)
+DDOC_SECTION   = $0$(BR)$(BR)$(LF)
+DDOC_MEMBERS   = $(DL $0)
+DDOC_MODULE_MEMBERS   = $(DDOC_MEMBERS $0)$(LF)
+DDOC_CLASS_MEMBERS    = $(DDOC_MEMBERS $0)$(LF)
+DDOC_STRUCT_MEMBERS   = $(DDOC_MEMBERS $0)$(LF)
+DDOC_ENUM_MEMBERS     = $(DDOC_MEMBERS $0)$(LF)
+DDOC_TEMPLATE_MEMBERS = $(DDOC_MEMBERS $0)$(LF)
+DDOC_PARAMS    = $(B Params:)$(BR)$(LF)
+$(TABLE $0)$(BR)
+DDOC_PARAM_ROW = $(TR $0)$(LF)
+DDOC_PARAM_ID  = $(TD $0)$(LF)
+DDOC_PARAM_DESC  = $(TD $0)
+_=
+
+DDOC_ANCHOR  = $(ADEF $1)
+DDOC_PSYMBOL = $(U $0)
+DDOC_KEYWORD = $(B $0)
+DDOC_PARAM   = $(I $0)
+DDOC_OVERLOAD_SEPARATOR = $(BR)
+DDOC_CONSTRAINT=$(BR)$(SPAN class="constraint", if ($0))
+DDOC_TEMPLATE_PARAM_LIST=$(SPAN class="template_param_list" title="Template parameter list", $0)
+_=
+
+_=Generic blurb to describe C header bindings
+
+C_HEADER_DESCRIPTION = This module contains bindings to selected types and
+functions from the standard C header $(HTTP $1, $(D $(LESS)$2$(GREATER))). Note that this
+is not automatically generated, and may omit some types/functions from the
+original C header.
+_=
+
+_=HTML named entities, ordered approximately as in https://dlang.org/entity.html
+
+QUOT = &quot;
+AMP = &amp;
+PERCENT = %
+TAB = &#09;
+_=
+
+OELIG_CAP = &OElig;
+OELIG = &oelig;
+SCARON_CAP = &Scaron;
+SCARON = &scaron;
+YUML = &Yuml;
+CIRC = &circ;
+TILDE = &tilde;
+ENSP = &ensp;
+EMSP = &emsp;
+THINSP = &thinsp;
+ZWNJ = &zwnj;
+ZWJ = &zwj;
+LRM = &lrm;
+RLM = &rlm;
+NDASH = &ndash;
+MDASH = &mdash;
+LSQUO = &lsquo;
+RSQUO = &rsquo;
+SBQUO = &sbquo;
+LDQUO = &ldquo;
+RDQUO = &rdquo;
+BDQUO = &bdquo;
+DAGGER = &dagger;
+DAGGER_CAP = &Dagger;
+PERMIL = &permil;
+LSAQUO = &lsaquo;
+RSAQUO = &rsaquo;
+EURO = &euro;
+NBSP = &nbsp;
+IEXCL = &iexcl;
+CENT = &cent;
+POUND = &pound;
+CURREN = &curren;
+YEN = &yen;
+BRVBAR = &brvbar;
+SECT = &sect;
+UML = &uml;
+COPY = &copy;
+REG = &reg;
+ORDF = &ordf;
+LAQUO = &laquo;
+NOT = &not;
+SHY = &shy;
+REG = &reg;
+MACR = &macr;
+DEG = &deg;
+PLUSMN = &plusmn;
+SUP2 = &sup2;
+SUP3 = &sup3;
+ACUTE = &acute;
+MICRO = &micro;
+PARA = &para;
+MIDDOT = &middot;
+CEDIL = &cedil;
+SUP1 = &sup1;
+ORDM = &ordm;
+RAQUO = &raquo;
+FRAC14 = &frac14;
+FRAC12 = &frac12;
+FRAC34 = &frac34;
+IQUEST = &iquest;
+AGRAVE_CAP = &Agrave;
+AACUTE_CAP = &Aacute;
+ACIRC_CAP = &Acirc;
+ATILDE_CAP = &Atilde;
+AUML_CAP = &Auml;
+ARING_CAP = &Aring;
+AELIG_CAP = &AElig;
+CCEDIL_CAP = &Ccedil;
+EGRAVE_CAP = &Egrave;
+EACUTE_CAP = &Eacute;
+ECIRC_CAP = &Ecirc;
+EUML_CAP = &Euml;
+IGRAVE_CAP = &Igrave;
+IACUTE_CAP = &Iacute;
+ICIRC_CAP = &Icirc;
+IUML_CAP = &Iuml;
+ETH_CAP = &ETH;
+NTILDE_CAP = &Ntilde;
+OGRAVE_CAP = &Ograve;
+OACUTE_CAP = &Oacute;
+OCIRC_CAP = &Ocirc;
+OTILDE_CAP = &Otilde;
+OUML_CAP = &Ouml;
+TIMES = &times;
+OSLASH_CAP = &Oslash;
+UGRAVE_CAP = &Ugrave;
+UACUTE_CAP = &Uacute;
+UCIRC_CAP = &Ucirc;
+UUML_CAP = &Uuml;
+YACUTE_CAP = &Yacute;
+THORN_CAP = &THORN;
+SZLIG = &szlig;
+AGRAVE = &agrave;
+AACUTE = &aacute;
+ACIRC = &acirc;
+ATILDE = &atilde;
+AUML = &auml;
+ARING = &aring;
+AELIG = &aelig;
+CCEDIL = &ccedil;
+EGRAVE = &egrave;
+EACUTE = &eacute;
+ECIRC = &ecirc;
+EUML = &euml;
+IGRAVE = &igrave;
+IACUTE = &iacute;
+ICIRC = &icirc;
+IUML = &iuml;
+ETH = &eth;
+NTILDE = &ntilde;
+OGRAVE = &ograve;
+OACUTE = &oacute;
+OCIRC = &ocirc;
+OTILDE = &otilde;
+OUML = &ouml;
+DIVIDE = &divide;
+OSLASH = &oslash;
+UGRAVE = &ugrave;
+UACUTE = &uacute;
+UCIRC = &ucirc;
+UUML = &uuml;
+YACUTE = &yacute;
+THORN = &thorn;
+YUML = &yuml;
+FNOF = &fnof;
+ALPHA_CAP = &Alpha;
+BETA_CAP = &Beta;
+GAMMA_CAP = &Gamma;
+DELTA_CAP = &Delta;
+EPSILON_CAP = &Epsilon;
+ZETA_CAP = &Zeta;
+ETA_CAP = &Eta;
+THETA_CAP = &Theta;
+IOTA_CAP = &Iota;
+KAPPA_CAP = &Kappa;
+LAMBDA_CAP = &Lambda;
+MU_CAP = &Mu;
+NU_CAP = &Nu;
+XI_CAP = &Xi;
+OMICRON_CAP = &Omicron;
+PI_CAP = &Pi;
+RHO_CAP = &Rho;
+SIGMA_CAP = &Sigma;
+TAU_CAP = &Tau;
+UPSILON_CAP = &Upsilon;
+PHI_CAP = &Phi;
+CHI_CAP = &Chi;
+PSI_CAP = &Psi;
+OMEGA_CAP = &Omega;
+ALPHA = &alpha;
+BETA = &beta;
+GAMMA = &gamma;
+DELTA = &delta;
+EPSILON = &epsilon;
+ZETA = &zeta;
+ETA = &eta;
+THETA = &theta;
+IOTA = &iota;
+KAPPA = &kappa;
+LAMBDA = &lambda;
+MU = &mu;
+NU = &nu;
+XI = &xi;
+OMICRON = &omicron;
+PI = &pi;
+RHO = &rho;
+SIGMAF = &sigmaf;
+SIGMA = &sigma;
+TAU = &tau;
+UPSILON = &upsilon;
+PHI = &phi;
+CHI = &chi;
+PSI = &psi;
+OMEGA = &omega;
+THETASYM = &thetasym;
+UPSIH = &upsih;
+PIV = &piv;
+BULL = &bull;
+HELLIP = &hellip;
+PRIME = &prime;
+PRIME_CAP = &Prime;
+OLINE = &oline;
+FRASL = &frasl;
+WEIERP = &weierp;
+IMAGE = &image;
+REAL = &real;
+TRADE = &trade;
+ALEFSYM = &alefsym;
+LARR = &larr;
+UARR = &uarr;
+RARR = &rarr;
+DARR = &darr;
+HARR = &harr;
+CRARR = &crarr;
+LARR_CAP = &lArr;
+UARR_CAP = &uArr;
+RARR_CAP = &rArr;
+DARR_CAP = &dArr;
+HARR_CAP = &hArr;
+FORALL = &forall;
+PART = &part;
+EXIST = &exist;
+EMPTY = &empty;
+NABLA = &nabla;
+ISIN = &isin;
+NOTIN = &notin;
+NI = &ni;
+PROD = &prod;
+SUM = &sum;
+MINUS = &minus;
+LOWAST = &lowast;
+RADIC = &radic;
+PROP = &prop;
+INFIN = &infin;
+ANG = &ang;
+AND = &and;
+OR = &or;
+CAP = &cap;
+CUP = &cup;
+INT = &int;
+THERE4 = &there4;
+SIM = &sim;
+CONG = &cong;
+ASYMP = &asymp;
+NE = &ne;
+EQUIV = &equiv;
+LE = &le;
+GE = &ge;
+SUB = &sub;
+SUP = &sup;
+NSUB = &nsub;
+SUBE = &sube;
+SUPE = &supe;
+OPLUS = &oplus;
+OTIMES = &otimes;
+PERP = &perp;
+SDOT = &sdot;
+LCEIL = &lceil;
+RCEIL = &rceil;
+LFLOOR = &lfloor;
+RFLOOR = &rfloor;
+LOZ = &loz;
+SPADES = &spades;
+CLUBS = &clubs;
+HEARTS = &hearts;
+DIAMS = &diams;
+LANG = &lang;
+RANG = &rang;
+_=
