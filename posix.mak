@@ -383,10 +383,13 @@ docs-prerelease: dmd-prerelease druntime-prerelease phobos-prerelease apidocs-pr
 
 docs : docs-latest docs-prerelease
 
-html : $(ALL_FILES) makebook
+html : html_files makebook
 
-makebook:
-	(cd book && rdmd build.d 6)
+html_files : $(ALL_FILES)
+
+makebook : book/build.d | $(STABLE_DMD)
+	cd book && PATH="$(STABLE_DMD_BIN_ROOT):$$PATH" rdmd build.d 6
+
 html-verbatim: $(addprefix $W/, $(addsuffix .verbatim,$(PAGES_ROOT)))
 
 verbatim : html-verbatim phobos-prerelease-verbatim
