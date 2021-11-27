@@ -388,7 +388,7 @@ html : html_files makebook
 html_files : $(ALL_FILES)
 
 makebook : book/build.d | $(STABLE_DMD)
-	cd book && PATH="$(STABLE_DMD_BIN_ROOT):$$PATH" rdmd build.d 6
+	cd book && $(abspath $(STABLE_DMD_BIN_ROOT))/rdmd build.d 6
 
 html-verbatim: $(addprefix $W/, $(addsuffix .verbatim,$(PAGES_ROOT)))
 
