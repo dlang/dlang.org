@@ -27,7 +27,7 @@ void compileToPath(string compileThis, string outputPath, bool loud = false)
         macroOut.writefln!"%s = %s"(key, value);
     }
     macroOut.flush();
-    const compileString = format!"dmd -revert=markdown -D  contextMacros.ddoc macros.ddoc html.ddoc dlang.org.ddoc doc.ddoc aliBook.ddoc %s -Df%s "(compileThis, outputPath);
+    const compileString = format!"dmd -D  contextMacros.ddoc macros.ddoc html.ddoc dlang.org.ddoc doc.ddoc aliBook.ddoc %s -Df%s "(compileThis, outputPath);
     if(loud)
         writefln!"%s:%s |> %s"(compileThis, outputPath, compileString);
     const res = executeShell(compileString);
