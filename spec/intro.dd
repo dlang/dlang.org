@@ -2,8 +2,8 @@ Ddoc
 
 $(SPEC_S はじめに,
 
-$(P Dは、汎用システムプログラミング言語で、ネイティブコードにコンパイルされます。
-Cライクな構文を持ち、静的に型付けされます。$(LPAREN)ガベージコレクション$(RPAREN)による自動メモリ管理をサポートします。
+$(P D言語は汎用システムプログラミング言語で、ネイティブコードにコンパイルされます。
+Cライクな構文を持ち、静的に型付けされます。ガベージコレクションによる自動メモリ管理をサポートします。
 手動でのメモリ管理にも対応しています。
 D言語のプログラムは、ネイティブライブラリや実行可能ファイルを作成するために、
 個別にコンパイルし外部ライブラリとリンク可能なモジュールとして構成されます。)
@@ -13,8 +13,8 @@ $(COMMA) $(LINK2 https://dlang.org/, D言語のWebサイト)を参照してく�
 
 $(H2 コンパイルのフェーズ)
 
-$(P コンパイルのプロセスは複数のフェーズに分かれています。各フェーズは、後続のフェーズから独立しています。
-たとえば、構文解析スキャナーは意味解析の影響を受けません。パスの分離により、構文解析を行うエディターなどのツールを比較的簡単に作成できます。)
+$(P コンパイルは複数のフェーズに分かれます。各フェーズは、後続のフェーズから独立しています。
+たとえば、構文解析スキャナーは意味解析の影響を受けません。フェーズの分離により、構文解析を行うエディターなどのツールを比較的簡単に作成できます。)
 
 $(OL
         $(LI $(B ソースの文字セット)$(BR)
@@ -31,20 +31,20 @@ $(OL
         $(LI $(B 字句解析)$(BR)
 
         ソースファイルは一連のトークンに分割されます。
-        $(DDSUBLINK spec/lex, specialtokens, スペシャルトークン(Special tokens))
+        $(DDSUBLINK spec/lex, specialtokens, スペシャルトークン$(LPAREN)Special tokens$(RPAREN))
         は、他のトークンに置き換えられます。
-        $(GLINK_LEX スペシャルトークンシーケンス(SpecialTokenSequence))
+        $(DDSUBLINK spec/lex, special-token-sequence, スペシャルトークンシーケンス$(LPAREN)SpecialTokenSequence$(RPAREN))
         は、処理後に削除されます。
         )
 
         $(LI $(B 構文解析)$(BR)
 
-        トークンのシーケンスが解析されて、構文ツリーが形成されます。
+        トークンが順序通りに解析されて、構文ツリーが形成されます。
         )
 
         $(LI $(B 意味解析)$(BR)
 
-        構文ツリーをもとに、変数の宣言、シンボルテーブルのロード、タイプの割り当て、およびプログラムの意味を決定します。
+        構文ツリーから、変数の宣言、シンボルテーブルのロード、型の割り当て、およびプログラムの意味を決定します。
         )
 
         $(LI $(B 最適化)$(BR)
@@ -60,47 +60,41 @@ $(OL
 )
 
 
-$(H2 $(LINK2 memory-model, メモリモデル))
+$(H2 $(LNAME2 memory-model, メモリモデル))
 
-    $(P The $(I byte) is the fundamental unit of storage. Each byte has 8 bits and is stored at
-    a unique address. A $(I memory location) is a sequence of one or more bytes of the exact size
-    required to hold a scalar type. Multiple threads can access separate memory locations
-    without interference.
+    $(P $(I バイト) はストレージの基本単位です。 各バイトは8ビットで、一意のアドレスに格納されます。
+    A $(I メモリロケーション) は、スカラー型を保持するために必要な1バイト以上のシーケンスです。
+    複数のスレッドは、干渉することなく別々のメモリロケーションにアクセスできます。
     )
 
-    $(P Memory locations come in three groups:)
+    $(P メモリロケーションは3つのグループに分けられます:)
 
     $(OL
-    $(LI $(I Thread-local memory locations) are accessible from only one thread at a time.)
-    $(LI $(I Immutable memory locations) cannot be written to during their lifetime. Immutable
-    memory locations can be read from by multiple threads without synchronization.)
-    $(LI $(I Shared memory locations) are accessible from multiple threads.)
+    $(LI $(I スレッドローカルなメモリロケーション) は、一度に1つのスレッドからのみアクセスできます。)
+    $(LI $(I immutable なメモリロケーション) は、存続期間中は書き込むことができません。 immutable な
+    メモリロケーション 同期せずに複数のスレッドから読み取ることができます。)
+    $(LI $(I Shared メモリロケーション) は、複数のスレッドからアクセスできます。)
     )
 
-    $(UNDEFINED_BEHAVIOR Allowing multiple threads to access a thread-local memory
-    location results in undefined behavior.)
+    $(未定義動作 複数のスレッドをスレッドローカルなメモリロケーションにアクセスさせることは、未定義の動作になります。)
 
-    $(UNDEFINED_BEHAVIOR Writing to an immutable memory location during its lifetime
-    results in undefined behavior.)
+    $(未定義動作 存続期間中の immutable なメモリロケーションへの書き込みは、未定義の動作になります。)
 
-    $(UNDEFINED_BEHAVIOR Writing to a shared memory location in
-    one thread while one or more additional threads read from or write to the same location is
-    undefined behavior unless all of the reads and writes are synchronized.)
+    $(未定義動作 1つ以上のスレッドが Shared メモリロケーションの読み取りまたは書き込みを行っている間に、
+    他のスレッドが同じ場所に書き込むことは、すべての読み取りと書き込みが同期されていない限り、未定義の動作になります。)
 
-    $(P Execution of a single thread on thread-local and immutable memory locations
-    is $(I sequentially consistent). This means the collective result of the operations
-    is the same as if they were executed in the same order that the operations appear in the program.
+    $(P スレッドローカルおよび immutable なメモリロケーションでの単一スレッドの実行は、$(I 順次一貫性)があります。
+    これは、メモリ操作の集合的な結果が、プログラムに表示されるのと同じ順序で実行された場合と同じであることを意味します。
     )
 
-    $(P A memory location can be transferred from thread-local to immutable or shared
-    if there is only one reference to the location.)
+    $(P メモリロケーションへの参照が1つしかない場合は、メモリロケーションをスレッドローカルから
+    immutable や Shared に移すことができます。)
 
-    $(P A memory location can be transferred from shared to immutable or thread-local
-    if there is only one reference to the location.)
+    $(P メモリロケーションへの参照が1つしかない場合は、メモリロケーションを
+    Shared から immutable やスレッドローカルに移すことができます。)
 
-    $(P A memory location can be temporarily transferred from shared to local if
-    synchronization is used to prevent any other threads from accessing the memory
-    location during the operation.)
+    $(P メモリ操作中に他のスレッドがメモリロケーションにアクセスするのを防ぐために同期が使用されている場合、
+    メモリロケーションを Shared　からスレッドローカルに、一時的に移すことができます。)
 
 
 $(H2 $(LNAME2 object-model, オブジェクトモデル))
@@ -152,5 +146,5 @@ $(SPEC_SUBNAV_NEXT lex, Lexical)
 )
 
 Macros:
-TITLE = Introduction
+TITLE = はじめに
 CHAPTER = 1
