@@ -3,15 +3,15 @@ Ddoc
 $(SPEC_S はじめに,
 
 $(P D言語は汎用システムプログラミング言語で、ネイティブコードにコンパイルされます。
-Cライクな構文を持ち、静的に型付けされます。ガベージコレクションによる自動メモリ管理をサポートします。
+Cライクな構文を持ち、静的に型付けされます。ガベージコレクションによる自動メモリ管理をサポートしますが、
 手動でのメモリ管理にも対応しています。
-D言語のプログラムは、ネイティブライブラリや実行可能ファイルを作成するために、
+ネイティブライブラリや実行可能ファイルを作成するために、D言語のプログラムは、
 個別にコンパイルし外部ライブラリとリンク可能なモジュールとして構成されます。)
 
 $(P このドキュメントは、プログラミング言語Dのリファレンスマニュアルです。 詳細な情報やその他のドキュメントについては
 $(COMMA) $(LINK2 https://dlang.org/, D言語のWebサイト)を参照してください。)
 
-$(H2 コンパイルのフェーズ)
+$(H2 $(LNAME2 compile-phase, コンパイル))
 
 $(P コンパイルは複数のフェーズに分かれます。各フェーズは、後続のフェーズから独立しています。
 たとえば、構文解析スキャナーは意味解析の影響を受けません。フェーズの分離により、構文解析を行うエディターなどのツールを比較的簡単に作成できます。)
@@ -63,69 +63,67 @@ $(OL
 $(H2 $(LNAME2 memory-model, メモリモデル))
 
     $(P $(I バイト) はストレージの基本単位です。 各バイトは8ビットで、一意のアドレスに格納されます。
-    A $(I メモリロケーション) は、スカラー型を保持するために必要な1バイト以上のシーケンスです。
-    複数のスレッドは、干渉することなく別々のメモリロケーションにアクセスできます。
+    $(I メモリロケーション) は、スカラー型を保持するために必要な1バイト以上のシーケンスです。
+    複数のスレッドは、別々のメモリロケーションに干渉することなくアクセスできます。
     )
 
     $(P メモリロケーションは3つのグループに分けられます:)
 
     $(OL
     $(LI $(I スレッドローカルなメモリロケーション) は、一度に1つのスレッドからのみアクセスできます。)
-    $(LI $(I immutable なメモリロケーション) は、存続期間中は書き込むことができません。 immutable な
-    メモリロケーション 同期せずに複数のスレッドから読み取ることができます。)
-    $(LI $(I Shared メモリロケーション) は、複数のスレッドからアクセスできます。)
+    $(LI $(I immutable なメモリロケーション) は、ライフタイム中は書き込むことができません。 immutable な
+    メモリロケーションは同期せずに複数のスレッドから読み取ることができます。)
+    $(LI $(I shared メモリロケーション) は、複数のスレッドからアクセスできます。)
     )
 
     $(未定義動作 複数のスレッドをスレッドローカルなメモリロケーションにアクセスさせることは、未定義の動作になります。)
 
-    $(未定義動作 存続期間中の immutable なメモリロケーションへの書き込みは、未定義の動作になります。)
+    $(未定義動作 ライフタイム中の immutable なメモリロケーションへの書き込みは、未定義の動作になります。)
 
-    $(未定義動作 1つ以上のスレッドが Shared メモリロケーションの読み取りまたは書き込みを行っている間に、
+    $(未定義動作 1つ以上のスレッドが shared メモリロケーションの読み取りまたは書き込みを行っている間に、
     他のスレッドが同じ場所に書き込むことは、すべての読み取りと書き込みが同期されていない限り、未定義の動作になります。)
 
     $(P スレッドローカルおよび immutable なメモリロケーションでの単一スレッドの実行は、$(I 順次一貫性)があります。
-    これは、メモリ操作の集合的な結果が、プログラムに表示されるのと同じ順序で実行された場合と同じであることを意味します。
+    これは、メモリ操作の集合的な結果が、プログラムに表示される順序で実行された場合と同じであることを意味します。
     )
 
     $(P メモリロケーションへの参照が1つしかない場合は、メモリロケーションをスレッドローカルから
-    immutable や Shared に移すことができます。)
+    immutable や shared に移すことができます。)
 
     $(P メモリロケーションへの参照が1つしかない場合は、メモリロケーションを
-    Shared から immutable やスレッドローカルに移すことができます。)
+    shared から immutable やスレッドローカルに移すことができます。)
 
     $(P メモリ操作中に他のスレッドがメモリロケーションにアクセスするのを防ぐために同期が使用されている場合、
-    メモリロケーションを Shared　からスレッドローカルに、一時的に移すことができます。)
+    メモリロケーションを shared　からスレッドローカルに、一時的に移すことができます。)
 
 
 $(H2 $(LNAME2 object-model, オブジェクトモデル))
 
-    $(P An $(I object) is created in the following circumstances:
+    $(P An $(I オブジェクト) は、次の状況で作成されます。:
     )
 
     $(UL
-    $(LI a definition)
-    $(LI a $(GLINK2 expression, NewExpression))
-    $(LI a temporary is created)
-    $(LI changing which field of a union is active)
+    $(LI 定義時)
+    $(LI $(GLINK2 expression, NewExpression))
+    $(LI テンポラリ作成時)
+    $(LI unionのアクティブなフィールドの変更時)
     )
 
-    $(P An object spans a sequence of memory locations which may or may not
-    be contiguous. Its lifetime encompasses construction, destruction, and the period in between.
-    Each object has a type which is determined either statically or by runtime
-    type information.
-    The object's memory locations may include any combination of thread-local, immutable, or
-    shared.
+    $(P オブジェクトは、連続または不連続な一連のメモリロケーションに及びます。
+    ライフタイムは、コンストラクションからデストラクション、その間を含みます。
+    オブジェクトには、静的または実行時型情報によって決定される型があります。
+    オブジェクトのメモリロケーションには、スレッドローカル, immutable,
+    sharedの任意の組み合わせを含めることができます。
     )
 
-    $(P Objects can be composed into a $(I composed object). Objects that make up
-    a composed object are $(I subobjects). An object that is not the subobject
-    of another object is a $(I complete object). The lifetime of a subobject
-    is always within the lifetime of the complete object to which it belongs.
+    $(P オブジェクトは、$(構成されたオブジェクト)に構成することができます。
+    構成されたオブジェクトを構成するオブジェクトは$(サブオブジェクト)です。
+    他のオブジェクトのサブオブジェクトではないオブジェクトは、$(完結したオブジェクト)です。
+    サブオブジェクトのライフタイムは、それが属する完結したオブジェクトのライフタイム内に常にあります。
     )
 
-    $(P An object's address is the address of the first byte of the first memory
-    location for that object. Object addresses are distinct unless one
-    object is nested within the other.
+    $(P オブジェクトのアドレスは、そのオブジェクトの最初のメモリロケーションの最初のバイトのアドレスです。
+    1つのオブジェクトが他のオブジェクト内にネストされていない限り、オブジェクトアドレスは区別されます。
     )
 
 $(H2 $(LNAME2 arithmetic, 四則演算))
@@ -141,7 +139,7 @@ $(H2 $(LNAME2 arithmetic, 四則演算))
     $(P 浮動小数点型の四則演算は、
     $(LINK2 https://en.wikipedia.org/wiki/IEEE_754, IEEE-754 浮動小数点演算)を使用して実行されます。)
 
-$(SPEC_SUBNAV_NEXT lex, Lexical)
+$(SPEC_SUBNAV_NEXT lex, 字句の構成$(LPAREN)Lexical$(RPAREN))
 )
 
 Macros:
