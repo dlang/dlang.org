@@ -489,6 +489,7 @@ $(GNAME AliasAssign):
         $(P An $(GLINK AliasDeclaration) can have a new value assigned to it with an
         $(I AliasAssign):)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 template Gorgon(T)
 {
@@ -498,6 +499,7 @@ template Gorgon(T)
 }
 pragma(msg, Gorgon!int); // prints int
 ---
+)
 
 $(UL
 $(LI The $(I AliasAssign) and its corresponding $(I AliasDeclaration) must both be
@@ -517,7 +519,9 @@ to another $(I AliasAssign) to the same lvalue other than in the right hand side
         $(I AliasAssign) is particularly useful when using an iterative
         computation rather than a recursive one, as it avoids creating
         the large number of intermediate templates that the recursive one
-        engenders.
+        engenders.)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 template AliasSeq(T...) { alias AliasSeq = T; }
 
@@ -546,7 +550,7 @@ enum X = 3;
 alias TK = Reverse!(int, const uint, X);
 pragma(msg, TK); // prints tuple(3, (const(uint)), (int))
 ---
-        )
+)
 
 $(H3 $(LNAME2 alias-reassignment, Alias Reassignment))
 
@@ -559,15 +563,22 @@ $(GNAME AliasReassignment):
 
         $(P An alias declaration inside a template can be reassigned a new value.)
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
-        template staticMap(alias F, T...)
+        alias AliasSeq(a...) = a;
+
+        template staticMap(alias F, args...)
         {
             alias A = AliasSeq!();
-            static foreach (t; T)
-                A = AliasSeq!(A, F!T); // alias reassignment
+            static foreach (arg; args)
+                A = AliasSeq!(A, F!arg); // alias reassignment
             alias staticMap = A;
         }
+
+        enum size(T) = T.sizeof;
+        static assert(staticMap!(size, char, wchar, dchar) == AliasSeq!(1, 2, 4));
         ---
+        )
 
         $(P The $(I Identifier) must resolve to a lexically preceding $(GLINK AliasDeclaration).
         Both must be members of the same $(GLINK2 template, TemplateDeclaration).
