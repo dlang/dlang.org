@@ -4,6 +4,8 @@ $(SPEC_S Templates,
 
 $(HEADERNAV_TOC)
 
+$(H2 $(LNAME2 declarations, Template Declarations))
+
     $(P Templates are D's approach to generic programming.
         Templates are defined with a $(I TemplateDeclaration):
     )
@@ -36,11 +38,9 @@ $(GNAME TemplateParameter):
     )
 
     $(P Template parameters can be types, values, symbols, or sequences.
-        Types can be any type.
-        Value parameters must be of an integral type, floating point
-        type, or string type and
-        specializations for them must resolve to an integral constant,
-        floating point constant, null, or a string literal.
+        Type parameters can be any type.
+        Value parameters can have any type which can be statically
+        initialized at compile time.
         Symbols can be any non-local symbol.
         Sequences can contain zero or more types, values or symbols.
     )
@@ -124,6 +124,13 @@ $(GNAME TemplateSingleArgument):
         foo.Ptr x;        // declare x to be of type int*
         ------
 
+    $(P If multiple templates with the same $(I Identifier) are
+        declared, they are distinct if they have a different number of
+        arguments or are differently specialized.
+    )
+
+$(H3 $(LNAME2 common_instantiation, Common Instantiation))
+
     $(P Multiple instantiations of a $(I TemplateDeclaration) with the same
         $(I TemplateArgumentList) will all refer to the same instantiation.
         For example:)
@@ -158,11 +165,6 @@ $(GNAME TemplateSingleArgument):
         // and refers to exactly the same instance as TFoo!(3)
         static assert(is(TFoo!(3) == TFoo!(3u)));
         -----
-
-    $(P If multiple templates with the same $(I Identifier) are
-        declared, they are distinct if they have a different number of
-        arguments or are differently specialized.
-    )
 
     $(H3 $(LNAME2 copy_example, Practical Example))
 
@@ -232,7 +234,7 @@ $(H2 $(LNAME2 instantiation_scope, Instantiation Scope))
         values are evaluated in the scope of the $(I TemplateDeclaration).
     )
 
-$(H2 $(LNAME2 argument_deduction, Argument Deduction))
+$(H2 $(LNAME2 argument_deduction, Template Argument Deduction))
 
     $(P The types of template parameters are deduced for a particular
         template instantiation by comparing the template argument with
@@ -812,6 +814,8 @@ $(GNAME TemplateSequenceParameter):
         to dynamically change, add, or remove elements either at compile-time or run-time.
     )
 
+$(H3 $(LNAME2 typeseq_deduction, Type Sequence Deduction))
+
     $(P Type sequences can be deduced from the trailing parameters
         of an implicitly instantiated function template:)
 
@@ -960,17 +964,6 @@ $(H2 $(LNAME2 implicit_template_properties, Eponymous Templates))
         }
         ------
 
-$(H2 $(LNAME2 template_ctors, Template Constructors))
-
-$(GRAMMAR
-$(GNAME ConstructorTemplate):
-    $(D this) $(GLINK TemplateParameters) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT) $(D :)
-    $(D this) $(GLINK TemplateParameters) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK2 function, FunctionBody)
-)
-
-    $(P Templates can be used to form constructors for classes  and structs.
-    )
-
 $(H2 $(LNAME2 aggregate_templates, Aggregate Templates))
 
 $(GRAMMAR
@@ -1022,6 +1015,17 @@ $(GNAME UnionTemplateDeclaration):
 
     $(P Analogously to class templates, struct, union and interfaces
         can be transformed into templates by supplying a template parameter list.
+    )
+
+$(H2 $(LNAME2 template_ctors, Template Constructors))
+
+$(GRAMMAR
+$(GNAME ConstructorTemplate):
+    $(D this) $(GLINK TemplateParameters) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT) $(D :)
+    $(D this) $(GLINK TemplateParameters) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK2 function, FunctionBody)
+)
+
+    $(P Templates can be used to form constructors for classes and structs.
     )
 
 $(H2 $(LNAME2 function-templates, Function Templates))
