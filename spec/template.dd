@@ -934,7 +934,8 @@ $(H2 $(LNAME2 implicit_template_properties, Eponymous Templates))
         }
         ------
 
-        $(P Using functions and more types than the template:)
+        $(P The following example has more than one eponymous member and uses
+        $(RELATIVE_LINK2 ifti, Implicit Function Template Instantiation):)
 
         ------
         template foo(S, T)
@@ -948,24 +949,6 @@ $(H2 $(LNAME2 implicit_template_properties, Eponymous Templates))
         {
             foo(1, 2, "test"); // foo!(int, int).foo(1, 2, "test")
             foo(1, 2); // foo!(int, int).foo(1, 2)
-        }
-        ------
-
-        $(P When the template parameters must be deduced, the eponymous members
-        can't rely on a $(LINK2 version.html#StaticIfCondition, `static if`)
-        condition since the deduction relies on how the in members are used:)
-
-        ------
-        template foo(T)
-        {
-            static if (is(T)) // T is not yet known...
-                void foo(T t) {} // T is deduced from the member usage
-        }
-
-        void main()
-        {
-            foo(0); // Error: cannot deduce function from argument types
-            foo!int(0); // Ok since no deduction necessary
         }
         ------
 
@@ -1084,6 +1067,8 @@ $(H3 $(LNAME2 ifti, Implicit Function Template Instantiation (IFTI)))
         from the function arguments.
     )
 
+$(H4 $(LNAME2 ifti-restrictions, Restrictions))
+
     $(P Function template type parameters that are to be implicitly
         deduced may not have specializations:)
 
@@ -1093,6 +1078,25 @@ $(H3 $(LNAME2 ifti, Implicit Function Template Instantiation (IFTI)))
         int x,y;
         foo!(int*)(x);   // ok, T is not deduced from function argument
         foo(&y);         // error, T has specialization
+        ------
+
+        $(P When the template parameters must be deduced, the
+        $(RELATIVE_LINK2 implicit_template_properties, eponymous members)
+        can't rely on a $(LINK2 version.html#StaticIfCondition, `static if`)
+        condition since the deduction relies on how the members are used:)
+
+        ------
+        template foo(T)
+        {
+            static if (is(T)) // T is not yet known...
+                void foo(T t) {} // T is deduced from the member usage
+        }
+
+        void main()
+        {
+            foo(0); // Error: cannot deduce function from argument types
+            foo!int(0); // Ok since no deduction necessary
+        }
         ------
 
 $(H4 $(LNAME2 ifti-conversions, Type Conversions))
