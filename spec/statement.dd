@@ -1275,7 +1275,20 @@ $(P `continue` aborts the current iteration of its enclosing loop statement, and
 starts the next iteration.)
 
         $(P continue executes the next iteration of its innermost enclosing
-        while, for, foreach, or do loop. The increment clause is executed.)
+        while, for, foreach, or do loop.
+        A $(GLINK ForStatement) increment clause is still executed:)
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+for (auto i = 0; i < 10; i++)
+{
+    auto j = i * i;
+    if (j < 10)
+        continue; // skip writeln
+    writeln(j);
+}
+---
+)
 
         $(P If continue is followed by $(I Identifier), the $(I Identifier)
         must be the label of an enclosing while, for, or do
@@ -1283,20 +1296,27 @@ starts the next iteration.)
         It is an error if
         there is no such statement.)
 
-        $(P Any intervening finally clauses are executed, and any intervening
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+outer: foreach (i; 0..6)
+{
+    writeln();
+    foreach (j; 0..i)
+    {
+        writef("%s ", j);
+        if (j == 2)
+            continue outer;
+    }
+}
+---
+)
+
+        $(P Any intervening $(GLINK FinallyStatement) clauses are executed, and any intervening
         synchronization objects are released.)
 
         $(P $(D Note:) If a finally clause executes a throw out of the finally
         clause, the continue target is never reached.)
 
----
-for (i = 0; i < 10; i++)
-{
-    if (foo(i))
-        continue;
-    bar();
-}
----
 
 $(H2 $(LEGACY_LNAME2 BreakStatement, break-statement, Break Statement))
 
@@ -1308,24 +1328,44 @@ $(GNAME BreakStatement):
 $(P `break` exits the innermost enclosing while, for, foreach, do, or switch
 statement, resuming execution at the statement following it.)
 
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+foreach (i; 0..10)
+{
+    auto j = i * i;
+    writeln(j);
+    if (j > 30)
+        break;
+}
+---
+)
+
         $(P If break is followed by $(I Identifier), the $(I Identifier)
         must be the label of an enclosing while, for, do or switch
         statement, and that statement is exited. It is an error if
         there is no such statement.)
 
-        $(P Any intervening finally clauses are executed, and any intervening
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+outer: for (auto i = 0;;)
+{
+    foreach (e; [1,2,3])
+    {
+        writefln("%s: %s", i, e);
+        i++;
+        if (i == 7)
+            break outer;
+    }
+}
+---
+)
+
+        $(P Any intervening $(GLINK FinallyStatement) clauses are executed, and any intervening
         synchronization objects are released.)
 
         $(P $(D Note:) If a finally clause executes a throw out of the finally
         clause, the break target is never reached.)
 
----
-for (i = 0; i < 10; i++)
-{
-    if (foo(i))
-        break;
-}
----
 
 $(H2 $(LEGACY_LNAME2 ReturnStatement, return-statement, Return Statement))
 
