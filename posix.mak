@@ -402,7 +402,7 @@ $W/sitemap.html : $(ALL_FILES_BUT_SITEMAP) $(DMD)
 	cp -f sitemap-template.dd $G/sitemap.dd
 	(true $(foreach F, $(TARGETS), \
 		&& echo \
-			"$F	`sed -n 's/<title>\(.*\) - D Programming Language.*<\/title>/\1/'p $W/$F`")) \
+			"$F	`sed -n 's/<title>\(.*\) - D言語 非公式日本語.*<\/title>/\1/'p $W/$F`")) \
 		| sort --ignore-case --key=2 | sed 's/^\([^	]*\)	\([^\n\r]*\)/<a href="\1">\2<\/a><br>/' >> $G/sitemap.dd
 	$(DMD) -conf= $(DDOCFLAGS) -Df$@ $(DDOC) $G/sitemap.dd
 	rm $G/sitemap.dd

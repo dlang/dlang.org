@@ -1,0 +1,47 @@
+name: 'Publish web-jp'
+
+on:
+  push:
+    branches: [ master-jp ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 'Download dmd'
+      uses: dlang-community/setup-dlang@v1
+      with:
+        compiler: dmd-latest
+    - name: 'Checkout dlang.org'
+      uses: actions/checkout@v2
+      with:
+        path: dlang.org
+    - name: 'Checkout dmd'
+      uses: actions/checkout@v2
+      with:
+        repository: dlang/dmd
+        path: dmd
+    - name: 'Checkout phobos'
+      uses: actions/checkout@v2
+      with:
+        repository: dlang/phobos
+        path: phobos
+    - name: 'Checkout druntime'
+      uses: actions/checkout@v2
+      with:
+        repository: dlang/druntime
+        path: druntime
+    - name: 'Make html file'
+      run: |
+        cd dlang.org
+        make -f posix.mak release
+    - name: 'Deploy web-jp'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: web-jp
+        publish_dir: ./dlang.org/web

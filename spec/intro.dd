@@ -1,164 +1,149 @@
 Ddoc
 
-$(SPEC_S Introduction,
+$(SPEC_S はじめに,
 
 $(HEADERNAV_TOC)
 
-$(P D is a general-purpose systems programming language with a C-like syntax that compiles to native code.
-It is statically typed and supports both automatic $(LPAREN)garbage collected$(RPAREN) and manual memory management.
-D programs are structured as modules that can be compiled separately and linked with external libraries
-to create native libraries or executables.)
+$(P D言語は汎用システムプログラミング言語で、ネイティブコードにコンパイルされます。
+Cライクな構文を持ち、静的に型付けされます。ガベージコレクションによる自動メモリ管理をサポートしますが、
+手動でのメモリ管理にも対応しています。
+ネイティブライブラリや実行可能ファイルを作成するために、D言語のプログラムは、
+個別にコンパイルし外部ライブラリとリンク可能なモジュールとして構成されます。)
 
-$(P This document is the reference manual for the D Programming Language. For more information and
-other documents$(COMMA) see $(LINK2 https://dlang.org/, The D Language Website).)
+$(P このドキュメントは、プログラミング言語Dのリファレンスマニュアルです。 詳細な情報やその他のドキュメントについては
+$(COMMA) $(LINK2 https://dlang.org/, D言語のWebサイト)を参照してください。)
 
-$(H2 $(LNAME2 Phases-of-Compilation, Phases of Compilation))
+$(H2 $(LNAME2 compile-phase, コンパイル))
 
-$(P The process of compiling is divided into multiple phases. Each phase is
-independent of subsequent phases. For example, the scanner is not affected by
-the semantic analyzer. This separation of passes makes language tools like
-syntax-directed editors relatively easy to create.)
+$(P コンパイルは複数のフェーズに分かれます。各フェーズは、後続のフェーズから独立しています。
+たとえば、構文解析スキャナーは意味解析の影響を受けません。フェーズの分離により、構文解析を行うエディターなどのツールを比較的簡単に作成できます。)
 
 $(OL
-        $(LI $(B source character set)$(BR)
+        $(LI $(B ソースファイルの文字セット)$(BR)
 
-        The source file is checked to determine its encoding
-        and the appropriate scanner is loaded. 7-bit ASCII and UTF
-        encodings are accepted.
+        ソースファイルをチェックすることでエンコーディングが決定され、適切な解析スキャナーがロードされます。
+        7ビットのASCIIおよびUTFエンコーディングに対応しています。
         )
 
-        $(LI $(B script line) $(BR)
+        $(LI $(B スクリプト行) $(BR)
 
-        If the first line starts with "$(HASH)!", then that line
-        is ignored.
+        最初の行が "$(HASH)!" で始まる場合、その行はスクリプト行として無視されます。
         )
 
-        $(LI $(B lexical analysis)$(BR)
+        $(LI $(B 字句解析)$(BR)
 
-        The source file is divided into a sequence of tokens.
-        $(DDSUBLINK spec/lex, specialtokens, Special tokens)
-        are replaced with other tokens.
-        $(GLINK_LEX SpecialTokenSequence)s
-        are processed and removed.
+        ソースファイルは一連のトークンに分割されます。
+        $(DDSUBLINK spec/lex, specialtokens, スペシャルトークン$(LPAREN)Special tokens$(RPAREN))
+        は、他のトークンに置き換えられます。
+        $(DDSUBLINK spec/lex, special-token-sequence, スペシャルトークンシーケンス$(LPAREN)SpecialTokenSequence$(RPAREN))
+        は、処理後に削除されます。
         )
 
-        $(LI $(B syntax analysis)$(BR)
+        $(LI $(B 構文解析)$(BR)
 
-        The sequence of tokens is parsed to form syntax trees.
+        トークンが順序通りに解析されて、構文ツリーが形成されます。
         )
 
-        $(LI $(B semantic analysis)$(BR)
+        $(LI $(B 意味解析)$(BR)
 
-        The syntax trees are traversed to declare variables, load symbol tables, assign
-        types, and determine the meaning of the program.
+        構文ツリーから、変数の宣言、シンボルテーブルのロード、型の割り当て、およびプログラムの意味を決定します。
         )
 
-        $(LI $(B optimization)$(BR)
+        $(LI $(B 最適化)$(BR)
 
-        Optimization is an optional pass that attempts to rewrite the program
-        in a semantically equivalent, more performant, version.
+        最適化は、意味的に同等でパフォーマンスが高くなるプログラムに書き換えるためのオプションパスです。
         )
 
-        $(LI $(B code generation)$(BR)
+        $(LI $(B コード生成)$(BR)
 
-        Instructions are selected from the target architecture to implement
-        the semantics of the program. The typical result will be
-        an object file suitable for input to a linker.
+        プログラムを実装するために、ターゲットアーキテクチャから命令が選択されます。
+        典型的な結果として、リンカへの入力に適したオブジェクトファイルになります。
         )
 )
 
 
-$(H2 $(LNAME2 memory-model, Memory Model))
+$(H2 $(LNAME2 memory-model, メモリモデル))
 
-    $(P The $(I byte) is the fundamental unit of storage. Each byte has 8 bits and is stored at
-    a unique address. A $(I memory location) is a sequence of one or more bytes of the exact size
-    required to hold a scalar type. Multiple threads can access separate memory locations
-    without interference.
+    $(P $(I バイト) はストレージの基本単位です。 各バイトは8ビットで、一意のアドレスに格納されます。
+    $(I メモリロケーション) は、スカラー型を保持するために必要な1バイト以上のシーケンスです。
+    複数のスレッドは、別々のメモリロケーションに干渉することなくアクセスできます。
     )
 
-    $(P Memory locations come in three groups:)
+    $(P メモリロケーションは3つのグループに分けられます:)
 
     $(OL
-    $(LI $(I Thread-local memory locations) are accessible from only one thread at a time.)
-    $(LI $(I Immutable memory locations) cannot be written to during their lifetime. Immutable
-    memory locations can be read from by multiple threads without synchronization.)
-    $(LI $(I Shared memory locations) are accessible from multiple threads.)
+    $(LI $(I スレッドローカルなメモリロケーション) は、一度に1つのスレッドからのみアクセスできます。)
+    $(LI $(I immutable なメモリロケーション) は、ライフタイム中は書き込むことができません。 immutable な
+    メモリロケーションは同期せずに複数のスレッドから読み取ることができます。)
+    $(LI $(I shared メモリロケーション) は、複数のスレッドからアクセスできます。)
     )
 
-    $(UNDEFINED_BEHAVIOR Allowing multiple threads to access a thread-local memory
-    location results in undefined behavior.)
+    $(未定義動作 複数のスレッドをスレッドローカルなメモリロケーションにアクセスさせることは、未定義の動作になります。)
 
-    $(UNDEFINED_BEHAVIOR Writing to an immutable memory location during its lifetime
-    results in undefined behavior.)
+    $(未定義動作 ライフタイム中の immutable なメモリロケーションへの書き込みは、未定義の動作になります。)
 
-    $(UNDEFINED_BEHAVIOR Writing to a shared memory location in
-    one thread while one or more additional threads read from or write to the same location is
-    undefined behavior unless all of the reads and writes are synchronized.)
+    $(未定義動作 1つ以上のスレッドが shared メモリロケーションの読み取りまたは書き込みを行っている間に、
+    他のスレッドが同じ場所に書き込むことは、すべての読み取りと書き込みが同期されていない限り、未定義の動作になります。)
 
-    $(P Execution of a single thread on thread-local and immutable memory locations
-    is $(I sequentially consistent). This means the collective result of the operations
-    is the same as if they were executed in the same order that the operations appear in the program.
+    $(P スレッドローカルおよび immutable なメモリロケーションでの単一スレッドの実行は、$(I 順次一貫性)があります。
+    これは、メモリ操作の集合的な結果が、プログラムに表示される順序で実行された場合と同じであることを意味します。
     )
 
-    $(P A memory location can be transferred from thread-local to immutable or shared
-    if there is only one reference to the location.)
+    $(P メモリロケーションへの参照が1つしかない場合は、メモリロケーションをスレッドローカルから
+    immutable や shared に移すことができます。)
 
-    $(P A memory location can be transferred from shared to immutable or thread-local
-    if there is only one reference to the location.)
+    $(P メモリロケーションへの参照が1つしかない場合は、メモリロケーションを
+    shared から immutable やスレッドローカルに移すことができます。)
 
-    $(P A memory location can be temporarily transferred from shared to local if
-    synchronization is used to prevent any other threads from accessing the memory
-    location during the operation.)
+    $(P メモリ操作中に他のスレッドがメモリロケーションにアクセスするのを防ぐために同期が使用されている場合、
+    メモリロケーションを shared　からスレッドローカルに、一時的に移すことができます。)
 
 
-$(H2 $(LNAME2 object-model, Object Model))
+$(H2 $(LNAME2 object-model, オブジェクトモデル))
 
-    $(P An $(I object) is created in the following circumstances:
+    $(P $(I オブジェクト) は、次の状況で作成されます。
     )
 
     $(UL
-    $(LI a definition)
-    $(LI a $(GLINK2 expression, NewExpression))
-    $(LI a temporary is created)
-    $(LI changing which field of a union is active)
+    $(LI 定義時)
+    $(LI $(GLINK2 expression, NewExpression))
+    $(LI テンポラリ作成時)
+    $(LI unionのアクティブなフィールドの変更時)
     )
 
-    $(P An object spans a sequence of memory locations which may or may not
-    be contiguous. Its lifetime encompasses construction, destruction, and the period in between.
-    Each object has a type which is determined either statically or by runtime
-    type information.
-    The object's memory locations may include any combination of thread-local, immutable, or
-    shared.
+    $(P オブジェクトは、連続または不連続な一連のメモリロケーションに及びます。
+    ライフタイムは、コンストラクションからデストラクション、その間を含みます。
+    オブジェクトには、静的または実行時型情報によって決定される型があります。
+    オブジェクトのメモリロケーションには、スレッドローカル, immutable,
+    sharedの任意の組み合わせを含めることができます。
     )
 
-    $(P Objects can be composed into a $(I composed object). Objects that make up
-    a composed object are $(I subobjects). An object that is not the subobject
-    of another object is a $(I complete object). The lifetime of a subobject
-    is always within the lifetime of the complete object to which it belongs.
+    $(P オブジェクトは、$(I 構成されたオブジェクト)に構成することができます。
+    構成されたオブジェクトを構成するオブジェクトは$(I サブオブジェクト)です。
+    他のオブジェクトのサブオブジェクトではないオブジェクトは、$(I 完結したオブジェクト)です。
+    サブオブジェクトのライフタイムは、それが属する完結したオブジェクトのライフタイム内に常にあります。
     )
 
-    $(P An object's address is the address of the first byte of the first memory
-    location for that object. Object addresses are distinct unless one
-    object is nested within the other.
+    $(P オブジェクトのアドレスは、そのオブジェクトの最初のメモリロケーションの最初のバイトのアドレスです。
+    1つのオブジェクトが他のオブジェクト内にネストされていない限り、オブジェクトアドレスは区別されます。
     )
 
-$(H2 $(LNAME2 arithmetic, Arithmetic))
+$(H2 $(LNAME2 arithmetic, 四則演算))
 
-    $(H3 Integer Arithmetic)
+    $(H3 整数の四則演算)
 
-    $(P Integer arithmetic is performed using
-    $(LINK2 https://en.wikipedia.org/wiki/Two%27s_complement, two's complement) math.
-    Integer overflow is not checked for.
+    $(P 整数の四則演算は、$(LINK2 https://en.wikipedia.org/wiki/Two%27s_complement, 2の補数)
+    演算を使用して実行されます。整数のオーバーフローはチェックしません。
     )
 
-    $(H3 Floating Point Arithmetic)
+    $(H3 浮動小数点数の四則演算)
 
-    $(P Floating point arithmetic is performed using
-    $(LINK2 https://en.wikipedia.org/wiki/IEEE_754, IEEE-754 floating point math).)
+    $(P 浮動小数点数の四則演算は、
+    $(LINK2 https://en.wikipedia.org/wiki/IEEE_754, IEEE-754 浮動小数点演算)を使用して実行されます。)
 
-$(SPEC_SUBNAV_NEXT lex, Lexical)
+$(SPEC_SUBNAV_NEXT lex, 字句の構成[Lexical])
 )
 
 Macros:
-TITLE = Introduction
+TITLE = はじめに
 CHAPTER = 1
