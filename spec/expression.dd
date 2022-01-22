@@ -21,22 +21,34 @@ The syntax, order of evaluation, and semantics of expressions are as follows.)
 
 $(H2 $(LNAME2 definitions-and-terms, Definitions and Terms))
 
-$(DDOC_ANCHOR define-full-expression)$(P $(B Definition) ($(DOUBLEQUOTE Full expression)): For any expression
+$(H3 $(LNAME2 .define-full-expression, Full Expression))
+
+$(P For any expression
 $(I expr), the full expression of $(I expr) is defined as follows. If $(I expr) parses as a
 subexpression of another expression $(I expr$(SUBSCRIPT 1)), then the full expression of $(I expr) is the
 full expression of $(I expr$(SUBSCRIPT 1)). Otherwise, $(I expr) is its own full expression.)
 
-$(P Each expression has a unique full expression.)
+$(P Each expression has a unique full expression. Example:)
 
-$(P Example: in the statement `return f() + g() * 2;`, the full expression of `g() * 2` is `f() + g() * 2`, but not the
+---
+return f() + g() * 2;
+---
+
+$(P The full expression of `g() * 2` above is `f() + g() * 2`, but not the
 full expression of `f() + g()` because the latter is not parsed as a subexpression.)
 
-$(P Note: Although the definition is straightforward, a few subtleties exist related to function literals. In the
-statement `return (() => x + f())() * g();`, the full expression of `f()` is `x + f()`, not the expression passed
+$(P Note: Although the definition is straightforward, a few subtleties exist related to function literals:)
+
+---
+return (() => x + f())() * g();
+---
+
+$(P The full expression of `f()` above is `x + f()`, not the expression passed
 to `return`. This is because the parent of `x + f()` has function literal type, not expression type.)
 
-$(DDOC_ANCHOR define-lvalue)$(P $(B Definition) ($(DOUBLEQUOTE Lvalue)): The following expressions, and no
-others, are called lvalue expressions or lvalues:)
+$(H3 $(LNAME2 .define-lvalue, Lvalue))
+
+$(P The following expressions, and no others, are called *lvalue expressions* or *lvalues*:)
 $(OL
 $(LI `this` inside `struct` and `union` member functions;)
 $(LI a variable or the result of the $(I DotIdentifier) grammatical construct `.` (left side may be
@@ -62,23 +74,28 @@ $(LI `cast(U)` expressions applied to lvalues of type `T` when `T*` is implicitl
 $(LI `cast()` and `cast(`$(I qualifier list)`)` when applied to an lvalue.)
 )))
 
-$(DDOC_ANCHOR define-rvalue)$(P $(B Definition) ($(DOUBLEQUOTE Rvalue)): Expressions that are not
-lvalues are rvalues.)
+$(H3 $(LNAME2 .define-rvalue, Rvalue))
 
-$(P Note: Rvalues include all literals, special value keywords such as `__FILE__` and `__LINE__`,
+$(P Expressions that are not lvalues are *rvalues*. Rvalues include all literals, special value keywords such as `__FILE__` and `__LINE__`,
 `enum` values, and the result of expressions not defined as lvalues above.)
 
 $(P The built-in address-of operator (unary `&`) may only be applied to lvalues.)
 
-$(DDOC_ANCHOR define-smallest-short-circuit)$(P $(B Definition) ($(DOUBLEQUOTE Smallest
-short-circuit expression)): Given an expression $(I expr) that is a subexpression of a full
-expression $(I fullexpr), the smallest short-circuit expression, if any, is the shortest
-subexpression $(I scexpr) of $(I fullexpr) that is an $(GLINK AndAndExpression) (`&&`) or an
-$(GLINK OrOrExpression) (`||`), such that $(I expr) is a subexpression of $(I scexpr).)
+$(H3 $(LNAME2 .define-smallest-short-circuit, Smallest Short-Circuit Expression))
 
-Example: in the expression `((f() * 2 && g()) + 1) || h()`, the smallest short-circuit expression
-of the subexpression `f() * 2` is `f() * 2 && g()`. In the expression `(f() && g()) + h()`, the
-subexpression `h()` has no smallest short-circuit expression.
+$(P Given an expression $(I expr) that is a subexpression of a full
+expression $(I fullexpr), the *smallest short-circuit expression*, if any, is the shortest
+subexpression $(I scexpr) of $(I fullexpr) that is an $(GLINK AndAndExpression) (`&&`) or an
+$(GLINK OrOrExpression) (`||`), such that $(I expr) is a subexpression of $(I scexpr). Example:)
+---
+((f() * 2 && g()) + 1) || h()
+---
+The smallest short-circuit expression
+of the subexpression `f() * 2` above is `f() * 2 && g()`. Example:
+---
+(f() && g()) + h()
+---
+The subexpression `h()` above has no smallest short-circuit expression.
 
 $(H2 $(LNAME2 order-of-evaluation, Order Of Evaluation))
 
@@ -479,11 +496,11 @@ $(H2 $(LNAME2 compare_expressions, Compare Expressions))
 
 $(GRAMMAR
 $(GNAME CmpExpression):
-    $(GLINK ShiftExpression)
     $(GLINK EqualExpression)
     $(GLINK IdentityExpression)
     $(GLINK RelExpression)
     $(GLINK InExpression)
+    $(GLINK ShiftExpression)
 )
 
 $(H2 $(LNAME2 equality_expressions, Equality Expressions))
@@ -517,18 +534,25 @@ $(GNAME EqualExpression):
         Otherwise, the bit patterns of the common type are compared for equality.
     )
 
-    $(P For complex numbers, equality is defined as equivalent to:
+    $(P For static and dynamic arrays, equality is defined as the
+        lengths of the arrays
+        matching, and all the elements are equal.
+    )
+
+    $(DDOC_DEPRECATED For complex numbers, equality is defined as equivalent to:)
 
         ---
         x.re == y.re && x.im == y.im
         ---
-    )
+
+    $(H3 $(LNAME2 class_struct_equality, Class & Struct Equality))
 
     $(P For struct objects, equality means the result of the
         $(LINK2 https://dlang.org/spec/operatoroverloading.html#equals, `opEquals()` member function).
         If an `opEquals()` is not provided, equality is defined as
         the logical product of all equality
-        results of the corresponding object fields.
+        results of the corresponding object fields.)
+    )
 
         $(IMPLEMENTATION_DEFINED The contents of any alignment gaps in the struct object.)
 
@@ -537,14 +561,13 @@ $(GNAME EqualExpression):
         An `opEquals()` can account for which of the overlapping fields contains valid data.
         An `opEquals()` can override the default behavior of floating point NaN values
         always comparing as unequal.
-        Be careful using `memcmp()` to implement `opEquals()` if:
+        Be careful using `memcmp()` to implement `opEquals()` if:)
+
         $(UL
         $(LI there are any alignment gaps)
-        $(LI if any fields have an `opEquals()`)
+        $(LI any fields have an `opEquals()`)
         $(LI there are any floating point fields that may contain NaN or `-0` values)
         )
-        )
-    )
 
     $(P For class and struct objects, the expression $(D (a == b))
         is rewritten as
@@ -569,11 +592,6 @@ $(GNAME EqualExpression):
             ...
         ---
 
-    $(P For static and dynamic arrays, equality is defined as the
-        lengths of the arrays
-        matching, and all the elements are equal.
-    )
-
 $(H3 $(LNAME2 identity_expressions, Identity Expressions))
 
 $(GRAMMAR
@@ -582,7 +600,7 @@ $(GNAME IdentityExpression):
     $(GLINK ShiftExpression) $(D ! is) $(GLINK ShiftExpression)
 )
 
-    $(P The $(D is) compares for identity.
+    $(P The $(D is) operator compares for identity.
         To compare for nonidentity, use $(D e1 !is e2).
         The type of the result is $(D bool). The operands
         undergo the $(USUAL_ARITHMETIC_CONVERSIONS) to bring them to a common type before
@@ -623,15 +641,7 @@ $(GNAME RelExpression):
         The result type of a relational expression is $(D bool).
     )
 
-    $(P For class objects, the result of Object.opCmp() forms the left
-        operand, and 0 forms the right operand. The result of the
-        relational expression (o1 op o2) is:)
-
-        ---
-        (o1.opCmp(o2) op 0)
-        ---
-
-    $(P It is an error to compare objects if one is $(D null).)
+$(H3 $(LNAME2 array_comparisons, Array comparisons))
 
     $(P For static and dynamic arrays, the result of the relational
         op is the result of the operator applied to the first non-equal
@@ -687,13 +697,24 @@ $(H3 $(LEGACY_LNAME2 class_comparisons, class-comparisons, Class comparisons))
     $(P For class objects, the relational
         operators compare the
         contents of the objects. Therefore, comparing against
-        $(CODE null) is invalid, as $(CODE null) has no contents.)
+        a $(CODE null) class reference is invalid, as $(CODE null) has no contents.)
+
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+        ---
+        class C {}
+        C c;
+        //if (c < null) {}  // compile-time error
+        assert(c is null);
+        if (c > new C) {}  // runtime error
+        ---
+        )
+
+    $(P For class objects, the result of `Object.opCmp()` forms the left
+        operand, and `0` forms the right operand. The result of the
+        relational expression `(o1 op o2)` is:)
 
         ---
-        class C;
-        C c;
-        if (c < null)  // error
-            ...
+        (o1.opCmp(o2) op 0)
         ---
 
 $(H2 $(LNAME2 in_expressions, In Expressions))
@@ -1577,8 +1598,10 @@ $(GNAME ArrayLiteral):
 
     $(P By default, an array literal is typed as a dynamic array, but the element
         count is known at compile time. So all array literals can be
-        implicitly converted to static array types.)
+        implicitly converted to static array types. Slicing a dynamic array with
+        statically known bounds also allows conversion to a static array.)
 
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
         -------------
         void foo(long[2] a)
         {
@@ -1587,11 +1610,9 @@ $(GNAME ArrayLiteral):
         void bar(ref long[2] a)
         {
             assert(a == [2, 3]);
-            a[0] = 4;
-            a[1] = 5;
+            a = [4, 5];
             assert(a == [4, 5]);
         }
-        void baz(const char[3] a) {}
 
         void main()
         {
@@ -1603,16 +1624,17 @@ $(GNAME ArrayLiteral):
             bar(arr[1 .. 3]);
             assert(arr == [1, 4, 5]);
 
-          //baz(arr[1 .. 3]); // cannot match length
+            //foo(arr[0 .. 3]); // cannot match length
         }
         -------------
+        )
 
     $(P If any of the arguments in the $(GLINK ArgumentList) are
         a $(I ValueSeq), then the elements of the $(I ValueSeq)
         are inserted as arguments in place of the sequence.
     )
 
-    $(P Array literals are allocated on the memory managed heap.
+    $(P Escaping array literals are allocated on the memory managed heap.
         Thus, they can be returned safely from functions:)
 
         ---
@@ -1646,7 +1668,7 @@ $(GNAME ArrayLiteral):
         }
         ---
 
-        In other words, casting literal expression will change the literal type.
+        In other words, casting an array literal will change the type of each initializer element.
 
 $(H3 $(LNAME2 associative_array_literals, Associative Array Literals))
 
@@ -1682,7 +1704,7 @@ $(GNAME ValueExpression):
         anything.)
 
         ---
-        [21u:"he", 38:"ho", 2:"hi"];  // type is string[uint],
+        [21u: "he", 38: "ho", 2: "hi"]; // type is string[uint],
                                       // with keys 21u, 38u and 2u
                                       // and values "he", "ho", and "hi"
         ---
