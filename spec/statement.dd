@@ -873,16 +873,16 @@ $(H4 $(LNAME2 front-seq, Multiple Element Values))
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         ---
-        // Common tuple implementation that can decay into a sequence of its members
-        import std.typecons : Tuple, tuple;
+        struct Tuple(Types...) // takes a TypeSeq
+        {
+            Types items; // ValueSeq
+            alias items this; // decay to a value sequence
+        }
 
-        // Infinite range whose elements are tuples
+        // Infinite range whose element is a fixed tuple
         struct TupleRange
         {
-            Tuple!(char, bool, int) front()
-            {
-                return typeof(return)('a', true, 2);
-            }
+            enum front = Tuple!(char, bool, int)('a', true, 2);
 
             enum bool empty = false;
 
@@ -900,9 +900,10 @@ $(H4 $(LNAME2 front-seq, Multiple Element Values))
                 break;
             }
             // Tuple variable
-            foreach (a; TupleRange())
+            foreach (tup; TupleRange())
             {
-                assert(a == tuple('a', true, 2));
+                assert(tup[0] == 'a');
+                assert(tup == TupleRange.front);
                 break;
             }
         }
