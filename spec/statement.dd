@@ -496,8 +496,8 @@ $(P
         will have $(D scope) semantics.
 )
 $(P
-        The aggregate must be loop invariant, meaning that
-        elements to the aggregate cannot be added or removed from it
+        The loop must be $(RELATIVE_LINK2 foreach_restrictions, invariant), meaning that
+        elements cannot be added or removed from the aggregate
         in the *NoScopeNonEmptyStatement*.
 )
 
@@ -995,20 +995,42 @@ $(H3 $(LNAME2 foreach_restrictions, Foreach Restrictions))
 
         $(P The aggregate itself must not be resized, reallocated, free'd,
         reassigned or destructed
-        while the foreach is iterating over the elements.
+        while `foreach` is iterating over the elements.
         )
 
 --------------
-int[] a;
-int[] b;
-foreach (int i; a)
+int[] a = [1,2,3];
+
+foreach (int v; a)
 {
-    a = null;       // error
-    a.length += 10; // error
-    a = b;          // error
+    // resizing is unspecified!
+    a ~= 4;
+    a.length += 10;
+    // reallocating is unspecified!
+    a.reserve(10);
+    // reassigning is unspecified!
+    a = null;
+    a = [5,6];
 }
-a = null;         // ok
+a ~= 4;   // OK
+a = null; // OK
 --------------
+---
+auto aa = [1:1,2:2];
+
+foreach (v; aa)
+{
+    aa[3] = 3; // unspecified resize
+    aa.rehash; // unspecified reallocation
+    aa = [4:4]; // unspecified reassign
+}
+aa[3] = 3; // OK
+aa = null; // OK
+---
+
+        $(NOTE Resizing or reassigning a dynamic or associative array during
+        `foreach` is still `@safe`.
+        )
 
 $(H3 $(LEGACY_LNAME2 ForeachRangeStatement, foreach-range-statement, Foreach Range Statement))
 
