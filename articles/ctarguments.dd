@@ -36,22 +36,24 @@ $(HEADERNAV_TOC)
     ---
     template Variadic(T...)
     {
-        static assert (T.length > 1);
+        static assert(T.length > 1);
         pragma(msg, T[0]);
         pragma(msg, T[1]);
     }
 
     alias dummy = Variadic!(int, 42);
-    // prints during compilation:
-    // int
-    // 42
     ---
+    $(P Output during compilation:)
+$(CONSOLE
+int
+42
+)
 
     $(H2 $(LNAME2 AliasSeq, AliasSeq))
 
     $(P The language itself does not provide any means to define such sequences outside of
         a template parameter declaration. Instead, there is a
-        $(MREF_ALTTEXT simple utility, std, meta) provided by the standard
+        $(REF_ALTTEXT simple template, AliasSeq, std,meta) provided by the standard
         library:
     )
 
@@ -79,7 +81,7 @@ $(H2 $(LNAME2 available-operations, Available operations))
 
         ---
         import std.meta;
-        static assert (AliasSeq!(1, 2, 3, 4).length == 4);
+        static assert(AliasSeq!(1, 2, 3, 4).length == 4);
         ---
 
     $(H3 $(LNAME2 indexing-slicing, Indexing and slicing))
@@ -88,13 +90,17 @@ $(H2 $(LNAME2 available-operations, Available operations))
 
         ---
         import std.meta;
-        alias Numbers = AliasSeq!(1, 2, 3, 4);
-        static assert (Numbers[1] == 2);
-        alias SubNumbers = Numbers[1 .. $];
-        static assert (SubNumbers[0] == 2);
+
+        alias nums = AliasSeq!(1, 2, 3, 4);
+        static assert(nums[1] == 2);
+
+        // slice last 3 elements
+        alias tail = nums[1 .. $];
+        static assert(tail[0] == 2);
+        static assert(tail.length == 3);
         ---
 
-    $(H3 $(LNAME2 assignment, Assignment))
+    $(H4 $(LNAME2 assignment, Element assignment))
 
         $(P Works only if the sequence element is a symbol that refers to a mutable variable)
 
@@ -106,12 +112,12 @@ $(H2 $(LNAME2 available-operations, Available operations))
             int x;
             alias seq = AliasSeq!(10, x);
             seq[1] = 42;
-            assert (x == 42);
+            assert(x == 42);
             // seq[0] = 42; // won't compile, can't assign to a constant
         }
         ---
 
-    $(H3 $(LNAME2 loops, Loops))
+    $(H3 $(LNAME2 loops, `foreach`))
 
         $(P D's $(DDSUBLINK spec/statement, ForeachStatement, foreach statement) has special
             semantics when iterating over compile-time sequences. It repeats the body of the loop
@@ -132,13 +138,13 @@ $(H2 $(LNAME2 available-operations, Available operations))
                     pragma (msg, typeof(sym));
             }
         }
-
-        /* Prints:
-        int
-        string
-        void()
-        */
         ---
+        $(P Output during compilation:)
+$(CONSOLE
+int
+string
+void()
+)
 
         $(P $(B Note:) $(DDSUBLINK version, staticforeach, Static foreach)
         should be preferred in new code.)
@@ -182,9 +188,11 @@ $(H3 $(LNAME2 type-seq, Type sequences))
     import std.meta;
     alias Params = AliasSeq!(int, double, string);
     void foo(Params); // void foo(int, double, string);
+
+    foo(7, 6.5, "hi");
     ---
 
-$(H4 $(LNAME2 type-seq-instantiation, Type sequence instantiation))
+$(H3 $(LNAME2 type-seq-instantiation, Type sequence instantiation))
 
     $(P D supports a special variable declaration syntax where a type sequence acts as a type:)
 
@@ -211,7 +219,7 @@ $(H4 $(LNAME2 type-seq-instantiation, Type sequence instantiation))
     variables, known as an $(I lvalue sequence).)
 
     $(P $(DDSUBLINK spec/template, variadic-templates, Variadic template functions)
-    use a type sequence instance for a function parameter:)
+    use a type sequence instance to declare function parameters:)
 
     ---
     void foo(T...)(T args)
@@ -222,9 +230,6 @@ $(H4 $(LNAME2 type-seq-instantiation, Type sequence instantiation))
         args[0] = T[0].init;
     }
     ---
-
-    $(P $(B Note:) $(REF Tuple, std, typecons) wraps a type sequence instance,
-    preventing auto-expansion, and allowing it to be returned from functions.)
 
 $(H3 $(LNAME2 value-seq, Value sequences))
 
@@ -248,13 +253,16 @@ $(H3 $(LNAME2 value-seq, Value sequences))
     swap(pair);
     assert(x == 7 && y == 3);
     ---
-    $(P As above, such sequences may use $(ALOCAL assignment, assignment).)
-
-$(H4 $(LNAME2 tupleof, Aggregate field sequences))
+    $(P As above, such sequences may use
+    $(ALOCAL assignment, element assignment).)
 
     $(P $(DDSUBLINK spec/class, class_properties, `.tupleof`) is a
     class/struct instance property that provides an lvalue sequence
     of each field.)
+
+    $(P A function cannot return a value sequence. Instead,
+    $(REF Tuple, std, typecons) can be used. It wraps an lvalue
+    sequence in a struct, preventing auto-expansion.)
 
 $(H3 $(LNAME2 symbol-seq, Symbol sequences))
 
@@ -262,6 +270,24 @@ $(P A symbol sequence aliases any named symbol - types, variables, functions and
 but not literals.
 Like an alias sequence, the kind of elements can be mixed.)
 
+---
+import std.meta : AliasSeq;
+
+void f(T)(T v)
+{
+    pragma(msg, T);
+}
+alias syms = AliasSeq!(f, f!byte);
+syms[0](42); // call f!int with IFTI
+syms[1](42); // call f!byte
+---
+$(P Output during compilation:)
+$(CONSOLE
+byte
+int
+)
+$(P Note that function `f!byte` is instantiated when the sequence is
+created, not at the call-site.)
 )
 
 Macros:
