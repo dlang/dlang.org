@@ -17,8 +17,6 @@ $(HEADERNAV_TOC)
         $(LI Expressions)
         )
         $(P
-        Combining this with compile time manipulation of strings
-        enables the creation of domain-specific languages.
         For example, we can generate a declaration `struct Foo { int bar; }`
         using string constants for the identifiers:
         )
@@ -90,6 +88,35 @@ int foo(int x)
     return mixin("x +", 1) * 7;  // same as `return (x + 1) * 7`
 }
 ---
+
+$(H2 $(LNAME2 dsl, Domain Specific Languages))
+
+        $(P
+        Combining compile-time function execution with `mixin()`
+        enables the use of domain-specific languages:)
+        ---
+        mixin(convertJS(q{
+            var msg = "Hello world!"
+            console.log(msg)
+            msg = 5
+            console.log(msg)
+            }));
+        ---
+        $(P `convertJS` would generate a string that would be compiled
+        to the following D code:)
+        ---
+        import std.variant;
+
+        Variant msg = "Hello world!";
+        writeln(msg);
+        msg = 5;
+        writeln(msg);
+        ---
+
+        $(NOTE Text editors can syntax highlight the contents of `q{}`
+        strings as D tokens rather than a string, which is useful with
+        `mixin()`. The above JS code happens to be token compatible
+        with D.)
 
 $(H2 $(LNAME2 cpp, Comparison with C preprocessor))
 
