@@ -16,8 +16,17 @@ $(HEADERNAV_TOC)
         $(LI Types)
         $(LI Expressions)
         )
-        $(P
-        For example, we can generate a declaration `struct Foo { int bar; }`
+
+$(H2 $(LNAME2 declarations, Generating Declarations))
+
+        $(P A mixin can be used for a variable declaration:)
+---
+enum s = "int y;";
+mixin(s);
+y = 4;     // ok, mixin declared y
+---
+
+        $(P We can generate a declaration `struct Foo { int bar; }`
         using string constants for the identifiers:
         )
 
@@ -30,7 +39,7 @@ mixin("struct " ~ name ~
 enum f = Foo(2);
 static assert(f.bar == 2);
 ---
-        $(P This can be encapsulated in an enum template:)
+        $(P This can be encapsulated in an enum template for reuse:)
 ---
 enum string genStruct(string name, string m1) =
     "struct " ~ name ~ "{ int " ~ m1 ~ "; }";
@@ -51,14 +60,6 @@ mixin("struct ", name,
 
 enum f = Foo();
 static assert(f.bar == 4);
----
-
-$(H2 $(LNAME2 declarations, Generating Declarations))
-
----
-enum s = "int y;";
-mixin(s);
-y = 4;     // ok, mixin declared y
 ---
 
 $(H2 $(LNAME2 statements, Generating Statements))
