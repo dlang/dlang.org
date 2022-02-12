@@ -85,7 +85,7 @@ auto compile(R)(R buffer, string[] arguments, string inputFile, string[string] m
 {
     import core.time : usecs;
     import core.thread : Thread;
-    import std.process : pipeProcess, Redirect, wait;
+    import std.process : execute;
     auto args = [config.dmdBinPath] ~ arguments;
 
     // Note: ideally we could pass in files directly on stdin.
@@ -110,8 +110,7 @@ auto compile(R)(R buffer, string[] arguments, string inputFile, string[string] m
         if (!args.canFind(arg))
             args ~= arg;
     }
-    auto pipes = pipeProcess(args, Redirect.stdin);
-    import std.process : execute;
+
     auto ret = execute(args);
     if (ret.status != 0)
     {
