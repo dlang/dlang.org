@@ -1,0 +1,917 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Mar 01, 2022, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 19 major changes and 207 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 99 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 22541,When `ref scope return` attributes are used on a parameter, and `return scope` appears, the `return` applies to the `scope`, not the `ref`.))
+$(LI $(RELATIVE_LINK2 TraitsParameters,`__traits(parameters)` has been added to the compiler.))
+$(LI $(RELATIVE_LINK2 __import,Add ability to import modules to ImportC))
+$(LI $(RELATIVE_LINK2 allow_casting_from_typetuple_to_typetuple,Casting between compatible tuples))
+$(LI $(RELATIVE_LINK2 disasm,New command line switch -vasm which outputs assembler code per function))
+$(LI $(RELATIVE_LINK2 fix16997,The '-preview=intpromote' switch is now set by default.))
+$(LI $(RELATIVE_LINK2 fix18964,`-m32` now produces MS Coff objects when targeting windows))
+$(LI $(RELATIVE_LINK2 ignore_nonroot_ut,Ignore unittests in non-root modules))
+$(LI $(RELATIVE_LINK2 switch_fallthrough_error,Falling through switch cases is now an error))
+$(LI $(RELATIVE_LINK2 throw_expression,Throw expression as proposed by DIP 1034 have been implemented))
+$(LI $(RELATIVE_LINK2 traits_initSymbol,Added __traits(initSymbol) to obtain aggregate initializers))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 openbsd_ioctls,Add support for OpenBSD ioctls))
+$(LI $(RELATIVE_LINK2 safe_opequals,Add support for `@safe` class `opEquals`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 checkedint,Move checkedint out of experimental.))
+$(LI $(RELATIVE_LINK2 chunkBy_mostly_safe,`chunkBy` `@safe` with forward ranges and `splitWhen` fully `@safe`))
+$(LI $(RELATIVE_LINK2 csv_un_equal_separator_count,`std.csv` can now optionally handle csv files with variable number of columns.))
+$(LI $(RELATIVE_LINK2 logger_default_warning,Change default log level for std.experimental.logger to LogLevel.warning))
+$(LI $(RELATIVE_LINK2 support_for_tuples,`std.conv.to` accepts `std.typecons` tuples))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 pdb,Windows: Copy PDB files to `targetPath`, alongside executable/DLL))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 22541,When `ref scope return` attributes are used on a parameter, and `return scope` appears, the `return` applies to the `scope`, not the `ref`.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/22541.dd)
+$(P
+Formerly, the `return` sometimes applied to the `ref` instead, which can be
+confusing. If `return scope` does not appear adjacent and in that order, the `return`
+will apply to the `ref`.
+)
+)
+
+$(LI $(LNAME2 TraitsParameters,`__traits(parameters)` has been added to the compiler.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/TraitsParameters.dd)
+$(P
+If used inside a function, this trait yields a
+tuple of the parameters to that function for example:
+)
+
+---
+int echoPlusOne(int x)
+{
+    __traits(parameters)[0] += 1;
+    return x;
+}
+---
+
+$(P
+This can be used to simply forward a functions parameters (becoming arguments of another),
+in effect unifying functions with variadic parameters and normal functions
+i.e. the following pattern is now possible without use of variadics:
+)
+
+---
+int add(int x, int y)
+{
+    return x + y;
+}
+
+auto forwardToAdd(Pack...)(Pack xy)
+{
+    return add(xy);
+}
+---
+$(P
+would become
+)
+---
+int add(int x, int y)
+{
+    return x + y;
+}
+
+auto forwardToAdd(int x, int y)
+{
+    return add(__traits(parameters));
+}
+---
+
+$(P
+When used inside a nested function or lambda, the trait gets the arguments
+of that and only that nested function or lambda, not what they are contained in.
+)
+
+$(P
+For example, these assertions hold:
+)
+---
+int testNested(int x)
+{
+    static assert(typeof(__traits(parameters)).length == 1);
+    int add(int x, int y)
+    {
+        static assert(typeof(__traits(parameters)).length == 2);
+        return x + y;
+    }
+    return add(x + 2, x + 3);
+}
+---
+
+$(P
+When used inside a `foreach` using an overloaded `opApply`, the trait yields
+the parameters to the delegate and not the function the foreach appears within.
+)
+
+---
+class Tree {
+    int opApply(int delegate(size_t, Tree) dg) {
+        if (dg(0, this)) return 1;
+        return 0;
+    }
+}
+void useOpApply(Tree top, int x)
+{
+    foreach(idx; 0..5)
+    {
+        static assert(is(typeof(__traits(parameters)) == AliasSeq!(Tree, int)));
+    }
+    foreach(idx, elem; top)
+    {
+        static assert(is(typeof(__traits(parameters)) == AliasSeq!(size_t, Tree)));
+    }
+}
+---
+)
+
+$(LI $(LNAME2 __import,Add ability to import modules to ImportC)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/__import.dd)
+$(P
+ImportC can now import modules with the __import keyword, with the C code:
+)
+
+$(P
+$(CCODE
+__import core.stdc.stdarg; // import a D source file
+__import test2;            // import an ImportC file
+)
+
+$(P
+int foo()
+{
+    va_list x;
+    return 1 + A;
+}
+)
+)
+
+$(P
+test2.c is:
+)
+
+$(P
+$(CCODE
+enum E { A = 3 };
+)
+)
+
+$(P
+The syntax for `__import` after the keyword is the same as for D's `import` declaration.
+)
+)
+
+$(LI $(LNAME2 allow_casting_from_typetuple_to_typetuple,Casting between compatible tuples)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/allow_casting_from_typetuple_to_typetuple.dd)
+$(P
+Prior to this release, casting between built-in tuples of the same type was not allowed.
+)
+
+$(P
+Starting with this release, casting between tuples of the same length is accepted provided that the underlying types of the casted tuple are implicitly convertible to the target tuple types.
+)
+
+---
+alias Tuple(T...) = T;
+
+void foo()
+{
+    Tuple!(int, int) tup;
+
+    auto foo = cast(long) tup;
+    pragma(msg, typeof(foo)); // (int, int)
+
+    auto bar = cast(Tuple!(long, int)) tup; // allowed
+    pragma(msg, typeof(bar)); // (long, int)
+}
+---
+)
+
+$(LI $(LNAME2 disasm,New command line switch -vasm which outputs assembler code per function)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/disasm.dd)
+$(P
+The new -vasm compiler switch will print to the console the generated assembler
+code for each function. As opossed to a typical dissasembler, it will omit all
+the boilerplate and output just the assembly code for each function. For example,
+compiling the following code:
+)
+
+---
+// test.d
+int demo(int x)
+{
+    return x * x;
+}
+---
+
+$(P
+by using the command `dmd test.d -c -vasm` will yield:
+)
+
+---
+_D4test4demoFiZi:
+0000:   89 F8                   mov     EAX,EDI
+0002:   0F AF C0                imul    EAX,EAX
+0005:   C3                      ret
+---
+)
+
+$(LI $(LNAME2 fix16997,The '-preview=intpromote' switch is now set by default.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/fix16997.dd)
+$(P
+Integer promotions now follow C integral promotions rules consistently
+It affects the unary `-` and `~` operators with operands of type `byte`, `ubyte`, `short`, `ushort`, `char`, or `wchar`.
+The operands are promoted to `int` before the operator is applied, and the resulting type will now be `int`.
+)
+
+$(P
+To revert to the old behavor, either use the '-revert=intpromote' switch, or explicitly cast the result of the unary operator back to the smaller integral type:
+)
+
+---
+void main()
+{
+    // Note: byte.max = 127, byte.min = -128
+    byte b = -128;
+    int x = -b; // new behavior: x = 128
+    int y = cast(byte)(-b); // old behavior: y = -128
+    byte b2 = cast(byte) -b; // cast now required
+}
+---
+)
+
+$(LI $(LNAME2 fix18964,`-m32` now produces MS Coff objects when targeting windows)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/fix18964.dd)
+$(P
+The `-m32mscoff` switch is deprecated and `-m32` should be used in its place.
+A new switch `-m32omf` has been added to produce code for OMF. Use of this switch
+is discouraged because OMF will soon be unsupported.
+)
+)
+
+$(LI $(LNAME2 ignore_nonroot_ut,Ignore unittests in non-root modules)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/ignore_nonroot_ut.dd)
+$(P
+This mainly means that unittests *inside templates* are now only instantiated if
+the module lexically declaring the template is one of the root modules.
+)
+
+$(P
+E.g., compiling some project with `-unittest` does NOT compile and later run any
+unittests in instantiations of templates declared in other libraries anymore.
+)
+
+$(P
+Declaring unittests *inside* templates is considered an anti-pattern. In almost
+all cases, the unittests don't depend on the template parameters, but
+instantiate the template with fixed arguments (e.g., `Nullable!T` unittests
+instantiating `Nullable!int`), so compiling and running identical tests for each
+template instantiation is hardly desirable.
+But adding a unittest right below some function being tested is arguably good
+for locality, so unittests end up inside templates.
+)
+
+$(P
+To make sure a template's unittests are run, it should be instantiated in the
+same module, e.g., some module-level unittest.
+)
+
+$(P
+This change paved the way for a more straight-forward template emission
+algorithm without `-unittest` special cases, showing significant compile-time
+improvements for some projects. `-allinst` now emits all templates instantiated
+in root modules.
+)
+)
+
+$(LI $(LNAME2 switch_fallthrough_error,Falling through switch cases is now an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/switch_fallthrough_error.dd)
+$(P
+This was deprectated in 2.072.2 because it is a common mistake to forget a `break` statement at the end of a switch case.
+The deprecation warning has now been turned into an error.
+)
+
+$(P
+If you intend to let control flow continue from one case to the next, use the `goto case;` statement.
+)
+
+---
+void parseNumFmt(char c, out int base, out bool uppercase)
+{
+    switch (c)
+    {
+        case 'B': // fallthrough allowed, case has no code
+        case 'b':
+            base = 2;
+            // error, accidental fallthrough to case 'X'
+        case 'X':
+            uppercase = true;
+            goto case; // allowed, explicit fallthrough
+        case 'x':
+            base = 16;
+            break;
+        default:
+            break;
+    }
+}
+---
+)
+
+$(LI $(LNAME2 throw_expression,Throw expression as proposed by DIP 1034 have been implemented)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/throw_expression.dd)
+$(P
+Prior to this release, `throw` was considered as a statement and hence was not
+allowed to appear inside of other expressions. This was cumbersome e.g. when
+wanting to throw an expression from a lambda:
+)
+
+---
+SumType!(int, string) result;
+
+result.match!(
+    (int num)       => writeln("Found ", num),
+    // (string err) => throw new Exception(err)    // expression expected
+    (string err)     { throw new Exception(err); } // ok, introduces an explicit body
+
+);
+---
+
+$(P
+`throw` is now treated as an expression as specified by DIP 1034 [1], causing
+it to become more flexible and easier to use.
+)
+
+
+---
+SumType!(int, string) result;
+
+result.match!(
+    (int num)    => writeln("Found ", num),
+    (string err) => throw new Exception(err)   // works
+
+);
+---
+
+$(P
+[1] https://github.com/dlang/DIPs/blob/master/DIPs/accepted/DIP1034.md
+)
+)
+
+$(LI $(LNAME2 traits_initSymbol,Added __traits(initSymbol) to obtain aggregate initializers)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/traits_initSymbol.dd)
+$(P
+Using `__traits(initSymbol, A)` where `A` is either a `class` or a `struct`
+will yield a `const(void)[]` that holds the initial state of an instance
+of `A`. The slice either points to the initializer symbol of `A` or `null`
+if `A` is zero-initialised - matching the behaviour of `TypeInfo.initializer()`.
+)
+
+$(P
+This traits can e.g. be used to initialize `malloc`'ed class instances without
+relying on `TypeInfo`:
+)
+
+---
+class C
+{
+    int i = 4;
+}
+
+void main()
+{
+    const void[] initSym = __traits(initSymbol, C);
+
+    void* ptr = malloc(initSym.length);
+    scope (exit) free(ptr);
+
+    ptr[0..initSym.length] = initSym[];
+
+    C c = cast(C) ptr;
+    assert(c.i == 4);
+}
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 openbsd_ioctls,Add support for OpenBSD ioctls)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/openbsd_ioctls.dd)
+$(P
+Support OpenBSD ioctls as found in OpenBSD's $(LINK2 https://github.com/openbsd/src/blob/master/sys/sys/filio.h, /usr/include/sys/filio.h), $(LINK2 https://github.com/openbsd/src/blob/master/sys/sys/ioccom.h, /usr/include/sys/ioccom.h), $(LINK2 https://github.com/openbsd/src/blob/master/sys/sys/ioctl.h, /usr/include/sys/ioctl.h), and $(LINK2 https://github.com/openbsd/src/blob/master/sys/sys/ttycom.h, /usr/include/sys/ttycom.h).
+)
+)
+
+$(LI $(LNAME2 safe_opequals,Add support for `@safe` class `opEquals`)
+$(CHANGELOG_SOURCE_FILE druntime, changelog/safe_opequals.dd)
+$(P
+`object.opEquals` is now `@safe` if the static types being compared provide an `opEquals` method that is also `@safe`.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 checkedint,Move checkedint out of experimental.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/checkedint.dd)
+$(P
+std.experimental.checkedint is now std.checkedint. The old name
+is still available and publicly imports the new one, and is also
+deprecated.
+)
+)
+
+$(LI $(LNAME2 chunkBy_mostly_safe,`chunkBy` `@safe` with forward ranges and `splitWhen` fully `@safe`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/chunkBy_mostly_safe.dd)
+$(P
+`std.algorithm.iteration.splitWhen` now infers safety from the underlying range,
+as most Phobos ranges do. `std.algorithm.iteration.chunkBy` also does that when
+instantiated with a forward range. Inference for `chunkBy` with a non-forward
+input range is not yet implemented, though.
+)
+
+-------
+@safe void fun()
+{
+    import std.algorithm;
+
+    // Grouping by particular attribute of each element:
+    auto data = [
+        [1, 1],
+        [1, 2],
+        [2, 2],
+        [2, 3]
+    ];
+
+    auto r1 = data.chunkBy!((a,b) => a[0] == b[0]);
+    assert(r1.equal!equal([
+        [[1, 1], [1, 2]],
+        [[2, 2], [2, 3]]
+    ]));
+
+    auto r2 = [1, 2, 3, 4, 5, 6, 7, 8, 9].splitWhen!((x, y) => ((x*y) % 3) > 0);
+    assert(r2.equal!equal([
+        [1],
+        [2, 3, 4],
+        [5, 6, 7],
+        [8, 9]
+    ]));
+}
+-------
+)
+
+$(LI $(LNAME2 csv_un_equal_separator_count,`std.csv` can now optionally handle csv files with variable number of columns.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/csv_un_equal_separator_count.dd)
+$(P
+By default `std.csv` will throw if the number of columns on a line
+is not equal to the number of columns of the first line.
+To allow, or disallow, a variable amount of columns a `bool` can be passed to
+all overloads of the `csvReader` function as shown below.
+)
+
+```
+string text = "76,26,22\n1,2\n3,4,5,6";
+auto records = text.csvReader!int(',', '"', true);
+
+assert(records.equal!equal([
+    [76, 26, 22],
+    [1, 2],
+    [3, 4, 5, 6]
+]));
+```
+)
+
+$(LI $(LNAME2 logger_default_warning,Change default log level for std.experimental.logger to LogLevel.warning)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/logger_default_warning.dd)
+$(P
+`std.experimental.logger.core.sharedLog` now returns by default a
+logger with its log level set to LogLevel.warning.
+)
+)
+
+$(LI $(LNAME2 support_for_tuples,`std.conv.to` accepts `std.typecons` tuples)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/support_for_tuples.dd)
+$(P
+The previous version of `to` did not support
+conversions to `std.typecons` tuples. Starting
+with this release, tuples are now supported as
+highlighted in the following example:
+)
+
+-------
+void main()
+{
+    import std.conv : to;
+    import std.typecons : Tuple;
+    auto data = ["10", "20", "30"];
+    auto a3 = data.to!(int[3]);                // accepted in previous and current versions
+    auto t3 = data.to!(Tuple!(int, int, int)); // rejected in past versions, accepted now
+}
+-------
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 pdb,Windows: Copy PDB files to `targetPath`, alongside executable/DLL)
+$(CHANGELOG_SOURCE_FILE dub, changelog/pdb.dd)
+$(P
+If the default PDB file is generated when linking an executable or DLL
+(e.g., no `/PDB:my\path.pdb` lflag), it is now copied to the target
+directory too.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 17635): [REG 2.066.0] cannot convert unique immutable$(LPAREN)int$(RPAREN)** to immutable)
+$(LI $(BUGZILLA 21367): Nameless union propagates copy constructors and destructors over all members)
+$(LI $(BUGZILLA 21538): Overriding with more attributes on delegate parameter is allowed)
+$(LI $(BUGZILLA 21719): [REG 2.072] "auto" methods of classes do not infer attributes correctly.)
+$(LI $(BUGZILLA 22130): [REG2.080.1][DIP1000] pure factory functions stopped working)
+$(LI $(BUGZILLA 22163): [REG 2.094.0] wrong code with static float array and delegate accessing it)
+$(LI $(BUGZILLA 22226): [REG 2.095.1] __ctfe + function call in conditional expression used to initialize struct member in constructor causes ICE)
+$(LI $(BUGZILLA 22254): Template instantiated twice results in different immutable qualifier)
+$(LI $(BUGZILLA 22512): importC: incomplete array type must have initializer)
+$(LI $(BUGZILLA 22659): [REG master] Error: declaration '$(LPAREN)S[2] arr = __error__;$(RPAREN)' is not yet implemented in CTFE)
+$(LI $(BUGZILLA 22676): fullyQualifiedName fails to compile with 2.098.1 relese -- there is some issue with call to __traits$(LPAREN)isScalar ..)
+$(LI $(BUGZILLA 22705): importC: forward reference to struct typedef gives struct already exists)
+$(LI $(BUGZILLA 22714): ICE: Assertion failure in ClassDeclaration::isBaseOf)
+$(LI $(BUGZILLA 22738): std.file.tempDir adds an addition / even when it already has one)
+$(LI $(BUGZILLA 22761): [REG 2.099] importC: Error: redeclaration with different type)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 3): Finish or remove MatchExp::toElem)
+$(LI $(BUGZILLA 3818): Generic error message for wrong foreach)
+$(LI $(BUGZILLA 8346): Literals 00 - 07 results in odd errors when used with UFCS)
+$(LI $(BUGZILLA 10584): Unhelpful error default constructing nested class)
+$(LI $(BUGZILLA 15711): Incorrect type inferring of [char]/string when passed via recursive template, extracting it from a structure field)
+$(LI $(BUGZILLA 15804): missing UDAs on nested struct template)
+$(LI $(BUGZILLA 17870): Can't alias a mix of parent and child class members)
+$(LI $(BUGZILLA 17977): [DIP1000] destructor allows escaping reference to a temporary struct instance)
+$(LI $(BUGZILLA 18960): Function parameter requires name with default value)
+$(LI $(BUGZILLA 19320):  -cov and -O yield variable used before set)
+$(LI $(BUGZILLA 19482): attributes incorrectly applied to static foreach local variables)
+$(LI $(BUGZILLA 19873): function should be by default @system even with -preview=dip1000)
+$(LI $(BUGZILLA 20023): Separate compilation breaks dip1000 / dip1008 @safety)
+$(LI $(BUGZILLA 20691): Converting scope static array to scope dynamic array should be error)
+$(LI $(BUGZILLA 20777): User defined type as enum base type fails to compile.)
+$(LI $(BUGZILLA 20904): dip1000 implicit conversion delegates error)
+$(LI $(BUGZILLA 21431): Incorrect maximum and actual number of cases in a switch case range is reported)
+$(LI $(BUGZILLA 21969): importC: Error: bit fields are not supported)
+$(LI $(BUGZILLA 22124): Corrupted closure when compiling with -preview=dip1000)
+$(LI $(BUGZILLA 22127): compiler assertion failure parser on UDA and function literal)
+$(LI $(BUGZILLA 22137):  -preview=dip1000 enables visibility checks for tupleof)
+$(LI $(BUGZILLA 22139): Compiler special cases object.dup when compiling with -preview=dip1000)
+$(LI $(BUGZILLA 22233): importC: $(LPAREN)identifier$(RPAREN)$(LPAREN)$(RPAREN) incorrectly parsed as a cast-expression)
+$(LI $(BUGZILLA 22236): sizeof an empty C struct should be 0, not 1)
+$(LI $(BUGZILLA 22245): importC: Error: found `.` when expecting `$(RPAREN)`)
+$(LI $(BUGZILLA 22267): ImportC: typedef-ed variable initialization with RHS in parenthesis doesn't parse)
+$(LI $(BUGZILLA 22277): removing strongly pure function calls is an incorrect optimization)
+$(LI $(BUGZILLA 22283):  -preview=in -inline leads to strange error inside object.d)
+$(LI $(BUGZILLA 22285): markdown tables are not parsed correctly)
+$(LI $(BUGZILLA 22287): ambiguous virtual function for extern$(LPAREN)C++$(RPAREN) under Windows)
+$(LI $(BUGZILLA 22298): [DIP1000] Nested function's scope parameters can be assigned to variables in enclosing function)
+$(LI $(BUGZILLA 22305): ImportC: #pragma STDC FENV_ACCESS is not supported)
+$(LI $(BUGZILLA 22311): dmd slice length is wrong on DWARF)
+$(LI $(BUGZILLA 22323): Link error for virtual destructor of C++ class in DLL)
+$(LI $(BUGZILLA 22339): importC: error message with character literal reports as integer instead of character literal.)
+$(LI $(BUGZILLA 22342): importC: Error: function 'func$(LPAREN)$(RPAREN)' is not callable using argument types '$(LPAREN)int$(RPAREN)')
+$(LI $(BUGZILLA 22344): ImportC: overloading of functions is not allowed)
+$(LI $(BUGZILLA 22356): Can't mixin the return type of a function)
+$(LI $(BUGZILLA 22361): Failed import gives misleading error message)
+$(LI $(BUGZILLA 22365): Compiler crash: tcs.body_ null in StatementSemanticVisitor.visit$(LPAREN)TryCatchStatement$(RPAREN) in semantic3 pass $(LPAREN)dmd/statementsem.d:3956$(RPAREN))
+$(LI $(BUGZILLA 22366): [dip1000] scope variable can be assigned to associative array)
+$(LI $(BUGZILLA 22372): Loop index incorrectly optimised out for -release -O)
+$(LI $(BUGZILLA 22387): Noreturn init loses type qualifiers)
+$(LI $(BUGZILLA 22401): importC: Error: cannot implicitly convert expression of type 'const$(LPAREN)int[1]$(RPAREN)' to 'const$(LPAREN)int*$(RPAREN)')
+$(LI $(BUGZILLA 22415): importC: Deprecation: switch case fallthrough - use 'goto case;' if intended)
+$(LI $(BUGZILLA 22421): static foreach introduces semantic difference between indexing and iteration variable)
+$(LI $(BUGZILLA 22467): DWARF: wchar_t reports wrong DECL attributes)
+$(LI $(BUGZILLA 22510): Structs with copy constructor can not be heap allocated with default constructor)
+$(LI $(BUGZILLA 22515): Aggregate definition with qualifiers has inconsistencies between structs and classes)
+$(LI $(BUGZILLA 22517): [REG 2.093][ICE] Bus error at dmd/lexer.d:398)
+$(LI $(BUGZILLA 22527): Casting out-of-range floating point value to signed integer overflows)
+$(LI $(BUGZILLA 22533): OpenBSD: Use correct size_t compat for 32-bit)
+$(LI $(BUGZILLA 22535): ImportC: gcc/clang math intrinsics are rejected.)
+$(LI $(BUGZILLA 22553): ImportC: undefined identifier `__uint128_t`)
+$(LI $(BUGZILLA 22566): Error: unknown architecture feature `4+avx` for `-target`)
+$(LI $(BUGZILLA 22573): DMD compiler errors on Illumos/Solaris)
+$(LI $(BUGZILLA 22590): importC: static functions have no debug information generated for them)
+$(LI $(BUGZILLA 22598): importC: Add support for __extension__ keyword)
+$(LI $(BUGZILLA 22607): ImportC misses some float values ending with f)
+$(LI $(BUGZILLA 22619): Missing inout substitution for __copytmp temporaries caused by copy ctors)
+$(LI $(BUGZILLA 22623): ImportC: typedef'd struct definition tag not put in symbol table)
+$(LI $(BUGZILLA 22624): ImportC: struct members in static initializer misaligned following bit field)
+$(LI $(BUGZILLA 22625): ImportC: original name of typedefed struct not visible in D when compiling separately)
+$(LI $(BUGZILLA 22632): Crash happens when CTFE compares an associative array to null using ==)
+$(LI $(BUGZILLA 22634): assert for too many symbols should be error)
+$(LI $(BUGZILLA 22655): Disassembler assertion on rdtsc)
+$(LI $(BUGZILLA 22656): SSE2 instructions have inconsistent layouts in the disassembler output)
+$(LI $(BUGZILLA 22665): ImportC: qualified enum values should be of enum type on the D side, not int)
+$(LI $(BUGZILLA 22666): ImportC: Error: attributes should be specified before the function definition)
+$(LI $(BUGZILLA 22668): Deprecation when a deprecated method overrides another deprecated method)
+$(LI $(BUGZILLA 22685): Template function instantiated with lambda and overload is nested incorrectly)
+$(LI $(BUGZILLA 22686): ICE: dmd segfaults on invalid member reference in static function)
+$(LI $(BUGZILLA 22698): ImportC: nested struct tag stored in wrong scope)
+$(LI $(BUGZILLA 22699): importC: assignment cannot be used as a condition)
+$(LI $(BUGZILLA 22703): importC: C++11 unscoped enums with underlying type rejects some C types.)
+$(LI $(BUGZILLA 22709): [dip1000] slice of static array can be escaped in @safe using ref arguments)
+$(LI $(BUGZILLA 22710): CTFE on bitfields does not account for field width)
+$(LI $(BUGZILLA 22713): ImportC: op= not correctly implemented for bit fields)
+$(LI $(BUGZILLA 22717): object.TypeInfo_Struct.equals swaps lhs and rhs parameters)
+$(LI $(BUGZILLA 22725): ImportC: segfault when compiling with -H)
+$(LI $(BUGZILLA 22726): ImportC: typedefs of tagged enums fail to compile)
+$(LI $(BUGZILLA 22727): ImportC: support for __stdcall and __fastcall is necessary for 32-bit Windows builds)
+$(LI $(BUGZILLA 22734): importC: typedef anonymous enum members not available when used from D)
+$(LI $(BUGZILLA 22749): importC: C11 does not allow taking the address of a bit-field)
+$(LI $(BUGZILLA 22757): importC: typedef causes forward reference error)
+$(LI $(BUGZILLA 22758): ImportC: parenthesized expression confused with cast-expression)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 5096): More readable unpaired brace error)
+$(LI $(BUGZILLA 7925): extern$(LPAREN)C++$(RPAREN) delegates?)
+$(LI $(BUGZILLA 11008): Allow -main switch even if user-defined main function exists)
+$(LI $(BUGZILLA 20340): [betterC] -main inserts D main function even with betterC)
+$(LI $(BUGZILLA 20616): Error: undefined identifier __dollar)
+$(LI $(BUGZILLA 21160): DWARF: DW_AT_main_subprogram should be emitted for _Dmain)
+$(LI $(BUGZILLA 22113): Allow `noreturn` as a type for main function)
+$(LI $(BUGZILLA 22198): Compile time bounds checking for static arrays)
+$(LI $(BUGZILLA 22278): [Conditional Compilation] there should be in and out flags)
+$(LI $(BUGZILLA 22291): __traits$(LPAREN)arguments$(RPAREN) to return a tuple of the function arguments)
+$(LI $(BUGZILLA 22353): Header generation is producing trailing whitespace on attribute declarations)
+$(LI $(BUGZILLA 22354): Header generation is producing trailing whitespace on enum declarations)
+$(LI $(BUGZILLA 22355): LLD fallback for mscoff is broken in the presence of some old VS versions)
+$(LI $(BUGZILLA 22377): Show location for Windows extern$(LPAREN)C++$(RPAREN) mangling ICE)
+$(LI $(BUGZILLA 22379): OpenBSD: link -lexecinfo to get backtrace symbols)
+$(LI $(BUGZILLA 22419): Allow return type inference for main)
+$(LI $(BUGZILLA 22423): DWARF DW_TAG_subprogram should generate DW_AT_decl_column)
+$(LI $(BUGZILLA 22426): DWARF DW_AT_noreturn should be present when function is noreturn)
+$(LI $(BUGZILLA 22459): DWARF: delegate type names should be distinguishable)
+$(LI $(BUGZILLA 22468): DWARF: dchar type is missing encoding)
+$(LI $(BUGZILLA 22469): DWARF: some debug info types are named wrongly)
+$(LI $(BUGZILLA 22471): DWARF: generated main is not marked as DW_AT_artificial)
+$(LI $(BUGZILLA 22494): Search paths for dmd.conf missing from dmd man page)
+$(LI $(BUGZILLA 22508): DWARF: associative arrays should report qualified name instead of _AArray_<key>_<val>)
+$(LI $(BUGZILLA 22519): [dip1000] cannot take address of `ref return`)
+$(LI $(BUGZILLA 22541): DIP1000: Resolve ambiguity of ref-return-scope parameters)
+$(LI $(BUGZILLA 22631): ImportC: support C++11 unscoped enums with underlying type)
+$(LI $(BUGZILLA 22672): Allow casting from TypeTuple to TypeTuple)
+$(LI $(BUGZILLA 22733): hdrgen generates inconsistent order of STC attributes for ~this$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 22746): Functions that throws marked as nothrow produces bad error)
+$(LI $(BUGZILLA 22753): Deprecation message for import module shouldn't produce hifen when no message)
+$(LI $(BUGZILLA 22754): Header generator shouldn't generate trailing whitespace on visibility declaration)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 17037): std.concurrency has random segfaults)
+$(LI $(BUGZILLA 19544): Can't call inputRangeObject on ranges not supported by moveFront)
+$(LI $(BUGZILLA 20554): std.algorithm.searching.all 's static assert produces a garbled error message)
+$(LI $(BUGZILLA 21022): std.range.only does not work with const)
+$(LI $(BUGZILLA 21457): std.functional.partial ignores function overloads)
+$(LI $(BUGZILLA 22105): std.container.array.Array.length setter creates values of init-less types)
+$(LI $(BUGZILLA 22185): std.array.array$(LPAREN)$(RPAREN) doesn't handle throwing element copying)
+$(LI $(BUGZILLA 22249): std.experimental.checkedint: Warn.onLowerBound does not compile)
+$(LI $(BUGZILLA 22255): JSONValue.opBinaryRight!"in" is const)
+$(LI $(BUGZILLA 22297): Behavior of minElement and maxElement with empty range is undocumented)
+$(LI $(BUGZILLA 22301): Only use 'from' if a packet was actually received)
+$(LI $(BUGZILLA 22325): ReplaceType fails on templated type instantiated with void-returning function)
+$(LI $(BUGZILLA 22359): joiner over an empty forward range object liable to segfault)
+$(LI $(BUGZILLA 22364): Unreachable warning for collectException[Msg] with noreturn value)
+$(LI $(BUGZILLA 22368): has[Unshared]Aliasing fails to instantiate for noreturn)
+$(LI $(BUGZILLA 22369): Unreachable statements in std.concurrency with noreturn values / callbacks)
+$(LI $(BUGZILLA 22383): Array of bottom types not recognized as a range)
+$(LI $(BUGZILLA 22384): castSwitch confused by noreturn handlers)
+$(LI $(BUGZILLA 22386): Unreachable warning for assertThrown with noreturn value)
+$(LI $(BUGZILLA 22394): std.getopt cannot handle "-")
+$(LI $(BUGZILLA 22408): Multiple issues in AllImplicitConversionTargets)
+$(LI $(BUGZILLA 22414): clamp$(LPAREN)a, b, c$(RPAREN) should always return typeof$(LPAREN)a$(RPAREN))
+$(LI $(BUGZILLA 22561): only$(LPAREN)$(RPAREN).joiner fails with immutable element type)
+$(LI $(BUGZILLA 22572): Cannot define SumType over immutable struct with Nullable)
+$(LI $(BUGZILLA 22608): RandomAccessInfinite is not a valid random-access range)
+$(LI $(BUGZILLA 22647): [std.variant.Variant] Cannot compare types compliant with null comparison with 'null')
+$(LI $(BUGZILLA 22648): [std.variant.Variant] Incorrectly written unittests)
+$(LI $(BUGZILLA 22673): .array of a range with length preallocates without checking if the length was lying or not.)
+$(LI $(BUGZILLA 22683): core.math.rndtonl can't be linked)
+$(LI $(BUGZILLA 22695): std.traits.isBuiltinType is false for typeof$(LPAREN)null$(RPAREN))
+$(LI $(BUGZILLA 22704): Linker error when running the public unittests)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 13551): std.conv.to for std.typecons tuples too)
+$(LI $(BUGZILLA 17488): Platform-inconsistent behavior from getTempDir$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 18051): missing enum support in formattedRead/unformatValue)
+$(LI $(BUGZILLA 21507): SysTime.toISOExtString is unusable for logging or consistent filename creation)
+$(LI $(BUGZILLA 22117): Can't store scope pointer in a SumType)
+$(LI $(BUGZILLA 22340): totalCPUs may not return accurate number of CPUs)
+$(LI $(BUGZILLA 22370): std.concurrency.spawn* should accept noreturn callables)
+$(LI $(BUGZILLA 22511): Nullable is not copyable when templated type has elaborate copy ctor)
+$(LI $(BUGZILLA 22532): std.experimental.logger Change default log level to LogLevel.warning, or LogLevel.off)
+$(LI $(BUGZILLA 22701): std.typecons.apply needlessly checks if the predicate is callable)
+)
+$(BUGSTITLE_BUGZILLA Druntime regression fixes,
+
+$(LI $(BUGZILLA 22136): [REG 2.097.1] hashOf failed to compile because of different inheritance order)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 22328): Specific D types are used instead of Windows type aliases)
+$(LI $(BUGZILLA 22336): core.lifetime.move doesn't work with betterC on elaborate non zero structs)
+$(LI $(BUGZILLA 22523): DRuntime options passed after -- affect current process)
+$(LI $(BUGZILLA 22552): moveEmplace wipes context pointer of nested struct contained in non-nested struct)
+$(LI $(BUGZILLA 22630): It is possible for VS to be installed and providing VC directory without VC libraries being installed)
+$(LI $(BUGZILLA 22702): druntime not compliant with D spec re getLinkage)
+$(LI $(BUGZILLA 22721): importC: some gnu builtins are rejected)
+$(LI $(BUGZILLA 22735): __builtins.di does not implement __builtin_bswap64 correctly)
+$(LI $(BUGZILLA 22741): importC: Error: bswap isn’t a template)
+$(LI $(BUGZILLA 22744): ImportC: builtins defined in __builtins.di cause undefined symbol linker errors.)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 14892):  -profile=gc doesn't account for GC API allocations)
+$(LI $(BUGZILLA 20936): core.sync.rwmutex should have shared overloads $(LPAREN)and make it usable in @safe code$(RPAREN))
+$(LI $(BUGZILLA 21005): Speed up hashOf for associative arrays)
+$(LI $(BUGZILLA 21014): aa.byKeyValue, byKey, byValue very under-documented)
+$(LI $(BUGZILLA 22378): OpenBSD: execinfo.d and unistd.d aren't being installed)
+$(LI $(BUGZILLA 22669): OpenBSD: Sync socket.d)
+$(LI $(BUGZILLA 22670): Support *BSD kqueue-backed API-compatible inotify shim library)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 19136): is expressions don't work as documented)
+$(LI $(BUGZILLA 21717): [Oh No! Page Not Found])
+$(LI $(BUGZILLA 22064): Missing documentation page for phobos core.builtins)
+$(LI $(BUGZILLA 22281): unreadable quotes in the upcoming 2.099 changelog)
+$(LI $(BUGZILLA 22363): Wrong link in https://dlang.org/spec/abi.html for "Garbage Collection")
+$(LI $(BUGZILLA 22417): Slice assignment operator overloading example is incorrect)
+$(LI $(BUGZILLA 22504): spec/type.html: 6.1 Basic Data Types: Backslash missing in default value for {,d,w}char)
+$(LI $(BUGZILLA 22518): [dip1000] return without scope/ref not specified)
+$(LI $(BUGZILLA 22544): [spec] C++ and Objective-C are not single tokens)
+$(LI $(BUGZILLA 22692): Underground Rekordz link is dead)
+$(LI $(BUGZILLA 22711): Effect of template UDAs on instance members is undocumented)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 22425): Documentation on implicit conversion of arrays is incomplete)
+$(LI $(BUGZILLA 22431): Add OpenBSD to Third-party downloads list)
+)
+$(BUGSTITLE_BUGZILLA Installer enhancements,
+
+$(LI $(BUGZILLA 18362): Build dmd with LTO and PGO)
+$(LI $(BUGZILLA 22078): install.sh: Recognize ARM64 as architecture)
+)
+)
+$(D_CONTRIBUTORS_HEADER 99)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR 12345swordy)
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Andrej Petrović)
+    $(D_CONTRIBUTOR Anton Curmanschii)
+    $(D_CONTRIBUTOR Antonio Cabrera)
+    $(D_CONTRIBUTOR Arun Chandrasekaran)
+    $(D_CONTRIBUTOR Ate Eskola)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR BarrOff)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR Bianca Fodor)
+    $(D_CONTRIBUTOR bistcuite)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Brian Callahan)
+    $(D_CONTRIBUTOR David Gileadi)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR DoctorNoobingstoneIPresume)
+    $(D_CONTRIBUTOR Domenico Teodonio)
+    $(D_CONTRIBUTOR Dorian Verna)
+    $(D_CONTRIBUTOR dorianverna17)
+    $(D_CONTRIBUTOR dteod)
+    $(D_CONTRIBUTOR Eddy Schauman-Haigh)
+    $(D_CONTRIBUTOR Eduard Staniloiu)
+    $(D_CONTRIBUTOR etienne02)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR fourst4r)
+    $(D_CONTRIBUTOR Gabriel)
+    $(D_CONTRIBUTOR Gabriel Dolberg)
+    $(D_CONTRIBUTOR giacomo.ratto00)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR Harrison)
+    $(D_CONTRIBUTOR Harry T. Vennik)
+    $(D_CONTRIBUTOR Hasan Kashi)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Ilya Yaroshenko)
+    $(D_CONTRIBUTOR Imperatorn)
+    $(D_CONTRIBUTOR James S Blachly, MD)
+    $(D_CONTRIBUTOR Jan Jurzitza)
+    $(D_CONTRIBUTOR Jeremy DeHaan)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR John Colvin)
+    $(D_CONTRIBUTOR John Kilpatrick)
+    $(D_CONTRIBUTOR João Lourenço)
+    $(D_CONTRIBUTOR jpiles)
+    $(D_CONTRIBUTOR jrfondren)
+    $(D_CONTRIBUTOR Julian Fondren)
+    $(D_CONTRIBUTOR Laeeth Isharc)
+    $(D_CONTRIBUTOR Lionello Lunesu)
+    $(D_CONTRIBUTOR Lio李歐)
+    $(D_CONTRIBUTOR lucica28)
+    $(D_CONTRIBUTOR Lucien Perregaux)
+    $(D_CONTRIBUTOR Luís Ferreira)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Marcelo Silva Nascimento Mancini)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Max H Haughton)
+    $(D_CONTRIBUTOR Max Haughton)
+    $(D_CONTRIBUTOR Max Samukha)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR quassy)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Richard Andrew Cattermole)
+    $(D_CONTRIBUTOR rikki cattermole)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Ryan Frame)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Sebastien Alaiwan)
+    $(D_CONTRIBUTOR sorin-gabriel)
+    $(D_CONTRIBUTOR Stanislav Blinov)
+    $(D_CONTRIBUTOR Stefan Koch)
+    $(D_CONTRIBUTOR Sönke Ludwig)
+    $(D_CONTRIBUTOR teo)
+    $(D_CONTRIBUTOR Teodor Dutu)
+    $(D_CONTRIBUTOR thaven)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR tim-dlang)
+    $(D_CONTRIBUTOR Tobias Pankrath)
+    $(D_CONTRIBUTOR Tomáš Chaloupka)
+    $(D_CONTRIBUTOR Victarus)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Walter Waldron)
+    $(D_CONTRIBUTOR wolframw)
+    $(D_CONTRIBUTOR Ömer Faruk IRMAK)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.099.0
+    TITLE=Change Log: $(VER)
