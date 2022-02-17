@@ -204,20 +204,24 @@ void main()
 }
 ----
 )
-$(EXTRA_EXAMPLE_RUNNABLE Count frequencies of all 2-tuples,
+$(EXTRA_EXAMPLE_RUNNABLE Count frequencies of character pairs,
 ----
 void main()
 {
     import std.stdio : writefln;
+    // An associative array mapping pairs of characters to integers
     int[char[2]] aa;
     auto arr = "ABBBA";
 
-    // Iterate over all pairs in the string and observe each pair
-    // ('A', 'B'), ('B', 'B'), ('B', 'A'), ...
-    // String slicing doesn't allocate a copy
+    // Iterate over all pairs in the string
+    // ['A', 'B'], ['B', 'B'], ..., ['B', 'A']
     foreach (i; 0 .. arr.length - 1)
-        aa[arr[i .. $][0 .. 2]]++;
-
+    {
+        // String slicing doesn't allocate a copy
+        char[2] pair = arr[i .. i + 2];
+        // count occurrences
+        aa[pair]++;
+    }
     foreach (key, value; aa)
         writefln("key: %s, value: %d", key, value);
 }
