@@ -66,7 +66,7 @@ All unknown options are passed to the compiler.
 
     // Phobos index.d should have been named index.dd
     if (inputFile.endsWith(".d") && !inputFile.endsWith("index.d"))
-        text = assertWritelnModule(text);
+        text = assertWritelnModule(inputFile, text);
 
     string[string] macros;
     macros["SRC_FILENAME"] = "%s\n".format(inputFile.buildNormalizedPath);

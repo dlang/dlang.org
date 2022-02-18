@@ -178,7 +178,7 @@ private:
     Out fl;
 }
 
-void parseString(Visitor)(ubyte[] sourceCode, Visitor visitor)
+void parseString(Visitor)(const string filepath, ubyte[] sourceCode, Visitor visitor)
 {
     import dparse.lexer;
     import dparse.parser : parseModule, ParserConfig;
@@ -189,28 +189,28 @@ void parseString(Visitor)(ubyte[] sourceCode, Visitor visitor)
     const(Token)[] tokens = getTokensForParser(sourceCode, config, &cache).array;
 
     RollbackAllocator rba;
-    auto m = parseModule(ParserConfig(tokens, "magic.d", &rba));
+    auto m = parseModule(ParserConfig(tokens, filepath, &rba));
     visitor.visit(m);
 }
 
-private auto assertWritelnModuleImpl(string fileText)
+private auto assertWritelnModuleImpl(const string filepath, string fileText)
 {
     import std.string : representation;
     auto fl = FileLines(fileText);
     scope visitor = new TestVisitor!(typeof(fl))(fl);
     // libdparse doesn't allow to work on immutable source code
-    parseString(cast(ubyte[]) fileText.representation, visitor);
+    parseString(filepath, cast(ubyte[]) fileText.representation, visitor);
     return fl;
 }
 
-auto assertWritelnModule(string fileText)
+auto assertWritelnModule(const string filepath, string fileText)
 {
-    return assertWritelnModuleImpl(fileText).buildLines;
+    return assertWritelnModuleImpl(filepath, fileText).buildLines;
 }
-auto assertWritelnBlock(string fileText)
+auto assertWritelnBlock(const string filepath, string fileText)
 {
     auto source = "unittest{\n" ~ fileText ~ "}\n";
-    auto fl = assertWritelnModuleImpl(source);
+    auto fl = assertWritelnModuleImpl(filepath, source);
     auto app = appender!string;
     foreach (line; fl.lines[1 .. $ - 2])
     {
@@ -275,7 +275,7 @@ version(unittest)
         import std.string : representation;
         auto mock = FileLinesMock(sourceCode.split("\n"));
         scope visitor = new TestVisitor!(typeof(mock))(mock);
-        parseString(sourceCode.representation.dup, visitor);
+        parseString("unittest.d", sourceCode.representation.dup, visitor);
         return mock;
     }
 }
