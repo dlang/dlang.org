@@ -6,7 +6,8 @@ import std.file;
 import std.stdio;
 import std.exception;
 import std.path;
-void compileToPath(string compileThis, string outputPath, bool loud = false)
+
+void compileToPath(string compileThis, string outputPath, string extraFiles, bool loud = false)
 {
     import std.compiler;
     import core.stdc.stdlib;
@@ -27,7 +28,8 @@ void compileToPath(string compileThis, string outputPath, bool loud = false)
         macroOut.writefln!"%s = %s"(key, value);
     }
     macroOut.flush();
-    const compileString = format!"dmd -D  contextMacros.ddoc macros.ddoc html.ddoc dlang.org.ddoc doc.ddoc aliBook.ddoc %s -Df%s "(compileThis, outputPath);
+
+    const compileString = format!"dmd -D contextMacros.ddoc macros.ddoc html.ddoc dlang.org.ddoc doc.ddoc aliBook.ddoc %s  %s -Df%s "(extraFiles, compileThis, outputPath);
     if(loud)
         writefln!"%s:%s |> %s"(compileThis, outputPath, compileString);
     const res = executeShell(compileString);
@@ -52,10 +54,14 @@ int main(string[] args)
     if(outDir.exists) {
         executeShell("rm -rf " ~ outDir);
     }
+
+    const diffable = environment.get("DIFFABLE", "0") == "1";
+    const noTimestamp = diffable ? "../nodatetime.ddoc" : "";
+
     dirEntries("d.en", "*.d", SpanMode.shallow)
         .map!(dFile => tuple(dFile.name, buildPath(outDir, baseName(dFile).setExtension("html"))))
         //.parallel(jobs)
-        .each!(elem => compileToPath(elem.tupleof));
+        .each!(elem => compileToPath(elem.tupleof, noTimestamp));
     dirEntries("d.en", "*.png", SpanMode.shallow)
         .each!(p => copy(p, buildPath(outDir, baseName(p).setExtension("png"))));
     return 0;
