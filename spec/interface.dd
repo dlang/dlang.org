@@ -4,8 +4,9 @@ $(SPEC_S Interfaces,
 
 $(HEADERNAV_TOC)
 
-    $(P An $(I Interface) describes a list of functions that a class which inherits
-    from the interface must implement.)
+    $(P An $(I Interface) abstracts from common behavior in terms of an abstract class
+    which doesn't expose implementation details of methods and object state.
+    Classes which inherit from an interface must implement the functions' signatures.)
 
 $(GRAMMAR
 $(GNAME InterfaceDeclaration):
@@ -39,7 +40,7 @@ $(GNAME BaseInterfaceList):
     to that interface.)
 
     $(P Interfaces cannot derive from classes; only from other interfaces.
-    Classes cannot derive from an interface multiple times.
+    Classes cannot derive from the same interface multiple times.
     )
 
 ------
@@ -67,8 +68,7 @@ D d = new D();  // error, cannot create instance of interface
 ------
 
 
-    $(P Virtual interface member functions do not have implementations.
-    Interfaces are expected to implement static or final functions.
+    $(P Interfaces may provide definitions of members, but such members must be `static`, be templated or functions must be `final`.
     )
 
 ------
@@ -80,14 +80,28 @@ interface D
 }
 ------
 
-     $(P Interfaces can have function templates in the members.
-         All instantiated functions are implicitly `final`.
+     $(P Non-static member fields may not be defined in interfaces.
+     )
+
+------
+interface D
+{
+    static immutable e = 2.71828f;   // ok
+    float f;  // error, variable `f` field not allowed in interface
+    immutable g = 3.81f;  // error, variable `g` field not allowed in interface
+    enum h = 6.626f;  // ok, compile-time-static symbols are considered static
+}
+------
+
+     $(P Interfaces can have member templates.
+         All instantiated member templates are implicitly `final` and therefore must be defined.
      )
 
 ---
 interface D
 {
     void foo(T)() { }  // ok, it's implicitly final
+    T chameleon(T) = T.init; // ok, it's implicitly final
 }
 ---
 
@@ -100,13 +114,17 @@ interface D
     void bar();
     static void foo() { }
     final void abc() { }
+    static void xyz() { }
+    static int bla = 0;
 }
 
 class C : D
 {
     void bar() { } // ok
-    void foo() { } // error, cannot override static D.foo()
+    static void xyz() { } // ok, but does not override D.xyz()
+    override static void foo() { } // error, cannot override non-virtual function D.foo()
     void abc() { } // error, cannot override final D.abc()
+    static int bla = 1; // ok, but does not override D.bla
 }
 ------
 
@@ -156,6 +174,54 @@ B b = new B();
 b.foo();            // returns 2
 D d = b;    // ok since B inherits A's D implementation
 d.foo();            // returns 2;
+------
+
+    $(P Member definitions are only imported from an interface into a class if the symbol does not exist in that class already.)
+
+------
+interface D
+{
+    static int foo() { return 3; }
+    int foo(T)() { return 10; }
+}
+
+interface E
+{
+    static int foo(int x) { return 4; }
+}
+
+class A : D, E  // imports D.foo
+{
+}
+
+class B : E, D  // imports E.foo
+{
+}
+
+class C : D, E  // neither imports D.foo nor E.foo
+{
+    T foo(T : float)(T f) { return f; }
+}
+
+...
+
+A a = new A();
+a.foo(5);  // error
+a.foo();  // returns 3
+a.foo!double();  // returns 10
+
+B b = new B();
+b.foo(5);  // returns 4
+b.foo();  // error
+b.foo!double();  // error
+
+C c = new C();
+c.foo(5);  // returns 5
+c.foo();  // error
+c.foo!double();  // error
+
+E e = cast(E) c;
+e.foo(5);  // returns 4
 ------
 
     $(P Interfaces can be reimplemented in derived classes:)
