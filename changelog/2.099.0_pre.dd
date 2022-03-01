@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Mar 01, 2022, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 19 major changes and 207 fixed Bugzilla issues.
+$(VER) comes with 20 major changes and 216 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 99 contributors)
         who made $(VER) possible.)
@@ -15,11 +15,12 @@ $(BUGSTITLE_TEXT_HEADER Compiler changes,
 $(LI $(RELATIVE_LINK2 22541,When `ref scope return` attributes are used on a parameter, and `return scope` appears, the `return` applies to the `scope`, not the `ref`.))
 $(LI $(RELATIVE_LINK2 TraitsParameters,`__traits(parameters)` has been added to the compiler.))
 $(LI $(RELATIVE_LINK2 __import,Add ability to import modules to ImportC))
-$(LI $(RELATIVE_LINK2 allow_casting_from_typetuple_to_typetuple,Casting between compatible tuples))
+$(LI $(RELATIVE_LINK2 allow_casting_from_typetuple_to_typetuple,Casting between compatible sequences))
 $(LI $(RELATIVE_LINK2 disasm,New command line switch -vasm which outputs assembler code per function))
 $(LI $(RELATIVE_LINK2 fix16997,The '-preview=intpromote' switch is now set by default.))
 $(LI $(RELATIVE_LINK2 fix18964,`-m32` now produces MS Coff objects when targeting windows))
 $(LI $(RELATIVE_LINK2 ignore_nonroot_ut,Ignore unittests in non-root modules))
+$(LI $(RELATIVE_LINK2 main_return_type,`main` can now return type `noreturn` and supports return inference))
 $(LI $(RELATIVE_LINK2 switch_fallthrough_error,Falling through switch cases is now an error))
 $(LI $(RELATIVE_LINK2 throw_expression,Throw expression as proposed by DIP 1034 have been implemented))
 $(LI $(RELATIVE_LINK2 traits_initSymbol,Added __traits(initSymbol) to obtain aggregate initializers))
@@ -194,27 +195,27 @@ The syntax for `__import` after the keyword is the same as for D's `import` decl
 )
 )
 
-$(LI $(LNAME2 allow_casting_from_typetuple_to_typetuple,Casting between compatible tuples)
+$(LI $(LNAME2 allow_casting_from_typetuple_to_typetuple,Casting between compatible sequences)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/allow_casting_from_typetuple_to_typetuple.dd)
 $(P
-Prior to this release, casting between built-in tuples of the same type was not allowed.
+Prior to this release, casting between built-in sequences of the same type was not allowed.
 )
 
 $(P
-Starting with this release, casting between tuples of the same length is accepted provided that the underlying types of the casted tuple are implicitly convertible to the target tuple types.
+Starting with this release, casting between sequences of the same length is accepted provided that the underlying types of the casted sequence are implicitly convertible to the target sequence types.
 )
 
 ---
-alias Tuple(T...) = T;
+alias Seq(T...) = T;
 
 void foo()
 {
-    Tuple!(int, int) tup;
+    Seq!(int, int) seq;
 
-    auto foo = cast(long) tup;
+    auto foo = cast(long) seq;
     pragma(msg, typeof(foo)); // (int, int)
 
-    auto bar = cast(Tuple!(long, int)) tup; // allowed
+    auto bar = cast(Seq!(long, int)) seq; // allowed
     pragma(msg, typeof(bar)); // (long, int)
 }
 ---
@@ -314,6 +315,20 @@ This change paved the way for a more straight-forward template emission
 algorithm without `-unittest` special cases, showing significant compile-time
 improvements for some projects. `-allinst` now emits all templates instantiated
 in root modules.
+)
+)
+
+$(LI $(LNAME2 main_return_type,`main` can now return type `noreturn` and supports return inference)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/main_return_type.dd)
+$(P
+If `main` never returns (due to an infinite loop or always throwing an
+exception), it can now be declared as returning `noreturn`.
+See https://dlang.org/spec/type.html#noreturn.
+)
+
+$(P
+If `main` is declared with `auto`, the inferred return type must be
+one of `void`, `int` and `noreturn`.
 )
 )
 
@@ -571,6 +586,7 @@ $(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
 $(LI $(BUGZILLA 17635): [REG 2.066.0] cannot convert unique immutable$(LPAREN)int$(RPAREN)** to immutable)
 $(LI $(BUGZILLA 21367): Nameless union propagates copy constructors and destructors over all members)
 $(LI $(BUGZILLA 21538): Overriding with more attributes on delegate parameter is allowed)
+$(LI $(BUGZILLA 21674): [REG v2.086] `alias this` triggers wrong deprecation message on function call)
 $(LI $(BUGZILLA 21719): [REG 2.072] "auto" methods of classes do not infer attributes correctly.)
 $(LI $(BUGZILLA 22130): [REG2.080.1][DIP1000] pure factory functions stopped working)
 $(LI $(BUGZILLA 22163): [REG 2.094.0] wrong code with static float array and delegate accessing it)
@@ -581,11 +597,17 @@ $(LI $(BUGZILLA 22659): [REG master] Error: declaration '$(LPAREN)S[2] arr = __e
 $(LI $(BUGZILLA 22676): fullyQualifiedName fails to compile with 2.098.1 relese -- there is some issue with call to __traits$(LPAREN)isScalar ..)
 $(LI $(BUGZILLA 22705): importC: forward reference to struct typedef gives struct already exists)
 $(LI $(BUGZILLA 22714): ICE: Assertion failure in ClassDeclaration::isBaseOf)
+$(LI $(BUGZILLA 22730): master: "dmd -i" doesn't include unit tests from imported modules)
 $(LI $(BUGZILLA 22738): std.file.tempDir adds an addition / even when it already has one)
 $(LI $(BUGZILLA 22761): [REG 2.099] importC: Error: redeclaration with different type)
+$(LI $(BUGZILLA 22780): [REG 2.090] variable reference to scope class must be scope)
+$(LI $(BUGZILLA 22804): [REG 2.099] compiling multiple files without linking produces broken object files)
+$(LI $(BUGZILLA 22816): [REG 2.099] Parser reads files with other extensions)
+$(LI $(BUGZILLA 22817): [REG 2.099] Missing file gives misleading error message)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
 
+$(LI $(BUGZILLA 2): Hook up new dmd command line arguments)
 $(LI $(BUGZILLA 3): Finish or remove MatchExp::toElem)
 $(LI $(BUGZILLA 3818): Generic error message for wrong foreach)
 $(LI $(BUGZILLA 8346): Literals 00 - 07 results in odd errors when used with UFCS)
@@ -670,6 +692,7 @@ $(LI $(BUGZILLA 22726): ImportC: typedefs of tagged enums fail to compile)
 $(LI $(BUGZILLA 22727): ImportC: support for __stdcall and __fastcall is necessary for 32-bit Windows builds)
 $(LI $(BUGZILLA 22734): importC: typedef anonymous enum members not available when used from D)
 $(LI $(BUGZILLA 22749): importC: C11 does not allow taking the address of a bit-field)
+$(LI $(BUGZILLA 22756): ImportC: no __builtin_offsetof)
 $(LI $(BUGZILLA 22757): importC: typedef causes forward reference error)
 $(LI $(BUGZILLA 22758): ImportC: parenthesized expression confused with cast-expression)
 )
@@ -702,7 +725,7 @@ $(LI $(BUGZILLA 22508): DWARF: associative arrays should report qualified name i
 $(LI $(BUGZILLA 22519): [dip1000] cannot take address of `ref return`)
 $(LI $(BUGZILLA 22541): DIP1000: Resolve ambiguity of ref-return-scope parameters)
 $(LI $(BUGZILLA 22631): ImportC: support C++11 unscoped enums with underlying type)
-$(LI $(BUGZILLA 22672): Allow casting from TypeTuple to TypeTuple)
+$(LI $(BUGZILLA 22672): Allow casting a ValueSeq to a compatible TypeTuple)
 $(LI $(BUGZILLA 22733): hdrgen generates inconsistent order of STC attributes for ~this$(LPAREN)$(RPAREN))
 $(LI $(BUGZILLA 22746): Functions that throws marked as nothrow produces bad error)
 $(LI $(BUGZILLA 22753): Deprecation message for import module shouldn't produce hifen when no message)
@@ -771,6 +794,7 @@ $(LI $(BUGZILLA 22721): importC: some gnu builtins are rejected)
 $(LI $(BUGZILLA 22735): __builtins.di does not implement __builtin_bswap64 correctly)
 $(LI $(BUGZILLA 22741): importC: Error: bswap isn’t a template)
 $(LI $(BUGZILLA 22744): ImportC: builtins defined in __builtins.di cause undefined symbol linker errors.)
+$(LI $(BUGZILLA 22779): druntime: Calling __delete with null pointer-to-struct segfaults)
 )
 $(BUGSTITLE_BUGZILLA Druntime enhancements,
 
