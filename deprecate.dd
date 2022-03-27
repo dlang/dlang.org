@@ -49,6 +49,7 @@ $(SPEC_S Deprecated Features,
         $(TROW $(DEPLINK .offset property),                                       ?,     0.107,  2.061,  2.067 )
         $(TROW $(DEPLINK .size property),                                         ?,     0.107,  0.107,  2.061 )
         $(TROW $(DEPLINK .typeinfo property),                                     ?,     0.093,  2.061,  2.067 )
+        $(TROW $(DEPLINK unannotated asm blocks),                                 &nbsp;, &nbsp, &nbsp;, 2.100 )
     )
 
     $(DL
@@ -998,6 +999,27 @@ $(H4 Rationale)
 
 
 
+$(H3 $(DEPNAME unannotated asm blocks))
+    $(P $(D asm) blocks don't affect the function annotations.
+        ---
+        void foo() @safe
+        {
+            asm { noop; }
+        }
+        ---
+    )
+$(H4 Corrective Action)
+    $(P Annotate the $(D asm) blocks instead
+        ---
+        void foo() @safe
+        {
+            asm @safe { noop; }
+        }
+        ---
+    )
+$(H4 Rationale)
+    $(P $(D asm) blocks may throw, contain unsafe, impure code or call the GC
+    interfaces.)
 )
 
 Macros:
