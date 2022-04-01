@@ -1,0 +1,144 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Apr 06, 2022, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 2 major changes and 18 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 11 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 TraitsParametersRevised,Special case for `__traits(parameters)` in foreach loops was removed))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 log_default_info,std.experimental.logger default level changed to `info` instead of `warning`))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 TraitsParametersRevised,Special case for `__traits(parameters)` in foreach loops was removed)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/TraitsParametersRevised.dd)
+$(P
+Previously, when used inside a `foreach` using an overloaded `opApply`, the trait
+would yield the parameters to the delegate and not the function the foreach appears within.
+)
+
+$(P
+This behaviour is unintuitive, especially when the type of the `foreach` aggregate
+depends on a template parameter. Hence `__traits(parameters)` was changed to consistently
+return the parameters of the lexically enclosing function.
+)
+
+---
+class Tree {
+    int opApply(int delegate(size_t, Tree) dg) {
+        if (dg(0, this)) return 1;
+        return 0;
+    }
+}
+void useOpApply(Tree top, int x)
+{
+    foreach(idx; 0..5)
+    {
+        static assert(is(typeof(__traits(parameters)) == AliasSeq!(Tree, int)));
+    }
+
+    foreach(idx, elem; top)
+    {
+        // Previously:
+        // static assert(is(typeof(__traits(parameters)) == AliasSeq!(size_t, Tree)));
+
+        // Now:
+        static assert(is(typeof(__traits(parameters)) == AliasSeq!(Tree, int)));
+    }
+}
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 log_default_info,std.experimental.logger default level changed to `info` instead of `warning`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/log_default_info.dd)
+$(P
+In the 2.099.0 release, the default log level $(LINK2 https://dlang.org/changelog/2.099.0.html#logger_default_warning, was changed to warning).
+)
+
+$(P
+However, this was erroneously assumed to include `info` (informational) logs as well. Now it does include `info` log messages.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 20015): [REG 2.086] Deprecated -preview, -revert, and -transition options not documented)
+$(LI $(BUGZILLA 20717): Unsilenced bogus "undefined identifier" error from speculative collision)
+$(LI $(BUGZILLA 21285): Delegate covariance broken between 2.092 and 2.094 $(LPAREN)git master$(RPAREN).)
+$(LI $(BUGZILLA 22175): assert fail when struct assignment value is desired and struct size is odd)
+$(LI $(BUGZILLA 22639): Copy constructors with default arguments not getting called)
+$(LI $(BUGZILLA 22858): [REG2.099] Incorrect alignment of void*[0])
+$(LI $(BUGZILLA 22859): Error: forward reference of variable `isAssignable` for mutually recursed `allSatisfy`)
+$(LI $(BUGZILLA 22860): `Error: unknown` with mutually recursive and nested SumType)
+$(LI $(BUGZILLA 22863): [REG2.099] -main doesn't work anymore when used for linking only $(LPAREN)without source modules$(RPAREN))
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 22852): importC: Lexer allows invalid wysiwyg and hex strings)
+$(LI $(BUGZILLA 22853): importC: Lexer allows nesting block comments)
+$(LI $(BUGZILLA 22868): __traits$(LPAREN)parameters$(RPAREN) returns parameters of delegate instead of function)
+$(LI $(BUGZILLA 22871): Using an alias to `__traits$(LPAREN)parameters$(RPAREN)` causes unknown error)
+$(LI $(BUGZILLA 22939): bad error message: Error: no property `msg` for type `string`)
+$(LI $(BUGZILLA 22942): Invalid section type / offset for newer XCode versions)
+)
+$(BUGSTITLE_BUGZILLA Druntime regression fixes,
+
+$(LI $(BUGZILLA 20778): exception messages with nulls within are treated inconsistently)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 22908): OpenBSD: Add getpwnam_shadow and getpwuid_shadow function prototypes)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 21086): Wrong source link for core.thread.context)
+)
+)
+$(D_CONTRIBUTORS_HEADER 11)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Brian Callahan)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.099.1
+    TITLE=Change Log: $(VER)
