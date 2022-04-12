@@ -66,7 +66,7 @@ All unknown options are passed to the compiler.
 
     // Phobos index.d should have been named index.dd
     if (inputFile.endsWith(".d") && !inputFile.endsWith("index.d"))
-        text = assertWritelnModule(text);
+        text = assertWritelnModule(inputFile, text);
 
     string[string] macros;
     macros["SRC_FILENAME"] = "%s\n".format(inputFile.buildNormalizedPath);
@@ -114,10 +114,13 @@ auto compile(R)(R buffer, string[] arguments, string inputFile, string[string] m
     auto ret = execute(args);
     if (ret.status != 0)
     {
-        stderr.writeln("File content:");
-        stderr.writeln(buffer);
-        stderr.writeln("----------------------------------------");
-        stderr.writeln(ret.output);
+        stderr.writeln(
+            "\n------------- File content -------------\n",
+            buffer,
+            "\n------------ Compiler output -----------\n",
+            ret.output,
+            "\n----------------------------------------\n",
+        );
     }
     return ret.status;
 }

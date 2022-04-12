@@ -129,7 +129,7 @@ int cmdFilterDocs(string[] args)
 						writefln("Warning: Cannot add documented unit test %s to %s, which is not documented.", name, last_decl["name"].opt!string);
 					} else {
 					    import assert_writeln_magic;
-                        auto rewrittenSource = assertWritelnBlock(source);
+                        auto rewrittenSource = assertWritelnBlock(mod["file"].get!string(), source);
                         last_decl["comment"] ~= format("Example:\n%s$(DDOX_UNITTEST_HEADER %s)\n---\n%s\n---\n$(DDOX_UNITTEST_FOOTER %s)\n", comment.strip, name, rewrittenSource, name);
 					}
 				} catch (Exception e) {
