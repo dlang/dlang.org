@@ -240,6 +240,32 @@ $(H3 $(LNAME2 properties, Properties))
         properties should be nouns, just like if they were member variables.
         Getter properties should $(I not) alter state.)
 
+$(H3 $(LNAME2 property-syntax, Property syntax))
+
+$(P Do not use $(LINK2 spec/function.html#pseudo-member, UFCS) or
+$(LINK2 spec/function.html#optional-parenthesis, Optional Parentheses) outside of their intended use cases.
+Omitting parentheses is useful in generic code that does not care whether a member is a field or
+a function, for example the range primitive `front`.
+It can also make a chain of range functions more compact.
+However, when a simple call is made to a function with side effects, prefer 'regular' function call syntax.
+)
+
+-------------------------------
+import std.range, std.stdio;
+void main()
+{
+    // good
+    writeln();
+    writeln("hello");
+    iota(0, 10).dropOne.array.front.writeln;
+
+    // bad
+    writeln;
+    "hello".writeln;
+    writeln = "hello";
+}
+-------------------------------
+
 $(H3 $(LNAME2 documentation, Documentation))
 
 $(P
