@@ -1,0 +1,854 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION May 07, 2022, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 22 major changes and 162 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 40 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 alias_this_assignment,End deprecation period for using `alias this` for partial assignment.))
+$(LI $(RELATIVE_LINK2 d1_style_operators,The deprecation period for D1-style operators has ended.))
+$(LI $(RELATIVE_LINK2 dep_scope_type,`scope` as a type constraint on class, struct, and enum declarations is deprecated.))
+$(LI $(RELATIVE_LINK2 deprecation_asm_stc,The deprecation period of unannotated `asm` blocks has been ended.))
+$(LI $(RELATIVE_LINK2 deprecation_delete,The deprecation period of the `delete` keyword has been ended.))
+$(LI $(RELATIVE_LINK2 dip1000_deprecation_warnings,Print warning messages unless -revert=dip1000 is used))
+$(LI $(RELATIVE_LINK2 dtoh-improvements,Improvements for the C++ header generation))
+$(LI $(RELATIVE_LINK2 error_scope_interface,The deprecation period for `scope` as a type constraint on interface declarations has ended.))
+$(LI $(RELATIVE_LINK2 inout-return,The `inout` attribute no longer implies the `return` attribute))
+$(LI $(RELATIVE_LINK2 invariant_contract_version_identifier,Support contract invariant version identifier.))
+$(LI $(RELATIVE_LINK2 mustUse,Implement DIP 1038: @mustuse))
+$(LI $(RELATIVE_LINK2 static_array_tupleof,Added `.tupleof` property for static arrays))
+$(LI $(RELATIVE_LINK2 super_type_gone,Usage of `this` and `super` as types has been removed))
+$(LI $(RELATIVE_LINK2 switch-fallthrough,A missed case of switch case fallthrough has been deprecated))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 std_functional_bind,New function `bind` in `std.functional`))
+$(LI $(RELATIVE_LINK2 std_typecons_nullable_range,`Nullable` in `std.typecons` can now act as a range))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Tools changes,
+
+$(LI $(RELATIVE_LINK2 rdmd-environment-args,rdmd now supports specifying the D compiler using the `RDMD_DMD` environment variable))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 actual-dynamiclibrary,Builds dynamicLibrary targets as dynamic libraries instead of static libraries.))
+$(LI $(RELATIVE_LINK2 build-path-variable,The `$DUB_BUILD_PATH` variable was added))
+$(LI $(RELATIVE_LINK2 command-variables,Command environment variable substitution changed))
+$(LI $(RELATIVE_LINK2 etc-dub-settings-json,Posix: use /etc/dub/settings.json if DUB is installed in /usr))
+$(LI $(RELATIVE_LINK2 injectsourcefile,Adds injection of source files from dependencies via injectSourceFiles command))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 alias_this_assignment,End deprecation period for using `alias this` for partial assignment.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/alias_this_assignment.dd)
+$(P
+Starting with this release, `alias this` may not be used for the partial
+assignment of a left-hand side operand. Any such assignment will result in a
+compiler error.
+)
+
+$(P
+If a struct has a single member which is aliased this directly or aliased to a
+ref getter function that returns the mentioned member, then alias this may be
+used since the object will be fully initialised.
+)
+
+---
+struct Allowed
+{
+    int onemember;
+    alias onemember this;
+}
+
+struct Rejected
+{
+    int aliased;
+    long other;
+    alias aliased this;
+}
+
+void fun(Allowed a, Rejected r)
+{
+    a = 0; // OK, struct has only one member.
+    r = 0; // Error, cannot use `alias this` to partially initialize variable `r` of type `Rejected`. Use `r.aliased`
+}
+---
+)
+
+$(LI $(LNAME2 d1_style_operators,The deprecation period for D1-style operators has ended.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/d1_style_operators.dd)
+$(P
+Starting with this release, any use of the deprecated D1 overload operators
+will result in a compiler error.
+)
+
+$(P
+The corrective action is to replace all operators with their D2 equivalent.
+)
+
+$(P
+The following D1 operator overloads have been removed in favor of `opUnary`:
+  * `opNeg` must be replaced with `opUnary(string op)() if (op == "-")`
+  * `opCom` must be replaced with `opUnary(string op)() if (op == "~")`
+  * `opPostInc`must be replaced with `opUnary(string op)() if (op == "++")`
+  * `opPostDec`must be replaced with `opUnary(string op)() if (op == "--")`
+  * `opStar`must be replaced with `opUnary(string op)() if (op == "*")`
+)
+
+$(P
+The following D1 operator overloads have been removed in favor of `opBinary`:
+  * `opAdd` must be replaced with `opBinary(string op)(...) if (op == "+")`
+  * `opSub` must be replaced with `opBinary(string op)(...) if (op == "-")`
+  * `opMul` must be replaced with `opBinary(string op)(...) if (op == "*")`
+  * `opDiv` must be replaced with `opBinary(string op)(...) if (op == "/")`
+  * `opMod` must be replaced with `opBinary(string op)(...) if (op == "%")`
+  * `opAnd` must be replaced with `opBinary(string op)(...) if (op == "&")`
+  * `opXor` must be replaced with `opBinary(string op)(...) if (op == "^")`
+  * `opOr` must be replaced with `opBinary(string op)(...) if (op == "|")`
+  * `opShl` must be replaced with `opBinary(string op)(...) if (op == "<<")`
+  * `opShr` must be replaced with `opBinary(string op)(...) if (op == ">>")`
+  * `opUShr` must be replaced with `opBinary(string op)(...) if (op == ">>>")`
+  * `opCat` must be replaced with `opBinary(string op)(...) if (op == "~")`
+  * `opIn` must be replaced with `opBinary(string op)(...) if (op == "in")`
+)
+
+$(P
+The following D1 operator overloads have been removed in favor of `opBinaryRight`:
+  * `opAdd_r` must be replaced with `opBinaryRight(string op)(...) if (op == "+")`
+  * `opSub_r` must be replaced with `opBinaryRight(string op)(...) if (op == "-")`
+  * `opMul_r` must be replaced with `opBinaryRight(string op)(...) if (op == "*")`
+  * `opDiv_r` must be replaced with `opBinaryRight(string op)(...) if (op == "/")`
+  * `opMod_r` must be replaced with `opBinaryRight(string op)(...) if (op == "%")`
+  * `opAnd_r` must be replaced with `opBinaryRight(string op)(...) if (op == "&")`
+  * `opXor_r` must be replaced with `opBinaryRight(string op)(...) if (op == "^")`
+  * `opOr_r` must be replaced with `opBinaryRight(string op)(...) if (op == "|")`
+  * `opShl_r` must be replaced with `opBinaryRight(string op)(...) if (op == "<<")`
+  * `opShr_r` must be replaced with `opBinaryRight(string op)(...) if (op == ">>")`
+  * `opUShr_r` must be replaced with `opBinaryRight(string op)(...) if (op == ">>>")`
+  * `opCat_r` must be replaced with `opBinaryRight(string op)(...) if (op == "~")`
+  * `opIn_r` must be replaced with `opBinaryRight(string op)(...) if (op == "in")`
+)
+
+$(P
+Note: The `opBinaryRight` overload operator takes precedence over any `opBinary` operators.
+)
+
+$(P
+The following D1 operator overloads have been removed in favor of `opOpAssign`:
+  * `opAddAssign` must be replaced with `opOpAssign(string op)(...) if (op == "+")`
+  * `opSubAssign` must be replaced with `opOpAssign(string op)(...) if (op == "-")`
+  * `opMulAssign` must be replaced with `opOpAssign(string op)(...) if (op == "*")`
+  * `opDivAssign` must be replaced with `opOpAssign(string op)(...) if (op == "/")`
+  * `opModAssign` must be replaced with `opOpAssign(string op)(...) if (op == "%")`
+  * `opAndAssign` must be replaced with `opOpAssign(string op)(...) if (op == "&")`
+  * `opOrAssign` must be replaced with `opOpAssign(string op)(...) if (op == "|")`
+  * `opXorAssign` must be replaced with `opOpAssign(string op)(...) if (op == "^")`
+  * `opShlAssign` must be replaced with `opOpAssign(string op)(...) if (op == "<<")`
+  * `opShrAssign` must be replaced with `opOpAssign(string op)(...) if (op == ">>")`
+  * `opUShrAssign` must be replaced with `opOpAssign(string op)(...) if (op == ">>>")`
+  * `opCatAssign` must be replaced with `opOpAssign(string op)(...) if (op == "~")`
+)
+
+$(P
+The following D1 operator overloads have been removed in favor of `alias this`:
+  * `opDot` must be replaced with `alias this`
+)
+)
+
+$(LI $(LNAME2 dep_scope_type,`scope` as a type constraint on class, struct, and enum declarations is deprecated.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dep_scope_type.dd)
+$(P
+`scope` as a type constraint on class declarations was meant to force users
+of a class to `scope` allocate it, which resulted in the class being placed
+on the stack rather than GC-allocated. While it has been scheduled for
+deprecation for quite some time, the compiler will emit a deprecation warning
+on usage starting from this release.
+)
+
+$(P
+`scope` as a type constraint on struct or enum declarations has never had any
+effect, and has been deprecated as well.
+)
+
+---
+scope class C { }  // Deprecation: `scope` as a type constraint is deprecated. Use `scope` at the usage site.
+scope struct S { } // Ditto
+scope enum E { }   // Ditto
+---
+
+$(P
+Using `scope` to stack-allocate `class` is still suported,
+only the type constraint is deprecated.
+)
+
+---
+class C { }
+
+void main () @nogc
+{
+    scope c = new C;
+}
+---
+)
+
+$(LI $(LNAME2 deprecation_asm_stc,The deprecation period of unannotated `asm` blocks has been ended.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecation_asm_stc.dd)
+$(P
+See the $(LINK2 $(ROOT_DIR)deprecate.html#asm, Deprecated Features) for more
+information.
+)
+
+$(P
+Starting with this release, using `asm` blocks will assume to be `@system`,
+`@nogc`, impure and might throw, unless explicitly annotated.
+)
+)
+
+$(LI $(LNAME2 deprecation_delete,The deprecation period of the `delete` keyword has been ended.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/deprecation_delete.dd)
+$(P
+See the $(LINK2 $(ROOT_DIR)deprecate.html#delete, Deprecated Features) for more information.
+)
+
+$(P
+Starting with this release, using the `delete` keyword will result in a compiler error.
+)
+
+$(P
+As a replacement, users are encouraged to use $(REF1 destroy, object)
+if feasible, or $(REF __delete, core,memory) as a last resort.
+)
+)
+
+$(LI $(LNAME2 dip1000_deprecation_warnings,Print warning messages unless -revert=dip1000 is used)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dip1000_deprecation_warnings.dd)
+$(P
+As an incentive to transition to -preview=dip1000 by default, now the
+compiler prints what would have been error messages if the flag had
+been on as deprecation messages.  This new behaviour can be disabled
+with -revert=dip1000.
+)
+)
+
+$(LI $(LNAME2 dtoh-improvements,Improvements for the C++ header generation)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dtoh-improvements.dd)
+$(P
+The following features/bugfixes/improvements were implemented for the
+experimental C++ header generator:
+)
+
+$(P
+- The implicitly generated context pointer for nested aggregates is now
+  emitted as `outer` instead of `this`
+- Explicit mangling via `pragma(mangle, "...")` is partially supported for
+  functions / variables. The mangling is used as the identifier of `extern(C)`
+  declarations because C doesn't mangle declaration names. `extern(C++)`
+  declarations are ignored because there's no portable alternative for C++.
+- Emits destructors not easily accessible from C++ (e.g. `extern(D)`) as private
+  members, preventing the creation of instances that would not be destroyed
+  on the C++ side.
+- No longer generates `extern(C)` functions in aggregates that are emitted
+  with D mangling.
+)
+
+$(P
+Note: The header generator is still considered experimental, so please submit
+      any bugs encountered to [the bug tracker](https://issues.dlang.org).
+)
+)
+
+$(LI $(LNAME2 error_scope_interface,The deprecation period for `scope` as a type constraint on interface declarations has ended.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/error_scope_interface.dd)
+$(P
+Starting with this release, using `scope` as a type constraint on `interface`
+declarations will result in a compiler error.
+)
+
+---
+scope interface I { }  // Error: `scope` as a type constraint is obsolete.  Use `scope` at the usage site.
+---
+)
+
+$(LI $(LNAME2 inout-return,The `inout` attribute no longer implies the `return` attribute)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/inout-return.dd)
+$(P
+The compiler would formerly add the `return` attribute to `inout` functions, under the assumption that every `inout` function would return its argument.
+However, it could also return a member of the `inout` argument, which would still be `inout` because `const` and `immutable` are transitive, while `return` semantics are not transitive.
+)
+
+---
+@safe:
+
+struct Node
+{
+    Node* next;
+    int x;
+
+    // This escapes a pointer to this struct
+    // This used to be allowed because of `inout`
+    @safe inout(int)* getScopePointer() inout
+    {
+        return &this.x;
+    }
+
+    // But what if you do not return a pointer to this struct?
+    // `inout` applies because it's transitive, but `return ref` does not
+    // The compiler could needlessly treat the returned pointer as a scope pointer
+    @safe inout(int)* getNonScopePointer() inout
+    {
+        return &this.next.x;
+    }
+
+    // Corrective action for the first case:
+    // if you want `inout` + `return ref`, annotate it with both
+    @safe inout(int)* getScopePointer() inout return
+    {
+        return &this.x;
+    }
+}
+---
+)
+
+$(LI $(LNAME2 invariant_contract_version_identifier,Support contract invariant version identifier.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/invariant_contract_version_identifier.dd)
+$(P
+Sometimes it is useful to compile code only when invariants are enabled. This
+feature provides the reserved version identifier D_Invariants which evaluates to
+true or false when invariants are compiled in or not respectively.
+)
+
+---
+bool hit;
+
+class Foo
+{
+    this() {}
+    invariant { hit = true; }
+}
+
+void main()
+{
+    cast(void) new Foo();
+
+    version(D_Invariants) assert(hit); // runs if invariants are compiled in
+}
+---
+)
+
+$(LI $(LNAME2 mustUse,Implement DIP 1038: @mustuse)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/mustUse.dd)
+$(P
+`@mustuse` is a new attribute that can be applied to a `struct` or `union` type
+to make ignoring an expression of that type into a compile-time error. It can
+be used to implement alternative error-handling mechanisms for code that cannot
+use exceptions, including `@nogc` and BetterC code.
+)
+
+$(P
+For more information, see
+$(LINK https://github.com/dlang/DIPs/blob/master/DIPs/accepted/DIP1038.md, DIP 1038).
+)
+)
+
+$(LI $(LNAME2 static_array_tupleof,Added `.tupleof` property for static arrays)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/static_array_tupleof.dd)
+$(P
+The `.tupleof` property may now be used with instances of static arrays, yielding an $(DDSUBLINK spec/template, homogeneous_sequences, lvalue sequence) of each element in the array.
+)
+
+$(P
+Note that this is only for static array *instances*. It remains an error when used on a type, to avoid breaking older code lacking suitable checks. As a workaround, use `typeof((T[N]).init.tupleof)`.
+)
+
+---
+void foo(int, int, int) { /* ... */ }
+
+int[3] ia = [1, 2, 3];
+foo(ia.tupleof); // same as `foo(1, 2, 3);`
+
+float[3] fa;
+//fa = ia; // error
+fa.tupleof = ia.tupleof;
+assert(fa == [1F, 2F, 3F]);
+---
+)
+
+$(LI $(LNAME2 super_type_gone,Usage of `this` and `super` as types has been removed)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/super_type_gone.dd)
+$(P
+Prior to this release, using `this` or `super` as a type resulted in a compiler
+error suggesting to use `typeof(this)` or `typeof(super)` instead. This has now
+been completely removed from the language, and the parser won't recognize this
+wrong code anymore.
+)
+)
+
+$(LI $(LNAME2 switch-fallthrough,A missed case of switch case fallthrough has been deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/switch-fallthrough.dd)
+$(P
+Forgetting a `break;` statement in a switch case has been turned from a deprecation
+$(LINK2 $(ROOT_DIR)/changelog/2.099.0.html#switch_fallthrough_error, into an error in DMD 2.099.0).
+However, the compiler would not issue an error when using multiple values in a single case statement:
+)
+
+---
+void main()
+{
+    int i = 0;
+    switch (10)
+    {
+        case 10, 11:
+            i = 4;
+            // accidental falltrough allowed
+        default:
+            i = 8;
+    }
+    assert(i == 4); // fails
+}
+---
+
+$(P
+This bug has been fixed, but to avoid breaking code, this specific case now issues a deprecation warning.
+Starting from DMD 2.110, it will produce an error just like other cases of switch case fallthrough.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 std_functional_bind,New function `bind` in `std.functional`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std_functional_bind.dd)
+$(P
+It is used to pass the fields of a struct as arguments to a function. For
+example, it can be used in a range pipeline to give names to the elements of a
+$(REF Tuple, std, typecons):
+)
+
+---
+import std.stdio;
+import std.range;
+import std.algorithm;
+import std.functional;
+
+void printWithLineNumbers(File f)
+{
+    f.byLine
+        .enumerate
+        .each!(bind!((num, line) {
+            writefln("%8d %s", num, line);
+        }));
+}
+---
+
+$(P
+See $(REF_ALTTEXT the standard library documentation, bind, std, functional)
+for more information.
+)
+)
+
+$(LI $(LNAME2 std_typecons_nullable_range,`Nullable` in `std.typecons` can now act as a range)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std_typecons_nullable_range.dd)
+$(P
+`Nullable` now offers an alternative 0 or 1 element range interface.
+)
+
+---
+import std.stdio;
+import std.algorithm;
+import std.typecons;
+
+void printValues(Nullable!int[] values)
+{
+    values.joiner.each!writeln();
+}
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Tools changes,
+
+$(LI $(LNAME2 rdmd-environment-args,rdmd now supports specifying the D compiler using the `RDMD_DMD` environment variable)
+$(CHANGELOG_SOURCE_FILE tools, ../tools/changelog/rdmd-environment-args.dd)
+$(P
+rdmd now uses the `RDMD_DMD` environment variable, if it is present in the environment, to choose the D compiler to use. As with the `--compiler` option, the variable's value must specify the name or path of a compiler with a DMD-like command line syntax, such as `gdmd` or `ldmd2`. The variable overrides the default (which is decided at the time `rdmd` was built), but can still be overridden by the `--compiler` option.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 actual-dynamiclibrary,Builds dynamicLibrary targets as dynamic libraries instead of static libraries.)
+$(CHANGELOG_SOURCE_FILE dub, changelog/actual-dynamiclibrary.dd)
+$(P
+Dub will no longer build dynamicLibrary targetType's as staticLibrary.
+)
+
+$(P
+Except for x86_omf. This has been disabled due to numerous issues that will lead this to not doing what is expected of it.
+)
+
+$(P
+No compiler or linker flags have been added at this time, you will need to specify the relevant flag to get the compiler to link dynamically against Phobos.
+)
+)
+
+$(LI $(LNAME2 build-path-variable,The `$DUB_BUILD_PATH` variable was added)
+$(CHANGELOG_SOURCE_FILE dub, changelog/build-path-variable.dd)
+$(P
+The `$DUB_BUILD_PATH` variable is now defined inside the `postBuildCommands`
+section. It contains the absolute path in which the package was built, and can
+be used to copy by-products of the build process to their intended locations.
+)
+
+$(P
+For example, if an executable exports symbols, you will want to make the
+resulting import library and symbols export file available somewhere. That can
+be done with a `dub.json` section like this:
+)
+-------
+    "postBuildCommands-windows": [
+        "copy /y $DUB_BUILD_PATH\\$DUB_TARGET_NAME.lib $PACKAGE_DIR\\lib"
+        "copy /y $DUB_BUILD_PATH\\$DUB_TARGET_NAME.exp $PACKAGE_DIR\\lib"
+    ],
+-------
+)
+
+$(LI $(LNAME2 command-variables,Command environment variable substitution changed)
+$(CHANGELOG_SOURCE_FILE dub, changelog/command-variables.dd)
+$(P
+Now users can use the documented predefined variables inside custom command
+directives without the need for a wrapper shell script.
+)
+
+$(P
+Before this would have failed:
+)
+```json
+"preBuildCommands": ["$DC -run foo.d"]
+```
+$(P
+unless DC was defined as environment variable outside DUB.
+)
+
+$(P
+It was before possible to run a script that used the $DC environment variable or
+on POSIX escape the `$` with `$$DC` to make the shell substitute the variable.
+These workarounds are no longer needed now.
+)
+
+$(P
+API change: none of the different command directives are no longer substituted
+with the process environment variables. You now access the raw commands as
+provided by the user in the recipe. `dub describe` has been adjusted and now
+also processes the predefined environment variables as well as the process
+environment variables.
+)
+)
+
+$(LI $(LNAME2 etc-dub-settings-json,Posix: use /etc/dub/settings.json if DUB is installed in /usr)
+$(CHANGELOG_SOURCE_FILE dub, changelog/etc-dub-settings-json.dd)
+$(P
+For Linux distributions that put the dub installation in /usr, there is now a
+special case that DUB will load from /etc/dub/settings.json (absolute path) if
+the installation is inside /usr.
+)
+
+$(P
+Previously settings would have attempted to be loaded from
+`/usr/etc/dub/settings.json` if installed in `/usr/bin/dub`. This is still
+loaded if it exists, but if not `/etc/dub/settings.json` will be loaded.
+)
+)
+
+$(LI $(LNAME2 injectsourcefile,Adds injection of source files from dependencies via injectSourceFiles command)
+$(CHANGELOG_SOURCE_FILE dub, changelog/injectsourcefile.dd)
+$(P
+Each (sub)package now supports a source file that will be included in any executable or dynamic library that depends either directly or indirectly on it.
+)
+
+$(P
+This can be used to register and unregister elements of a package within the dependant package without requiring the dependant to acknowledge that the registration mechanism needs to take place.
+)
+
+$(P
+A comparable existing feature to this is the usage of sourceLibrary target type.
+A sourceLibrary targetType defers compilation of source code until it is dependent upon by a static library, dynamic library or executable (sub)package.
+Unlike sourceLibrary the injection of source code using this feature will inject it into every dynamic library and executable that depends on it, regardless of how deep it is in the dependency graph.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 22788): [REG master] Expression header out of sync)
+$(LI $(BUGZILLA 22797): [REG master] Internal Compiler Error: cannot mixin static assert '')
+$(LI $(BUGZILLA 22801): [REG 2.099.0-beta.1] Can't return address of return ref parameter from constructor)
+$(LI $(BUGZILLA 22810): [REG 2.088] FAIL: runnable/test15.d on BigEndian targets)
+$(LI $(BUGZILLA 22833): [REG 2.083] error: 'string' is not a member of 'std')
+$(LI $(BUGZILLA 22844): [REG 2.089] SIGBUS, Bus error in _d_newitemU)
+$(LI $(BUGZILLA 22881): ICE Index of array outside of bounds at CTFE)
+$(LI $(BUGZILLA 22913): importC: array index expression parsed as cast)
+$(LI $(BUGZILLA 22961): importC: K&R-style main function rejected)
+$(LI $(BUGZILLA 22997): DMD crash: copy ctor can't call other ctor)
+$(LI $(BUGZILLA 22999): no switch fallthrough error with multi-valued case)
+$(LI $(BUGZILLA 23019): Missing filename when -of points to an existing directory)
+$(LI $(BUGZILLA 23036): Rvalue constructor with default parameter crashes compiler in the presence of a copy constructor)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 7625): inlining only works with explicit else branch)
+$(LI $(BUGZILLA 12344): .di generation doesn't include contracts in interfaces)
+$(LI $(BUGZILLA 19948): Fully qualified name not used in errors when implicit const conversion is involved)
+$(LI $(BUGZILLA 20149): [DIP1000] Local data escapes inout method if not decorated with return)
+$(LI $(BUGZILLA 20603): 'cannot use non-constant CTFE pointer in an initializer' in recursive structure with overlap)
+$(LI $(BUGZILLA 20881): [DIP1000] scope inference turns return-ref into return-scope)
+$(LI $(BUGZILLA 21008): dmd segfaults because of __traits$(LPAREN)getMember, ...$(RPAREN) and virtual function overriding)
+$(LI $(BUGZILLA 21324):  @live not detecting overwrite of Owner without disposing of previous owned value)
+$(LI $(BUGZILLA 21546): covariant return checks for functions wrong if returning by ref)
+$(LI $(BUGZILLA 21676): [ICE][SIMD] DMD crashing with SIMD + optimizations + inlining)
+$(LI $(BUGZILLA 21975): is expression ignores implicit conversion of struct via alias this when pattern matching)
+$(LI $(BUGZILLA 22023): adding `return` to escaped argument of a variadic defeats @safe)
+$(LI $(BUGZILLA 22145): scope for foreach parameters is ignored)
+$(LI $(BUGZILLA 22202): Wrong error message for implicit call to @system copy constructor in @safe code)
+$(LI $(BUGZILLA 22221): [dip1000] pure function can escape parameters through Exception)
+$(LI $(BUGZILLA 22234): __traits$(LPAREN)getLinkage$(RPAREN) returns wrong value for extern$(LPAREN)System$(RPAREN) functions)
+$(LI $(BUGZILLA 22489): C header generation ignores custom mangling)
+$(LI $(BUGZILLA 22539): [dip1000] slicing of returned ref scope static array should not be allowed)
+$(LI $(BUGZILLA 22635): opCast prevent calling destructor for const this.)
+$(LI $(BUGZILLA 22751): DMD as a library crashes with fatal$(LPAREN)$(RPAREN) on parseModule)
+$(LI $(BUGZILLA 22755): ImportC: declared symbol must be available in initializer)
+$(LI $(BUGZILLA 22756): ImportC: no __builtin_offsetof)
+$(LI $(BUGZILLA 22776): string literal printing fails on non-ASCII/non-printable chars)
+$(LI $(BUGZILLA 22782): [dip1000] address of ref can be assigned to non-scope parameter)
+$(LI $(BUGZILLA 22793): importC: __import conflicts when importing multiple modules with same package)
+$(LI $(BUGZILLA 22802): [dip1000] First ref parameter seen as `return` destination even with `this`)
+$(LI $(BUGZILLA 22806): cppmangle: Complex real mangled incorrectly)
+$(LI $(BUGZILLA 22807): ImportC: Array index is out of bounds for old-style flexible arrays.)
+$(LI $(BUGZILLA 22808): ImportC: function not decaying to pointer to function in return statement.)
+$(LI $(BUGZILLA 22809): ImportC: druntime’s definition of __builtin_offsetof leads to dereference of invalid pointer.)
+$(LI $(BUGZILLA 22812): ImportC: C11 does not allow newlines between the start and end of a directive)
+$(LI $(BUGZILLA 22818): typesafe variadic function parameter of type class should be scope)
+$(LI $(BUGZILLA 22823): dmd.root.file: File.read fails to read any file on PPC)
+$(LI $(BUGZILLA 22830): Solaris: error: module 'core.stdc.math' import 'signbit' not found)
+$(LI $(BUGZILLA 22831): No error for malformed extern$(LPAREN)C$(RPAREN) main function)
+$(LI $(BUGZILLA 22837): [dip1000] checkConstructorEscape quits after first non-pointer)
+$(LI $(BUGZILLA 22840): [dip1000] inout method with inferred @safe escapes local data)
+$(LI $(BUGZILLA 22841): importC: Error: variable 'var' is shadowing variable 'var')
+$(LI $(BUGZILLA 22842): importC: cannot declare function with a typedef)
+$(LI $(BUGZILLA 22845): DWARF .debug_line section is not standard compliant)
+$(LI $(BUGZILLA 22846): [REG 2.066] SIGBUS, Bus error in _d_newarrayiT)
+$(LI $(BUGZILLA 22848): DWARF .debug_line section should be generated to conform with DW_AT_stmt_list bounds)
+$(LI $(BUGZILLA 22874): ICE: Segmentation fault building druntime on mips64el-linux)
+$(LI $(BUGZILLA 22876): importC: expression parsing affected by parentheses that should do nothing)
+$(LI $(BUGZILLA 22877): importC: wrong sizeof for string literal)
+$(LI $(BUGZILLA 22878): importC: glibc fallback for HUGE_VAL gives 'not representable')
+$(LI $(BUGZILLA 22884): ImportC: function does not decay to pointer when being cast)
+$(LI $(BUGZILLA 22885): ImportC: typedef declared with itself should work)
+$(LI $(BUGZILLA 22886): ImportC: forward declaration of struct in a function prototype leads to redeclaration with different type error)
+$(LI $(BUGZILLA 22887): ImportC: typedef enum fails)
+$(LI $(BUGZILLA 22892): importC: dereferencing array as pointer is not supported)
+$(LI $(BUGZILLA 22894): importC: static struct initializer can't take address of own field)
+$(LI $(BUGZILLA 22895): importC: exponent parsed as member access)
+$(LI $(BUGZILLA 22896): importC: 'function redeclaration with different type' should ignore const)
+$(LI $(BUGZILLA 22897): importC: segfault calling forward-declared static function through pointer)
+$(LI $(BUGZILLA 22899): importC: extra parentheses in sizeof should give error with typedef types)
+$(LI $(BUGZILLA 22904): importC: syntax error for function call with casted result and parentheses around name)
+$(LI $(BUGZILLA 22906): DMD as a library hangs on semantic analysis of non regular D files)
+$(LI $(BUGZILLA 22909): importC: u8 strings rejected by parser)
+$(LI $(BUGZILLA 22910): [dip1000] return scope struct member functions allow returning `this` by ref)
+$(LI $(BUGZILLA 22912): importC: syntax error for function call with cast and typedef and parentheses around name)
+$(LI $(BUGZILLA 22914): outdated supplemental error "perhaps remove scope")
+$(LI $(BUGZILLA 22915): Errors for invalid foreach aggregates should print the type)
+$(LI $(BUGZILLA 22918): importC: some types not zero-initialized in static variables)
+$(LI $(BUGZILLA 22919): [dip1000] -checkaction=context gives "assigned to `__assertOp2` with longer lifetime")
+$(LI $(BUGZILLA 22923): importC: forward-declared static variable has invalid address)
+$(LI $(BUGZILLA 22924): importC: boolean expression result should be int)
+$(LI $(BUGZILLA 22927): importC: 'struct already exists' with forward reference and function with same name)
+$(LI $(BUGZILLA 22928): importC: array does not have a boolean value)
+$(LI $(BUGZILLA 22929): importC: extern array with unknown length gives bounds errors)
+$(LI $(BUGZILLA 22930): importC: switch statement should use default:break; if no default specified)
+$(LI $(BUGZILLA 22931): importC: Error: `0` has no effect)
+$(LI $(BUGZILLA 22933): importC: goto skips declaration of variable)
+$(LI $(BUGZILLA 22934): Header generator emits context pointer as `this`)
+$(LI $(BUGZILLA 22935): importC: offsetof with array element gives 'dereference of invalid pointer')
+$(LI $(BUGZILLA 22951): Dtor missing from generated C++ header)
+$(LI $(BUGZILLA 22954): Header generator emits extern$(LPAREN)C$(RPAREN) member functions)
+$(LI $(BUGZILLA 22955): importC: wrong alignof for D struct with specified alignment)
+$(LI $(BUGZILLA 22970): importC: taking address one past array end gives bounds error)
+$(LI $(BUGZILLA 22971): importC: can't initialize unsigned char array with string literal)
+$(LI $(BUGZILLA 22972): importC: static variable cannot be read at compile time)
+$(LI $(BUGZILLA 22974): importC: D name mangling applied to extern variable inside function)
+$(LI $(BUGZILLA 22976): importC: fails to multiply by element size when doing address-of)
+$(LI $(BUGZILLA 22988): no short-circuiting when constant folding ternary operator)
+$(LI $(BUGZILLA 22994): importC: some types not zero-initialized in static array)
+$(LI $(BUGZILLA 23000): final switch error has no line number with -checkaction=C)
+$(LI $(BUGZILLA 23002): importC: struct or union field with same name as type gives circular reference error)
+$(LI $(BUGZILLA 23003): ImportC should not import object.d)
+$(LI $(BUGZILLA 23004): importC: calling function pointer named 'init' or 'stringof' from struct or union pointer gives error)
+$(LI $(BUGZILLA 23008): importC: dmd asserts on empty struct or union as global)
+$(LI $(BUGZILLA 23009): [CODEGEN][SIMD] SIMD + optimizations + inlining + double)
+$(LI $(BUGZILLA 23011): importC: asm label to set symbol name doesn't work with externs)
+$(LI $(BUGZILLA 23017): C++ class may not derive from D class)
+$(LI $(BUGZILLA 23025): ImportC: duplicate symbol for tentative definition and definition of variable)
+$(LI $(BUGZILLA 23028): ImportC: found _Generic instead of statement)
+$(LI $(BUGZILLA 23029): ImportC: _Generic treats pointer to const and regular pointers as the same type)
+$(LI $(BUGZILLA 23031): importC: hex character escapes should be variable length)
+$(LI $(BUGZILLA 23034): importC: head-const struct confused with multiple files on command line)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 3632): modify float is float to do a bitwise compare)
+$(LI $(BUGZILLA 11463): DDoc html to show the normal escaped ASCII chars)
+$(LI $(BUGZILLA 14277): Compile-time array casting error - ugly error report)
+$(LI $(BUGZILLA 20853): static array ptr cannot be used in safe code but it should be allowed)
+$(LI $(BUGZILLA 21673): [SIMD][Win64] Wrong codegen for _mm_move_ss)
+$(LI $(BUGZILLA 22027): inout shouldn't imply return)
+$(LI $(BUGZILLA 22541): DIP1000: Resolve ambiguity of ref-return-scope parameters)
+$(LI $(BUGZILLA 22770): C++ header generator generates trailing newlines)
+$(LI $(BUGZILLA 22790): ref-return-scope is always ref-return, scope, unless return-scope appear in that order)
+$(LI $(BUGZILLA 22820): Error messages for slice pointers of structs with opIndex can be improved)
+$(LI $(BUGZILLA 22821): Dub package does not use incremental compilation)
+$(LI $(BUGZILLA 22861): Build the compiler with PGO)
+$(LI $(BUGZILLA 22880): importC: support __restrict__ __signed__ __asm__)
+$(LI $(BUGZILLA 22922): Support empty array literal in -betterC)
+$(LI $(BUGZILLA 22945): [Conditional Compilation] support invariant version flag)
+$(LI $(BUGZILLA 22967): [dip1000] no return ref inference for extended return semantics)
+$(LI $(BUGZILLA 23021): [dip1000] infer return scope from pure nothrow)
+)
+$(BUGSTITLE_BUGZILLA Phobos regression fixes,
+
+$(LI $(BUGZILLA 20182): [REG 2.086.0] std.traits.ParameterDefaults fails for copy constructor of nested struct)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 13541): std.windows.syserror.sysErrorString$(LPAREN)$(RPAREN) should be nothrow)
+$(LI $(BUGZILLA 18036): Documentation of moveFront$(LPAREN)$(RPAREN) fails to mention different behavior depending on hasElaborateCopyConstructor)
+$(LI $(BUGZILLA 22213): Base64: Missing `@nogc` attribute on encodeLength)
+$(LI $(BUGZILLA 22503): Invalid changelog entry for isValidCodePoint)
+$(LI $(BUGZILLA 22771): BigInt divMod can return "-0" $(LPAREN)negative zero$(RPAREN))
+$(LI $(BUGZILLA 22791): std\socket.d$(LPAREN)790$(RPAREN) Heisenbug random failure)
+$(LI $(BUGZILLA 22851): Missing reference to std.sumtype's source in the latter's documentation)
+$(LI $(BUGZILLA 22867): std.utf.decode changes offset despite error.)
+$(LI $(BUGZILLA 22873): Wrong std.format output for `inout`)
+$(LI $(BUGZILLA 22901): Can't construct inout SumType)
+$(LI $(BUGZILLA 22946): WindowsException ctor is not nothrow)
+$(LI $(BUGZILLA 22947): sysErrorString throws Exception instead of WindowsException)
+$(LI $(BUGZILLA 22998): Update to zlib 1.2.12)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 22736): Add destructuring bind for std.typecons.Tuple tuples)
+$(LI $(BUGZILLA 22798): defaultGetoptPrinter should be @safe)
+)
+$(BUGSTITLE_BUGZILLA Druntime regression fixes,
+
+$(LI $(BUGZILLA 22829): [REG master] Undefined symbol stderr first referenced in file test19933.o)
+$(LI $(BUGZILLA 22834): runnable_cxx/stdint.d: Undefined reference to _Z15testCppI8Mangleahahah)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 18117): ldiv_t struct in core.stdc.stdlib -- int vs c_long expectations)
+$(LI $(BUGZILLA 21631): core.atomic.cas fails to compile with const ifThis $(LPAREN)if target is a pointer$(RPAREN))
+$(LI $(BUGZILLA 22763): importing std.utf fails in BetterC)
+$(LI $(BUGZILLA 22822): core.sys.posix.sys.stat: PPC stat_t bindings corrupt)
+$(LI $(BUGZILLA 22832): Can't destroy class with overloaded opCast)
+$(LI $(BUGZILLA 22843): Program hangs on full gc collect with --DRT-gcopt=fork:1 if run under valgrind/callgrind)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 18816): [betterC] Standard Streams Unlinkable)
+$(LI $(BUGZILLA 19933): MSVC: Undefined std{in,out,err} with -betterC)
+$(LI $(BUGZILLA 22766): copyEmplace does not work with copy constructor and @disable this$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 22964): array cast message is awkwardly worded)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 15437): documentation for typeof$(LPAREN)someTemplate$(RPAREN) == void)
+$(LI $(BUGZILLA 22215): returning expired stack pointers in @system code allowed by spec, not by implementation)
+$(LI $(BUGZILLA 22795): Access denied when trying to download DMD 2.099.0-beta.1)
+$(LI $(BUGZILLA 22850): [Oh No! Page Not Found] Contract Programming)
+$(LI $(BUGZILLA 22959): Documentation for C/D main is incomplete)
+)
+$(BUGSTITLE_BUGZILLA Installer bug fixes,
+
+$(LI $(BUGZILLA 22958): [Internal] Installer uses outdated image on Azure)
+)
+)
+$(D_CONTRIBUTORS_HEADER 40)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Arne Ludwig)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Brian Callahan)
+    $(D_CONTRIBUTOR Cameron Ross)
+    $(D_CONTRIBUTOR canopyofstars)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR devmynote)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR Etienne Brateau)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR Gabriel)
+    $(D_CONTRIBUTOR Harry T. Vennik)
+    $(D_CONTRIBUTOR human)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Ilya Yaroshenko)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR João Lourenço)
+    $(D_CONTRIBUTOR Luís Ferreira)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Max Haughton)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR rikki cattermole)
+    $(D_CONTRIBUTOR sorin-gabriel)
+    $(D_CONTRIBUTOR Steven Dwy)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Teodor Dutu)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.100.0
+    TITLE=Change Log: $(VER)
