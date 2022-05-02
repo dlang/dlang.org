@@ -509,7 +509,7 @@ Alignment is needed for CPU performance or requirements, because accessing misal
 $(H6 $(IX .alignof) The $(C .alignof) property)
 
 $(P
-$(IX classInstanceAlignment) The $(C .alignof) property of a type is its default alignment value. For classes, $(C .alignof) is the alignment of the class variable, not the class object. The alignment of a class object is obtained by $(C std.traits.classInstanceAlignment).
+$(IX classInstanceAlignment) The $(C .alignof) property of a type is its default alignment value. For classes, $(C .alignof) is the alignment of the class variable, not the class object. The alignment of a class object is obtained by $(C __traits(classInstanceAlignment)).
 )
 
 $(P
@@ -549,7 +549,7 @@ void main() {
     foreach (Type; Types) {
         static if (is (Type == class)) {
             size_t size = __traits(classInstanceSize, Type);
-            size_t alignment = $(HILITE classInstanceAlignment!Type);
+            size_t alignment = $(HILITE __traits(classInstanceAlignment, Type));
 
         } else {
             size_t size = Type.sizeof;
@@ -636,8 +636,7 @@ $(CODE_NAME nextAlignedAddress)T * nextAlignedAddress(T)(T * candidateAddr) {
     import std.traits;
 
     static if (is (T == class)) {
-        const alignment = classInstanceAlignment!T;
-
+        const alignment = __traits(classInstanceAlignment, T);
     } else {
         const alignment = T.alignof;
     }
@@ -1314,7 +1313,7 @@ $(LI $(C GC.calloc) and other functions reserve memory, $(C GC.realloc) extends 
 
 $(LI It is possible to mark the allocated memory by attributes like $(C GC.BlkAttr.NO_SCAN), $(C GC.BlkAttr.NO_INTERIOR), etc.)
 
-$(LI The $(C .alignof) property is the default memory alignment of a type. Alignment must be obtained by $(C classInstanceAlignment) for class $(I objects).)
+$(LI The $(C .alignof) property is the default memory alignment of a type. Alignment must be obtained by $(C __traits(classInstanceAlignment)) for class $(I objects).)
 
 $(LI The $(C .offsetof) property is the number of bytes a member is from the beginning of the object that it is a part of.)
 
