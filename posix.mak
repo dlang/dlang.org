@@ -342,14 +342,15 @@ ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
+PAGES_ROOT=$(SPEC_ROOT) 404 $(ARTICLE_FILES) \
 	ascii-table bugstats $(CHANGELOG_FILES) calendar community comparison concepts \
 	deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys glossary \
-	howto-promote htod index install \
-	menu orgs-using-d overview rdmd resources search security tuple wc windbg \
+	htod index install menu overview rdmd resources \
+	search security tuple wc windbg \
 	$(addprefix foundation/, index about donate prman sponsors upb-scholarship) \
-	$(addprefix gsoc/, gsoc2011 gsoc2012 gsoc2012-template gsoc2013 gsoc2013-template)
+	$(addprefix gsoc/, gsoc2011 gsoc2012 gsoc2012-template gsoc2013 gsoc2013-template) \
+	$(addprefix community/, howto-promote orgs-using-d areas-of-d-usage acknowledgements )
 
 # The contributors listing is dynamically generated
 ifneq (1,$(DIFFABLE))
