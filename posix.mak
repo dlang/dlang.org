@@ -918,15 +918,15 @@ $(DDOC_BIN): ddoc/source/preprocessor.d ddoc/source/assert_writeln_magic.d | $(S
 # This allows previewing changes to the automatically generated DMD man page
 ################################################################################
 
-$(DMD_DIR)/generated/$(MAN_PAGE): $(DMD_DIR)/docs/gen_man.d $(DMD_DIR)/compiler/src/dmd/cli.d | ${STABLE_DMD}
-	${MAKE} -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) build
+$(DMD_DIR)/generated/$(MAN_PAGE): $(DMD_DIR)/compiler/docs/gen_man.d $(DMD_DIR)/compiler/src/dmd/cli.d | ${STABLE_DMD}
+	${MAKE} -C $(DMD_DIR)/compiler/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) build
 
 $W/$(MAN_PAGE): $(DMD_DIR)/generated/$(MAN_PAGE) | ${STABLE_DMD}
 	mkdir -p $(dir $@)
 	cp $< $@
 	# CircleCi + nightlies.dlang.org might not have `man` installed
 	if [ $(OS) != "osx" ] -a [ command -v man > /dev/null ] ; then \
-		${MAKE} -s -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) preview > $(dir $@)dmd.txt; \
+		${MAKE} -s -C $(DMD_DIR)/compiler/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) preview > $(dir $@)dmd.txt; \
 	fi
 
 man: $W/$(MAN_PAGE)
