@@ -1,0 +1,109 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jul 15, 2022, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 1 major change and 16 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 14 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 deprecate_scope_failure_return,`scope(failure)` blocks that contain `return` statements are now deprecated))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 deprecate_scope_failure_return,`scope(failure)` blocks that contain `return` statements are now deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, release/script/tools/../dmd/changelog/deprecate_scope_failure_return.dd)
+$(P
+Starting with this release, having a `return` statement in the body of a `scope(failure)`
+statement is deprecated. Having the ability to `return` from such blocks is error prone since currently, Errors are also handled by `scope(failure)`. This leads to the following situation:
+)
+
+---
+ulong get () @safe nothrow
+{
+    scope (failure) return 10;
+    throw new Error("");
+}
+
+void main () @safe
+{
+    assert(get() == 10);  // passes
+}
+---
+
+$(P
+where an error is circumvented by a return. If a return is indeed desired
+in such situations, then the solution is to simply use a try-catch block
+for the function body.
+)
+
+$(P
+Note: `scope(exit)` and `scope(success)` already present this restriction.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 23100): empty array literal passed to scope param not 'falsey' anymore)
+$(LI $(BUGZILLA 23148): Missing invariant symbol with static library when template function declares struct with destructor and invariant that instantiates template with lambda, also main has a lambda)
+$(LI $(BUGZILLA 23170): Array literal passed to map in lambda, then returned from nested function, is memory corrupted)
+$(LI $(BUGZILLA 23172): [REG2.100] Wrong cast inserted for ternary operator and non-int enums)
+$(LI $(BUGZILLA 23181): [REG 2.099] AssertError@src/dmd/e2ir.d$(LPAREN)6094$(RPAREN): Trying reference _d_arraysetctor)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 20143): ICE in optimizer on real 0/0 returned as double)
+$(LI $(BUGZILLA 21443): scope $(LPAREN)failure$(RPAREN) with a return breaks safety)
+$(LI $(BUGZILLA 21723): Linker error: two module static library, main compiled inline, invariant that defines a function, type alias, and an alias lambda)
+$(LI $(BUGZILLA 23082): stringof of template alias overloaded with function accessed by trait: segfault.)
+$(LI $(BUGZILLA 23102): pinholeopt, "Conditional jump or move depends on uninitialised value$(LPAREN)s$(RPAREN)")
+$(LI $(BUGZILLA 23108): ICE: AssertError@src/dmd/clone.d$(LPAREN)567$(RPAREN): Assertion failure)
+$(LI $(BUGZILLA 23109): ICE: AssertError@src/dmd/dclass.d$(LPAREN)449$(RPAREN): Assertion failure)
+$(LI $(BUGZILLA 23114): Can't use noreturn operand in arithmetic expression)
+$(LI $(BUGZILLA 23120): dmd illegal instruction throw expression)
+$(LI $(BUGZILLA 23166): seg fault when compiling with -inline)
+)
+$(BUGSTITLE_BUGZILLA Phobos regression fixes,
+
+$(LI $(BUGZILLA 23132): "cannot access frame pointer" comparing two ranges for equality from v2.099.0)
+)
+)
+$(D_CONTRIBUTORS_HEADER 14)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR FeepingCreature)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR mhh)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR richard andrew cattermole)
+    $(D_CONTRIBUTOR Tomáš Chaloupka)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.100.1
+    TITLE=Change Log: $(VER)
