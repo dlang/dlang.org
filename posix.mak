@@ -419,13 +419,13 @@ ${GENERATED}/modlist-${LATEST}.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_L
 
 ${GENERATED}/modlist-release.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) $< $(DRUNTIME_DIR)/src $(PHOBOS_DIR) $(DMD_DIR)/src $(MOD_EXCLUDES_RELEASE) \
+	$(STABLE_RDMD) $< $(DRUNTIME_DIR)/src $(PHOBOS_DIR) $(DMD_DIR)/compiler/src $(MOD_EXCLUDES_RELEASE) \
 		$(addprefix --internal=, dmd rt core.internal) \
 		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) $< $(DRUNTIME_DIR)/src $(PHOBOS_DIR) $(DMD_DIR)/src $(MOD_EXCLUDES_PRERELEASE) \
+	$(STABLE_RDMD) $< $(DRUNTIME_DIR)/src $(PHOBOS_DIR) $(DMD_DIR)/compiler/src $(MOD_EXCLUDES_PRERELEASE) \
 		$(addprefix --internal=, dmd rt core.internal) \
 		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
 
@@ -735,7 +735,7 @@ $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} | dpl-docs
 		sed -e /unittest/d >> $G/.prerelease-files.txt
 	find ${PHOBOS_DIR}/etc ${PHOBOS_DIR}/std -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.prerelease-files.txt
-	${DMD} -J$(DMD_DIR)/res -J$(DMD_DIR)/src/dmd/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
+	${DMD} -J$(DMD_DIR)/res -J$(DMD_DIR)/compiler/src/dmd/res -J$(dir $(DMD)) -c -o- -version=MARS -version=CoreDdoc \
 		-version=StdDdoc -Df$G/.prerelease-dummy.html \
 		-Xf$@ -I${PHOBOS_DIR} @$G/.prerelease-files.txt
 	${DPL_DOCS} filter $@ --min-protection=Protected \
@@ -918,7 +918,7 @@ $(DDOC_BIN): ddoc/source/preprocessor.d ddoc/source/assert_writeln_magic.d | $(S
 # This allows previewing changes to the automatically generated DMD man page
 ################################################################################
 
-$(DMD_DIR)/generated/$(MAN_PAGE): $(DMD_DIR)/docs/gen_man.d $(DMD_DIR)/src/dmd/cli.d | ${STABLE_DMD}
+$(DMD_DIR)/generated/$(MAN_PAGE): $(DMD_DIR)/docs/gen_man.d $(DMD_DIR)/compiler/src/dmd/cli.d | ${STABLE_DMD}
 	${MAKE} -C $(DMD_DIR)/docs DMD=$(abspath $(STABLE_DMD)) DIFFABLE=$(DIFFABLE) build
 
 $W/$(MAN_PAGE): $(DMD_DIR)/generated/$(MAN_PAGE) | ${STABLE_DMD}
