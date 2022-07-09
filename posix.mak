@@ -166,7 +166,7 @@ DOC_OUTPUT_DIR:=$(PWD)/web
 W:=$(DOC_OUTPUT_DIR)
 GIT_HOME=https://github.com/dlang
 DPL_DOCS_PATH=dpl-docs
-DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs
+DPL_DOCS=$(DPL_DOCS_PATH)/dpl-docs --DRT-gcopt=parallel:0
 REMOTE_DIR=d-programming@digitalmars.com:data
 TMP?=/tmp
 GENERATED=.generated
