@@ -87,7 +87,7 @@ setup_repos()
         git merge -m "Automatic merge" $current_branch
     fi
 
-    for proj in dmd druntime phobos ; do
+    for proj in dmd phobos ; do
         if [ $base_branch != master ] && [ $base_branch != stable ] &&
             ! git ls-remote --exit-code --heads https://github.com/dlang/$proj.git $base_branch > /dev/null; then
             # use master as fallback for other repos to test feature branches
