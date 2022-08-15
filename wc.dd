@@ -2,17 +2,18 @@ Ddoc
 
 $(D_S Example: wc,
 
-    $(P This program is the D version of the classic wc (wordcount) C
+    $(P This program is the D version of the classic `wc` (wordcount) C
     program.
     It serves to demonstrate how to read files, slice arrays,
     and simple symbol table management with associative arrays.
     )
 
+$(RUNNABLE_EXAMPLE
 ----
 import std.stdio;
 import std.algorithm;
 
-int main(string[] args)
+void main(string[] args)
 {
     ulong wordCount;
     ulong lineCount;
@@ -21,20 +22,20 @@ int main(string[] args)
     int[string] dictionary;
     writeln("   lines   words   bytes file");
 
-    foreach(arg; args[1 .. args.length])
+    foreach (arg; args[1 .. $])
     {
         ulong lWordCount;
         ulong lCharCount;
         ulong lLineCount;
 
         auto file = File(arg);
-        foreach(line; file.byLine(KeepTerminator.yes))
+        foreach (line; file.byLine(KeepTerminator.yes))
         {
             lCharCount += line.length;
-            foreach(word; splitter(line))
+            foreach (word; splitter(line))
             {
                 lWordCount += 1;
-                if(auto count = word in dictionary)
+                if (auto count = word in dictionary)
                     *count += 1;
                 else
                     dictionary[word.idup] = 1;
@@ -62,9 +63,9 @@ int main(string[] args)
     {
             writefln("%3s %s", dictionary[word], word);
     }
-    return 0;
 }
 ----
+)
 )
 
 Macros:
