@@ -988,69 +988,6 @@ $(GNAME ComplementExpression):
         prior to the complement operation.
     )
 
-$(H3 $(LNAME2 new_expressions, New Expressions))
-
-$(GRAMMAR
-$(GNAME NewExpression):
-    $(D new) $(GLINK2 type, Type)
-    $(D new) $(GLINK2 type, Type) $(D [) $(GLINK AssignExpression) $(D ])
-    $(D new) $(GLINK2 type, Type) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
-    $(GLINK2 class, NewAnonClassExpression)
-
-$(GNAME ArgumentList):
-    $(GLINK AssignExpression)
-    $(GLINK AssignExpression) $(D ,)
-    $(GLINK AssignExpression) $(D ,) $(GSELF ArgumentList)
-)
-
-    $(P $(I NewExpression)s are used to allocate memory on the garbage
-        collected heap.
-    )
-
-    $(P If a $(I NewExpression) is used as an initializer for
-        a function local variable with $(D scope) storage class,
-        then the instance is allocated on the stack.
-    )
-
-$(H3 $(LNAME2 new_multidimensional, Multidimensional Arrays))
-
-    $(P To allocate multidimensional arrays, the declaration reads
-        in the same order as the prefix array declaration order.)
-
-        -------------
-        char[][] foo;   // dynamic array of strings
-        ...
-        foo = new char[][30]; // allocate array of 30 strings
-        -------------
-
-    $(P The above allocation can also be written as:)
-
-        -------------
-        foo = new char[][](30); // allocate array of 30 strings
-        -------------
-
-    $(P To allocate the nested arrays, multiple arguments can be used:)
-
-        ---------------
-        int[][][] bar;
-        ...
-        bar = new int[][][](5, 20, 30);
-        ---------------
-
-    The code above is equivalent to:
-
-        ----------
-        bar = new int[][][5];
-        foreach (ref a; bar)
-        {
-            a = new int[][20];
-            foreach (ref b; a)
-            {
-                b = new int[30];
-            }
-        }
-        -----------
-
 $(H3 $(LNAME2 delete_expressions, Delete Expressions))
 
 $(GRAMMAR
@@ -2271,6 +2208,69 @@ $(GNAME ImportExpression):
             writeln(import("foo.txt"));
         }
         ---
+
+$(H3 $(LNAME2 new_expressions, New Expressions))
+
+$(GRAMMAR
+$(GNAME NewExpression):
+    $(D new) $(GLINK2 type, Type)
+    $(D new) $(GLINK2 type, Type) $(D [) $(GLINK AssignExpression) $(D ])
+    $(D new) $(GLINK2 type, Type) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
+    $(GLINK2 class, NewAnonClassExpression)
+
+$(GNAME ArgumentList):
+    $(GLINK AssignExpression)
+    $(GLINK AssignExpression) $(D ,)
+    $(GLINK AssignExpression) $(D ,) $(GSELF ArgumentList)
+)
+
+    $(P $(I NewExpression)s are used to allocate memory on the garbage
+        collected heap.
+    )
+
+    $(P If a $(I NewExpression) is used as an initializer for
+        a function local variable with $(D scope) storage class,
+        then the instance is allocated on the stack.
+    )
+
+$(H3 $(LNAME2 new_multidimensional, Multidimensional Arrays))
+
+    $(P To allocate multidimensional arrays, the declaration reads
+        in the same order as the prefix array declaration order.)
+
+        -------------
+        char[][] foo;   // dynamic array of strings
+        ...
+        foo = new char[][30]; // allocate array of 30 strings
+        -------------
+
+    $(P The above allocation can also be written as:)
+
+        -------------
+        foo = new char[][](30); // allocate array of 30 strings
+        -------------
+
+    $(P To allocate the nested arrays, multiple arguments can be used:)
+
+        ---------------
+        int[][][] bar;
+        ...
+        bar = new int[][][](5, 20, 30);
+        ---------------
+
+    The code above is equivalent to:
+
+        ----------
+        bar = new int[][][5];
+        foreach (ref a; bar)
+        {
+            a = new int[][20];
+            foreach (ref b; a)
+            {
+                b = new int[30];
+            }
+        }
+        -----------
 
 $(H3 $(LNAME2 typeid_expressions, Typeid Expressions))
 
