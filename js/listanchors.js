@@ -34,7 +34,7 @@ function addAnchors()
 function addVersionSelector() {
   // Latest version offered by the archive builds
   // This needs to be manually updated after new versions have been archived
-  var currentArchivedVersion = 81;
+  var currentArchivedVersion = 99;
   // build URLs for dlang.org: DDoc + Dox
   var ddocModuleURL = document.body.id.replace(/[.]/g, "_") + ".html";
   var ddoxModuleURL = document.body.id.replace(/[.]/g, "/") + ".html";
@@ -52,7 +52,11 @@ function addVersionSelector() {
   // build list of versions available in the docarchives
   var archivedVersions = [];
   while (currentArchivedVersion >= 66) {
-    archivedVersions.push("2.0" + currentArchivedVersion--);
+    if (currentArchivedVersion < 100) {
+      archivedVersions.push("2.0" + currentArchivedVersion--);
+    } else {
+      archivedVersions.push("2." + currentArchivedVersion--);
+    }
   }
   archivedVersions = archivedVersions.map(function(e) {
       var currentRoot = root;
