@@ -10,6 +10,7 @@ $(SPEC_S Deprecated Features,
 
     $(TABLE2 Deprecated Features,
         $(THEAD Feature,                                                          Spec,  Dep,    Error,  Gone)
+        $(TROW $(DEPLINK Throwing from contracts of nothrow functions),           &nbsp;, 2.101, 2.111, &nbsp;)
         $(TROW $(DEPLINK body keyword),                                           2.075, 2.097, 2.097, 2.117)
         $(TROW $(DEPLINK Hexstring literals),                                     2.079, 2.079, 2.086, &nbsp;)
         $(TROW $(DEPLINK Class allocators and deallocators),                      &nbsp;, 2.080, 2.087, 2.100 )
@@ -61,6 +62,42 @@ $(SPEC_S Deprecated Features,
         $(DD It is an error to use the feature)
         $(DT Gone)
         $(DD The feature is completely gone)
+    )
+
+$(H3 $(DEPNAME Throwing from contracts of nothrow functions))
+    $(P Throwing exceptions from the contracts of a $(D nothrow) function was permitted:
+        ---
+        float sqrt(float n) nothrow
+        in
+        {
+            if (n < 0)
+                throw new Exception("n must be positive");
+        }
+        do
+        {
+            // ...
+        }
+        ---
+    )
+$(H4 Corrective Action)
+    $(P Remove the $(D nothrow) attribute or rewrite the contract using
+        $(LINK2 spec/expression.html#assert_expressions, assertions) instead.
+        ---
+        float sqrt(float n) nothrow
+        in
+        {
+            assert(n >= 0);
+        }
+        do
+        {
+            // ...
+        }
+        ---
+    )
+$(H4 Rationale)
+    $(P Since a function's preconditions and postconditions are implicitly
+        executed before and after the function's body, allowing them to throw
+        would break the guarantees of the $(D nothrow) attribute.
     )
 
 $(H3 $(DEPNAME body keyword))

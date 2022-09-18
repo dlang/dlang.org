@@ -16,13 +16,18 @@ void compileToPath(string compileThis, string outputPath, string extraFiles, boo
     if(outputPath.indexOf("cozum") == -1)
     {
         //We need to build a little .ddoc file to set the right predefined build macros - these are context dependant.
-        
+
         const cozumHtml = outputPath.baseName.replace(".html", ".cozum.html");
         contextMacros["COZUM_HTML"] = cozumHtml;
         //exit(0);
     }
     auto macroOut = File("contextMacros.ddoc", "w");
-    
+    scope(exit)
+    {
+        import std.file : remove; // conflicts with `core.stdc.stdio.remove` otherwise
+        remove("contextMacros.ddoc");
+    }
+
     foreach(key, value; contextMacros)
     {
         macroOut.writefln!"%s = %s"(key, value);
@@ -33,10 +38,10 @@ void compileToPath(string compileThis, string outputPath, string extraFiles, boo
     if(loud)
         writefln!"%s:%s |> %s"(compileThis, outputPath, compileString);
     const res = executeShell(compileString);
-    
+
     if(res.status != 0) {
         write(res.output);
-        
+
         exit(0);
     }
 }
