@@ -30,7 +30,7 @@
     var html = '';
     for (var i = 0; i < files.length; ++i) {
         var f = files[i];
-        var url = 'https://s3.us-west-2.amazonaws.com/downloads.dlang.org/releases/2022/' + f.name + f.suffix;
+        var url = 'https://downloads.dlang.org/releases/2022/' + f.name + f.suffix;
         html += '<a href="' + url + '" class="btn action">Download ' + f.text + '</a>';
     }
     if (files.length > 1) {
