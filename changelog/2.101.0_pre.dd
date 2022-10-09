@@ -2,12 +2,12 @@ Ddoc
 
 $(CHANGELOG_NAV_INJECT)
 
-$(VERSION Oct 01, 2022, =================================================,
+$(VERSION Nov 01, 2022, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 32 major changes and 697 fixed Bugzilla issues.
+$(VER) comes with 37 major changes and 734 fixed Bugzilla issues.
         A huge thanks goes to the
-        $(LINK2 #contributors, 297 contributors)
+        $(LINK2 #contributors, 300 contributors)
         who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
@@ -15,6 +15,7 @@ $(BUGSTITLE_TEXT_HEADER Compiler changes,
 $(LI $(RELATIVE_LINK2 bitfields,Add bit fields to D))
 $(LI $(RELATIVE_LINK2 class_instance_alignment,Added `__traits(classInstanceAlignment)`))
 $(LI $(RELATIVE_LINK2 crt_constructor_signature,Relaxed `pragma(crt_constructor)` / `pragma(crt_destructor)` linkage check))
+$(LI $(RELATIVE_LINK2 d_optimized,Add predefined version `D_Optimized` when compiling with `-O`))
 $(LI $(RELATIVE_LINK2 deprecate_throwing_nothrow_contracts,Throwing from contracts of `nothrow` functions has been deprecated))
 $(LI $(RELATIVE_LINK2 deprecate_version_int,Using integers for `version` or `debug` conditions has been deprecated))
 $(LI $(RELATIVE_LINK2 dip1000_deprecation_warnings,Print deprecations for `scope` pointer errors))
@@ -28,8 +29,17 @@ $(LI $(RELATIVE_LINK2 previewInLink,`-preview=in` can now be used with `extern(C
 
 )
 
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 cpuid-add-avx512f,Added avx512f detection to `core.cpuid`))
+$(LI $(RELATIVE_LINK2 drt-oncycle-deprecate,`--DRT-oncycle=deprecate` is removed))
+$(LI $(RELATIVE_LINK2 posix_gc_signals,Posix (excl. Darwin): Switch default GC signals from SIGUSR1/2 to SIGRTMIN/SIGRTMIN+1))
+
+)
+
 $(BUGSTITLE_TEXT_HEADER Library changes,
 
+$(LI $(RELATIVE_LINK2 borrow_for_refcounted,Added `SafeRefCounted`, that can be used in `@safe` with `-preview=dip1000`.))
 $(LI $(RELATIVE_LINK2 logger,Move logger out of experimental.))
 $(LI $(RELATIVE_LINK2 logger_remove_compile_time_loglevel,remove std.experimental.logger's capability to set the minimal LogLevel at compile time))
 $(LI $(RELATIVE_LINK2 logger_sharedLog_returning_shared_logger,Change std.experimental.logger.core.sharedLog to return shared(Logger)))
@@ -108,6 +118,15 @@ $(CHANGELOG_SOURCE_FILE dmd, changelog/crt_constructor_signature.dd)
 $(P
 `extern(C)` isn't a requirement for CRT con/destructors anymore when
 using the default `void ()` signature.
+)
+)
+
+$(LI $(LNAME2 d_optimized,Add predefined version `D_Optimized` when compiling with `-O`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/d_optimized.dd)
+$(P
+It allows code to distinguish whether it's being compiled with optimizations enabled (the `-O` flag was provided).
+This is orthogonal to whether `-release` mode is active - for that see the
+predefined versions `assert`, `D_NoBoundsChecks`, `D_Invariants`, etc.
 )
 )
 
@@ -381,7 +400,105 @@ as `in` will allow to bind rvalues to `const T&`, as in C++.
 
 )
 
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 cpuid-add-avx512f,Added avx512f detection to `core.cpuid`)
+$(CHANGELOG_SOURCE_FILE dmd, druntime/changelog/cpuid-add-avx512f.dd)
+$(P
+The feature flag `core.cpuid.avx512f` has been added to allow detection at
+run-time CPUs with 512-bit vector support.
+)
+)
+
+$(LI $(LNAME2 drt-oncycle-deprecate,`--DRT-oncycle=deprecate` is removed)
+$(CHANGELOG_SOURCE_FILE dmd, druntime/changelog/drt-oncycle-deprecate.dd)
+$(P
+The option was [introduced in 2.072.2](https://dlang.org/changelog/2.072.2.html#drt-cycle-deprecated) to help transition code that relied on the old faulty cycle checker for module constructors.
+It now prints a warning and does the same as the default, `--DRT-oncycle=abort`.
+See also: $(DDSUBLINK spec/module, order_of_static_ctor, Order of Static Construction) in the specification.
+)
+)
+
+$(LI $(LNAME2 posix_gc_signals,Posix (excl. Darwin): Switch default GC signals from SIGUSR1/2 to SIGRTMIN/SIGRTMIN+1)
+$(CHANGELOG_SOURCE_FILE dmd, druntime/changelog/posix_gc_signals.dd)
+$(P
+As the SIGUSR ones might be used by 'system' libraries (e.g., Android
+Dalvik VM or LLVM libFuzzer), while the SIGRT ones are reserved for
+user-defined purposes and less likely to collide.
+)
+
+$(P
+The used signals can still be customized with an early call to
+`core.thread.osthread.thread_setGCSignals()`.
+)
+)
+
+
+)
+
 $(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 borrow_for_refcounted,Added `SafeRefCounted`, that can be used in `@safe` with `-preview=dip1000`.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/borrow_for_refcounted.dd)
+$(P
+`RefCounted` is only available for `@system` code, because of the possibility of
+escaping a reference to its payload past the end of its lifetime. a modified
+copy of it, `std.typecons.SafeRefCounted` has been added. Also added is a
+`borrow` function, that lets one safely access and modify the payload.
+`-preview=dip1000` prevents escaping a reference to it in `@safe` code.
+)
+
+-------
+@safe pure nothrow void fun()
+{
+    import std.typecons;
+
+    auto rcInt = safeRefCounted(5);
+    assert(rcInt.borrow!(theInt => theInt) == 5);
+    auto sameInt = rcInt;
+    assert(sameInt.borrow!"a" == 5);
+
+    // using `ref` in the function
+    auto arr = [0, 1, 2, 3, 4, 5, 6];
+    sameInt.borrow!(ref (x) => arr[x]) = 10;
+    assert(arr == [0, 1, 2, 3, 4, 10, 6]);
+
+    // modifying the payload via an alias
+    sameInt.borrow!"a*=2";
+    assert(rcInt.borrow!"a" == 10);
+}
+-------
+
+$(P
+Direct access to the payload unfortunately has to be `@system`, though. While
+`-dip1000` could prevent escaping the reference, it is possible to destroy the
+last reference before the end of it's scope:
+)
+
+-------
+int destroyFirstAndUseLater()
+{
+    import std.typecons;
+
+    auto rc = SafeRefCounted!int(123);
+    int* ptr = &rc.refCountedPayload();
+    destroy(rc);
+    return *ptr; // Reads from freed memory. Don't do this.
+}
+-------
+
+$(P
+As a side effect, this enabled us to make $(REF dirEntries, std, file) `@safe`
+with `-preview=dip1000`.
+)
+
+$(P
+Some member functions of `RefCounted` that are `@safe` are not so in
+`SafeRefCounted`. The `RefCounted` type and `refCounted` function are still
+available for the old behaviour. However, their main purpose is backwards
+compatibility. They are not recommended for new code.
+)
+)
 
 $(LI $(LNAME2 logger,Move logger out of experimental.)
 $(CHANGELOG_SOURCE_FILE phobos, changelog/logger.dd)
@@ -730,6 +847,8 @@ $(LI $(BUGZILLA 23076): SIMD assert fail with -inline -O converting float to sho
 $(LI $(BUGZILLA 23247): Deprecation: argument 0.0L for format specification "%La" must be double, not real)
 $(LI $(BUGZILLA 23271): `goto` skips declaration of variable `bugred.A.test.__appendtmp4`)
 $(LI $(BUGZILLA 23291): Members of arrays of shared classes cannot be compared)
+$(LI $(BUGZILLA 23337): Wrongly elided postblit/copy ctor for array construction $(LPAREN)_d_arrayctor lowering$(RPAREN))
+$(LI $(BUGZILLA 23386): Segfault on enum member UDA inside template)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
 
@@ -756,6 +875,7 @@ $(LI $(BUGZILLA 11653): No error when forgetting break with range cases.)
 $(LI $(BUGZILLA 12962): osver.mak should use isainfo on Solaris to determine model)
 $(LI $(BUGZILLA 13123): Disallow throwing contracts for nothrow functions)
 $(LI $(BUGZILLA 13661): static array init does not call destructors)
+$(LI $(BUGZILLA 13732): Regular templates can use "template this", and they allow any type to be passed)
 $(LI $(BUGZILLA 14024): [CTFE] unstable postblit/destructor call order on static array assignment)
 $(LI $(BUGZILLA 14617): PTHREAD_MUTEX_INITIALIZER does not work on OSX)
 $(LI $(BUGZILLA 15290): length of  associative array literal with duplicate keys is wrong)
@@ -770,7 +890,6 @@ $(LI $(BUGZILLA 19178): Static initialization of 2d static arrays in structs pro
 $(LI $(BUGZILLA 19285): false positive GC inferred)
 $(LI $(BUGZILLA 19635):  -checkaction=context not working with attributes)
 $(LI $(BUGZILLA 19783): Fail to emplace struct with betterC)
-$(LI $(BUGZILLA 19812): nested class reference causes dangling reference to out-of-scope struct)
 $(LI $(BUGZILLA 19831): throw/catch in scope$(LPAREN)exit$(RPAREN) crashes with illegal instruction)
 $(LI $(BUGZILLA 20019): Symbol not found: _dyld_enumerate_tlv_storage on macOS 10.15)
 $(LI $(BUGZILLA 20048): [Windows] Program segfaults when running tests)
@@ -801,14 +920,20 @@ $(LI $(BUGZILLA 22610): ImportC: 3 extra initializer$(LPAREN)s$(RPAREN) for stru
 $(LI $(BUGZILLA 22626): Can't use synchronized member functions with -nosharedaccess)
 $(LI $(BUGZILLA 22652): importC: Braceless initializer of nested struct is rejected.)
 $(LI $(BUGZILLA 22664): Disassembler mistakes rdtscp for invlpg  ECX)
+$(LI $(BUGZILLA 22674): ImportC: compatible types declared in different translation units are not treated equivalent in D.)
 $(LI $(BUGZILLA 22680):  @safe hole with destructors)
 $(LI $(BUGZILLA 22706): Bad error on explicit instantiation of function template with auto ref parameter)
 $(LI $(BUGZILLA 22717): object.TypeInfo_Struct.equals swaps lhs and rhs parameters)
 $(LI $(BUGZILLA 22724): ImportC: VC extension __pragma$(LPAREN)pack$(RPAREN) is not implemented)
 $(LI $(BUGZILLA 22756): ImportC: no __builtin_offsetof)
+$(LI $(BUGZILLA 22784): pragma$(LPAREN)printf$(RPAREN) applies to nested functions)
 $(LI $(BUGZILLA 22830): Solaris: error: module 'core.stdc.math' import 'signbit' not found)
 $(LI $(BUGZILLA 22846): [REG 2.066] SIGBUS, Bus error in _d_newarrayiT)
 $(LI $(BUGZILLA 22865): __traits$(LPAREN)compiles$(RPAREN) affects inferrence of attributes)
+$(LI $(BUGZILLA 22875): importC: cannot assign const typedef with pointers to non-const one)
+$(LI $(BUGZILLA 22925): importC: multi-dimensional array is not a static and cannot have static initializer)
+$(LI $(BUGZILLA 22952): Compiler fails to find package.d modules via -mv map)
+$(LI $(BUGZILLA 22973): importC: sizeof with array and pointer access gives array type has incomplete element type)
 $(LI $(BUGZILLA 23006): importC: dmd segfaults on static initializer for multi-dimensional array inside struct)
 $(LI $(BUGZILLA 23007): importC: dmd segfaults for extra braces in array initializer)
 $(LI $(BUGZILLA 23009): [CODEGEN][SIMD] SIMD + optimizations + inlining + double)
@@ -867,9 +992,23 @@ $(LI $(BUGZILLA 23252): Deprecation: format specifier "%[]]" is invalid)
 $(LI $(BUGZILLA 23254): Deprecation: format specifier "%S" and "%C" are invalid)
 $(LI $(BUGZILLA 23256): must supply -mscrtlib manually when compiling for Windows)
 $(LI $(BUGZILLA 23262): typesafe variadic function parameter cannot infer return)
+$(LI $(BUGZILLA 23293): ImportC: _Bool bit fields layout does not match gcc)
 $(LI $(BUGZILLA 23308): Can't resolve overload of varargs function if one parameter is the result of a ternary expression)
 $(LI $(BUGZILLA 23327): [ICE] SEGV in AssocArray!$(LPAREN)Identifier, Dsymbol$(RPAREN).AssocArray.opIndex$(LPAREN)const$(LPAREN)Identifier$(RPAREN)$(RPAREN) at src/dmd/root/aav.d:313)
+$(LI $(BUGZILLA 23331): implicit cast from noreturn crashes compiler in various ways)
 $(LI $(BUGZILLA 23338): braceless subarray initalizers for struct fields fails)
+$(LI $(BUGZILLA 23340): std.path: expandTilde erroneously raises onOutOfMemory on failed getpwam_r$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 23342): ImportC: Array compound literals use the GC)
+$(LI $(BUGZILLA 23343): ImportC: functions declared with asm label to set symbol name gets extra underscore prepended)
+$(LI $(BUGZILLA 23345): ImportC: out of order designated initializers initialize to wrong value)
+$(LI $(BUGZILLA 23346): ImportC: pragma pack is not popped)
+$(LI $(BUGZILLA 23347): ImportC: pragma pack causes asm label to set symbol name to be ignored)
+$(LI $(BUGZILLA 23348): not handling braceless sub structs in initializers)
+$(LI $(BUGZILLA 23351): A bunch of Mayonix's dmd-segfaulting programs)
+$(LI $(BUGZILLA 23355): invalid template parameter loses error location in some cases)
+$(LI $(BUGZILLA 23357): ImportC: compatible types with definitions leads to redeclaration error when used from D.)
+$(LI $(BUGZILLA 23379): Cast of expressions with type noreturn result in ice)
+$(LI $(BUGZILLA 23380): [dip1000] class parameter should not be treated as ref qua lifetime)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
@@ -879,11 +1018,13 @@ $(LI $(BUGZILLA 7372): Error provides too little information to diagnose the pro
 $(LI $(BUGZILLA 9726): Add minimum % coverage required for -cov testing)
 $(LI $(BUGZILLA 12330): array.reserve at compile time too)
 $(LI $(BUGZILLA 13138): add peek/poke as compiler intrinsics)
+$(LI $(BUGZILLA 14690): pragma$(LPAREN)inline, true$(RPAREN) functions must have their bodies emitted in the .di file)
 $(LI $(BUGZILLA 14755): Could -profile=gc also give the number of allocations that led to X bytes being allocated?)
 $(LI $(BUGZILLA 16394): TypeInfo.init$(LPAREN)$(RPAREN) for static arrays returns single element instead of whole array)
 $(LI $(BUGZILLA 16558): [Mir] Generic unaligned load/store like $(LPAREN)like LDC loadUnaligned and storeUnaligned$(RPAREN))
 $(LI $(BUGZILLA 16701): Remove Restriction of "package.d" Source File Module Forced to All Lowercase)
 $(LI $(BUGZILLA 17575): named mixin template error message)
+$(LI $(BUGZILLA 21243): Allow lambdas to return auto ref)
 $(LI $(BUGZILLA 21673): [SIMD][Win64] Wrong codegen for _mm_move_ss)
 $(LI $(BUGZILLA 22880): importC: support __restrict__ __signed__ __asm__)
 $(LI $(BUGZILLA 22911): dtoh: make include directives sorted for generated headers)
@@ -897,6 +1038,9 @@ $(LI $(BUGZILLA 23216): Better Error Message For foreach_reverse Without Bidirec
 $(LI $(BUGZILLA 23284): Enhance floating point not representable error message)
 $(LI $(BUGZILLA 23295): [dip1000] explain why scope inference failed)
 $(LI $(BUGZILLA 23306):  @disable new$(LPAREN)$(RPAREN) ought not disable `scope A = new A`)
+$(LI $(BUGZILLA 23369): Confusing error message for duplicate import)
+$(LI $(BUGZILLA 23376): Allow multi-code-point HTML entities)
+$(LI $(BUGZILLA 23384): Suggest calling matching base class method when hidden)
 )
 $(BUGSTITLE_BUGZILLA Phobos regression fixes,
 
@@ -913,6 +1057,8 @@ $(LI $(BUGZILLA 3798): core.cpuid locks systems with Xeon E5530 CPU)
 $(LI $(BUGZILLA 9025): core.thread.Fiber seems to crash on Win64)
 $(LI $(BUGZILLA 10469): WinAPI declarations in std.process should be moved to core.sys.windows.windows)
 $(LI $(BUGZILLA 11192): std.demangle doesn't demangle alias template arguments)
+$(LI $(BUGZILLA 14543): std.algorithm.searching.until does not handle range sentinels nicely)
+$(LI $(BUGZILLA 16034): map should be possible with a reference only)
 $(LI $(BUGZILLA 16232): std.experimental.logger.core.sharedLog isn't thread-safe)
 $(LI $(BUGZILLA 17966): chunkBy cannot accept an input range $(LPAREN)from multiwayMerge$(RPAREN))
 $(LI $(BUGZILLA 18631): std.random.choice does not work with const arrays)
@@ -925,6 +1071,8 @@ $(LI $(BUGZILLA 23250): Unicode regional indicators are not paired correctly)
 $(LI $(BUGZILLA 23270): std.random.dice is poorly documented)
 $(LI $(BUGZILLA 23288): zlib: Fix potential buffer overflow)
 $(LI $(BUGZILLA 23324): Incorrect source link in std.format docs)
+$(LI $(BUGZILLA 23350): Nondeterministic test failure in std.concurrency)
+$(LI $(BUGZILLA 23362): Permutations should be a forward range)
 )
 $(BUGSTITLE_BUGZILLA Phobos enhancements,
 
@@ -932,9 +1080,11 @@ $(LI $(BUGZILLA 13893): "rawRead must take a non-empty buffer")
 $(LI $(BUGZILLA 15128): "IP_ADD_MEMBERSHIP" error in winsock2.d)
 $(LI $(BUGZILLA 18735): all versions of find and canfind should identify usage of predicate)
 $(LI $(BUGZILLA 20869): `std.algorithm.mutation : move` is overly trusting of `opPostMove`)
+$(LI $(BUGZILLA 21000):  -preview=nosharedaccess precludes use of stdin,stdout,stderr)
 $(LI $(BUGZILLA 23101): [std.sumtype] canMatch does not account ref)
 $(LI $(BUGZILLA 23298): std.string wrap wraps early)
 $(LI $(BUGZILLA 23333): DList range can be @nogc)
+$(LI $(BUGZILLA 23370): std.base64 can have more @nogc functions)
 )
 $(BUGSTITLE_BUGZILLA Druntime regression fixes,
 
@@ -1398,6 +1548,7 @@ $(BUGSTITLE_BUGZILLA dlang.org bug fixes,
 
 $(LI $(BUGZILLA 3093): Object.factory has incomplete documentation)
 $(LI $(BUGZILLA 13844): core.stdc.config isn't listed in the docs)
+$(LI $(BUGZILLA 14542): Table of contents in specification PDF is broken)
 $(LI $(BUGZILLA 15379): "final" attribute on function parameter)
 $(LI $(BUGZILLA 15476): DDOC_UNDEFINED_MACRO is undocumented)
 $(LI $(BUGZILLA 17324): Floating point 1/$(LPAREN)1/x$(RPAREN) > 0 if x > 0 not generally true)
@@ -1422,19 +1573,22 @@ $(LI $(BUGZILLA 23276): DOC: "&gt;" instead of ">" in dmd-windows.html)
 $(LI $(BUGZILLA 23296): Value Range Propagation not documented)
 $(LI $(BUGZILLA 23314): Language spec falsely states that struct field invariants are checked)
 $(LI $(BUGZILLA 23325): Assigning dynamic array to static array not documented)
+$(LI $(BUGZILLA 23358): Link unusable due to space insertion)
 )
 $(BUGSTITLE_BUGZILLA dlang.org enhancements,
 
 $(LI $(BUGZILLA 15286): is$(LPAREN)typeof$(LPAREN)symbol$(RPAREN)$(RPAREN))
 $(LI $(BUGZILLA 19036): .tupleof order guarantee)
+$(LI $(BUGZILLA 22141): Property .capacity is not listed in the array properties section)
 $(LI $(BUGZILLA 23186): wchar/dchar do not have their endianess defined)
+$(LI $(BUGZILLA 23359): Rename InOut to ParameterStorageClass)
 )
 $(BUGSTITLE_BUGZILLA Tools bug fixes,
 
 $(LI $(BUGZILLA 18208): demangle RangeError@src/core/demangle.d$(LPAREN)230$(RPAREN))
 )
 )
-$(D_CONTRIBUTORS_HEADER 297)
+$(D_CONTRIBUTORS_HEADER 300)
 $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR 0l-l0)
     $(D_CONTRIBUTOR 12345swordy)
@@ -1560,6 +1714,7 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Jacob Carlborg)
     $(D_CONTRIBUTOR Jakob Bornecrantz)
     $(D_CONTRIBUTOR Jakob Øvrum)
+    $(D_CONTRIBUTOR james)
     $(D_CONTRIBUTOR Jan Jurzitza)
     $(D_CONTRIBUTOR Jasmine Hegman)
     $(D_CONTRIBUTOR Jason Evans)
@@ -1654,6 +1809,7 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Philpax)
     $(D_CONTRIBUTOR Puneet Goel)
     $(D_CONTRIBUTOR qchikara)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
     $(D_CONTRIBUTOR Radu Racariu)
     $(D_CONTRIBUTOR Rainer Schuetze)
     $(D_CONTRIBUTOR Rasmus Thomsen)
@@ -1731,6 +1887,7 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Yuxuan Shui)
     $(D_CONTRIBUTOR Ömer Faruk IRMAK)
     $(D_CONTRIBUTOR Ömer Faruk Irmak)
+    $(D_CONTRIBUTOR Ömer Faruk IRMAK)
     $(D_CONTRIBUTOR Михаил Страшун)
     $(D_CONTRIBUTOR سليمان السهمي (Suleyman Sahmi))
 )
