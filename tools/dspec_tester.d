@@ -121,6 +121,7 @@ int main(string[] args)
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_COMPILE", CompileConfig.TestMode.compile),
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_RUN", CompileConfig.TestMode.run),
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_FAIL", CompileConfig.TestMode.fail),
+        SpecType("$(RUNNABLE_EXAMPLE", CompileConfig.TestMode.run),
     ];
     foreach (file; specDir.dirEntries("*.dd", SpanMode.depth).parallel(1))
     {
