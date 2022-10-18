@@ -127,9 +127,9 @@ int main(string[] args)
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_FAIL", CompileConfig.TestMode.fail),
         SpecType("$(RUNNABLE_EXAMPLE", CompileConfig.TestMode.run),
     ];
-    auto fnames = chain(specDir.dirEntries("*.dd", SpanMode.depth),
+    auto files = chain(specDir.dirEntries("*.dd", SpanMode.depth),
         stdDir.dirEntries("*.d", SpanMode.depth));
-    foreach (file; fnames.parallel(1))
+    foreach (file; files.parallel(1))
     {
         // auto-import current module if in phobos
         string modImport = file.name.find(stdDir);
