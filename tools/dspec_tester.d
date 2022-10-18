@@ -202,7 +202,7 @@ auto compileAndCheck(R)(R buffer, CompileConfig config, string modImport)
     if (!buffer.find!(a => !a.isWhite).startsWith("module"))
     {
         buffer = "import std.stdio;\n" ~ buffer; // used too often
-        if (modImport)
+        if (modImport.length)
             buffer = "import " ~ modImport ~ ";" ~ buffer;
         if (!hasMain)
             buffer = "void main() {\n" ~ buffer ~ "\n}";
