@@ -127,7 +127,7 @@ int main(string[] args)
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_FAIL", CompileConfig.TestMode.fail),
         SpecType("$(RUNNABLE_EXAMPLE", CompileConfig.TestMode.run),
     ];
-    auto fnames = chain(specDir.dirEntries("_*.dd", SpanMode.depth),
+    auto fnames = chain(specDir.dirEntries("*.dd", SpanMode.depth),
         stdDir.dirEntries("*.d", SpanMode.depth));
     foreach (file; fnames.parallel(1))
     {
