@@ -22,6 +22,7 @@ function wrapIntoMain(code) {
     // dynamically wrap into main if needed
     if (code.indexOf("void main") >= 0) {
         codeOut = "import " + currentPackage + "; ";
+        codeOut += "#line 1\n";
         codeOut += code;
     }
     else {
@@ -29,6 +30,7 @@ function wrapIntoMain(code) {
         codeOut += "    import " + currentPackage + ";\n";
         // writing to the stdout is probably often used
         codeOut += (currentPackage == "std.file") ? "    import std.stdio: writeln, writef, writefln;\n    " : "    import std.stdio: write, writeln, writef, writefln;\n    ";
+        codeOut += "#line 1\n";
         codeOut += code.split("\n").join("\n    ");
         codeOut += "\n}";
     }
