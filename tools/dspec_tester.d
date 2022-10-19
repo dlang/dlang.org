@@ -16,7 +16,6 @@ Author: Sebastian Wilzbach
 */
 
 import std.algorithm;
-import std.path;
 import std.stdio;
 import std.range;
 import std.regex;
@@ -90,8 +89,8 @@ int main(string[] args)
 {
     import std.file, std.getopt;
     import std.parallelism : parallel;
+    import std.path;
     import std.process : environment;
-    import std.range : chain;
     import std.typecons : Tuple;
 
     const rootDir = __FILE_FULL_PATH__.dirName.dirName;
@@ -136,7 +135,7 @@ int main(string[] args)
         if (modImport.length)
         {
             modImport = "std" ~ modImport[stdDir.length..$];
-            modImport.popBackN(2); // ".d"
+            modImport = modImport.stripExtension();
             modImport = modImport.findSplitBefore(dirSeparator ~ "package")[0];
             modImport = modImport.replace(dirSeparator, ".");
         }
