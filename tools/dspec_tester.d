@@ -113,12 +113,6 @@ int main(string[] args)
         return 1;
     }
 
-    // Find all examples in the specification
-    alias findExamples = (file, ddocKey) => file
-            .readText
-            .findDdocMacro(ddocKey)
-            .map!ddocMacroToCode;
-
     alias SpecType = Tuple!(string, "key", CompileConfig.TestMode, "mode");
     auto specTypes = [
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_COMPILE", CompileConfig.TestMode.compile),
@@ -139,7 +133,12 @@ int main(string[] args)
             modImport = modImport.findSplitBefore(dirSeparator ~ "package")[0];
             modImport = modImport.replace(dirSeparator, ".");
         }
-        auto allTests = specTypes.map!(c => findExamples(file, c.key)
+        const text = file.readText;
+        // Find all examples in the specification
+        alias findExamples = (ddocKey) => text
+            .findDdocMacro(ddocKey)
+            .map!ddocMacroToCode;
+        auto allTests = specTypes.map!(c => findExamples(c.key)
             .map!(e => compileAndCheck(e, CompileConfig(c.mode), modImport)))
             .joiner;
         if (!allTests.empty)
