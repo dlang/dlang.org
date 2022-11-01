@@ -5,9 +5,9 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Nov 14, 2022, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 38 major changes and 62 fixed Bugzilla issues.
+$(VER) comes with 40 major changes and 63 fixed Bugzilla issues.
         A huge thanks goes to the
-        $(LINK2 #contributors, 62 contributors)
+        $(LINK2 #contributors, 63 contributors)
         who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
@@ -27,6 +27,8 @@ $(LI $(RELATIVE_LINK2 dmd.markdown,Removed the `-transition=markdown` and `-reve
 $(LI $(RELATIVE_LINK2 dmd.new-aa,`new` can now allocate an associative array))
 $(LI $(RELATIVE_LINK2 dmd.previewInLink,`-preview=in` can now be used with `extern(C++)`, disabled for other non-D linkage))
 $(LI $(RELATIVE_LINK2 dmd.shortenedMethodsEnabled,The shortened method syntax is now available by default.))
+$(LI $(RELATIVE_LINK2 dmd.unicode-directionality,Source files may no longer contain Unicode directionality overrides))
+$(LI $(RELATIVE_LINK2 dmd.windows_stack_limit,Windows: Double DMD stack limit to 16 MB))
 
 )
 
@@ -56,7 +58,7 @@ $(BUGSTITLE_TEXT_HEADER Dub changes,
 
 $(LI $(RELATIVE_LINK2 build_unittest,Building the special test runner configuration))
 $(LI $(RELATIVE_LINK2 colored_output,Output will now be colorized))
-$(LI $(RELATIVE_LINK2 configy_stricter_parsing,dub will now warn on unrecognized settings or selections file))
+$(LI $(RELATIVE_LINK2 configy_stricter_parsing,dub will now warn on unrecognized fields in `dub.json`, settings, or selections file))
 $(LI $(RELATIVE_LINK2 cov_ctfe,The two new build types `cov-ctfe` and `unittest-cov-ctfe` have been added.))
 $(LI $(RELATIVE_LINK2 dpath,DUB settings & packages directory placement overhauled))
 $(LI $(RELATIVE_LINK2 exitcodes,DUB command exit codes have been made more consistent))
@@ -420,6 +422,32 @@ The preview flag will still work until it is deprecated in a future release.
 )
 )
 
+$(LI $(LNAME2 dmd.unicode-directionality,Source files may no longer contain Unicode directionality overrides)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.unicode-directionality.dd)
+$(P
+[Trojan Source: Invisible Vulnerabilities](https://github.com/nickboucher/trojan-source) shows how they can be used to maliciously hide code in various programming languages.
+[D is also affected](https://github.com/nickboucher/trojan-source/pull/16).
+)
+
+$(P
+To prevent this, the compiler now raises an error when they appear in source files.
+If you need a string literal containing directionality overrides, use escape sequences instead:
+)
+---
+string s = "\u202E\u2066";
+---
+)
+
+$(LI $(LNAME2 dmd.windows_stack_limit,Windows: Double DMD stack limit to 16 MB)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.windows_stack_limit.dd)
+$(P
+The compilation of some projects require more stack space than previously available.
+Now DMD has the same limit as LDC, which
+$(LINK2 https://github.com/ldc-developers/ldc/pull/3921, increased its stack limit)
+in its 1.29.0 release.
+)
+)
+
 
 )
 
@@ -685,11 +713,11 @@ pipelines to ensure human-readable output.
 )
 )
 
-$(LI $(LNAME2 configy_stricter_parsing,dub will now warn on unrecognized settings or selections file)
+$(LI $(LNAME2 configy_stricter_parsing,dub will now warn on unrecognized fields in `dub.json`, settings, or selections file)
 $(CHANGELOG_SOURCE_FILE dub, changelog/configy_stricter_parsing.dd)
 $(P
 Previously, dub was silently accepting anything it didn't recognize
-in `[dub.]settings.json` and `dub.selections.json`. While the original
+in `dub.json`, `[dub.]settings.json` and `dub.selections.json`. While the original
 intent was to make forward-compatibility easy, it proved detrimental
 as typos would just mean the user setting was ignored.
 )
@@ -854,6 +882,7 @@ $(BUGSTITLE_BUGZILLA Phobos regression fixes,
 $(LI $(BUGZILLA 23245): [REG 2.099] std.format ignores non-const toString method of static array element)
 $(LI $(BUGZILLA 23246): [REG 2.099] std.format ignores non-const toString method of associative array value)
 $(LI $(BUGZILLA 23268): clamp no longer accepts shorts)
+$(LI $(BUGZILLA 23400): [REG 2.099] Can't format enum value whose base type has non-const opEquals)
 )
 $(BUGSTITLE_BUGZILLA Phobos bug fixes,
 
@@ -927,7 +956,7 @@ $(LI $(BUGZILLA 23186): wchar/dchar do not have their endianess defined)
 $(LI $(BUGZILLA 23359): Rename InOut to ParameterStorageClass)
 )
 )
-$(D_CONTRIBUTORS_HEADER 62)
+$(D_CONTRIBUTORS_HEADER 63)
 $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Adam D. Ruppe)
     $(D_CONTRIBUTOR aG0aep6G)
@@ -936,6 +965,7 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Ast-x64)
     $(D_CONTRIBUTOR Ate Eskola)
     $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
     $(D_CONTRIBUTOR Brian Callahan)
     $(D_CONTRIBUTOR Carsten Schlote)
     $(D_CONTRIBUTOR chloekek)
