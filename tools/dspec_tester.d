@@ -87,12 +87,15 @@ auto ddocMacroToCode(R)(R text)
 
 int main(string[] args)
 {
-    import std.file, std.getopt, std.path;
+    import std.file, std.getopt;
     import std.parallelism : parallel;
+    import std.path;
     import std.process : environment;
     import std.typecons : Tuple;
 
-    auto specDir = __FILE_FULL_PATH__.dirName.dirName.buildPath("spec");
+    const rootDir = __FILE_FULL_PATH__.dirName.dirName;
+    const specDir = rootDir.buildPath("spec");
+    const stdDir = rootDir.buildPath("..", "phobos", "std");
     bool hasFailed;
 
     config.dmdBinPath = environment.get("DMD", "dmd");
@@ -121,15 +124,27 @@ int main(string[] args)
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_COMPILE", CompileConfig.TestMode.compile),
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_RUN", CompileConfig.TestMode.run),
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_FAIL", CompileConfig.TestMode.fail),
+        SpecType("$(RUNNABLE_EXAMPLE", CompileConfig.TestMode.run),
     ];
-    foreach (file; specDir.dirEntries("*.dd", SpanMode.depth).parallel(1))
+    auto files = chain(specDir.dirEntries("*.dd", SpanMode.depth),
+        stdDir.dirEntries("*.d", SpanMode.depth));
+    foreach (file; files.parallel(1))
     {
+        // auto-import current module if in phobos
+        string modImport = file.name.find(stdDir);
+        if (modImport.length)
+        {
+            modImport = "std" ~ modImport[stdDir.length..$];
+            modImport = modImport.stripExtension();
+            modImport = modImport.findSplitBefore(dirSeparator ~ "package")[0];
+            modImport = modImport.replace(dirSeparator, ".");
+        }
         auto allTests = specTypes.map!(c => findExamples(file, c.key)
-                                            .map!(e => compileAndCheck(e, CompileConfig(c.mode))))
-                                 .joiner;
+            .map!(e => compileAndCheck(e, CompileConfig(c.mode), modImport)))
+            .joiner;
         if (!allTests.empty)
         {
-            writefln("%s: %d examples found", file.baseName, allTests.walkLength);
+            writefln("%s: %d examples found", file[rootDir.length+1..$], allTests.walkLength);
             if (allTests.any!(a => a != 0))
                 hasFailed = true;
         }
@@ -154,7 +169,7 @@ Params:
 
 Returns: the exit code of the compiler invocation.
 */
-auto compileAndCheck(R)(R buffer, CompileConfig config)
+auto compileAndCheck(R)(R buffer, CompileConfig config, string modImport)
 {
     import std.process;
     import std.uni : isWhite;
@@ -186,7 +201,8 @@ auto compileAndCheck(R)(R buffer, CompileConfig config)
     if (!buffer.find!(a => !a.isWhite).startsWith("module"))
     {
         buffer = "import std.stdio;\n" ~ buffer; // used too often
-
+        if (modImport.length)
+            buffer = "import " ~ modImport ~ ";" ~ buffer;
         if (!hasMain)
             buffer = "void main() {\n" ~ buffer ~ "\n}";
     }
