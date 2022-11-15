@@ -176,7 +176,7 @@ G=$(GENERATED)
 # Last released versions
 DMD_LATEST_DIR=$G/dmd-${LATEST}
 DMD_LATEST=$(DMD_LATEST_DIR)/generated/$(OS)/release/$(MODEL)/dmd
-DRUNTIME_LATEST_DIR=$G/druntime-${LATEST}
+DRUNTIME_LATEST_DIR=$G/dmd-${LATEST}/druntime
 PHOBOS_LATEST_DIR=$G/phobos-${LATEST}
 
 # stable dub and dmd versions used to build dpl-docs
@@ -431,10 +431,9 @@ ${GENERATED}/modlist-prerelease.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_
 		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
-rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
+rebase: rebase-dlang rebase-dmd rebase-phobos
 rebase-dlang: ; $(call REBASE,dlang.org)
 rebase-dmd: ; cd $(DMD_DIR) && $(call REBASE,dmd)
-rebase-druntime: ; cd $(DRUNTIME_DIR) && $(call REBASE,druntime)
 rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
@@ -575,12 +574,16 @@ $G/dblog_latest.ddoc: $G/dblog_latest.xml $(STABLE_DMD) tools/ddoc_xml_extractor
 # Git rules
 ################################################################################
 
+# Druntime is in the DMD repository.
+${DRUNTIME_DIR}: ${DMD_DIR}
+${DRUNTIME_LATEST_DIR}: ${DMD_LATEST_DIR}
+
 # Clone snapshots of the latest official release of all main D repositories
 $G/%-${LATEST} :
 	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
 
 # Clone all main D repositories
-${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR} ${DUB_DIR}:
+${DMD_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR} ${DUB_DIR}:
 	git clone ${GIT_HOME}/$(notdir $(@F)) $@
 
 ${DMD_DIR}/VERSION : ${DMD_DIR}
