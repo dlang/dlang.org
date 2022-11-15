@@ -155,7 +155,7 @@ DUB_DIR=../dub
 
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
-include $(DMD_DIR)/src/osmodel.mak
+include $(DMD_DIR)/compiler/src/osmodel.mak
 
 # External binaries
 DMD=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)/dmd
@@ -593,10 +593,10 @@ ${DMD_DIR}/VERSION : ${DMD_DIR}
 ################################################################################
 
 $(DMD) : ${DMD_DIR}
-	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
+	${MAKE} --directory=${DMD_DIR}/compiler/src -f posix.mak AUTO_BOOTSTRAP=1
 
 $(DMD_LATEST) : ${DMD_LATEST_DIR}
-	${MAKE} --directory=${DMD_LATEST_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
+	${MAKE} --directory=${DMD_LATEST_DIR}/compiler/src -f posix.mak AUTO_BOOTSTRAP=1
 	sed -i -e "s|../druntime/import |../../dmd-${LATEST}/druntime/import |" -e "s|../phobos |../phobos-${LATEST} |" $@.conf
 
 dmd-prerelease : $(STD_DDOC_PRERELEASE) druntime-target $G/changelog/next-version
@@ -719,13 +719,13 @@ $W/library-prerelease/.htaccess : dpl_prerelease_htaccess
 
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 			${DRUNTIME_LATEST_DIR} | dpl-docs
-	find ${DMD_LATEST_DIR}/src -name '*.d' -o -name '*.di' | sort -r | \
+	find ${DMD_LATEST_DIR}/compiler/src -name '*.d' -o -name '*.di' | sort -r | \
 		gawk '!n[gensub(/\.di?$$/, "", 1)]++' > $G/.latest-files.txt
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
 	find ${PHOBOS_LATEST_DIR}/etc ${PHOBOS_LATEST_DIR}/std -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
-	${DMD_LATEST} -J$(DMD_LATEST_DIR)/src/dmd/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
+	${DMD_LATEST} -J$(DMD_LATEST_DIR)/compiler/src/dmd/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
 		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
 		-Xf$@ -I${PHOBOS_LATEST_DIR} @$G/.latest-files.txt
 	${DPL_DOCS} ${DPL_DOCS_FLAGS} filter $@ --min-protection=Protected \
@@ -733,7 +733,7 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} | dpl-docs
-	find ${DMD_DIR}/src -name '*.d' -o -name '*.di' | sort -r | \
+	find ${DMD_DIR}/compiler/src -name '*.d' -o -name '*.di' | sort -r | \
 		gawk '!n[gensub(/\.di?$$/, "", 1)]++' > $G/.prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | \
 		sed -e /unittest/d >> $G/.prerelease-files.txt
