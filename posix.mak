@@ -414,7 +414,7 @@ ${GENERATED}/${LATEST}.ddoc :
 
 ${GENERATED}/modlist-${LATEST}.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) $< $(DRUNTIME_LATEST_DIR)/src $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)/src $(MOD_EXCLUDES_LATEST) \
+	$(STABLE_RDMD) $< $(DRUNTIME_LATEST_DIR)/src $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)/compiler/src $(MOD_EXCLUDES_LATEST) \
 		$(addprefix --internal=, dmd rt core.internal) \
 		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
 
