@@ -597,7 +597,7 @@ $(DMD) : ${DMD_DIR}
 
 $(DMD_LATEST) : ${DMD_LATEST_DIR}
 	${MAKE} --directory=${DMD_LATEST_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
-	sed -i -e "s|../druntime/import |../druntime-${LATEST}/import |" -e "s|../phobos |../phobos-${LATEST} |" $@.conf
+	sed -i -e "s|../druntime/import |../../dmd-${LATEST}/druntime/import |" -e "s|../phobos |../phobos-${LATEST} |" $@.conf
 
 dmd-prerelease : $(STD_DDOC_PRERELEASE) druntime-target $G/changelog/next-version
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
