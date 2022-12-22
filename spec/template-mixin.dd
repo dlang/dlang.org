@@ -203,6 +203,26 @@ void main()
     duff_loop();  // executes foo() 10 times
 }
 ------
+
+        $(P A template declaration that is preceded by the $(D mixin) keyword
+        may only be instantiated only by being mixin-ed. A template declaration
+        that is not preceded by the $(D mixin) keyword may be both instantiated
+        normally and mixin-ed:)
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+------
+mixin template Foo() { int foo; }
+template Bar() { int bar; }
+
+mixin Foo;  // can only be used by being mixin-ed
+mixin Bar;  // also can be mixed in
+
+void main()
+{
+    auto b = Bar!().bar;  // can instantiate normally
+ // auto c = Foo!().foo; -> error: mixin templates are not regula templates
+}
+------
 )
 
 $(H2 $(LNAME2 mixin_scope, Mixin Scope))
