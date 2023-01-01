@@ -190,6 +190,7 @@ function wrapIntoMain(code) {
         var codeOut = "void main()\n{\n";
         // writing to the stdout is probably often used
         codeOut += "    import std.stdio: write, writeln, writef, writefln;\n    ";
+        codeOut += "#line 1\n";
         codeOut += code.split("\n").join("\n    ");
         codeOut += "\n}";
         return codeOut;
