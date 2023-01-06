@@ -343,7 +343,7 @@ ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
-PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
+PAGES_ROOT=$(SPEC_ROOT) maintenance 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 	ascii-table bugstats $(CHANGELOG_FILES) community comparison concepts \
 	deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys glossary \
@@ -470,6 +470,9 @@ $W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= $(DDOCFLAGS) -Df$@ $(DDOC) errorpage.ddoc $<
+
+$W/maintenance.html : maintenance.dd $(DDOC) $(DMD)
+	$(DMD) -conf= $(DDOCFLAGS) -Df$@ $(DDOC) $<
 
 $(DOC_OUTPUT_DIR)/foundation/contributors.html: foundation/contributors.dd \
 		$G/contributors_list.ddoc foundation/foundation.ddoc $(DDOC) $(DMD)
