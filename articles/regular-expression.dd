@@ -35,39 +35,47 @@ $(D_S $(TITLE),
     )
 
     $(H2 $(LNAME2 warm-up, A warm up))
+
     $(P How do you check if something is a phone number by looking at it? )
     $(P Yes, it's something with numbers, and there may be a country code in front of that...
     Sticking to an international format should make it more strict. As this is the first time, let's
-    put together a full program:
+    put together a full program:)
+    $(RUNNABLE_EXAMPLE
+    $(RUNNABLE_EXAMPLE_STDIN +1 555 123 4567)
     ---
     import std.stdio, std.regex;
-    void main(string argv[])
+
+    void main()
     {
-        string phone = argv[1];  // assuming phone is passed as the first argument on the command line
-        if(matchFirst(phone, r"^\+[1-9][0-9]* [0-9 ]*$"))
+        string phone = readln();  // assume phone is passed as the first line of stdin
+        if (matchFirst(phone, r"^\+[1-9][0-9]* [0-9 ]*$"))
             writeln("It looks like a phone number.");
         else
             writeln("Nope, it's not a phone number.");
     }
     ---
+    )
+    $(P
     And that's it! Let us however keep in mind the boundaries of regular expressions power - to truly establish a
     validness of a phone number, one has to try dialing it or contact the authority.
     )
-    $(P Let's drill down into this tiny example because it actually showcases a lot of interesting things:
+    $(P Let's drill down into this tiny example because it actually showcases a lot of interesting things:)
         $(UL
-        $(LI A raw string literal of form r"...", that allows writing a regex pattern in its natural notation. )
+        $(LI A raw string literal of form `r"..."`, that allows writing a regex pattern in its natural notation. )
         $(LI $(D matchFirst) function to find the first match in a string if any. To check if there was a match just
         test the return value explicitly in a boolean context, such as an $(D if) statement. )
-        $(LI When matching special regex characters like  +, *, (, ), [, ] and $ don't forget to use escaping with backslash(`\`). )
+        $(LI When matching special regex characters like  +, *, (, ), [, ] and $ don't forget to use escaping with backslash, e.g. `\+`. )
         $(LI Unless there is a lot of text processing going on, it's perfectly fine to pass a plain string as a pattern.
         The internal representation used to do the actual work is cached, to speed up subsequent calls. )
         )
-    )
     $(P Continuing with the phone number example, it would be useful to get the exact value of
     the country code, as well as the whole number. For the sake of experiment let's also explicitly obtain
     compiled regex pattern via $(D regex) to see how it works.
     )
+    $(RUNNABLE_EXAMPLE
     ---
+    import std.regex;
+
     string phone = "+31 650 903 7158";  // fictional, any coincidence is just that
     auto phoneReg = regex(r"^\+([1-9][0-9]*) [0-9 ]*$");
     auto m = matchFirst(phone, phoneReg);
@@ -79,8 +87,9 @@ $(D_S $(TITLE),
     // but here it is for the curious
     static assert(is(typeof(phoneReg) : Regex!char));
     ---
+    )
+    $(H2 $(LNAME2 search-replace, Search and replace))
 
-    $(H2 $(LNAME2 search-replace, To search and replace))
     $(P While getting first match is a common theme in string validation, another frequent need is
     to extract all matches found in a piece of text.  Picking an easy task, let's see how to
     filter out all white space-only lines. There is no special routine for looping over input
@@ -95,12 +104,15 @@ $(D_S $(TITLE),
     }
     ---
     $(P It may look and feel like a built-in but it just follows the common conventions to do that.
-    In this case matchAll returns and object that follows the right "protocol" of an input range
+    In this case `matchAll` returns an object that follows the right "protocol" of an input range
     simply by having the right set of methods. An input range is a lot like an iterator found
-    in other languages. Likewise the result of matchFirst and each element of matchAll
+    in other languages. Likewise the result of `matchFirst` and each element of `matchAll`
     is a random access range, a thing that behaves like a "view" of an array.
     )
+    $(RUNNABLE_EXAMPLE
     ---
+    import std.regex;
+
     auto m = matchAll("Ranges are hot!", r"(\w)\w+(\w)");  // at least 3 "word" symbols
     assert(m.front[0] == "Ranges"); // front - first of input range
     // m.captures is a historical alias for the first element of match range (.front).
@@ -110,17 +122,19 @@ $(D_S $(TITLE),
     foreach (item; sub)
         writeln(item);  // will show lines: Ranges, R, s
     ---
+    )
     $(P By playing by the rules $(STD regex) gets some nice benefits in interaction with other modules e.g.
     this is how one could count non-empty lines in a text buffer:
     )
     ---
     import std.algorithm, std.file, std.regex;
+
     auto buffer = std.file.readText(r"std\typecons.d");
     int count = count(matchAll(buffer, regex(r"^.*\P{WhiteSpace}+.*$", "m")));
     ---
     $(P
     A seasoned regex user catches instantly that Unicode properties are supported with perl-style \p{xxx},
-    to spice that all of Scripts and Blocks are supported as well. Let us dully note that \P{xxx} means not
+    to spice that all of Scripts and Blocks are supported as well. Let us duly note that \P{xxx} means not
     having an xxx property, i.e. here not a white space character. Unicode is a vital subject to know, and it won't suffice
     to try to cover it here. For details see the accessible $(STD uni) documentation and level 1 of conformance
     as per Unicode standard  $(LINK2 http://Unicode.org/reports/tr18/, UTS 18).
@@ -135,60 +149,72 @@ $(D_S $(TITLE),
     Needless to say, one need not turn on multi-line mode if not using any of ^, $.
     )
 
-    $(P Now that search was covered, the topic suggest that it's about time to do some replacements.
+$(H3 $(LNAME2 replacing, Replacing))
+
+    $(P Now that search was covered, as the heading suggests it's about time to do some replacements.
     For instance to replace all dates in a text from "MM/dd/YYYY" format to a sortable version of "YYYY-MM-dd":
     )
+    $(RUNNABLE_EXAMPLE
     ---
-    auto text = readText(...);
+    import std.regex;
+
+    auto text = "2/31/1998";
     auto replaced = replaceAll(text, r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})".regex, "$3-$1-$2");
+    assert(replaced == "1998-2-31");
     ---
+    )
     $(P $(D r"pattern".regex) is just another notation of writing $(D regex("pattern")) called
     $(DDSUBLINK spec/function, pseudo-member, UFCS) that some may find more
     slick.
-    As can be seen the replacement is controlled by a format string not unlike one in C's famous printf.
-    The &#36;1, &#36;2, &#36;3 substituted with content of sub-expressions.
-    Aside from referencing sub-matches, one can include the whole part of input preceding the match via &#36;$(BACKTICK) and &#36;' for the content following right after the match.
+    As can be seen the replacement is controlled by a format string not unlike one in C's famous `printf`.
+    The $(D \$1), $(D \$2), $(D \$3) are substituted with the content of sub-expressions.
+    Aside from referencing sub-matches, one can include the whole part of input preceding the match via $(D $\`) and `$'` for the content following right after the match.
     )
     $(P Now let's aim for something bigger, this time to show that $(STD regex) can do things that
     are unattainable by classic textual substitution alone. Imagine you want to translate a web shop catalog so
     that it displays prices in your currency. Yes, one can use calculator or estimate it in his/her head,
-    once having current ratio.  Being programmers we can do better, so let's wrap up a simple program that
-    converts text to use correct prices everywhere.  For the sake of example let it be UK pounds and US dollars.
+    given the current ratio.  Being programmers we can do better, so let's wrap up a simple program that
+    converts text to use correct prices everywhere.  For example, UK pounds to US dollars.
     )
+    $(RUNNABLE_EXAMPLE
+    $(RUNNABLE_EXAMPLE_STDIN Bottles for £1, or £3 for 4.)
     ---
-    import std.conv, std.regex, std.range, std.file, std.stdio;
+    import std.conv, std.regex, std.range, std.stdio;
     import std.string : format;
 
-    void main(string[] argv)
+    void main()
     {
         immutable ratio = 1.5824;  // UK pounds to US dollar as of this writing
         auto toDollars(Captures!string price)
         {
             real value = to!real(price["integer"]);
             if (!price["fraction"].empty)
-                value += 0.01*to!real(price["fraction"]);
-            return format("$%.2f",value * ratio);
+                value += 0.01 * to!real(price["fraction"]);
+            return format("$%.2f", value * ratio);
         }
-        string text = std.file.readText(argv[1]);
+        string text = readln();
         auto converted = replaceAll!toDollars(text,
-                regex(r"£\s*(?P<integer>[0-9]+)(\.(?P<fraction>[0-9]{2}))?","g"));
+            regex(r"£\s*(?P<integer>[0-9]+)(\.(?P<fraction>[0-9]{2}))?", "g"));
         write(converted);
     }
     ---
+    )
     $(P Getting current conversion rates and supporting more currencies is left as an exercise for the reader.
-    What at work here is so-called replace with delegate, analogous to a callout ability found in other languages
-    and regex libraries. The magic is simple: whenever replace finds a match it calls a user supplied callback
-    on the captured piece, then it uses the return value as replacement.
+    What's at work here is called *replace with delegate*, which is analogous to a callout ability found in other languages
+    and regex libraries. The magic is simple: whenever `replaceAll` finds a match it calls a user supplied callback `toDollars`
+    on the captured piece, then it uses the return value to make the replacement.
     )
 
-    $(P And I just can't resist to spice this example up with yet another feature - named groups.
+    $(P And I just couldn't resist spicing that example up with yet another feature - named groups.
+    The syntax for a named group is `(?P<name>regex)`.
     Names work just like aliases for numbers of captured subexpressions,
-    meaning that with the same exact regular expression one could as well change affected lines to:
+    meaning that with the exact same regular expression one could just as well change the affected lines to:)
     ---
     real value = to!real(price[1]);
     if (!price[3].empty)
         value += 0.01*to!real(price[3]);
     ---
+    $(P
     Though that lacks readability and is not as future proof.
     )
 
@@ -197,84 +223,101 @@ $(D_S $(TITLE),
 
     $(H2 $(LNAME2 split-up, Split it up))
 
-    $(P As core functionality was already presented, let's move on to some extras.
-    Sometimes it's useful to do almost the opposite of searching - split up input using regex as separator.
-    Like the following sample, that outputs text by sentences:
+    $(P Now core functionality has been presented, let's move on to some extras.
+    Sometimes it's useful to do almost the opposite of searching - split up input using a regex as separator.
+    The following sample outputs text by sentences:
     )
+    $(RUNNABLE_EXAMPLE
+    $(RUNNABLE_EXAMPLE_STDIN This is sample text! It has several sentences. Did it work?!)
     ---
-    foreach (sentence; splitter(argv[1], regex(r"(?<=[.?!]+(?![?!]))\s*")))
+    import std.regex, std.stdio;
+
+    auto text = readln('\0'); // read all stdin
+    foreach (sentence; splitter(text, regex(r"(?<=[.?!]+(?![?!]))\s*")))
         writeln(sentence);
     ---
-    $(P Again the type of splitter is range, thus allowing foreach iteration.
-    Notice the usage of lookaround in regex, it's a neat trick here as stripping off final punctuation is
-    not our intention. Breaking down this example, (?<=[.?!]) part looks behind for first ., ? or !.
-    This get us half way to our goal because \s* also matches between elements of punctuation like "?!",
-    so a negative lookahead is introduced $(I inside lookbehind) to make sure we are past all of the punctuation marks.
-    Admittedly, barrage of ? and ! makes this regex rather obscure, more then it actually is.
-    Observe that there are no restrictions on contents of lookaround expressions,
+    )
+    $(P Again the type `splitter` returns is a range, thus allowing foreach iteration.
+    Notice the usage of lookaround in the regex, it's a neat trick here as stripping off final punctuation is
+    not our intention. `(?=regex)` is lookahead and `(?<=regex)` is lookbehind.)
+    $(P
+    Breaking down this example, the `(?<=[.?!])` part looks behind for first `.`, `?` or `!`.
+    This gets us halfway to our goal because `\s*` also matches between elements of punctuation like "?!",
+    so a negative lookahead `(?!regex)` is introduced $(I inside a lookbehind) to make sure there are no more punctuation marks.)
+    $(P
+    Admittedly, the barrage of ? and ! makes this regex rather obscure, more then it actually is.
+    Observe that there are no restrictions on the contents of lookaround expressions,
     one can go for lookahead inside lookbehind and so on.
     However in general it's recommended to use them sparingly, keeping them as the weapon of last resort.
     )
 
     $(H2 $(LNAME2 static-regex, Static regex))
-    $(P Let's stop going for features and start thinking performance. And D has something to offer here.
-    For one, there is an ability to precompile constant regex at compile-time:
+
+    $(P Let's stop going for features and start thinking performance. D has something to offer here.
+    For one, there is an ability to precompile a constant regex at compile-time:
     )
+    $(RUNNABLE_EXAMPLE
     ---
+    import std.regex;
+
     static r = regex("Boo-hoo");
     assert(match("What was that? Boo-hoo?", r));
     ---
-    $(P Importantly it's the exact same Regex object that works through all of the API we've seen so far.
-    It takes next to nothing to initialize, just copy over ready-made structure from the data segment.
     )
-
-    $(P Roughly ~ 1 μs of run-time to initialize. Run-time version took around 10-20 μs on my machine, keep in mind that it was a trivial pattern.
+    $(P Importantly it's the exact same `Regex` object that works through all of the API we've seen so far.
+    It takes next to no time to initialize, just copy over a ready-made structure from the data segment -
+    roughly 1 μs of run-time to initialize. Conversely, compiling the regex at run-time took around 10-20 μs on my machine - and keep in mind that it was a trivial pattern.
     )
 
     $(P Now stepping further in this direction there is an ability to construct specialized
-    D code that matches a given regex and compile it instead of using the default run-time engine.
+    D code to match a given regex instead of using the default run-time engine.
     Isn't it so often the case that code starts with regular expressions only to be later re-written
     to heaps of scary-looking code to match speed requirements? No need to rewrite - we got you covered.
     )
     $(P Recalling the phone number example:
     )
+    $(RUNNABLE_EXAMPLE
     ---
-    //It's only a 5 characters difference!
+    import std.regex;
+
     string phone = "+31 650 903 7158";
+    // It's only a 5 characters difference!
     auto phoneReg = ctRegex!r"^\+([1-9][0-9]*) [0-9 ]*$";
     auto m = match(phone, phoneReg);
     assert(m);
     assert(m.captures[0] == "+31 650 903 7158");
     assert(m.captures[1] == "31");
     ---
-    $(P Interestingly it looks almost exactly the same (a total of 5 letters changed), yet it does all of
-    the hard work - generates D code for this pattern, compiles it (again) and masquerades under the same API.
-    Which is the key point - the API stays consistent, yet gets us the significant speed up we sought after.
-    This fosters quick iteration with the $(D regex)  and if desired a decent speed with $(D ctRegex) in the release build (at the cost of slower builds).
+    )
+    $(P Interestingly it looks almost exactly the same (a total of 5 letters changed), yet `ctRegex` does all of
+    the hard work - generates D code for this pattern, compiles it (again) and produces a `StaticRegex` object which supports the same API as `Regex`.
+    This is the key point - the API stays consistent, yet gets us the significant speed up we sought after.
+    This fosters quick development speed using the $(D regex) function and then if desired a decent runtime speed switching to $(D ctRegex) in the release build (at the cost of slower builds).
     )
     $(P In this particular case it matched roughly 50% faster for me though I haven't
     done comprehensive analysis of this case.
-    That being said, there is no doubt ctRegex facility is going to improve immensely over time.
-    We only scratched the surface of new exciting possibilities.
-    More data on real-world patterns, performance of CT-regex and other benchmarks
+    That being said, there is no doubt `ctRegex` is going to improve immensely over time.
+    We only scratched the surface of exciting new possibilities.
+    More data on real-world patterns, performance of CT-regex and other benchmarks is
     $(LINK2 https://github.com/DmitryOlshansky/FReD, here).
     )
 
     $(H2 $(LNAME2 conclusion, Conclusion))
+
     $(P The article represents a walk-through of $(D std.regex) focused on showcasing the API.
     By following a series of easy yet meaningful tasks, its features were exposed in combination,
     that underline the elegance and flexibility of this library solution.
-    The good thing that not only the API is natural, but it also follows established
+    The good thing is not only that the API is natural, but it also follows established
     standards and integrates well with the rest of Phobos.
-    Putting together its major features for a short-list, $(STD regex) is:
+    Putting its major features together, $(STD regex) is:
     )
      $(UL
      $(LI Fully Unicode-aware, qualifies to standard full level 1 Unicode support)
-     $(LI Lots of modern extensions, including unlimited generalized lookaround.
+     $(LI Replete with lots of modern extensions, including unlimited generalized lookaround.
      That makes porting regexes from other libraries a breeze.)
-     $(LI Lean API that consists of a few flexible tools: $(D matchFirst)/$(D matchAll), $(D replaceFirst)/$(D replaceAll) and $(D splitter).)
-     $(LI Uniform and powerful, with unique abilities like precompiling regex or generating
-     specially tailored engine at compile-time with ctRegex. All of this fits within the common interface without a notch.)
+     $(LI Designed with a lean API that consists of a few flexible tools: $(D matchFirst)/$(D matchAll), $(D replaceFirst)/$(D replaceAll) and $(D splitter).)
+     $(LI Uniform and powerful, with unique abilities like precompiling a regex or generating
+     specially tailored code at compile-time with ctRegex. All of this fits within the common interface without a hitch.)
      )
     $(P The format of this article is intentionally more of an overview, it doesn't stop to talk in-depth about
      certain capabilities like case-insensitive matching (simple casefolding rules of Unicode),
