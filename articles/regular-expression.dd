@@ -266,7 +266,7 @@ $(H3 $(LNAME2 replacing, Replacing))
     )
     $(P Importantly it's the exact same `Regex` object that works through all of the API we've seen so far.
     It takes next to no time to initialize, just copy over a ready-made structure from the data segment -
-    roughly 1 μs of run-time to initialize. Conversely, compiling the regex at run-time took around 10-20 μs on my machine - and keep in mind that it was a trivial pattern.
+    roughly 1 μs of run-time to initialize on my machine. Conversely, compiling the regex at run-time took around 10-20 μs - and keep in mind that it was a trivial pattern.
     )
 
     $(P Now stepping further in this direction there is an ability to construct specialized
@@ -289,10 +289,10 @@ $(H3 $(LNAME2 replacing, Replacing))
     assert(m.captures[1] == "31");
     ---
     )
-    $(P Interestingly it looks almost exactly the same (a total of 5 letters changed), yet `ctRegex` does all of
-    the hard work - generates D code for this pattern, compiles it (again) and produces a `StaticRegex` object which supports the same API as `Regex`.
+    $(P Interestingly the code looks almost exactly the same (a total of 5 letters changed), yet it does all of
+    the hard work, generating equivalent D code for the regex pattern. `ctRegex` produces a `StaticRegex` object which supports the same API as the runtime `Regex`.
     This is the key point - the API stays consistent, yet gets us the significant speed up we sought after.
-    This fosters quick development speed using the $(D regex) function and then if desired a decent runtime speed switching to $(D ctRegex) in the release build (at the cost of slower builds).
+    This fosters quick development speed using the regex engine and then if desired, a decent runtime speed by switching to $(D ctRegex) in the release build (at the cost of slower builds).
     )
     $(P In this particular case it matched roughly 50% faster for me though I haven't
     done comprehensive analysis of this case.
