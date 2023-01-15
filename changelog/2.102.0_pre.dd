@@ -5,13 +5,14 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Feb 01, 2023, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 12 major changes and 76 fixed Bugzilla issues.
+$(VER) comes with 15 major changes and 71 fixed Bugzilla issues.
         A huge thanks goes to the
-        $(LINK2 #contributors, 37 contributors)
+        $(LINK2 #contributors, 39 contributors)
         who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
+$(LI $(RELATIVE_LINK2 dmd.deprecate-duplicate-system-implementations,A missed case of conflicting `extern (D) @system` function definitions has been deprecated))
 $(LI $(RELATIVE_LINK2 dmd.deprecate-getAttributes-overloadSet,Deprecate the ability to call `__traits(getAttributes)` on overload sets))
 $(LI $(RELATIVE_LINK2 dmd.for-increment,Deprecate non-empty `for` statement *Increment* clause with no effect))
 $(LI $(RELATIVE_LINK2 dmd.scope-array-on-stack,Array literals assigned to `scope` array variables can now be allocated on the stack))
@@ -35,6 +36,13 @@ $(LI $(RELATIVE_LINK2 unique-struct-dtor,`std.typecons.Unique` now calls `destro
 
 )
 
+$(BUGSTITLE_TEXT_HEADER Installer changes,
+
+$(LI $(RELATIVE_LINK2 VisualDUpdate,Update the bundled VisualD package))
+$(LI $(RELATIVE_LINK2 issue_23623,Prefer 64 bit over 32 bit DMD on Windows 64 bit.))
+
+)
+
 $(BUGSTITLE_TEXT_HEADER Dub changes,
 
 $(LI $(RELATIVE_LINK2 build-cache,Binary output will now be in a central cache))
@@ -47,6 +55,33 @@ $(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
 $(CHANGELOG_SEP_HEADER_TEXT)
 
 $(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.deprecate-duplicate-system-implementations,A missed case of conflicting `extern (D) @system` function definitions has been deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.deprecate-duplicate-system-implementations.dd)
+$(P
+Having multiple definitions of functions within a module had been turned
+$(LINK2 $(ROOT_DIR)/changelog/2.095.0.html#duplicate-implementations-deprecation,
+into an error in DMD 2.095.0).
+)
+
+$(P
+However, the compiler would not issue an error when two implementations
+differed by an explicit and inferred `@system` attribute, although they have
+the same mangling.
+)
+
+---
+void foo() {}
+void foo() @system {} // no error
+---
+
+$(P
+This bug has been fixed, and DMD will now issue a deprecation if there are such
+conflicting `@system` function implementations. Starting from DMD 2.112, it
+will produce a multiple definition error just like other kinds of conflicting
+functions within a module.
+)
+)
 
 $(LI $(LNAME2 dmd.deprecate-getAttributes-overloadSet,Deprecate the ability to call `__traits(getAttributes)` on overload sets)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.deprecate-getAttributes-overloadSet.dd)
@@ -368,6 +403,30 @@ value.
 
 )
 
+
+$(BUGSTITLE_TEXT_BODY Installer changes,
+
+$(LI $(LNAME2 VisualDUpdate,Update the bundled VisualD package)
+$(CHANGELOG_SOURCE_FILE installer, changelog/VisualDUpdate.dd)
+$(P
+The $(LINK2 https://rainers.github.io/visuald/visuald/StartPage.html, VisualD) package version
+that the installer downloads hasn't been updated in years. This has been remedied by a version
+bump to 1.3.1, the latest release of VisualD.
+)
+)
+
+$(LI $(LNAME2 issue_23623,Prefer 64 bit over 32 bit DMD on Windows 64 bit.)
+$(CHANGELOG_SOURCE_FILE installer, changelog/issue_23623.dd)
+$(P
+The NSIS installer for Windows has the option "Add to PATH". Previously, only
+the 32 bit version of DMD was added to the PATH environment variable. Now, on
+Windows 64 bit, the 64 bit version of DMD will be selected from PATH.
+)
+)
+
+
+)
+
 $(BUGSTITLE_TEXT_BODY Dub changes,
 
 $(LI $(LNAME2 build-cache,Binary output will now be in a central cache)
@@ -414,39 +473,30 @@ $(CHANGELOG_SEP_TEXT_BUGZILLA)
 
 $(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
 
-$(LI $(BUGZILLA 18646): [REG 2.079.0] Recursive template expansion incorrectly reported)
-$(LI $(BUGZILLA 20811): Regression as of 2.066.0 - CTFE static variable retained across calls)
+$(LI $(BUGZILLA 20520): Runtime segfault when taking typeid of a class instanciated within an enum)
 $(LI $(BUGZILLA 21301): Wrong values being passed in long parameter list)
-$(LI $(BUGZILLA 22638): [REG 2.096][ICE] cod4.d: Assertion cast$(LPAREN)int$(RPAREN)sz > 0 failed)
-$(LI $(BUGZILLA 22646): [REG2.099] CT bounds checking ignores short circuit evaluation)
-$(LI $(BUGZILLA 22813): [REG 2.079.1] recursive template expansion)
-$(LI $(BUGZILLA 22854): static foreach byCodepoint segfault $(LPAREN)2.099-rc.1$(RPAREN))
-$(LI $(BUGZILLA 22975): 3 cyclic aliases with meaningful overloads not caught [ice])
 $(LI $(BUGZILLA 23307): [REG][CODEGEN][SIMD] wrong codegen with inlined local functions + SIMD)
-$(LI $(BUGZILLA 23391): [Reg 2.098.1] Segmentation fault with static foreach + range + inout)
-$(LI $(BUGZILLA 23499): inliner crashes/asserts when building for 32-bit)
 $(LI $(BUGZILLA 23539): [REG master] Scope C++ definition out of sync with D)
 $(LI $(BUGZILLA 23548): [REG 2.098] C sources files have precedent over D modules in imports)
-$(LI $(BUGZILLA 23564): [REG 2.099.0] SIGSEGV during compilation)
-$(LI $(BUGZILLA 23567): pragma$(LPAREN)printf$(RPAREN) messes up with the vtable of extern$(LPAREN)C++$(RPAREN) classes)
 $(LI $(BUGZILLA 23569): [REG 2.081][ICE] Segmentation fault in in AggregateDeclaration::getType$(LPAREN)$(RPAREN) $(LPAREN)this=0x0$(RPAREN) at src/dmd/aggregate.d:594)
 $(LI $(BUGZILLA 23587): cast$(LPAREN)void$(RPAREN) doesn't work for noreturn)
-$(LI $(BUGZILLA 23589): [REG2.095] Purity check special case gives circular reference error.)
 $(LI $(BUGZILLA 23591): [REG 2.101] Invalid casts accepted by the compiler if from type is noreturn)
+$(LI $(BUGZILLA 23607): invalid code leading to an ICE due to an error message that's not emitted anymore)
+$(LI $(BUGZILLA 23626): [REG2.096] Template deduction with auto const ref Args... and delegate)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
 
 $(LI $(BUGZILLA 13060):  @nogc reading an associative array)
-$(LI $(BUGZILLA 14907): DMD crash when using template name as a default value of template's typed argument)
 $(LI $(BUGZILLA 15414): __traits$(LPAREN)getAttributes$(RPAREN) should error if the function has multiple overloads)
 $(LI $(BUGZILLA 15712): extern$(LPAREN)C$(RPAREN) attribute inside extern$(LPAREN)C$(RPAREN) unittest is incorrectly ignored)
-$(LI $(BUGZILLA 19585): Invalid recursive template expansion error)
+$(LI $(BUGZILLA 18026): Stack overflow in ddmd/dtemplate.d:6241, TemplateInstance::needsCodegen$(LPAREN)$(RPAREN))
 $(LI $(BUGZILLA 19623): HERE string identifier cannot start with Unicode letter)
+$(LI $(BUGZILLA 19649): Misleading error message for duplicate constraints)
 $(LI $(BUGZILLA 21062): Confusing error when using a keyword as an identifier for a declaration)
 $(LI $(BUGZILLA 21506): misalignment of _argptr for variadic functions)
 $(LI $(BUGZILLA 22759): ImportC: cannot modify const expression from dereferencing const pointer declared within function.)
 $(LI $(BUGZILLA 23122): enum member UDAs semantics are not checked properly)
-$(LI $(BUGZILLA 23151): ICE: core.exception.AssertError@src/dmd/aggregate.d$(LPAREN)678$(RPAREN): Assertion failure)
+$(LI $(BUGZILLA 23218): ICE: src/dmd/backend/cgxmm.d:1373: Assertion `0' failed.)
 $(LI $(BUGZILLA 23412): void init member detection does not account for static arrays)
 $(LI $(BUGZILLA 23418): double argument is passed on stack, but assumed to be in XMM0 register)
 $(LI $(BUGZILLA 23447): wrong expression in error message when template instance doesn't match any overload)
@@ -459,10 +509,12 @@ $(LI $(BUGZILLA 23531): [DIP1000] scope variable can be assigned as AA key)
 $(LI $(BUGZILLA 23534): __traits$(LPAREN)isZeroInit$(RPAREN) is true for enums with explicit values)
 $(LI $(BUGZILLA 23536): crt_constructors and crt_destructors should not be non-static member functions)
 $(LI $(BUGZILLA 23568): Error: cannot implicitly convert expression 'a < b' of type 'float4' to 'int4')
-$(LI $(BUGZILLA 23574): ICE: AssertError@src/dmd/optimize.d$(LPAREN)866$(RPAREN): Assertion failure)
 $(LI $(BUGZILLA 23578): Types are not matched to alias parameters in "is" expression)
 $(LI $(BUGZILLA 23586): DMD forgets a variable was just declared.)
 $(LI $(BUGZILLA 23593): core.thread: suspendAll doesn't wait for all if current thread has detached itself)
+$(LI $(BUGZILLA 23614): ImportC: __int128 not supported)
+$(LI $(BUGZILLA 23618): Right Shift equals expressions on unsigned shorts should be unsigned right shift)
+$(LI $(BUGZILLA 23620): 'alias this' is not respected in static array length position)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
@@ -498,6 +550,7 @@ $(LI $(BUGZILLA 23562): [REG master] Segmentation fault in core.demangle)
 $(BUGSTITLE_BUGZILLA Druntime bug fixes,
 
 $(LI $(BUGZILLA 16641): Infinite loop on InvalidMemoryOperationError in __dmd_personality_v0)
+$(LI $(BUGZILLA 19467): Support EV_SET on OSX)
 $(LI $(BUGZILLA 23572): OpenBSD: Add OpenBSD to the RTLD_DEFAULT list)
 )
 $(BUGSTITLE_BUGZILLA Druntime enhancements,
@@ -518,13 +571,19 @@ $(LI $(BUGZILLA 23432): document when array capacity is zero and capacity perfor
 $(LI $(BUGZILLA 23511): Incrementing a not supported type in enum)
 $(LI $(BUGZILLA 23553): opCmp spec is incomplete)
 )
+$(BUGSTITLE_BUGZILLA Installer bug fixes,
+
+$(LI $(BUGZILLA 23623): On 64 bit Windows the path should point to 64 bit dmd.)
 )
-$(D_CONTRIBUTORS_HEADER 37)
+)
+$(D_CONTRIBUTORS_HEADER 39)
 $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Adam D. Ruppe)
     $(D_CONTRIBUTOR aG0aep6G)
     $(D_CONTRIBUTOR Amaury)
     $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Boris Carvajal)
     $(D_CONTRIBUTOR Brian Callahan)
     $(D_CONTRIBUTOR Dennis)
     $(D_CONTRIBUTOR Dennis Korpel)
