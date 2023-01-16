@@ -144,9 +144,10 @@ int main(string[] args)
             .joiner;
         if (!allTests.empty)
         {
+            import core.atomic;
             writefln("%s: %d examples found", file[rootDir.length+1..$], allTests.walkLength);
             if (allTests.any!(a => a != 0))
-                hasFailed = true;
+                atomicStore(hasFailed, true);
         }
     }
     return hasFailed;
