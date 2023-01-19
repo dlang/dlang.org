@@ -2,31 +2,130 @@ Ddoc
 
 $(D_S String Mixins,
 
-        $(P String Mixins (not to be confused with
+$(HEADERNAV_TOC)
+
+        $(P String mixins (not to be confused with
         $(DDLINK spec/template-mixin, Template Mixins, template mixins))
         enable string constants to be compiled as regular D code
         and inserted into the program.
-        Combining this with compile time manipulation of strings
-        enables the creation of domain-specific languages.
+        String mixins can be used in place of:)
+
+        $(UL
+        $(LI Declarations)
+        $(LI Statements)
+        $(LI Types)
+        $(LI Expressions)
         )
 
-        $(P For example, here we can create a template that generates
-        a struct with the named members:
+$(H2 $(LNAME2 declarations, Generating Declarations))
+
+        $(P A mixin can be used for a variable declaration:)
+---
+enum s = "int y;";
+mixin(s);
+y = 4;     // ok, mixin declared y
+---
+
+        $(P We can generate a declaration `struct Foo { int bar; }`
+        using string constants for the identifiers:
         )
 
 ---
-template GenStruct(string Name, string M1)
+enum name = "Foo";
+enum m1 = "bar";
+mixin("struct " ~ name ~
+    "{ int " ~ m1 ~ "; }");
+
+enum f = Foo(2);
+static assert(f.bar == 2);
+---
+        $(P This can be encapsulated in an enum template for reuse:)
+---
+enum string genStruct(string name, string m1) =
+    "struct " ~ name ~ "{ int " ~ m1 ~ "; }";
+
+mixin(genStruct!("Foo", "bar"));
+---
+
+$(H2 $(LNAME2 multiple-args, Concatenation of Multiple Arguments))
+
+        $(P `mixin()` can also concatenate multiple arguments, converting any
+        non-strings to strings:)
+---
+enum name = "Foo";
+enum m1 = "bar";
+$(CODE_HIGHLIGHT enum val = 4;)
+mixin("struct ", name,
+    "{ int ", m1, " = ", $(CODE_HIGHLIGHT val), "; }");
+
+enum f = Foo();
+static assert(f.bar == 4);
+---
+
+$(H2 $(LNAME2 statements, Generating Statements))
+
+---
+int x = 3;
+mixin("
+    foreach (i; 0 .. 3)
+        writeln(x + i);
+    ");
+---
+        $(P This outputs:)
+$(CONSOLE
+3
+4
+5
+)
+        $(P See also: $(GLINK2 statement, MixinStatement).)
+
+$(H2 $(LNAME2 types, Generating Types))
+
+---
+mixin("int")* p;  // int* p
+mixin("int")[] a; // int[] a;
+mixin("int[]") b; // int[] b;
+---
+
+$(H2 $(LNAME2 expressions, Generating Expressions))
+
+---
+int foo(int x)
 {
-    const char[] GenStruct = "struct " ~ Name ~ "{ int " ~ M1 ~ "; }";
+    return mixin("x +", 1) * 7;  // same as `return (x + 1) * 7`
 }
-
-mixin(GenStruct!("Foo", "bar"));
----
-        $(P which generates:)
----
-struct Foo { int bar; }
 ---
 
+$(H2 $(LNAME2 dsl, Domain Specific Languages))
+
+        $(P
+        Combining compile-time function execution with `mixin()`
+        enables the use of domain-specific languages:)
+        ---
+        mixin(convertJS(q{
+            var msg = "Hello world!"
+            console.log(msg)
+            msg = 5
+            console.log(msg)
+            }));
+        ---
+        $(P `convertJS` would generate a string that would be compiled
+        to the following D code:)
+        ---
+        import std.variant;
+
+        Variant msg = "Hello world!";
+        writeln(msg);
+        msg = 5;
+        writeln(msg);
+        ---
+
+        $(NOTE Text editors can syntax highlight the contents of `q{}`
+        strings as D tokens rather than a string, which is useful with
+        `mixin()`. The above JS code happens to be token compatible
+        with D.)
+
+$(H2 $(LNAME2 cpp, Comparison with C preprocessor))
 
         $(P Superficially, since D mixins can manipulate text and compile
         the result, it has some similar properties to the C preprocessor.
@@ -61,7 +160,7 @@ END
 
         This monkey business is impossible with mixins.
         Mixed in text must form complete declarations,
-        statements, or expressions.
+        statements, types, or expressions.
         )
 
         $(LI C macros will affect everything following that has
@@ -93,3 +192,4 @@ END
 Macros:
         TITLE=String Mixins
         SUBNAV=$(SUBNAV_ARTICLES)
+        NOTE= $(DIVC note, $(B Note:) $0)

@@ -2093,30 +2093,26 @@ $(GNAME MixinStatement):
         )
 
 $(SPEC_RUNNABLE_EXAMPLE_RUN
----
-import std.stdio;
-
-void main()
-{
-    int i = 0;
+    ---
+    int x = 3;
     mixin("
-        int x = 3;
-        for (; i < 3; i++)
-            writeln(x + i, i);
+        foreach (i; 0 .. 3)
+            writeln(x + i);
         ");    // ok
+    ---
+)
 
-    enum s = "int y;";
-    mixin(s);  // ok
-    y = 4;     // ok, mixin declared y
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+    ---
+    int y;
 
     string t = "y = 3;";
     //mixin(t);  // error, t is not evaluatable at compile time
-    //mixin("y =") 4; // error, string must be complete statement
 
+    //mixin("y =") 4; // error, string must be complete statement
     mixin("y =" ~ "4;");  // ok
     mixin("y =", 2+2, ";");  // ok
-}
----
+    ---
 )
 
 $(SPEC_SUBNAV_PREV_NEXT expression, Expressions, arrays, Arrays)
