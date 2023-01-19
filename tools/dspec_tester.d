@@ -96,7 +96,6 @@ int main(string[] args)
     const rootDir = __FILE_FULL_PATH__.dirName.dirName;
     const specDir = rootDir.buildPath("spec");
     const stdDir = rootDir.buildPath("..", "phobos", "std");
-    bool hasFailed;
 
     config.dmdBinPath = environment.get("DMD", "dmd");
     auto helpInformation = getopt(
@@ -122,6 +121,7 @@ int main(string[] args)
     ];
     auto files = chain(specDir.dirEntries("*.dd", SpanMode.depth),
         stdDir.dirEntries("*.d", SpanMode.depth));
+    shared bool hasFailed;
     foreach (file; files.parallel(1))
     {
         // auto-import current module if in phobos
@@ -143,9 +143,10 @@ int main(string[] args)
             .joiner;
         if (!allTests.empty)
         {
+            import core.atomic;
             writefln("%s: %d examples found", file[rootDir.length+1..$], allTests.walkLength);
             if (allTests.any!(a => a != 0))
-                hasFailed = true;
+                atomicStore(hasFailed, true);
         }
     }
     return hasFailed;
