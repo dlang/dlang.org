@@ -1145,15 +1145,31 @@ $(H4 $(LNAME2 cast_class, Class References))
     )
 
 $(H4 $(LNAME2 cast_pointers, Pointers))
-    $(P Casting a pointer)
+    $(P Casting a pointer modifies the type that will be obtained as a result of dereferencing,
+        along with the number of bytes on which the pointer arithmetic is performed.
+    )
+
+    $(P In the following example, variable val has 4 bytes and then its address is casted to char* in the ch variable.
+        Now, if ch is dereferenced, the printed value will be the character 'a' 
+        which corresponds to the integer value 97 (the least significant byte of val). If ch is incremented,
+        the printed value will be the character 'b' (the second least significant byte of val).
+    )
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
             -------------
-            int a = 353;
-            char *c = cast(char*) (&a);
-            writeln(*c);
+            int val = 25185; // 00000000 00000000 01100010 01100001
+            char *ch = cast(char*)(&val);
+
+            writeln(*ch);    // a
+            writeln(cast(int)(*ch)); // 97
+            writeln(*(ch + 1));  // b
+            writeln(cast(int)(*(ch + 1)));   // 98
             -------------
         )
+
+    $(P Here is an example of the reverse process. It will result in undefined behaviour due to the fact that 
+        the memory space following the c variables location has unknown content.
+    )
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
             -------------
@@ -1162,6 +1178,8 @@ $(H4 $(LNAME2 cast_pointers, Pointers))
             writeln(*p);
             -------------
         )
+
+    $(P The same thing can be done using a dynamically allocated array.)
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
             -------------
@@ -3022,4 +3040,3 @@ Macros:
         USUAL_ARITHMETIC_CONVERSIONS=$(DDSUBLINK spec/type, usual-arithmetic-conversions, Usual Arithmetic Conversions)
         INTEGER_PROMOTIONS=$(DDSUBLINK spec/type, integer-promotions, Integer Promotions)
         _=
-
