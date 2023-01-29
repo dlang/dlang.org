@@ -193,7 +193,7 @@ DUB=$(STABLE_DMD_BIN_ROOT)/dub
 
 # exclude lists
 MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
-	core.internal core.stdc.config core.sys \
+	core.internal core.stdc.config \
 	std.algorithm.internal std.c std.internal std.regex.internal \
 	std.digest.digest \
 	std.windows.registry etc.linux.memoryerror \
