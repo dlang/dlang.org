@@ -990,6 +990,16 @@ assert(value == [5, 6, 2]);
 ---------
 )
 
+        $(P All elements of a static array can be initialized to a specific value with:)
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---------
+int[4] a = 42; // set all elements of a to 42
+
+assert(a == [42, 42, 42, 42]);
+---------
+)
+
         $(P These arrays are statically allocated when they appear in global scope.
         Otherwise, they need to be marked with $(D const) or $(D static)
         storage classes to make them statically allocated arrays.)
@@ -1007,10 +1017,10 @@ $(H3 $(LNAME2 strings, Strings))
 
 $(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---------
-char[] str1 = "abc";                // error, "abc" is not mutable
+char[] str1 = "abc";                // error, cannot implicitly convert expression `"abc"` of type `string` to `char[]`
 char[] str2 = "abc".dup;            // ok, makes mutable copy
 immutable(char)[] str3 = "abc";     // ok
-immutable(char)[] str4 = str2;      // error, str4 is not mutable
+immutable(char)[] str4 = str2;      // error, cannot implicitly convert expression `str2` of type `char[]` to `string`
 immutable(char)[] str5 = str3;      // ok, makes a mutable str5 with immutable aray contents
 immutable(char)[] str6 = str2.idup; // ok, makes immutable copy
 ---------
@@ -1022,32 +1032,36 @@ immutable(char)[] str6 = str2.idup; // ok, makes immutable copy
 
 $(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---------
-char[] str1 = "abc";     // error, "abc" is not mutable
+char[] str1 = "abc";     // error, cannot implicitly convert expression `"abc"` of type `string` to `char[]`
 char[] str2 = "abc".dup; // ok, makes mutable copy
 string str3 = "abc";     // ok
-string str4 = str2;      // error, str4 is not mutable
+string str4 = str2;      // error, cannot implicitly convert expression `str2` of type `char[]` to `string`
 string str5 = str3;      // ok, makes a mutable str5 with immutable aray contents
 string str6 = str2.idup; // ok, makes immutable copy
 ---------
 )
 
-        $(P Immutable is transitive, so data referred to by an immutable is also immutable:)
+        $(P
+        Immutable is transitive, data referred to by an immutable is
+        also immutable:
+        )
 
----------
+---
 immutable char[] s = "foo";
 s[0] = 'a';  // error, s refers to immutable data
 s = "bar";   // error, s is immutable
----------
+---
 
-        $(P Data that will never change its value can be typed as immutable.
-        The immutable keyword can be used as a type qualifier:)
+        $(P
+        Data that will never change its value can be typed as immutable.
+        The immutable keyword can be used as a $(I type qualifier):
+        )
 
----------
+---
 immutable(char)[] s = "hello";
 s[0] = 'b';  // error, s[] is immutable
 s = null;    // ok, s itself is not immutable
----------
-
+---
 
         $(P $(CODE char[]) strings are in UTF-8 format.
         $(CODE wchar[]) strings are in UTF-16 format.
