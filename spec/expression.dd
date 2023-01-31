@@ -1101,17 +1101,22 @@ $(GNAME CastExpression):
         -------------
 
 $(H4 $(LNAME2 cast_basic_data_types, Basic Data Types))
-    $(P Cast between different types of data will not be performed automatically.
-        The next operation generates the following error:
-        "cannot implicitly convert expression a of type int to byte".
+    $(P There are some cases where the $(DDSUBLINK spec/type, implicit-conversions, implicit conversion)
+        cannot be applied, so cast may be used to force the type system to accept the reinterpretation.
     )
+        
+    This situation may occur, for example, when trying to assign a value stored on four bytes
+    to a variable stored on one byte. Without a cast, the following error will be displayed:
+    "cannot implicitly convert expression a of type int to byte".
 
-        -------------
-        int a;
-        byte b = a;
-        -------------
+    -------------
+    int a;
+    byte b = a; // error
+    -------------
 
-    $(P In the following example, the cast operation will truncate the number.)
+    $(P When the destination type is smaller than the source type,
+        the value is truncated to the destination size.
+    )
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
             -------------
@@ -1128,35 +1133,23 @@ $(H4 $(LNAME2 cast_basic_data_types, Basic Data Types))
             -------------
         )
 
-    $(P In this case, the sign will be extended.)
-
-        $(SPEC_RUNNABLE_EXAMPLE_RUN
-            -------------
-            ubyte a = 133;  // 10000101
-            byte b = cast(byte)a;   // 10000101
-
-            writeln(a);
-            writeln(b);
-
-            ushort c = cast(ushort) a;  // 00000000 10000101
-            short d = cast(short)b; // 11111111 10000101
-
-            writeln(c);
-            writeln(d);
-            -------------
-        )
-
-    $(P It is also possible to cast pointers to basic data types but this operation
-        does not provide control over the obtained result.
+    $(P Casting from a narrower type to a wider type could be done automatically,
+        the sign of the value being extended to reach the required dimension.
     )
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
             -------------
-            import core.stdc.stdlib;
+            ubyte a = 133;  // 10000101
+            byte b = a;     // 10000101
 
-            int *p = cast(int*) malloc(int.sizeof);
-            int a = cast(int) p;
             writeln(a);
+            writeln(b);
+
+            ushort c = a;   // 00000000 10000101
+            short d = b;    // 11111111 10000101
+
+            writeln(c);
+            writeln(d);
             -------------
         )
 
@@ -1205,8 +1198,9 @@ $(H4 $(LNAME2 cast_class, Class References))
     )
 
 $(H4 $(LNAME2 cast_pointers, Pointers))
-    $(P Casting a pointer modifies the type that will be obtained as a result of dereferencing,
-        along with the number of bytes on which pointer arithmetic is performed.
+    $(P Casting a pointer variable to another pointer type modifies the value that
+        will be obtained as a result of dereferencing, along with the number of bytes
+        on which pointer arithmetic is performed.
     )
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
@@ -1221,7 +1215,10 @@ $(H4 $(LNAME2 cast_pointers, Pointers))
             -------------
         )
 
-    $(P The same outcome can be obtained by using a dynamically allocated array.)
+    $(P Similarly, when casting a dynamically allocated array to a type of smaller size,
+        the bytes of the initial array will be divided and regrouped according to the new
+        dimension.
+    )
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
             -------------
@@ -1240,8 +1237,8 @@ $(H4 $(LNAME2 cast_pointers, Pointers))
             -------------
         )
 
-    $(P The following code results in undefined behavior due to accessing memory
-        outside of the bounds of variable c.
+    $(P When casting a pointer of type A to a pointer of type B and type B is wider than type A,
+        attempts at accessing the memory exceeding the size of A will result in undefined behaviour.
     )
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
@@ -1249,6 +1246,21 @@ $(H4 $(LNAME2 cast_pointers, Pointers))
             char c = 'a';
             int *p = cast(int*) (&c);
             writeln(*p);
+            -------------
+        )
+
+    $(P It is also possible to cast pointers to basic data types.
+        A common practice could be to cast the pointer to an int value
+        and then print its address:
+    )
+
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
+            -------------
+            import core.stdc.stdlib;
+
+            int *p = cast(int*) malloc(int.sizeof);
+            int a = cast(int) p;
+            writeln(a);
             -------------
         )
 
