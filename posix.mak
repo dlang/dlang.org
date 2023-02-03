@@ -310,7 +310,7 @@ CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
 
-PREMADE=fetch-issue-cnt.php robots.txt .htaccess .dpl_rewrite_map.txt \
+PREMADE=fetch-issue-cnt.php robots.txt .htaccess .dpl_rewrite_map.txt ads.txt \
 		d-keyring.gpg d-keyring.gpg.sig d-security.asc
 
 # Language spec root filenames. They have extension .dd in the source
@@ -322,7 +322,7 @@ SPEC_ROOT=$(addprefix spec/, \
 	const3 function operatoroverloading template template-mixin contracts \
 	version traits errors unittest garbage float iasm ddoc \
 	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
-	abi simd betterc importc ob)
+	abi simd betterc importc ob windows)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
@@ -333,7 +333,7 @@ endif
 MAN_PAGE=docs/man/man1/dmd.1
 
 ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
-		cpptod ctarguments ctod d-array-article d-floating-point \
+		constraints cpptod ctarguments ctod d-array-article d-floating-point \
 		exception-safe faq hijack intro-to-datetime lazy-evaluation \
 		migrate-to-shared mixin pretod rationale regular-expression \
 		safed templates-revisited variadic-function-templates warnings \
@@ -344,7 +344,7 @@ ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
-	ascii-table bugstats $(CHANGELOG_FILES) community comparison concepts \
+	ascii-table bugstats $(CHANGELOG_FILES) community comparison \
 	deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys glossary \
 	howto-promote htod index install \
