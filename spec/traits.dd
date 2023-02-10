@@ -60,6 +60,7 @@ $(GNAME TraitsKeyword):
     $(RELATIVE_LINK2 getLinkage, $(D getLinkage))
     $(RELATIVE_LINK2 getLocation, $(D getLocation))
     $(RELATIVE_LINK2 getMember, $(D getMember))
+    $(RELATIVE_LINK2 getModuleClasses, $(D getModuleClasses))
     $(RELATIVE_LINK2 getOverloads, $(D getOverloads))
     $(RELATIVE_LINK2 getParameterStorageClasses, $(D getParameterStorageClasses))
     $(RELATIVE_LINK2 getPointerBitmap, $(D getPointerBitmap))
@@ -1306,7 +1307,6 @@ $(H3 $(GNAME getMember))
         argument, followed by a $(SINGLEQUOTE .), followed by the second
         argument as an identifier.
         )
-
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 import std.stdio;
@@ -1328,6 +1328,31 @@ void main()
     __traits(getMember, S, "my") = 2;  // ok
 }
 ---
+)
+
+$(H3 $(GNAME getModuleClasses))
+
+        $(P Optionally takes one argument which is a module name or a fully qualified import.
+        If there is no argument, the current module is used.
+        It returns a tuple of strings representing the fully qualified names of classes defined in
+        the module at the global level.
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+module test;
+import std.stdio;
+class C { }
+pragma(msg, __traits(getModuleClasses));
+pragma(msg, __traits(getModuleClasses, std.stdio));
+---
+)
+
+prints:
+
+$(CONSOLE
+tuple("test.C");
+tuple("std.stdio.Stdio.Exception");
 )
 
 $(H3 $(GNAME getOverloads))
