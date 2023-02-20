@@ -2748,7 +2748,8 @@ void foo()
         $(H5 $(LNAME2 is-type-equal, $(D is $(LPAREN)) $(I Type) $(D ==) $(I TypeSpecialization) $(D $(RPAREN))))
 
         $(P
-        The condition is satisfied if $(I Type) is semantically correct and is
+        If *TypeSpecialization* is a type,
+        the condition is satisfied if $(I Type) is semantically correct and is
         the same type as $(I TypeSpecialization).
         )
 -------------
@@ -2764,7 +2765,6 @@ void foo()
 -------------
         $(P
         If $(I TypeSpecialization) is one of
-
                 $(D struct)
                 $(D union)
                 $(D class)
@@ -2773,26 +2773,43 @@ void foo()
                 $(D __vector)
                 $(D function)
                 $(D delegate)
-                $(D const)
-                $(D immutable)
-                $(D inout)
-                $(D shared)
                 $(D module)
                 $(D package)
-
         then the condition is satisfied if $(I Type) is one of those.
         )
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 static assert(is(Object == class));
-
-int i;
-static assert(!is(i == const));
+static assert(is(ModuleInfo == struct));
+static assert(is(object == module));
 ---
+)
+        $(NOTE The `module` and `package` forms are only satisfied when *Type* is not a type,
+        unlike the other forms. Prefer using $(DDSUBLINK spec/traits, isModule, isModule)
+        and $(DDSUBLINK spec/traits, isPackage, isPackage) `__traits` instead.
+
         $(P $(DDSUBLINK
         spec/module, package-module, Package modules) are considered to be both
         packages and modules.
         )
+        $(P
+        If *TypeSpecialization* is a $(GLINK2 type, TypeCtor) keyword
+                $(D const)
+                $(D immutable)
+                $(D inout)
+                $(D shared)
+        then the condition is satisfied if *Type* is declared with that *TypeCtor*:
+        )
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+static assert(is(const int == const));
+static assert(is(const int[] == const));
+static assert(!is(const(int)[] == const)); // head is mutable
+static assert(!is(immutable int == const));
+---
+)
         $(P $(B See also:) $(DDLINK spec/traits, Traits, Traits).)
+
 
 $(H4 $(LNAME2 is-identifier, Identifier Forms))
 
@@ -2878,9 +2895,12 @@ void foo()
         $(H5 $(LNAME2 is-identifier-equal, $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D ==) $(I TypeSpecialization) $(D $(RPAREN))))
 
         $(P
-        The condition is satisfied if $(I Type) is semantically
-        correct and is the same as $(I TypeSpecialization).
-        The $(I Identifier) is declared to be either an alias of the
+        The condition is satisfied in the same manner as the
+        $(RELATIVE_LINK2 is-type-equal, form without *Identifier*).
+        )
+        $(P
+        When the condition is satisfied and *TypeSpecialization* is a type,
+        $(I Identifier) is declared to be either an alias of the
         $(I TypeSpecialization) or, if $(I TypeSpecialization) is
         dependent on $(I Identifier), the $(I TypeSpecialization) forms
         a pattern from which the type of $(I Identifier) is deduced.
@@ -2898,35 +2918,19 @@ void foo()
     )
 
         $(P
-        If $(I TypeSpecialization) is one of
-                $(D struct)
-                $(D union)
-                $(D class)
-                $(D interface)
-                $(D enum)
-                $(D __vector)
-                $(D function)
-                $(D delegate)
-                $(D const)
-                $(D immutable)
-                $(D inout)
-                $(D shared)
-                $(D module)
-                $(D package)
-
-        then the condition is satisfied if $(I Type) is one of those.
-        *TypeSpecialization* can also match the following keywords:
+        *TypeSpecialization* can be the same keywords as the form
+        without *Identifier*. *TypeSpecialization* can also be one of these keywords:
         )
         $(TABLE
         $(THEAD keyword, condition)
         $(TROW `super`, `true` if *Type* is a class or interface)
         $(TROW `return`,
-            $(ARGS `true` is *Type* is a function, delegate or function pointer))
+            $(ARGS `true` if *Type* is a function, delegate or function pointer))
         $(TROW `__parameters`,
-            $(ARGS `true` is *Type* is a function, delegate or function pointer))
+            $(ARGS `true` if *Type* is a function, delegate or function pointer))
         )
         $(P
-        Furthermore, $(I Identifier) is set to be an alias of the type:
+        When *TypeSpecialization* is a keyword, $(I Identifier) is set as follows:
         )
 
         $(TABLE_2COLS ,
