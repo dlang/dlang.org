@@ -2849,14 +2849,12 @@ void foo()
         )
 
         $(P
-        The condition is satisfied if $(I Type) is semantically
+        If *TypeSpecialization* is a type,
+        the condition is satisfied if $(I Type) is semantically
         correct and it is the same as
         or can be implicitly converted to $(I TypeSpecialization).
-        $(I TypeSpecialization) is only allowed to be a $(I Type).
-        The $(I Identifier) is declared to be either an alias of the
-        $(I TypeSpecialization) or, if $(I TypeSpecialization) is
-        dependent on $(I Identifier), the $(I TypeSpecialization) forms
-        a pattern from which the type of $(I Identifier) is deduced.
+        $(I Identifier) is declared to be an alias of the
+        $(I TypeSpecialization).
         )
 
     $(SPEC_RUNNABLE_EXAMPLE_COMPILE
@@ -2871,11 +2869,22 @@ void foo()
     static assert(is(S == int));
     ---
     )
+        $(P
+        If $(I TypeSpecialization) is a type pattern involving
+        $(I Identifier), type deduction of $(I Identifier) is attempted
+        based on either *Type* or a type that it implicitly converts to.
+        The condition is only satisfied if the type pattern is matched.
+        )
+
     $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
-    alias Abc = long*;
+    struct S
+    {
+        long* i;
+        alias i this; // S converts to long*
+    }
 
-    static if (is(Abc U : U*)) // Abc is matched against the pattern U*
+    static if (is(S U : U*)) // S is matched against the pattern U*
     {
         U u;
     }
@@ -2892,31 +2901,46 @@ void foo()
         $(H5 $(LNAME2 is-identifier-equal, $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D ==) $(I TypeSpecialization) $(D $(RPAREN))))
 
         $(P
-        The condition is satisfied in the same manner as the
-        $(RELATIVE_LINK2 is-type-equal, form without *Identifier*).
+        If *TypeSpecialization* is a type,
+        the condition is satisfied if $(I Type) is semantically correct and is
+        the same type as $(I TypeSpecialization).
+        $(I Identifier) is declared to be an alias of the
+        $(I TypeSpecialization).
         )
-        $(P
-        When the condition is satisfied and *TypeSpecialization* is a type,
-        $(I Identifier) is declared to be either an alias of the
-        $(I TypeSpecialization) or, if $(I TypeSpecialization) is
-        dependent on $(I Identifier), the $(I TypeSpecialization) forms
-        a pattern from which the type of $(I Identifier) is deduced.
-        )
-
     $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
-    alias Bar = short;
+    const x = 5;
 
-    static if (is(Bar T == int))   // not satisfied, short is not int
+    static if (is(typeof(x) T == const int))   // satisfied, T is now defined
         alias S = T;
 
-    static assert(!is(T)); // T is not defined
+    static assert(is(T)); // T is in scope
+    pragma(msg, T); // const int
     ---
     )
 
         $(P
-        *TypeSpecialization* can be the same keywords as the form
-        without *Identifier*. *TypeSpecialization* can also be one of these keywords:
+        If $(I TypeSpecialization) is a type pattern involving
+        $(I Identifier), type deduction of $(I Identifier) is attempted
+        based on *Type*.
+        The condition is only satisfied if the type pattern is matched.
+        )
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+    ---
+    alias Foo = long*;
+
+    static if (is(Foo U == U*)) // Foo is matched against the pattern U*
+    {
+        U u;
+    }
+    static assert(is(U == long));
+    ---
+    )
+        $(P
+        If *TypeSpecialization* is a keyword, the condition is satisfied
+        in the same manner as the
+        $(RELATIVE_LINK2 is-type-equal, `is(Type == Keyword)` form).
+        *TypeSpecialization* can also be one of these keywords:
         )
         $(TABLE
         $(THEAD keyword, condition)
