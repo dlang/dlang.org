@@ -2790,6 +2790,28 @@ static assert(is(ModuleInfo == struct));
         packages and modules.
         )
         $(P
+        *TypeSpecialization* can also be one of these keywords:
+        )
+        $(TABLE
+        $(THEAD keyword, condition)
+        $(TROW `super`, `true` if *Type* is a class or interface)
+        $(TROW `return`,
+            $(ARGS `true` if *Type* is a function, delegate or function pointer))
+        $(TROW `__parameters`,
+            $(ARGS `true` if *Type* is a function, delegate or function pointer))
+        )
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+        ---
+        class C {}
+        static assert(is(C == super));
+
+        void foo(int i);
+        static assert(!is(foo == return));
+        static assert(is(typeof(foo) == return));
+        static assert(is(typeof(foo) == __parameters));
+        ---
+        )
+        $(P
         If *TypeSpecialization* is a $(GLINK2 type, TypeCtor) keyword
                 $(D const)
                 $(D immutable)
@@ -2937,21 +2959,10 @@ void foo()
     ---
     )
         $(P
-        If *TypeSpecialization* is a keyword, the condition is satisfied
-        in the same manner as the
-        $(RELATIVE_LINK2 is-type-equal, `is(Type == Keyword)` form).
-        *TypeSpecialization* can also be one of these keywords:
-        )
-        $(TABLE
-        $(THEAD keyword, condition)
-        $(TROW `super`, `true` if *Type* is a class or interface)
-        $(TROW `return`,
-            $(ARGS `true` if *Type* is a function, delegate or function pointer))
-        $(TROW `__parameters`,
-            $(ARGS `true` if *Type* is a function, delegate or function pointer))
-        )
-        $(P
-        When *TypeSpecialization* is a keyword, $(I Identifier) is set as follows:
+        If *TypeSpecialization* is a valid keyword for the
+        $(RELATIVE_LINK2 is-type-equal, `is(Type == Keyword)` form),
+        the condition is satisfied in the same manner.
+        $(I Identifier) is set as follows:
         )
 
         $(TABLE_2COLS ,
