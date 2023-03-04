@@ -1392,12 +1392,44 @@ switch (name)
         less error prone. char, wchar and dchar strings are allowed.
         )
 
-        $(P $(D Implementation Note:) The compiler's code generator may
+        $(P A new scope for local symbols is introduced immediately following a
+        $(GLINK CaseStatement), $(GLINK CaseRangeStatement), or $(GLINK DefaultStatement),
+        extending to the first appearance of one of
+        $(GLINK CaseStatement), $(GLINK CaseRangeStatement), $(GLINK DefaultStatement), `}`
+        or the end of a $(GLINK MixinStatement). One current limitation of this is that
+        cases that are mixed in should have the whole case in inside the mixin statement
+        to avoid "switch skips declaration" errors of variables declared in the case:
+        )
+---
+int n;
+switch(n) // Error: switch skips declaration of variable x
+{
+mixin("case 0:");
+    int x = 1;
+    return x;
+case 1:
+    int y = 2;
+    return y;
+default:
+    return -1;
+}
+---
+        $(IMPLEMENTATION_DEFINED The compiler's code generator may
         assume that the case
         statements are sorted by frequency of use, with the most frequent
         appearing first and the least frequent last. Although this is
         irrelevant as far as program correctness is concerned, it is of
         performance interest.
+        )
+
+        $(BEST_PRACTICE
+        $(OL
+        $(LI Use a $(GLINK ScopeBlockStatement) rather than a $(GLINK ScopeStatement)
+        for the $(B switch) body. (I.e. use `{ }`.))
+        $(LI $(GLINK CaseStatement), $(GLINK CaseRangeStatement), and $(GLINK DefaultStatement)
+        should appear directly in the `{ }` of the $(GLINK ScopeStatement), rather than
+        in nested `{ }`.)
+        )
         )
 
 $(H2 $(LEGACY_LNAME2 FinalSwitchStatement, final-switch-statement, Final Switch Statement))
