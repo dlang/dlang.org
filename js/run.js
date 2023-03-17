@@ -38,8 +38,8 @@ void main(string[] args) {
 ------
 
 TL;DR
-All examples are replaced with custom form by default. You need to do additional work only if you wan't
-your example to have deafault standard input or default standard arguments.
+All examples are replaced with custom form by default. You need to do additional work only if you want
+your example to have default standard input or default standard arguments.
 */
 
 var nl2br = function()
@@ -179,12 +179,16 @@ function parseOutput(res, o, oTitle)
 }
 
 // wraps a unittest into a runnable script
-function wrapIntoMain(code) {
+function wrapIntoMain(code, compile) {
     var currentPackage = $('body')[0].id;
 
     // dynamically wrap into main if needed
     if (code.indexOf("void main") >= 0 || code.indexOf("int main") >= 0) {
         return code;
+    }
+    else if (compile) {
+        // avoid missing main link error
+        return code + "\nvoid main() {}";
     }
     else {
         var codeOut = "void main()\n{\n";
@@ -207,7 +211,6 @@ $(document).ready(function()
     {
         var root = $(this);
         var el = root.children("pre");
-        var stripedText = el.text().replace(/\s/gm,'');
 
         var stdin = root.children(".runnable-examples-stdin").text();
         var args = root.children(".runnable-examples-args").text();
@@ -247,11 +250,13 @@ $(document).ready(function()
         var outputDiv = parent.children("div.d_code_output");
         var hasStdin = parent.children(".inputButton").length > 0;
         var hasArgs  = parent.children(".argsButton").length > 0;
+        var compile = parent.parent()[0].hasAttribute('data-compile');
         setupTextarea(this, {
           parent: parent,
           outputDiv: outputDiv,
           stdin: hasStdin,
           args: hasArgs,
+          compile: compile,
           defaultOutput: "Succeed without output.",
           transformOutput: wrapIntoMain,
         });
@@ -421,7 +426,7 @@ function setupTextarea(el, opts)
         output.focus();
 
         var data = {
-          code: opts.transformOutput(editor.getValue())
+          code: opts.transformOutput(editor.getValue(), opts.compile)
         };
         if (opts.stdin) {
             data.stdin = stdin.val();
