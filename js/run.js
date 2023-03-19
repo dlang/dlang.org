@@ -227,6 +227,10 @@ $(document).ready(function()
                 + '<textarea class="d_code_args">'+args+'</textarea></div>';
         }
 
+        var compile = el.parent()[0].hasAttribute('data-compile');
+        var runAttrs = `value="${compile ? 'Compile' : 'Run'}"`;
+        if (!compile)
+            runAttrs += ' title="Note: Wraps code in `main` automatically if `main` is missing"';
         var currentExample = el;
         var orig = currentExample.html();
 
@@ -239,7 +243,7 @@ $(document).ready(function()
             + '<input type="button" class="editButton" value="Edit">'
             + (args.length > 0 ? '<input type="button" class="argsButton" value="Args">' : '')
             + (stdin.length > 0 ? '<input type="button" class="inputButton" value="Input">' : '')
-            + '<input type="button" class="runButton" value="Run">'
+            + `<input type="button" class="runButton" ${runAttrs}>`
             + '<input type="button" class="resetButton" value="Reset">'
             + '<input type="button" class="openInEditorButton" value="Open in IDE"></div>'
         );
