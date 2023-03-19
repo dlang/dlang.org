@@ -197,13 +197,13 @@ auto compileAndCheck(R)(R buffer, CompileConfig config, string modImport)
     static mainRegex = regex(`(void|int)\s+main`);
     const hasMain = !buffer.matchFirst(mainRegex).empty;
 
-    // if it's not a standalone
+    // don't change standalone module
     if (!buffer.find!(a => !a.isWhite).startsWith("module"))
     {
         buffer = "import std.stdio;\n" ~ buffer; // used too often
         if (modImport.length)
             buffer = "import " ~ modImport ~ ";" ~ buffer;
-        if (!hasMain)
+        if (!hasMain && config.mode == CompileConfig.TestMode.run)
             buffer = "void main() {\n" ~ buffer ~ "\n}";
     }
     pipes.stdin.write(buffer);
