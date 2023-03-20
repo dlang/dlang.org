@@ -102,7 +102,7 @@ var backends = {
         var req = {
             source: data.code,
             // always execute unittests and main for backwards compatibility with examples
-            args: "-unittest",
+            args: "-unittest -main",
             runtimeArgs: "--DRT-testmode=run-main",
             compiler: dmdCompilerBranch
         }
@@ -183,12 +183,8 @@ function wrapIntoMain(code, compile) {
     var currentPackage = $('body')[0].id;
 
     // dynamically wrap into main if needed
-    if (code.indexOf("void main") >= 0 || code.indexOf("int main") >= 0) {
+    if (compile || code.indexOf("void main") >= 0 || code.indexOf("int main") >= 0) {
         return code;
-    }
-    else if (compile) {
-        // avoid missing main link error
-        return code + "\nvoid main() {}";
     }
     else {
         var codeOut = "void main()\n{\n";
