@@ -230,7 +230,8 @@ $(document).ready(function()
         var compile = el.parent()[0].hasAttribute('data-compile');
         var runAttrs = `value="${compile ? 'Compile' : 'Run'}"`;
         if (!compile)
-            runAttrs += ' title="Note: Wraps code in `main` automatically if `main` is missing"';
+            runAttrs += ' title="Note: Wraps code in `main` automatically if `main` is missing'
+                + ' & imports std.stdio.write[f][ln]"';
         var currentExample = el;
         var orig = currentExample.html();
 
