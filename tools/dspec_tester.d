@@ -200,7 +200,8 @@ auto compileAndCheck(R)(R buffer, CompileConfig config, string modImport)
     // don't change standalone module
     if (!buffer.find!(a => !a.isWhite).startsWith("module"))
     {
-        buffer = "import std.stdio;\n" ~ buffer; // used too often
+        if (config.mode == CompileConfig.TestMode.run)
+            buffer = "import std.stdio;\n" ~ buffer; // used too often
         if (modImport.length)
             buffer = "import " ~ modImport ~ ";" ~ buffer;
         if (!hasMain && config.mode == CompileConfig.TestMode.run)
