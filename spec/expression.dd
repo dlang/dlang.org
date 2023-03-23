@@ -1519,6 +1519,15 @@ $(GNAME PostfixExpression):
     $(GLINK2 type, TypeCtors)$(OPT) $(GLINK2 type, BasicType) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
     $(GLINK IndexExpression)
     $(GLINK SliceExpression)
+
+$(GNAME ArgumentList):
+    $(GLINK NamedArgument)
+    $(GLINK NamedArgument) $(D ,)
+    $(GLINK NamedArgument) $(D ,) $(GSELF ArgumentList)
+
+$(GNAME NamedArgument):
+    $(IDENTIFIER) : $(GLINK AssignExpression)
+    $(GLINK AssignExpression)
 )
 
 $(TABLE
@@ -1535,6 +1544,11 @@ $(TABLE
     $(TROW *IndexExpression*, Select a single element)
     $(TROW *SliceExpression*, Select a series of elements)
 )
+
+    $(P An argument list consists of comma-separated *AssignExpression*s,
+        each optionally prefixed by an *Identifier* to specify
+        which parameter the argument binds to.
+    )
 
 $(H2 $(LNAME2 index_expressions, Index Expressions))
 
@@ -2505,11 +2519,6 @@ $(GNAME NewExpression):
     $(D new) $(GLINK2 type, Type) $(D [) $(GLINK AssignExpression) $(D ])
     $(D new) $(GLINK2 type, Type) $(D $(LPAREN)) $(GLINK ArgumentList)$(OPT) $(D $(RPAREN))
     $(GLINK2 class, NewAnonClassExpression)
-
-$(GNAME ArgumentList):
-    $(GLINK AssignExpression)
-    $(GLINK AssignExpression) $(D ,)
-    $(GLINK AssignExpression) $(D ,) $(GSELF ArgumentList)
 )
 
     $(P $(I NewExpression)s are used to allocate memory on the
