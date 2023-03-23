@@ -2056,10 +2056,24 @@ $(GNAME FunctionLiteral):
     $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
 
 $(GNAME ParameterWithAttributes):
-    $(GLINK2 function, Parameters) $(GLINK2 function, FunctionAttributes)$(OPT)
+    $(I FunctionLiteralParameters) $(GLINK2 function, FunctionAttributes)$(OPT)
 
 $(GNAME ParameterWithMemberAttributes):
-    $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT)
+    $(I FunctionLiteralParameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT)
+
+$(GNAME FunctionLiteralParameters):
+    `(` $(I FunctionLiteralParameterList)$(OPT) `)`
+
+$(GNAME FunctionLiteralParameterList):
+    $(I FunctionLiteralParameter)
+    $(I FunctionLiteralParameter), $(I FunctionLiteralParameterList)$(OPT)
+    $(GLINK2 function, VariadicArgumentsAttributes)$(OPT) $(D ...)
+
+$(GNAME FunctionLiteralParameter):
+    $(GLINK2 function, ParameterAttributes)$(OPT) $(GLINK2 type, FundamentalType)
+    $(GLINK2 function, ParameterAttributes)$(OPT) $(GLINK2 type, BasicType)$(OPT) $(GLINK2 declaration, Declarator)
+    $(GLINK2 function, ParameterAttributes)$(OPT) $(GLINK2 type, BasicType)$(OPT) $(GLINK2 declaration, Declarator) $(D ...)
+    $(GLINK2 function, ParameterAttributes)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator) $(D =) $(ASSIGNEXPRESSION)
 
 $(GNAME FunctionLiteralBody2):
     $(D =>) $(GLINK AssignExpression)
@@ -2070,16 +2084,18 @@ $(GNAME RefOrAutoRef):
     $(D auto ref)
 )
 
-    $(P $(I FunctionLiteral)s (also known as $(LNAME2 lambdas, $(I Lambdas))) enable embedding anonymous functions
+    $(P $(I FunctionLiteral)s enable embedding anonymous functions
         and anonymous delegates directly into expressions.
-        $(I Type) is the return type of the function or delegate -
+        Short function literals are known as $(LNAME2 lambdas, $(I lambdas)).
+    )
+      * $(I Type) is the return type of the function or delegate -
         if omitted it is $(RELATIVE_LINK2 lambda-return-type, inferred).
-        $(I ParameterWithAttributes) or $(I ParameterWithMemberAttributes)
+      * $(I ParameterWithAttributes) or $(I ParameterWithMemberAttributes)
         can be used to specify the parameters for the function. If these are
         omitted, the function defaults to the empty parameter list $(D ( )).
-        The type of a function literal is a
+      * Parameter types can be $(RELATIVE_LINK2 lambda-parameter-inference, omitted).
+      * The type of a function literal is a
         $(DDSUBLINK spec/function, closures, delegate or a pointer to function).
-    )
 
     $(P For example:)
 
