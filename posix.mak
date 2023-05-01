@@ -794,13 +794,13 @@ chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-p
 ################################################################################
 
 d-latest.tag d-tags-latest.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
-	$(STABLE_RDMD) $< --root=$W --target latest
+	$(STABLE_RDMD) $< --root=$W --target latest --dir ${GENERATED}/chmgen-latest
 
 d-release.tag d-tags-release.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
-	$(STABLE_RDMD) $< --root=$W --target release
+	$(STABLE_RDMD) $< --root=$W --target release --dir ${GENERATED}/chmgen-release
 
 d-prerelease.tag d-tags-prerelease.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
-	$(STABLE_RDMD) $< --root=$W --target prerelease
+	$(STABLE_RDMD) $< --root=$W --target prerelease --dir ${GENERATED}/chmgen-prerelease
 
 ################################################################################
 # Style tests
