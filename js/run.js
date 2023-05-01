@@ -38,8 +38,8 @@ void main(string[] args) {
 ------
 
 TL;DR
-All examples are replaced with custom form by default. You need to do additional work only if you wan't
-your example to have deafault standard input or default standard arguments.
+All examples are replaced with custom form by default. You need to do additional work only if you want
+your example to have default standard input or default standard arguments.
 */
 
 var nl2br = function()
@@ -102,7 +102,7 @@ var backends = {
         var req = {
             source: data.code,
             // always execute unittests and main for backwards compatibility with examples
-            args: "-unittest",
+            args: "-unittest -main",
             runtimeArgs: "--DRT-testmode=run-main",
             compiler: dmdCompilerBranch
         }
@@ -179,11 +179,11 @@ function parseOutput(res, o, oTitle)
 }
 
 // wraps a unittest into a runnable script
-function wrapIntoMain(code) {
+function wrapIntoMain(code, compile) {
     var currentPackage = $('body')[0].id;
 
     // dynamically wrap into main if needed
-    if (code.indexOf("void main") >= 0 || code.indexOf("int main") >= 0) {
+    if (compile || code.indexOf("void main") >= 0 || code.indexOf("int main") >= 0) {
         return code;
     }
     else {
@@ -207,7 +207,6 @@ $(document).ready(function()
     {
         var root = $(this);
         var el = root.children("pre");
-        var stripedText = el.text().replace(/\s/gm,'');
 
         var stdin = root.children(".runnable-examples-stdin").text();
         var args = root.children(".runnable-examples-args").text();
@@ -224,6 +223,11 @@ $(document).ready(function()
                 + '<textarea class="d_code_args">'+args+'</textarea></div>';
         }
 
+        var compile = el.parent()[0].hasAttribute('data-compile');
+        var runAttrs = `value="${compile ? 'Compile' : 'Run'}"`;
+        if (!compile)
+            runAttrs += ' title="Note: Wraps code in `main` automatically if `main` is missing'
+                + ' & imports std.stdio.write[f][ln]"';
         var currentExample = el;
         var orig = currentExample.html();
 
@@ -236,7 +240,7 @@ $(document).ready(function()
             + '<input type="button" class="editButton" value="Edit">'
             + (args.length > 0 ? '<input type="button" class="argsButton" value="Args">' : '')
             + (stdin.length > 0 ? '<input type="button" class="inputButton" value="Input">' : '')
-            + '<input type="button" class="runButton" value="Run">'
+            + `<input type="button" class="runButton" ${runAttrs}>`
             + '<input type="button" class="resetButton" value="Reset">'
             + '<input type="button" class="openInEditorButton" value="Open in IDE"></div>'
         );
@@ -247,11 +251,13 @@ $(document).ready(function()
         var outputDiv = parent.children("div.d_code_output");
         var hasStdin = parent.children(".inputButton").length > 0;
         var hasArgs  = parent.children(".argsButton").length > 0;
+        var compile = parent.parent()[0].hasAttribute('data-compile');
         setupTextarea(this, {
           parent: parent,
           outputDiv: outputDiv,
           stdin: hasStdin,
           args: hasArgs,
+          compile: compile,
           defaultOutput: "Succeed without output.",
           transformOutput: wrapIntoMain,
         });
@@ -421,7 +427,7 @@ function setupTextarea(el, opts)
         output.focus();
 
         var data = {
-          code: opts.transformOutput(editor.getValue())
+          code: opts.transformOutput(editor.getValue(), opts.compile)
         };
         if (opts.stdin) {
             data.stdin = stdin.val();
