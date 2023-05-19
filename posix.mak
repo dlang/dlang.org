@@ -322,7 +322,7 @@ SPEC_ROOT=$(addprefix spec/, \
 	const3 function operatoroverloading template template-mixin contracts \
 	version traits errors unittest garbage float iasm ddoc \
 	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
-	abi simd betterc importc ob windows)
+	abi simd betterc importc ob windows glossary)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
@@ -347,7 +347,7 @@ ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 	ascii-table bugstats $(CHANGELOG_FILES) community comparison \
 	deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
-	documentation download dstyle forum-template gpg_keys glossary \
+	documentation download dstyle forum-template gpg_keys \
 	howto-promote htod index install \
 	menu orgs-using-d overview rdmd resources search security tuple wc windbg \
 	$(addprefix foundation/, index about donate prman sponsors upb-scholarship) \
