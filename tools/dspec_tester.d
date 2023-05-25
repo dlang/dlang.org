@@ -87,13 +87,15 @@ auto ddocMacroToCode(R)(R text)
 
 int main(string[] args)
 {
-    import std.file, std.getopt, std.path;
+    import std.file, std.getopt;
     import std.parallelism : parallel;
+    import std.path;
     import std.process : environment;
     import std.typecons : Tuple;
 
-    auto specDir = __FILE_FULL_PATH__.dirName.dirName.buildPath("spec");
-    bool hasFailed;
+    const rootDir = __FILE_FULL_PATH__.dirName.dirName;
+    const specDir = rootDir.buildPath("spec");
+    const stdDir = rootDir.buildPath("..", "phobos", "std");
 
     config.dmdBinPath = environment.get("DMD", "dmd");
     auto helpInformation = getopt(
@@ -110,28 +112,41 @@ int main(string[] args)
         return 1;
     }
 
-    // Find all examples in the specification
-    alias findExamples = (file, ddocKey) => file
-            .readText
-            .findDdocMacro(ddocKey)
-            .map!ddocMacroToCode;
-
     alias SpecType = Tuple!(string, "key", CompileConfig.TestMode, "mode");
     auto specTypes = [
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_COMPILE", CompileConfig.TestMode.compile),
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_RUN", CompileConfig.TestMode.run),
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_FAIL", CompileConfig.TestMode.fail),
+        SpecType("$(RUNNABLE_EXAMPLE", CompileConfig.TestMode.run),
     ];
-    foreach (file; specDir.dirEntries("*.dd", SpanMode.depth).parallel(1))
+    auto files = chain(specDir.dirEntries("*.dd", SpanMode.depth),
+        stdDir.dirEntries("*.d", SpanMode.depth));
+    shared bool hasFailed;
+    foreach (file; files.parallel(1))
     {
-        auto allTests = specTypes.map!(c => findExamples(file, c.key)
-                                            .map!(e => compileAndCheck(e, CompileConfig(c.mode))))
-                                 .joiner;
+        // auto-import current module if in phobos
+        string modImport = file.name.find(stdDir);
+        if (modImport.length)
+        {
+            modImport = "std" ~ modImport[stdDir.length..$];
+            modImport = modImport.stripExtension();
+            modImport = modImport.findSplitBefore(dirSeparator ~ "package")[0];
+            modImport = modImport.replace(dirSeparator, ".");
+        }
+        const text = file.readText;
+        // Find all examples in the specification
+        alias findExamples = (ddocKey) => text
+            .findDdocMacro(ddocKey)
+            .map!ddocMacroToCode;
+        auto allTests = specTypes.map!(c => findExamples(c.key)
+            .map!(e => compileAndCheck(e, CompileConfig(c.mode), modImport)))
+            .joiner;
         if (!allTests.empty)
         {
-            writefln("%s: %d examples found", file.baseName, allTests.walkLength);
+            import core.atomic;
+            writefln("%s: %d examples found", file[rootDir.length+1..$], allTests.walkLength);
             if (allTests.any!(a => a != 0))
-                hasFailed = true;
+                atomicStore(hasFailed, true);
         }
     }
     return hasFailed;
@@ -154,7 +169,7 @@ Params:
 
 Returns: the exit code of the compiler invocation.
 */
-auto compileAndCheck(R)(R buffer, CompileConfig config)
+auto compileAndCheck(R)(R buffer, CompileConfig config, string modImport)
 {
     import std.process;
     import std.uni : isWhite;
@@ -182,12 +197,14 @@ auto compileAndCheck(R)(R buffer, CompileConfig config)
     static mainRegex = regex(`(void|int)\s+main`);
     const hasMain = !buffer.matchFirst(mainRegex).empty;
 
-    // if it's not a standalone
+    // don't change standalone module
     if (!buffer.find!(a => !a.isWhite).startsWith("module"))
     {
-        buffer = "import std.stdio;\n" ~ buffer; // used too often
-
-        if (!hasMain)
+        if (config.mode == CompileConfig.TestMode.run)
+            buffer = "import std.stdio;\n" ~ buffer; // used too often
+        if (modImport.length)
+            buffer = "import " ~ modImport ~ ";" ~ buffer;
+        if (!hasMain && config.mode == CompileConfig.TestMode.run)
             buffer = "void main() {\n" ~ buffer ~ "\n}";
     }
     pipes.stdin.write(buffer);

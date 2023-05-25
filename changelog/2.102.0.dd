@@ -1,0 +1,630 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Feb 01, 2023, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 15 major changes and 75 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 40 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.deprecate-duplicate-system-implementations,A missed case of conflicting `extern (D) @system` function definitions has been deprecated))
+$(LI $(RELATIVE_LINK2 dmd.deprecate-getAttributes-overloadSet,Deprecate the ability to call `__traits(getAttributes)` on overload sets))
+$(LI $(RELATIVE_LINK2 dmd.for-increment,Deprecate non-empty `for` statement *Increment* clause with no effect))
+$(LI $(RELATIVE_LINK2 dmd.scope-array-on-stack,Array literals assigned to `scope` array variables can now be allocated on the stack))
+$(LI $(RELATIVE_LINK2 dmd.static-assert,`static assert` now supports multiple message arguments))
+$(LI $(RELATIVE_LINK2 dmd.system-variables,`-preview=systemVariables` has been added))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 druntime.nogc-traceinfo,The default `Throwable.TraceInfo` generation now is `@nogc`.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 log_float_double_implementations,Single- and double-precision implementations for log function families))
+$(LI $(RELATIVE_LINK2 unicode_properties_c,The Unicode property "C" aka "Other" has had the wrong properties associated with it.))
+$(LI $(RELATIVE_LINK2 unicode_table_generator,Unicode table generator is now in Phobos, tables are updated to version 15.))
+$(LI $(RELATIVE_LINK2 unique-struct-dtor,`std.typecons.Unique` now calls `destroy` on struct types))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Installer changes,
+
+$(LI $(RELATIVE_LINK2 VisualDUpdate,Update the bundled VisualD package))
+$(LI $(RELATIVE_LINK2 issue_23623,Prefer 64 bit over 32 bit DMD on Windows 64 bit.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 build-cache,Binary output will now be in a central cache))
+$(LI $(RELATIVE_LINK2 metadata-cache,DUB API breaking change: `Package.metadataCache` setter and getter have been removed))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.deprecate-duplicate-system-implementations,A missed case of conflicting `extern (D) @system` function definitions has been deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.deprecate-duplicate-system-implementations.dd)
+$(P
+Having multiple definitions of functions within a module had been turned
+$(LINK2 $(ROOT_DIR)/changelog/2.095.0.html#duplicate-implementations-deprecation,
+into an error in DMD 2.095.0).
+)
+
+$(P
+However, the compiler would not issue an error when two implementations
+differed by an explicit and inferred `@system` attribute, although they have
+the same mangling.
+)
+
+---
+void foo() {}
+void foo() @system {} // no error
+---
+
+$(P
+This bug has been fixed, and DMD will now issue a deprecation if there are such
+conflicting `@system` function implementations. Starting from DMD 2.112, it
+will produce a multiple definition error just like other kinds of conflicting
+functions within a module.
+)
+)
+
+$(LI $(LNAME2 dmd.deprecate-getAttributes-overloadSet,Deprecate the ability to call `__traits(getAttributes)` on overload sets)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.deprecate-getAttributes-overloadSet.dd)
+$(P
+Up until this release, `__traits(getAttributes)` could be called both on
+individual functions and on overload sets. However, in the latter case,
+the compiler simply collected the user defined attributes for the first
+lexically defined function. This behavior is error prone. Consider:
+)
+
+```d
+module test;
+
+@("gigi")
+void fun() {}
+@("mimi")
+void fun(int) {}
+
+void main()
+{
+    static foreach(attr; __traits(getAttributes, fun))
+        pragma(msg, attr);
+```
+
+$(P
+The above code will print "gigi" although there is no indication on
+what overload is actually queried. The first one is always picked.
+)
+
+$(P
+Starting with this release, this sort of usage of `__traits(getAttributes)`
+is deprecated. If a specific overload needs to be handled, `__traits(getOverloads)`
+may be used in conjunction with `__traits(getAttributes)` for proper behavior:
+)
+
+```d
+module test;
+
+@("gigi")
+void fun() {}
+@("mimi")
+void fun(int) {}
+
+void main()
+{
+    static foreach (t; __traits(getOverloads, test, "fun"))
+        static foreach(attr; __traits(getAttributes, t))
+            pragma(msg, attr);
+```
+
+$(P
+The above code prints:
+)
+
+```
+gigi
+mimi
+```
+)
+
+$(LI $(LNAME2 dmd.for-increment,Deprecate non-empty `for` statement *Increment* clause with no effect)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.for-increment.dd)
+$(P
+The $(DDSUBLINK spec/statement, for-statement, last clause of a `for` statement)
+should not produce a value without also having some meaningful
+side-effect. This is now detected with a deprecation message. The
+following `for` statements each trigger the deprecation:
+)
+
+---
+// evaluating `j` has no side-effects
+int j;
+for (;; j) {...}
+
+// unnecessary dereference
+for (ubyte* sp;; *sp++) {...}
+
+// first clause is a block statement
+// last clause is a function literal, not a block statement
+for({j = 2; int d = 3;} j + d < 7; {j++; d++;}) {...}
+---
+
+$(P
+Note: Calling a function returning `void` is *not* deprecated even if the
+function does nothing. This is for generic code.
+)
+)
+
+$(LI $(LNAME2 dmd.scope-array-on-stack,Array literals assigned to `scope` array variables can now be allocated on the stack)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.scope-array-on-stack.dd)
+$(P
+Formerly, they were always allocated with the Garbage Collector, making it unavailable in `@nogc` or `-betterC` code.
+This led to frequent use of the following workaround:
+)
+
+---
+void main() @nogc
+{
+    int[3] buffer = [10, 20, 30];
+    int[] arr = buffer[];
+}
+---
+
+$(P
+This can now be written in a single line:
+)
+
+---
+void main() @nogc
+{
+    scope int[] arr = [10, 20, 30];
+}
+---
+
+$(P
+With the following limitations:
+- The variable must be explicitly annotated `scope`, not just inferred `scope`
+- The `-preview=dip1000` must be passed, to prevent introducing memory corruption in legacy code.
+Note that in `@system` and `@trusted` code, the compiler doesn't verify that your `scope` variable doesn't escape.
+- The array literal must be initializing the variable. Subsequent array literals assignments still use the GC.
+- The array elements may not have a destructor
+)
+
+$(P
+Some of these limitations might get lifted in the future.
+)
+)
+
+$(LI $(LNAME2 dmd.static-assert,`static assert` now supports multiple message arguments)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.static-assert.dd)
+$(P
+When the condition evaluates to false, any subsequent expressions will
+each be converted to string and then concatenated. The resulting string
+will be printed out along with the error diagnostic.
+)
+---
+enum e = 3;
+static assert(false, "a = ", e);
+---
+$(P
+Will print:
+$(CONSOLE
+file.d(2): Error: static assert:  a = 3
+)
+)
+)
+
+$(LI $(LNAME2 dmd.system-variables,`-preview=systemVariables` has been added)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.system-variables.dd)
+$(P
+Since [DIP 1035 - System Variables](http://dlang.org/dips/1035) has been accepted, variables marked `@system` may no longer be accessed from `@safe` code.
+To avoid code breakage, the compiler will start with emitting deprecation warnings.
+The preview switch will turn these into errors, and it will be enabled by default in a future release.
+)
+
+---
+@system int* p;
+
+struct S
+{
+    @system int i;
+}
+
+void main() @safe
+{
+    int x = *p; // error with `-preview=systemVariables`, deprecation otherwise
+
+    S s;
+    s.i = 0; // ditto
+}
+---
+
+$(P
+Note that currently this is limited to variables explicitly marked `@system`, inference of `@system` based on a variable's initializer is yet to be implemented.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 druntime.nogc-traceinfo,The default `Throwable.TraceInfo` generation now is `@nogc`.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.nogc-traceinfo.dd)
+$(P
+The way this works:
+)
+
+$(P
+1. The runtime now has 2 trace-related functions, one for allocating a traceinfo, and one for deallocating the traceinfo. Both are set via the same `Runtime.traceHandler` function. The second parameter that sets the deallocation function is optional (so existing code will not be affected).
+2. When a `Throwable` is thrown, if the trace info is not yet set, the runtime uses the designated function to allocate a trace info. If the deallocation function is non-null, the function pointer is copied into the `Throwable`, into the new member `infoDeallocator`.
+3. When the `Throwable` is destroyed, if the `infoDeallocator` member is set, it is called on the `info` member.
+)
+
+$(P
+The default allocator and deallocator now uses C malloc and free to allocate and deallocate the `TraceInfo`. Almost everything was already nogc, *except* for the allocation of the `TraceInfo` object itself.
+)
+
+$(P
+The benefits:
+)
+
+$(P
+1. Stack traces can now be generated when run inside the GC collection routine.
+2. InvalidMemoryOperationError now has a stack trace.
+3. Little known is that even inside `@nogc` functions, throwing a `Throwable` actually was using the GC, that is no longer the case (by default).
+4. Certain GC hangs have been fixed (see bug fixes listed below).
+)
+
+$(P
+One possible drawback is that the `TraceInfo` is deallocated upon `Throwable` being finalized, leading to a potential dangling pointer situation. If you do copy the `info` out of the `Throwable`, makes sure to not keep it beyond the lifetime of the `Throwable`, or make sure to set the `infoDeallocator` member to null.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 log_float_double_implementations,Single- and double-precision implementations for log function families)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/log_float_double_implementations.dd)
+$(P
+New `float` and `double` overloads of $(REF log, std, math, exponential),
+$(REF log10, std, math, exponential), $(REF log1p, std, math, exponential),
+ $(REF log2, std, math, exponential), and $(REF logb, std, math, exponential)
+have been added to Phobos with proper 'software' implementations in the
+corresponding precision. Furthermore, $(REF logb, std, math, exponential) is
+now `pure`.
+)
+
+$(P
+While this may result in a slowdown in some cases for DMD, the overall speed-up
+factor for GDC and LDC is over 3x, for both `double` and `float`.
+)
+
+$(P
+This also implies less precise results, especially in single-precision,
+so if your code depended on more accurate results via 80-bit intermediate
+precision, you'll have to cast the argument(s) explicitly now.
+)
+)
+
+$(LI $(LNAME2 unicode_properties_c,The Unicode property "C" aka "Other" has had the wrong properties associated with it.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/unicode_properties_c.dd)
+$(P
+If you use `unicode.c` or `unicode.Other` (case insensitive) from `std.uni`, you should mitigate or fix your codebase.
+)
+
+$(P
+This change makes it match the [Unicode Techical Report #44](https://www.unicode.org/reports/tr44/). Unfortunately if you are already using it with its previous wrong values, this will break your code, below is a function which reflects the original values that you can use to mitigate against any breakage.
+)
+
+---
+@property auto loadPropertyOriginal(string name)() pure
+{
+    import std.uni : unicode;
+
+    static if (name == "C" || name == "c" || name == "other" || name == "Other")
+    {
+        auto target = unicode.Co;
+        target |= unicode.Lo;
+        target |= unicode.No;
+        target |= unicode.So;
+        target |= unicode.Po;
+        return target;
+    }
+    else
+        return unicode.opDispatch!name;
+}
+---
+)
+
+$(LI $(LNAME2 unicode_table_generator,Unicode table generator is now in Phobos, tables are updated to version 15.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/unicode_table_generator.dd)
+$(P
+It is likely that this change will result in breakage in code and program usage.
+This is due to a number of factors, the tables being updated so significantly and the table generator not having all its changes commited throughout the years.
+)
+)
+
+$(LI $(LNAME2 unique-struct-dtor,`std.typecons.Unique` now calls `destroy` on struct types)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/unique-struct-dtor.dd)
+$(P
+When Unique goes out of scope, any destructor will now be called.
+Previously the destructor was not called then.
+)
+
+$(P
+$(RUNNABLE_EXAMPLE
+)
+---
+static int i;
+
+struct S
+{
+    ~this()
+    {
+        i++;
+    }
+}
+{
+    Unique!S u = new S;
+    // S.~this now called here
+}
+assert(i == 1);
+---
+$(P
+)
+)
+
+$(P
+$(B Note:) Above, the struct destructor will also be called by the GC just
+before the memory for `new S` is reclaimed. Take care that any struct
+destructor used will handle being called again on the struct `.init`
+value.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Installer changes,
+
+$(LI $(LNAME2 VisualDUpdate,Update the bundled VisualD package)
+$(CHANGELOG_SOURCE_FILE installer, changelog/VisualDUpdate.dd)
+$(P
+The $(LINK2 https://rainers.github.io/visuald/visuald/StartPage.html, VisualD) package version
+that the installer downloads hasn't been updated in years. This has been remedied by a version
+bump to 1.3.1, the latest release of VisualD.
+)
+)
+
+$(LI $(LNAME2 issue_23623,Prefer 64 bit over 32 bit DMD on Windows 64 bit.)
+$(CHANGELOG_SOURCE_FILE installer, changelog/issue_23623.dd)
+$(P
+The NSIS installer for Windows has the option "Add to PATH". Previously, only
+the 32 bit version of DMD was added to the PATH environment variable. Now, on
+Windows 64 bit, the 64 bit version of DMD will be selected from PATH.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 build-cache,Binary output will now be in a central cache)
+$(CHANGELOG_SOURCE_FILE dub, changelog/build-cache.dd)
+$(P
+Up until now, dub would output build artifact in the package directory.
+)
+
+$(P
+This allowed reuse of build artifact for dependencies, but also created
+issues with large amount of build artifacts in the packages folder,
+preventing the use of read-only location to store packages,
+and making garbage collection of build artifacts unreliable.
+)
+
+$(P
+Starting from this version, build artifacts will be output by default to
+`$HOME/.dub/cache/build/$BASE_PACKAGE_NAME/$PACKAGE_VERSION/[+$SUB_PACKAGE_NAME]`
+on Linux, and
+`%APPDATA%/cache/build/$BASE_PACKAGE_NAME/$PACKAGE_VERSION/[+$SUB_PACKAGE_NAME]`
+on Windows.
+)
+)
+
+$(LI $(LNAME2 metadata-cache,DUB API breaking change: `Package.metadataCache` setter and getter have been removed)
+$(CHANGELOG_SOURCE_FILE dub, changelog/metadata-cache.dd)
+$(P
+Those two functions were used to provide access to the metadata cache file
+to the generator. They were never intended for public consumption,
+and the JSON file format was not stable.
+)
+
+$(P
+Due to the introduction of the build cache, they needed to be removed,
+as there was no way to provide a sensible transition path, and they should be unused.
+If you have a use case for it, please open an issue in dub repository.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 19268): BetterC turns off .dup for CTFE)
+$(LI $(BUGZILLA 20520): Runtime segfault when taking typeid of a class instanciated within an enum)
+$(LI $(BUGZILLA 21301): Wrong values being passed in long parameter list)
+$(LI $(BUGZILLA 23307): [REG][CODEGEN][SIMD] wrong codegen with inlined local functions + SIMD)
+$(LI $(BUGZILLA 23539): [REG master] Scope C++ definition out of sync with D)
+$(LI $(BUGZILLA 23548): [REG 2.098] C sources files have precedent over D modules in imports)
+$(LI $(BUGZILLA 23569): [REG 2.081][ICE] Segmentation fault in in AggregateDeclaration::getType$(LPAREN)$(RPAREN) $(LPAREN)this=0x0$(RPAREN) at src/dmd/aggregate.d:594)
+$(LI $(BUGZILLA 23587): cast$(LPAREN)void$(RPAREN) doesn't work for noreturn)
+$(LI $(BUGZILLA 23591): [REG 2.101] Invalid casts accepted by the compiler if from type is noreturn)
+$(LI $(BUGZILLA 23607): invalid code leading to an ICE due to an error message that's not emitted anymore)
+$(LI $(BUGZILLA 23626): [REG2.096] Template deduction with auto const ref Args... and delegate)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 13060):  @nogc reading an associative array)
+$(LI $(BUGZILLA 15414): __traits$(LPAREN)getAttributes$(RPAREN) should error if the function has multiple overloads)
+$(LI $(BUGZILLA 15712): extern$(LPAREN)C$(RPAREN) attribute inside extern$(LPAREN)C$(RPAREN) unittest is incorrectly ignored)
+$(LI $(BUGZILLA 18026): Stack overflow in ddmd/dtemplate.d:6241, TemplateInstance::needsCodegen$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 19623): HERE string identifier cannot start with Unicode letter)
+$(LI $(BUGZILLA 19649): Misleading error message for duplicate constraints)
+$(LI $(BUGZILLA 21062): Confusing error when using a keyword as an identifier for a declaration)
+$(LI $(BUGZILLA 21506): misalignment of _argptr for variadic functions)
+$(LI $(BUGZILLA 21613): DMD crash: copy ctor + templated rvalue ctor)
+$(LI $(BUGZILLA 22759): ImportC: cannot modify const expression from dereferencing const pointer declared within function.)
+$(LI $(BUGZILLA 23122): enum member UDAs semantics are not checked properly)
+$(LI $(BUGZILLA 23218): ICE: src/dmd/backend/cgxmm.d:1373: Assertion `0' failed.)
+$(LI $(BUGZILLA 23412): void init member detection does not account for static arrays)
+$(LI $(BUGZILLA 23418): double argument is passed on stack, but assumed to be in XMM0 register)
+$(LI $(BUGZILLA 23447): wrong expression in error message when template instance doesn't match any overload)
+$(LI $(BUGZILLA 23462): dmd: src/dmd/backend/cod2.d:2158: Assertion cast$(LPAREN)int$(RPAREN)tysize$(LPAREN)$(LPAREN)*e$(RPAREN).Ety$(RPAREN) <= REGSIZE$(LPAREN)$(RPAREN) failed)
+$(LI $(BUGZILLA 23463): Don't count skipped function overloads when limiting overloads shown)
+$(LI $(BUGZILLA 23465): Invalid token error points to wrong line)
+$(LI $(BUGZILLA 23470): Backticks in diagnostic are confusing with wrong number of arguments passed)
+$(LI $(BUGZILLA 23491): Nonsensical deprecation message when using delegate)
+$(LI $(BUGZILLA 23531): [DIP1000] scope variable can be assigned as AA key)
+$(LI $(BUGZILLA 23534): __traits$(LPAREN)isZeroInit$(RPAREN) is true for enums with explicit values)
+$(LI $(BUGZILLA 23536): crt_constructors and crt_destructors should not be non-static member functions)
+$(LI $(BUGZILLA 23568): Error: cannot implicitly convert expression 'a < b' of type 'float4' to 'int4')
+$(LI $(BUGZILLA 23578): Types are not matched to alias parameters in "is" expression)
+$(LI $(BUGZILLA 23586): DMD forgets a variable was just declared.)
+$(LI $(BUGZILLA 23593): core.thread: suspendAll doesn't wait for all if current thread has detached itself)
+$(LI $(BUGZILLA 23614): ImportC: __int128 not supported)
+$(LI $(BUGZILLA 23618): Right Shift equals expressions on unsigned shorts should be unsigned right shift)
+$(LI $(BUGZILLA 23620): 'alias this' is not respected in static array length position)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 9848): Better diagnostic when type declaration was not expected)
+$(LI $(BUGZILLA 15368): Improve error message for "auto" keyword inside "foreach")
+$(LI $(BUGZILLA 21338): Confusing error message for template overload resolution failure)
+$(LI $(BUGZILLA 22306): scope array variable should be stack allocated)
+$(LI $(BUGZILLA 23410): ImportC: binary constants not allowed)
+$(LI $(BUGZILLA 23424): improve error when template instantiation doesn't match any overload)
+$(LI $(BUGZILLA 23458): No template candidates listed when OverDeclaration or OverloadSet don't match)
+$(LI $(BUGZILLA 23466):  -verrors=context should not repeat same context for supplemental messages)
+$(LI $(BUGZILLA 23480): non-empty ForStatement  Increment clause should require a side effect)
+$(LI $(BUGZILLA 23552): Function `x` does not override any function, but it actually does)
+$(LI $(BUGZILLA 23566): ImportC: __PRETTY_FUNCTION__ is not defined)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 23319): std.range.Generator does not work with non-mutable elements)
+$(LI $(BUGZILLA 23488): std.format.sformat mishandles char ranges)
+$(LI $(BUGZILLA 23507): Socket.blocking property incorrect on new Socket on Windows)
+$(LI $(BUGZILLA 23540): std.uni loadProperty aliases for C are incorrect)
+$(LI $(BUGZILLA 23561): std.typecons.Unique!struct does not destroy struct instance)
+$(LI $(BUGZILLA 23640): Nullable range iteration doesn't work with immutable values)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 19737): [std.experimental.allocator] link table in docs has missing symbols)
+$(LI $(BUGZILLA 23453): Generic iota should be a forward range)
+)
+$(BUGSTITLE_BUGZILLA Druntime regression fixes,
+
+$(LI $(BUGZILLA 22616): Infinity loop instead of InvalidMemoryOperationError during GC routine)
+$(LI $(BUGZILLA 23562): [REG master] Segmentation fault in core.demangle)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 16641): Infinite loop on InvalidMemoryOperationError in __dmd_personality_v0)
+$(LI $(BUGZILLA 19467): Support EV_SET on OSX)
+$(LI $(BUGZILLA 23572): OpenBSD: Add OpenBSD to the RTLD_DEFAULT list)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 20650): Cryptic error message when GC called in finalizer)
+$(LI $(BUGZILLA 23332): core.sync.condition notify methods should be @nogc)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 23382): Non-template requirement for copy constructors is undocumented)
+$(LI $(BUGZILLA 23436): Spec falsely states mutable references in struct .init are forbidden)
+$(LI $(BUGZILLA 23541): [ImportC] dlang.org contains incorrect links)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 23426): Example Run button shows wrong line numbers for errors)
+$(LI $(BUGZILLA 23432): document when array capacity is zero and capacity performance)
+$(LI $(BUGZILLA 23511): Incrementing a not supported type in enum)
+$(LI $(BUGZILLA 23553): opCmp spec is incomplete)
+)
+$(BUGSTITLE_BUGZILLA Installer bug fixes,
+
+$(LI $(BUGZILLA 23623): On 64 bit Windows the path should point to 64 bit dmd.)
+)
+)
+$(D_CONTRIBUTORS_HEADER 40)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR Amaury)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Brian Callahan)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR fn ⌃ ⌥)
+    $(D_CONTRIBUTOR Gabriel Dolberg)
+    $(D_CONTRIBUTOR Garrett D'Amore)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jan Jurzitza)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR Jordi Sayol)
+    $(D_CONTRIBUTOR Loren Burkholder)
+    $(D_CONTRIBUTOR Lucian Danescu)
+    $(D_CONTRIBUTOR lucica28)
+    $(D_CONTRIBUTOR Luís Ferreira)
+    $(D_CONTRIBUTOR Marcelo Silva Nascimento Mancini)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Max Haughton)
+    $(D_CONTRIBUTOR mhh)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR richard (rikki) andrew cattermole)
+    $(D_CONTRIBUTOR RJ Nowling)
+    $(D_CONTRIBUTOR Stefan Koch)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Ömer Faruk IRMAK)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.102.0
+    TITLE=Change Log: $(VER)

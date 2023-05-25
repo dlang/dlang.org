@@ -1,0 +1,356 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Apr 01, 2023, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 9 major changes and 83 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 43 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.check,Add __check(assign-expression) to ImportC))
+$(LI $(RELATIVE_LINK2 dmd.deprecate-alias-this-for-classes,Alias this for classes is deprecated))
+$(LI $(RELATIVE_LINK2 dmd.dip25-default,`-preview=dip25` has been enabled by default))
+$(LI $(RELATIVE_LINK2 dmd.extern-dllimport,export int a; now generates dllexport instead of dllimport))
+$(LI $(RELATIVE_LINK2 dmd.get-is-virtual-function,Deprecate `traits(isVirtualFunction)` and `traits(getVirtualFunctions)`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 grapheme_walker_update,Unicode grapheme walking updated to conform to Unicode version 15))
+$(LI $(RELATIVE_LINK2 joiner_assert_message,Better static assert messages for `std.algorithm.iteration.joiner`))
+$(LI $(RELATIVE_LINK2 sort_assert_messaged,Better static assert messages for `std.algorithm.sorting.sort`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 colors,The `--color` argument now accepts values `auto`, `never`, `always`))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.check,Add __check(assign-expression) to ImportC)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.check.dd)
+$(P
+C code normally relies on `#include <assert.h>` to add support for assert's. D has them builtin to the
+language, which is much more convenient and does not rely on a preprocessor. This extension adds
+)
+
+---
+__check(assign-expression)
+---
+
+$(P
+as an expression to ImportC. The compiler switch -checkaction=C gives it the same behavior
+as C's assert macro. If the compiler switch -release is thrown, the `__check`'s are ignored.
+The `__check` expressions are handy for writing C programs that are free of reliance on `#include`.
+)
+
+$(P
+`__assert` is not used due to conflicts with some C .h files.
+)
+)
+
+$(LI $(LNAME2 dmd.deprecate-alias-this-for-classes,Alias this for classes is deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.deprecate-alias-this-for-classes.dd)
+$(P
+Using `alias this` for classes has not been clearly specified and the lookup rules in such circumstances are not defined. As a consequence, various failures or crashes may appear when `alias this` is used in conjunction with classes. Starting with this release, `alias this` for classes is being deprecated. As an alternative, getter/setter methods may be used to replace the `alias this`. This can be generically handled by:
+)
+
+```d
+static foreach(member, __traits(allMembers, LeClass))
+    mixin("ref auto " ~ member() { return $field_name." ~ member ~ "; }");
+```
+)
+
+$(LI $(LNAME2 dmd.dip25-default,`-preview=dip25` has been enabled by default)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.dip25-default.dd)
+$(P
+Deprecation warnings for [DIP25](http://dlang.org/dips/25) violations have been enabled since 2.092.
+Starting with this release, it will report errors, unless the `-revert=dip25` switch is used.
+Using the switch (or its short version `-dip25`) is now deprecated.
+)
+
+---
+ref int escapeRef(ref int x) {return x;}
+
+// Formerly:
+// Deprecation: returning `x` escapes a reference to parameter `x`
+//        perhaps annotate the parameter with `return`
+//
+// Now it is an error, unless `-revert=dip25` is used
+---
+)
+
+$(LI $(LNAME2 dmd.extern-dllimport,export int a; now generates dllexport instead of dllimport)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.extern-dllimport.dd)
+$(P
+In order to make it dllimport, use:
+)
+
+---
+export extern int a;
+---
+)
+
+$(LI $(LNAME2 dmd.get-is-virtual-function,Deprecate `traits(isVirtualFunction)` and `traits(getVirtualFunctions)`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.get-is-virtual-function.dd)
+$(P
+Up until this release, D had both `traits(isVirtualFunction)` and `traits(isVirtualMethod)`
+(and their coressponding `traits(get...)` counterpart). The differenrcte between the two is
+that `isVirtualFunction` returns true for `final` methods that do not override anything. This
+is in contradiction with the D spec which states that `final` functions that do not override
+other functions cannot be virtual. `isVirtualMethod` correctly returns `false` in that case.
+)
+
+$(P
+Starting with this release, both `traits(isVirtualFunction)` and `traits(getVirtualFunctions)`
+are deprecated. If the behavior of `traits(isVirtualFunction)` is desired, it can be achieved by
+`traits(isVirtualMethod, f) || (traits(isFinalFunction, f) && !traits(isOverrideFunction, f))`.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 grapheme_walker_update,Unicode grapheme walking updated to conform to Unicode version 15)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/grapheme_walker_update.dd)
+$(P
+Up until now `graphemeStride`, `byGrapheme` and `decodeGrapheme` functions in
+`std.uni` have used obsolete rules from earlier Unicode standards.
+)
+
+$(P
+This release brings grapheme breaking rules up to date with Unicode version 15.
+This means Phobos functions now recognise extended pictogram sequences and
+prepend characters.
+)
+)
+
+$(LI $(LNAME2 joiner_assert_message,Better static assert messages for `std.algorithm.iteration.joiner`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/joiner_assert_message.dd)
+$(P
+Up until now `filter` used a template constraint to check if the passed Data
+could be used. If it were not, it was very tedious to figure out why.
+)
+
+$(P
+As the template constraint is not used to overload the symbol template
+function, the constrains are move into static asserts with expressive error
+messages.
+)
+)
+
+$(LI $(LNAME2 sort_assert_messaged,Better static assert messages for `std.algorithm.sorting.sort`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/sort_assert_messaged.dd)
+$(P
+Up until now `sort` used a template constraint to check if the passed Range
+could be used. If it were not, it was very tedious to figure out why.
+)
+
+$(P
+As the template constraint is not used to overload the symbol template
+function, the constrains are move into static asserts with expressive error
+messages.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 colors,The `--color` argument now accepts values `auto`, `never`, `always`)
+$(CHANGELOG_SOURCE_FILE dub, changelog/colors.dd)
+$(P
+The previous `automatic`, `on`, `off` values are still supported, but
+undocumented, because they are used in almost no other program like this. For
+consistency, with other Linux tools especially, we have implemented and switched
+the defaults to the widely-used `auto`, `never`, `always` values.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 15985): [REG2.068/2.069] Code doesn't link unless compiled with -debug)
+$(LI $(BUGZILLA 18472): [Reg 2.078] betterC: cannot use format at compile time.)
+$(LI $(BUGZILLA 21772): [REG2.069] Consecutive different-signed double.nans in an array literal take the sign of the previous nan $(LPAREN)same for float and real$(RPAREN))
+$(LI $(BUGZILLA 22039): ICE on infinite recursion in default parameter)
+$(LI $(BUGZILLA 23688): FTBFS: error: cannot convert 'Expression' to 'Expression*')
+$(LI $(BUGZILLA 23710): [REG master] Reachable code inside an 'if $(LPAREN)false$(RPAREN)' block no longer gets codegen)
+$(LI $(BUGZILLA 23758): [REG 2.103] Segfault accessing NewExp::argprefix from C++)
+$(LI $(BUGZILLA 23799): Link error with -betterC)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 10886): Typeof on @property function triggers 'wrong this' type error)
+$(LI $(BUGZILLA 11051): Unmatched case in a final switch should throw in both release and non-release mode)
+$(LI $(BUGZILLA 16098): align$(LPAREN)N$(RPAREN) not respected for stack variables if N > platform stack alignment)
+$(LI $(BUGZILLA 16213): CTFE internal error with static array $ as template argument)
+$(LI $(BUGZILLA 20781): Can call @live function without checking dip1021 rules)
+$(LI $(BUGZILLA 20908):  -preview=nosharedaccess requires zero-initializion for aggregates)
+$(LI $(BUGZILLA 21288): Wrong context pointer for alias this function)
+$(LI $(BUGZILLA 21492): betterC: TypeInfo is generated for code guarded by if$(LPAREN)__ctfe$(RPAREN))
+$(LI $(BUGZILLA 21821): Optimizer assumes immutables do not change, but they can in @system code)
+$(LI $(BUGZILLA 22916): [dip1000] copy of ref return still treated as scope variable)
+$(LI $(BUGZILLA 23145): Stack allocation of scope new variables defeats @safe)
+$(LI $(BUGZILLA 23195): Win64 function ABI bug for small non-POD arguments)
+$(LI $(BUGZILLA 23261): druntime core.std.attribute.Tagged1_2 constructor is unsafe)
+$(LI $(BUGZILLA 23387): ImportC: identical structs defined in two C files lead to duplicate .init symbol on macOS)
+$(LI $(BUGZILLA 23407): ImportC: function-local struct definition as part of variable declaration doesn’t shadow global definition)
+$(LI $(BUGZILLA 23545): export int a; should generate dllexport, not dllimport)
+$(LI $(BUGZILLA 23583): ImportC: undefined identifier __builtin___memmove_chk)
+$(LI $(BUGZILLA 23584): ImportC: __builtin_bit_cast not supported)
+$(LI $(BUGZILLA 23598): Circular reference bug with static if and eponymous templates)
+$(LI $(BUGZILLA 23606): betterC with CTFE and gc)
+$(LI $(BUGZILLA 23616): ImportC: clang __has_feature and __has_extension not recognized)
+$(LI $(BUGZILLA 23617): traits$(LPAREN)child$(RPAREN) compile error need this for something that doesn't need this)
+$(LI $(BUGZILLA 23622): ImportC #defines conflict with declarations)
+$(LI $(BUGZILLA 23635): Nonsensical "`case` must be a `string` or an integral constant, not `x`")
+$(LI $(BUGZILLA 23639): Casting to shared not allowed with -preview=nosharedaccess)
+$(LI $(BUGZILLA 23650): Using typeid with struct defined in in __traits$(LPAREN)compiles, ...$(RPAREN) causes linker error)
+$(LI $(BUGZILLA 23651): Order dependency in semantic analysis of template members)
+$(LI $(BUGZILLA 23658): .di generation of variables should turn them into declarations)
+$(LI $(BUGZILLA 23669): [DIP1000] Compound assignment to length of slice member variable in scope method fails)
+$(LI $(BUGZILLA 23676): Static foreach hangs compilation for some time)
+$(LI $(BUGZILLA 23682): dip1000 problem with return by ref)
+$(LI $(BUGZILLA 23694): compilable/ctests2.c:51:9: error: initializer element is not constant)
+$(LI $(BUGZILLA 23711): compilable/testcstuff1.c:63:1: error: invalid use of restrict)
+$(LI $(BUGZILLA 23717): runnable/bitfields.c:192:5: error: unknown type name S; use struct keyword to refer to the type)
+$(LI $(BUGZILLA 23752): ImportC: can't take address of dereferenced void pointer)
+$(LI $(BUGZILLA 23760): Error: unknown)
+$(LI $(BUGZILLA 23763): ICE on operations involving zero-initialized structs)
+$(LI $(BUGZILLA 23767): ImportC: ternary with null constant has wrong pointer type)
+$(LI $(BUGZILLA 23778): Code generator fails to handle __c_complex_real properly for Windows)
+$(LI $(BUGZILLA 23781): [ICE] Segmentation Fault when taking the address of a ref return at CTFE)
+$(LI $(BUGZILLA 23783):  -preview=nosharedaccess does not detect comparison of shared data)
+$(LI $(BUGZILLA 23790): Cannot use cas on member variable with -preview=nosharedaccess)
+$(LI $(BUGZILLA 23792): lexer warns about preprocessor inside token strings)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 11316): Some cases of missing delegate argument type inference)
+$(LI $(BUGZILLA 13656): clarify error message upon trying to declare a variable of type ref)
+$(LI $(BUGZILLA 16495): __traits$(LPAREN)fullyQualifedName$(RPAREN) instead of std.traits.fullyQualifiedName)
+$(LI $(BUGZILLA 20101): BetterC: Template instantiation in CTFE only context should skip codegen / nogc / ... Phases)
+$(LI $(BUGZILLA 23558): add __traits$(LPAREN)getModuleClasses [, module name]$(RPAREN))
+$(LI $(BUGZILLA 23597): .di files not compatible with -i)
+)
+$(BUGSTITLE_BUGZILLA Phobos regression fixes,
+
+$(LI $(BUGZILLA 23776): getSymbolsByUDA fails to fetch symbols from module)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 23474): Grapheme should end after carriage return if not followed by line feed.)
+$(LI $(BUGZILLA 23600): [std.format.read] formattedRead static asserts with Tuple and compile time format string)
+$(LI $(BUGZILLA 23668): Can't stable sort structs with disabled default constructor.)
+$(LI $(BUGZILLA 23724): HTTP.onReceive example does not compile)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 19567): [std.stdio] Not really helpful documentation of `tell`)
+$(LI $(BUGZILLA 20397): [std.algorithm] documentation nthPermutation)
+$(LI $(BUGZILLA 23683): std.file.setTimes requests more permissions than needed)
+$(LI $(BUGZILLA 23706): Do not escape POSIX shell parameters unless necessary)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 19575): core.cpuid not usable without a runtime)
+$(LI $(BUGZILLA 23625): Function ZeroMemory missing in windows headers)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 6583): cast$(LPAREN)$(RPAREN) operation not fully specified)
+$(LI $(BUGZILLA 11493): dlang.org/type.html incorrectly says that you can't cast from -1 to unsigned types)
+$(LI $(BUGZILLA 16707): [Templates] run variadic templates example failed)
+$(LI $(BUGZILLA 21132): Ff two keys in an associative array literal are equal)
+$(LI $(BUGZILLA 21178): It is not explained what is "unknown")
+$(LI $(BUGZILLA 23716): ImportC: Missing documentation on the asm keyword accepted as an extension)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 18765): [Arrays] Docs need info on initialization of static array with element literal)
+$(LI $(BUGZILLA 20997): Missing example of scope guard executing after return statement)
+$(LI $(BUGZILLA 22418): Error in documentation on strings)
+$(LI $(BUGZILLA 22594): Update "Interfacing to C" to include intptr_t and uintptr_t)
+$(LI $(BUGZILLA 23612): Template constraints article not listed in article index)
+$(LI $(BUGZILLA 23636): No spec docs for shared qualifer)
+$(LI $(BUGZILLA 23730): Clarify IsExpression `Identifier :` and `== TypeCtor` spec)
+)
+$(BUGSTITLE_BUGZILLA Tools bug fixes,
+
+$(LI $(BUGZILLA 23624): Race condition in test runner for DMD)
+$(LI $(BUGZILLA 23634): Possible data race with runnable example tester)
+)
+)
+$(D_CONTRIBUTORS_HEADER 43)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Amaury)
+    $(D_CONTRIBUTOR Andra Maslaev)
+    $(D_CONTRIBUTOR Andrea Fontana)
+    $(D_CONTRIBUTOR Ate Eskola)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR BVRazvan)
+    $(D_CONTRIBUTOR Daniel Zuncke)
+    $(D_CONTRIBUTOR DanutAldea)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR Drehuta Andreea)
+    $(D_CONTRIBUTOR Dumitrache Adrian-George)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Ikey Doherty)
+    $(D_CONTRIBUTOR ioanavivi12)
+    $(D_CONTRIBUTOR Jan Jurzitza)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR João Lourenço)
+    $(D_CONTRIBUTOR KytoDragon)
+    $(D_CONTRIBUTOR Luís Ferreira)
+    $(D_CONTRIBUTOR Mateiuss)
+    $(D_CONTRIBUTOR MathewColin)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR matthriscu)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Rareș Constantin)
+    $(D_CONTRIBUTOR Razvan Mihai Popa)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR richard (rikki) andrew cattermole)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Robert Grancsa)
+    $(D_CONTRIBUTOR Robert Stoica)
+    $(D_CONTRIBUTOR Rosca Rares)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Teodor Dutu)
+    $(D_CONTRIBUTOR Tudor Brindus)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.103.0
+    TITLE=Change Log: $(VER)

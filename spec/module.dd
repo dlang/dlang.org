@@ -104,7 +104,8 @@ $(GNAME ModuleFullyQualifiedName):
 
 $(GNAME ModuleName):
     $(GLINK_LEX Identifier)
-
+)
+$(GRAMMAR
 $(GNAME Packages):
     $(GLINK PackageName)
     $(GSELF Packages) $(D .) $(GLINK PackageName)
@@ -235,7 +236,6 @@ $(H3 $(LNAME2 name_lookup, Symbol Name Lookup))
 
 $(P The simplest form of importing is to just list the modules being imported:)
 
-$(RUNNABLE_EXAMPLE
 ---------
 module myapp.main;
 
@@ -251,7 +251,6 @@ class Foo : BaseClass
     }
 }
 ---------
-)
 
 $(P When a symbol name is used unqualified, a two-phase lookup is used.
 First, the module scope is searched, starting from the innermost scope.
@@ -408,7 +407,7 @@ $(H3 $(LNAME2 selective_imports, Selective Imports))
 $(P Specific symbols can be exclusively imported from a module and bound into
 the current namespace:)
 
-$(RUNNABLE_EXAMPLE
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---
 import std.stdio : writeln, foo = write;
 
@@ -429,7 +428,7 @@ $(H3 $(LNAME2 renamed_selective_imports, Renamed and Selective Imports))
 
 $(P When renaming and selective importing are combined:)
 
-$(RUNNABLE_EXAMPLE
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ------------
 import io = std.stdio : foo = writeln;
 
@@ -628,14 +627,31 @@ $(GNAME MixinDeclaration):
     $(D mixin) $(D $(LPAREN)) $(GLINK2 expression, ArgumentList) $(D $(RPAREN)) $(D ;)
 )
 
-    $(P Each $(GLINK2 expression, AssignExpression) in the $(I ArgumentList) is
-        evaluated at compile time, and the result must be representable
-        as a string.
-        The resulting strings are concatenated to form a string.
-        The text contents of the string must be compilable as a valid
-        $(GLINK DeclDefs), and is compiled as such.
-        )
+$(P Each $(GLINK2 expression, AssignExpression) in the $(I ArgumentList) is
+    evaluated at compile time, and the result must be representable
+    as a string.
+    The resulting strings are concatenated to form a string.
+    The text contents of the string must be compilable as a valid
+    $(GLINK DeclDefs), and is compiled as such.)
 
+$(P The content of a mixin cannot be forward referenced by other DeclDefs of
+    the same scope because it is not yet pulled in the AST.)
+
+---------
+class B : A {}      // Error: undefined identifier `A`
+mixin ("class A {}");
+---------
+
+$(P Forward references may only work in function bodies because they
+    are processed after the declarations)
+
+---------
+void v()
+{
+    class B : A {}
+}
+mixin ("class A {}");
+---------
 
 $(H2 $(LEGACY_LNAME2 PackageModule, package-module, Package Module))
 

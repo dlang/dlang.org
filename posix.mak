@@ -155,7 +155,7 @@ DUB_DIR=../dub
 
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
-include $(DMD_DIR)/src/osmodel.mak
+include $(DMD_DIR)/compiler/src/osmodel.mak
 
 # External binaries
 DMD=$(DMD_DIR)/generated/$(OS)/release/$(MODEL)/dmd
@@ -176,7 +176,7 @@ G=$(GENERATED)
 # Last released versions
 DMD_LATEST_DIR=$G/dmd-${LATEST}
 DMD_LATEST=$(DMD_LATEST_DIR)/generated/$(OS)/release/$(MODEL)/dmd
-DRUNTIME_LATEST_DIR=$G/druntime-${LATEST}
+DRUNTIME_LATEST_DIR=$G/dmd-${LATEST}/druntime
 PHOBOS_LATEST_DIR=$G/phobos-${LATEST}
 
 # stable dub and dmd versions used to build dpl-docs
@@ -310,7 +310,7 @@ CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
 
-PREMADE=fetch-issue-cnt.php robots.txt .htaccess .dpl_rewrite_map.txt \
+PREMADE=fetch-issue-cnt.php robots.txt .htaccess .dpl_rewrite_map.txt ads.txt \
 		d-keyring.gpg d-keyring.gpg.sig d-security.asc
 
 # Language spec root filenames. They have extension .dd in the source
@@ -322,7 +322,7 @@ SPEC_ROOT=$(addprefix spec/, \
 	const3 function operatoroverloading template template-mixin contracts \
 	version traits errors unittest garbage float iasm ddoc \
 	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
-	abi simd betterc importc ob)
+	abi simd betterc importc ob windows glossary)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
@@ -333,20 +333,21 @@ endif
 MAN_PAGE=docs/man/man1/dmd.1
 
 ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
-		cpptod ctarguments ctod d-array-article d-floating-point \
+		constraints cpptod ctarguments ctod d-array-article d-floating-point \
 		exception-safe faq hijack intro-to-datetime lazy-evaluation \
 		migrate-to-shared mixin pretod rationale regular-expression \
 		safed templates-revisited variadic-function-templates warnings \
 		cppcontracts template-comparison dll-linux \
+		RefReturnScope \
 	)
 
 # Website root filenames. They have extension .dd in the source
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
-	ascii-table bugstats $(CHANGELOG_FILES) calendar community comparison concepts \
+	ascii-table bugstats $(CHANGELOG_FILES) community comparison \
 	deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
-	documentation download dstyle forum-template gpg_keys glossary \
+	documentation download dstyle forum-template gpg_keys \
 	howto-promote htod index install \
 	menu orgs-using-d overview rdmd resources search security tuple wc windbg \
 	$(addprefix foundation/, index about donate prman sponsors upb-scholarship) \
@@ -414,7 +415,7 @@ ${GENERATED}/${LATEST}.ddoc :
 
 ${GENERATED}/modlist-${LATEST}.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_LATEST_DIR) $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)
 	mkdir -p $(dir $@)
-	$(STABLE_RDMD) $< $(DRUNTIME_LATEST_DIR)/src $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)/src $(MOD_EXCLUDES_LATEST) \
+	$(STABLE_RDMD) $< $(DRUNTIME_LATEST_DIR)/src $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)/compiler/src $(MOD_EXCLUDES_LATEST) \
 		$(addprefix --internal=, dmd rt core.internal) \
 		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
 
@@ -431,10 +432,9 @@ ${GENERATED}/modlist-prerelease.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_
 		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
-rebase: rebase-dlang rebase-dmd rebase-druntime rebase-phobos
+rebase: rebase-dlang rebase-dmd rebase-phobos
 rebase-dlang: ; $(call REBASE,dlang.org)
 rebase-dmd: ; cd $(DMD_DIR) && $(call REBASE,dmd)
-rebase-druntime: ; cd $(DRUNTIME_DIR) && $(call REBASE,druntime)
 rebase-phobos: ; cd $(PHOBOS_DIR) && $(call REBASE,phobos)
 
 clean:
@@ -575,12 +575,16 @@ $G/dblog_latest.ddoc: $G/dblog_latest.xml $(STABLE_DMD) tools/ddoc_xml_extractor
 # Git rules
 ################################################################################
 
+# Druntime is in the DMD repository.
+${DRUNTIME_DIR}: ${DMD_DIR}
+${DRUNTIME_LATEST_DIR}: ${DMD_LATEST_DIR}
+
 # Clone snapshots of the latest official release of all main D repositories
 $G/%-${LATEST} :
 	git clone -b v${LATEST} --depth=1 ${GIT_HOME}/$(notdir $*) $@
 
 # Clone all main D repositories
-${DMD_DIR} ${DRUNTIME_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR} ${DUB_DIR}:
+${DMD_DIR} ${PHOBOS_DIR} ${TOOLS_DIR} ${INSTALLER_DIR} ${DUB_DIR}:
 	git clone ${GIT_HOME}/$(notdir $(@F)) $@
 
 ${DMD_DIR}/VERSION : ${DMD_DIR}
@@ -590,11 +594,11 @@ ${DMD_DIR}/VERSION : ${DMD_DIR}
 ################################################################################
 
 $(DMD) : ${DMD_DIR}
-	${MAKE} --directory=${DMD_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
+	${MAKE} --directory=${DMD_DIR}/compiler/src -f posix.mak AUTO_BOOTSTRAP=1
 
 $(DMD_LATEST) : ${DMD_LATEST_DIR}
-	${MAKE} --directory=${DMD_LATEST_DIR}/src -f posix.mak AUTO_BOOTSTRAP=1
-	sed -i -e "s|../druntime/import |../druntime-${LATEST}/import |" -e "s|../phobos |../phobos-${LATEST} |" $@.conf
+	${MAKE} --directory=${DMD_LATEST_DIR}/compiler/src -f posix.mak AUTO_BOOTSTRAP=1
+	sed -i -e "s|../druntime/import |../../dmd-${LATEST}/druntime/import |" -e "s|../phobos |../phobos-${LATEST} |" $@.conf
 
 dmd-prerelease : $(STD_DDOC_PRERELEASE) druntime-target $G/changelog/next-version
 	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
@@ -716,13 +720,13 @@ $W/library-prerelease/.htaccess : dpl_prerelease_htaccess
 
 $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 			${DRUNTIME_LATEST_DIR} | dpl-docs
-	find ${DMD_LATEST_DIR}/src -name '*.d' -o -name '*.di' | sort -r | \
+	find ${DMD_LATEST_DIR}/compiler/src -name '*.d' -o -name '*.di' | sort -r | \
 		gawk '!n[gensub(/\.di?$$/, "", 1)]++' > $G/.latest-files.txt
 	find ${DRUNTIME_LATEST_DIR}/src -name '*.d' | \
 		sed -e /unittest.d/d -e /gcstub/d >> $G/.latest-files.txt
 	find ${PHOBOS_LATEST_DIR}/etc ${PHOBOS_LATEST_DIR}/std -name '*.d' | \
 		sed -e /unittest.d/d | sort >> $G/.latest-files.txt
-	${DMD_LATEST} -J$(DMD_LATEST_DIR)/src/dmd/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
+	${DMD_LATEST} -J$(DMD_LATEST_DIR)/compiler/src/dmd/res -J$(dir $(DMD_LATEST)) -c -o- -version=CoreDdoc \
 		-version=MARS -version=CoreDdoc -version=StdDdoc -Df$G/.latest-dummy.html \
 		-Xf$@ -I${PHOBOS_LATEST_DIR} @$G/.latest-files.txt
 	${DPL_DOCS} ${DPL_DOCS_FLAGS} filter $@ --min-protection=Protected \
@@ -730,7 +734,7 @@ $G/docs-latest.json : ${DMD_LATEST} ${DMD_LATEST_DIR} \
 	rm -f $G/.latest-files.txt $G/.latest-dummy.html
 
 $G/docs-prerelease.json : ${DMD} ${DMD_DIR} ${DRUNTIME_DIR} | dpl-docs
-	find ${DMD_DIR}/src -name '*.d' -o -name '*.di' | sort -r | \
+	find ${DMD_DIR}/compiler/src -name '*.d' -o -name '*.di' | sort -r | \
 		gawk '!n[gensub(/\.di?$$/, "", 1)]++' > $G/.prerelease-files.txt
 	find ${DRUNTIME_DIR}/src -name '*.d' | \
 		sed -e /unittest/d >> $G/.prerelease-files.txt
@@ -791,13 +795,13 @@ chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-p
 ################################################################################
 
 d-latest.tag d-tags-latest.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-latest druntime-latest chm-nav-latest.json
-	$(STABLE_RDMD) $< --root=$W --target latest
+	$(STABLE_RDMD) $< --root=$W --target latest --dir ${GENERATED}/chmgen-latest
 
 d-release.tag d-tags-release.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-release druntime-release chm-nav-release.json
-	$(STABLE_RDMD) $< --root=$W --target release
+	$(STABLE_RDMD) $< --root=$W --target release --dir ${GENERATED}/chmgen-release
 
 d-prerelease.tag d-tags-prerelease.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FILES) phobos-prerelease druntime-prerelease chm-nav-prerelease.json
-	$(STABLE_RDMD) $< --root=$W --target prerelease
+	$(STABLE_RDMD) $< --root=$W --target prerelease --dir ${GENERATED}/chmgen-prerelease
 
 ################################################################################
 # Style tests

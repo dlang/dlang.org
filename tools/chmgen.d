@@ -133,7 +133,6 @@ void main(string[] args)
         "only-tags", &onlyTags,
         "root", &docRoot,
         "dir", &chmDir,
-        "pre", &prerelease,
         "target", &target,
     );
     prerelease = target == "prerelease";
