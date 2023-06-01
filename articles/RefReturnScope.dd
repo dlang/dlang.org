@@ -9,6 +9,12 @@ will produce undefined behavior. Undefined behavior can lead to crashes, corrupt
 malware, and other costly problems. D uses `ref`, `return` and `scope` keywords to
 prevent pointer escapes.)
 
+$(OL
+$(LI $(RELATIVE_LINK2 fundamentals, Fundamentals))
+$(LI $(RELATIVE_LINK2 methods-of-escape, Methods of Escape))
+)
+
+$(H2 $(LNAME2 fundamentals, Fundamentals))
 
 $(H3 What is a Scope?)
 
@@ -194,10 +200,77 @@ int* tricky()
 
 $(P Curses! Foiled again!)
 
-$(P The operational idea here is, while compiling `@safe` code, it is not be possible to escape
+$(P The operational idea here is, while compiling `@safe` code, it is not possible to escape
 a scoped value, no matter how twisty the code is.)
 
+
+
+$(H2 $(LNAME2 methods-of-escape, Methods of Escape))
+
+$(P There are many ways of copying values around, and hence many ways for a pointer value to
+escape a function. The compiler will detect all of them, and hence close off any
+avenue for a scoped pointer to escape.)
+
+$(OL
+$(LI $(RELATIVE_LINK2 return-from-function, Return from Function))
+$(LI $(RELATIVE_LINK2 assign-to-global, Assign to Global))
+$(LI $(RELATIVE_LINK2 assign-to-longer-lived-pointer, Assign to Longer Lived Pointer))
+$(LI $(RELATIVE_LINK2 pass-to-non-scope-parameter, Pass To Non-Scope Parameter))
+$(LI $(RELATIVE_LINK2 throw-scope, Throw Scope Value))
 )
+
+
+$(H3 $(LNAME2 return-from-function, Return from Function))
+
+$(P This is the most obvious one:)
+
+---
+int* viaReturn(scope int* p) { return p; }
+---
+
+
+$(H3 $(LNAME2 assign-to-global, Assign to Global))
+
+---
+int* gp;
+void viaGlobal(scope int* p) { gp = p; }
+---
+)
+
+$(H3 $(LNAME2 assign-to-longer-lived-pointer, Assign to Longer Lived Pointer))
+
+---
+int* viaLongerLived(scope int* p, int* q)
+{
+    q = p;
+    return q;
+}
+---
+
+$(H3 $(LNAME2 pass-to-non-scope-parameter, Pass To Non-Scope Parameter))
+
+---
+void leak(int* q);
+
+void viaNonScopeParameter(scope int* p)
+{
+    leak(p);
+}
+---
+
+$(H3 $(LNAME2 throw-scope, Throw Scope Value))
+
+---
+class E : Exception
+{
+    int* p;
+    this();
+}
+
+void test(scope E e) {
+    throw e;
+}
+---
 
 Macros:
         TITLE=Coralling Wild Pointers With $(D ref return scope)
