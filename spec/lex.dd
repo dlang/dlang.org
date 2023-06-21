@@ -883,11 +883,9 @@ $(GNAME HexExponentStart):
 
 
 $(GNAME Suffix):
-    $(GLINK FloatSuffix)
-    $(GLINK RealSuffix)
+    $(GLINK FloatSuffix) $(GLINK ImaginarySuffix)$(OPT)
+    $(GLINK RealSuffix) $(GLINK ImaginarySuffix)$(OPT)
     $(GLINK ImaginarySuffix)
-    $(GLINK FloatSuffix) $(GLINK ImaginarySuffix)
-    $(GLINK RealSuffix) $(GLINK ImaginarySuffix)
 
 $(GNAME FloatSuffix):
     $(B f)
@@ -904,14 +902,33 @@ $(GNAME LeadingDecimal):
     $(B 0) $(GLINK DecimalDigitsNoSingleUS)
 )
 
-        $(P Floats can be in decimal or hexadecimal format.)
+        $(P Floats can be in decimal or hexadecimal format, and must have
+        at least one digit and either a decimal point, an exponent, or
+        a *FloatSuffix*.)
+
+        $(P Decimal floats can have an exponent which is `e` or `E` followed
+        by a decimal number serving as the exponent of 10.)
+
+---
+-1.0
+1e2               // 100.0
+1e-2              // 0.01
+-1.175494351e-38F // float.min
+---
 
         $(P Hexadecimal floats are preceded by a $(B 0x) or $(B 0X) and the
         exponent is a $(B p) or $(B P) followed by a decimal number serving as
         the exponent of 2.
         )
 
-        $(P Floating literals can have embedded $(SINGLEQUOTE $(UNDERSCORE)) characters to improve readability, and which are ignored.
+---
+0xA                    // 10.0
+0x1p2                  // 4.0
+0x1.FFFFFFFFFFFFFp1023 // double.max
+0x1p-52                // double.epsilon
+---
+
+        $(P Floating literals can have embedded $(D $(UNDERSCORE)) characters to improve readability, which are ignored.
         )
 
         ---
@@ -921,24 +938,21 @@ $(GNAME LeadingDecimal):
         6_022_.140_857E+20_
         ---
 
-        $(P Floating literals with no suffix are of type `double`.
-        Floating literals followed by $(B f) or $(B F) are of type `float`,
-        and those followed by $(B L) are of type `real`.
-        )
-
-        $(P Examples:)
+        * Floating literals with no suffix are of type `double`.
+        * Floating literals followed by $(B f) or $(B F) are of type `float`.
+        * Floating literals followed by $(B L) are of type `real`.
 
 ---------
-0x1.FFFFFFFFFFFFFp1023 // double.max
-0x1p-52                // double.epsilon
-1.175494351e-38F       // float.min
+0.0                    // double
+0F                     // float
+0.0L                   // real
 ---------
 
         $(P The literal may not exceed the range of the type.
         The literal is rounded to fit into
         the significant digits of the type.
         )
-        $(P If a floating literal has a $(B .) and a type suffix, at least one
+        $(P If a floating literal has a $(D .) and a type suffix, at least one
             digit must be in-between:)
 
         ---
@@ -947,7 +961,7 @@ $(GNAME LeadingDecimal):
         1.;  // OK, double
         ---
 
-        $(P NOTE: Floating literals followed by $(B i) to denote imaginary
+        $(NOTE Floating literals followed by $(B i) to denote imaginary
         floating point values have been deprecated.)
 
 
