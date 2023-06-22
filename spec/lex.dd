@@ -268,6 +268,9 @@ $(GNAME IdentifierStart):
     $(I Letter)
     $(I UniversalAlpha)
 
+$(GNAME IdentifierStartError):
+    IdentifierStart
+
 $(GNAME IdentifierChar):
     $(GLINK IdentifierStart)
     $(B 0)
@@ -281,6 +284,11 @@ Universal alphas are as defined in ISO/IEC 9899:1999(E) Appendix D of the C99 St
 Identifiers can be arbitrarily long, and are case sensitive.)
 
 $(IMPLEMENTATION_DEFINED Identifiers starting with $(D __) (two underscores) are reserved.)
+
+$(NOTE *IdentifierStartError* exists to enforce that a $(GLINK StringPostfix)
+or numeric literal with a suffix is not immediately followed by an identifier
+without whitespace.)
+
 
 $(H2 $(LNAME2 string_literals, String Literals))
 
@@ -328,9 +336,9 @@ $(GNAME EscapeSequence):
     $(B \\) $(GLINK2 entity, NamedCharacterEntity)
 
 $(GNAME StringPostfix):
-    $(B c)
-    $(B w)
-    $(B d)
+    $(B c) $(GLINK IdentifierStartError)$(OPT)
+    $(B w) $(GLINK IdentifierStartError)$(OPT)
+    $(B d) $(GLINK IdentifierStartError)$(OPT)
 )
 
 $(H3 $(LNAME2 wysiwyg, Wysiwyg Strings))
@@ -626,7 +634,7 @@ $(H2 $(LNAME2 integerliteral, Integer Literals))
 $(GRAMMAR_LEX
 $(GNAME IntegerLiteral):
     $(GLINK Integer)
-    $(GLINK Integer) $(GLINK IntegerSuffix)
+    $(GLINK Integer) $(GLINK IntegerSuffix) $(GLINK IdentifierStartError)$(OPT)
 
 $(GNAME Integer):
     $(GLINK DecimalInteger)
@@ -842,9 +850,11 @@ $(H2 $(LNAME2 floatliteral, Floating Point Literals))
 
 $(GRAMMAR_LEX
 $(GNAME FloatLiteral):
-    $(GLINK Float) $(GLINK Suffix)$(OPT)
-    $(GLINK Integer) $(GLINK FloatSuffix) $(GLINK ImaginarySuffix)$(OPT)
+    $(GLINK Float)
+    $(GLINK Float) $(GLINK Suffix) $(GLINK IdentifierStartError)$(OPT)
+    $(GLINK Integer) $(GLINK FloatSuffix) $(GLINK IdentifierStartError)$(OPT)
     $(GLINK Integer) $(GLINK RealSuffix)$(OPT) $(GLINK ImaginarySuffix)
+    $(GLINK Integer) $(GLINK FloatSuffix) $(GLINK ImaginarySuffix)
 
 $(GNAME Float):
     $(GLINK DecimalFloat)
