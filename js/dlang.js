@@ -74,5 +74,20 @@
                 elem.show();
             }
         });
+
+      // wire the search box to the ddox search
+      // only for ddoc pages for now
+      if ($('body').hasClass("std"))
+      {
+        var search = $("#q")
+        search.attr("placeholder", "API Search");
+        search.attr("autocomplete", "off");
+        var onChange = function(){
+          performSymbolSearch(80);
+        };
+        search.on("change", onChange);
+        search.on("keypress", onChange);
+        search.on("input", onChange);
+      }
     });
 })(jQuery);

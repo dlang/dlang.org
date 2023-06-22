@@ -34,7 +34,10 @@ function performSymbolSearch(maxlen)
 {
 	if (maxlen === 'undefined') maxlen = 26;
 
-	var searchstring = $("#symbolSearch").val().toLowerCase();
+	var el = $("#symbolSearch");
+	if (el.length  === 0) el = $("#q");
+
+	var searchstring = el.val().toLowerCase();
 
 	if (searchstring == lastSearchString) return;
 	lastSearchString = searchstring;
@@ -118,7 +121,20 @@ function performSymbolSearch(maxlen)
 			if (np > 0) shortname = ".." + shortname;
 			else shortname = shortname.substr(1);
 
-			el.append('<a href="'+symbolSearchRootDir+sym.path+'" title="'+name+'" tabindex="1001">'+shortname+'</a>');
+			if (typeof(symbolSearchRootDir) === "undefined") {
+				// translate ddox path into ddoc path -  this is a big messy
+				var module = ddoxSymbolToDdocModule(sym);
+				var path;
+				if (sym.kind === "module") {
+					path = module;
+				} else {
+					var symbol = ddoxSymbolToDdocSymbol(sym);
+					path = module + "#" + symbol; // combine module + symbol, e.g. core_atomic.html#testCAS
+				}
+				el.append('<a href="'+path+'" title="'+name+'" tabindex="1001">'+shortname+'</a>');
+			} else {
+				el.append('<a href="'+symbolSearchRootDir+sym.path+'" title="'+name+'" tabindex="1001">'+shortname+'</a>');
+			}
 			$('#symbolSearchResults').append(el);
 		}
 
@@ -127,6 +143,40 @@ function performSymbolSearch(maxlen)
 	}
 
 	$('#symbolSearchResults').show();
+}
+
+function ddoxSymbolToDdocModule(sym)
+{
+	// sym.path: ./core/atomic/test_cas.html
+	// ddoc has an individual page for each top-level symbol, so we need to go one level higher to get the actual module name
+	if (sym.kind === "module")
+		return sym.name.split(".").join("_") + ".html";
+
+	var path = sym.path.slice(0, -5); // strip the html extension from the path, e.g. ./core/atomic/test_cas
+	path = path.replace(/(.*)\/(.*)$/g, "$1.html"); // the module is one level higher, e.g. ./core/atomic.html
+	path = path.replace(/\//g, "_"); // ddoc uses _ to divide modules, e.g. ._core_atomic.html
+	path = path.replace("._", ""); // remove the beginning excess, e.g. core_atomic.html
+	return path;
+}
+
+function ddoxSymbolToDdocSymbol(sym)
+{
+	var pathBaseName = sym.path.replace(/.*?([^\/]*)[.]html(.*)/g, "$1$2"); // the basename on the HTML, e.g. socket_option_level.html#IP
+	if (sym.path.indexOf("#") >= 0 || pathBaseName.indexOf(".") >= 0) {
+		// sym.name: std.socket.SocketOptionLevel.IP, sym.path: "./std/socket/socket_option_level.html#IP -> SocketOptionLevel.IP
+		// this is the difficult case where the symbol is nested
+		// strategy: take the last two portions of the package name and hope for the best
+		var parts = sym.name.split(".").slice(-2);
+		if (parts[0] === parts[1]) {
+			// an eponymous template
+			return parts[0];
+		} else {
+		return "." + parts.join(".");
+		}
+	} else {
+		// sym.name: core.atomic.testCAS
+		return sym.name.replace(/(.*)[.](.*)$/g, "$2") // testCAS
+	}
 }
 
 $(function(){
