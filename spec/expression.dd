@@ -1865,41 +1865,38 @@ $(H3 $(LEGACY_LNAME2 StringLiteral, string_literals, String Literals))
 
     $(P By default, a string literal is typed as a dynamic array, but the element
         count is known at compile time. So all string literals can be
-        implicitly converted to an immutable static array lvalue.)
+        implicitly converted to an immutable static array:)
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         -------------
         void foo(char[2] a)
         {
-            assert(a == "bc");
+            assert(a[0] == 'b');
         }
         void bar(ref const char[2] a)
         {
             assert(a == "bc");
         }
-        void baz(const char[3] a) {}
 
         void main()
         {
             foo("bc");
-            bar("bc");
-            baz("bc"); // OK, see below
-
-            string str = "abc";
-            foo(str[1 .. 3]);
-            bar(str[1 .. 3]);
-            //baz(str[1 .. 3]); // cannot match length
+            foo("b"); // OK
+            //foo("bcd"); // error, too many chars
+            bar("bc"); // OK, same length
+            //bar("b"); // error, lengths must match
         }
         -------------
         )
-    $(P See $(RELATIVE_LINK2 slice_to_static_array, Slice Conversion to Static Array).)
+    $(P A string literal converts to a static array rvalue of the same or longer length.
+        Any extra elements are padded with zeros. A string literal
+        can also convert to a static array lvalue of the same length.)
 
     $(P String literals have a `'\0'` appended to them, which makes
         them easy to pass to C or C++ functions expecting a null-terminated
         $(CODE const char*) string.
         The `'\0'` is not included in the $(CODE .length) property of the
-        string literal, but it can be used in a conversion to a static array
-        when necessary.
+        string literal.
     )
 
     $(P Concatenation of string literals requires the use of
