@@ -100,44 +100,6 @@ $(H4 Rationale)
         would break the guarantees of the $(D nothrow) attribute.
     )
 
-$(H3 $(DEPNAME body keyword))
-    $(P 'body' was a keyword used to specify a function/method's body in the presence of contracts
-        ---
-        class Foo
-        {
-            void bar(int i)
-            in { assert(i >= 42); }
-            body { /* Do something interesting */ }
-
-            string method(string s)
-            out(v) { assert(v.length == s.length); }
-            body { /* Do something even more interesting */ }
-
-            void noBody() { /* No contracts, no body */ }
-        }
-        ---
-    )
-$(H4 Corrective Action)
-    $(P Use the 'do' keyword instead (introduced v2.075.0)
-        ---
-        void bar(int i)
-        in { assert(i >= 42); }
-        do { /* Look ma, no body! */ }
-        ---
-    )
-$(H4 Rationale)
-    $(P The 'body' keyword was only used for this single purpose.
-        Since D grammar aims to be context free, this common word was reserved,
-        which led to frequent trouble for people interfacing with other languages
-        (e.g. javascript) or auto-generating code.
-    )
-    $(P Note that given the large amount of code relying on the 'body' keyword
-        (essentially any code using contracts), and the fact that the benefit
-        of DIP1003 to the user are mostly the ability to use 'body' as an identifier,
-        the deprecation has been postponed beyond its original goal of 2.091.0.
-        Users are still encouraged to use 'do' for future-proofness.
-    )
-
 $(H3 $(DEPNAME Hexstring literals))
     $(P Hexstring literals can be used to enter literals in base 16.
         ---
@@ -1050,7 +1012,7 @@ $(H4 Corrective Action)
         ---
         void foo() @safe
         {
-            asm @safe { noop; }
+            asm @trusted { noop; }
         }
         ---
     )
