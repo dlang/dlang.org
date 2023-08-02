@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Aug 01, 2023, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 10 major changes and 64 fixed Bugzilla issues.
+$(VER) comes with 11 major changes and 59 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 34 contributors)
         who made $(VER) possible.)
@@ -13,6 +13,7 @@ $(VER) comes with 10 major changes and 64 fixed Bugzilla issues.
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
 $(LI $(RELATIVE_LINK2 dmd.alias-this-syntax,Assignment-style syntax is now allowed for `alias this`))
+$(LI $(RELATIVE_LINK2 dmd.catch-immutable,Catch clause must take only `const` or mutable exceptions))
 $(LI $(RELATIVE_LINK2 dmd.enum-function,Functions can no longer have `enum` storage class))
 $(LI $(RELATIVE_LINK2 dmd.extern-c-overload,Overloading `extern(C)` functions is now an error))
 $(LI $(RELATIVE_LINK2 dmd.private-deprecation-error,Deprecation phase ended for access to private method when overloaded with public method.))
@@ -60,6 +61,31 @@ struct S
     alias this = n;
     // Equivalent to:
     //alias n this;
+}
+---
+)
+
+$(LI $(LNAME2 dmd.catch-immutable,Catch clause must take only `const` or mutable exceptions)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.catch-immutable.dd)
+$(P
+In 2.104, throwing qualified types was
+[deprecated](https://dlang.org/changelog/2.104.0.html#dmd.throw-qualifier).
+)
+
+$(P
+It is also unsafe to catch an exception as `immutable`, `inout` or `shared`.
+This is because the exception may still be accessible through another
+mutable or non-shared reference. Catching an exception with those qualifiers
+is now deprecated.
+)
+
+---
+auto e = new Exception("first");
+try {
+        throw e;
+} catch(immutable Exception ie) { // now an error
+        e.msg = "second";
+        assert(ie.msg == "first"); // would fail
 }
 ---
 )
@@ -283,9 +309,7 @@ $(CHANGELOG_SEP_TEXT_BUGZILLA)
 $(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
 
 $(LI $(BUGZILLA 22427): betterC: casting an array causes linker error in string comparison.)
-$(LI $(BUGZILLA 23966): [REG2.102] Cannot use traits$(LPAREN)getAttributes$(RPAREN) with overloaded template)
 $(LI $(BUGZILLA 24018): array concatenation doesn't work with disabled default construction)
-$(LI $(BUGZILLA 24026): ImportC: ICE on nested C initializer 2)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
 
@@ -298,8 +322,8 @@ $(LI $(BUGZILLA 20008): __traits$(LPAREN)allMembers$(RPAREN) of packages is comp
 $(LI $(BUGZILLA 20687): Allow member function address as const initializer)
 $(LI $(BUGZILLA 21415): catch immutable exceptions breaks immutable)
 $(LI $(BUGZILLA 21425): Using va_start twice results in wrong values)
-$(LI $(BUGZILLA 23279): Segmentation fault on mixin template + using unknown type)
 $(LI $(BUGZILLA 23719): runnable/test22071.c:22:16: error: ‘abc’ is a pointer; did you mean to use ‘->’?)
+$(LI $(BUGZILLA 23857): backend inliner takes too long on recursive function call)
 $(LI $(BUGZILLA 23870): ImportC doesn't accept '\' followed by newline, whereas VC does)
 $(LI $(BUGZILLA 23875): ImportC: __attribute__ in a cast doesn't work)
 $(LI $(BUGZILLA 23879): ImportC: Windows system headers use __alignof)
@@ -312,20 +336,17 @@ $(LI $(BUGZILLA 23914): "auto ref" resolution on return value prevented by noret
 $(LI $(BUGZILLA 23935): ImportC: __pragma not allowed between struct and tag name)
 $(LI $(BUGZILLA 23936): ImportC: pragma pack is not working for structs)
 $(LI $(BUGZILLA 23947): If a class overloads a method mixing private and public and the last overload is public, the method is always public.)
-$(LI $(BUGZILLA 23951): "alias this" not properly dereferenced when the object being looked up is a field of a type)
 $(LI $(BUGZILLA 23968): Deprecation not emitted with alias to template function in UFCS)
 $(LI $(BUGZILLA 23988): Conditional Exp does not bring enums to correct common type if one leg is const)
 $(LI $(BUGZILLA 24010): Destructor called before end of scope for tuples)
 $(LI $(BUGZILLA 24017): [UFCS] Bypassing `nothrow` with `debug` doesn’t work)
 $(LI $(BUGZILLA 24024): cannot pass class this to ref class)
 $(LI $(BUGZILLA 24025): Expressions contained in parentheses should not be assumed to be C casts)
-$(LI $(BUGZILLA 24027): error: instantiated from here: `maxElement!$(LPAREN)"a.a", A[]$(RPAREN)`)
 $(LI $(BUGZILLA 24029): ImportC: symbol name clash on statement expressions)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
 $(LI $(BUGZILLA 4663): Wrong 'static' position error message)
-$(LI $(BUGZILLA 5636): Array ops use lexicographic comparison instead of vector-style element-wise)
 $(LI $(BUGZILLA 15436): Compiler still refers to AliasSeq-s as "tuple"-s $(LPAREN)and TypeTuple?$(RPAREN))
 $(LI $(BUGZILLA 23475): confusing printf deprecation message with ulong/long on Windows)
 $(LI $(BUGZILLA 23871): ImportC: __attribute not recognized)
@@ -351,10 +372,6 @@ $(BUGSTITLE_BUGZILLA Phobos enhancements,
 $(LI $(BUGZILLA 23881): std.system has no function for system architecture)
 $(LI $(BUGZILLA 23922): [std.socket])
 )
-$(BUGSTITLE_BUGZILLA Druntime regression fixes,
-
-$(LI $(BUGZILLA 23890): "Warning: cannot inline function" in core.lifetime)
-)
 $(BUGSTITLE_BUGZILLA Druntime bug fixes,
 
 $(LI $(BUGZILLA 23312): Crash when calling writeln in WinMain)
@@ -372,6 +389,7 @@ $(LI $(BUGZILLA 23946): specifications state that "there can only be one destruc
 )
 $(BUGSTITLE_BUGZILLA dlang.org enhancements,
 
+$(LI $(BUGZILLA 5636): Array ops use lexicographic comparison instead of vector-style element-wise)
 $(LI $(BUGZILLA 23571): Discussion of manifest constants in enum documentation is confusing at best)
 )
 )
@@ -389,7 +407,6 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Dennis Korpel)
     $(D_CONTRIBUTOR Dmytro Katyukha)
     $(D_CONTRIBUTOR Ernesto Castellotti)
-    $(D_CONTRIBUTOR FeepingCreature)
     $(D_CONTRIBUTOR Iain Buclaw)
     $(D_CONTRIBUTOR Jacob Carlborg)
     $(D_CONTRIBUTOR Jan Jurzitza)
@@ -397,6 +414,7 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Lucian Danescu)
     $(D_CONTRIBUTOR Lucipetus)
     $(D_CONTRIBUTOR Luís Ferreira)
+    $(D_CONTRIBUTOR Martin Kinkelin)
     $(D_CONTRIBUTOR Mathis Beer)
     $(D_CONTRIBUTOR mhh)
     $(D_CONTRIBUTOR Mike Parker)
