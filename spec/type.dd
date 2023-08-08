@@ -451,14 +451,26 @@ $(H4 $(LNAME2 enum-ops, Enum Operations))
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 enum E { a, b, c }
+enum F { x, y }
 
-void f()
+void test()
 {
     E e = E.a;
-    e |= E.c;
+    e = e | E.c;
+    //e = e + 4; // error, can't assign int to E
+    int i = e + 4;
+    e += 4; // OK, see below
+
+    F f;
+    //f = e | f; // error, can't assign int to F
+    i = e | f;
 }
 ---
 )
+
+    $(NOTE Above, `e += 4` compiles because the
+    $(DDSUBLINK spec/expression, assignment_operator_expressions, operator assignment)
+    is equivalent to `e = cast(E)(e + 4)`.)
 
 $(H3 $(LNAME2 disallowed-conversions, Preserving Bit Patterns))
 
