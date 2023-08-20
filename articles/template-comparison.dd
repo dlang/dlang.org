@@ -83,8 +83,9 @@ T foo(T i)
 
         $(TR
             $(TD Parameterize any Declaration)
-            $(TD Yes, classes, functions, typedefs,
-            variables, enums, etc. can be parameterized,
+            $(TD Yes, classes, functions, any
+            $(DDSUBLINK spec/declaration, alias, alias),
+            variables, any enum, etc. can be parameterized,
             such as this variable:
 ---
 template Foo(T)
@@ -97,7 +98,14 @@ template Foo(T)
                 $(B$(U C++98))$(BR)
                 No, only classes and functions
                 $(BR)$(B$(U C++11))$(BR)
-                Yes:
+                Added `using` type aliases:
+$(CPPCODE2
+template&lt;class T&gt;
+using ptr = T*;
+ptr&lt;int&gt; p;
+)
+                $(B$(U C++14))$(BR)
+                Added `constexpr` constant:
 $(CPPCODE2
 template&lt;class T&gt;
 constexpr T pi = T(3.1415926535897932385L);
@@ -133,7 +141,8 @@ MyFoo&lt;unsigned&gt; f;
 
         $(TR
             $(TD Sequence Constructors)
-            $(TD No)
+            $(TD No, use a
+                $(DDSUBLINK spec/function, typesafe_variadic_functions, variadic parameter) instead)
             $(TD
                 $(B$(U C++98))$(BR)
                 No
@@ -259,8 +268,8 @@ template&lt;class T, int maxLength&gt; class HashTable {
         )
 
         $(TR
-            $(TD Template Declarations (with no definition))
-            $(TD No)
+            $(TD Template Forward Declarations)
+            $(TD Not necessary)
             $(TD Yes:
 $(CPPCODE2
 template&lt;class T&gt;
@@ -293,6 +302,12 @@ Foo<int, long>::bar b;
 return Foo<char, int>::foo('c', 3);
 )
             )
+        )
+
+        $(TR
+        $(TD Deducing `this` parameter type)
+        $(TD $(DDSUBLINK spec/template, template_this_parameter, Yes))
+        $(TD $(B$(U C++23))$(BR)Yes)
         )
 
         $(TR
@@ -376,7 +391,7 @@ void foo()
 
         $(TR
             $(TD Reference Parameters)
-            $(TD No, D does not have a general reference type)
+            $(TD No, but an alias parameter can be used instead (see below).)
             $(TD Yes:
 $(CPPCODE2
 template&lt;double& D&gt;
