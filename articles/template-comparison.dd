@@ -206,7 +206,7 @@ template&lt;&gt; class factorial&lt;1&gt;
             based on Template Arguments)
             $(TD Yes:
 ---
-template void foo(T)(T i)
+void foo(T)(T i)
 {
   static if (can_fast_foo!(T))
     FastFoo f = fast_foo(i);
@@ -313,6 +313,8 @@ return Foo<char, int>::foo('c', 3);
         $(TR
         $(TD Compile time execution of functions)
         $(TD $(DDSUBLINK spec/function, interpretation, Yes):
+
+$(RUNNABLE_EXAMPLE_COMPILE
 ---
 int factorial(int i)
 {
@@ -321,8 +323,9 @@ int factorial(int i)
     else
         return i * factorial(i - 1);
 }
-static f = factorial(6);
+pragma(msg, factorial(6));
 ---
+)
         )
         $(TD
             $(B$(U C++98))$(BR)
@@ -722,19 +725,18 @@ void foo(int i) { }
             $(TD Can extract arguments of
             template instance)
             $(TD Yes:
----
-class Foo(T)
-{
-    static if (is(T x : T!A, A...))
-    {
-        pragma(msg, A);  // (int, float)
-    }
-}
 
+$(RUNNABLE_EXAMPLE_COMPILE
+---
 struct Bar(T1, T2) { }
 alias BarInst = Bar!(int, float);
-Foo!(BarInst) f;
+
+static if (is(BarInst : Template!Args, alias Template, Args...))
+{
+    pragma(msg, Args);  // (int, float)
+}
 ---
+)
             See $(DDSUBLINK spec/expression, IsExpression, is expressions).)
             $(TD No)
         )
