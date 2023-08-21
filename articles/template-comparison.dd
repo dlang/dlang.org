@@ -1,5 +1,7 @@
 Ddoc
 
+$(COMMENT BE CAREFUL TO USE &lt; AND &gt; INSIDE CPPCODE2)
+
 $(COMMUNITY Template Comparison,
 
 $(P C++ pioneered templates and template metaprogramming and has continued
@@ -23,8 +25,8 @@ templates based on the C++ experience.
 
         $(TR
             $(TD Argument list delineation)
-            $(TD Uses !( ), as in Foo!(int). $(BR)Can omit parens when the argument is a single lexical token: Foo!int)
-            $(TD Uses &lt; &gt; as in Foo&lt;int&gt;)
+            $(TD Uses `!( )`, as in `Foo!(int)`. $(BR)Can omit parens when the argument is a single lexical token: `Foo!int`)
+            $(TD Uses `< >` as in `Foo<int>`)
         )
 
         $(TR
@@ -151,7 +153,7 @@ MyFoo&lt;unsigned&gt; f;
 $(CPPCODE2
 template &lt;class T&gt;
 class Foo {
-    Foo(std::initializer_list<T>);
+    Foo(std::initializer_list&lt;T&gt;);
 };
 
 Foo&lt;double&gt; f = { 1.2, 3.0, 6.8 };
@@ -214,7 +216,8 @@ void foo(T)(T i)
     SlowFoo f = slow_foo(i);
   use_foo(f);
 }
-
+---
+---
 class HashTable(T, int maxLength)
 {
     static if (maxLength < 0xFFFE)
@@ -232,23 +235,23 @@ $(CPPCODE2
 template&lt;class T&gt; void foo(T i)
 {
   // Differentiate using a
-  // Helper<bool> specialization
-  Helper<can_fast_foo<T>>::use_foo(i);
+  // Helper&lt;bool&gt; specialization
+  Helper&lt;can_fast_foo&lt;T&gt;&gt;::use_foo(i);
 };
 
 template&lt;class T, int maxLength&gt; class HashTable {
-    typedef typename std::conditional<
-            maxLength < 0xFFFE, uint16_t, uint32_t>
+    typedef typename std::conditional&lt;
+            maxLength &lt; 0xFFFE, uint16_t, uint32_t&gt;
         ::type CellIdx;
     CellIdx index;
 };
 )
             $(BR)$(B$(U C++17))$(BR)
-            Yes, but is limited to block scope:
+            Yes, but it's limited to block scope:
 $(CPPCODE2
 template&lt;class T&gt; void foo(T i)
 {
-  if constexpr (can_fast_foo<T>)
+  if constexpr (can_fast_foo&lt;T&gt;)
     FastFoo foo = fast_foo(i);
   else
     SlowFoo foo = slow_foo(i);
@@ -257,7 +260,7 @@ template&lt;class T&gt; void foo(T i)
 
 template&lt;class T, int maxLength&gt; class HashTable {
     // $(ERROR cannot use 'if' outside of a function)
-    if constexpr (maxLength < 0xFFFE)
+    if constexpr (maxLength &lt; 0xFFFE)
         using CellIdx = ushort;
     else
         using CellIdx = uint;
@@ -298,8 +301,8 @@ class Foo {
     class Bar { ... };
     static T foo(T t, U u) { ... }
 };
-Foo<int, long>::bar b;
-return Foo<char, int>::foo('c', 3);
+Foo&lt;int, long&gt;::bar b;
+return Foo&lt;char, int&gt;::foo('c', 3);
 )
             )
         )
