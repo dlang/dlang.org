@@ -322,7 +322,7 @@ SPEC_ROOT=$(addprefix spec/, \
 	const3 function operatoroverloading template template-mixin contracts \
 	version traits errors unittest garbage float iasm ddoc \
 	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
-	abi simd betterc importc ob windows glossary)
+	abi simd betterc importc ob windows glossary legacy)
 SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
