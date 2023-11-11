@@ -594,20 +594,20 @@ ${DMD_DIR}/VERSION : ${DMD_DIR}
 ################################################################################
 
 $(DMD) : ${DMD_DIR}
-	${MAKE} --directory=${DMD_DIR}/compiler/src -f posix.mak AUTO_BOOTSTRAP=1
+	${MAKE} --directory=${DMD_DIR}/compiler/src -f posix.mak AUTO_BOOTSTRAP=1 BUILD_JOBS=$(BUILD_JOBS)
 
 $(DMD_LATEST) : ${DMD_LATEST_DIR}
-	${MAKE} --directory=${DMD_LATEST_DIR}/compiler/src -f posix.mak AUTO_BOOTSTRAP=1
+	${MAKE} --directory=${DMD_LATEST_DIR}/compiler/src -f posix.mak AUTO_BOOTSTRAP=1 BUILD_JOBS=$(BUILD_JOBS)
 	sed -i -e "s|../druntime/import |../../dmd-${LATEST}/druntime/import |" -e "s|../phobos |../phobos-${LATEST} |" $@.conf
 
 dmd-prerelease : $(STD_DDOC_PRERELEASE) druntime-target $G/changelog/next-version
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML)
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML) BUILD_JOBS=$(BUILD_JOBS)
 
 dmd-release : $(STD_DDOC_RELEASE) druntime-target
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML)
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML) BUILD_JOBS=$(BUILD_JOBS)
 
 dmd-latest : $(STD_DDOC_LATEST) druntime-latest-target
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML)
+	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML) BUILD_JOBS=$(BUILD_JOBS)
 
 dmd-prerelease-verbatim : $W/phobos-prerelease/mars.verbatim
 $W/phobos-prerelease/mars.verbatim: $(STD_DDOC_PRERELEASE) druntime-target \
