@@ -239,9 +239,11 @@ void main()
     {
         static foreach (c; "+-*/")
             if (sym == [c])
-                return mixin("arr[0 .. $-2] ~
-                    (arr[$-2] " ~ c ~ " arr[$-1])");
+                // replace the last 2 elements with the binary op
+                return arr[0 .. $-2] ~
+                    mixin("arr[$-2] " ~ c ~ " arr[$-1]");
 
+        // sym must be a number
         return arr ~ sym.to!real;
     })((real[]).init).writeln;
 }
