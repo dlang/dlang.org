@@ -109,7 +109,7 @@ run_make()
     make -v
 
     # -j1 is used for a better error log
-    make -f posix.mak -j1 DIFFABLE=1 release
+    make -f posix.mak -j1 DIFFABLE=1 BUILD_JOBS=3 release
 }
 
 case $1 in
