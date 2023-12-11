@@ -593,27 +593,29 @@ ${DMD_DIR}/VERSION : ${DMD_DIR}
 # dmd compiler, latest released build and current build
 ################################################################################
 
+BUILD_JOBS_ARG:=$(if $(BUILD_JOBS),-j$(BUILD_JOBS),)
+
 $(DMD) : ${DMD_DIR}
-	${MAKE} --directory=${DMD_DIR}/compiler/src -f posix.mak AUTO_BOOTSTRAP=1 BUILD_JOBS=$(BUILD_JOBS)
+	bash ${DMD_DIR}/compiler/src/bootstrap.sh $(BUILD_JOBS_ARG)
 
 $(DMD_LATEST) : ${DMD_LATEST_DIR}
-	${MAKE} --directory=${DMD_LATEST_DIR}/compiler/src -f posix.mak AUTO_BOOTSTRAP=1 BUILD_JOBS=$(BUILD_JOBS)
+	bash ${DMD_LATEST_DIR}/compiler/src/bootstrap.sh $(BUILD_JOBS_ARG)
 	sed -i -e "s|../druntime/import |../../dmd-${LATEST}/druntime/import |" -e "s|../phobos |../phobos-${LATEST} |" $@.conf
 
 dmd-prerelease : $(STD_DDOC_PRERELEASE) druntime-target $G/changelog/next-version
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_HTML) BUILD_JOBS=$(BUILD_JOBS)
+	bash $(DMD_DIR)/compiler/src/bootstrap.sh html $(DDOC_VARS_PRERELEASE_HTML) $(BUILD_JOBS_ARG)
 
 dmd-release : $(STD_DDOC_RELEASE) druntime-target
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_RELEASE_HTML) BUILD_JOBS=$(BUILD_JOBS)
+	bash $(DMD_DIR)/compiler/src/bootstrap.sh html $(DDOC_VARS_RELEASE_HTML) $(BUILD_JOBS_ARG)
 
 dmd-latest : $(STD_DDOC_LATEST) druntime-latest-target
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_LATEST_DIR) -f posix.mak html $(DDOC_VARS_LATEST_HTML) BUILD_JOBS=$(BUILD_JOBS)
+	bash $(DMD_LATEST_DIR)/compiler/src/bootstrap.sh html $(DDOC_VARS_LATEST_HTML) $(BUILD_JOBS_ARG)
 
 dmd-prerelease-verbatim : $W/phobos-prerelease/mars.verbatim
 $W/phobos-prerelease/mars.verbatim: $(STD_DDOC_PRERELEASE) druntime-target \
 		verbatim.ddoc $G/changelog/next-version
 	mkdir -p $(dir $@)
-	$(MAKE) AUTO_BOOTSTRAP=1 --directory=$(DMD_DIR) -f posix.mak html $(DDOC_VARS_PRERELEASE_VERBATIM)
+	bash $(DMD_DIR)/compiler/src/bootstrap.sh html $(DDOC_VARS_PRERELEASE_VERBATIM)
 	$(call CHANGE_SUFFIX,html,verbatim,$W/phobos-prerelease-verbatim)
 	mv $W/phobos-prerelease-verbatim/* $(dir $@)
 	rm -r $W/phobos-prerelease-verbatim
