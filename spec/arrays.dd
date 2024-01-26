@@ -1062,62 +1062,61 @@ $(H2 $(LNAME2 special-array, Special Array Types))
 
 $(H3 $(LNAME2 strings, Strings))
 
-        $(P A string is an array of characters. String literals essentially are
-        an easy way to write character arrays.
-        String literals are immutable (read-only).
+        $(P A string is an array of $(DDSUBLINK spec/const3, immutable_type, immutable)
+        (read-only) characters. String literals essentially are
+        an easy way to write character array literals.
         )
 
-$(SPEC_RUNNABLE_EXAMPLE_FAIL
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
-char[] str1 = "abc";                // error, cannot implicitly convert expression `"abc"` of type `string` to `char[]`
-char[] str2 = "abc".dup;            // ok, makes mutable copy
-immutable(char)[] str3 = "abc";     // ok
-immutable(char)[] str4 = str2;      // error, cannot implicitly convert expression `str2` of type `char[]` to `string`
-immutable(char)[] str5 = str3;      // ok, makes a mutable str5 with immutable array contents
-immutable(char)[] str6 = str2.idup; // ok, makes immutable copy
+char[] arr;
+//arr = "abc";          // error, cannot implicitly convert expression `"abc"` of type `string` to `char[]`
+arr = "abc".dup;        // ok, allocates mutable copy
+
+string str1 = "abc";    // ok, same types
+//str1 = arr;           // error, cannot implicitly convert expression `arr` of type `char[]` to `string`
+str1 = arr.idup;        // ok, allocates an immutable copy of elements
+assert(str1 == "abc");
+
+string str2 = str1;     // ok, mutable slice of same immutable array contents
 ---------
 )
 
-        $(P The name $(CODE string) is aliased to $(CODE immutable(char)[]),
-        so the above declarations could be equivalently written as:
-        )
-
-$(SPEC_RUNNABLE_EXAMPLE_FAIL
----------
-char[] str1 = "abc";     // error, cannot implicitly convert expression `"abc"` of type `string` to `char[]`
-char[] str2 = "abc".dup; // ok, makes mutable copy
-string str3 = "abc";     // ok
-string str4 = str2;      // error, cannot implicitly convert expression `str2` of type `char[]` to `string`
-string str5 = str3;      // ok, makes a mutable str5 with immutable array contents
-string str6 = str2.idup; // ok, makes immutable copy
----------
-)
-        $(P
+        $(P The name $(CODE string) is aliased to $(CODE immutable(char)[]).
         The type $(D immutable(char)[]) represents an array of $(D immutable char)s. However, the reference to the string is
-        mutable. If the reference to the string needs to be immutable as well, it can be declared $(D immutable char[])
+        mutable.
+        )
+---
+immutable(char)[] s = "foo";
+s[0] = 'a';  // error, s[0] is immutable
+s = "bar";   // ok, s itself is not immutable
+---
+
+        $(P If the reference to the string needs to be immutable as well, it can be declared $(D immutable char[])
         or $(D immutable string):
         )
-
 ---
 immutable char[] s = "foo";
 s[0] = 'a';  // error, s refers to immutable data
 s = "bar";   // error, s is immutable
-
-immutable(char)[] s = "hello";
-s[0] = 'b';  // error, s[] is immutable
-s = null;    // ok, s itself is not immutable
 ---
 
         $(P Strings can be copied, compared, concatenated, and appended:)
 
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
-str1 = str2;
-if (str1 < str3) { ... }
-func(str3 ~ str4);
-str4 ~= str1;
----------
+string s1;
+immutable s2 = "ello";
+s1 = s2;
+s1 = "h" ~ s1;
+if (s1 > "farro")
+    s1 ~= " there";
 
-        $(P with the obvious semantics. Any generated temporaries get cleaned up
+assert(s1 == "hello there");
+---------
+)
+
+        $(P with array semantics. Any generated temporaries get cleaned up
         by the garbage collector (or by using $(CODE alloca())).
         Not only that, this works with any
         array not just a special String array.
