@@ -5,9 +5,9 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Feb 01, 2024, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 9 major changes and 52 fixed Bugzilla issues.
+$(VER) comes with 10 major changes and 61 fixed Bugzilla issues.
         A huge thanks goes to the
-        $(LINK2 #contributors, 35 contributors)
+        $(LINK2 #contributors, 37 contributors)
         who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
@@ -22,6 +22,7 @@ $(LI $(RELATIVE_LINK2 dmd.template-_d_newarratmT,`_d_newarray{mTX,miTX,OpT}` are
 
 $(BUGSTITLE_TEXT_HEADER Runtime changes,
 
+$(LI $(RELATIVE_LINK2 druntime.coreatomic,Using an invalid MemoryOrder for `core.atomic` operations are now rejected at compile time))
 $(LI $(RELATIVE_LINK2 druntime.makefiles,Makefiles cleanup for druntime))
 $(LI $(RELATIVE_LINK2 druntime.stdatomic,New addition of the C stdatomic header implemented in D))
 
@@ -172,6 +173,105 @@ This change adds the new template to `core.internal.array.construction`.
 
 $(BUGSTITLE_TEXT_BODY Runtime changes,
 
+$(LI $(LNAME2 druntime.coreatomic,Using an invalid MemoryOrder for `core.atomic` operations are now rejected at compile time)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.coreatomic.dd)
+$(P
+The following `core.atomic` functions have become more restrictive:
+)
+
+$(P
+1. `atomicLoad` and `atomicStore` now reject being instantiated with the
+argument `MemoryOrder.acq_rel`. Previously `atomicLoad` and `atomicStore` only
+rejected `MemoryOrder.rel` and `MemoryOrder.acq` respectively.
+)
+
+$(P
+In most cases, code that previously used `MemoryOrder.acq_rel` should switch to
+use `MemoryOrder.seq` instead.
+)
+
+---
+// Error:
+atomicLoad!(MemoryOrder.acq_rel)(src);
+atomicStore!(MemoryOrder.acq_rel)(dest, value);
+
+// Corrective action:
+atomicLoad!(MemoryOrder.seq)(src);
+atomicStore!(MemoryOrder.seq)(dest, value);
+
+// Or:
+atomicLoad(src);
+atomicStore(dest, value);
+---
+
+$(P
+2. `atomicExchange` now rejects being instantiated with the argument
+`MemoryOrder.acq`.
+)
+
+$(P
+In most cases, code that previously used `MemoryOrder.acq` should switch to use
+`MemoryOrder.seq` instead.
+)
+
+---
+// Error:
+atomicExchange!(MemoryOrder.acq)(dest, value);
+
+// Corrective action:
+atomicExchange!(MemoryOrder.seq)(dest, value);
+
+// Or:
+atomicExchange(dest, value);
+---
+
+$(P
+3. `atomicCompareExchangeWeak` and `atomicCompareExchangeStrong` now reject
+being instantiated when the second `fail` argument is `MemoryOrder.rel` or
+`MemoryOrder.acq_rel`.
+)
+
+$(P
+In most cases, code that previously used either of these should switch to use
+`MemoryOrder.raw` instead.
+)
+
+---
+// Error:
+atomicExchangeWeak!(MemoryOrder.rel, MemoryOrder.rel)(dest, compare, value);
+atomicExchangeWeakNoResult!(MemoryOrder.acq_rel, MemoryOrder.acq_rel)(dest, compare, value);
+atomicExchangeStrong!(MemoryOrder.acq, MemoryOrder.rel)(dest, compare, value);
+atomicExchangeStrongNoResult!(MemoryOrder.seq, MemoryOrder.acq_rel)(dest, compare, value);
+
+// Corrective action:
+atomicExchangeWeak!(MemoryOrder.rel, MemoryOrder.raw)(dest, compare, value);
+atomicExchangeWeakNoResult!(MemoryOrder.acq_rel, MemoryOrder.raw)(dest, compare, value);
+atomicExchangeStrong!(MemoryOrder.acq, MemoryOrder.raw)(dest, compare, value);
+atomicExchangeStrongNoResult!(MemoryOrder.seq, MemoryOrder.raw)(dest, compare, value);
+---
+
+$(P
+4. `atomicCompareExchangeWeak` and `atomicCompareExchangeStrong` additionally
+now reject being instantiated when the second `fail` argument has a greater
+value than its first `succ` argument.
+)
+
+$(P
+In most cases, code that violates this contract should use the same MemoryOrder
+for both `succ` and `fail` arguments.
+)
+
+---
+// Error:
+atomicExchangeWeak!(MemoryOrder.raw)(dest, compare, value);
+atomicExchangeStrong!(MemoryOrder.acq, MemoryOrder.seq)(dest, compare, value);
+
+// Corrective action:
+atomicExchangeWeak!(MemoryOrder.raw, MemoryOrder.raw)(dest, compare, value);
+atomicExchangeStrong!(MemoryOrder.acq, MemoryOrder.acq)(dest, compare, value);
+---
+)
+
 $(LI $(LNAME2 druntime.makefiles,Makefiles cleanup for druntime)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.makefiles.dd)
 $(P
@@ -234,7 +334,9 @@ $(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
 
 $(LI $(BUGZILLA 24266): ImportC: struct initializer entry gets ignored)
 $(LI $(BUGZILLA 24274): [REG master] ImportC: unrecognized C initializer with array in struct)
+$(LI $(BUGZILLA 24295): [betterC] ICE with new int[])
 $(LI $(BUGZILLA 24301): [REG 2.100] Misleading error message when passing non-copyable struct by value in @safe code)
+$(LI $(BUGZILLA 24338): Cannot concatenate dynamic arrays of enum type with static array base type)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
 
@@ -252,6 +354,7 @@ $(LI $(BUGZILLA 24094): importC __declspec not working in front of declaration s
 $(LI $(BUGZILLA 24200): ImportC: .di file collected macro conflicts with Special Token)
 $(LI $(BUGZILLA 24224): __traits$(LPAREN)initSymbol$(RPAREN) treats aggregate-derived enum as base type)
 $(LI $(BUGZILLA 24248): const constructor call with mutable target gives wrong error message)
+$(LI $(BUGZILLA 24252): ci: Error: error writing file 'compilable\testcstuff3_0.obj')
 $(LI $(BUGZILLA 24264): ImportC: inliner trips on _Bool return)
 $(LI $(BUGZILLA 24276): ImportC: typedef aliases not emitted correctly in .di files)
 $(LI $(BUGZILLA 24280): ImportC: forward reference error when compiling multiple files)
@@ -261,6 +364,11 @@ $(LI $(BUGZILLA 24292): Struct with destructor wrongly returned in register)
 $(LI $(BUGZILLA 24303): anonymous struct problems when typedef'd in separate C files)
 $(LI $(BUGZILLA 24304): __uint16_t, __uint32_t, __uint64_t are not recognized)
 $(LI $(BUGZILLA 24306): ImportC: same name structs in separate C files interfere when compiled together)
+$(LI $(BUGZILLA 24309): Memory allocation failed on Azure pipeline)
+$(LI $(BUGZILLA 24311): Named enum with AA base type causes ICE)
+$(LI $(BUGZILLA 24319): OpenBSD: Use correct type for file_time)
+$(LI $(BUGZILLA 24326): ImportC: segfault on nameless enum translation with -H)
+$(LI $(BUGZILLA 24340): Invalid export directives generated)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
@@ -284,6 +392,7 @@ $(BUGSTITLE_BUGZILLA Phobos bug fixes,
 $(LI $(BUGZILLA 24151): std.container.array: Array!string$(LPAREN)""$(RPAREN) does not compile)
 $(LI $(BUGZILLA 24215): std.traits.isBasicType!Enum should be false)
 $(LI $(BUGZILLA 24278): std.math.abs promotes unsigned argument to 32 bits)
+$(LI $(BUGZILLA 24342): T[][].until$(LPAREN)T[]$(RPAREN) breaks if sentinel is longer than 1.)
 )
 $(BUGSTITLE_BUGZILLA Phobos enhancements,
 
@@ -313,11 +422,12 @@ $(LI $(BUGZILLA 24177): Array literal can implicitly convert to an expected type
 $(LI $(BUGZILLA 24210): Function types are not documented)
 )
 )
-$(D_CONTRIBUTORS_HEADER 35)
+$(D_CONTRIBUTORS_HEADER 37)
 $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Adam D. Ruppe)
     $(D_CONTRIBUTOR Atila Neves)
     $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Brian Callahan)
     $(D_CONTRIBUTOR Daniel Pflager)
     $(D_CONTRIBUTOR Danil Sidoruk)
     $(D_CONTRIBUTOR Denis Feklushkin)
@@ -347,6 +457,7 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Sönke Ludwig)
     $(D_CONTRIBUTOR Teodor Dutu)
     $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Timon Gehr)
     $(D_CONTRIBUTOR Walter Bright)
     $(D_CONTRIBUTOR Yang Yujie)
     $(D_CONTRIBUTOR Семён Марьясин)
