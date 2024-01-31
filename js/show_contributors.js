@@ -29,8 +29,8 @@ $(document).ready(function()
     var repo;
     if (modulePath.indexOf("core") == 0 || modulePath.indexOf("object") == 0)
     {
-        repo = "druntime";
-        modulePath = "src/" + modulePath;
+        repo = "dmd";
+        modulePath = "druntime/src/" + modulePath;
     }
     else if (modulePath.indexOf("std") == 0 || modulePath.indexOf("etc") == 0)
     {
