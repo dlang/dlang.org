@@ -1,0 +1,137 @@
+Ddoc
+
+$(SPEC_S Interpolation Expression Sequence,
+
+$(HEADERNAV_TOC)
+
+$(P Interpolation Expression Sequences (IES) are expressions that intersperse string literal data, and values. An interpolation expression is written like a string, but can contain values that are passed directly to a function that is able to accept them. It is transformed into a $(I Sequence) of expressions that can be overloaded or handled by template functions.)
+
+$(GRAMMAR
+$(GNAME InterpolationExpressionSequence):
+    $(B i") $(GLINK InterpolatedDoubleQuotedCharacters)$(OPT) $(B ")
+    $(B $(BACKTICK)) $(GLINK InterpolatedWysiwygCharacters)$(OPT) $(B $(BACKTICK))
+    $(D q{) $(GLINK InterpolatedTokenStringTokens)$(OPT) $(D })
+
+$(GNAME InterpolatedDoubleQuotedCharacters):
+    $(GLINK InterpolatedDoubleQuotedCharacter)
+    $(GLINK InterpolatedDoubleQuotedCharacter) $(GSELF InterpolatedDoubleQuotedCharacters)
+
+$(GNAME InterpolatedDoubleQuotedCharacter):
+    $(GLINK DoubleQuotedCharacter)
+    $(GLINK InterpolationEscapeSequence)
+    $(GLINK InterpolationExpression)
+
+$(GNAME InterpolationEscapeSequence):
+    $(GLINK EscapeSequence)
+    $(B \\\$)
+
+$(GNAME InterpolatedWysiwygCharacters):
+    $(GLINK InterpolatedWysiwygCharacter)
+    $(GLINK InterpolatedWysiwygCharacter) $(GSELF InterpolatedWysiwygCharacters)
+
+$(GNAME InterpolatedWysiwygCharacter):
+    $(GLINK WysiwygCharacter)
+    $(GLINK InterpolationExpression)
+
+$(GNAME InterpolatedTokenStringTokens):
+    $(GLINK InterpolatedTokenStringTokenNoBraces)
+    $(GLINK InterpolatedTokenStringToken) $(GSELF InterpolatedTokenStringTokens)
+
+$(GNAME InterpolatedTokenStringToken):
+    $(GLINK InterpolatedTokenNoBraces)
+    (D {) $(GSELF InterpolatedTokenStringTokens)$(OPT) $(D })
+
+$(GNAME InterpolatedTokenNoBraces):
+    $(GLINK TokenNoBraces)
+    $(GLINK InterpolationExpression);
+
+$(GNAME InterpolationExpression):
+    $(B $ (LPAREN)) $(GLINK AssignExpression) $(B $(RPAREN))
+)
+
+$(H2 $(LNAME2 expression_translation Expression Translation)
+
+$(P When the lexer encounters an Interpolation Expression Sequence, the token is translated into a sequence of expressions, which replaces the single token. The sequence always starts with the expression $(D core.interpolation.InterpolationHeader()) and always ends with $(D core.interpolation.InterpolationFooter()))
+
+$(P Each part $(D str) of the token which is literal string data is translated into the expression $(D core.interpolation.InterpolatedLiteral!(str)))
+
+$(P Each part $(D $$(LPAREN)expr$(RPAREN)) of the token which is an $(GLINK InterpolationExpression) is translated into the sequence $(D core.interpolation.InterpolatedExpression!(expr), expr).)
+
+------
+// simple version of std.typecons.Tuple
+struct Tuple(T...) { T value; }
+Tuple!T tuple(T...)(T value) { return Tuple!T(value); }
+
+import core.interpolation;
+string name = "John Doe";
+auto items = tuple(i"Hello, $(name), how are you?");
+assert(items == tuple(
+    InterpolationHeader(),                       // denotes the start of an IES
+    InterpolatedLiteral!("Hello, ")(),           // literal string data
+    InterpolatedExpression!("name")(),           // expression literal data
+    name,                                        // expression passed directly
+    InterpolatedLiteral!(", how are you?")(),    // literal string data
+    InterpolationFooter()));                     // denotes the end of an IES
+------
+
+$(H2 $(LNAME2 core_interpolation core.interpolation Header Types)
+
+$(P Types defined in $(D core.interpolation) need not be imported to use IES. These are automatically imported when an IES is used. The types are defined so as to make it easy to introspect the IES for processing at compile-time.)
+
+$(H3 $(LNAME2 interp_header, InterpolationHeader and InterpolationFooter))
+
+$(P The $(D InterpolationHeader) and $(InterpolationFooter) type are empty structs that allow easy overloading of functions to handle IES. They also can be used to understand which parts of a expression list were passed via IES.)
+
+$(P These types have a $(D toString) definition that returns an empty string, to allow for processing by functions which intend to convert IES to text, such as $(D std.stdio.writeln) or $(D std.conv.text).)
+
+$(H3 $(LNAME2 interp_literal, InterpolatedLiteral))
+
+$(P The $(D InterpolatedLiteral) type is an empty struct that provides compile-time access to the string literal portion of an IES. This type also provides a $(D toString) member function which returns the literal that is used to construct the type.)
+
+$(H3 $(LNAME2 interp_literal, InterpolatedExpression))
+
+$(P The $(D InterpolatedExpression) type is an empty struct that provides compile-time access to the literal that was used to form the following expression. It provides a $(D toString) member function which returns the empty string. It also has an $(D enum expression) member, which is assigned the text that is used to construct the type.)
+
+$(H2 $(LNAME2 accepting, Accepting and Processing IES))
+
+$(P The recommended mechanism to accept IES is to provide a variadic template function to match the various parameters inside the sequence, surrounded by explicit $(D InterpolationHEader) and $(InterpolationFooter) parameters.)
+
+-------
+void processIES(Sequence...)(InterpolationHeader, Sequence data, InterpolationFooter)
+{
+    // process data here
+}
+-------
+
+$(P An IES can also contain types as interpolation expressions. This can be used by passing to a variadic template parameter.)
+
+-------
+template processIESAtCompileTime(InterpolationHeader header, Sequence...)
+{
+    static assert(Sequence[$-1] == InterpolationFooter());
+}
+
+alias result = processIES!i"Here is a type: $(int)";
+-------
+
+$(H2 $(LNAME2 tostring, Converting to a String))
+
+$(P In many cases, it is desirable to convert an IES to a $(D string). In these cases, it is recommended to use the Phobos function $(D std.conv.text) to convert the IES to a $(D string) before passing to the function.)
+
+-------
+import std.conv : text;
+string name = "John Doe";
+
+string badgreeting = i"Hello, $(name)"; // Error
+string greeting = i"Hello, $(name)".text; // OK
+assert(greeting == "Hello, John Doe");
+-------
+
+$(P It is highly recommended for library authors who wish to accept IES to provide an overload that accepts them, rather than rely on $(D std.conv), as this incurs unnecessary allocations. This is especially important where certain types of injection attacks are possible from malicious user-provided data.)
+
+$(SPEC_SUBNAV_PREV_NEXT lex, Lexical, grammar, Grammar)
+)
+
+Macros:
+CHAPTER = 3
+TITLE = Interpolation Expression Sequences
