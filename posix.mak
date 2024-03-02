@@ -317,8 +317,8 @@ PREMADE=fetch-issue-cnt.php robots.txt .htaccess .dpl_rewrite_map.txt ads.txt \
 # and .html in the generated HTML. These are also used for the mobi
 # book generation, for which reason the list is sorted by chapter.
 SPEC_ROOT=$(addprefix spec/, \
-	spec intro lex grammar module declaration type property attribute pragma \
-	expression statement arrays hash-map struct class interface enum \
+	spec intro lex istring grammar module declaration type property attribute \
+	pragma expression statement arrays hash-map struct class interface enum \
 	const3 function operatoroverloading template template-mixin contracts \
 	version traits errors unittest garbage float iasm ddoc \
 	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
