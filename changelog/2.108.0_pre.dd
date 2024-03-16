@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Apr 01, 2024, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 7 major changes and 48 fixed Bugzilla issues.
+$(VER) comes with 8 major changes and 33 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 35 contributors)
         who made $(VER) possible.)
@@ -14,8 +14,9 @@ $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
 $(LI $(RELATIVE_LINK2 dmd.classinfo,Added .nameSig field to TypeInfo_Class in object.d))
 $(LI $(RELATIVE_LINK2 dmd.default-init,Keywords like `__FILE__` are always evaluated at the call site))
-$(LI $(RELATIVE_LINK2 dmd.hexstring-cast,Hex strings can now be cast to integer arrays))
+$(LI $(RELATIVE_LINK2 dmd.hexstring-cast,Hex strings now convert to integer arrays))
 $(LI $(RELATIVE_LINK2 dmd.ies,Add support for Interpolated Expression Sequences))
+$(LI $(RELATIVE_LINK2 dmd.named-arguments,Named arguments for functions have been implemented and documented))
 
 )
 
@@ -102,30 +103,30 @@ void func3(Loc loc = defaultLoc)
 ---
 )
 
-$(LI $(LNAME2 dmd.hexstring-cast,Hex strings can now be cast to integer arrays)
+$(LI $(LNAME2 dmd.hexstring-cast,Hex strings now convert to integer arrays)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.hexstring-cast.dd)
 $(P
 Hex strings are the most efficient way to embed binary data into source files.
 However, they couldn't easily be used to initialize a `short[]`, `int[]` or `long[]` because re-interpret casting arrays is not allowed during CTFE.
-Now, hex strings can be cast to integer arrays with element types larger than `byte`.
+Now, hex strings implicitly convert to all integer arrays.
 A big endian byte order is assumed, consistent with how integer literals are written.
 )
 
 ---
-immutable uint[] data = cast(immutable uint[]) x"AABBCCDD";
+immutable uint[] data = x"AABBCCDD";
 
 static assert(data[0] == 0xAABBCCDD);
 ---
 
 $(P
-Character postfixes can now also be used for integers of size 2 or 4:
+Character postfixes can now also be used to explicitly set an element size of 2 or 4.
 )
+
 ---
 immutable ushort[] f = x"80 3F"w;
 static assert(f[0] == 0x803F);
 
-immutable int[] f = x"80 35 FF FD"d;
-static assert(f[0] == 0x803FFF);
+immutable ubyte[] g = x"80 35"w; // error: size mismatch
 ---
 
 $(P
@@ -164,6 +165,59 @@ writeln(i"Content $(a + 4)"); // prints "Content 10"
 
 $(P
 You can also pass them to other functions which understand the types in the new `core.interpolation` module. Numerous examples can be found documentation of that module or in this repository: https://github.com/adamdruppe/interpolation-examples/
+)
+)
+
+$(LI $(LNAME2 dmd.named-arguments,Named arguments for functions have been implemented and documented)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.named-arguments.dd)
+$(P
+When calling a function, arguments may be preceded with a parameter name for purposes of clarity and flexible ordering.
+Consequently, default arguments need not be at the end of the parameter list anymore.
+)
+
+---
+void createWindow(bool fullScreen = false, int width, int height, string title);
+
+void main()
+{
+    createWindow(title: "Skynet", width: 1280, height: 720);
+}
+---
+
+$(P
+Named arguments can also be used in struct/union literals.
+A union can now be initialized by setting a field different than the first one.
+)
+
+---
+union U
+{
+    float asFloat;
+    uint asInt;
+}
+
+auto u0 = U(1.0); // this sets the `asFloat` field
+auto u1 = U(asInt: 0x3F800000); // formerly not possible
+---
+
+$(P
+Relevant specification pages are:
+$(UL
+    $(LI $(DDSUBLINK spec/struct, struct-literal, Struct Literals))
+    $(LI $(DDSUBLINK spec/struct, anonymous, Anonymous Structs and Unions))
+    $(LI $(DDSUBLINK spec/expression, argument-parameter-matching, Matching Arguments to Parameters))
+    $(LI $(DDSUBLINK spec/function, function-overloading, Function Overloading))
+)
+)
+
+$(P
+Note that the implementation for regular functions and struct literals has been around since dmd 2.103, but it was undocumented and wouldn't work with template functions.
+)
+
+$(P
+This implements [DIP1030](https://www.dlang.org/dips/1030) for *function arguments*, but named *template arguments* are not implemented yet.
+Also, there are still implementation details to be ironed out which the DIP doesn't specify, such as how named arguments interact with tuples.
+For more information, see: [Named Arguments Status Update](https://forum.dlang.org/post/bynneksajyfyadwndsbm@forum.dlang.org)
 )
 )
 
@@ -273,37 +327,22 @@ $(CHANGELOG_SEP_TEXT_BUGZILLA)
 
 $(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
 
-$(LI $(BUGZILLA 20802): [REG2.088.0] Link failure with writefln)
 $(LI $(BUGZILLA 24179): Ddoc broke D code sections)
 $(LI $(BUGZILLA 24315): dmd/cpreprocess.d:87: warning: use of tmpnam is dangerous use mkstemp)
-$(LI $(BUGZILLA 24371): [REG 2.104] String array concatenation does not respect operator precedence)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
 
-$(LI $(BUGZILLA 20297): ld: warning: no platform load command found for macOS)
-$(LI $(BUGZILLA 21047): Linker error: GOT load reloc does not point to a movq instruction)
-$(LI $(BUGZILLA 22556): Invalid GOT load reloc with -O on MacOS)
 $(LI $(BUGZILLA 23515): Named Enum of function SIGSEGFAULT)
-$(LI $(BUGZILLA 23517): dmd with -g flag fails to link on macOS with unaligned pointer)
 $(LI $(BUGZILLA 23786): __traits$(LPAREN)parent, {}$(RPAREN) in overloaded function produces wierd results dependent on declaration order)
 $(LI $(BUGZILLA 23818): Error HMODULE not defined, please use HMODULE)
-$(LI $(BUGZILLA 24137): Link failure on macOS with symbol count from symbol table and dynamic symbol table differ)
 $(LI $(BUGZILLA 24293): ImportC: C preprocessor output should use temporary files)
 $(LI $(BUGZILLA 24309): Memory allocation failed on Azure pipeline)
 $(LI $(BUGZILLA 24359): slice equality expression can be discarded)
 $(LI $(BUGZILLA 24363): hex string postfixes are useless)
-$(LI $(BUGZILLA 24365): ICE when printing 'showCtfeContext' error)
-$(LI $(BUGZILLA 24370): static array values in static AA initialise to dynamic arrays)
 $(LI $(BUGZILLA 24383): Index assignment expression in __traits$(LPAREN)compiles$(RPAREN) fails to parse)
 $(LI $(BUGZILLA 24387): Base class construction ignores private)
 $(LI $(BUGZILLA 24389): importC: Building zlib in Phobos with importC fails on FreeBSD 14)
 $(LI $(BUGZILLA 24390): AssertError@src/dmd/backend/cgxmm.d$(LPAREN)1476$(RPAREN): Assertion failure)
-$(LI $(BUGZILLA 24399): Link failure on MacOS with address=0x0 points to section$(LPAREN)2$(RPAREN) with no content in config_a68_4c3.o)
-$(LI $(BUGZILLA 24401): OSX: Linker error: GOT load reloc does not point to a movq instruction)
-$(LI $(BUGZILLA 24402): OSX: Linker warning: pointer not aligned at __OBJC_PROTOCOL_$_Foo)
-$(LI $(BUGZILLA 24407): OSX: ld: Assertion failed: $(LPAREN)slot < _sideTableBuffer.size$(LPAREN)$(RPAREN)$(RPAREN), function addAtom)
-$(LI $(BUGZILLA 24409): DMD crash for CTFE in stompOverlappedFields)
-$(LI $(BUGZILLA 24422): ImportC: ICE: Segfault in cparseFunctionDefinition)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
