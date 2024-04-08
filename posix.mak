@@ -345,7 +345,7 @@ ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
 # and .html in the generated HTML. Save for the expansion of
 # $(SPEC_ROOT), the list is sorted alphabetically.
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
-	ascii-table bugstats $(CHANGELOG_FILES) community comparison \
+	ascii-table bugstats $(CHANGELOG_FILES) community comparison contributing \
 	deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
 	documentation download dstyle forum-template gpg_keys \
 	howto-promote htod index install \
