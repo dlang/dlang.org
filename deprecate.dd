@@ -50,6 +50,8 @@ $(SPEC_S Deprecated Features,
         $(TROW $(DEPLINK .size property),                                         ?,     0.107,  0.107,  2.061 )
         $(TROW $(DEPLINK .typeinfo property),                                     ?,     0.093,  2.061,  2.067 )
         $(TROW $(DEPLINK unannotated asm blocks),                                 &nbsp;, &nbsp, 2.100,  (never) )
+        $(TROW $(DEPLINK Throwing qualified objects),                             &nbsp;, 2.104, &nbsp,  (never) )
+        $(TROW $(DEPLINK Catching immutable/inout/shared objects),                &nbsp;, 2.106, &nbsp,  (never) )
     )
 
     $(DL
@@ -1021,6 +1023,41 @@ $(H4 Rationale)
     $(P $(D asm) blocks may throw, contain unsafe, impure code or call the GC
     interfaces.)
 )
+
+$(H3 $(DEPNAME Throwing qualified objects))
+
+$(P
+Previously, an `immutable`, `const`, `inout` or `shared` exception could be
+thrown and then caught in an unqualified `catch (Exception e)` clause.
+That breaks type safety.
+Throwing a qualified object is now deprecated. This helps to prevent
+possible mutation of an immutable object in a `catch` clause.
+)
+
+$(P
+The runtime also modifies a thrown object (e.g. to contain a stack
+trace) which can violate `const` or `immutable` objects. Throwing
+qualified objects has been deprecated for this reason also.
+)
+
+$(H3 $(DEPNAME Catching immutable/inout/shared objects))
+
+$(P
+It is unsafe to catch an exception as `immutable`, `inout` or `shared`.
+This is because the exception may still be accessible through another
+mutable or non-shared reference.
+)
+
+---
+auto e = new Exception("first");
+try {
+        throw e;
+} catch(immutable Exception ie) { // unsafe
+        e.msg = "second";
+        assert(ie.msg == "first"); // would fail
+}
+---
+
 
 Macros:
         DEPLINK=$(RELATIVE_LINK2 $0, $0)
