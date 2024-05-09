@@ -952,9 +952,9 @@ $(H2 $(LNAME2 lifetime-management, Lifetime Management))
     movable and there is no move constructor.)
 
 $(H2 $(LNAME2 operator-overloading, Operator Overloading))
-    $(P D's operator overloading is primarily involved with overloading its Unary
-    and Binary operators including the increment, index, slice, cast, function call,
-    comparison operator etc. overloads of these operators that exist in C++ can be
+    $(P D's operator overloading is primarily involved with overloading its unary
+    and binary operators including the increment, index, slice, cast, function call,
+    comparison operator etc. Overloads of these operators that exist in C++ can be
     directly called from D provided the D operator and its C++ counterpart semantically agree.
     Below is a simple use case involving the assignment, index, and function call operator
     overloads interoperating between D and C++.
@@ -977,7 +977,7 @@ public:
         b = 0;
     }
     A(int a, int b);
-    A& operator=(const A& obj);//overloading the assignment operator
+    A& operator=(const A& obj); //overloading the assignment operator
     void operator()(int a, int b, int c); // overloading the call operator
     int& operator[](int value); // overloading the index operator
     void printbuffer();
@@ -988,6 +988,7 @@ A::A(int a, int b)
     this->a = a;
     this->b = b;
 }
+
 A& A::operator=(const A& obj)
 {
     a = obj.a;
@@ -1009,7 +1010,7 @@ int& A::operator[](int value)
 
 void A::printbuffer()
 {
-    for(int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++)
     {
         std::cout << "the buffer numbers of index "<< i << " is "<< buffer[i] << std:: endl;
     }
@@ -1025,11 +1026,11 @@ extern(C++) struct A
 {
     int a;
     int b;
-    int [3]buffer;
+    int[3] buffer;
     this(int a, int b);
-    ref A opAssign(ref const A); //assignment operator interface
-    void opCall(int a, int b, int c); //function call operator interface
-    ref int opIndex(int value); //index operator interface
+    ref A opAssign(ref const A); // links with A::operator=
+    void opCall(int a, int b, int c); // links with A::operator()
+    ref int opIndex(int value); // links with A::operator[]
     void printbuffer();
 }
 
@@ -1037,10 +1038,10 @@ void main()
 {
     auto obj1 = A(1, 3);
     auto obj2 = A(13, 43);
-    obj2 = obj1; //opAssign called here
-    writeln("obj2's a is ",obj2.a);
+    obj2 = obj1; // opAssign called here
+    writeln("obj2's a is ", obj2.a);
     writeln("obj2's b is ", obj2.b);
-    obj2(20,40,60);
+    obj2(20, 40, 60);
     obj2[0] = 30;
     obj2[1] = 60;
     obj2[2] = 90;
