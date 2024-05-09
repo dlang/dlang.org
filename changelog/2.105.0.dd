@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Aug 01, 2023, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 11 major changes and 59 fixed Bugzilla issues.
+$(VER) comes with 12 major changes and 59 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 34 contributors)
         who made $(VER) possible.)
@@ -18,6 +18,7 @@ $(LI $(RELATIVE_LINK2 dmd.enum-function,Functions can no longer have `enum` stor
 $(LI $(RELATIVE_LINK2 dmd.extern-c-overload,Overloading `extern(C)` functions is now an error))
 $(LI $(RELATIVE_LINK2 dmd.private-deprecation-error,Deprecation phase ended for access to private method when overloaded with public method.))
 $(LI $(RELATIVE_LINK2 dmd.visionos-version-identifier,Added predefined version identifier `VisionOS`))
+$(LI $(RELATIVE_LINK2 dmd.allow-parentheses-for-call,Do not error with a C cast when surrounding a type or expression in parentheses when calling or constructing.))
 
 )
 
@@ -174,6 +175,30 @@ This is Apple's new operating system for their VR/AR device Vision Pro.
 )
 )
 
+$(LI $(LNAME2 dmd.allow-parentheses-for-call,Do not error with a C cast when surrounding a type or expression in parentheses when calling or constructing.)
+$(P
+Previous to this version, an expression like `(IdentifierOrBasicType)(Expression)` would be considered a c-style cast,
+and disallowed, even if the `IdentifierOrBasicType` could be used as a callable. This is now allowed, as long as the expression is a call, or a construction.
+
+```
+struct S { int x; }
+int foo(int x) { return x; }
+auto bar = &foo;
+
+// these were previously disallowed
+auto s = (S)(5);   // equivalent to S(5)
+auto f = (foo)(5); // equivalent to foo(5)
+auto b = (bar)(5); // equivalent to bar(5)
+auto i = (int)(5); // equivalent to int(5), not a cast.
+
+// these are not allowed
+auto bad = (int)5; // Error: C style cast illegal, use `cast(int)5`
+auto bad2 = (ubyte)(12345); // Error: cannot implicitly convert expression `12345` of type `int` to `ubyte`
+```
+)
+
+$(P See $(BUGZILLA 24025): Expressions contained in parentheses should not be assumed to be C casts)
+)
 
 )
 
