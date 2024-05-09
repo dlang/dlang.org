@@ -1,0 +1,554 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jun 01, 2024, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 14 major changes and 22 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 41 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.alias-instance-member,[next edition] Aliasing a member of a type *instance* is now an error))
+$(LI $(RELATIVE_LINK2 dmd.bitfield-introspection,Add Bitfield Introspection Capability))
+$(LI $(RELATIVE_LINK2 dmd.ctfeWrite,Added `__ctfeWrite` to write messages from CTFE))
+$(LI $(RELATIVE_LINK2 dmd.deprecation-limit,Deprecation warnings are now also limited by `-verrors`))
+$(LI $(RELATIVE_LINK2 dmd.dtoh-windows,dtoh generates signatures for `extern(Windows)` and `extern(System)` functions.))
+$(LI $(RELATIVE_LINK2 dmd.foreach-reverse-delegate-error,`foreach_reverse` on a delegate is now an error))
+$(LI $(RELATIVE_LINK2 dmd.identifier-tables,Expansion of identifier tables to allow new characters to match C23 have been added along with CLI configurability))
+$(LI $(RELATIVE_LINK2 dmd.importc-unicode,ImportC has improved Unicode support))
+$(LI $(RELATIVE_LINK2 dmd.linker-error,Missing symbol errors are made less cryptic))
+$(LI $(RELATIVE_LINK2 dmd.omf-removed,Windows OMF support has been removed))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 druntime.core.sys.linux.sys.mount,Add module `core.sys.linux.sys.mount`.))
+$(LI $(RELATIVE_LINK2 druntime.removenostackcollect,Remove all `collectNoStack` functions and API from druntime.))
+$(LI $(RELATIVE_LINK2 druntime.thread-sleep-trusted,Mark `Thread.sleep` as `@trusted`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 std.process.Config.preExecDelegate,Add `std.process.Config.preExecDelegate`))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.alias-instance-member,[next edition] Aliasing a member of a type *instance* is now an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.alias-instance-member.dd)
+$(P
+Such an alias actually aliases a member of the instance's *type*, not
+the instance member itself. That could be confusing, and is now an error.
+Instead, alias a member of the type:
+)
+
+---
+struct Foo
+{
+    int v;
+    void test(Foo that) const
+    {
+        alias a = this.v; // OK
+        alias b = that.v; // Error, use `typeof(that).v` instead
+        assert(&a is &b); // passes
+        assert(&b !is &that.v);
+    }
+}
+
+struct Bar
+{
+    Foo f;
+    alias v = f.v; // Error, use `typeof(f).v`
+}
+---
+)
+
+$(LI $(LNAME2 dmd.bitfield-introspection,Add Bitfield Introspection Capability)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.bitfield-introspection.dd)
+$(P
+Adds:
+)
+
+$(P
+* property `.bitoffsetof` to get the starting bit number of a bitfield
+)
+
+$(P
+* property `.bitwidth` to get the number of bits in a bitfield
+)
+
+$(P
+* `__traits(isBitfield, symbol)` returns true if a field symbol is a bitfield
+)
+)
+
+$(LI $(LNAME2 dmd.ctfeWrite,Added `__ctfeWrite` to write messages from CTFE)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.ctfeWrite.dd)
+$(P
+The special function `__ctfeWrite` can now be used to write messages
+during CTFE, similar to `pragma(msg, ...)`. It is Implementation Defined
+how the message is presented to the user; the recommended way is by
+printing the message to `stderr`, standard error stream.
+The function is available in `object.d` and accepts any value implicitly
+convertible to `const(char)[]`.
+)
+
+$(P
+For example:
+)
+
+```d
+int greeting()
+{
+    __ctfeWrite("Hello from CTFE. Today is ");
+    __ctfeWrite(__DATE__);
+    __ctfeWrite("\n");
+    return 0;
+}
+
+enum forceCTFE = greeting();
+```
+
+$(P
+Compiling this program will generate the following output:
+)
+
+```
+Hello from CTFE. Today is <current date>
+```
+)
+
+$(LI $(LNAME2 dmd.deprecation-limit,Deprecation warnings are now also limited by `-verrors`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.deprecation-limit.dd)
+$(P
+By default, the compiler stops after 20 error messages, unless a different amount is specified by passing e.g. `-verrors=50` or `-verrors=0` for no limit.
+This error limit now also applies to deprecation messages, so the command line isn't flooded with hundreds of them when compiling a big project that hasn't fixed all deprecations yet.
+)
+
+---
+deprecated void f()
+{
+}
+
+void main()
+{
+    f();
+    f();
+    f();
+    f();
+}
+---
+
+$(P
+$(CONSOLE
+&gt; dmd -verrors=3 app.d
+app.d(7): Deprecation: function `deprecationlimit.x` is deprecated
+app.d(8): Deprecation: function `deprecationlimit.x` is deprecated
+app.d(9): Deprecation: function `deprecationlimit.x` is deprecated
+1 deprecation warning omitted, use `-verrors=0` to show all
+)
+)
+)
+
+$(LI $(LNAME2 dmd.dtoh-windows,dtoh generates signatures for `extern(Windows)` and `extern(System)` functions.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.dtoh-windows.dd)
+$(P
+When using the -HC switch, in addition to `extern(C)` and `extern(C++)` functions, `extern(Windows)` and `extern(System)` functions are output in the .h file as well.
+)
+
+$(P
+Example D module:
+)
+---
+extern(Windows) int hello()
+{
+    return 0;
+}
+
+extern(System) int myFriend()
+{
+    return 0;
+}
+---
+
+$(P
+Output with `-HC` switch:
+)
+---
+// (full header omitted)
+
+#ifndef _WIN32
+#define EXTERN_SYSTEM_AFTER __stdcall
+#define EXTERN_SYSTEM_BEFORE
+#else
+#define EXTERN_SYSTEM_AFTER
+#define EXTERN_SYSTEM_BEFORE extern "C"
+#endif
+
+int32_t __stdcall hello();
+
+EXTERN_SYSTEM_BEFORE int32_t EXTERN_SYSTEM_AFTER myFriend(x);
+---
+)
+
+$(LI $(LNAME2 dmd.foreach-reverse-delegate-error,`foreach_reverse` on a delegate is now an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.foreach-reverse-delegate-error.dd)
+$(P
+The compiler did not try to implement reverse traversal of the results returned by
+the delegate when $(D foreach_reverse) was used. That could result in code
+that was confusing to read, so it was deprecated (for many years). Using
+$(D foreach_reverse) with a delegate is now an error.
+)
+)
+
+$(LI $(LNAME2 dmd.identifier-tables,Expansion of identifier tables to allow new characters to match C23 have been added along with CLI configurability)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.identifier-tables.dd)
+$(P
+You can currently choose between ``c99``, ``c11``, ``UAX31`` (C23's) and ``all`` (the least restrictive set) for both D and ImportC.
+)
+
+$(P
+This can be done with ``-identifiers=<table>`` and for ImportC ``-identifiers-importc=<table>``.
+)
+
+$(P
+The default table for D is currently set to ``all``, while ImportC is set to ``c11``.
+Previously both D and ImportC used the ``c99`` tables.
+)
+
+$(P
+D's table will be swapped over at a later date to [UAX31](https://unicode.org/reports/tr31/), this should be done in 2.117.
+If you find yourself at this time using ``c99`` specific characters and not willing to change them, you may switch back to ``all``.
+Although it should be unlikely that you will need to.
+)
+)
+
+$(LI $(LNAME2 dmd.importc-unicode,ImportC has improved Unicode support)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.importc-unicode.dd)
+$(P
+Universal Character Names are now supported, allowing you to use the ``\uXXXX`` and ``\UXXXXXXXX`` syntax where ``X`` is a hex digit as part of an identifier.
+)
+
+$(P
+DigitalMars sppn does not support anything newer than C99.
+It is known to be limited and using any Unicode character not in those ranges will result in an error.
+)
+)
+
+$(LI $(LNAME2 dmd.linker-error,Missing symbol errors are made less cryptic)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.linker-error.dd)
+$(P
+It is not uncommon to forget to link a library, list a .d file on the command line, or include a `main` function.
+Example:
+)
+---
+module app;
+
+unittest
+{
+    import assertions;
+    assertEquals('D', 'D');
+}
+---
+
+---
+module assertions;
+
+void assertEquals(char a, char b)
+{
+    assert(a == b);
+}
+---
+
+$(P
+When compiling this as follows:
+)
+
+$(P
+$(CONSOLE
+\> dmd -unittest app.d
+)
+)
+
+$(P
+The compiler would not see any error, but at link time there are missing symbols.
+Formerly, this would result in a cryptic linker error with mangled symbol names:
+)
+
+$(P
+$(CONSOLE
+/usr/bin/ld: /usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/../../../../lib/Scrt1.o: in function `_start':
+(.text+0x1b): undefined reference to `main'
+/usr/bin/ld: app.o: in function `_D3app16__unittest_L5_C1FZv':
+app.d:(.text._D3app16__unittest_L5_C1FZv[_D3app16__unittest_L5_C1FZv]+0xc): undefined reference to `_D10assertions12assertEqualsFaaZv'
+collect2: error: ld returned 1 exit status
+)
+)
+
+$(P
+Experienced users might know how to demangle the symbol to make it more readable:
+)
+
+$(P
+$(CONSOLE
+\> echo _D10assertions12assertEqualsFaaZv | ddemangle
+void assertions.assertEquals(char, char)
+)
+)
+
+$(P
+But this is inconvenient to do manually every time.
+Now, when the compiler invokes the linker program, it will read its output, scan for undefined symbol errors, and demangle the names:
+)
+
+$(P
+$(CONSOLE
+Error: undefined reference to `main`
+Error: undefined reference to `void assertions.assertEquals(char, char)`
+       referenced from `void app.__unittest_L5_C1()`
+       perhaps define a `void main() {}` function or use the `-main` switch
+       perhaps `.d` files need to be added on the command line, or use `-i` to compile imports
+Error: linker exited with status 1
+)
+)
+
+$(P
+Which makes it easier to fix the command:
+$(CONSOLE
+\> dmd -unittest -main -i app.d
+)
+)
+
+$(P
+Currently supported linkers are ld, bfd, gold, mold, and Microsoft LINK.
+Please file an issue if your linker's errors aren't detected.
+)
+)
+
+$(LI $(LNAME2 dmd.omf-removed,Windows OMF support has been removed)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.omf-removed.dd)
+$(P
+After two years of making PE-COFF support the default on Windows, OMF support has now been removed.
+)
+
+$(P
+This includes the switch (``-m32omf``).
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 druntime.core.sys.linux.sys.mount,Add module `core.sys.linux.sys.mount`.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.core.sys.linux.sys.mount.dd)
+$(P
+The new module `core.sys.linux.sys.mount` provides definitions corresponding to
+those in the header `<sys/mount.h>` on Linux.
+)
+)
+
+$(LI $(LNAME2 druntime.removenostackcollect,Remove all `collectNoStack` functions and API from druntime.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.removenostackcollect.dd)
+$(P
+The function `collectNoStack` in the D garbage collector performed a
+collection, without using any roots from thread stacks or thread-local-storage.
+The danger of running this mechanism is that any blocks of memory which only
+have a reference from a thread might be collected, while the thread is still
+running and possibly using the memory.
+)
+
+$(P
+The only time this function was called was at GC termination. At GC
+termination, the GC is about to be destroyed, and so we want to run as many
+destructors as possible. However, if some thread is using GC-allocated memory,
+cleaning up that memory isn't going to help matters. Either it will crash after
+the GC cleans the memory, or it will crash after the GC is destroyed.
+)
+
+$(P
+The original purpose of this function (from D1) was to ensure simple uses of
+the GC were cleaned up in small test programs, as this mechanism was only used
+on single-threaded programs (and of course, at program exit). Also note at the
+time, D1 was 32-bit, and false pointers where much more common. Avoiding
+scanning stacks would aid in avoiding seemingly random behavior in cleanup.
+However, as shown below, there are more deterministic ways to ensure data is
+always cleaned up.
+)
+
+$(P
+Today, the dangers are much greater that such a function is even callable --
+any call to such a function would immediately start use-after-free memory
+corruption in any thread that is still running. Therefore, we are removing the
+functionality entirely, and simply doing a standard GC cleanup (scanning stacks
+and all). One less footgun is the benefit for having less guaranteed GC clean
+up at program exit.
+)
+
+$(P
+In addition, the GC today is a bit smarter about where the valid stack is, so
+there is even less of a chance of leaving blocks unfinalized.
+)
+
+$(P
+As always, the GC is *not* guaranteed to clean up any block at the end of
+runtime. Any change in behavior with code that had blocks clean up before, but
+no longer are cleaned up is still within specification. And if you want the
+behavior that absolutely cleans all blocks, you can use the
+`--DRT-gcopt=cleanup:finalize` druntime configuration option, which will clean
+up all blocks without even scanning.
+)
+)
+
+$(LI $(LNAME2 druntime.thread-sleep-trusted,Mark `Thread.sleep` as `@trusted`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.thread-sleep-trusted.dd)
+$(P
+The static method `core.thread.Thread.sleep` is now marked as `@trusted` and
+can be called directly from `@safe` code.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 std.process.Config.preExecDelegate,Add `std.process.Config.preExecDelegate`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std.process.Config.preExecDelegate.dd)
+$(P
+$(LINK2 $(ROOT_DIR)phobos/std_process.html#.Config.preExecDelegate, `std.process.Config.preExecDelegate`)
+is just like
+$(LINK2 $(ROOT_DIR)phobos/std_process.html#.Config.preExecFunction, `std.process.Config.preExecFunction`),
+but can capture an environment, for example:
+)
+
+-------
+import core.sys.linux.sys.prctl : PR_SET_PDEATHSIG, prctl;
+import std.process : Config, execute;
+
+void runProgram(int pdeathsig)
+{
+    execute(
+        ["program"],
+        config: Config(
+            preExecDelegate: () @trusted =>
+                prctl(PR_SET_PDEATHSIG, pdeathsig, 0, 0, 0) != -1,
+        ),
+    );
+}
+-------
+
+$(P
+`preExecFunction` is retained for backwards compatibility. If both
+`preExecFunction` and `preExecDelegate` are given, both are called.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 14128): AliasDeclaration allows expressions, causing false code for ThisExp)
+$(LI $(BUGZILLA 20148): void initializated bool can be both true and false)
+$(LI $(BUGZILLA 21854):  @live breaks foreach over integers)
+$(LI $(BUGZILLA 21923):  @live does not take destructor code into account.)
+$(LI $(BUGZILLA 22977): [dip1000] can escape scope pointer returned by nested function)
+$(LI $(BUGZILLA 23530): casting immutable away allowed in safe)
+$(LI $(BUGZILLA 24434): Casting away const with cast$(LPAREN)$(RPAREN) should not produce an lvalue)
+$(LI $(BUGZILLA 24477): Union access of bool shouldn't be allowed in @safe)
+$(LI $(BUGZILLA 24485): Invalid implicit ref return reinterpret cast for structs with copy constructor)
+$(LI $(BUGZILLA 24493): FreeBSD_14 version identifier missing)
+$(LI $(BUGZILLA 24520): [REG] type$(LPAREN)value$(RPAREN) got a synonym $(LPAREN)type$(RPAREN)$(LPAREN)value$(RPAREN))
+$(LI $(BUGZILLA 24525): auto ref lambda exp not parsed if used as left-most expression in an expression statement)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 5573): Compiler $(LPAREN)not linker$(RPAREN) should generate an error for missing main$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 21718): Preview switches have insufficient descriptions)
+$(LI $(BUGZILLA 24111): [ImportC] fatal error C1034: stdio.h: no include path set)
+$(LI $(BUGZILLA 24450): apply VRP to foreach indices when array is of known length)
+$(LI $(BUGZILLA 24452): Can't disable coverage at runtime)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 15708): std.range.choose assumes hasElaborateCopyConstructor means "has __postblit")
+$(LI $(BUGZILLA 24478): std.csv array out of bounds when row size exceeds header)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 24517): druntime tests fail on FreeBSD 14)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 24472): __traits$(LPAREN)fullyQualifedName$(RPAREN) is undocumented in spec)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 24488): contributor guide hard to find from home page)
+)
+)
+$(D_CONTRIBUTORS_HEADER 41)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR 0-v-0)
+    $(D_CONTRIBUTOR Adam Wilson)
+    $(D_CONTRIBUTOR Andrei Horodniceanu)
+    $(D_CONTRIBUTOR Ate Eskola)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR chloekek)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR dokutoku)
+    $(D_CONTRIBUTOR Don Allen)
+    $(D_CONTRIBUTOR drug007)
+    $(D_CONTRIBUTOR Emmanuel Nyarko)
+    $(D_CONTRIBUTOR Horodniceanu Andrei)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR IchorDev)
+    $(D_CONTRIBUTOR Inkrementator)
+    $(D_CONTRIBUTOR Jeremy Baxter)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR John Dougan)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR liushuyu)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Matheus C. França)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR richard (rikki) andrew cattermole)
+    $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
+    $(D_CONTRIBUTOR richard (rikki) andrew cattermole)
+    $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
+    $(D_CONTRIBUTOR shoo)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Sönke Ludwig)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR WANG Rui)
+    $(D_CONTRIBUTOR zopsicle)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.109.0
+    TITLE=Change Log: $(VER)
