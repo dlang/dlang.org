@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Jun 01, 2024, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 14 major changes and 22 fixed Bugzilla issues.
+$(VER) comes with 15 major changes and 24 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 41 contributors)
         who made $(VER) possible.)
@@ -17,6 +17,7 @@ $(LI $(RELATIVE_LINK2 dmd.bitfield-introspection,Add Bitfield Introspection Capa
 $(LI $(RELATIVE_LINK2 dmd.ctfeWrite,Added `__ctfeWrite` to write messages from CTFE))
 $(LI $(RELATIVE_LINK2 dmd.deprecation-limit,Deprecation warnings are now also limited by `-verrors`))
 $(LI $(RELATIVE_LINK2 dmd.dtoh-windows,dtoh generates signatures for `extern(Windows)` and `extern(System)` functions.))
+$(LI $(RELATIVE_LINK2 dmd.foreach-array-index-type,`foreach` on a dynamic array can have an index type smaller than `size_t`))
 $(LI $(RELATIVE_LINK2 dmd.foreach-reverse-delegate-error,`foreach_reverse` on a delegate is now an error))
 $(LI $(RELATIVE_LINK2 dmd.identifier-tables,Expansion of identifier tables to allow new characters to match C23 have been added along with CLI configurability))
 $(LI $(RELATIVE_LINK2 dmd.importc-unicode,ImportC has improved Unicode support))
@@ -153,9 +154,9 @@ void main()
 $(P
 $(CONSOLE
 &gt; dmd -verrors=3 app.d
-app.d(7): Deprecation: function `deprecationlimit.x` is deprecated
-app.d(8): Deprecation: function `deprecationlimit.x` is deprecated
-app.d(9): Deprecation: function `deprecationlimit.x` is deprecated
+app.d(7): Deprecation: function `app.f` is deprecated
+app.d(8): Deprecation: function `app.f` is deprecated
+app.d(9): Deprecation: function `app.f` is deprecated
 1 deprecation warning omitted, use `-verrors=0` to show all
 )
 )
@@ -200,6 +201,28 @@ int32_t __stdcall hello();
 
 EXTERN_SYSTEM_BEFORE int32_t EXTERN_SYSTEM_AFTER myFriend(x);
 ---
+)
+
+$(LI $(LNAME2 dmd.foreach-array-index-type,`foreach` on a dynamic array can have an index type smaller than `size_t`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.foreach-array-index-type.dd)
+$(P
+The array length is known at compile-time for the following cases:
+)
+
+$(P
+* The array is a literal
+* The array is a slice expression whose upper bound is known at
+  compile-time
+)
+
+$(P
+For an array `a`, the index type can be any integer type `I` where
+`a.length <= I.max`.
+)
+
+$(P
+Other cases [are not implemented](https://issues.dlang.org/show_bug.cgi?id=24542) yet.
+)
 )
 
 $(LI $(LNAME2 dmd.foreach-reverse-delegate-error,`foreach_reverse` on a delegate is now an error)
@@ -488,10 +511,12 @@ $(BUGSTITLE_BUGZILLA Phobos bug fixes,
 
 $(LI $(BUGZILLA 15708): std.range.choose assumes hasElaborateCopyConstructor means "has __postblit")
 $(LI $(BUGZILLA 24478): std.csv array out of bounds when row size exceeds header)
+$(LI $(BUGZILLA 24549): std.process.environment.get$(LPAREN)null$(RPAREN) segfaults)
 )
 $(BUGSTITLE_BUGZILLA Druntime bug fixes,
 
 $(LI $(BUGZILLA 24517): druntime tests fail on FreeBSD 14)
+$(LI $(BUGZILLA 24546): importC musl setjmp.h failure)
 )
 $(BUGSTITLE_BUGZILLA dlang.org bug fixes,
 
@@ -534,10 +559,10 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Paul Backus)
     $(D_CONTRIBUTOR Petar Kirov)
     $(D_CONTRIBUTOR Razvan Nitu)
-    $(D_CONTRIBUTOR richard (rikki) andrew cattermole)
     $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
     $(D_CONTRIBUTOR richard (rikki) andrew cattermole)
     $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
+    $(D_CONTRIBUTOR richard (rikki) andrew cattermole)
     $(D_CONTRIBUTOR shoo)
     $(D_CONTRIBUTOR Steven Schveighoffer)
     $(D_CONTRIBUTOR Sönke Ludwig)
