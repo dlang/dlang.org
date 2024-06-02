@@ -34,7 +34,7 @@ function addAnchors()
 function addVersionSelector() {
   // Latest version offered by the archive builds
   // This needs to be manually updated after new versions have been archived
-  var currentArchivedVersion = 108;
+  var currentArchivedVersion = 109;
   // build URLs for dlang.org: DDoc + Dox
   var ddocModuleURL = document.body.id.replace(/[.]/g, "_") + ".html";
   var ddoxModuleURL = document.body.id.replace(/[.]/g, "/") + ".html";
