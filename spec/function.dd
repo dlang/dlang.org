@@ -22,7 +22,10 @@ $(GNAME FuncDeclaratorSuffix):
     $(GLINK2 template, TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
 )
 
-        * A *FuncDeclaration* with a $(GLINK FunctionBody) is called a *function definition*.
+        * A *FuncDeclaration* with a function body is called a
+          $(RELATIVE_LINK2 function-bodies, function definition).
+        * A *FuncDeclaration* without a function body is called a
+          $(RELATIVE_LINK2 function-declarations, function prototype).
         * A *FuncDeclaration* with *TemplateParameters* defines a
           $(DDSUBLINK spec/template, function-templates, function template).
 
@@ -135,7 +138,7 @@ $(LEGACY_LNAME2 FunctionLiteralBody)
         This syntax also applies for $(DDSUBLINK spec/expression, function_literals, function literals).)
 
 
-$(H3 $(LNAME2 function-declarations, Functions without Bodies))
+$(H3 $(LNAME2 function-declarations, Function Prototypes))
 
 $(GRAMMAR
 $(GNAME MissingFunctionBody):
@@ -144,16 +147,23 @@ $(GNAME MissingFunctionBody):
     $(GLINK FunctionContracts)$(OPT) $(GLINK InOutStatement)
 )
 
-    $(P Functions without bodies:)
+    $(P Function declarations with a *MissingFunctionBody*, e.g.:)
 
 ---
 int foo();
 ---
 
-    $(P that are not declared as $(D abstract) are expected to have their implementations
+    $(P that are not declared as $(DDSUBLINK spec/class, abstract, `abstract`)
+    are expected to have their implementations
     elsewhere, and that implementation will be provided at the link step.
     This enables an implementation of a function to be completely hidden from the user
     of it, and the implementation may be in another language such as C, assembler, etc.
+    Typically a function prototype would have non-`extern(D)`
+    $(DDSUBLINK spec/attribute, linkage, linkage).
+    )
+
+    $(P A function prototype can have `extern(D)` linkage.
+    This is useful for $(DDSUBLINK dmd, interface-files, D interface files).
     )
 
 
@@ -3785,27 +3795,33 @@ $(H3 $(LNAME2 safe-functions, Safe Functions))
         $(LI No casting from a pointer type `T` to any type `U` with pointers, except when:)
             * `T` implicitly converts to `U`
             * `U` implements class or interface `T`
-            * Both types are dynamic arrays
             * `T.opCast!U` is `@safe`
+            * Both types $(DDSUBLINK spec/expression, cast_array, are dynamic arrays) and:
+                * Casting a source element to a target element type is `@safe`
+                * The target element type is not mutable when the source type is `void[]`
+                * The target type is not `bool[]` unless the operand is a literal
         $(LI No casting from any non-pointer type to a pointer type.)
-        $(LI No pointer arithmetic (including pointer indexing).)
-        $(LI Cannot access unions that:)
+        $(LI No pointer arithmetic (including pointer indexing & slicing).)
+        $(LI Cannot access union fields that:)
             * Have pointers or references overlapping with other types
-            * Have fields with invariants overlapping with other types
+            * Have invariants overlapping with other types
+            * Contain a $(DDSUBLINK spec/type, bool, `bool`)
         $(LI Calling any $(RELATIVE_LINK2 system-functions, System Functions).)
         $(LI No catching of exceptions that are not derived from
         $(LINK2 https://dlang.org/phobos/object.html#.Exception, $(D class Exception)).)
-        $(LI No inline assembler.)
-        $(LI No explicit casting of:)
-            * mutable objects to immutable
-            * immutable objects to mutable
+        $(LI $(DDSUBLINK spec/iasm, asmstatements, Inline assembler) must be marked as
+            `@trusted`.)
+        $(LI No explicit casting (except with a matching `@safe` `opCast`) of:)
+            * mutable objects to immutable (except basic data types)
+            * immutable objects to mutable (except basic data types)
             * thread local objects to shared
             * shared objects to thread local
         $(LI Cannot access $(DDSUBLINK spec/attribute, system-variables, `@system`)
             or $(D __gshared) variables.)
-        $(LI Cannot use $(D void) initializers for:)
-            * Pointers/reference types or any type containing them
-            * Types that have invariants
+        $(LI Cannot use $(D void) initializers for types containing:)
+            * Pointers/reference types
+            * Types with invariants
+            * `bool`
         )
 
         $(NOTE When indexing or slicing an array, an out of bounds access
