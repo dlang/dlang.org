@@ -718,7 +718,7 @@ $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes 
     }
     void main()
     {
-        S s;
+        S s = S(41);
         foreach (ref uint i; s)
         {
             i++; // effectively s.n++
@@ -726,7 +726,7 @@ $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes 
         foreach (i; s)
         {
             static assert(is(typeof(i) == uint));
-            assert(i == 1);
+            assert(i == 42);
         }
     }
     ---
@@ -771,35 +771,41 @@ $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes 
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         --------------
-        class Foo
+        class Tree
         {
-            uint[] array;
+            int label;
+            Tree[] children;
 
-            int opApply(scope int delegate(ref uint) body)
+            this(int l) @safe { label = l; }
+
+            int opApply(scope int delegate(ref int) @safe body) @safe
             {
-                foreach (e; array)
+                int result = body(label);
+                if (result != 0) return result;
+
+                foreach (child; children)
                 {
-                    int result = body(e);
-                    if (result)
-                        return result;
+                    int childResult = child.opApply(body);
+                    if (childResult != 0) return childResult;
                 }
                 return 0;
             }
         }
 
-        void main()
+        void main() @safe
         {
             import std.stdio;
 
-            Foo a = new Foo();
-            a.array = [73, 82, 2, 9];
+            Tree tree = new Tree(1);
+            tree.children = [ new Tree(2), new Tree(6) ];
+            tree.children[0].children = [ new Tree(3) ];
+            tree.children[1].children = [ new Tree(7), new Tree(8) ];
+            tree.children[0].children[0].children = [ new Tree(4), new Tree(5) ];
 
-            foreach (uint u; a)
+            foreach (int label; tree)
             {
-                if (u < 5)
-                    break;
-
-                writeln(u);
+                writeln(label);
+                if (label == 4) break;
             }
         }
         --------------
@@ -808,8 +814,10 @@ $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes 
     $(P This would print:)
 
 $(CONSOLE
-73
-82
+1
+2
+3
+4
 )
 
     $(BEST_PRACTICE Annotate delegate parameters to `opApply` functions with `scope` when possible.)
@@ -868,16 +876,19 @@ $(H4 $(LNAME2 template-instance-op-apply, `opApply` as an Alias to an Explicit F
         --------------
         struct A
         {
+            // Vanilla
             int opApply(scope int delegate(long) body) => body(42);
         }
         struct B
         {
+            // Template
             int opApply(Body)(scope Body body) => body(42);
         }
         struct C
         {
-            int opApplyImpl(Body)(scope Body body) => body(42);
+            // Alias to an explicit function template instance
             alias opApply = opApplyImpl!(int delegate(long));
+            int opApplyImpl(Body)(scope Body body) => body(42);
         }
         void main() @nogc nothrow pure @safe
         {
@@ -885,6 +896,7 @@ $(H4 $(LNAME2 template-instance-op-apply, `opApply` as an Alias to an Explicit F
             // Error: `pure` function `D main` cannot call impure function `onlineapp.A.opApply`
             // Error: `@safe` function `D main` cannot call `@system` function `onlineapp.A.opApply`
             // Error: function `onlineapp.A.opApply` is not `nothrow`
+            // (You might not encounter all of these errors at once.)
             static assert(!__traits(compiles, () @safe {
                 foreach (x; A()) { }
             }));
@@ -894,7 +906,7 @@ $(H4 $(LNAME2 template-instance-op-apply, `opApply` as an Alias to an Explicit F
                 foreach (x; B()) { }
             }));
 
-            // Good:
+            // Good
             foreach (x; C())
             {
                 static assert(is(typeof(x) == long));
@@ -953,7 +965,7 @@ $(H4 $(LNAME2 template-instance-op-apply, `opApply` as an Alias to an Explicit F
         foreach (depth, ref label; tree)
         {
             import std.stdio;
-            foreach (_; 0 .. depth) write("  ");
+            foreach (_; 0 .. depth) write("--");
             writeln(label);
         }
     }
@@ -964,6 +976,17 @@ $(H4 $(LNAME2 template-instance-op-apply, `opApply` as an Alias to an Explicit F
         printTree(new T(0, [new T(1, [new T(2), new T(3)]), new T(4, [new T(5)])]));
     }
     --------------
+
+    $(P This would print:)
+
+$(CONSOLE
+0
+--1
+----2
+----3
+--4
+----5
+)
 
 $(H3 $(LEGACY_LNAME2 foreach_with_ranges, foreach-with-ranges, Foreach over Structs and Classes with Ranges))
 
