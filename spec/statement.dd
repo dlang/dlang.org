@@ -703,22 +703,11 @@ $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes 
         $(LEGACY_LNAME2 opApply, op-apply, $(D opApply)) member function, and the
         `foreach_reverse` behavior is defined by the
         $(LEGACY_LNAME2 opApplyReverse, op-apply-reverse, $(D opApplyReverse)) member function.
-        These functions must each have the signature below:
+        These functions must each take exactly one function parameter of delegate type.
     )
 
-$(GRAMMAR
-    `int opApply` `(` `scope` `int delegate` `(` $(I OpApplyParameters) `)` `body` `)` `;`
-
-$(GNAME OpApplyParameters):
-    $(GLINK ParameterDeclaration)
-    $(GLINK ParameterDeclaration), *OpApplyParameters*
-
-$(GNAME OpApplyParameter):
-    $(GLINK ParameterStorageClass)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator)
-)
-
     $(PANEL
-    To support a `ref` iteration variable, the delegate must take a `ref` parameter:
+    To support a `ref` iteration, the delegate must take `ref` parameters:
 
     $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
@@ -729,7 +718,7 @@ $(GNAME OpApplyParameter):
     }
     void main()
     {
-		S s;
+        S s;
         foreach (ref uint i; s)
         {
             i++; // effectively s.n++
