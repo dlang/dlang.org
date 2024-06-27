@@ -2136,7 +2136,7 @@ $(H4 $(LNAME2 c_style_variadic_functions, C-style Variadic Functions))
 
         $(P A C-style variadic function is declared with
         a parameter `...` as the last function parameter.
-        It has non-D linkage, such as $(D extern (C)).)
+        It has non-D linkage, such as $(D extern(C)).)
 
         $(P To access the variadic arguments,
         import the standard library
@@ -2146,7 +2146,7 @@ $(H4 $(LNAME2 c_style_variadic_functions, C-style Variadic Functions))
         ---
         import core.stdc.stdarg;
 
-        extern (C) void dry(int x, int y, ...); // C-style Variadic Function
+        extern(C) void dry(int x, int y, ...); // C-style Variadic Function
 
         void spin()
         {
@@ -2159,7 +2159,7 @@ $(H4 $(LNAME2 c_style_variadic_functions, C-style Variadic Functions))
         $(P There must be at least one non-variadic parameter declared.)
 
         ---
-        extern (C) int def(...); // error, must have at least one parameter
+        extern(C) int def(...); // error, must have at least one parameter
         ---
 
         $(P
@@ -2169,7 +2169,7 @@ $(H4 $(LNAME2 c_style_variadic_functions, C-style Variadic Functions))
         )
 
         ---
-        extern (C) int printf(const(char)*, ...);
+        extern(C) int printf(const(char)*, ...);
 
         void main()
         {
@@ -2187,7 +2187,7 @@ $(H4 $(LNAME2 c_style_variadic_functions, C-style Variadic Functions))
         }
 
         import core.stdc.stdarg;
-        extern (C) void rinse(int x, int y, ...)
+        extern(C) void rinse(int x, int y, ...)
         {
             va_list args;
             va_start(args, y); // y is the last named parameter
@@ -3469,7 +3469,7 @@ $(H2 $(LNAME2 main, $(D main()) Function))
 
         $(GRAMMAR
         $(GNAME CMainFunction):
-            $(D extern (C)) $(GLINK MainReturnDecl) $(D main$(LPAREN)$(GLINK CmainParameters)$(OPT)$(RPAREN)) $(GLINK2 statement, BlockStatement)
+            $(D extern(C)) $(GLINK MainReturnDecl) $(D main$(LPAREN)$(GLINK CmainParameters)$(OPT)$(RPAREN)) $(GLINK2 statement, BlockStatement)
 
         $(GNAME CmainParameters):
             $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
@@ -3841,7 +3841,7 @@ $(H4 Safe External Functions)
         $(P External functions don't have a function body visible to the compiler:
         )
         ---
-        @safe extern (C) void play();
+        @safe extern(C) void play();
         ---
         and so safety cannot be verified automatically.
 
@@ -3916,7 +3916,7 @@ $(H3 $(LNAME2 system-functions, System Functions))
 
         $(P System functions can call safe and trusted functions.)
 
-        $(BEST_PRACTICE When in doubt, mark `extern (C)` and `extern (C++)` functions as
+        $(BEST_PRACTICE When in doubt, mark `extern(C)` and `extern(C++)` functions as
         `@system` when their implementations are not in D, as the D compiler will be
         unable to check them. Most of them are `@safe`, but will need to be manually
         checked.)
@@ -3953,7 +3953,7 @@ $(H3 $(LNAME2 safe-interfaces, Safe Interfaces))
             $(LI
                 C's `free` does not have a safe interface:
                 ---
-                extern (C) @system void free(void* ptr);
+                extern(C) @system void free(void* ptr);
                 ---
                 because `free(p)` invalidates `p`, making its value unsafe.
                 `free` can only be `@system`.
@@ -3961,8 +3961,8 @@ $(H3 $(LNAME2 safe-interfaces, Safe Interfaces))
             $(LI
                 C's `strlen` and `memcpy` do not have safe interfaces:
                 ---
-                extern (C) @system size_t strlen(char* s);
-                extern (C) @system void* memcpy(void* dst, void* src, size_t nbytes);
+                extern(C) @system size_t strlen(char* s);
+                extern(C) @system void* memcpy(void* dst, void* src, size_t nbytes);
                 ---
                 because they iterate pointers based on unverified assumptions
                 (`strlen` assumes that `s` is zero-terminated; `memcpy` assumes
@@ -3974,7 +3974,7 @@ $(H3 $(LNAME2 safe-interfaces, Safe Interfaces))
             $(LI
                 C's `malloc` does have a safe interface:
                 ---
-                extern (C) @trusted void* malloc(size_t sz);
+                extern(C) @trusted void* malloc(size_t sz);
                 ---
                 It does not exhibit undefined behavior for any input. It returns
                 either a valid pointer, which is safe, or `null` which is also
