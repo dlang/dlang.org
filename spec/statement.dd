@@ -740,16 +740,15 @@ $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes 
 
     $(P The apply
         function iterates over the elements it aggregates by passing each one
-        in successive calls to the `body` delegate. The delegate return value
-        of the `body` delegate
-        determines how to proceed iteration:)
+        in successive calls to the `body` delegate. The return value
+        of the `body` delegate determines how to proceed:)
 
     $(UL
-        $(LI If the result is nonzero, the apply function must cease
+        $(LI If the result is nonzero, the apply function $(B must) cease
         iterating and return that value.)
         $(LI If the result is `0`, then iteration should continue.
         If there are no more elements to iterate,
-        the apply function must return `0`.)
+        the apply function $(B must) return `0`.)
     )
 
     $(P The result of the `body` delegate will be nonzero if the *ForeachStatement*
@@ -822,9 +821,9 @@ $(CONSOLE
         be allocated for it on the heap instead of the stack.
     )
 
-    $(P $(B Important:) If an apply function catches any exceptions, ensure that those
+    $(NOTE If an apply function catches any exceptions, ensure that those
         exceptions did not originate from the delegate. The user would expect
-        exceptions thrown from a `foreach` body to both terminate the loop, and propagate outside
+        exceptions thrown from a `foreach` body to both terminate the loop and propagate outside
         the `foreach` body.
      )
 
@@ -834,7 +833,7 @@ $(H4 $(LNAME2 template-op-apply, Template `opApply`))
         which can optionally infer the types of parameters based on the $(I ForeachStatement).
     )
 
-    $(P $(B Note:) An apply function template cannot infer `foreach` variable types.)
+    $(NOTE An apply function template cannot infer `foreach` variable types.)
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         --------------
@@ -856,12 +855,12 @@ $(H4 $(LNAME2 template-op-apply, Template `opApply`))
         --------------
         )
 
-$(H4 $(LNAME2 template-instance-op-apply, `opApply` as an alias to a explicit function template instance))
+$(H4 $(LNAME2 template-instance-op-apply, `opApply` as an Alias to an Explicit Function Template Instance))
 
-    $(P `opApply` and `opApplyReverse` can be aliases to an appropriate function or function template.
+    $(P Like any other function, `opApply` and `opApplyReverse` can be aliases to a function or function template.
         However, special treatment is given to apply functions that are aliases of an appropriate function template instance.)
 
-    $(P In that case, the function template instance is used for overload selection and `foreach` variable type inference,
+    $(P In that case, the aliased function template instance is used for overload selection and `foreach` variable type inference,
         but the template is instantiated again with the actual delegate type of the `foreach` body.
         This way, apply functions can infer attributes depending on the attributes of `body` delegate.)
 
@@ -905,10 +904,11 @@ $(H4 $(LNAME2 template-instance-op-apply, `opApply` as an alias to a explicit fu
         --------------
         )
 
-    $(P The `opApplyImpl` pattern is generally preferable to
+    $(PANEL The `opApplyImpl` pattern is generally preferable to
         overloading many apply functions with all possible combinations of attributes.)
 
-    $(P Multiple apply function aliases can exist, and selection and `foreach` variable type inference work:)
+    $(P Multiple apply function aliases can exist, and selection and `foreach` variable type inference work.
+        They can alias instances of the same function template or different function templates.)
 
     --------------
     class Tree(T)
@@ -1686,7 +1686,7 @@ foreach (item; list)
         $(P Any intervening $(RELATIVE_LINK2 try-statement, `finally`) clauses are executed,
         and any intervening synchronization objects are released.)
 
-        $(P $(B Note:) If a `finally` clause executes a `throw` out of the finally
+        $(NOTE If a `finally` clause executes a `throw` out of the finally
         clause, the continue target is never reached.)
 
 $(H2 $(LEGACY_LNAME2 BreakStatement, break-statement, Break Statement))
