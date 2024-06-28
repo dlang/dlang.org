@@ -39,6 +39,7 @@ $(GNAME FunctionAttributeKwd):
 
 $(GNAME AtAttribute):
     $(D @) $(RELATIVE_LINK2 disable, $(D disable))
+    $(D @) $(RELATIVE_LINK2 future, $(D __future))
     $(D @) $(RELATIVE_LINK2 nogc, $(D nogc))
     $(D @) $(DDLINK spec/ob, Live Functions, `live`)
     $(GLINK Property)
@@ -402,7 +403,35 @@ $(GNAME DeprecatedAttribute):
         )
 
 
-$(H2 $(LNAME2 visibility_attributes, Visibility Attribute))
+$(H2 $(LNAME2 future, `@__future` attribute))
+
+        $(P The `@__future` attribute is used to mark a new symbol which could
+        cause a name clash in another module. The other module using a symbol with the
+        same name will continue to compile as before but will show a deprecation message.
+        The message indicates that the new symbol will break the existing code in future,
+        and the other module should be updated.
+        )
+
+        $(NOTE Currently only methods that implicitly override a `@__future` base class
+        method show a deprecation message.)
+
+        $(P See $(LINK2 https://github.com/dlang/DIPs/blob/master/DIPs/accepted/DIP1007.md,
+        DIP1007) for details.)
+
+        $(COMMENT
+        ---
+        module a;
+        @__future int i;
+
+        module b;
+        import a;
+        import c : i;
+        enum e = i; // Deprecation: `c.i` will conflict with `@__future` symbol `a.i`
+        ---
+        )
+
+
+$(H2 $(LNAME2 visibility_attributes, Visibility Attributes))
 
 $(GRAMMAR
 $(GNAME VisibilityAttribute):
@@ -429,12 +458,22 @@ $(H3 $(LNAME2 export, $(D export) Attribute))
         or DLL.)
 
         $(P $(D export) applied to the definition of a symbol will export it. $(D export) applied to
-        a declaration of a symbol will import it.)
+        a declaration of a symbol will import it.
+        A variable is a definition unless `extern` is applied to it.)
 
         ---
         export int x = 3;    // definition, exporting `x`
         export int y;        // definition, exporting `y`
         export extern int z; // declaration, importing `z`
+
+        export __gshared h = 3;        // definition, exporting `h`
+        export __gshared i;            // definition, exporting `i`
+        export extern __gshared int j; // declaration, importing `j`
+        ---
+
+        $(P A function with a body is a definition, without a body is a declaration.)
+
+        ---
         export void f() { }  // definition, exporting `f`
         export void g();     // declaration, importing `g`
         ---
@@ -452,7 +491,7 @@ $(H3 $(LNAME2 package, $(D package) Attribute))
 
         $(P $(D package) may have an optional parameter in the form of a dot-separated identifier
         list which is resolved as the qualified package name. The package must be either the module's
-        parent package or one of its anscestors. If this parameter is present, the symbol
+        parent package or one of its ancestors. If this parameter is present, the symbol
         will be visible in the specified package and all of its descendants.
         )
 
@@ -580,7 +619,7 @@ $(H3 $(LNAME2 gshared, $(D __gshared) Attribute))
 
         $(P $(D __gshared) is disallowed in `@safe` code.)
 
-$(H3 $(LNAME2 synchronized, $(D @synchronized) Attribute))
+$(H3 $(LNAME2 synchronized, $(D synchronized) Attribute))
 
         $(P See $(DDSUBLINK spec/class, synchronized-classes, Synchronized Classes).)
 
@@ -608,9 +647,32 @@ void main() { foo(); /* error, foo is disabled */ }
         )
 
 
-$(H2 $(LNAME2 safe, $(D @safe), $(D @trusted), and $(D @system) Attribute))
+$(H2 $(LNAME2 safe, $(D @safe), $(D @trusted), and $(D @system) Attributes))
 
     $(P See $(DDSUBLINK spec/function, function-safety, Function Safety).)
+
+$(H3 $(LNAME2 system-variables, System Variables))
+
+    $(P Variables marked `@system` cannot be accessed from `@safe` code.)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+@system int* p;
+
+struct S
+{
+    @system int i;
+}
+
+void main() @safe
+{
+    int x = *p; // error with `-preview=systemVariables`, deprecation otherwise
+
+    S s;
+    s.i = 0; // ditto
+}
+---
+)
 
 
 $(H2 $(LNAME2 function-attributes, Function Attributes))
@@ -732,10 +794,10 @@ scope int* x; // scope ignored, global variable
 
 void main()
 {
-    static int* x;  // scope ignored, global variable
-    scope float y;  // scope ignored, no indirections
-    scope int[2] z; // scope ignored, static array is value type
-    scope int[] w;  // scope dynamic array
+    // scope static int* x;  // cannot be both scope and static
+    scope float y;           // scope ignored, no indirections
+    scope int[2] z;          // scope ignored, static array is value type
+    scope int[] w;           // scope dynamic array
 }
 ---
 )
@@ -870,9 +932,9 @@ $(P
     In that case, they are inferred as $(DDSUBLINK spec/function, return-scope-parameters, Return Scope Parameters).
 )
 
-$(H3 $(LNAME2 scope-class-var, $(D scope) variables with `class` type))
+$(H3 $(LNAME2 scope-class-var, $(D scope) Class Instances))
 $(P
-        When used on variables with a `class` type, `scope` signifies the RAII
+        When used to allocate a class instance directly, a `scope` variable signifies the RAII
         (Resource Acquisition Is Initialization) protocol.
         This means that the destructor for an object is automatically called when the
         reference to it goes out of scope. The destructor is called even
@@ -1014,9 +1076,9 @@ $(GRAMMAR
 $(GNAME UserDefinedAttribute):
     $(D @ $(LPAREN)) $(GLINK2 expression, TemplateArgumentList) $(D $(RPAREN))
     $(D @) $(GLINK2 template, TemplateSingleArgument)
-    $(D @) $(GLINK_LEX Identifier) $(D $(LPAREN)) $(GLINK2 expression, ArgumentList)$(OPT) $(D $(RPAREN))
+    $(D @) $(GLINK_LEX Identifier) $(D $(LPAREN)) $(GLINK2 expression, NamedArgumentList)$(OPT) $(D $(RPAREN))
     $(D @) $(GLINK2 template, TemplateInstance)
-    $(D @) $(GLINK2 template, TemplateInstance) $(D $(LPAREN)) $(GLINK2 expression, ArgumentList)$(OPT) $(D $(RPAREN))
+    $(D @) $(GLINK2 template, TemplateInstance) $(D $(LPAREN)) $(GLINK2 expression, NamedArgumentList)$(OPT) $(D $(RPAREN))
 )
 
     $(P
@@ -1182,5 +1244,5 @@ $(SPEC_SUBNAV_PREV_NEXT property, Properties, pragma, Pragmas)
 )
 
 Macros:
-        CHAPTER=8
+        CHAPTER=9
         TITLE=Attributes

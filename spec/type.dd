@@ -144,8 +144,8 @@ $(H2 $(LEGACY_LNAME2 Derived Data Types, derived-data-types, Derived Data Types)
     $(LI $(DDSUBLINK spec/arrays, static-arrays, Static Arrays))
     $(LI $(DDSUBLINK spec/arrays, dynamic-arrays, Dynamic Arrays))
     $(LI $(DDLINK spec/hash-map, Associative Array, Associative Arrays))
-    $(LI $(DDLINK spec/function, Functions, Functions))
-    $(LI $(RELATIVE_LINK2 delegates, Delegates))
+    $(LI $(RELATIVE_LINK2 functions, Function Types))
+    $(LI $(RELATIVE_LINK2 delegates, Delegate Types))
     )
 
 $(H3 $(LNAME2 pointers, Pointers))
@@ -230,27 +230,13 @@ $(H3 $(LEGACY_LNAME2 Implicit Conversions, implicit-conversions, Implicit Conver
     types as required. The rules for integers are detailed in the next sections.
     )
 
-    $(P An enum can be implicitly converted to its base
+    $(P An enum can be $(DDSUBLINK spec/enum, named_enums, implicitly converted) to its base
     type, but going the other way requires an explicit
-    conversion. For example:)
-
-$(SPEC_RUNNABLE_EXAMPLE_FAIL
--------------------
-int i;
-
-enum Foo { E }
-Foo f;
-i = f;           // OK
-f = i;           // error
-f = cast(Foo)i;  // OK
-f = 0;           // error
-f = Foo.E;       // OK
--------------------
-)
+    conversion.)
 
     $(UL
     $(LI All types implicitly convert to $(RELATIVE_LINK2 noreturn, `noreturn`).)
-    $(LI Static and dynamic arrays implicitly convert to $(DDSUBLINK spec/arrays, void_arrays, `void[]`).)
+    $(LI Static and dynamic arrays implicitly convert to $(DDSUBLINK spec/arrays, void_arrays, `void` arrays).)
     $(LI $(DDSUBLINK spec/function, function-pointers-delegates, Function pointers and delegates)
         can convert to covariant types.)
     )
@@ -271,7 +257,7 @@ Derived db = cast(Derived)new Base(); // explicit conversion
 
     $(P A dynamic array, say `x`, of a derived class can be implicitly converted
     to a dynamic array, say `y`, of a base class iff elements of `x` and `y` are
-    qualified as being either both `const` or `both` `immutable`.)
+    qualified as being either both `const` or both `immutable`.)
 
 $(SPEC_RUNNABLE_EXAMPLE_RUN
 -------------------
@@ -284,7 +270,7 @@ immutable(Base)[] ia = (immutable(Derived)[]).init; // `immutable` elements
 
     $(P A static array, say `x`, of a derived class can be implicitly converted
     to a static array, say `y`, of a base class iff elements of `x` and `y` are
-    qualified as being either both `const` or `both` `immutable` or both mutable
+    qualified as being either both `const` or both `immutable` or both mutable
     (neither `const` nor `immutable`).)
 
 $(SPEC_RUNNABLE_EXAMPLE_RUN
@@ -436,8 +422,10 @@ $(H3 $(LEGACY_LNAME2 Usual Arithmetic Conversions, usual-arithmetic-conversions,
     ---
     )
 
-    $(P If one or both of the operand types is an enum  after
-    undergoing the above conversions, the result type is:)
+$(H4 $(LNAME2 enum-ops, Enum Operations))
+
+    $(P If one or both of the operand types is an $(DDLINK spec/enum, Enums, enum) after
+    undergoing the above conversions, the result type is determined as follows:)
 
     $(OL
     $(LI If the operands are the same type, the result will be of
@@ -450,25 +438,79 @@ $(H3 $(LEGACY_LNAME2 Usual Arithmetic Conversions, usual-arithmetic-conversions,
     original type.)
     )
 
-    $(P Integer values cannot be implicitly converted to another
-    type that cannot represent the integer bit pattern after integral
-    promotion. For example:)
-
-$(SPEC_RUNNABLE_EXAMPLE_FAIL
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
-ubyte  u1 = -1;       // error, -1 cannot be represented in a ubyte
-ushort u2 = -1;       // error, -1 cannot be represented in a ushort
-uint   u3 = int(-1);  // ok, -1 can be represented in an int, which can be converted to a uint
-ulong  u4 = long(-1); // ok, -1 can be represented in a long, which can be converted to a ulong
+enum E { a, b, c }
+enum F { x, y }
+
+void test()
+{
+    E e = E.a;
+    e = e | E.c;
+    //e = e + 4; // error, can't assign int to E
+    int i = e + 4;
+    e += 4; // OK, see below
+
+    F f;
+    //f = e | f; // error, can't assign int to F
+    i = e | f;
+}
 ---
 )
 
-    $(P Floating point types cannot be implicitly converted to
-    integral types. Complex or imaginary floating point types cannot be implicitly converted
-    to non-complex floating point types. Non-complex floating point types
-    cannot be implicitly converted to imaginary floating
-    point types.
+    $(NOTE Above, `e += 4` compiles because the
+    $(DDSUBLINK spec/expression, assignment_operator_expressions, operator assignment)
+    is equivalent to `e = cast(E)(e + 4)`.)
+
+$(H3 $(LEGACY_LNAME2 disallowed-conversions, integer-conversions, Integer Type Conversions))
+
+    $(P An integer of type `I` implicitly converts to another integer type `J` when
+    `J.sizeof >= I.sizeof`.)
+
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
+---
+void f(byte b, ubyte ub, short s)
+{
+    b = ub; // OK, bit pattern same
+    ub = b; // OK, bit pattern same
+    s = b; // OK, widening conversion
+    b = s; // error, implicit narrowing
+}
+---
+)
+
+    $(P Integer values cannot be implicitly converted to another
+    type that cannot represent the integer bit pattern after
+    $(RELATIVE_LINK2 integer-promotions, integral promotion). For example:)
+
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
+---
+ubyte  u1 = -1; // error, -1 cannot be represented in a ubyte
+ushort u2 = -1; // error, -1 cannot be represented in a ushort
+uint   u3 = -1; // ok, -1 can be represented in an int, which can be converted to a uint
+ulong  u4 = -1; // ok, -1 can be represented in a long, which can be converted to a ulong
+---
+)
+
+$(H3 $(LNAME2 floating-point-conversions, Floating Point Type Conversions))
+
+    * Integral types implicitly convert to floating point types.
+    * Floating point types cannot be implicitly converted to integral types.
+
+    $(SPEC_RUNNABLE_EXAMPLE_FAIL
+    ---
+    void f(int i, float f)
+    {
+        f = i; // OK
+        i = f; // error
+    }
+    ---
     )
+
+    * Complex or imaginary floating point types cannot be implicitly converted
+      to non-complex floating point types.
+    * Non-complex floating point types cannot be implicitly converted to imaginary floating
+      point types.
 
 $(H3 $(LNAME2 vrp, Value Range Propagation))
 
@@ -535,39 +577,83 @@ $(P A `bool` value can be implicitly converted to any integral type, with
 
 $(P The numeric literals `0` and `1` can be implicitly converted to the `bool`
 values `false` and `true`, respectively. Casting an expression to `bool` means
-testing for `0` or `!=0` for arithmetic types, and `null` or `!=null` for
+testing `!=0` for arithmetic types, and `!=null` for
 pointers or references.)
 
-$(H2 $(LNAME2 delegates, Delegates))
+$(UNDEFINED_BEHAVIOR)
+* Interpreting a value with a byte representation
+  other than 0 or 1 as `bool` (e.g. an overlapped union field).
+* Reading a `void`-initialized `bool`.
 
-$(P Delegates are an aggregate of two pieces of data: an
-object reference and a pointer to a non-static member function, or a pointer to
-a closure and a pointer to a nested function. The object reference forms the
-`this` pointer when the function is called.)
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+byte i = 2;
+bool b = cast(bool) i; // OK, same as `i != 0`
+assert(b);
 
-$(P Delegates are declared similarly to function pointers:)
+bool* p = cast(bool*) &i; // unsafe cast
+// `*p` holds 0x2, an invalid bool value
+// reading `*p` is undefined behavior
+---
+)
+
+$(H2 $(LNAME2 functions, Function Types))
+
+$(P A function type has the form:)
+
+$(GRAMMAR_INFORMATIVE
+$(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK Type) $(GLINK2 function, Parameters) $(GLINK2 function, FunctionAttributes)$(OPT)
+)
+
+$(P Function types are not included in the $(GLINK Type) grammar.
+A function type e.g. `int(int)` $(DDSUBLINK spec/declaration, alias-function, can be aliased).
+A function type is only used for type tests or as the target type of a pointer.)
+
+$(P Instantiating a function type is illegal. Instead, a pointer to function
+or delegate can be used. Those have these type forms respectively:)
+
+$(GRAMMAR_INFORMATIVE
+$(GLINK Type) `function` $(GLINK2 function, Parameters) $(GLINK2 function, FunctionAttributes)$(OPT)
+$(GLINK Type) `delegate` $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT)
+)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+void f(int);
+alias Fun = void(int);
+static assert(is(typeof(f) == Fun));
+static assert(is(Fun* == void function(int)));
+---
+)
+
+$(P See $(DDSUBLINK spec/function, function-pointers, Function Pointers).)
+
+$(H3 $(LNAME2 delegates, Delegates))
+
+$(P Delegates are an aggregate of two pieces of data, either:)
+* An object reference and a pointer to a non-static
+  $(DDSUBLINK spec/class, member-functions, member function).
+* A pointer to a closure and a pointer to a
+  $(DDSUBLINK spec/function, nested, nested function).
+  The object reference forms the `this` pointer when the function is called.)
+
+$(P Delegates are declared and initialized similarly to function pointers:)
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 -------------------
-int function(int) fp; // fp is pointer to a function
 int delegate(int) dg; // dg is a delegate to a function
--------------------
-)
 
-    $(P A delegate is initialized analogously to function pointers:
-    )
-
--------------------
-int func(int);
-fp = &func;   // fp points to func
 class OB
 {
     int member(int);
 }
-OB o;
-dg = &o.member; // dg is a delegate to object o and
-                // member function member
+
+void f(OB o)
+{
+    dg = &o.member; // dg is a delegate to object o and member function member
+}
 -------------------
+)
 
     $(P Delegates cannot be initialized with static member functions
     or non-member functions.
@@ -598,12 +684,6 @@ auto c = new C();  // create an instance of C
 mfp(c, 1);  // and call c.foo(1)
 ---
 )
-
-$(P The C style syntax for declaring pointers to functions is deprecated:)
-
--------------------
-int (*fp)(int);  // fp is pointer to a function
--------------------
 
 $(H2 $(LNAME2 typeof, $(D typeof)))
 
@@ -694,7 +774,7 @@ $(GNAME Typeof):
         typeof(S.foo) n;  // n is declared to be an int
         --------------------
 
-        $(P If the expression is a $(DDLINK, spec/template, Template, Template),
+        $(P If the expression is a $(DDLINK spec/template, Template, Template),
         $(D typeof) gives the type $(D void).
         )
 
@@ -784,5 +864,5 @@ $(SPEC_SUBNAV_PREV_NEXT declaration, Declarations, property, Properties)
 )
 
 Macros:
-    CHAPTER=6
+    CHAPTER=7
     TITLE=Types

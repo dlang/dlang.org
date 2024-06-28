@@ -63,11 +63,8 @@ $(GNAME NonEmptyStatementNoCaseNoDefault):
     $(GLINK2 pragma, PragmaStatement)
     $(GLINK2 version, ConditionalStatement)
     $(GLINK2 version, StaticForeachStatement)
-    $(GLINK2 version, StaticAssert)
-    $(GLINK2 template-mixin, TemplateMixin)
     $(GLINK2 module, ImportDeclaration)
 )
-
 
         $(P Any ambiguities in the grammar between $(I Statement)s and
         $(GLINK2 declaration, Declaration)s are
@@ -254,36 +251,60 @@ $(GNAME ElseStatement):
     $(PSSCOPE)
 )
 
-        $(P *Expression* is evaluated and must have a type that
-        can be converted to a boolean. If it's `true` the
-        $(I ThenStatement) is transferred to, else the $(I ElseStatement)
-        is transferred to.)
+        $(P If there is a declared *Identifier* variable,
+        $(RELATIVE_LINK2 condition-variables, it is evaluated).
+        Otherwise, *Expression* is evaluated. The result is converted to a
+        boolean.
+        If the boolean is `true`, the $(I ThenStatement) is transferred
+        to, otherwise the $(I ElseStatement) is transferred to.)
 
-        $(P The $(I ElseStatement) is associated with the innermost if
+        $(P The $(I ElseStatement) is associated with the innermost `if`
         statement which does not already have an associated $(I ElseStatement).)
 
-        $(P If an $(D auto) $(I Identifier) is provided, it is declared and
-        initialized
-        to the value
-        and type of the *Expression*. Its scope extends from when it is
-        initialized to the end of the $(I ThenStatement).)
+$(H3 $(LNAME2 boolean-conditions, Boolean Conversion))
 
-        $(P If a $(I TypeCtors) $(I Identifier) is provided, it is declared
-        to be of the type specified by $(I TypeCtors)
-        and is initialized with the value of the *Expression*.
-        Its scope extends from when it is
-        initialized to the end of the $(I ThenStatement).)
+        $(P The following type instances are supported in a condition:)
 
-        $(P If a $(I Declarator) is provided, it is declared and
-        initialized
-        to the value
-        of the *Expression*. Its scope extends from when it is
-        initialized to the end of the $(I ThenStatement).)
+        $(UL
+        $(LI $(DDSUBLINK spec/type, FundamentalType, Fundamental types) are `true` when non-zero)
+        $(LI Pointers are `true` when non-null)
+        $(LI Reference types are `true` when non-null)
+        $(LI A user-defined type with a valid $(DDSUBLINK spec/operatoroverloading, cast, `opCast!bool()`) method will be called for the result. Otherwise, any
+        $(DDSUBLINK spec/struct, alias-this, `alias this`) member declaration
+        will be used if its target type itself matches one of these rules.)
+        $(LI An enum type is `true` if its base type matches one of these rules.)
+        )
+        $(P If none of these are valid, it is an error to use the value in a condition.)
 
+        $(NOTE A dynamic array can be used in a condition, which is `true` when non-null.
+        However, using this should be avoided as it can be bug-prone.
+        This may be disallowed in a future edition.)
+
+$(H3 $(LNAME2 condition-variables, Condition Variables))
+
+        $(P
+        When an $(I Identifier) form of *IfCondition* is used, a
+        variable is declared with that name and initialized to the
+        value of the *Expression*.
+        )
+
+        * If $(D auto) $(I Identifier) is provided, the type of the variable
+          is the same as *Expression*.
+
+        * If $(I TypeCtors) $(I Identifier) is provided, the variable is
+          declared to be the type of *Expression* but with $(I TypeCtors) applied.
+
+        * If the $(I BasicType) form is provided, it declares the type of the
+          variable as it would for a normal
+          $(DDSUBLINK spec/declaration, variable-declarations, variable declaration).
+
+        $(P The scope of the variable is the *ThenStatement* only.)
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---
 import std.regex;
-...
-if (auto m = std.regex.matchFirst("abcdef", "b(c)d"))
+
+if (auto m = matchFirst("abcdef", "b(c)d"))
 {
     writefln("[%s]", m.pre);    // prints [a]
     writefln("[%s]", m.post);   // prints [ef]
@@ -292,10 +313,13 @@ if (auto m = std.regex.matchFirst("abcdef", "b(c)d"))
 }
 else
 {
-    writeln(m.post); // Error: undefined identifier 'm'
+    writeln("no match");
+    //writeln(m.post); // Error: undefined identifier 'm'
 }
-writeln(m.pre);      // Error: undefined identifier 'm'
+//writeln(m.pre);      // Error: undefined identifier 'm'
 ---
+)
+    )
 
 $(H2 $(LEGACY_LNAME2 WhileStatement, while-statement, While Statement))
 
@@ -307,7 +331,8 @@ $(GNAME WhileStatement):
 $(P A $(I While Statement) implements a simple loop.)
 
 $(P If the $(I IfCondition) is an *Expression*, it is evaluated and must have a type
-that can be converted to a boolean. If it's `true` the *ScopeStatement* is executed.
+that can be $(DDSUBLINK spec/statement, boolean-conditions, converted to a boolean).
+If it's `true` the *ScopeStatement* is executed.
 After the *ScopeStatement* is executed, the *Expression* is evaluated again, and
 if `true` the *ScopeStatement* is executed again. This continues until the *Expression*
 evaluates to `false`.)
@@ -349,7 +374,8 @@ $(GNAME DoStatement):
 $(P Do while statements implement simple loops.)
 
 $(P *ScopeStatement* is executed. Then *Expression* is evaluated and must have a
-type that can be converted to a boolean. If it's `true` the loop is iterated
+type that can be $(DDSUBLINK spec/statement, boolean-conditions, converted to a boolean).
+If it's `true` the loop is iterated
 again. This continues until the *Expression* evaluates to `false`.)
 
 ---
@@ -385,8 +411,8 @@ $(GNAME Increment):
 
         $(P $(I Initialize) is executed.
         $(I Test) is evaluated and must have a type that
-        can be converted to a boolean. If *Test* is `true` the
-        *ScopeStatement* is executed. After execution,
+        can be $(DDSUBLINK spec/statement, boolean-conditions, converted to a boolean).
+        If *Test* is `true` the *ScopeStatement* is executed. After execution,
         $(I Increment) is executed.
         Then $(I Test) is evaluated again, and if `true` the
         *ScopeStatement* is executed again. This continues until the
@@ -559,7 +585,8 @@ foreach (i, char c; a)
 --------------
 )
         $(P For a dynamic array, the $(I index) type must be compatible
-        with `size_t`.
+        with `size_t`, unless the array length is statically known to fit
+        in a smaller integer type.
         Static arrays may use any integral type that spans the length
         of the array.)
 
@@ -669,35 +696,62 @@ foreach (string s, double d; aa)
         array are iterated over is unspecified for $(D foreach).
         This is why $(D foreach_reverse) for associative arrays is illegal.)
 
-$(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes with opApply))
+$(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes with `opApply`))
 
     $(P If the aggregate expression is a struct or class object,
         the $(D foreach) is defined by the
         special $(LEGACY_LNAME2 opApply, op-apply, $(D opApply)) member function, and the
         `foreach_reverse` behavior is defined by the special
         $(LEGACY_LNAME2 opApplyReverse, op-apply-reverse, $(D opApplyReverse)) member function.
-        These functions have the signatures:
+        These functions must each have the signature below:
     )
 
-        --------------
-        int opApply(scope int delegate(ref Type [, ...]) dg);
+$(GRAMMAR
+$(GNAME OpApplyDeclaration):
+    `int opApply` `(` `scope` `int delegate` `(` $(I OpApplyParameters) `)` `dg` `)` `;`
 
-        int opApplyReverse(scope int delegate(ref Type [, ...]) dg);
-        --------------
+$(GNAME OpApplyParameters):
+    *OpApplyParameter*
+    *OpApplyParameter*, *OpApplyParameters*
 
-    $(P where $(I Type) determines the type of the first $(GLINK ForeachType)
-        declared. Multiple $(I ForeachType)s are supported.
-        Each one must match a parameter of the delegate *dg*,
+$(GNAME OpApplyParameter):
+    $(GLINK ForeachTypeAttributes)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator)
+)
+
+    $(P where each $(I OpApplyParameter) of `dg` must match a $(GLINK ForeachType)
+        in a $(GLINK ForeachStatement),
         otherwise the *ForeachStatement* will cause an error.)
+
+    $(P Any *ForeachTypeAttribute* cannot be `enum`.)
+
+    $(PANEL
+    To support a `ref` iteration variable, the delegate must take a `ref` parameter:
+
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+    ---
+    struct S
+    {
+        int opApply(scope int delegate(ref uint n) dg);
+    }
+    void f(S s)
+    {
+        foreach (ref uint i; s)
+            i++;
+    }
+    ---
+    )
+    Above, `opApply` is still matched when `i` is not `ref`, so by using
+    a `ref` delegate parameter both forms are supported.
+    )
 
     $(P There can be multiple $(D opApply) and $(D opApplyReverse) functions -
         one is selected
-        by matching each parameter type of *dg* to the type of each $(I ForeachType)
+        by matching each parameter of `dg` to each $(I ForeachType)
         declared in the $(I ForeachStatement).)
 
     $(P The body of the apply
         function iterates over the elements it aggregates, passing each one
-        in successive calls to the $(I dg) delegate. The delegate return value
+        in successive calls to the `dg` delegate. The delegate return value
         determines whether to interrupt iteration:)
 
     $(UL
@@ -708,13 +762,18 @@ $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes 
         apply must return 0.)
     )
 
+    $(P The result of calling the delegate will be nonzero if the *ForeachStatement*
+        body executes a matching $(GLINK BreakStatement), $(GLINK ReturnStatement), or
+        $(GLINK GotoStatement) whose matching label is outside the *ForeachStatement*.
+    )
+
     $(P For example, consider a class that is a container for two elements:)
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         --------------
         class Foo
         {
-            uint[2] array;
+            uint[] array;
 
             int opApply(scope int delegate(ref uint) dg)
             {
@@ -733,10 +792,13 @@ $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes 
             import std.stdio;
 
             Foo a = new Foo();
-            a.array = [73, 82];
+            a.array = [73, 82, 2, 9];
 
             foreach (uint u; a)
             {
+                if (u < 5)
+                    break;
+
                 writeln(u);
             }
         }
@@ -749,13 +811,14 @@ $(CONSOLE
 73
 82
 )
-    $(P The `scope` storage class on the $(I dg) parameter means that the delegate does
-    not escape the scope of the $(D opApply) function (an example would be assigning $(I dg) to a
-    global variable). If it cannot be statically guaranteed that $(I dg) does not escape, a closure may
+    $(PANEL
+    The `scope` storage class on the $(D dg) parameter means that the delegate does
+    not escape the scope of the $(D opApply) function (an example would be assigning $(D dg) to a
+    global variable). If it cannot be statically guaranteed that $(D dg) does not escape, a closure may
     be allocated for it on the heap instead of the stack.
-    )
 
     $(BEST_PRACTICE Annotate delegate parameters to `opApply` functions with `scope` when possible.)
+    )
 
     $(P $(B Important:) If $(D opApply) catches any exceptions, ensure that those
         exceptions did not originate from the delegate passed to $(D opApply). The user would expect
@@ -910,41 +973,42 @@ $(H4 $(LNAME2 front-seq, Multiple Element Values))
         expands to a $(DDSUBLINK spec/template, homogeneous_sequences, value sequence)
         whose length matches the number of variables. Each variable is assigned
         to the corresponding value in the sequence.
+        If there is only one variable, it will be a value sequence.
     )
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         ---
+        import std.stdio;
+
+        // simple version of std.typecons.Tuple
         struct Tuple(Types...) // takes a TypeSeq
         {
             Types items; // ValueSeq
             alias items this; // decay to a value sequence
         }
 
-        // Infinite range with a repeating element, which is a tuple
+        string s = "hello";
+
         struct TupleRange
         {
-            enum front = Tuple!(char, bool, int)('a', true, 2);
-            enum bool empty = false;
-
-            void popFront() {}
+            size_t i;
+            auto front() => Tuple!(size_t, char)(i, s[i]);
+            bool empty() => i >= s.length;
+            void popFront() { i++; }
         }
 
         void main()
         {
             // Tuple destructuring
-            foreach (a, b, c; TupleRange())
+            foreach (i, c; TupleRange())
             {
-                assert(a == 'a');
-                assert(b == true);
-                assert(c == 2);
-                break;
+                writeln(i, ": ", c);
             }
+            writeln();
             // Tuple variable
             foreach (tup; TupleRange())
             {
-                assert(tup[0] == 'a');
-                assert(tup == TupleRange.front);
-                break;
+                writefln("(%s, %s)", tup[0], tup[1]);
             }
         }
         ---
@@ -953,8 +1017,8 @@ $(H4 $(LNAME2 front-seq, Multiple Element Values))
 
 $(H3 $(LNAME2 foreach_over_delegates, Foreach over Delegates))
 
-        $(P If $(I ForeachAggregate) is a delegate, the type signature of
-        the delegate is of the same as for
+        $(P If $(I ForeachAggregate) is a delegate, the type signature and
+        behavior of the delegate is the same as for
         $(RELATIVE_LINK2 foreach_over_struct_and_classes, opApply). This enables
         many different named looping strategies to coexist in the same
         class or struct.)
@@ -965,7 +1029,7 @@ $(SPEC_RUNNABLE_EXAMPLE_RUN
     --------------
     // Custom loop implementation, that iterates over powers of 2 with
     // alternating sign. The foreach loop body is passed in dg.
-    int myLoop(int delegate(int) dg)
+    int myLoop(scope int delegate(int) dg)
     {
         for (int z = 1; z < 128; z *= -2)
         {
@@ -988,11 +1052,8 @@ $(SPEC_RUNNABLE_EXAMPLE_RUN
     --------------
 )
 
-        $(P $(B Note:) When $(I ForeachAggregate) is a delegate, the compiler
-        does not try to implement reverse traversal of the results returned by
-        the delegate when $(D foreach_reverse) is used. This may result in code
-        that is confusing to read. Therefore, using $(D foreach_reverse) with a
-        delegate is now deprecated, and will be rejected in the future.)
+        $(P $(D foreach_reverse) with a delegate is an error.)
+
 
 $(H3 $(LNAME2 foreach_over_tuples, Foreach over Sequences))
 
@@ -1081,7 +1142,7 @@ $(H3 $(LNAME2 foreach_ref_parameters, Foreach Ref Parameters))
 
         $(P $(D ref) can be used to modify the elements of the *ForeachAggregate*.
         This works for containers that expose lvalue elements, and
-        $(DDSUBLINK spec/template, homogeneous_sequences, lvalue sequences).
+        $(DDSUBLINK spec/template, lvalue-sequences, lvalue sequences).
         )
 
     $(SPEC_RUNNABLE_EXAMPLE_RUN
@@ -1223,7 +1284,7 @@ $(H2 $(LEGACY_LNAME2 SwitchStatement, switch-statement, Switch Statement))
 
 $(GRAMMAR
 $(GNAME SwitchStatement):
-    $(D switch $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
+    $(D switch $(LPAREN)) $(GLINK IfCondition) $(D $(RPAREN)) $(PSSCOPE)
 
 $(GNAME CaseStatement):
     $(D case) $(GLINK2 expression, ArgumentList) $(D :) $(PSSEMI_PSCURLYSCOPE_LIST)$(OPT)
@@ -1244,14 +1305,22 @@ $(GNAME StatementNoCaseNoDefault):
     $(GLINK ScopeBlockStatement)
 )
 
-        $(P $(I Expression) is evaluated.
-        If the type of $(I Expression) is an `enum`, it is
+        $(P The *Expression* from the $(I IfCondition) is evaluated.
+        If the type of the *Expression* is an `enum`, it is
         (recursively) converted to its $(GLINK2 enum, EnumBaseType).
-        Then, if the type is an integral, $(I Expression) undergoes
+        Then, if the type is an integral, the *Expression* undergoes
         $(DDSUBLINK spec/type, integer-promotions, Integer Promotions).
-        Then, the type of $(I Expression) must be either an integral or
+        Then, the type of the *Expression* must be either an integral or
         a static or dynamic array of $(CODE char), $(CODE wchar), or $(CODE dchar).
         )
+
+        $(P If an $(I Identifier) `=` prefix is provided, a variable is declared with that
+        name, initialized to the value and type of the *Expression*. Its scope
+        extends from when it is initialized to the end of the *ScopeStatement*.)
+
+        $(P If $(I TypeCtors) and/or a specific type is provided for *Identifier*, those
+        are used for the variable declaration which is initialized by an implicit
+        conversion from the value of the *Expression*.)
 
         $(P The resulting value is
         compared against each of the case expressions. If there is
@@ -1437,7 +1506,7 @@ $(H2 $(LEGACY_LNAME2 FinalSwitchStatement, final-switch-statement, Final Switch 
 
 $(GRAMMAR
 $(GNAME FinalSwitchStatement):
-    $(D final switch $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
+    $(D final switch $(LPAREN)) $(GLINK IfCondition) $(D $(RPAREN)) $(PSSCOPE)
 )
 
         $(P A final switch statement is just like a switch statement,
@@ -1852,7 +1921,7 @@ void main()
 $(H2 $(LEGACY_LNAME2 SynchronizedStatement, synchronized-statement, Synchronized Statement))
 
         $(P The synchronized statement wraps a statement with
-        a mutex to synchronize access among multiple threads.
+        mutex locking and unlocking to synchronize access among multiple threads.
         )
 
 $(GRAMMAR
@@ -1861,33 +1930,48 @@ $(GNAME SynchronizedStatement):
     $(D synchronized $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
 )
 
-        $(P Synchronized allows only one thread at a time to execute
-        $(I ScopeStatement) by using a mutex.
-        )
-
-        $(P What mutex is used is determined by the *Expression*.
-        If there is no *Expression*, then a global mutex is created,
-        one per such synchronized statement.
+        $(P A synchronized statement without *Expression* allows only one thread
+        at a time to execute $(I ScopeStatement) by locking a mutex.
+        A global mutex is created, one per synchronized statement.
         Different synchronized statements will have different global mutexes.
         )
 
         $(P If there is an *Expression*, it must evaluate to either an
-        Object or an instance of an $(I Interface), in which case it
-        is cast to the Object instance that implemented that $(I Interface).
+        Object or an instance of an $(DDLINK spec/interface, Interfaces, interface),
+        in which case it
+        is cast to the Object instance that implemented that interface.
         The mutex used is specific to that Object instance, and
         is shared by all synchronized statements referring to that instance.
+        If the object's mutex is already locked when reaching the synchronized
+        statement, it will block every thread until that mutex is unlocked by
+        other code.
         )
 
+$(PANEL
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+void work();
+
+void f(Object o)
+{
+    synchronized (o) work();
+}
+
+void g(Object o)
+{
+    synchronized (o) work();
+}
+---
+)
+        $(P If `f` and `g` are called by different threads but with the same
+        argument, the `work` calls cannot execute simultaneously. If the
+        `(o)` part of the `synchronized` statements is removed in one
+        or both functions, then both `work` calls could execute
+        simultaneously, because they would be protected by different mutexes.)
+)
         $(P The synchronization gets released even if $(I ScopeStatement)
         terminates with an exception, goto, or return.
         )
-
-        $(P Example:
-        )
-
---------------
-synchronized { ... }
---------------
 
         $(P This implements a standard critical section.
         )
@@ -1897,6 +1981,8 @@ synchronized { ... }
         itself and the behavior will be as expected: The mutex will be
         locked and unlocked as many times as there is recursion.
         )
+
+        $(P See also $(DDSUBLINK spec/class, synchronized-classes, synchronized classes).)
 
 $(H2 $(LEGACY_LNAME2 TryStatement, try-statement, Try Statement))
 
@@ -2272,7 +2358,7 @@ $(SPEC_SUBNAV_PREV_NEXT expression, Expressions, arrays, Arrays)
 )
 
 Macros:
-        CHAPTER=11
+        CHAPTER=12
         TITLE=Statements
         EXPRESSION=$(GLINK2 expression, Expression)
         PSSEMI_PSCURLYSCOPE=$(GLINK Statement)

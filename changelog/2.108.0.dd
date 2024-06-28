@@ -1,0 +1,436 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Apr 01, 2024, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 8 major changes and 36 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 36 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.classinfo,Added .nameSig field to TypeInfo_Class in object.d))
+$(LI $(RELATIVE_LINK2 dmd.default-init,Keywords like `__FILE__` are always evaluated at the call site))
+$(LI $(RELATIVE_LINK2 dmd.hexstring-cast,Hex strings now convert to integer arrays))
+$(LI $(RELATIVE_LINK2 dmd.ies,Add support for Interpolated Expression Sequences))
+$(LI $(RELATIVE_LINK2 dmd.named-arguments,Named arguments for functions have been implemented and documented))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 range_predicate_element,`isForwardRange`, `isBidirectionalRange`, and `isRandomAccessRange` now take an optional element type))
+$(LI $(RELATIVE_LINK2 upgrade-unicode,std.uni has been upgraded from Unicode 15.0.0 to 15.1.0))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 dub-fetch,The fetch command now supports multiple arguments, recursive fetch, and is project-aware))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.classinfo,Added .nameSig field to TypeInfo_Class in object.d)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.classinfo.dd)
+$(P
+This is a 16 byte md5 signature of the fully qualified name of the class.
+It is used to compare two classes for equality, rather than comparing the
+pointers with a fallback to doing a string compare on the name, which can
+be rather slow.
+)
+
+$(P
+The result is both druntime and phobos will need to be recompiled to be
+compatible with this change. Any libraries will need to be recompiled
+as well.
+)
+)
+
+$(LI $(LNAME2 dmd.default-init,Keywords like `__FILE__` are always evaluated at the call site)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.default-init.dd)
+$(P
+Default arguments for functions can contain the keywords `__FILE__`,
+`__FILE_FULL_PATH__`, `__MODULE__`, `__LINE__`, `__FUNCTION__`
+and `__PRETTY_FUNCTION__`. They are now evaluated at the source location
+of the calling function in more complex expressions as long as used in
+an initializer, directly or not. Previously they had to be used directly
+in the initializer to be evaluated at the call site. Here are some
+examples, where more complex initializers are now evaluated at the
+call site:
+)
+
+---
+void func1(const(char)* file = __FILE__.ptr, size_t line = __LINE__)
+{
+    // This now prints the filename of the calling function.
+    // Previously it was the filename of func1 itself.
+    printf("%s:%zd\n", file, line);
+}
+
+struct Loc
+{
+   string file;
+   size_t line;
+}
+
+void func2(Loc loc = Loc(__FILE__, __LINE__))
+{
+    // Variable loc now contains file and line of the calling function.
+    // Previously it was the location of func2.
+    writeln(loc.file, ":", loc.line);
+}
+
+Loc defaultLoc(string file = __FILE__, size_t line = __LINE__)
+{
+    return Loc(file, line);
+}
+
+void func3(Loc loc = defaultLoc)
+{
+    // Variable loc contains file and line of the calling function of
+    // func3 and not the location of func3 or defaultLoc.
+    writeln(loc.file, ":", loc.line);
+}
+---
+)
+
+$(LI $(LNAME2 dmd.hexstring-cast,Hex strings now convert to integer arrays)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.hexstring-cast.dd)
+$(P
+Hex strings are the most efficient way to embed binary data into source files.
+However, they couldn't easily be used to initialize a `short[]`, `int[]` or `long[]` because re-interpret casting arrays is not allowed during CTFE.
+Now, hex strings implicitly convert to all integer arrays.
+A big endian byte order is assumed, consistent with how integer literals are written.
+)
+
+---
+immutable uint[] data = x"AABBCCDD";
+
+static assert(data[0] == 0xAABBCCDD);
+---
+
+$(P
+Character postfixes can now also be used to explicitly set an element size of 2 or 4.
+)
+
+---
+immutable ushort[] f = x"80 3F"w;
+static assert(f[0] == 0x803F);
+
+immutable ubyte[] g = x"80 35"w; // error: size mismatch
+---
+
+$(P
+Formerly, they would pad each byte with 1 or 3 zeros, which did not serve a purpose (See [Issue 24363](https://issues.dlang.org/show_bug.cgi?id=24363)).
+)
+
+$(P
+If the string's byte length is not a multiple of the target element size, it is an error:
+)
+
+---
+immutable ushort[] e = x"AABBCC"w; // Error, 3 bytes is not a multiple of `ushort.sizeof`
+---
+)
+
+$(LI $(LNAME2 dmd.ies,Add support for Interpolated Expression Sequences)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.ies.dd)
+$(P
+Interpolated Expression Sequences are a way to implement things like string interpolation in library code. Three forms of literals are added:
+)
+
+```
+i"Content $(a + 4)"
+i`Content $(a + 4)`
+iq{Content $(a + 4)}
+```
+
+$(P
+all provide the same thing: a tuple that can be passed to other functions, like `writeln` from `std.stdio` and `text` from `std.conv`:
+)
+
+```
+int a = 6;
+writeln(i"Content $(a + 4)"); // prints "Content 10"
+```
+
+$(P
+You can also pass them to other functions which understand the types in the new `core.interpolation` module. Numerous examples can be found documentation of that module or in this repository: https://github.com/adamdruppe/interpolation-examples/
+)
+)
+
+$(LI $(LNAME2 dmd.named-arguments,Named arguments for functions have been implemented and documented)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.named-arguments.dd)
+$(P
+When calling a function, arguments may be preceded with a parameter name for purposes of clarity and flexible ordering.
+Consequently, default arguments need not be at the end of the parameter list anymore.
+)
+
+---
+void createWindow(bool fullScreen = false, int width, int height, string title);
+
+void main()
+{
+    createWindow(title: "Skynet", width: 1280, height: 720);
+}
+---
+
+$(P
+Named arguments can also be used in struct/union literals.
+A union can now be initialized by setting a field different than the first one.
+)
+
+---
+union U
+{
+    float asFloat;
+    uint asInt;
+}
+
+auto u0 = U(1.0); // this sets the `asFloat` field
+auto u1 = U(asInt: 0x3F800000); // formerly not possible
+---
+
+$(P
+Relevant specification pages are:
+$(UL
+    $(LI $(DDSUBLINK spec/struct, struct-literal, Struct Literals))
+    $(LI $(DDSUBLINK spec/struct, anonymous, Anonymous Structs and Unions))
+    $(LI $(DDSUBLINK spec/expression, argument-parameter-matching, Matching Arguments to Parameters))
+    $(LI $(DDSUBLINK spec/function, function-overloading, Function Overloading))
+)
+)
+
+$(P
+Note that the implementation for regular functions and struct literals has been around since dmd 2.103, but it was undocumented and wouldn't work with template functions.
+)
+
+$(P
+This implements [DIP1030](https://www.dlang.org/dips/1030) for *function arguments*, but named *template arguments* are not implemented yet.
+Also, there are still implementation details to be ironed out which the DIP doesn't specify, such as how named arguments interact with tuples.
+For more information, see: [Named Arguments Status Update](https://forum.dlang.org/post/bynneksajyfyadwndsbm@forum.dlang.org)
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 range_predicate_element,`isForwardRange`, `isBidirectionalRange`, and `isRandomAccessRange` now take an optional element type)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/range_predicate_element.dd)
+$(P
+In Phobos 2.106, an optional second template parameter was added to
+`isInputRange` to enable conveniently checking a range's element type. Now, the
+same parameter has been added to `isForwardRange`, `isBidirectionalRange`, and
+`isRandomAccessRange`.
+)
+
+$(P
+As before, if a second type argument is passed to one of these templates, the
+range's element type is checked to see if it is
+$(DDSUBLINK spec/const3, implicit_qualifier_conversions, qualifier-convertible)
+to the given type, and this additional check must pass in order for the
+template to evaluate to `true`.
+)
+
+$(P
+Examples:
+)
+---
+// exact match
+static assert( isForwardRange!(int[], int));
+
+// match with qualifier conversion
+static assert( isBidirectionalRange!(int[], const(int));
+
+// not a match
+static assert(!isRandomAccessRange!(int[], string));
+---
+)
+
+$(LI $(LNAME2 upgrade-unicode,std.uni has been upgraded from Unicode 15.0.0 to 15.1.0)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/upgrade-unicode.dd)
+$(P
+This Unicode update was released September 12, 2023.
+See: https://www.unicode.org/versions/Unicode15.1.0/
+)
+
+```
+import std;
+
+void main()
+{
+    const alphaCount = iota(0, dchar.max).filter!(std.uni.isAlpha).walkLength;
+    writeln(alphaCount);
+    // formerly: 137765
+    // now:      138387
+    // 622 new dchars return true for `isAlpha`
+}
+```
+
+$(P
+The internal unicode tables (std/internal/unicode_tables.d) have also been changed to use hex strings instead of array literals, which makes them faster to import.
+The exact speed up depends on your computer and D compiler, but it likely cuts between 30 and 100 milliseconds if you compile something which imports `std.string` or `std.uni`.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 dub-fetch,The fetch command now supports multiple arguments, recursive fetch, and is project-aware)
+$(CHANGELOG_SOURCE_FILE dub, changelog/dub-fetch.dd)
+$(P
+Previously, `dub fetch` could only fetch a single package,
+and was working independently of the working directory.
+)
+
+$(P
+With this release, support for multiple packages have
+been added, such that the following is now possible:
+)
+---
+$ dub fetch vibe-d@0.9.0 vibe-d@0.9.1 vibe-d@0.9.2
+---
+
+$(P
+When called with no argument, `dub fetch` used to error out.
+However, it will now attempt to fetch dependencies for the
+current project, if any exists.
+)
+
+$(P
+Finally, when fetching a package, it might be useful to fetch
+all its dependencies. This is done automatically for projects,
+and can now be done for direct fetch as well:
+)
+---
+$ dub fetch --recursive vibe-d@0.9.0 vibe-d@0.9.1
+---
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 24179): Ddoc broke D code sections)
+$(LI $(BUGZILLA 24315): dmd/cpreprocess.d:87: warning: use of tmpnam is dangerous use mkstemp)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 23515): Named Enum of function SIGSEGFAULT)
+$(LI $(BUGZILLA 23786): __traits$(LPAREN)parent, {}$(RPAREN) in overloaded function produces wierd results dependent on declaration order)
+$(LI $(BUGZILLA 23818): Error HMODULE not defined, please use HMODULE)
+$(LI $(BUGZILLA 24293): ImportC: C preprocessor output should use temporary files)
+$(LI $(BUGZILLA 24309): Memory allocation failed on Azure pipeline)
+$(LI $(BUGZILLA 24359): slice equality expression can be discarded)
+$(LI $(BUGZILLA 24363): hex string postfixes are useless)
+$(LI $(BUGZILLA 24383): Index assignment expression in __traits$(LPAREN)compiles$(RPAREN) fails to parse)
+$(LI $(BUGZILLA 24387): Base class construction ignores private)
+$(LI $(BUGZILLA 24389): importC: Building zlib in Phobos with importC fails on FreeBSD 14)
+$(LI $(BUGZILLA 24390): AssertError@src/dmd/backend/cgxmm.d$(LPAREN)1476$(RPAREN): Assertion failure)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 3543): [tdpl] ternary operator can't find common type for classes/interfaces)
+$(LI $(BUGZILLA 18919): __FILE__ and __LINE__ should work when used in default argument expressions)
+$(LI $(BUGZILLA 24316): Allow CTFE access to immutable variable through pointer)
+$(LI $(BUGZILLA 24397): Support C preprocessor function-like macros)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 24339): std.mmfile has poor documentation)
+$(LI $(BUGZILLA 24348): Inaccurate documentation for hasSlicing with infinite range)
+$(LI $(BUGZILLA 24384): roundRobin crashes with empty first argument)
+$(LI $(BUGZILLA 24403): Nullable doesn't work with non-mutable types with a destructor)
+$(LI $(BUGZILLA 24458): Mac M3 associative array keys on std.net.curl gets overwritten)
+$(LI $(BUGZILLA 24465): Tuple does not get a copy constructor when its members need it)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 24318): Nullable should support non-copyable objects)
+$(LI $(BUGZILLA 24382): std.range.only should have assignable elements)
+)
+$(BUGSTITLE_BUGZILLA Druntime regression fixes,
+
+$(LI $(BUGZILLA 24453): [REG2.108] idup fails for inout$(LPAREN)T$(RPAREN)[] slices)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 4071): Missing support to share memory and objects between DLLs and executable)
+$(LI $(BUGZILLA 24349): object noreturn link is missing)
+$(LI $(BUGZILLA 24404): The names of the union fields in Linux's ifaddrs are named incorrectly.)
+$(LI $(BUGZILLA 24405): FreeBSD's ifaddrs missing the ifa_broadaddr field)
+$(LI $(BUGZILLA 24408): AF_INET6 duplicated in core.sys.linux.sys.socket)
+$(LI $(BUGZILLA 24417): core.sys.posix.sys.select: fds_bits named __fds_bits on FreeBSD)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 15504): core.demangle uses exception handling for normal control flow)
+$(LI $(BUGZILLA 19702): Remove usage of DECLARE_HANDLE)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 24313): Download page should reference Github nightlies)
+$(LI $(BUGZILLA 24331):  @nogc and GC.disable$(LPAREN)$(RPAREN) are often confused)
+)
+)
+$(D_CONTRIBUTORS_HEADER 36)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR Adam Wilson)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jeremy)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR Johannes)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR kt)
+    $(D_CONTRIBUTOR Mai-Lapyst)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Max Haughton)
+    $(D_CONTRIBUTOR MrcSnm)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Ogi-kun)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Puneet Goel)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
+    $(D_CONTRIBUTOR ryuukk)
+    $(D_CONTRIBUTOR Spoov)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Teodor Dutu)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR vabenil)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.108.0
+    TITLE=Change Log: $(VER)

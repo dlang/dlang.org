@@ -11,8 +11,7 @@ $(SPEC_S Deprecated Features,
     $(TABLE2 Deprecated Features,
         $(THEAD Feature,                                                          Spec,  Dep,    Error,  Gone)
         $(TROW $(DEPLINK Throwing from contracts of nothrow functions),           &nbsp;, 2.101, 2.111, &nbsp;)
-        $(TROW $(DEPLINK body keyword),                                           2.075, 2.097, 2.097, 2.117)
-        $(TROW $(DEPLINK Hexstring literals),                                     2.079, 2.079, 2.086, &nbsp;)
+        $(TROW $(COMMENT DEPLINK Hexstring literals),                             2.079,  2.079, 2.086, &nbsp;)
         $(TROW $(DEPLINK Class allocators and deallocators),                      &nbsp;, 2.080, 2.087, 2.100 )
         $(TROW $(DEPLINK Implicit comparison of different enums),                 2.075,  2.075, 2.081, &nbsp;)
         $(TROW $(DEPLINK Implicit string concatenation),                          2.072,  2.072, 2.081, &nbsp;)
@@ -50,7 +49,9 @@ $(SPEC_S Deprecated Features,
         $(TROW $(DEPLINK .offset property),                                       ?,     0.107,  2.061,  2.067 )
         $(TROW $(DEPLINK .size property),                                         ?,     0.107,  0.107,  2.061 )
         $(TROW $(DEPLINK .typeinfo property),                                     ?,     0.093,  2.061,  2.067 )
-        $(TROW $(DEPLINK unannotated asm blocks),                                 &nbsp;, &nbsp, &nbsp;, 2.100 )
+        $(TROW $(DEPLINK unannotated asm blocks),                                 &nbsp;, &nbsp, 2.100,  (never) )
+        $(TROW $(DEPLINK Throwing qualified objects),                             &nbsp;, 2.104, &nbsp,  (never) )
+        $(TROW $(DEPLINK Catching immutable/inout/shared objects),                &nbsp;, 2.106, &nbsp,  (never) )
     )
 
     $(DL
@@ -100,44 +101,7 @@ $(H4 Rationale)
         would break the guarantees of the $(D nothrow) attribute.
     )
 
-$(H3 $(DEPNAME body keyword))
-    $(P 'body' was a keyword used to specify a function/method's body in the presence of contracts
-        ---
-        class Foo
-        {
-            void bar(int i)
-            in { assert(i >= 42); }
-            body { /* Do something interesting */ }
-
-            string method(string s)
-            out(v) { assert(v.length == s.length); }
-            body { /* Do something even more interesting */ }
-
-            void noBody() { /* No contracts, no body */ }
-        }
-        ---
-    )
-$(H4 Corrective Action)
-    $(P Use the 'do' keyword instead (introduced v2.075.0)
-        ---
-        void bar(int i)
-        in { assert(i >= 42); }
-        do { /* Look ma, no body! */ }
-        ---
-    )
-$(H4 Rationale)
-    $(P The 'body' keyword was only used for this single purpose.
-        Since D grammar aims to be context free, this common word was reserved,
-        which led to frequent trouble for people interfacing with other languages
-        (e.g. javascript) or auto-generating code.
-    )
-    $(P Note that given the large amount of code relying on the 'body' keyword
-        (essentially any code using contracts), and the fact that the benefit
-        of DIP1003 to the user are mostly the ability to use 'body' as an identifier,
-        the deprecation has been postponed beyond its original goal of 2.091.0.
-        Users are still encouraged to use 'do' for future-proofness.
-    )
-
+$(COMMENT
 $(H3 $(DEPNAME Hexstring literals))
     $(P Hexstring literals can be used to enter literals in base 16.
         ---
@@ -154,6 +118,7 @@ $(H4 Corrective Action)
 $(H4 Rationale)
     $(P Hexstrings are used so seldom that they don't warrant a language feature.
     )
+)
 
 $(H3 $(DEPNAME Class allocators and deallocators))
     $(P D classes can have members customizing the (de)allocation strategy.
@@ -1050,7 +1015,7 @@ $(H4 Corrective Action)
         ---
         void foo() @safe
         {
-            asm @safe { noop; }
+            asm @trusted { noop; }
         }
         ---
     )
@@ -1058,6 +1023,41 @@ $(H4 Rationale)
     $(P $(D asm) blocks may throw, contain unsafe, impure code or call the GC
     interfaces.)
 )
+
+$(H3 $(DEPNAME Throwing qualified objects))
+
+$(P
+Previously, an `immutable`, `const`, `inout` or `shared` exception could be
+thrown and then caught in an unqualified `catch (Exception e)` clause.
+That breaks type safety.
+Throwing a qualified object is now deprecated. This helps to prevent
+possible mutation of an immutable object in a `catch` clause.
+)
+
+$(P
+The runtime also modifies a thrown object (e.g. to contain a stack
+trace) which can violate `const` or `immutable` objects. Throwing
+qualified objects has been deprecated for this reason also.
+)
+
+$(H3 $(DEPNAME Catching immutable/inout/shared objects))
+
+$(P
+It is unsafe to catch an exception as `immutable`, `inout` or `shared`.
+This is because the exception may still be accessible through another
+mutable or non-shared reference.
+)
+
+---
+auto e = new Exception("first");
+try {
+        throw e;
+} catch(immutable Exception ie) { // unsafe
+        e.msg = "second";
+        assert(ie.msg == "first"); // would fail
+}
+---
+
 
 Macros:
         DEPLINK=$(RELATIVE_LINK2 $0, $0)

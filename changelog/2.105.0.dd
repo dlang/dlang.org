@@ -1,0 +1,463 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Aug 01, 2023, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 12 major changes and 59 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 34 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.alias-this-syntax,Assignment-style syntax is now allowed for `alias this`))
+$(LI $(RELATIVE_LINK2 dmd.catch-immutable,Catch clause must take only `const` or mutable exceptions))
+$(LI $(RELATIVE_LINK2 dmd.enum-function,Functions can no longer have `enum` storage class))
+$(LI $(RELATIVE_LINK2 dmd.extern-c-overload,Overloading `extern(C)` functions is now an error))
+$(LI $(RELATIVE_LINK2 dmd.private-deprecation-error,Deprecation phase ended for access to private method when overloaded with public method.))
+$(LI $(RELATIVE_LINK2 dmd.visionos-version-identifier,Added predefined version identifier `VisionOS`))
+$(LI $(RELATIVE_LINK2 dmd.allow-parentheses-for-call,Do not error with a C cast when surrounding a type or expression in parentheses when calling or constructing.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 druntime.input-headers,Linux input header translations were added to druntime))
+$(LI $(RELATIVE_LINK2 druntime.valgrind,Integration with the Valgrind `memcheck` tool has been added to the garbage collector))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 permutation_assert_message,Better static assert messages for `std.algorithm.iteration.permutations`))
+$(LI $(RELATIVE_LINK2 std_system_instruction_set_architecture,Added `std.system.instructionSetArchitecture` and `std.system.ISA`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 d_versions_flag,Exposed `--d-versions` CLI flag))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.alias-this-syntax,Assignment-style syntax is now allowed for `alias this`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.alias-this-syntax.dd)
+$(P
+`alias this` declarations can now be written using the same `alias new = old;`
+syntax as other `alias` declarations.
+)
+
+---
+struct S
+{
+    int n;
+    alias this = n;
+    // Equivalent to:
+    //alias n this;
+}
+---
+)
+
+$(LI $(LNAME2 dmd.catch-immutable,Catch clause must take only `const` or mutable exceptions)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.catch-immutable.dd)
+$(P
+In 2.104, throwing qualified types was
+[deprecated](https://dlang.org/changelog/2.104.0.html#dmd.throw-qualifier).
+)
+
+$(P
+It is also unsafe to catch an exception as `immutable`, `inout` or `shared`.
+This is because the exception may still be accessible through another
+mutable or non-shared reference. Catching an exception with those qualifiers
+is now deprecated.
+)
+
+---
+auto e = new Exception("first");
+try {
+        throw e;
+} catch(immutable Exception ie) { // now an error
+        e.msg = "second";
+        assert(ie.msg == "first"); // would fail
+}
+---
+)
+
+$(LI $(LNAME2 dmd.enum-function,Functions can no longer have `enum` storage class)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.enum-function.dd)
+$(P
+`enum` on a function declaration had no effect other than being
+equivalent to the `auto` storage class when no return type was present.
+That syntax could be confused with `enum` manifest constants and is
+now an error:
+)
+---
+enum void f1() { }  // error
+enum f2() { }       // error
+---
+
+$(P
+Instead, remove `enum` and use `auto` where necessary:
+)
+---
+void f1() { }
+auto f2() { }
+---
+)
+
+$(LI $(LNAME2 dmd.extern-c-overload,Overloading `extern(C)` functions is now an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.extern-c-overload.dd)
+$(P
+Since 2.095.0, defining the same function multiple times in a module is not allowed, since it would result in symbol clashes at link time.
+Overloading a function with different parameter types is still allowed of course, and works because D mangles symbol names including parameter types.
+However, some external linkages (such as `extern(C)`, `extern(Windows)`) don't do this, so overloading them can also result in symbol clashes at link time.
+Therefore, doing this was deprecated in that release as well.
+)
+
+$(P
+This deprecation now turned into an error.
+As a corrective action, give the function D or C++ linkage, or use a unique function name.
+)
+
+---
+// Error:
+extern(C) float square(float x) { return x * x; }
+extern(C) double square(double x) { return x * x; }
+
+// Corrective action:
+extern(C) float squaref(float x) { return x * x; }
+extern(C) double squared(double x) { return x * x; }
+
+// Or:
+float square(float x) { return x * x; }
+double square(double x) { return x * x; }
+---
+)
+
+$(LI $(LNAME2 dmd.private-deprecation-error,Deprecation phase ended for access to private method when overloaded with public method.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.private-deprecation-error.dd)
+$(P
+When a private method was overloaded with a public method that came after it,
+you could access the private overload as if it was public.
+)
+
+$(P
+After a deprecation period starting with 2.094, this code is now an error.
+)
+
+$(P
+Example:
+)
+
+```
+struct Foo
+{
+    private void test(int) { }
+    public void test(string) { }
+}
+...
+Foo().test(3);
+```
+)
+
+$(LI $(LNAME2 dmd.visionos-version-identifier,Added predefined version identifier `VisionOS`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.visionos-version-identifier.dd)
+$(P
+This is Apple's new operating system for their VR/AR device Vision Pro.
+)
+)
+
+$(LI $(LNAME2 dmd.allow-parentheses-for-call,Do not error with a C cast when surrounding a type or expression in parentheses when calling or constructing.)
+$(P
+Previous to this version, an expression like `(IdentifierOrBasicType)(Expression)` would be considered a c-style cast,
+and disallowed, even if the `IdentifierOrBasicType` could be used as a callable. This is now allowed, as long as the expression is a call, or a construction.
+
+```
+struct S { int x; }
+int foo(int x) { return x; }
+auto bar = &foo;
+
+// these were previously disallowed
+auto s = (S)(5);   // equivalent to S(5)
+auto f = (foo)(5); // equivalent to foo(5)
+auto b = (bar)(5); // equivalent to bar(5)
+auto i = (int)(5); // equivalent to int(5), not a cast.
+
+// these are not allowed
+auto bad = (int)5; // Error: C style cast illegal, use `cast(int)5`
+auto bad2 = (ubyte)(12345); // Error: cannot implicitly convert expression `12345` of type `int` to `ubyte`
+```
+)
+
+$(P See $(BUGZILLA 24025): Expressions contained in parentheses should not be assumed to be C casts)
+)
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 druntime.input-headers,Linux input header translations were added to druntime)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.input-headers.dd)
+$(P
+These headers give access to the [Linux Input Subsystem userspace API](https://docs.kernel.org/input/input_uapi.html),
+which is used to read input from e.g. keyboards, touch screens, and game controllers, or to emulate input devices.
+You can now import them through `core.sys.linux`:
+)
+
+---
+import core.sys.linux.input; // linux/input.h
+import core.sys.linux.input_event_codes; // linux/input-event-codes.h
+import core.sys.linux.uinput; // linux/uinput.h
+---
+)
+
+$(LI $(LNAME2 druntime.valgrind,Integration with the Valgrind `memcheck` tool has been added to the garbage collector)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.valgrind.dd)
+$(P
+The garbage collector gained a compile-time option to enable integration with Valgrind's `memcheck` tool.
+When it is enabled, the GC will communicate with Valgrind and inform it which memory access operations are valid and which are not.
+)
+
+$(P
+The integration allows catching memory errors in D programs which mix safe (GC) and unsafe (manual) memory management, for example:
+)
+
+---
+import core.memory;
+
+void main()
+{
+    auto arr = new int[3];
+    GC.free(arr.ptr);
+    arr[1] = 42; // use after free
+}
+---
+
+$(P
+To use it, obtain the DMD source code, then include the garbage collector and lifetime implementation into your program's compilation and compile with the `-debug=VALGRIND` option:
+)
+
+```
+git clone -b v2.105.0 --depth=1 https://github.com/dlang/dmd
+dmd -g -debug=VALGRIND program.d -Idmd/druntime/src dmd/druntime/src/{core/internal/gc/impl/conservative/gc,rt/lifetime,etc/valgrind/valgrind}.d
+valgrind --tool=memcheck ./program
+```
+
+$(P
+The option is compatible with other GC debugging build options, such as `MEMSTOMP` and `SENTINEL`.
+)
+
+$(P
+Dub users can try the following equivalent recipe:
+)
+
+```
+git clone -b v2.105.0 --depth=1 https://github.com/dlang/dmd
+cat >> dub.sdl <<EOF
+debugVersions "VALGRIND"
+sourceFiles "dmd/druntime/src/core/internal/gc/impl/conservative/gc.d"
+sourceFiles "dmd/druntime/src/rt/lifetime.d"
+sourceFiles "dmd/druntime/src/etc/valgrind/valgrind.d"
+importPaths "dmd/druntime/src"
+EOF
+dub build
+valgrind --tool=memcheck ./program
+```
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 permutation_assert_message,Better static assert messages for `std.algorithm.iteration.permutations`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/permutation_assert_message.dd)
+$(P
+Until now, `permutations` used a template constraint to check if the passed types
+could be used. If they were not, it was very tedious to figure out why.
+)
+
+$(P
+As the template constraint is not used for overload resolution
+the constrains are moved into static asserts with expressive error
+messages.
+)
+)
+
+$(LI $(LNAME2 std_system_instruction_set_architecture,Added `std.system.instructionSetArchitecture` and `std.system.ISA`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/std_system_instruction_set_architecture.dd)
+$(P
+A new enum representing the instruction set architecture for the targeted
+system was added. It is intended for cases where a targeted CPU's ISA is only
+needed at runtime, such as providing human-readable messages as demonstrated
+below.
+)
+-------
+import std.stdio;
+import std.system;
+
+void main()
+{
+    writeln("Hello ", instructionSetArchitecture, " world!");
+}
+-------
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 d_versions_flag,Exposed `--d-versions` CLI flag)
+$(CHANGELOG_SOURCE_FILE dub, changelog/d_versions_flag.dd)
+$(P
+You can now specify `--d-versions=Xyz` to basically insert `version = Xyz;` into
+all D source files. This is the same as specifying `versions` in your dub.sdl /
+dub.json file, but from the CLI and unrelated to any build types or
+configurations.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 22427): betterC: casting an array causes linker error in string comparison.)
+$(LI $(BUGZILLA 24018): array concatenation doesn't work with disabled default construction)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 7184): parse error on *$(LPAREN)x$(RPAREN)++)
+$(LI $(BUGZILLA 11612): Inconsistent error on negative new array size)
+$(LI $(BUGZILLA 13063): `enum` is allowed as storage class for functions)
+$(LI $(BUGZILLA 16384): Invariant not called with multiple defined.)
+$(LI $(BUGZILLA 18528): dmd should deduplicate identical errors)
+$(LI $(BUGZILLA 20008): __traits$(LPAREN)allMembers$(RPAREN) of packages is complete nonsense)
+$(LI $(BUGZILLA 20687): Allow member function address as const initializer)
+$(LI $(BUGZILLA 21415): catch immutable exceptions breaks immutable)
+$(LI $(BUGZILLA 21425): Using va_start twice results in wrong values)
+$(LI $(BUGZILLA 23719): runnable/test22071.c:22:16: error: ‘abc’ is a pointer; did you mean to use ‘->’?)
+$(LI $(BUGZILLA 23857): backend inliner takes too long on recursive function call)
+$(LI $(BUGZILLA 23870): ImportC doesn't accept '\' followed by newline, whereas VC does)
+$(LI $(BUGZILLA 23875): ImportC: __attribute__ in a cast doesn't work)
+$(LI $(BUGZILLA 23879): ImportC: Windows system headers use __alignof)
+$(LI $(BUGZILLA 23880): ImportC: __attribute__$(LPAREN)$(LPAREN)vector_size$(LPAREN)N$(RPAREN)$(RPAREN)$(RPAREN) is not implemented)
+$(LI $(BUGZILLA 23885): [CI] C++ interop tests with g++ fail)
+$(LI $(BUGZILLA 23900):  @safe is allowed in inline asm)
+$(LI $(BUGZILLA 23908): confusing nonexistent import hint on cyclic import)
+$(LI $(BUGZILLA 23912): Destructor disables scope inference)
+$(LI $(BUGZILLA 23914): "auto ref" resolution on return value prevented by noreturn $(LPAREN)bottom type$(RPAREN))
+$(LI $(BUGZILLA 23935): ImportC: __pragma not allowed between struct and tag name)
+$(LI $(BUGZILLA 23936): ImportC: pragma pack is not working for structs)
+$(LI $(BUGZILLA 23947): If a class overloads a method mixing private and public and the last overload is public, the method is always public.)
+$(LI $(BUGZILLA 23968): Deprecation not emitted with alias to template function in UFCS)
+$(LI $(BUGZILLA 23988): Conditional Exp does not bring enums to correct common type if one leg is const)
+$(LI $(BUGZILLA 24010): Destructor called before end of scope for tuples)
+$(LI $(BUGZILLA 24017): [UFCS] Bypassing `nothrow` with `debug` doesn’t work)
+$(LI $(BUGZILLA 24024): cannot pass class this to ref class)
+$(LI $(BUGZILLA 24025): Expressions contained in parentheses should not be assumed to be C casts)
+$(LI $(BUGZILLA 24029): ImportC: symbol name clash on statement expressions)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 4663): Wrong 'static' position error message)
+$(LI $(BUGZILLA 15436): Compiler still refers to AliasSeq-s as "tuple"-s $(LPAREN)and TypeTuple?$(RPAREN))
+$(LI $(BUGZILLA 23475): confusing printf deprecation message with ulong/long on Windows)
+$(LI $(BUGZILLA 23871): ImportC: __attribute not recognized)
+$(LI $(BUGZILLA 23877): ImportC: Importing byteswap.h results in undefined reference to core.bitop.byteswap)
+$(LI $(BUGZILLA 23886): ImportC preprocessor directive #ident not supported)
+$(LI $(BUGZILLA 23928): improve error msg: scope variable s assigned to non-scope parameter this calling abc)
+$(LI $(BUGZILLA 23931): Error: reference to local variable `this` calling non-scope member function `this.this$(LPAREN)$(RPAREN)`)
+$(LI $(BUGZILLA 23948): __FILE__ and __MODULE__ cannot be implicitly converted to const$(LPAREN)char$(RPAREN)* as default paramenter)
+$(LI $(BUGZILLA 23971): Provide clearer error message when trying to return a slice with C++ linkage)
+$(LI $(BUGZILLA 24000): show the open bracket "{" location for Error: matching `}` expected, not `End of File`)
+$(LI $(BUGZILLA 24023): Unnecessary module prefix in error message types)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 23361): std.uni.normalize should be pure)
+$(LI $(BUGZILLA 23844): chain$(LPAREN)only$(RPAREN) doesn't support immutable structs)
+$(LI $(BUGZILLA 23940): std.getopt does not assert with options that only differ in case with config.caseInsensitive)
+$(LI $(BUGZILLA 23997): isClose$(LPAREN)1, -double.infinity$(RPAREN) returns true)
+$(LI $(BUGZILLA 24028): BigInt power operator ignores sign of exponent)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 23881): std.system has no function for system architecture)
+$(LI $(BUGZILLA 23922): [std.socket])
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 23312): Crash when calling writeln in WinMain)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 23980): OpenBSD: Add getthrname$(LPAREN)2$(RPAREN) and setthrname$(LPAREN)2$(RPAREN) to unistd.d)
+$(LI $(BUGZILLA 24044): Support float opCmp$(LPAREN)...$(RPAREN) with array)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 23692): ImportC: __pragma and __declspec are not documented as supported Visual C extensions)
+$(LI $(BUGZILLA 23697): No examples of invalid forward references in C code accepted by ImportC)
+$(LI $(BUGZILLA 23946): specifications state that "there can only be one destructor" which can be confusing because of mixin templates)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 5636): Array ops use lexicographic comparison instead of vector-style element-wise)
+$(LI $(BUGZILLA 23571): Discussion of manifest constants in enum documentation is confusing at best)
+)
+)
+$(D_CONTRIBUTORS_HEADER 34)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Amaury)
+    $(D_CONTRIBUTOR Ate Eskola)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Brian Callahan)
+    $(D_CONTRIBUTOR Cameron Ross)
+    $(D_CONTRIBUTOR Dante Broggi)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR Dmytro Katyukha)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR Jan Jurzitza)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR Lucian Danescu)
+    $(D_CONTRIBUTOR Lucipetus)
+    $(D_CONTRIBUTOR Luís Ferreira)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR mhh)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Teodor Dutu)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.105.0
+    TITLE=Change Log: $(VER)

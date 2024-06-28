@@ -26,16 +26,14 @@ $(H2 $(LNAME2 examples, Quick Examples))
     {
         printf("hello world\n");
         return 0;
-    }
-    )
+    })
 
     $(P Compile and run:)
 
     $(CONSOLE
     dmd hello.c
     ./hello
-    hello world
-    )
+    hello world)
 
     $(P C function in file $(TT functions.c):)
 
@@ -109,7 +107,7 @@ $(H2 $(LNAME2 command-line, Invoking ImportC))
     )
 
     $(P will compile `hello.c` with ImportC and link it to create the executable
-    file `hello` (`hello.exe` on Windows) which can be run
+    file `hello` (`hello.exe` on Windows)
     )
 
     $(BEST_PRACTICE explicitly use a `.i` or `.c` extension when
@@ -150,8 +148,6 @@ $(H2 $(LNAME2 preprocessor, Preprocessor))
     $(LI Otherwise the $(TT cpp) preprocessor will be used.)
     )
 
-    $(P The druntime file $(TT src/importc.h) will automatically be $(TT #include)d.)
-
     $(P The $(DDSUBLINK dmd, switch-v, $(TT -v)) switch can be used to observe the command
     that invokes the preprocessor.
     )
@@ -160,6 +156,19 @@ $(H2 $(LNAME2 preprocessor, Preprocessor))
     to the preprocessor.
     )
 
+    $(H4 $(LNAME2 importc-h, $(TT importc.h)))
+
+    $(P The druntime file $(LINK2 https://github.com/dlang/dmd/blob/master/druntime/src/importc.h, $(TT src/importc.h))
+    will automatically be $(TT #include)d first. $(TT importc.h) provides adjustments to the source code to
+    account for various C compiler extensions not supported by ImportC.)
+
+    $(H4 $(LNAME2 no-builtin-macro-redefined, no-builtin-macro-redefined))
+
+    $(P On Posix systems, ImportC will pass the switch $(TT -Wno-builtin-macro-redefined) to the C preprocessor
+    used by $(TT gcc) and $(TT clang).
+    This $(LINK2 https://gcc.gnu.org/legacy-ml/gcc-patches/2008-07/msg02321.html, switch)
+    does not exist in $(TT gcc) preprocessors made before 2008.
+    The workaround is to run the preprocessor manually.)
 
     $(H3 $(LNAME2 manual-cpp, Running the Preprocessor Manually))
 
@@ -218,22 +227,76 @@ $(H2 $(LNAME2 preprocessor, Preprocessor))
     $(H3 $(LNAME2 defines, Preprocessor Macros))
 
     $(P ImportC collects all the $(TT #define) macros from the preprocessor run when it is run automatically.
-    The macros that look like manifest constants, such as:)
-
-    $(CCODE
-    #define COLOR 0x123456
+    Some can be made available to D code by interpreting them as declarations.
+    The variety of macros that can be interpreted as D declarations may be expanded,
+    but will never encompass all the metaprogramming uses of C macros.
     )
+
+    $(H4 Manifest Constants)
+
+    $(P Macros that look like manifest constants, such as:)
+
+$(CCODE
+#define COLOR 0x123456
+#define HELLO "hello")
 
     $(P are interpreted as D manifest constant declarations of the form:)
 
     ---
     enum COLOR = 0x123456;
+    enum HELLO = "hello";
     ---
 
-    $(P The variety of macros that can be interpreted as D declarations may be expanded,
-    but will never encompass all the metaprogramming uses of C macros.
-    )
+    $(H4 Function-Like Macros)
 
+    $(P Many macros look like functions, and can be treated as template functions:)
+
+$(CCODE
+#define ABC a + b
+#define DEF(a) (a + x))
+
+    ---
+    auto ABC() { return a + b; }
+    auto DEF(T)(T a) { return a + x; }
+    ---
+
+    $(P Some macro formulations, however, will not produce the same result:)
+
+$(CCODE
+#define ADD(a, b) a + b
+int x = ADD(1, 2) * 4; // sets x to 9)
+
+---
+auto ADD(U, V)(U a, V b) { return a + b; }
+int x = ADD(1, 2) * 4; // sets x to 12
+---
+
+    $(BEST_PRACTICE Always use parentheses around arguments and entire expressions:)
+
+$(CCODE
+#define ADD(a, b) ((a) + (b)))
+
+    $(P Another area of trouble is side effects in the arguments:)
+
+$(CCODE
+#define DOUBLE(x) ((x) + (x)))
+
+---
+int i = 0;
+DOUBLE(i++);
+assert(i == 2);  // D result will be 1, C result will be 2
+---
+
+    $(P and treating arguments as references:)
+
+$(CCODE
+#define INC(x) (++x))
+
+---
+int i = 0;
+INC(i);
+assert(i == 1); // D result will be 0, C result will be 1
+---
 
 $(H2 $(LNAME2 predefined-macros, Predefined Macros))
 
@@ -278,6 +341,13 @@ $(H2 $(LNAME2 preprocessor-directives, Preprocessor Directives))
     $(LI $(TT #pragma pack ( pop )))
     $(LI $(TT #pragma pack ( pop PopList )))
     )
+
+$(H2 $(LNAME2 _builtins, $(TT src/__builtins.di)))
+
+    $(P The first thing the compiler does when preprocessing is complete is to import
+    $(LINK2 https://github.com/dlang/dmd/blob/master/druntime/src/__builtins.di, $(TT src/__builtins.di)).
+    It provides support for various builtins provided by other C compilers.
+    $(TT __builtins.di) is a D file.)
 
 $(H2 $(LNAME2 implementation, Implementation))
 
@@ -328,7 +398,7 @@ $(H2 $(LNAME2 implementation, Implementation))
 
     $(P This is described in C11 7.6.1)
 
-$(GRAMMAR
+$(GRAMMAR_INFORMATIVE
 #pragma STDC FENV_ACCESS on-off-switch
 
 on-off-switch:
@@ -372,6 +442,41 @@ $(H2 $(LNAME2 limitations, Limitations))
     $(H3 $(LNAME2 compatible_types, Compatible Types))
 
     $(P $(I Compatible Types) (C11 6.7.2) are identical types in ImportC.)
+
+
+$(H2 $(LNAME2 impedance-mismatch, Impedance Mismatch))
+
+    $(P While every effort is made to match up C and D so it "just works", the languages have some
+    fundamental differences that appear now and then.
+    )
+
+    $(H3 $(LNAME2 keyword-mismatch, Keyword Mismatch))
+
+    $(P D and C use mostly the same keywords, C has keywords that D doesn't have, and vice versa. This
+    does not affect compilation of C code, but it can cause difficulty when accessing C variables and types
+    from D. For example, the D `version` keyword is not uncommonly used as a struct member in C:)
+
+    $(P C code in file $(TT defs.c):)
+$(CCODE
+struct S { int version; };)
+
+    $(P Accessing it from D:)
+    ---
+    import defs;
+    int tech(S* s) {
+        return s.version; // fails because version is a D keyword
+    }
+    ---
+
+    $(P A workaround is available:)
+    ---
+    import defs;
+    int tech(S* s) {
+        return __traits(getMember, *s, "version");
+    }
+    ---
+
+
 
     $(H3 $(LNAME2 same_only_different, Same only Different Types))
 
@@ -422,6 +527,19 @@ int myprintf(char *, ...) asm("printf");
 
     $(P Any declarations in scope can be accessed, not just
     declarations that lexically precede a reference.)
+
+$(CCODE
+Ta *p;  // Ta is forward referenced
+struct Sa { int x; };
+typedef struct Sa Ta; // Ta is defined
+)
+
+$(CCODE
+struct S s;
+int* p = &s.t.x;  // struct S definition is forward referenced
+struct S { int a; struct T t; }; // T still forward referenced
+struct T { int b; int x; }; // definition of struct T
+)
 
     $(H3 $(LNAME2 cpp-tag-symbols, C++ Style Tag Symbols))
 
@@ -595,6 +713,19 @@ enum E { A = 3; }
 
     $(P A control-Z character `\x1A` in the source text means End Of File.)
 
+    $(H3 $(LNAME2 largeDecimal, Signed Integer Literal Larger Than long long))
+
+    $(P A signed integer constant with no suffix that is larger than a `long long` type,
+    but will fit into an `unsigned long long` type, is accepted and typed as `unsigned long long`.
+    This matches D behavior, and that of some C compilers.)
+
+    $(H3 $(LNAME2 dotArrow, Dot and Arror Operators))
+
+    $(P The `.` operator is used to designate a member of a struct or union value.
+        The `->` operator is used to designate a member of a struct or union value pointed to
+        by a pointer. The extension is that `.` and `->` can be used interchangeably on
+        values and pointers. This matches D's behavior for `.`.)
+
 $(H2 $(LNAME2 gnu-clang-extensions, Gnu and Clang Extensions))
 
     $(P `gcc` and `clang` are presumed to have the same behavior w.r.t. extensions,
@@ -614,6 +745,9 @@ $(H2 $(LNAME2 gnu-clang-extensions, Gnu and Clang Extensions))
     $(LI `__attribute__((naked))`)
     $(LI `__attribute__((noinline))`)
     $(LI $(RELATIVE_LINK2 noreturn, `__attribute__((noreturn))`))
+    $(LI `__attribute__((nothrow))`)
+    $(LI `__attribute__((pure))`)
+    $(LI `__attribute__((vector_size(N)))`)
     $(LI others are ignored)
     )
 
@@ -658,6 +792,7 @@ $(H2 $(LNAME2 visualc-extensions, Visual C Extensions))
     $(P The following $(LINK2 https://learn.microsoft.com/en-us/cpp/cpp/declspec?view=msvc-170, `__declspec` extensions):)
 
     $(OL
+    $(LI `__declspec()`)
     $(LI `__declspec(align(N))`)
     $(LI `__declspec(deprecated)`)
     $(LI `__declspec(dllexport)`)
@@ -665,7 +800,18 @@ $(H2 $(LNAME2 visualc-extensions, Visual C Extensions))
     $(LI `__declspec(naked)`)
     $(LI `__declspec(noinline)`)
     $(LI `__declspec(noreturn)`)
+    $(LI `__declspec(nothrow)`)
     $(LI `__declspec(thread)`)
+    $(LI others are ignored)
+    )
+
+    $(H3 $(LNAME2 __pragma, `__pragma` Attribute Extensions))
+
+    $(P The following
+        $(LINK2 https://learn.microsoft.com/en-us/cpp/preprocessor/pragma-directives-and-the-pragma-keyword?view=msvc-170, `__pragma` extensions):)
+
+    $(OL
+    $(LI `__pragma(pack(N))`)
     $(LI others are ignored)
     )
 
@@ -787,6 +933,51 @@ $(H2 $(LNAME2 wrapping, Wrapping C Code))
     $(P Then, `import file_ic;` instead of `import file;`, and use `S_t` when $(CCODE struct S) is desired.)
 
 
+$(H2 $(LNAME2 ctod, Converting C Code to D Code))
+
+    $(P Sometimes its desirable to go further than importing C code, to actually do a C source to
+    D source conversion. Reasons include:)
+
+    $(UL
+    $(LI Migrating a C project to a D project.)
+    $(LI Equivalent D code can compile much faster, due to not needing a preprocessor, etc.)
+    $(LI Tweaking the D code to add attributes for memory safety, purity, etc.)
+    $(LI Eliminating the need for C-isms in the D part of the project.)
+    )
+
+    $(P This can be done with the D compiler by using the $(TT -Hf) switch:)
+
+$(CONSOLE
+dmd -c mycode.c -Hf=mycode.di
+)
+
+    $(P which will convert the C source code in $(TT mycode.c) to D source code in $(TT mycode.di).
+    If the $(TT -inline) switch is also used, it will emit the C function bodies as well, instead
+    of just the function prototypes.)
+
+$(H3 Impedance Mismatch)
+
+    $(P A precise mapping of C semantics, with all its oddities, to D source code is not
+    always practical. ImportC uses C semantics in its semantic analysis to get much closer
+    to exact C semantics than is expressible in D source code. Hence, the translation to
+    D source code will be less than perfect. For example:)
+
+    $(CCODE
+    int S;
+    struct S { int a, b; };
+    int foo(struct S s)
+    {
+        return S + s.a;
+    }
+    )
+
+    $(P will work fine in ImportC, because the `int S` and the `struct S` are in different
+    symbol tables. But in the generated D code, both symbols would be in the same symbol table, and will collide.
+    Such D source code translated from C will need to be adjusted by the user.)
+
+    $(P Nevertheless, reports from the field are that this conversion capability is a huge
+    timesaver for users who need to deal with existing C code.)
+
 $(H2 $(LNAME2 warnings, Warnings))
 
     $(P Many suspicious C constructs normally cause warnings to be emitted by default by
@@ -873,5 +1064,5 @@ $(SPEC_SUBNAV_PREV_NEXT betterc, Better C, ob, Live Functions)
 )
 
 Macros:
-    CHAPTER=41
+    CHAPTER=42
     TITLE=ImportC

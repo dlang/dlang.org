@@ -1,0 +1,222 @@
+Ddoc
+
+$(D_S $(TITLE),
+
+$(HEADERNAV_TOC)
+
+Windows DLLs (aka shared libraries) are a method of sharing instances of executable
+code and data between processes. Although they perform the same role as shared libraries
+in other systems like Linux, OSX, and FreeBSD, they are implemented quite differently.
+The information in this article is specific to Windows DLLs.
+
+
+$(H2 Build a DLL)
+
+$(H3 Code for the DLL)
+
+$(OL
+$(LI Create the file mydll.d:
+
+---
+module mydll;
+
+import core.sys.windows.dll;
+import core.stdc.stdio;
+
+mixin SimpleDllMain;
+
+export void entry()
+{
+    printf("called mydll.entry()\n");
+}
+---
+)
+
+$(LI Compile and link the DLL:
+
+$(CONSOLE
+dmd -shared mydll
+)
+
+which will create the files $(TT mydll.lib) (the $(I import library)) and
+$(TT mydll.dll) (the $(I dll)).
+)
+
+
+$(LI Create the file mydll.di:
+
+---
+module mydll;
+
+export void entry();
+---
+)
+
+$(LI Create the file myexe.d:
+
+---
+module myexe;
+
+import mydll;
+
+int main()
+{
+    mydll.entry();
+    return 0;
+}
+---
+)
+
+$(LI Compile the $(TT myexe.d) file and link is with the $(TT mydll.lib)
+file to create the $(TT myexe.exe) file:
+$(CONSOLE
+dmd myexe.d mydll.lib
+)
+)
+
+$(LI Run myexe:
+
+$(CONSOLE
+C:> myexe
+called mydll.entry()
+)
+)
+
+
+$(H2 DllMain - Entry Point)
+
+A Windows DLL must have an entry point, much like the `main` function in an executable.
+It looks like:
+
+---
+module dllmain;  // nice to always name it this
+
+import core.sys.windows.windef : HINSTANCE, BOOL, DWORD, LPVOID;
+import core.sys.windows.winnt;
+import core.sys.windows.dll : dll_process_attach, dll_process_detach,
+                              dll_thread_attach, dll_thread_detach;
+
+__gshared HINSTANCE g_hInst;  // saved instance handle for the DLL
+
+/***********************************
+ * DLL entry point.
+ * Params:
+ *      hInstance = instance handle for the DLL
+ *      ulReason = why the DllMain is being called
+ *      fImpLoad = null if Dll is explicitly loaded, !null if implicitly loaded
+ * Returns:
+ *      true for success, false for failure
+ */
+extern (Windows)
+BOOL DllMain(HINSTANCE hInstance, ULONG ulReason, LPVOID fImpLoad)
+{
+    switch (ulReason)
+    {
+        case DLL_PROCESS_ATTACH: // when the DLL is first loaded
+            g_hInst = hInstance;  // save it for later
+            return dll_process_attach(hInstance, true); // perform process-relative initialization
+
+        case DLL_PROCESS_DETACH: // when DLL is being unloaded
+            return dll_process_detach(hInstance, true); // perform process-relative teardown
+
+        case DLL_THREAD_ATTACH:  // new thread initialization
+            return dll_thread_attach(true, true); // perform thread-relative initialization
+
+        case DLL_THREAD_DETACH:  // thread is ending
+            return dll_thread_detach(true, true); // perform thread teardown
+
+        default:
+            assert(0);
+    }
+}
+---
+
+Or, since this is just boilerplate code, this will do nicely:
+
+---
+module dllmain;
+
+import core.sys.windows.dll;
+
+mixin SimpleDllMain;
+---
+
+The compiler recognizes `DllMain`, and emits a reference to `__acrtused_dll` which will
+pull in the DLL support code from the C runtime library. It will also cause the addition
+of the debug runtime library
+(for symbolic debug compiles) or the default runtime library (otherwise) to be searched
+by the linker.
+
+
+$(H2 Exporting Definitions)
+
+In order for an executable to reference a name in the DLL, that name must be $(I exported)
+by the DLL. For example, to export the symbol `func` from this module:
+
+---
+module mydll;
+export int func() { return 3; }
+---
+
+the compiler inserts the following Export Definition directive into the object file:
+
+
+$(CONSOLE
+EXPDEF expflag=x00, export '__D5mydll4funcFZi', internal '', ordinal=x0
+)
+
+for OMF files, and the equivalent in MSCOFF object files.
+$(TT EXPDEF) informs the linker that `mydll.func` is to be put in the export
+table of the DLL being linked. That's the only addition to the object file.
+
+
+$(H2 Importing Declarations)
+
+The EXE file, when a DLL is attached to it, needs to know how to call it. This is
+called importing a declaration from the DLL. Prepare an import file $(TT mydll.di):
+
+---
+module mydll;
+export int func(); // note no function body
+---
+
+---
+module myexe;
+import mydll;
+
+int test() { return func(); }
+---
+
+Compiling $(TT myexe.d) uncovers the magic:
+
+---
+extrn   __imp___D5mydll4funcFZi
+
+__D5myexe4testFZi       comdat
+        call    dword ptr __imp___D5mydll4funcFZi
+        ret
+---
+
+A direct call is not made to `mydll.func()`, instead an indirect call to `mydll.func()` is
+made via a pointer to `mydll.func()`, and the pointer’s name is `__imp___D5mydll4func`.
+)
+
+$(H2 Import Library)
+
+$(P Exporting the definitions from the dll's object file, and hooking the exe file up to
+the dll's exports requires an additional file, the import library. The import library is
+automatically created by the linker when the dll is linked. This library then must be added
+to the link step when linking the executable file.)
+
+$(H2 $(LNAME2 references, References))
+
+$(OL
+$(LI $(LINK2 https://wiki.dlang.org/Win32_DLLs_in_D, Win32 DLLs in D))
+$(LI $(LINK2 https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-best-practices, Dynamic-Link Library Best Practices))
+)
+
+)
+
+Macros:
+        TITLE=Creating Windows DLLs
+        SUBNAV=$(SUBNAV_ARTICLES)

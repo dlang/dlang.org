@@ -1,6 +1,6 @@
 #!/usr/bin/env dub
 /++ dub.sdl:
-dependency "libdparse" version="0.19.0"
+dependency "libdparse" version="~>0.24.0"
 name "assert_writeln_magic"
 +/
 /*

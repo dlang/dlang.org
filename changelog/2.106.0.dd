@@ -1,0 +1,528 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Dec 01, 2023, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 17 major changes and 65 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 33 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.catch-immutable,Catch clause must take only `const` or mutable exceptions))
+$(LI $(RELATIVE_LINK2 dmd.dtoh-improvements,Improvements for the C++ header generation))
+$(LI $(RELATIVE_LINK2 dmd.enum-function,A function with enum storage class is now deprecated, not an error))
+$(LI $(RELATIVE_LINK2 dmd.fix24084,Add -nothrow Switch to Compiler))
+$(LI $(RELATIVE_LINK2 dmd.intel-cet-ibt-protection,Added support for Intel CET (Control-flow Enforcement Technology) IBT (Indirect Branch Tracking) protection))
+$(LI $(RELATIVE_LINK2 dmd.scope-ctor-error,Creating a `scope` class instance with a non-scope constructor is `@system` only with DIP1000))
+$(LI $(RELATIVE_LINK2 dmd.shared-static-ctor-const,Global `const` variables can no longer be initialized from a non-shared static constructor))
+$(LI $(RELATIVE_LINK2 dmd.static-assoc-array,Global variables can now be initialized with Associative Arrays))
+$(LI $(RELATIVE_LINK2 dmd.template-_d_newarrayT,`_d_newarray{U,T,iT}` are converted to templates))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 druntime.gc-collect-safe,4 `core.memory.GC` functions have been marked `@safe`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 PR8804,Undo etc.c.odbc deprecation and enable usage on non-Windows systems))
+$(LI $(RELATIVE_LINK2 is_input_range_element,isInputRange now takes an optional element type.))
+$(LI $(RELATIVE_LINK2 unshared,Add Unshared to std.traits.))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 deep,Added `--deep=` switch to dub build))
+$(LI $(RELATIVE_LINK2 describe-configs,Added `default-config`, `configs`, `default-build`, `builds` data to dub describe))
+$(LI $(RELATIVE_LINK2 init_license,Dub init now has a select menu for package format and license))
+$(LI $(RELATIVE_LINK2 recipefile,Added `--recipe=` switch to DUB))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.catch-immutable,Catch clause must take only `const` or mutable exceptions)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.catch-immutable.dd)
+$(P
+In 2.104, throwing qualified types was
+[deprecated](https://dlang.org/changelog/2.104.0.html#dmd.throw-qualifier).
+)
+
+$(P
+It is also unsafe to catch an exception as `immutable`, `inout` or `shared`.
+This is because the exception may still be accessible through another
+mutable or non-shared reference. Catching an exception with those qualifiers
+is now deprecated.
+)
+
+---
+auto e = new Exception("first");
+try {
+        throw e;
+} catch(immutable Exception ie) { // now an error
+        e.msg = "second";
+        assert(ie.msg == "first"); // would fail
+}
+---
+)
+
+$(LI $(LNAME2 dmd.dtoh-improvements,Improvements for the C++ header generation)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.dtoh-improvements.dd)
+$(P
+The following features/bugfixes/improvements were implemented for the
+experimental C++ header generator:
+)
+
+$(P
+- Static variables used in a default argument context are now emitted using
+  their fully qualified name.
+)
+
+$(P
+Note: The header generator is still considered experimental, so please submit
+      any bugs encountered to [the bug tracker](https://issues.dlang.org).
+)
+)
+
+$(LI $(LNAME2 dmd.enum-function,A function with enum storage class is now deprecated, not an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.enum-function.dd)
+$(P
+The error was introduced in 2.105.0.
+)
+)
+
+$(LI $(LNAME2 dmd.fix24084,Add -nothrow Switch to Compiler)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.fix24084.dd)
+$(P
+dmd itself (and presumably others) do not throw Exceptions, preferring other methods
+for dealing with errors. There is a cost, however, in supporting Exceptions even when
+they are never thrown. The cost is in adding stack unwinders for things like RAII
+objects, and preventing numerous optimizations across try-catch boundaries.
+)
+
+$(P
+Adding `nothrow` to all the code in a project turns out to be an inordinate amount of
+work if the program is large. Putting `nothrow:` at the top of the module doesn't
+influence the status for member functions in a class or struct, the `nothrow:`
+will have to be repeated for each class/struct.
+)
+
+$(P
+Adding the -nothrow switch to the compiler causes the stack unwinders to not be added
+and enables the optimizations. This capability is already there for -betterC code,
+this would just enable it for regular D code.
+)
+
+$(P
+The switch does not affect semantic analysis, just the code generation. Name mangling
+is not affected.
+)
+
+$(P
+The switch is useful for determining what effect exception handling has on an executable's
+size and performance in non-throwing code.
+)
+)
+
+$(LI $(LNAME2 dmd.intel-cet-ibt-protection,Added support for Intel CET (Control-flow Enforcement Technology) IBT (Indirect Branch Tracking) protection)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.intel-cet-ibt-protection.dd)
+$(P
+CET is a technology that is useful for preventing an attacker from redirecting a program's control flow,
+specifically IBT prevents an attacker from causing an indirect branch to go to an unintended place.
+)
+
+$(P
+Intel IBT expects the compiler to emit special instructions (`endbr32` and `endbr64`) which in older processors
+that do not support IBT are equivalent to `nop` instructions, consequently a program compiled with active IBT
+will be compatible on any x86 processor and the protection will be opportunistically active on supported processors.
+)
+
+$(P
+To enable Intel IBT protection in DMD you need to pass the `-fIBT` flag to the compiler, consequently the compiler
+will manage the emission of instructions for IBT by itself.
+Be careful when using inline assembly, the compiler will not automatically handle IBT inside an inline assembly.
+)
+
+$(P
+To find out within a D program whether IBT has been activated or not use the traits getTargetInfo as follows:
+)
+
+---
+// IBT active
+static assert(__traits(getTargetInfo, "CET") == 1);  // CET == 1 if IBT is active
+
+// IBT not active
+static assert(__traits(getTargetInfo, "CET") == 0);  // CET == 0 if IBT is not active
+---
+)
+
+$(LI $(LNAME2 dmd.scope-ctor-error,Creating a `scope` class instance with a non-scope constructor is `@system` only with DIP1000)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.scope-ctor-error.dd)
+$(P
+The fix for [issue 23145](https://issues.dlang.org/show_bug.cgi?id=23145) broke existing code, so it's put behind `-preview=DIP1000` now, just like other `scope` related errors.
+)
+)
+
+$(LI $(LNAME2 dmd.shared-static-ctor-const,Global `const` variables can no longer be initialized from a non-shared static constructor)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.shared-static-ctor-const.dd)
+$(P
+Just like `immutable` data, global `const` data is not placed in Thread Local Storage (TLS), so initializing it in a thread-local static constructor allows you to violate `const`:
+see [issue 24056](https://issues.dlang.org/show_bug.cgi?id=24056) for details.
+Doing this will now result in a deprecation:
+)
+
+---
+int x;
+const int y;
+immutable int z;
+
+static this()
+{
+    x = 1;
+    y = 2; // Deprecation: cannot modify const variable
+    z = 3; // Error: cannot modify immutable variable (same as before)
+}
+---
+
+$(P
+As a corrective action, move the initialization to a shared static constructor:
+)
+
+---
+const int y;
+
+shared static this()
+{
+    y = 4; // OK
+}
+---
+)
+
+$(LI $(LNAME2 dmd.static-assoc-array,Global variables can now be initialized with Associative Arrays)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.static-assoc-array.dd)
+$(P
+Formerly, module constructors or `enum` had to be used to initialize global variables with Associtive Arrays.
+By internally lowering to Steven Schveighoffer's [newaa](https://github.com/schveiguy/newaa/blob/master/source/schlib/newaa.d) struct implementation, Associative Arrays can now be used directly.
+)
+
+---
+immutable string[string] table = ["key": "value"];
+
+void main()
+{
+    assert(table["key"] == "value");
+}
+---
+
+$(P
+When the key/value types have `toHash`, `opEquals` or `~this` defined, they must be callable at compile time.
+An `if (!__ctfe)` branch can be used to make a destructor only run at run time.
+Future enhancements may obviate the need for this workaround.
+)
+)
+
+$(LI $(LNAME2 dmd.template-_d_newarrayT,`_d_newarray{U,T,iT}` are converted to templates)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.template-_d_newarrayT.dd)
+$(P
+The template `_d_newarrayT` now uses DBI to check what type of initialiser is required by the type of the elements in the array.
+Thus it replaces both `_d_newarrayT` and `_d_newarrayiT`.
+)
+
+$(P
+`_d_newarrayU` is the generic implementation of both of the above hooks and just allocates the array.
+It hasn't been incorporated into `_d_newarrayT` because it is used by `dup`.
+Currently `dup` is still using the non-template `_d_newarrayU`.
+A future PR will update `dup` to use the new template.
+)
+
+$(P
+Now the compiler performs the following lowering:
+)
+
+---
+S[] s = new S[10]
+
+// is now lowered to:
+S[] s = _d_newarrayT!S(10);
+---
+
+$(P
+This change adds the new templates to `core.internal.array.construction`.
+In addition, it implements template `__arrayClearPad`, `__arrayAlloc`, `__arrayStart` and `__setArrayAllocLength` in `core.internal.array.utils`.
+`__arrayClearPad` and `__arrayStart` were also removed from `rt.lifetime`.
+The others can't be removed yet because they receive a `TypeInfo` argument and are called by other hooks in `rt.lifetime`.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 druntime.gc-collect-safe,4 `core.memory.GC` functions have been marked `@safe`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.gc-collect-safe.dd)
+$(P
+* `GC.enable`
+* `GC.disable`
+* `GC.collect`
+* `GC.minimize`
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 PR8804,Undo etc.c.odbc deprecation and enable usage on non-Windows systems)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/PR8804.dd)
+$(P
+Previously, the etc.c.odbc bindings were deprecated and forwarded the core.sys.windows versions of the bindings via public import. However, ODBC is supported on all major platforms and the machine translated MinGW bindings in core.sys.windows have version(Windows) specified which results in being unable to use those bindings on non-Windows platforms. The bindings have been returned to etc.c.odbc, undeprecated, and support for non-Windows platforms enabled.
+)
+)
+
+$(LI $(LNAME2 is_input_range_element,isInputRange now takes an optional element type.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/is_input_range_element.dd)
+$(P
+isInputRange now has an optional 2nd template parameter that defaults
+to void. If not void, it only evaluates to true if the range's element
+type is the same type as this extra argument, modulo const. For
+instance, `isInputRange!(int[], const(int))` is true, but
+`isInputRange!(int[], string)` is false.
+)
+)
+
+$(LI $(LNAME2 unshared,Add Unshared to std.traits.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/unshared.dd)
+$(P
+`Unshared` is the `shared` equivalent of `Unconst`. It strips off the outer
+layer of `shared` from a type. e.g.
+)
+
+```
+    static assert(Unshared!(shared int) == int);
+    static assert(Unshared!(shared(int[])) == shared(int)[]);
+```
+
+$(P
+So, `Unconst` strips off the outer layer of `const`, `immutable`, and `inout`;
+`Unshared` strips off the outer layer of `shared`; and `Unqual` strips off all
+qualifiers from the outer layer of a type.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 deep,Added `--deep=` switch to dub build)
+$(CHANGELOG_SOURCE_FILE dub, changelog/deep.dd)
+$(P
+By specifying this flag, you can now build all the dependencies
+of a staticLibrary. The default behavior is to only build the
+library located in the root directory of the dub configuration
+file. This allows better integration with other build systems
+which require the libraries to be built upfront.
+)
+
+```
+dub build --deep
+```
+
+$(P
+If a staticLibrary A depends on staticLibrary B, and the --deep
+flag is specified, dub will output both the A and B libraries.
+)
+)
+
+$(LI $(LNAME2 describe-configs,Added `default-config`, `configs`, `default-build`, `builds` data to dub describe)
+$(CHANGELOG_SOURCE_FILE dub, changelog/describe-configs.dd)
+$(P
+- `default-config` will be a single string that is the `--config` configuration that DUB would pick when not provided any configuration such as in a simple `dub build` call
+- `configs` is a list of all available configurations (default generated application and/or library, or the manually specified ones in the recipe)
+- `default-build` will be a single string that is the `--build` build type that DUB would pick when not provided any (currently always "debug")
+- `builds` is a list of all available build types (built-in + custom defined)
+)
+)
+
+$(LI $(LNAME2 init_license,Dub init now has a select menu for package format and license)
+$(CHANGELOG_SOURCE_FILE dub, changelog/init_license.dd)
+$(P
+When creating a package using `dub init` you are now prompted to select a license for the package.
+)
+)
+
+$(LI $(LNAME2 recipefile,Added `--recipe=` switch to DUB)
+$(CHANGELOG_SOURCE_FILE dub, changelog/recipefile.dd)
+$(P
+You can now override which file is used as recipe, instead of the default
+`dub.sdl` and `dub.json`. This means you can define multiple dub.json files for
+local development, for example for special local-machine-only operations, and
+select which one to use over the CLI.
+)
+
+```
+dub build --recipe=custom-dub.json
+```
+
+$(P
+This can also be used to pick dub.sdl over dub.json, if both of them exist in
+the same directory. Although this is discouraged for interoperability with other
+DUB-supporting tools and general confusion for users. Both existing at the same
+time may also become an error when this switch is not specified in the future.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 20655): [REG: 2.072] attribute inference accepts unsafe union access as @safe)
+$(LI $(BUGZILLA 24066): __traits$(LPAREN)isAbstractClass$(RPAREN) causes a segfault when passed an opaque class)
+$(LI $(BUGZILLA 24159): BetterC: appending to dynamic arrays no longer errors at compile time)
+$(LI $(BUGZILLA 24184): [REG 2.103] Segmentation fault accessing variable with align$(LPAREN)N$(RPAREN) > platform stack alignment)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 8662): Better error for duplicate labels inside static foreach body)
+$(LI $(BUGZILLA 11455): Overriding template methods should raise a compile error)
+$(LI $(BUGZILLA 14835): Constant folding should not affect front end flow analysis)
+$(LI $(BUGZILLA 18578): First enum value assigned 0 instead of EnumBaseType.init)
+$(LI $(BUGZILLA 19460): C style cast error has wrong line number for functions)
+$(LI $(BUGZILLA 22682): `pragma$(LPAREN)mangle$(RPAREN)` does not work for nested functions)
+$(LI $(BUGZILLA 23103): static initialization of associative arrays is not implemented)
+$(LI $(BUGZILLA 23522): Error message when enum type is not integral and a value lacks an initializer)
+$(LI $(BUGZILLA 23733): Can't use template type parameter as type of alias parameter)
+$(LI $(BUGZILLA 24036): assert message in CTFE becomes `['m', 'e', 's', 's', 'a', 'g', 'e'][0..7]` if produced using std.format.format)
+$(LI $(BUGZILLA 24051): Safety attrib inference of enum/immut/const decls inconsistent with mutable static variable decls)
+$(LI $(BUGZILLA 24054): return expression expected on noreturn function)
+$(LI $(BUGZILLA 24055): is$(LPAREN)x == __parameters$(RPAREN) does not work on function pointer/delegate types)
+$(LI $(BUGZILLA 24056): const uninitialized data at module scope is not in TLS)
+$(LI $(BUGZILLA 24065): __traits$(LPAREN)getTargetInfo$(RPAREN) causes a segfault when passed a non value)
+$(LI $(BUGZILLA 24070): Opaque struct with nested definition when taking pointer segfaults)
+$(LI $(BUGZILLA 24071): When enum has typedef integer constants do not have types determined correctly)
+$(LI $(BUGZILLA 24072): cast$(LPAREN)__vector$(RPAREN) array literal incorrectly triggers GC error)
+$(LI $(BUGZILLA 24105): Dip1000 C variadics not marked as scope should not accept scope arguments)
+$(LI $(BUGZILLA 24107): The error for exceeding the CTFE recursion limit bypasses speculative compilation.)
+$(LI $(BUGZILLA 24108): dmd -H and -X fail when given an importC module)
+$(LI $(BUGZILLA 24117): noreturn can be used as expression)
+$(LI $(BUGZILLA 24121): ImportC: typedef enum fails to compile when generating .di file)
+$(LI $(BUGZILLA 24129): ImportC: MS-Link cannot handle multiple COMDATs with the same name)
+$(LI $(BUGZILLA 24130): ImportC: Windows headers use inline asm with different syntax)
+$(LI $(BUGZILLA 24133): printf format checking of %n allows writing to const pointers)
+$(LI $(BUGZILLA 24154): ImportC: useless expression parsed as invalid variable declaration)
+$(LI $(BUGZILLA 24156): ImportC: Apple uses __signed as a keyword)
+$(LI $(BUGZILLA 24168): Corrupted if TLS values are passed in ref parameters when compiling with -fPIE)
+$(LI $(BUGZILLA 24174): [CTFE] goto within with statements & catch blocks cause a infinite loop)
+$(LI $(BUGZILLA 24181): reading double parameter from RCX rather than XMM1)
+$(LI $(BUGZILLA 24187): ImportC: _Float32 not defined)
+$(LI $(BUGZILLA 24193): Incorrect size of unions with bit fields)
+$(LI $(BUGZILLA 24199): ImportC: generated .di file uses struct keyword when referring to a type)
+$(LI $(BUGZILLA 24208): [DIP1000] Scope pointer can escape via non-scope parameter of pure nested function)
+$(LI $(BUGZILLA 24209): static aa initialization of static function variable ICE)
+$(LI $(BUGZILLA 24212): [DIP1000] Scope pointer can escape via non-scope parameter of pure virtual function)
+$(LI $(BUGZILLA 24213): [DIP1000] Scope pointer can escape via non-scope parameter of pure delegate)
+$(LI $(BUGZILLA 24257): ImportC: ICE on accessing last _Bool bitfield)
+$(LI $(BUGZILLA 24262): Assert error with bit fields)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 5445): DMD does not look for ".dmd.conf" in HOME dir)
+$(LI $(BUGZILLA 10532): Silence some unreachable statement warnings when in a static foreach)
+$(LI $(BUGZILLA 11070): Allow declaration statement in a switch expression)
+$(LI $(BUGZILLA 15752): Diagnostic: Better Error Message for Assigning Incorrect AA Empty Value)
+$(LI $(BUGZILLA 20522): Spurious statement unreachable warning caused by undefined variable)
+$(LI $(BUGZILLA 21520): dmd does not honor the NO_COLOR environment variable)
+$(LI $(BUGZILLA 21852): diagnostic: One-liner errors with formatted Loc should print context when -verrors=context)
+$(LI $(BUGZILLA 23958): ImportC: undefined identifier `__builtin__sprintf_chk`)
+$(LI $(BUGZILLA 24060): Improve "Cannot create instance of abstract class" error)
+$(LI $(BUGZILLA 24084): Add -nothrow Switch to Compiler)
+$(LI $(BUGZILLA 24173): ImportC: add Microsoft iNN integer literal suffixes)
+)
+$(BUGSTITLE_BUGZILLA Phobos regression fixes,
+
+$(LI $(BUGZILLA 24267): [REG 2.106 beta] Grapheme cannot be used as an AA key)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 24049): std.conv.to: string to enum conversion is not documented)
+$(LI $(BUGZILLA 24207): std.parallelism: AbstractTask private data is inadvertently available)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 24082): add Int128.toString that supports std.format)
+$(LI $(BUGZILLA 24142): Allow casting Int128 to integral and floating types)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 24079): core.sys.windows.winnt.IMAGE_FIRST_SECTION returns bad pointer)
+$(LI $(BUGZILLA 24123): More importc definitions are needed for macOS)
+$(LI $(BUGZILLA 24230): Infinite loop in core.cpuid.getCpuInfo0B in Solaris/x86 kernel zone)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 3396): Compiler accepts call of superclass abstract method with no implementation)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 24012): [spec/cpp_interface] _d_dynamicArray generated by -HC not documented)
+)
+)
+$(D_CONTRIBUTORS_HEADER 33)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR Adam Wilson)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Dante Broggi)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Imperatorn)
+    $(D_CONTRIBUTOR Jan Jurzitza)
+    $(D_CONTRIBUTOR Jeremy)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR liushuyu)
+    $(D_CONTRIBUTOR Mai-Lapyst)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Piotr Fusik)
+    $(D_CONTRIBUTOR Prajwal S N)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Temtaime)
+    $(D_CONTRIBUTOR Teodor Dutu)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR tjs137)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.106.0
+    TITLE=Change Log: $(VER)

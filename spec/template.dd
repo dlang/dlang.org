@@ -78,8 +78,9 @@ $(H2 $(LNAME2 template_instantiation, Template Instantiation))
 
 $(H3 $(LNAME2 explicit_tmp_instantiation, Explicit Template Instantiation))
 
-    $(P Templates are explicitly instantiated with:
-    )
+    $(P Templates are explicitly instantiated using a `!` after the
+    template name, then either an argument list or a single token
+    argument.)
 
 $(GRAMMAR
 $(GNAME TemplateInstance):
@@ -94,6 +95,25 @@ $(GNAME TemplateArgumentList):
     $(GLINK TemplateArgument) $(D ,)
     $(GLINK TemplateArgument) $(D ,) $(GSELF TemplateArgumentList)
 
+$(GNAME TemplateSingleArgument):
+    $(GLINK_LEX Identifier)
+    $(GLINK2 type, FundamentalType)
+    $(GLINK_LEX CharacterLiteral)
+    $(GLINK_LEX StringLiteral)
+    $(GLINK2 istring, InterpolationExpressionSequence)
+    $(GLINK_LEX IntegerLiteral)
+    $(GLINK_LEX FloatLiteral)
+    $(D true)
+    $(D false)
+    $(D null)
+    $(D this)
+    $(GLINK2 expression, SpecialKeyword)
+)
+
+    $(P A template argument can be a type, compile-time expression
+    or a symbol.)
+
+$(GRAMMAR
 $(GNAME TemplateArgument):
     $(GLINK2 type, Type)
     $(ASSIGNEXPRESSION)
@@ -108,19 +128,6 @@ $(GNAME SymbolTail):
     $(GLINK_LEX Identifier) $(D .) $(GSELF SymbolTail)
     $(GLINK TemplateInstance)
     $(GLINK TemplateInstance) $(D .) $(GSELF SymbolTail)
-
-$(GNAME TemplateSingleArgument):
-    $(GLINK_LEX Identifier)
-    $(GLINK2 type, FundamentalType)
-    $(GLINK_LEX CharacterLiteral)
-    $(GLINK_LEX StringLiteral)
-    $(GLINK_LEX IntegerLiteral)
-    $(GLINK_LEX FloatLiteral)
-    $(D true)
-    $(D false)
-    $(D null)
-    $(D this)
-    $(GLINK2 expression, SpecialKeyword)
 )
 
     $(P Once instantiated, the declarations inside the template, called
@@ -518,23 +525,26 @@ $(GNAME TemplateValueParameterDefault):
 )
 
     $(P A template value parameter can take an argument of any expression which can
-        be statically evaluated at compile time.
-        Template value arguments can be integer values, floating point values,
-        nulls, string values, array literals of template value arguments,
-        associative array literals of template value arguments,
-        or struct literals of template value arguments.)
+        be statically evaluated at compile time as one of the following:)
+
+        * A `bool`, character, integer, floating point or string value
+        * `null`
+        * An array literal whose elements could be valid template value arguments
+        * An associative array literal whose keys and values could each be valid
+          template value arguments
+        * A struct literal whose arguments could be valid template value arguments
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         -----
         template foo(string s)
         {
-            string bar() { return s ~ " betty"; }
+            enum string bar = s ~ " betty";
         }
 
         void main()
         {
             import std.stdio;
-            writeln(foo!("hello").bar()); // prints: hello betty
+            writeln(foo!("hello").bar); // prints: hello betty
         }
         -----
         )
@@ -912,7 +922,7 @@ $(H4 $(LNAME2 homogeneous_sequences, Homogeneous Sequences))
         ---
         )
 
-        $(P A *TypeSeq* can be used to declare parameters for a function:)
+        $(P A *TypeSeq* can be used to declare a parameter sequence for a function:)
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         ---
@@ -933,15 +943,63 @@ $(H4 $(LNAME2 homogeneous_sequences, Homogeneous Sequences))
         ---
         )
 
+    $(P A value sequence:)
+    * Can be copied
+    * Cannot have its address taken
+    * Cannot be returned from a function - instead, return a
+        $(REF Tuple, std,typecons)
+
+$(H4 $(LNAME2 lvalue-sequences, Lvalue Sequences))
+
     $(P A *TypeSeq* can similarly be used to
         $(DDSUBLINK articles/ctarguments, type-seq-instantiation, declare variables).
-        Parameters or variables declared with a *TypeSeq* are called an
+        A variable whose type is a *TypeSeq* is called an
         *lvalue sequence*.)
+    $(P An lvalue sequence can be initialized from, assigned to, and compared with
+        a value sequence of a compatible type.)
+
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
+            ---
+            import std.meta: AliasSeq;
+            // use a type alias just for convenience
+            alias TS = AliasSeq!(string, int);
+            TS tup; // lvalue sequence
+            assert(tup == AliasSeq!("", 0)); // TS.init
+
+            int i = 5;
+            // initialize another lvalue sequence from a sequence of a value and a symbol
+            auto tup2 = AliasSeq!("hi", i); // value of i is copied
+            i++;
+            enum hi5 = AliasSeq!("hi", 5); // rvalue sequence
+            static assert(is(typeof(hi5) == TS));
+            assert(tup2 == hi5);
+
+            // lvalue sequence elements can be modified
+            tup = tup2;
+            assert(tup == hi5);
+            ---
+        )
+
     $(UL
-        $(LI `.tupleof` can be $(DDSUBLINK spec/class, class_properties, used on a class)
+        $(LI `.tupleof` can be $(DDSUBLINK spec/class, tupleof, used on a class)
             or struct instance to obtain an lvalue sequence of its fields.)
         $(LI `.tupleof` can be $(DDSUBLINK spec/arrays, array-properties, used on a static array)
             instance to obtain an lvalue sequence of its elements.)
+    )
+
+    $(P An lvalue sequence can be initialized from a single expression.
+        Each element is initialized from the given expression.)
+
+    $(SPEC_RUNNABLE_EXAMPLE_RUN
+    ---
+    import std.meta: AliasSeq;
+    AliasSeq!(int, int, int) vs = 4;
+    assert(vs == AliasSeq!(4, 4, 4));
+
+    int[3] sa = [1, 2, 3];
+    vs = sa.tupleof;
+    assert(vs == AliasSeq!(1, 2, 3));
+    ---
     )
 
 $(H4 $(LNAME2 seq-ops, Sequence Operations))
@@ -950,10 +1008,11 @@ $(H4 $(LNAME2 seq-ops, Sequence Operations))
     $(LI The number of elements in an $(I AliasSeq) can be retrieved with
         the $(D .length) property.)
     $(LI The $(I n)th element can be retrieved by
-        $(DDSUBLINK spec/expression, index_expressions, indexing) an
+        $(DDSUBLINK spec/expression, index_operations, indexing) an
         $(I AliasSeq) with `Seq[n]`. Indexes must be known at compile-time.
-        The result is an lvalue when the element is a variable.)
-    $(LI $(DDSUBLINK spec/expression, slice_expressions, Slicing)
+        The result is an lvalue when the element is a symbol which resolves to a variable,
+        or when the sequence is an lvalue sequence.)
+    $(LI $(DDSUBLINK spec/expression, slice_operations, Slicing)
         produces a new sequence with a subset of the elements of the original sequence.)
     )
 
@@ -962,12 +1021,13 @@ $(H4 $(LNAME2 seq-ops, Sequence Operations))
     import std.meta : AliasSeq;
 
     int v = 4;
+    // alias a sequence of 3 values and one symbol
     alias nums = AliasSeq!(1, 2, 3, v);
     static assert(nums.length == 4);
     static assert(nums[1] == 2);
 
-    // nums[3] is bound to v, an lvalue
-    nums[3]++;
+    //nums[0]++; // Error, nums[0] is an rvalue
+    nums[3]++; // OK, nums[3] is bound to v, an lvalue
     assert(v == 5);
 
     // slice first 3 elements
@@ -1473,7 +1533,6 @@ $(H2 $(LNAME2 template_ctors, Template Constructors))
 
 $(GRAMMAR
 $(GNAME ConstructorTemplate):
-    $(D this) $(GLINK TemplateParameters) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT) $(D :)
     $(D this) $(GLINK TemplateParameters) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(GLINK Constraint)$(OPT) $(GLINK2 function, FunctionBody)
 )
 
@@ -1482,30 +1541,36 @@ $(GNAME ConstructorTemplate):
 
 $(H2 $(LNAME2 variable-template, Enum & Variable Templates))
 
-    $(P Like aggregates and functions, manifest constant and variable
-        declarations can have template parameters, providing there is
+    $(P Like aggregates and functions, $(DDSUBLINK spec/declaration, variable-declarations, variable
+        declarations) and manifest constants can have template parameters, providing there is
         an $(GLINK2 declaration, Initializer):)
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ------
-        enum string constant(TL...) = TL.stringof;
+        enum bool within(alias v, T) = v <= T.max && v >= T.min;
         ubyte[T.sizeof] storage(T) = 0;
-        auto array(alias a) = a;
-        ------
+        const triplet(alias v) = [v, v+1, v+2];
 
-    $(P These declarations are transformed into templates:)
+        static assert(within!(-128F, byte));
+        static assert(storage!(int[2]).length == 8);
+        static assert(triplet!3 == [3, 4, 5]);
+        ------
+        )
+
+    $(P Those declarations are transformed into these *TemplateDeclaration*s:)
 
         ------
-        template constant(TL...)
+        template within(alias v, T)
         {
-            enum string constant = TL.stringof;
+            enum bool within = v <= T.max && v >= T.min;
         }
         template storage(T)
         {
             ubyte[T.sizeof] storage = 0;
         }
-        template array(alias a)
+        template triplet(alias v)
         {
-            auto array = a;
+            const triplet = [v, v+1, v+2];
         }
         ------
 
@@ -1837,6 +1902,6 @@ $(SPEC_SUBNAV_PREV_NEXT operatoroverloading, Operator Overloading, template-mixi
 )
 
 Macros:
-        CHAPTER=21
+        CHAPTER=22
         TITLE=Templates
         _=

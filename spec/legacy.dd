@@ -1,0 +1,95 @@
+Ddoc
+
+$(SPEC_S Legacy Code,
+
+$(HEADERNAV_TOC)
+
+    $(P To maintain compatibility with older D code, many legacy features remain supported.
+$(COMMENT
+    If the $(TT -wo) compiler command line switch is used, the compiler will give warning messages
+    for each use of a legacy feature.
+)
+    This page describes each legacy feature that is supported, with a suggestion of how to
+    modernize the code.
+    )
+
+    $(TABLE2 Legacy Features,
+        $(THEAD Feature, Summary)
+        $(TROW $(RELATIVE_LINK2 body, `body` keyword), $(D body) after a contract statement -
+            use $(D do) instead)
+        $(TROW `alias` target first syntax, use `alias name = target` instead.)
+        $(TROW Struct/union postblit, use a $(DDSUBLINK spec/struct, struct-copy-constructor,
+            copy constructor) instead.)
+        $(TROW $(RELATIVE_LINK2 alias-instance-member, Aliasing an instance member),
+            use `typeof(instance).member` instead.)
+    )
+
+$(H2 $(LNAME2 body, `body` keyword))
+    $(P `body` was a keyword used to specify a function/method's body after a contract statement:)
+        ---
+        class Foo
+        {
+            void bar(int i)
+            in { assert(i >= 42); }
+            body { /* Do something interesting */ }
+
+            string method(string s)
+            out(v) { assert(v.length == s.length); }
+            body { /* Do something even more interesting */ }
+
+            void noBody() { /* No contracts, no body */ }
+        }
+        ---
+
+$(H3 Corrective Action)
+
+    $(P Use the `do` keyword instead (introduced in v2.075.0):)
+        ---
+        void bar(int i)
+        in { assert(i >= 42); }
+        do { /* Look ma, no body! */ }
+        ---
+
+    $(RATIONALE The `body` keyword was only used for this single purpose.
+        Since D grammar aims to be context free, this common word was reserved,
+        which led to frequent trouble for people interfacing with other languages
+        (e.g. javascript) or auto-generating code.
+    )
+
+$(H2 $(LNAME2 alias-instance-member, Aliasing an instance member))
+
+    $(P E.g. `alias a = instance.field;`.
+        Such an alias actually aliases a member of the instance's *type*, not
+        the instance member itself. That could be confusing.
+        Instead, alias a member of the type.)
+
+    $(NOTE Aliasing `this.member` and `super.member` are valid inside
+        methods.)
+
+---
+struct Bar
+{
+    Foo f;
+    alias v = f.v; // Error, use `typeof(f).v`
+}
+
+struct Foo
+{
+    int v;
+    void test(Foo that) const
+    {
+        alias a = this.v; // OK
+        alias b = that.v; // Error, use `typeof(that).v` instead
+        assert(&a is &b); // passes
+        assert(&b !is &that.v);
+    }
+}
+---
+
+
+$(SPEC_SUBNAV_PREV glossary, Glossary)
+)
+
+Macros:
+        CHAPTER=46
+        TITLE=Legacy Code
