@@ -332,6 +332,7 @@ $(H2 $(LNAME2 preprocessor-directives, Preprocessor Directives))
     $(P The following pragmas are supported:)
 
     $(UL
+    $(LI $(TT #pragma importc_ignore ( +/-category... : identifier,... )))
     $(LI $(TT #pragma pack ( )))
     $(LI $(TT #pragma pack ( show )))
     $(LI $(TT #pragma pack ( push )))
@@ -341,6 +342,55 @@ $(H2 $(LNAME2 preprocessor-directives, Preprocessor Directives))
     $(LI $(TT #pragma pack ( pop )))
     $(LI $(TT #pragma pack ( pop PopList )))
     )
+
+    $(H4 $(LNAME2 pragma-importc-ignore, #pragma importc_ignore))
+
+    $(P $(TT #pragma importc_ignore) is an ImportC-specific pragma, it is used to
+    ignore kinds of declarations and definitions with specific identifiers.)
+
+    $(P $(TT #pragma importc_ignore) has one form:
+    $(OL
+    $(LI $(TT #pragma importc_ignore(+/-<category>... : <identifier>,...)))))
+
+    $(P That is, a sequence of plus-or-minus-prefixed categories,
+    followed by a colon, and then a comma-separated list of identifiers.
+    A trailing comma may be used in the list of identifiers.)
+
+    $(P The categories recognized by $(TT #pragma importc_ignore) are as follows:
+    $(UL
+    $(LI $(TT function_decl): which ignores function declarations, e.g. $(TT void foo(int);).)
+    $(LI $(TT function_def): which ignores function definitions, e.g. $(TT void foo(int x) {}).)))
+
+    $(P When a category is prefixed with a plus ($(TT +)), declarations/definitions of that category
+    will begin to be ignored if their identifier is included in the list of identifiers supplied to
+    $(TT #pragma importc_ignore).)
+    $(P When a category is prefixed with a minus ($(TT -)), declarations/definitions of that category
+    will no longer be ignored if their identifier is included in the list of identifiers supplied to
+    $(TT #pragma importc_ignore).)
+
+    $(P The same category may be specified multiple times within $(TT #pragma importc_ignore).
+    if different prefixes are used across instances of the same category, the last prefix is the
+    prefix which takes effect.)
+
+$(CCODE
+// We start ignoring function-declarations and function-definitions of `foo` and `bar`.
+#pragma importc_ignore(+function_decl +function_def : foo, bar)
+// This declaration of `foo` is ignored.
+void foo(int);
+// As is this definition of `foo`.
+void foo(int x)
+{}
+
+// We stop ignoring function-definitions of `bar`.
+#pragma importc_ignore(-function_def : bar)
+// This declaration of `bar` is ignored.
+void bar(int);
+// This definition of `bar` is not ignored.
+float bar(float x, float y)
+{
+    return x * y;
+}
+)
 
 $(H2 $(LNAME2 _builtins, $(TT src/__builtins.di)))
 
