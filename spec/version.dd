@@ -10,17 +10,17 @@ $(HEADERNAV_TOC)
 
 $(GRAMMAR
 $(GNAME ConditionalDeclaration):
-    $(GLINK Condition) $(GLINK2 attribute, DeclarationBlock)
-    $(GLINK Condition) $(GLINK2 attribute, DeclarationBlock) $(D else) $(GLINK2 attribute, DeclarationBlock)
-    $(GLINK Condition) $(D :) $(GLINK2 module, DeclDefs)$(OPT)
-    $(GLINK Condition) $(GLINK2 attribute, DeclarationBlock) $(D else) $(D :) $(GLINK2 module, DeclDefs)$(OPT)
+    $(GLINK Conditional) $(GLINK2 attribute, DeclarationBlock)
+    $(GLINK Conditional) $(GLINK2 attribute, DeclarationBlock) $(D else) $(GLINK2 attribute, DeclarationBlock)
+    $(GLINK Conditional) $(D :) $(GLINK2 module, DeclDefs)$(OPT)
+    $(GLINK Conditional) $(GLINK2 attribute, DeclarationBlock) $(D else) $(D :) $(GLINK2 module, DeclDefs)$(OPT)
 
 $(GNAME ConditionalStatement):
-    $(GLINK Condition) $(GLINK2 statement, NoScopeNonEmptyStatement)
-    $(GLINK Condition) $(GLINK2 statement, NoScopeNonEmptyStatement) $(D else) $(GLINK2 statement, NoScopeNonEmptyStatement)
+    $(GLINK Conditional) $(GLINK2 statement, NoScopeNonEmptyStatement)
+    $(GLINK Conditional) $(GLINK2 statement, NoScopeNonEmptyStatement) $(D else) $(GLINK2 statement, NoScopeNonEmptyStatement)
 )
 
-        $(P If the $(GLINK Condition) is satisfied, then the following
+        $(P If the $(GLINK Conditional) is satisfied, then the following
         $(I DeclarationBlock) or $(I Statement) is compiled in.
         If it is not satisfied, the $(I DeclarationBlock) or $(I Statement)
         after the optional $(CODE else) is compiled in.
@@ -44,20 +44,20 @@ $(GNAME ConditionalStatement):
         compilation that are errors.
         )
 
-        $(P $(I Condition) comes in the following forms:
+        $(P $(I Conditional) comes in the following forms:
         )
 
 $(GRAMMAR
-$(GNAME Condition):
-    $(GLINK VersionCondition)
-    $(GLINK DebugCondition)
-    $(GLINK StaticIfCondition)
+$(GNAME Conditional):
+    $(GLINK VersionConditional)
+    $(GLINK DebugConditional)
+    $(GLINK StaticIfConditional)
 )
 
-$(H2 $(LNAME2 version, Version Condition))
+$(H2 $(LNAME2 version, Version Conditional))
 
 $(GRAMMAR
-$(GNAME VersionCondition):
+$(GNAME VersionConditional):
     $(D version $(LPAREN)) $(GLINK_LEX Identifier) $(D $(RPAREN))
     $(D version $(LPAREN)) $(D unittest) $(D $(RPAREN))
     $(D version $(LPAREN)) $(D assert) $(D $(RPAREN))
@@ -67,7 +67,7 @@ $(GNAME VersionCondition):
         with a single source file.
         )
 
-        $(P The $(I VersionCondition) is satisfied if $(I Identifier)
+        $(P The $(I VersionConditional) is satisfied if $(I Identifier)
         matches a $(I version identifier).
         )
 
@@ -405,10 +405,10 @@ version(DigitalMars_funky_extension)
         )
 
 
-$(H2 $(LNAME2 debug, Debug Condition))
+$(H2 $(LNAME2 debug, Debug Conditional))
 
 $(GRAMMAR
-$(GNAME DebugCondition):
+$(GNAME DebugConditional):
     $(D debug)
     $(D debug $(LPAREN)) $(GLINK_LEX Identifier) $(D $(RPAREN))
 )
@@ -442,7 +442,7 @@ debug:
 
 $(H3 $(LNAME2 DebugStatement, Debug Statement))
 
-        $(P A $(GLINK ConditionalStatement) that has a $(GLINK DebugCondition) is called
+        $(P A $(GLINK ConditionalStatement) that has a $(GLINK DebugConditional) is called
         a $(I DebugStatement). $(I DebugStatements) have relaxed semantic checks in that
         `pure`, `@nogc`, `nothrow` and `@safe` checks are not done.
         Neither do $(I DebugStatements) influence the inference of `pure`, `@nogc`, `nothrow`
@@ -497,10 +497,10 @@ debug(identifier) { } // add in debug code if debug keyword is identifier
         and $(D -debug=)$(I identifier).
         )
 
-$(H2 $(LNAME2 staticif, Static If Condition))
+$(H2 $(LNAME2 staticif, Static If Conditional))
 
 $(GRAMMAR
-$(GNAME StaticIfCondition):
+$(GNAME StaticIfConditional):
     $(D static if $(LPAREN)) $(ASSIGNEXPRESSION) $(D $(RPAREN))
 )
 
@@ -514,7 +514,7 @@ $(GNAME StaticIfCondition):
         to a boolean type or if it cannot be evaluated at compile time.
         )
 
-        $(P $(I StaticIfCondition)s
+        $(P $(I StaticIfConditional)s
         can appear in module, class, template, struct, union, or function scope.
         In function scope, the symbols referred to in the
         $(ASSIGNEXPRESSION) can be any that can normally be referenced
@@ -562,7 +562,7 @@ Int!(17) c;  // error, static assert trips
 ------
 )
 
-        $(P A $(I StaticIfCondition) differs from an
+        $(P A $(I StaticIfConditional) differs from an
         $(I IfStatement) in the following ways:
         )
 
