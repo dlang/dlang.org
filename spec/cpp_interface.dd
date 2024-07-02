@@ -77,13 +77,13 @@ int foo(int i, int j, int k)
     )
 
 ------
-extern (C++) int foo(int i, int j, int k);
+extern(C++) int foo(int i, int j, int k);
 ------
 
     $(P and then it can be called within the D code:)
 
 ------
-extern (C++) int foo(int i, int j, int k);
+extern(C++) int foo(int i, int j, int k);
 
 void main()
 {
@@ -131,7 +131,7 @@ $(H3 $(LNAME2 calling_global_d_functions_from_cpp, Calling Global D Functions Fr
 ---
 import std.stdio;
 
-extern (C++) int foo(int i, int j, int k)
+extern(C++) int foo(int i, int j, int k)
 {
     writefln("i = %s", i);
     writefln("j = %s", j);
@@ -139,7 +139,7 @@ extern (C++) int foo(int i, int j, int k)
     return 1;
 }
 
-extern (C++) void bar();
+extern(C++) void bar();
 
 void main()
 {
@@ -172,11 +172,11 @@ $(H2 $(LNAME2 cpp-namespaces, C++ Namespaces))
 
         $(P C++ symbols that reside in namespaces can be
         accessed from D. A $(LINK2 attribute.html#namespace, namespace)
-        can be added to the `extern (C++)`
+        can be added to the `extern(C++)`
         $(LINK2 attribute.html#linkage, LinkageAttribute):
     )
 ------
-extern (C++, N) int foo(int i, int j, int k);
+extern(C++, N) int foo(int i, int j, int k);
 
 void main()
 {
@@ -189,13 +189,13 @@ void main()
 
 ---
 module ns;
-extern (C++, `ns`)
+extern(C++, `ns`)
 {
     int foo() { return 1; }
 }
 ---
     $(P Any expression that resolves to either a tuple of strings or an empty tuple is accepted.
-      When the expression resolves to an empty tuple, it is equivalent to `extern (C++)`)
+      When the expression resolves to an empty tuple, it is equivalent to `extern(C++)`)
 ---
 extern(C++, (expression))
 {
@@ -213,12 +213,12 @@ ns/
 
 $(P File `ns/a.d`:)
 ---
-module a; extern (C++, `ns`) { int foo() { return 1; } }
+module a; extern(C++, `ns`) { int foo() { return 1; } }
 ---
 
 $(P File `ns/b.d`:)
 ---
-module b; extern (C++, `ns`) { int bar() { return 2; } }
+module b; extern(C++, `ns`) { int bar() { return 2; } }
 ---
 
 $(P File `ns/package.d`:)
@@ -233,7 +233,7 @@ import ns;
 static assert(foo() == 1 && bar() == 2);
 ---
 
-$(P Note that the `extern (C++, `ns`)` linkage attribute affects only the ABI (name mangling and calling convention) of
+$(P Note that the `extern(C++, `ns`)` linkage attribute affects only the ABI (name mangling and calling convention) of
   these declarations. Importing them follows the usual
   $(LINK2 spec/module.html, D module import semantics).)
 
@@ -241,10 +241,10 @@ $(P Alternatively, the non-string form can be used to introduce a scope. Note th
     enclosing module already provides a scope for the symbols declared in the namespace.
     This form does not allow closing and reopening the same namespace with in the same module. That is:)
 ---
-module a; extern (C++, ns1) { int foo() { return 1; } }
+module a; extern(C++, ns1) { int foo() { return 1; } }
 ---
 ---
-module b; extern (C++, ns1) { int bar() { return 2; } }
+module b; extern(C++, ns1) { int bar() { return 2; } }
 ---
 ---
 import a, b;
@@ -252,15 +252,15 @@ static assert(foo() == 1 && bar() == 2);
 ---
    $(P works, but:)
 ---
-extern (C++, ns1) { int foo() { return 1; } }
-extern (C++, ns1) { int bar() { return 2; } }
+extern(C++, ns1) { int foo() { return 1; } }
+extern(C++, ns1) { int bar() { return 2; } }
 ---
    $(P does not. Additionally, aliases can be used to avoid collision of symbols:)
 ---
-module a; extern (C++, ns) { int foo() { return 1; } }
+module a; extern(C++, ns) { int foo() { return 1; } }
 ---
 ---
-module b; extern (C++, ns) { int bar() { return 2; } }
+module b; extern(C++, ns) { int bar() { return 2; } }
 ---
 ---
 module ns;
@@ -275,16 +275,16 @@ static assert(foo() == 1 && bar() == 2);
 
 $(H2 $(LNAME2 classes, Classes))
 
-    $(P C++ classes can be declared in D by using the $(CODE extern (C++))
+    $(P C++ classes can be declared in D by using the $(CODE extern(C++))
     attribute on $(CODE class), $(CODE struct) and $(CODE interface)
-    declarations. $(CODE extern (C++)) interfaces have the same restrictions as
+    declarations. $(CODE extern(C++)) interfaces have the same restrictions as
     D interfaces, which means that Multiple Inheritance is supported to the
     extent that only one base class can have member fields.)
 
-    $(P $(CODE extern (C++)) structs do not support virtual functions but can
+    $(P $(CODE extern(C++)) structs do not support virtual functions but can
     be used to map C++ value types.)
 
-    $(P Unlike classes and interfaces with D linkage, $(CODE extern (C++))
+    $(P Unlike classes and interfaces with D linkage, $(CODE extern(C++))
     classes and interfaces are not rooted in $(CODE Object) and cannot be used
     with $(CODE typeid).)
 
@@ -300,7 +300,7 @@ $(H2 $(LNAME2 classes, Classes))
     $(P $(CODE extern(C++, class)) and $(CODE extern(C++, struct)) can be combined
     with C++ namespaces:)
 ---
-extern (C++, struct) extern (C++, foo)
+extern(C++, struct) extern(C++, foo)
 class Bar
 {
 }
@@ -423,16 +423,16 @@ $(H3 $(LNAME2 using_d_classes_from_cpp, Using D Classes From C++))
     $(P Given D code like:)
 
 ---
-extern (C++) int callE(E);
+extern(C++) int callE(E);
 
-extern (C++) interface E
+extern(C++) interface E
 {
     int bar(int i, int j, int k);
 }
 
 class F : E
 {
-    extern (C++) int bar(int i, int j, int k)
+    extern(C++) int bar(int i, int j, int k)
     {
         import std.stdio : writefln;
         writefln("i = %s", i);
@@ -546,7 +546,7 @@ struct Derived
 $(H2 $(LNAME2 cpp-templates, C++ Templates))
 
     $(P C++ function and type templates can be bound by using the
-    $(CODE extern (C++)) attribute on a function or type template declaration.)
+    $(CODE extern(C++)) attribute on a function or type template declaration.)
 
     $(P Note that all instantiations used in D code must be provided by linking
     to C++ object code or shared libraries containing the instantiations.)
@@ -667,7 +667,7 @@ C
 $(H2 $(LNAME2 function-overloading, Function Overloading))
 
     $(P C++ and D follow different rules for function overloading.
-    D source code, even when calling $(CODE extern (C++)) functions,
+    D source code, even when calling $(CODE extern(C++)) functions,
     will still follow D overloading rules.
     )
 
@@ -810,17 +810,17 @@ $(H2 $(LNAME2 data-type-compatibility, Data Type Compatibility))
     )
 
     $(TROW
-    $(ARGS $(CODE extern (C++)) $(B struct)),
+    $(ARGS $(CODE extern(C++)) $(B struct)),
     $(ARGS $(B struct) or $(B class))
     )
 
     $(TROW
-    $(ARGS $(CODE extern (C++)) $(B class)),
+    $(ARGS $(CODE extern(C++)) $(B class)),
     $(ARGS $(B struct) or $(B class))
     )
 
     $(TROW
-    $(ARGS $(CODE extern (C++)) $(B interface)),
+    $(ARGS $(CODE extern(C++)) $(B interface)),
     $(ARGS $(B struct) or $(B class) with no member fields)
     )
 
@@ -857,7 +857,7 @@ $(H2 $(LNAME2 data-type-compatibility, Data Type Compatibility))
 
     $(TROW
     $(ARGS $(I type)$(B [])),
-    $(ARGS no `extern (C++)` equivalent, $(RELATIVE_LINK2 dynamic-arrays, see below))
+    $(ARGS no `extern(C++)` equivalent, $(RELATIVE_LINK2 dynamic-arrays, see below))
     )
 
     $(TROW
@@ -881,11 +881,11 @@ $(H2 $(LNAME2 data-type-compatibility, Data Type Compatibility))
 
 $(H3 $(LNAME2 dynamic-arrays, Dynamic Arrays))
 
-    $(P These are not supported for `extern (C++)`. For `extern (C)`, they
+    $(P These are not supported for `extern(C++)`. For `extern(C)`, they
     are equivalent to a struct template. For example:)
 
 ---
-extern (C) const(char)[] slice;
+extern(C) const(char)[] slice;
 ---
 
     $(P `dmd -HC` generates the following C++ declaration:)
