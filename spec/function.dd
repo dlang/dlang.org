@@ -3414,30 +3414,31 @@ $(H3 $(LNAME2 anonymous, Anonymous Functions and Anonymous Delegates))
         $(P See $(GLINK2 expression, FunctionLiteral)s.
         )
 
-$(H2 $(LNAME2 main, $(D main()) Function))
+$(H2 $(LNAME2 main, The $(D main) Function))
 
-        $(P For console programs, $(D main()) serves as the entry point.
+        $(P For console programs, the $(D main) function serves as the entry point.
         It gets called after all the $(DDSUBLINK spec/module, staticorder, module initializers)
         are run, and after any $(DDLINK spec/unittest, Unit Tests, unittests) are run.
         After it returns, all the module destructors are run.
-        $(D main()) must be declared as follows:
+        The $(D main) function typically is declared as follows:
         )
 
-        $(GRAMMAR
-        $(GNAME MainFunction):
-            $(GLINK MainReturnDecl) $(D main$(LPAREN)$(RPAREN)) $(GLINK2 statement, MainFunctionBody)
-            $(GLINK MainReturnDecl) $(D main$(LPAREN)string[]) $(GLINK_LEX Identifier)$(D $(RPAREN)) $(GLINK2 statement, MainFunctionBody)
+$(INFORMATIVE_GRAMMAR
+$(GNAME MainFunction):
+    $(GLINK MainReturnDecl) $(D main) $(LPAREN) $(RPAREN) $(GLINK FunctionBody)
+    $(GLINK MainReturnDecl) $(D main) $(LPAREN) $(D string) $(D [) $(D ]) $(GLINK_LEX Identifier)$(OPT) $(RPAREN) $(GLINK FunctionBody)
 
-        $(GNAME MainReturnDecl):
-            $(D void)
-            $(D int)
-            $(GLINK2 type, noreturn)
-            $(RELATIVE_LINK2 auto-functions, $(D auto))
+$(GNAME MainReturnDecl):
+    $(D void)
+    $(D int)
+    $(GLINK2 type, noreturn)
+    $(RELATIVE_LINK2 auto-functions, $(D auto))
+    $(GLINK_LEX Identifier)
 
-        $(GNAME MainFunctionBody):
-            $(GLINK ShortenedFunctionBody)
-            $(GLINK SpecifiedFunctionBody)
-        )
+$(GNAME MainFunctionBody):
+    $(GLINK ShortenedFunctionBody)
+    $(GLINK SpecifiedFunctionBody)
+)
 
         $(UL
         $(LI If `main` returns `void`, the OS will receive a zero value on success.)
@@ -3447,35 +3448,36 @@ $(H2 $(LNAME2 main, $(D main()) Function))
         one of `void`, `int` and `noreturn`.)
         )
 
-        $(P If the $(D string[]) parameter is declared, the parameter will hold
-        arguments passed to the program by the OS. The first argument is typically
+        $(P If the parameter is declared, it will hold
+        arguments passed to the program by the OS. The index-0 element is typically
         the executable name, followed by any command-line arguments.)
 
         $(NOTE The runtime can remove any arguments prefixed `--DRT-`.)
 
-        $(NOTE The aforementioned return / parameter types may be annotated with $(D const),
-        $(D immutable). They may also be replaced by $(D enum)'s with matching base types.)
+        $(NOTE The aforementioned return / parameter types may be annotated with $(D const) or
+        $(D immutable), or carry $(GLINK ParameterAttributes).
+        They may also be replaced by $(D enum) types with matching base types.)
 
         $(P The main function must have D linkage.)
 
         $(P Attributes may be added as needed, e.g. `@safe`, `@nogc`, `nothrow`, etc.)
 
-    $(H3 $(LNAME2 betterc-main, $(D extern(C) main()) Function))
+$(H2 $(LNAME2 betterc-main, $(D extern(C)) $(D main) Function))
 
         $(P Programs may define an $(D extern(C) main) function as an alternative to the
         standard $(RELATIVE_LINK2 main, entry point). This form is required for
         $(DDLINK spec/betterc, Better C, $(B BetterC)) programs.)
 
-        $(P A C $(D main) function must be declared as follows:)
+        $(P A C $(D main) function is typically declared as follows:)
 
-        $(GRAMMAR
-        $(GNAME CMainFunction):
-            $(D extern (C)) $(GLINK MainReturnDecl) $(D main$(LPAREN)$(GLINK CmainParameters)$(OPT)$(RPAREN)) $(GLINK2 statement, BlockStatement)
+$(INFORMATIVE_GRAMMAR
+$(GNAME CMainFunction):
+    $(D extern) $(LPAREN) $(D C) $(RPAREN) $(GLINK MainReturnDecl) $(D main) $(LPAREN) $(GLINK CMainParameters)$(OPT) $(RPAREN) $(GLINK2 statement, BlockStatement)
 
-        $(GNAME CmainParameters):
-            $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
-            $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
-        )
+$(GNAME CMainParameters):
+    $(D int) $(GLINK_LEX Identifier)$(OPT) $(D ,) $(D char**) $(GLINK_LEX Identifier)$(OPT)
+    $(D int) $(GLINK_LEX Identifier)$(OPT) $(D ,) $(D char**) $(GLINK_LEX Identifier)$(OPT) $(D ,) $(D char**) $(GLINK_LEX Identifier)$(OPT)
+)
 
         $(P When defined, the first two parameters denote a C-style array (length + pointer)
         that holds the arguments passed to the program by the OS. The third parameter is a POSIX
