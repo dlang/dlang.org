@@ -226,7 +226,7 @@ $(ITEM q4, Why is printf in D?)
         is not part of D, it is part of C's standard
         runtime library which is accessible from D.
         D's standard runtime library has
-        $(REF writefln, std,stdio)
+        $(REF writef, std,stdio)
         which is as powerful as $(LINK2 http://www.digitalmars.com/rtl/stdio.html#printf, printf)
         but is much easier to use.
         )
@@ -388,8 +388,8 @@ void main()
 
 $(ITEM printf, How do I get printf() to work with strings?)
 
-        In C, the normal way to printf a string is to use the $(B %s)
-        format:
+        $(P In C, the normal way to printf a string is to use the $(D %s)
+        format:)
 
 $(CCODE
 char s[8];
@@ -397,34 +397,61 @@ strcpy(s, "foo");
 printf("string = '%s'\n", s);
 )
 
-        Attempting this in D, as in:
+        $(P Attempting this in D:)
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---------------------------------
+import core.stdc.stdio;
 string s;
 s = "foo";
-printf("string = '%s'\n", s);
+printf("string = '%s'\n", s); // Error
 ---------------------------------
+)
+        $(P The call gets flagged at compile-time (see
+        $(DDSUBLINK spec/pragma, printf, `pragma(printf)`))
+        because in general, `string` is not compatible with the `%s` specifier.
+        This prevents garbage being printed, or an access violation.)
 
-        usually results in garbage being printed, or an access violation.
-        The cause is that in C, strings are terminated by a 0 character.
-        The $(B %s) format prints until a 0 is encountered.
-        In D, strings are not 0 terminated, the size is determined
+        $(P In D, a string is an array, so it has a length and a pointer.
+        In C, a string is a pointer to memory terminated by a 0 character.
+        The $(D %s) format prints until a 0 is encountered.
+        In D, strings in general are not 0-terminated, the size is determined
         by a separate length value. So, strings are printf'd using the
-        $(B %.*s) format:
+        $(D %.*s) format:)
 
+$(RUNNABLE_EXAMPLE
 ---------------------------------
+import core.stdc.stdio;
 string s;
 s = "foo";
-printf("string = '%.*s'\n", s);
+printf("string = '%.*s'\n", cast(int) s.length, s.ptr);
 ---------------------------------
+)
+        $(P which will behave as expected, for that input data.
+        There are pitfalls:)
+        * printf's $(D %.*s) will print until the length
+          is reached or a 0 is encountered, so D strings with embedded 0's
+          will only print up to the first 0.
+        * printf's length argument is an int, so ensure `s.length <= int.max`.
 
-        $(P which will behave as expected.
-        Remember, though, that printf's $(B %.*s) will print until the length
-        is reached or a 0 is encountered, so D strings with embedded 0's
-        will only print up to the first 0.
+        $(P D string literals are actually 0-terminated, so `%s` can be used
+        with the `.ptr` property and printf will work for those.
+        However, non-literal strings often are not 0-terminated:)
+
+        $(RUNNABLE_EXAMPLE
+        ---
+        import core.stdc.stdio;
+        printf("string = '%s'\n", "bar".ptr); // OK, 0-terminated
+
+        string s = "food";
+        s = s[0..3]; // foo, not 0-terminated
+        printf("string = '%.*s'\n", cast(int) s.length, s.ptr);
+
+        s ~= "ie"; // s is still not 0-terminated
+        ---
         )
 
-        $(P Of course, the easier solution is just use $(REF writefln, std, stdio)
+        $(P Of course, the easier solution is just to use $(REF writef, std, stdio)
         which works correctly with D strings.
         )
 
