@@ -287,7 +287,7 @@ auto genGrammar(string fileText)
     {
         foreach (i, entry; specTocEntries)
         {
-            if (entry.fileName.endsWith("grammar.dd", "lex.dd", "simd.dd"))
+            if (entry.fileName.endsWith("grammar.dd", "lex.dd", "istring.dd", "simd.dd"))
                 continue;
 
             enum grammarKey = "$(GRAMMAR";
