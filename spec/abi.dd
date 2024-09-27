@@ -995,6 +995,47 @@ $(H2 $(LNAME2 ModuleInfo, ModuleInfo Instance))
         Similarly, $(DDLINK spec/importc, ImportC, ImportC) modules do not generate a `ModuleInfo`.
         )
 
+        $(P An example of how suppressing the generation of `ModuleInfo` ensures `-betterC` modules shall work without the D runtime library can be seen here:
+        )
+
+        lib.d
+        ---
+        module lib;
+
+        int initializeMe;
+
+        static this() {
+                initializeMe = 5;
+        }
+
+        int func() {
+                return initializeMe;
+        }
+        ---
+
+        $(P Thanks to the above rule about `ModuleInfo` generation, this library, compiled with `-betterC`, will work both with and without the D runtime.)
+
+        app.d
+        ---
+        module app;
+        import lib;
+        version(D_BetterC) {
+                extern(C)
+                int main() {
+                        assert(lib.func() == 5); // proof that the module works without D Runtime with no bugs
+                        return 0;
+                }
+        }
+        else {
+                // building this will prove that betterC modules are 100% compatible with standard D code too
+                void main() {
+                        lib.func();
+                }
+        }
+        ---
+
+        $(P Compile with `dmd -c -betterC lib.d ; dmd app.d lib.o` and separately with `dmd app.d lib.d -betterC` to see the smashing success of this 100% correct spec and flawlessly logical, very well-reasoned rationale.)
+
 $(H3 $(LNAME2 module_init_and_fina, Module Initialization and Termination))
 
         $(P All the static constructors for a module are aggregated into a
