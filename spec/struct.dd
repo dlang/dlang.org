@@ -59,12 +59,19 @@ void main()
 ---
 )
 
-    $(P For local variables, a struct instance is allocated on the stack
-    by default. To allocate on the heap, use `new`:)
+    $(P For local variables, a struct/union instance is allocated on the stack
+    by default. To allocate on the heap, use $(DDSUBLINK spec/expression, new_expressions,
+    `new`), which gives a pointer.)
+
+    $(PANEL
+    A $(LNAME2 struct-pointer, pointer to a struct) or union is automatically
+    dereferenced when using the `.` operator to access members.
     ---
     S* p = new S;
-    assert(p.i == 0);
+    assert(p.i == 0); // `p.i` is the same as `(*p).i`
     ---
+    $(NOTE There is no `->` operator as in C.)
+    )
 
     $(P A struct can contain multiple fields which are stored sequentially.
     Conversely, multiple fields in a union use overlapping storage.)
@@ -105,7 +112,7 @@ $(H3 $(LNAME2 struct-members, Struct Members))
             $(LI $(RELATIVE_LINK2 Invariant, Invariants))
             $(LI $(DDLINK spec/operatoroverloading, Operator Overloading, Operator Overloading))
         )
-        $(LI $(DDSUBLINK spec/class, alias-this, Alias This))
+        $(LI $(RELATIVE_LINK2 alias-this, Alias This))
         $(LI Other declarations (see $(GLINK2 module, DeclDef)))
         )
     )
@@ -133,7 +140,7 @@ $(H3 $(LNAME2 union-members, Union Members))
             $(LI $(RELATIVE_LINK2 UnionConstructor, Constructors))
             $(LI $(DDLINK spec/operatoroverloading, Operator Overloading, Operator Overloading))
         )
-        $(LI $(DDSUBLINK spec/class, alias-this, Alias This))
+        $(LI $(RELATIVE_LINK2 alias-this, Alias This))
         $(LI Other declarations (see $(GLINK2 module, DeclDef)))
         )
     )
@@ -211,7 +218,7 @@ $(H2 $(LNAME2 POD, Plain Old Data))
     $(P A struct or union is $(I Plain Old Data) (POD) if it meets the following criteria:)
 
     $(OL
-    $(LI it is not nested)
+    $(LI it is static, or not nested)
     $(LI it has no postblits, copy constructors, destructors, or assignment operators)
     $(LI it has no fields that are themselves non-POD)
     )
@@ -253,7 +260,7 @@ $(H3 $(LNAME2 default_struct_init, Default Initialization of Structs))
 
         $(P Struct fields are by default initialized to whatever the
         $(GLINK2 declaration, Initializer) for the field is, and if none is supplied, to
-        the default initializer for the field's type.
+        the $(DDSUBLINK spec/property, init, default initializer) for the field's type.
         )
 
         $(SPEC_RUNNABLE_EXAMPLE_COMPILE
@@ -281,19 +288,22 @@ $(GNAME StructMemberInitializer):
     $(GLINK_LEX Identifier) $(D :) $(GLINK2 declaration, NonVoidInitializer)
 )
 
-        $(P If a $(I StructInitializer) is supplied, the
-        fields are initialized by the $(I StructMemberInitializer) syntax.
-        $(I StructMemberInitializers) with the $(I Identifier : NonVoidInitializer) syntax
-        may be appear in any order, where $(I Identifier) is the field identifier.
-        $(I StructMemberInitializer)s with the $(GLINK2 declaration, NonVoidInitializer) syntax
-        appear in the lexical order of the fields in the $(GLINK StructDeclaration).
-        )
+        $(P If a $(I StructInitializer) is supplied,
+        each $(I StructMemberInitializer) initializes a matching field:)
 
-        $(P Fields not specified in the $(I StructInitializer) are default initialized.)
+        * A $(I StructMemberInitializer) using the $(I Identifier : NonVoidInitializer) syntax
+          may appear in any order. The identifier must match a field name.
+        * If the first $(I StructMemberInitializer) does not specify an *Identifier*,
+          it refers to the first field in the $(GLINK StructDeclaration).
+        * A subsequent *NonVoidInitializer* without an *Identifier* refers to the next field
+          (in lexical order) after the one referred to in the previous *StructMemberInitializer*.
+
+        $(P Any field not covered by a $(I StructMemberInitializer) is default initialized.)
 
         $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
         struct S { int a, b, c, d = 7; }
+
         S r;                          // r.a = 0, r.b = 0, r.c = 0, r.d = 7
         S s = { a:1, b:2 };           // s.a = 1, s.b = 2, s.c = 0, s.d = 7
         S t = { c:4, b:5, a:2, d:5 }; // t.a = 2, t.b = 5, t.c = 4, t.d = 5
@@ -342,8 +352,10 @@ $(H3 $(LNAME2 default_union_init, Default Initialization of Unions))
 
 $(H3 $(LNAME2 static_union_init, Static Initialization of Unions))
 
-        $(P Unions are initialized similarly to structs, except that only
-        one member initializer is allowed.)
+        $(P Unions are initialized
+        $(RELATIVE_LINK2 static_struct_init, similarly to structs), except that only
+        one member initializer is allowed. If the member initializer does not specify
+        an identifier, it will initialize the first member of the union.)
 
         $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
@@ -464,40 +476,67 @@ void test(int i)
 $(H2 $(LEGACY_LNAME2 StructLiteral, struct-literal, Struct Literals))
 
         $(P A struct literal consists of the name of the struct followed
-        by a parenthesized argument list:)
+        by a parenthesized named argument list:)
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         ---
         struct S { int x; float y; }
 
-        int foo(S s) { return s.x; }
-
-        foo( S(1, 2) ); // set field x to 1, field y to 2
+        S s1 = S(1, 2); // set field x to 1, field y to 2
+        S s2 = S(y: 2, x: 1); // same as above
+        assert(s1 == s2);
         ---
         )
 
-        $(P Struct literals are syntactically like function calls.
-        If a struct has a member function named $(CODE opCall), then
+        $(P
+        If a struct has a $(RELATIVE_LINK2 struct-constructor, constructor)
+        or a member function named `opCall`, then
         struct literals for that struct are not possible. See also
         $(DDSUBLINK spec/operatoroverloading, FunctionCall, opCall operator overloading)
         for the issue workaround.)
+
+        $(P Struct literals are syntactically like function calls.)
+
+        $(PANEL
+        Arguments are assigned to fields as follows:
+
+          1. If the first argument has no name, it will be assigned to the struct field that is defined first lexically.
+          1. A named argument is assigned to the struct field with the same name.
+             It is an error if no such field exists.
+          1. Any other argument is assigned to the next lexically defined struct field relative to the preceding argument's struct field.
+             It is an error if no such field exists, i.e. when the preceding argument assigns to the last struct field.
+          1. It is also an error to assign a field more than once.
+          1. Any fields not assigned a value are initialized with their respective default initializers.
+
+        **Note:**
+            These rules are consistent with function calls, see $(DDSUBLINK spec/function, argument-parameter-matching, Matching Arguments to Parameters).
+        )
         $(P
-        It is an error if there are more arguments than fields of
-        the struct.
-        If there are fewer arguments than fields, the remaining
-        fields are initialized with their respective default
-        initializers.)
-        $(P
-        If there is a union field in the struct, only the first
+        If there is a union field in the struct, only one
         member of the union can be initialized inside a
         struct literal. This matches the behaviour for union literals.
         )
 
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
+        ---
+        struct S { int x = 1, y = 2, z = 3; }
+
+        S s0 = S(y: 5, 6, x: 4); // `6` is assigned to field `z`, which comes after `y`
+        assert(s0.z == 6);
+
+        S s1 = S(y: 5, z: 6);    // Field x is not assigned, set to default initializer `1`
+        assert(s1.x == 1);
+
+        //S s2 = S(y: 5, x: 4, 5); // Error: field `y` is assigned twice
+        //S s3 = S(z: 2, 3);       // Error: no field beyond `z`
+        ---
+        )
+
 $(H2 $(LNAME2 union-literal, Union Literals))
 
-    $(P A union literal is like a struct literal, but only the first field can
-    be initialized with an initializer expression. Any field larger than the
-    first will have the remainder of its memory initialized to zero.
+    $(P A union literal is like a struct literal, but only one field can
+    be initialized with an initializer expression.
+    The remainder of the union's memory is initialized to zero.
     )
 
 $(SPEC_RUNNABLE_EXAMPLE_RUN
@@ -567,21 +606,14 @@ assert(u.c == false); // no overlap
 ---
 )
 
-$(H2 $(LNAME2 struct_properties, Struct Properties))
+$(H2 $(LEGACY_LNAME2 struct_instance_properties, struct_properties, Struct Properties))
 
-$(TABLE2 Struct Properties,
+$(TABLE
 $(THEAD Name, Description)
-$(TROW $(D .sizeof), Size in bytes of struct)
 $(TROW $(D .alignof), Size boundary struct needs to be aligned on)
-)
-
-$(H3 $(LNAME2 struct_instance_properties, Struct Instance Properties))
-
-$(TABLE2 Struct Instance Properties,
-$(THEAD Name, Description)
-$(TROW $(D .tupleof), An $(DDSUBLINK spec/template, homogeneous_sequences, lvalue sequence)
+$(TROW $(D .tupleof), A $(DDSUBLINK spec/template, variadic-templates, symbol sequence)
     of all struct fields - see
-    $(DDSUBLINK spec/class, class_properties, Class Properties) for a class-based example.)
+    $(DDSUBLINK spec/class, tupleof, class `.tupleof`) for more details.)
 )
 
 $(H3 $(LNAME2 struct_field_properties, Struct Field Properties))
@@ -654,6 +686,21 @@ $(H2 $(LEGACY_LNAME2 Struct-Constructor, struct-constructor, Struct Constructors
             S b = S();  // default initialized:    b.x = 0, b.y = 4, b.z = 6
             S c = S(1); // error, matching this(int) not found
         }
+        ---
+        )
+
+        $(P Named arguments will be forwarded to the constructor and match parameter names, not struct field names.)
+
+        $(SPEC_RUNNABLE_EXAMPLE_FAIL
+        ---
+        struct S
+        {
+            int x;
+            int y;
+            this(int y, int z) { this.x = y; this.y = z; }
+        }
+        S a = S(x: 3, y: 4); // Error: constructor has no parameter named `x`
+        S b = S(y: 3, 4); // `y: 3` will set field `x` through parameter `y`
         ---
         )
 
@@ -816,6 +863,7 @@ $(H3 $(LNAME2 constructor-attributes, Constructor Attributes))
         )
 
         $(P Constructors can be overloaded with different attributes.)
+
         $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
         struct S
@@ -825,9 +873,12 @@ $(H3 $(LNAME2 constructor-attributes, Constructor Attributes))
             this(int) immutable; // immutable constructor
         }
 
-        S m = S(1);
-        shared s = shared S(2);
-        immutable i = immutable S(3);
+        void fun()
+        {
+            S m = S(1);
+            shared s = shared S(2);
+            immutable i = immutable S(3);
+        }
         ---
         )
 
@@ -853,9 +904,12 @@ $(H4 $(LNAME2 pure-constructors, Pure Constructors))
             // Therefore the created object is unique.
         }
 
-        immutable i = immutable S(1); // this(int) pure is called
-        shared s = shared S(1);       // this(int) pure is called
-        S m = S([1,2,3]);             // this(int[]) immutable pure is called
+        void fun()
+        {
+            immutable i = immutable S(1); // this(int) pure is called
+            shared s = shared S(1);       // this(int) pure is called
+            S m = S([1,2,3]);             // this(int[]) immutable pure is called
+        }
         ---
         )
 
@@ -1055,10 +1109,11 @@ $(H3 $(LNAME2 field-init, Field initialization inside a constructor))
         ---
         )
 
-$(H3 $(LEGACY_LNAME2 StructCopyConstructor, struct-copy-constructor, Struct Copy Constructors))
+$(H2 $(LEGACY_LNAME2 StructCopyConstructor, struct-copy-constructor, Struct Copy Constructors))
 
     $(P Copy constructors are used to initialize a `struct` instance from
-    another `struct` of the same type.)
+    another instance of the same type. A `struct` that defines a copy constructor
+    is not $(RELATIVE_LINK2 POD, POD).)
 
     $(P A constructor declaration is a copy constructor declaration if it meets
     the following requirements:)
@@ -1094,20 +1149,31 @@ $(H3 $(LEGACY_LNAME2 StructCopyConstructor, struct-copy-constructor, Struct Copy
 
     $(OL
     $(LI When a variable is explicitly initialized:)
+
+    $(SPEC_RUNNABLE_EXAMPLE_RUN
     ---
     struct A
     {
-        this(ref return scope A rhs) {}
+        int[] arr;
+        this(ref return scope A rhs) { arr = rhs.arr.dup; }
     }
 
     void main()
     {
         A a;
+        a.arr = [1, 2];
+
         A b = a; // copy constructor gets called
+        b.arr[] += 1;
+        assert(a.arr == [1, 2]); // a is unchanged
+        assert(b.arr == [2, 3]);
     }
     ---
+    )
 
     $(LI When a parameter is passed by value to a function:)
+
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
     struct A
     {
@@ -1122,9 +1188,12 @@ $(H3 $(LEGACY_LNAME2 StructCopyConstructor, struct-copy-constructor, Struct Copy
         fun(a);    // copy constructor gets called
     }
     ---
+    )
 
-    $(LI When a parameter is returned by value from a function and Named Returned Value Optiomization (NRVO)
+    $(LI When a parameter is returned by value from a function and Named Returned Value Optimization (NRVO)
     cannot be performed:)
+
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
     struct A
     {
@@ -1150,11 +1219,15 @@ $(H3 $(LEGACY_LNAME2 StructCopyConstructor, struct-copy-constructor, Struct Copy
     }
     ---
     )
+    )
 
-    $(LNAME2 disable-copy)
+$(H3 $(LNAME2 disable-copy, Disabled Copying))
+
     $(P When a copy constructor is defined for a `struct` (or marked `@disable`), the compiler no
     longer implicitly generates default copy/blitting constructors for that `struct`:
     )
+
+    $(SPEC_RUNNABLE_EXAMPLE_FAIL
     ---
     struct A
     {
@@ -1170,7 +1243,9 @@ $(H3 $(LEGACY_LNAME2 StructCopyConstructor, struct-copy-constructor, Struct Copy
         fun(a);        // error: copy constructor cannot be called with types (immutable) immutable
     }
     ---
+    )
 
+    $(SPEC_RUNNABLE_EXAMPLE_FAIL
     ---
     struct A
     {
@@ -1183,19 +1258,40 @@ $(H3 $(LEGACY_LNAME2 StructCopyConstructor, struct-copy-constructor, Struct Copy
         A b = a; // error: copy constructor is disabled
     }
     ---
+    )
 
-    $(P If a `union S` has fields that define a copy constructor, whenever an object of type `S`
+    $(P If a `union U` has fields that define a copy constructor, whenever an object of type `U`
     is initialized by copy, an error will be issued. The same rule applies to overlapped fields
     (anonymous unions).)
 
-    $(P A `struct` that defines a copy constructor is not $(RELATIVE_LINK2 POD, POD).)
+    $(SPEC_RUNNABLE_EXAMPLE_FAIL
+    ---
+    struct S
+    {
+        this(ref S);
+    }
 
-$(H4 $(LNAME2 copy-constructor-attributes, Copy Constructor Attributes))
+    union U
+    {
+        S s;
+    }
+
+    void main()
+    {
+        U a;
+        U b = a; // error, could not generate copy constructor for U
+    }
+    ---
+    )
+
+$(H3 $(LNAME2 copy-constructor-attributes, Copy Constructor Attributes))
 
     $(P The copy constructor can be overloaded with different qualifiers applied
     to the parameter (copying from a qualified source) or to the copy constructor
     itself (copying to a qualified destination):
     )
+
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
     struct A
     {
@@ -1216,10 +1312,13 @@ $(H4 $(LNAME2 copy-constructor-attributes, Copy Constructor Attributes))
         immutable A a5 = ia;    // calls 4
     }
     ---
+    )
 
     $(P The `inout` qualifier may be applied to the copy constructor parameter in
     order to specify that mutable, `const`, or `immutable` types are treated the same:
     )
+
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
     struct A
     {
@@ -1238,8 +1337,9 @@ $(H4 $(LNAME2 copy-constructor-attributes, Copy Constructor Attributes))
         immutable(A) c = r3;
     }
     ---
+    )
 
-$(H4 $(LNAME2 implicit-copy-constructors, Implicit Copy Constructors))
+$(H3 $(LNAME2 implicit-copy-constructors, Implicit Copy Constructors))
 
     $(P A copy constructor is generated implicitly by the compiler for a `struct S`
     if all of the following conditions are met:)
@@ -1251,6 +1351,7 @@ $(H4 $(LNAME2 implicit-copy-constructors, Implicit Copy Constructors))
     )
 
     $(P If the restrictions above are met, the following copy constructor is generated:)
+
     ---
     this(ref return scope inout(S) src) inout
     {
@@ -1266,11 +1367,10 @@ $(H2 $(LEGACY_LNAME2 StructPostblit, struct-postblit, Struct Postblits))
 
 $(GRAMMAR
 $(GNAME Postblit):
-    $(D this $(LPAREN) this $(RPAREN)) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(D ;)
     $(D this $(LPAREN) this $(RPAREN)) $(GLINK2 function, MemberFunctionAttributes)$(OPT) $(GLINK2 function, FunctionBody)
 )
 
-    $(P WARNING: The postblit is considered legacy and is not recommended for new code.
+    $(P $(RED Warning): The postblit is considered legacy and is not recommended for new code.
     Code should use $(RELATIVE_LINK2 struct-copy-constructor, copy constructors)
     defined in the previous section. For backward compatibility reasons, a `struct` that
     explicitly defines both a copy constructor and a postblit will only use the postblit
@@ -1280,7 +1380,7 @@ $(GNAME Postblit):
     will have priority over the copy constructor.)
 
         $(P $(I Copy construction) is defined as initializing
-         a struct instance from another struct of the same type.
+         a struct instance from another instance of the same type.
          Copy construction is divided into two parts:)
 
         $(OL
@@ -1298,7 +1398,7 @@ $(GNAME Postblit):
         etc. For example:
         )
 
-        $(SPEC_RUNNABLE_EXAMPLE_RUN
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
         struct S
         {
@@ -1716,16 +1816,85 @@ void main()
 
 $(H2 $(LEGACY_LNAME2 StructDestructor, struct-destructor, Struct Destructors))
 
-        $(P Destructors are called when an object goes out of scope.
+        $(P Destructors are called implicitly when an object goes out of scope, or
+        $(RELATIVE_LINK2 assign-overload, before an assignment) (by default).
         Their purpose is to free up resources owned by the struct
         object.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+struct S
+{
+    int i;
+
+    ~this()
+    {
+        import std.stdio;
+        writeln("S(", i, ") is being destructed");
+    }
+}
+
+void main()
+{
+    auto s1 = S(1);
+    {
+        auto s2 = S(2);
+        // s2 destructor called
+    }
+    S(3); // s3 destructor called
+    // s1 destructor called
+}
+---
+)
+        $(P If the struct has a field of another struct type which itself has a destructor,
+        that destructor will be called at the end of the parent destructor. If there is no
+        parent destructor, the compiler will generate one. Similarly, a
+        static array of a struct type with a destructor will have the destructor
+        called for each element when the array goes out of scope.)
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+struct S
+{
+    char c;
+
+    ~this()
+    {
+        import std.stdio;
+        writeln("S(", c, ") is being destructed");
+    }
+}
+
+struct Q
+{
+    S a;
+    S b;
+}
+
+void main()
+{
+    Q q = Q(S('a'), S('b'));
+    S[2] arr = [S('0'), S('1')];
+    // destructor called for arr[1], arr[0], q.b, q.a
+}
+---
+)
+
+        $(P A destructor for a struct instance can also be called early using
+        $(REF1 destroy, object). Note that the destructor will still
+        be called again when the instance goes out of scope.)
+
+        $(P Struct destructors are used for $(DDSUBLINK spec/glossary, raii, RAII).)
+
+
+$(H2 $(LNAME2 union-field-destruction, Union Field Destruction))
+
         $(P Unions may have fields that have destructors. However, a union itself never has
-        a destructor. When a union goes out of scope, destructors for its fields are not called.
+        a destructor. When a union goes out of scope, destructors for its fields *are not called*.
         If those calls are desired, they must be inserted explicitly by the programmer:)
 
-$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---
 struct S
 {
@@ -1952,6 +2121,184 @@ $(H2 $(LEGACY_LNAME2 AssignOverload, assign-overload, Identity Assignment Overlo
         will reuse the existing storage.
         )
 
+$(H2 $(LEGACY_LNAME2 AliasThis, alias-this, Alias This))
+
+$(GRAMMAR
+$(GNAME AliasThis):
+    $(D alias) $(GLINK_LEX Identifier) $(D this ;)
+    $(D alias) $(D this) $(D =) $(GLINK_LEX Identifier) $(D ;)
+)
+
+        $(P An $(I AliasThis) declaration names a member to subtype.
+        The $(I Identifier) names that member.
+        )
+
+        $(P A struct or union instance can be implicitly converted to the $(I AliasThis)
+        member.
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+struct S
+{
+    int x;
+    alias x this;
+}
+
+int foo(int i) { return i * 2; }
+
+void main()
+{
+    S s;
+    s.x = 7;
+    int i = -s;
+    assert(i == -7);
+    i = s + 8;
+    assert(i == 15);
+    i = s + s;
+    assert(i == 14);
+    i = 9 + s;
+    assert(i == 16);
+    i = foo(s);  // implicit conversion to int
+    assert(i == 14);
+}
+---
+)
+
+        $(P If the member is a class or struct, undefined lookups will
+        be forwarded to the $(I AliasThis) member.
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+class Foo
+{
+    int baz = 4;
+    int get() { return 7; }
+}
+
+struct Bar
+{
+    Foo foo;
+    alias foo this;
+}
+
+void main()
+{
+    Bar bar = Bar(new Foo());
+    int i = bar.baz;
+    assert(i == 4);
+    i = bar.get();
+    assert(i == 7);
+}
+---
+)
+
+        $(P If the $(I Identifier) refers to a property member
+        function with no parameters then conversions and undefined
+        lookups are forwarded to the return value of the function.
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+struct S
+{
+    int x;
+    @property int get()
+    {
+        return x * 2;
+    }
+    alias get this;
+}
+
+void main()
+{
+    S s;
+    s.x = 2;
+    int i = s;
+    assert(i == 4);
+}
+---
+)
+
+        $(P If a struct declaration defines an $(D opCmp) or $(D opEquals)
+        method, it will take precedence to that of the *AliasThis* member. Note
+        that, unlike an $(D opCmp) method, an $(D opEquals) method is implicitly
+        defined for a $(D struct) declaration if a user-defined one isn't provided.
+        This means that if the *AliasThis* member's $(D opEquals) should be used, it
+        must be explicitly defined:
+        )
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+struct S
+{
+    int a;
+    bool opEquals(S rhs) const
+    {
+        return this.a == rhs.a;
+    }
+}
+
+struct T
+{
+    int b;
+    S s;
+    alias s this;
+}
+
+void main()
+{
+    S s1, s2;
+    T t1, t2;
+
+    assert(s1 == s2);      // calls S.opEquals
+    assert(t1 == t2);      // calls compiler generated T.opEquals that implements member-wise equality
+
+    assert(s1 == t1);      // calls s1.opEquals(t1.s);
+    assert(t1 == s1);      // calls t1.s.opEquals(s1);
+}
+---
+)
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+struct U
+{
+    int a;
+    bool opCmp(U rhs) const
+    {
+        return this.a < rhs.a;
+    }
+}
+
+struct V
+{
+    int b;
+    U u;
+    alias u this;
+}
+
+void main()
+{
+    U u1, u2;
+    V v1, v2;
+
+    assert(!(u1 < u2));    // calls U.opCmp
+    assert(!(v1 < v2));    // calls U.opCmp because V does not define an opCmp method
+                           // so the alias this of v1 is employed; U.opCmp expects a
+                           // paramter of type U, so alias this of v2 is used
+
+    assert(!(u1 < v1));    // calls u1.opCmp(v1.u);
+    assert(!(v1 < u1));    // calls v1.u.opCmp(v1);
+}
+---
+)
+        $(P $(GLINK2 attribute, Attribute)s are ignored for $(D AliasThis).
+        )
+
+        $(P A struct/union may only have a single $(I AliasThis) member.)
+
+
+
 $(H2 $(LNAME2 nested, Nested Structs))
 
     $(P A struct is a $(I nested struct) if)
@@ -1983,7 +2330,7 @@ $(H2 $(LNAME2 nested, Nested Structs))
         ---
         )
 
-    $(P The static attribute will prevent a struct from being nested. As such,
+    $(P The `static` attribute will prevent a struct from being nested. As such,
         the struct will not have access to its enclosing scope.)
 
         $(SPEC_RUNNABLE_EXAMPLE_FAIL
@@ -2003,6 +2350,10 @@ $(H2 $(LNAME2 nested, Nested Structs))
         ---
         )
 
+    $(P $(B Warning): For nested structs, $(DDSUBLINK spec/property, init-vs-construction,
+        `.init` is not the same as default construction).)
+
+
 $(H2 $(LNAME2 unions_and_special_memb_funct, Unions and Special Member Functions))
 
     $(P Unions may not have postblits, destructors, or invariants.)
@@ -2011,7 +2362,7 @@ $(SPEC_SUBNAV_PREV_NEXT hash-map, Associative Arrays, class, Classes)
 )
 
 Macros:
-        CHAPTER=14
+        CHAPTER=15
         TITLE=Structs, Unions
         UNCHECK=
         CHECK=$(CHECKMARK)

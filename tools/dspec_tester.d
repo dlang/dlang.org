@@ -96,7 +96,6 @@ int main(string[] args)
     const rootDir = __FILE_FULL_PATH__.dirName.dirName;
     const specDir = rootDir.buildPath("spec");
     const stdDir = rootDir.buildPath("..", "phobos", "std");
-    bool hasFailed;
 
     config.dmdBinPath = environment.get("DMD", "dmd");
     auto helpInformation = getopt(
@@ -113,12 +112,6 @@ int main(string[] args)
         return 1;
     }
 
-    // Find all examples in the specification
-    alias findExamples = (file, ddocKey) => file
-            .readText
-            .findDdocMacro(ddocKey)
-            .map!ddocMacroToCode;
-
     alias SpecType = Tuple!(string, "key", CompileConfig.TestMode, "mode");
     auto specTypes = [
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_COMPILE", CompileConfig.TestMode.compile),
@@ -128,6 +121,7 @@ int main(string[] args)
     ];
     auto files = chain(specDir.dirEntries("*.dd", SpanMode.depth),
         stdDir.dirEntries("*.d", SpanMode.depth));
+    shared bool hasFailed;
     foreach (file; files.parallel(1))
     {
         // auto-import current module if in phobos
@@ -139,14 +133,20 @@ int main(string[] args)
             modImport = modImport.findSplitBefore(dirSeparator ~ "package")[0];
             modImport = modImport.replace(dirSeparator, ".");
         }
-        auto allTests = specTypes.map!(c => findExamples(file, c.key)
+        const text = file.readText;
+        // Find all examples in the specification
+        alias findExamples = (ddocKey) => text
+            .findDdocMacro(ddocKey)
+            .map!ddocMacroToCode;
+        auto allTests = specTypes.map!(c => findExamples(c.key)
             .map!(e => compileAndCheck(e, CompileConfig(c.mode), modImport)))
             .joiner;
         if (!allTests.empty)
         {
+            import core.atomic;
             writefln("%s: %d examples found", file[rootDir.length+1..$], allTests.walkLength);
             if (allTests.any!(a => a != 0))
-                hasFailed = true;
+                atomicStore(hasFailed, true);
         }
     }
     return hasFailed;
@@ -197,13 +197,14 @@ auto compileAndCheck(R)(R buffer, CompileConfig config, string modImport)
     static mainRegex = regex(`(void|int)\s+main`);
     const hasMain = !buffer.matchFirst(mainRegex).empty;
 
-    // if it's not a standalone
+    // don't change standalone module
     if (!buffer.find!(a => !a.isWhite).startsWith("module"))
     {
-        buffer = "import std.stdio;\n" ~ buffer; // used too often
+        if (config.mode == CompileConfig.TestMode.run)
+            buffer = "import std.stdio;\n" ~ buffer; // used too often
         if (modImport.length)
             buffer = "import " ~ modImport ~ ";" ~ buffer;
-        if (!hasMain)
+        if (!hasMain && config.mode == CompileConfig.TestMode.run)
             buffer = "void main() {\n" ~ buffer ~ "\n}";
     }
     pipes.stdin.write(buffer);

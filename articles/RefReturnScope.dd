@@ -1,0 +1,207 @@
+Ddoc
+
+$(D_S $(TITLE),
+
+$(P A wild pointer is a pointer that escapes its corral, or in other words,
+escapes its scope. A pointer within its scope is valid, and outside
+its scope is not valid. Attempting to read or write using an out-of-scope pointer
+will produce undefined behavior. Undefined behavior can lead to crashes, corruption,
+malware, and other costly problems. D uses `ref`, `return` and `scope` keywords to
+prevent pointer escapes.)
+
+
+$(H3 What is a Scope?)
+
+$(P The scope of a declaration is closely related to its lifetime.
+Thread local variables have a lifetime that's the life of the thread they are
+in. Global variables have a lifetime from the program start to its finish.
+A local variable has a lifetime from its initialization to its closing curly brace.)
+
+$(P Note on examples: `@safe` annotation is assumed)
+
+---
+int x; // thread local lifetime
+__gshared int y; // global lifetime
+
+void mars(int i /* lifetime of i is from function call to function return */)
+{
+    { // open new scope
+      int* q = &i;  // lifetime starts after q is set to the address of i
+      *q = 3;       // sets i to 3
+    }               // q's lifetime ends with the end of the scope
+    *q = 4;         // oops, can't use q here
+    int* p = &i;    // lifetime starts after p is set to the address of i
+    *p = 5;         // sets i to 5
+} // lifetimes of i and p end when function returns
+---
+
+
+$(H3 What is an Escaping Pointer?)
+
+$(P A pointer escapes when its value becomes available outside the scope of the pointer.
+An example of an escaping pointer:)
+
+---
+int* escape()
+{
+    int i;
+    int* p = &i; // create pointer to local variable
+    return p;    // return pointer to a local variable that is no longer live
+}
+
+void crash()
+{
+    int* q = escape();
+    *q = 5;  // unleash the Hounds of Hell
+}
+---
+
+$(P Pointer escapes can occur in many, often not-so-obvious, cases. The compiler is
+the perfect tool to detect all the cases and report them as errors. Even if a
+particular pointer escape is benign, if a function interface makes clear that
+a function arguments cannot escape, it improves user understanding of the function.)
+
+
+$(H3 The Role of `scope`)
+
+$(P `scope` is a storage class. When it is applied to a pointer variable, then the pointer's
+value is mechanically (i.e. enforced by the compiler) prevented from outlasting the scope
+of the pointer variable. The previous example is modified with the addition of `scope`:)
+
+---
+int* escape()
+{
+    int i;
+    scope int* p = &i; // p is a scoped pointer
+    return p;    // error: scoped pointer p is escaping
+}
+---
+
+The compiler, for this case, helpfully goes one better:
+
+---
+int* escape()
+{
+    int i;
+    int* p = &i; // p is inferred to be a scoped pointer
+    return p;    // error: scoped pointer p is escaping
+}
+---
+
+$(P I.e. if a pointer variable is set to be the address of a local variable, or to the contents of
+scope pointer, then that pointer variable is automatically set to be a scope pointer.
+The compiler is pretty good at inferring scope, thus relieving the programmer of adding
+a lot of annotations.)
+
+$(P Note that as `scope` is a storage class, not a type constructor, it is not possible to specify
+a scope pointer to a scope pointer. It surprisingly turns out to not be necessary to support that.)
+
+
+$(H3 The Role of `return scope`)
+
+$(P Consider the following:)
+
+---
+void f()
+{
+    int i;
+    *process(&i) = 4;
+}
+
+int* process(scope int* p) { return p; }
+---
+
+$(P This is perfectly legitimate code, there is no pointer escaping bug. But it won't compile.
+Without `scope` on the parameter `p`, the call to `process(&i)` would be disallowed.
+But with `scope` on `p`, the `return p;` is disallowed.)
+
+$(P The solution is adding a `return` annotation:)
+
+---
+int* process(return scope int* p) { return p; }
+---
+
+$(P which allows the scope pointer value to be returned by the function.)
+
+$(P If a function returns `void`, `return scope` also allows returning the scope value
+through the first parameter:)
+
+---
+void mun(ref int* v, return scope int* p)
+{
+    v = p; // ok
+}
+---
+
+$(P And that's it for pointers. Remember that pointer scoping is concerned with the value
+of the pointer variable.)
+
+
+$(H3 The Role of `ref`)
+
+$(P A `ref` is a reference to a value, a fancy way of representing a pointer to a value.
+It is distinguished from a pointer:)
+
+$(OL
+$(LI by not allowing arithmetic on the address)
+$(LI whenever the `ref` variable is used an automatic dereference is performed)
+$(LI a ref cannot escape from a function)
+)
+
+---
+ref int fin(ref int i)
+{
+    return i; // error, cannot return ref variable i by ref
+}
+---
+
+
+$(H3 The role of `return ref`)
+
+$(P But it will be allowed if `return` is applied:)
+
+---
+ref int fin(return ref int i)
+{
+    return i; // ok
+}
+---
+
+
+$(H3 The role of `ref scope`)
+
+$(P The storage classes `ref` and `scope` together are orthogonal, they do not affect each other.
+`ref` refers to the address of the variable, `scope` refers to the contents of the variable.)
+
+
+$(H3 The role of `return ref scope`)
+
+$(P The `return` here applies to the `ref`, not the `scope`.)
+
+$(P Let's try tricking the compiler:)
+
+---
+ref int* fin(return ref scope int* p) { return p; } // ok
+
+int* tricky()
+{
+    int i;
+    int* p = &i; // p is now inferred to be scope
+    auto q = fin(p);  // q now contains the address of i, and so scope is also inferred
+    return q;  // error: scope variable `q` may not be returned
+}
+---
+
+$(P Curses! Foiled again!)
+
+$(P The operational idea here is, while compiling `@safe` code, it is not be possible to escape
+a scoped value, no matter how twisty the code is.)
+
+)
+
+Macros:
+        TITLE=Coralling Wild Pointers With ref return scope
+        ITEMR=$(LI $(RELATIVE_LINK2 $1, $+))
+        ITEM=<hr>$(H3 <a name="$1">$+</a>)
+        SUBNAV=$(SUBNAV_ARTICLES)
+

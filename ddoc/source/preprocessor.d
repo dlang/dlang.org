@@ -9,7 +9,7 @@ License:   $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
 Example usage:
 
 ---
-./ddoc --compiler=<path-to-dmd> --output=out.html myfile.dd
+./ddoc --compiler=<path-to-dmd> <source-file> <arguments-to-dmd>
 ---
 
 Author: Sebastian Wilzbach
@@ -23,7 +23,6 @@ import dmd.cli;
 struct Config
 {
     string dmdBinPath = "dmd";
-    string outputFile;
     string cwd = __FILE_FULL_PATH__.dirName.dirName.dirName;
 }
 Config config;
@@ -40,9 +39,10 @@ int main(string[] rootArgs)
     );
     if (helpInformation.helpWanted)
     {
-`DDoc wrapper
+`A wrapper around DDoc to allow custom extensions
+./ddoc --compiler=<path-to-dmd> <source-file> <arguments-to-dmd>
+
 All unknown options are passed to the compiler.
-./ddoc <file>...
 `.defaultGetoptPrinter(helpInformation.options);
         return 1;
     }
@@ -287,7 +287,7 @@ auto genGrammar(string fileText)
     {
         foreach (i, entry; specTocEntries)
         {
-            if (entry.fileName.endsWith("grammar.dd", "lex.dd", "simd.dd"))
+            if (entry.fileName.endsWith("grammar.dd", "lex.dd", "istring.dd", "simd.dd"))
                 continue;
 
             enum grammarKey = "$(GRAMMAR";

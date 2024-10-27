@@ -234,19 +234,17 @@ void main()
 {
     import std.stdio, std.string, std.algorithm, std.conv;
 
-    // Reduce the RPN expression using a stack
-    readln.split.fold!((stack, op)
+    // arr is real[] and sym is the current symbol
+    readln.split.fold!((arr, sym)
     {
-        switch (op)
-        {
-            // Generate operator switch cases statically
-            static foreach (c; "+-*/")
-                case [c]:
-                    return stack[0 .. $ - 2] ~
-                        mixin("stack[$ - 2] " ~ c ~
-                            " stack[$ - 1]");
-            default: return stack ~ op.to!real;
-        }
+        static foreach (c; "+-*/")
+            if (sym == [c])
+                // replace the last 2 elements with the binary op
+                return arr[0 .. $-2] ~
+                    mixin("arr[$-2] " ~ c ~ " arr[$-1]");
+
+        // sym must be a number
+        return arr ~ sym.to!real;
     })((real[]).init).writeln;
 }
 ----
@@ -326,7 +324,7 @@ $(DIVC call_to_donate,
         $(BR)
         $(BR)
         Lots of $(WHY_D_ICON heart) to our $(LINK2 $(ROOT_DIR)foundation/sponsors.html, sponsors) and
-        $(LINK2 $(ROOT_DIR)foundation/contributors, contributors).
+        $(LINK2 $(ROOT_DIR)foundation/contributors.html, contributors).
     </p>
 )
 
@@ -364,10 +362,6 @@ $(DIVID news,
     $(DIVID forum-summary,
     <iframe src="https://forum.dlang.org/frame-announcements"></iframe>
     <iframe src="https://forum.dlang.org/frame-discussions"></iframe>
-    )
-    $(DIVID twitter,
-    <a class="twitter-timeline" data-height="420" href="https://twitter.com/D_Programming?ref_src=twsrc%5Etfw">Tweets by D_Programming</a>
-    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     )
 )
 

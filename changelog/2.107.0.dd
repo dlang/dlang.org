@@ -1,0 +1,470 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Feb 01, 2024, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 10 major changes and 61 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 37 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.assert-string,A string literal as an assert condition is deprecated))
+$(LI $(RELATIVE_LINK2 dmd.makefiles,Makefiles cleanup for the compiler))
+$(LI $(RELATIVE_LINK2 dmd.pragma,Unrecognized pragmas are no longer an error, but instead simply ignored))
+$(LI $(RELATIVE_LINK2 dmd.standalone-attribute,Added `@standalone` for module constructors))
+$(LI $(RELATIVE_LINK2 dmd.template-_d_newarratmT,`_d_newarray{mTX,miTX,OpT}` are converted to a single template: `_d_newarraymTX`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 druntime.coreatomic,Using an invalid MemoryOrder for `core.atomic` operations are now rejected at compile time))
+$(LI $(RELATIVE_LINK2 druntime.makefiles,Makefiles cleanup for druntime))
+$(LI $(RELATIVE_LINK2 druntime.stdatomic,New addition of the C stdatomic header implemented in D))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 is_forward_range_element,isForwardRange now takes an optional element type.))
+$(LI $(RELATIVE_LINK2 makefiles,Makefiles cleanup))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.assert-string,A string literal as an assert condition is deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.assert-string.dd)
+$(P
+Boolean evaluation of a string literal could happen unintentionally
+e.g. when an `assert(0, "message")` was meant and the `0` was missing.
+)
+
+```d
+assert("unexpected runtime condition");
+static assert("unhandled case for `", T, "`");
+```
+
+$(P
+The 2 asserts would silently always have no effect.
+Now these cases will be detected with deprecation messages.
+If the original behaviour was actually intended, use `expr !is null` instead:
+)
+
+```d
+assert("" !is null);
+static assert("" !is null);
+```
+)
+
+$(LI $(LNAME2 dmd.makefiles,Makefiles cleanup for the compiler)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.makefiles.dd)
+$(P
+The Makefiles for building the compiler (`compiler/src/{posix,win32,win64}.mak`) have been deprecated for a while, and finally removed. Please use the `compiler/src/build.d` tool directly now (see [docs](https://github.com/dlang/dmd/tree/master/compiler/src#building-the-compiler)), or build compiler and druntime in one step via the top-level Makefile in the repo root, e.g., for an optimized build using an LDC host compiler: `make -jN HOST_DMD=ldmd2 ENABLE_RELEASE=1 ENABLE_LTO=1`
+)
+
+$(P
+The top-level Makefile has been renamed from `posix.mak` to `Makefile` (with a deprecated `posix.mak` forwarder). The semantics of some targets have slightly changed, e.g., druntime is included in the `test`, `install` and `clean` targets now.
+)
+
+$(P
+The legacy `src/posix.mak` file still exists, but forwards to the top-level Makefile. So e.g. the default `all` target now includes druntime too, not just the compiler.
+)
+
+$(P
+Top-level `win{32,64}.mak` and legacy `src/win{32,64}.mak` files (for DigitalMars make) have been removed altogether. The generic top-level `Makefile` works on Windows too - with a GNU make (and a git installation providing bash and GNU tools).
+)
+
+$(P
+Long-deprecated `compiler/test/Makefile` has also been removed; use `compiler/test/run.d` directly instead (see [docs](https://github.com/dlang/dmd/tree/master/compiler/test#quick-guide)).
+)
+)
+
+$(LI $(LNAME2 dmd.pragma,Unrecognized pragmas are no longer an error, but instead simply ignored)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.pragma.dd)
+$(P
+Previously, unrecognized pragmas would issue a hard error unless you used the `-ignore` dmd switch. Now, they are always ignored and the `-ignore` dmd switch is ignored.
+)
+)
+
+$(LI $(LNAME2 dmd.standalone-attribute,Added `@standalone` for module constructors)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.standalone-attribute.dd)
+$(P
+When two modules import each other and both have module constructors,
+druntime would throw an error because it can't determine which to run first.
+)
+
+$(P
+This could be circumvented by using `pragma(crt_constructor)` instead, but in C runtime constructors, druntime isn't initialized.
+Therefore the Garbage Collector can't be used in such constructors.
+)
+
+$(P
+`@standalone` is a new attribute that can be used to mark module constructors that run after druntime has been initialized,
+but do not depend on any other module constructors being run before it, so it will not cause a cyclic dependency error.
+It must be imported from `core.attribute`.
+)
+
+$(P
+The compiler doesn't verify that the module constructor truly doesn't depend on other variables being initialized, so it must be enforced manually.
+Because of this, they must be marked `@system` or `@trusted`.
+)
+
+---
+import core.attribute : standalone;
+
+immutable int* x;
+
+@standalone @system shared static this()
+{
+    x = new int(10);
+}
+
+void main()
+{
+    assert(*x == 10);
+}
+---
+
+$(P
+If possible, prefer to solve cyclic dependency errors by putting the offending module constructors into their own smaller modules instead of using `@standalone`.
+)
+)
+
+$(LI $(LNAME2 dmd.template-_d_newarratmT,`_d_newarray{mTX,miTX,OpT}` are converted to a single template: `_d_newarraymTX`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.template-_d_newarratmT.dd)
+$(P
+The template `_d_newarraymTX` now uses DBI to check what type of initialiser is required by the type of the elements in the array.
+Thus it replaces both `_d_newarraymTX` and `_d_newarraymiTX`.
+)
+
+$(P
+`_d_newarrayOpT` was the generic implementation of both of the above hooks.
+It first allocated the "outer" arrays as pointer arrays and then it called either `_d_newarrayT` or `_d_newarrayiT`, to allocate initialise the "inner" 1-dimensional arrays accordingly.
+Now this is no longer needed due to the merge between `_d_newarraymTX` and `_d_newarraymiTX`.
+)
+
+$(P
+Now the compiler performs the following lowering:
+)
+
+---
+S[][] s = new S[][](2, 3)
+
+// is now lowered to:
+S[] s = _d_newarraymTX!(S[][], S)([2, 3]);
+---
+
+$(P
+This change adds the new template to `core.internal.array.construction`.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 druntime.coreatomic,Using an invalid MemoryOrder for `core.atomic` operations are now rejected at compile time)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.coreatomic.dd)
+$(P
+The following `core.atomic` functions have become more restrictive:
+)
+
+$(P
+1. `atomicLoad` and `atomicStore` now reject being instantiated with the
+argument `MemoryOrder.acq_rel`. Previously `atomicLoad` and `atomicStore` only
+rejected `MemoryOrder.rel` and `MemoryOrder.acq` respectively.
+)
+
+$(P
+In most cases, code that previously used `MemoryOrder.acq_rel` should switch to
+use `MemoryOrder.seq` instead.
+)
+
+---
+// Error:
+atomicLoad!(MemoryOrder.acq_rel)(src);
+atomicStore!(MemoryOrder.acq_rel)(dest, value);
+
+// Corrective action:
+atomicLoad!(MemoryOrder.seq)(src);
+atomicStore!(MemoryOrder.seq)(dest, value);
+
+// Or:
+atomicLoad(src);
+atomicStore(dest, value);
+---
+
+$(P
+2. `atomicExchange` now rejects being instantiated with the argument
+`MemoryOrder.acq`.
+)
+
+$(P
+In most cases, code that previously used `MemoryOrder.acq` should switch to use
+`MemoryOrder.seq` instead.
+)
+
+---
+// Error:
+atomicExchange!(MemoryOrder.acq)(dest, value);
+
+// Corrective action:
+atomicExchange!(MemoryOrder.seq)(dest, value);
+
+// Or:
+atomicExchange(dest, value);
+---
+
+$(P
+3. `atomicCompareExchangeWeak` and `atomicCompareExchangeStrong` now reject
+being instantiated when the second `fail` argument is `MemoryOrder.rel` or
+`MemoryOrder.acq_rel`.
+)
+
+$(P
+In most cases, code that previously used either of these should switch to use
+`MemoryOrder.raw` instead.
+)
+
+---
+// Error:
+atomicExchangeWeak!(MemoryOrder.rel, MemoryOrder.rel)(dest, compare, value);
+atomicExchangeWeakNoResult!(MemoryOrder.acq_rel, MemoryOrder.acq_rel)(dest, compare, value);
+atomicExchangeStrong!(MemoryOrder.acq, MemoryOrder.rel)(dest, compare, value);
+atomicExchangeStrongNoResult!(MemoryOrder.seq, MemoryOrder.acq_rel)(dest, compare, value);
+
+// Corrective action:
+atomicExchangeWeak!(MemoryOrder.rel, MemoryOrder.raw)(dest, compare, value);
+atomicExchangeWeakNoResult!(MemoryOrder.acq_rel, MemoryOrder.raw)(dest, compare, value);
+atomicExchangeStrong!(MemoryOrder.acq, MemoryOrder.raw)(dest, compare, value);
+atomicExchangeStrongNoResult!(MemoryOrder.seq, MemoryOrder.raw)(dest, compare, value);
+---
+
+$(P
+4. `atomicCompareExchangeWeak` and `atomicCompareExchangeStrong` additionally
+now reject being instantiated when the second `fail` argument has a greater
+value than its first `succ` argument.
+)
+
+$(P
+In most cases, code that violates this contract should use the same MemoryOrder
+for both `succ` and `fail` arguments.
+)
+
+---
+// Error:
+atomicExchangeWeak!(MemoryOrder.raw)(dest, compare, value);
+atomicExchangeStrong!(MemoryOrder.acq, MemoryOrder.seq)(dest, compare, value);
+
+// Corrective action:
+atomicExchangeWeak!(MemoryOrder.raw, MemoryOrder.raw)(dest, compare, value);
+atomicExchangeStrong!(MemoryOrder.acq, MemoryOrder.acq)(dest, compare, value);
+---
+)
+
+$(LI $(LNAME2 druntime.makefiles,Makefiles cleanup for druntime)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.makefiles.dd)
+$(P
+The `{posix,win32,win64}.mak` Makefiles have been merged to a generic `Makefile` (including the ones in `druntime/test/`). `posix.mak` is kept as a deprecated forwarder for now.
+)
+
+$(P
+On Windows, you can/need to use the generic Makefile too - with a GNU make (and a git installation providing bash and GNU tools). Windows devs can finally exploit parallelism via `-j`! You may download a prebuilt zipped .exe from https://github.com/dlang/dmd/releases/download/nightly/gnumake-4.4-win64.zip.
+)
+)
+
+$(LI $(LNAME2 druntime.stdatomic,New addition of the C stdatomic header implemented in D)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.stdatomic.dd)
+$(P
+The goal of this module is to assist in porting efforts for code from C to D and to give as close as possible same code generation as the system C compiler counterpart.
+)
+
+$(P
+If you do not care about code generation quality should the aliases to the function names not exist, you may append ``_impl`` to get at the implementation.
+)
+
+$(P
+If the code generation provided by a given function is not on-par to the system C compiler and it matters to your use case, please report it as a bug.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 is_forward_range_element,isForwardRange now takes an optional element type.)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/is_forward_range_element.dd)
+$(P
+isForwardRange now has an optional 2nd template parameter that defaults
+to void. If not void, it only evaluates to true if the range's element
+type is the same type as this extra argument, modulo const. For
+instance, `isForwardRange!(int[], const(int))` is true, but
+`isForwardRange!(int[], string)` is false.
+)
+)
+
+$(LI $(LNAME2 makefiles,Makefiles cleanup)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/makefiles.dd)
+$(P
+The `{posix,win32,win64}.mak` Makefiles have been merged to a generic `Makefile`. `posix.mak` is kept as a deprecated forwarder for now.
+)
+
+$(P
+On Windows, you can/need to use the generic Makefile too - with a GNU make (and a git installation providing bash and GNU tools). Windows devs can finally exploit parallelism via `-j`! You may download a prebuilt zipped .exe from https://github.com/dlang/dmd/releases/download/nightly/gnumake-4.4-win64.zip.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 24266): ImportC: struct initializer entry gets ignored)
+$(LI $(BUGZILLA 24274): [REG master] ImportC: unrecognized C initializer with array in struct)
+$(LI $(BUGZILLA 24295): [betterC] ICE with new int[])
+$(LI $(BUGZILLA 24301): [REG 2.100] Misleading error message when passing non-copyable struct by value in @safe code)
+$(LI $(BUGZILLA 24338): Cannot concatenate dynamic arrays of enum type with static array base type)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 16357): cast$(LPAREN)T[]$(RPAREN)[x] casts x to T instead of [x] to T[])
+$(LI $(BUGZILLA 20339): isPOD returns true if sizeof is accessed inside struct declaration)
+$(LI $(BUGZILLA 20369): shadowed variable in foreach loop always considered "foreach variable")
+$(LI $(BUGZILLA 22216): Incomplete/incorrect error message for mutability overloads)
+$(LI $(BUGZILLA 22905): gdb backtrace contains wrong location)
+$(LI $(BUGZILLA 23411): ImportC: undefined identifier __builtin_nanf)
+$(LI $(BUGZILLA 23713): compilable/testcstuff1.c:206:1: error: static assertion failed: sizeof$(LPAREN)u'a'$(RPAREN) == 4)
+$(LI $(BUGZILLA 23714): compilable/testcstuff1.c:213:1: error: static assertion failed: u'ab' == 0x610062)
+$(LI $(BUGZILLA 23972): class identity check is broken)
+$(LI $(BUGZILLA 24031): ImportC: rejects nested C initializers)
+$(LI $(BUGZILLA 24094): importC __declspec not working in front of declaration statement)
+$(LI $(BUGZILLA 24200): ImportC: .di file collected macro conflicts with Special Token)
+$(LI $(BUGZILLA 24224): __traits$(LPAREN)initSymbol$(RPAREN) treats aggregate-derived enum as base type)
+$(LI $(BUGZILLA 24248): const constructor call with mutable target gives wrong error message)
+$(LI $(BUGZILLA 24252): ci: Error: error writing file 'compilable\testcstuff3_0.obj')
+$(LI $(BUGZILLA 24264): ImportC: inliner trips on _Bool return)
+$(LI $(BUGZILLA 24276): ImportC: typedef aliases not emitted correctly in .di files)
+$(LI $(BUGZILLA 24280): ImportC: forward reference error when compiling multiple files)
+$(LI $(BUGZILLA 24281): Segfault with missing field after named argument)
+$(LI $(BUGZILLA 24283): [SIMD][CODEGEN] Bad codegen with and not + AVX2 registers)
+$(LI $(BUGZILLA 24292): Struct with destructor wrongly returned in register)
+$(LI $(BUGZILLA 24303): anonymous struct problems when typedef'd in separate C files)
+$(LI $(BUGZILLA 24304): __uint16_t, __uint32_t, __uint64_t are not recognized)
+$(LI $(BUGZILLA 24306): ImportC: same name structs in separate C files interfere when compiled together)
+$(LI $(BUGZILLA 24309): Memory allocation failed on Azure pipeline)
+$(LI $(BUGZILLA 24311): Named enum with AA base type causes ICE)
+$(LI $(BUGZILLA 24319): OpenBSD: Use correct type for file_time)
+$(LI $(BUGZILLA 24326): ImportC: segfault on nameless enum translation with -H)
+$(LI $(BUGZILLA 24340): Invalid export directives generated)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 14387): Disallow string literals as assert conditions)
+$(LI $(BUGZILLA 23629): importC: Need to support code coverage analysis)
+$(LI $(BUGZILLA 24069): ImportC does not parse function pointer as parameter without name)
+$(LI $(BUGZILLA 24125): ImportC: vector type initializer not understood)
+$(LI $(BUGZILLA 24155): ImportC: accept C23 default initializers)
+$(LI $(BUGZILLA 24206): Can't alias a function type that returns a type with a TypeSuffix)
+$(LI $(BUGZILLA 24238): Confusing "not an lvalue"error messages)
+$(LI $(BUGZILLA 24247): Improve constructor not callable using $modifier object error)
+$(LI $(BUGZILLA 24294): ImportC: unrecognized command line option -Wno-builtin-macro-redefined with gcc)
+$(LI $(BUGZILLA 24297): ImportC incompatible with glibc _FORTIFY_SOURCE)
+)
+$(BUGSTITLE_BUGZILLA Phobos regression fixes,
+
+$(LI $(BUGZILLA 24243): Can't format chain$(LPAREN)filter, filter$(RPAREN))
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 24151): std.container.array: Array!string$(LPAREN)""$(RPAREN) does not compile)
+$(LI $(BUGZILLA 24215): std.traits.isBasicType!Enum should be false)
+$(LI $(BUGZILLA 24278): std.math.abs promotes unsigned argument to 32 bits)
+$(LI $(BUGZILLA 24342): T[][].until$(LPAREN)T[]$(RPAREN) breaks if sentinel is longer than 1.)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 11111): std.algorithm.canFind should support Needles...)
+$(LI $(BUGZILLA 24075): Can't use toChars with `ushort` or `ubyte`)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 4071): Missing support to share memory and objects between DLLs and executable)
+$(LI $(BUGZILLA 24272): operations.arrayOp is forced @nogc nothrow pure)
+$(LI $(BUGZILLA 24298): cpp_delete should check for null)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 20332): associative array clear function should be @safe)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 23712): ImportC: Unclear documentation of what type is inferred from integer literals $(LPAREN)type of 9223372036854775808 is undefined$(RPAREN))
+$(LI $(BUGZILLA 24239): dlang.org tests on CircleCI run out of memory)
+$(LI $(BUGZILLA 24241): Spec disallows missing default arguments)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 24176): Parameters of opApply delegate don't have to be `ref`)
+$(LI $(BUGZILLA 24177): Array literal can implicitly convert to an expected type)
+$(LI $(BUGZILLA 24210): Function types are not documented)
+)
+)
+$(D_CONTRIBUTORS_HEADER 37)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Brian Callahan)
+    $(D_CONTRIBUTOR Daniel Pflager)
+    $(D_CONTRIBUTOR Danil Sidoruk)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR Feldwor)
+    $(D_CONTRIBUTOR HuskyNator)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR IchorDev)
+    $(D_CONTRIBUTOR Imperatorn)
+    $(D_CONTRIBUTOR imrying)
+    $(D_CONTRIBUTOR Jeremy)
+    $(D_CONTRIBUTOR jibal)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR mhh)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR richard (rikki) andrew cattermole)
+    $(D_CONTRIBUTOR ryuukk)
+    $(D_CONTRIBUTOR Sönke Ludwig)
+    $(D_CONTRIBUTOR Teodor Dutu)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Timon Gehr)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Yang Yujie)
+    $(D_CONTRIBUTOR Семён Марьясин)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.107.0
+    TITLE=Change Log: $(VER)

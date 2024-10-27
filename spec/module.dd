@@ -30,10 +30,6 @@ $(GNAME DeclDef):
     $(GLINK2 version, ConditionalDeclaration)
     $(GLINK2 version, DebugSpecification)
     $(GLINK2 version, VersionSpecification)
-    $(GLINK2 version, StaticAssert)
-    $(GLINK2 template, TemplateDeclaration)
-    $(GLINK2 template-mixin, TemplateMixinDeclaration)
-    $(GLINK2 template-mixin, TemplateMixin)
     $(GLINK MixinDeclaration)
     $(GLINK EmptyDeclaration)
 
@@ -104,7 +100,8 @@ $(GNAME ModuleFullyQualifiedName):
 
 $(GNAME ModuleName):
     $(GLINK_LEX Identifier)
-
+)
+$(GRAMMAR
 $(GNAME Packages):
     $(GLINK PackageName)
     $(GSELF Packages) $(D .) $(GLINK PackageName)
@@ -492,17 +489,18 @@ $(H2 $(LNAME2 module_scope_operators, Module Scope Operator))
     $(P A leading dot (`.`) causes the
     identifier to be looked up in the module scope.)
 
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
-int x;
+const int x = 1;
 
-int foo(int x)
+void main()
 {
-    if (y)
-        return x;  // returns foo.x, not global x
-    else
-        return .x; // returns global x
+    int x = 5;
+    assert(x == 5); // main.x, not global x
+    assert(.x == 1); // global x
 }
 ---------
+)
 
 
 $(H2 $(LNAME2 staticorder, Static Construction and Destruction))
@@ -626,14 +624,31 @@ $(GNAME MixinDeclaration):
     $(D mixin) $(D $(LPAREN)) $(GLINK2 expression, ArgumentList) $(D $(RPAREN)) $(D ;)
 )
 
-    $(P Each $(GLINK2 expression, AssignExpression) in the $(I ArgumentList) is
-        evaluated at compile time, and the result must be representable
-        as a string.
-        The resulting strings are concatenated to form a string.
-        The text contents of the string must be compilable as a valid
-        $(GLINK DeclDefs), and is compiled as such.
-        )
+$(P Each $(GLINK2 expression, AssignExpression) in the $(I ArgumentList) is
+    evaluated at compile time, and the result must be representable
+    as a string.
+    The resulting strings are concatenated to form a string.
+    The text contents of the string must be compilable as valid
+    $(GLINK DeclDefs), and is compiled as such.)
 
+$(P The content of a mixin cannot be forward referenced by other *DeclDefs* of
+    the same scope because it is not yet pulled into the AST.)
+
+---------
+class B : A {}      // Error: undefined identifier `A`
+mixin ("class A {}");
+---------
+
+$(P Forward references may only work in function bodies because they
+    are processed after the declarations:)
+
+---------
+void v()
+{
+    class B : A {}
+}
+mixin ("class A {}");
+---------
 
 $(H2 $(LEGACY_LNAME2 PackageModule, package-module, Package Module))
 
@@ -717,6 +732,6 @@ $(SPEC_SUBNAV_PREV_NEXT grammar, Grammar, declaration, Declarations)
 )
 
 Macros:
-    CHAPTER=4
+    CHAPTER=5
         TITLE=Modules
         _=

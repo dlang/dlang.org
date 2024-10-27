@@ -6,6 +6,9 @@ $(HEADERNAV_TOC)
 
 $(H2 $(LNAME2 grammar, Grammar))
 
+$(P *Declaration* can be used inside a function body for a $(GLINK2 statement, DeclarationStatement),
+as well as outside a function as it is included in $(GLINK2 module, DeclDef).)
+
 $(GRAMMAR
 $(GNAME Declaration):
     $(GLINK2 function, FuncDeclaration)
@@ -18,10 +21,11 @@ $(GNAME Declaration):
     $(GLINK2 version, ConditionalDeclaration)
     $(GLINK2 version, StaticForeachDeclaration)
     $(GLINK2 version, StaticAssert)
+    $(GLINK2 template, TemplateDeclaration)
+    $(GLINK2 template-mixin, TemplateMixinDeclaration)
+    $(GLINK2 template-mixin, TemplateMixin)
 )
 
-$(P See also $(GLINK2 module, DeclDef).
-)
 
 $(H3 $(LNAME2 aggregates, Aggregates))
 
@@ -37,33 +41,29 @@ $(H3 $(LNAME2 variable-declarations, Variable Declarations))
 
 $(GRAMMAR
 $(GNAME VarDeclarations):
-    $(GLINK StorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK Declarators) $(D ;)
+    $(GLINK StorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 type, TypeSuffixes)$(OPT) $(GLINK IdentifierInitializers) $(D ;)
     $(GLINK AutoDeclaration)
 
-$(GNAME Declarators):
-    $(GLINK DeclaratorInitializer)
-    $(GLINK DeclaratorInitializer) $(D ,) $(GLINK DeclaratorIdentifierList)
+$(GNAME IdentifierInitializers): $(LEGACY_LNAME2 Declarators, DeclaratorIdentifierList)
+    $(GLINK IdentifierInitializer)
+    $(GLINK IdentifierInitializer) $(D ,) $(GSELF IdentifierInitializers)
 
-$(GNAME DeclaratorInitializer):
-    $(GLINK VarDeclarator)
-    $(GLINK VarDeclarator) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
-
-$(GNAME DeclaratorIdentifierList):
-    $(GLINK DeclaratorIdentifier)
-    $(GLINK DeclaratorIdentifier) $(D ,) $(GSELF DeclaratorIdentifierList)
-
-$(GNAME DeclaratorIdentifier):$(LEGACY_LNAME2 VarDeclaratorIdentifier)
+$(GNAME IdentifierInitializer): $(LEGACY_LNAME2 DeclaratorInitializer, DeclaratorIdentifier)
     $(GLINK_LEX Identifier)
     $(GLINK_LEX Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK Initializer)
 
-$(GNAME Declarator):
-    $(GLINK VarDeclarator)
-
-$(GNAME VarDeclarator):
+$(GNAME Declarator): $(LEGACY_LNAME2 VarDeclarator)
     $(GLINK2 type, TypeSuffixes)$(OPT) $(GLINK_LEX Identifier)
 )
 
+    $(P See also:)
+    * $(RELATIVE_LINK2 declaration_syntax, Declaration Syntax)
+    * $(GLINK AutoDeclaration)
+    * $(DDSUBLINK spec/template, variable-template, Variable Templates)
+
 $(H3 $(LNAME2 storage-classes, Storage Classes))
+
+    $(P See $(RELATIVE_LINK2 typequal_vs_storageclass, Type Classes vs. Storage Classes).)
 
 $(GRAMMAR
 $(GNAME StorageClasses):
@@ -71,44 +71,30 @@ $(GNAME StorageClasses):
     $(GLINK StorageClass) $(GSELF StorageClasses)
 
 $(GNAME StorageClass):
-$(MULTICOLS 5,     $(GLINK2 attribute, LinkageAttribute)
+    $(GLINK2 attribute, LinkageAttribute)
     $(GLINK2 attribute, AlignAttribute)
     $(GLINK2 attribute, AtAttribute)
-    $(D deprecated)
-    $(D enum)
-    $(D static)
+    $(DDSUBLINK spec/attribute, deprecated, `deprecated`)
+    $(DDSUBLINK spec/enum, manifest_constants, `enum`)
+    $(DDSUBLINK spec/attribute, static, `static`)
     $(RELATIVE_LINK2 extern, $(D extern))
-    $(D abstract)
-    $(D final)
-    $(D override)
-    $(D synchronized)
-    $(D auto)
-    $(D scope)
-    $(D const)
-    $(D immutable)
-    $(D inout)
-    $(D shared)
-    $(D __gshared)
+    $(DDSUBLINK spec/class, abstract, `abstract`)
+    $(DDSUBLINK spec/class, final, `final`)
+    $(DDSUBLINK spec/function, virtual-functions, `override`)
+    $(DDSUBLINK spec/class, synchronized-classes, `synchronized`)
+    $(RELATIVE_LINK2 auto-declaration, `auto`)
+    $(DDSUBLINK spec/attribute, scope, `scope`)
+    $(DDLINK spec/const3, Type Qualifiers, `const`)
+    $(DDLINK spec/const3, Type Qualifiers, `immutable`)
+    $(DDSUBLINK spec/const3, inout, `inout`)
+    $(DDSUBLINK spec/const3, shared, `shared`)
+    $(DDSUBLINK spec/attribute, gshared, `__gshared`)
     $(GLINK2 attribute, Property)
-    $(D nothrow)
-    $(D pure)
-    $(D ref))
+    $(DDSUBLINK spec/function, nothrow-functions, `nothrow`)
+    $(DDSUBLINK spec/function, pure-functions, `pure`)
+    $(RELATIVE_LINK2 ref-storage, `ref`)
 )
 
-$(H3 $(LNAME2 initializers, Initializers))
-
-$(GRAMMAR
-$(GNAME Initializer):
-    $(GLINK VoidInitializer)
-    $(GLINK NonVoidInitializer)
-
-$(GNAME NonVoidInitializer):
-    $(GLINK2 expression, AssignExpression)$(LEGACY_LNAME2 ExpInitializer)
-    $(GLINK2 expression, ArrayLiteral)$(LEGACY_LNAME2 ArrayInitializer)
-    $(GLINK2 struct, StructInitializer)$(LEGACY_LNAME2 StructInitializer)
-)
-
-$(P See also $(GLINK VoidInitializer).)
 
 $(H2 $(LNAME2 declaration_syntax, Declaration Syntax))
 
@@ -128,10 +114,14 @@ int[3][5] x;  // x is a static array of 5 static arrays of 3 ints
 int[3]*[5] x; // x is a static array of 5 pointers to static arrays of 3 ints
 --------------------
 
-$(H3 $(LNAME2 pointers-to-functions, Pointers to Functions))
+$(P See $(DDSUBLINK spec/type, pointers, Pointers), $(DDLINK spec/arrays, Arrays, Arrays)
+and $(GLINK2 type, TypeSuffix).)
+
+$(H3 $(LNAME2 pointers-to-functions, Function Pointers))
 
 $(P
-Pointers to functions are declared using the $(D function) keyword:
+$(DDSUBLINK spec/function, function-pointers, Function Pointers)
+are declared using the $(D function) keyword:
 )
 
 --------------------
@@ -147,19 +137,31 @@ int function(char)[] x; // x is an array of
 $(H3 $(LNAME2 c-style-declarations, C-Style Declarations))
 
 $(P
-C-style array, function pointer and pointer to array declarations are deprecated:
+C-style array, function pointer and pointer to array declarations are
+not supported. The following C declarations are for comparison only:
 )
 
---------------------
-int x[3];          // x is a static array of 3 ints
-int x[3][5];       // x is a static array of 3 arrays of 5 ints
+$(CPPCODE
+int x[3];          // C static array of 3 ints
+int x[3][5];       // C static array of 3 arrays of 5 ints
 
-int (*x[5])[3];    // x is a static array of 5 pointers to static arrays of 3 ints
-int (*x)(char);    // x is a pointer to a function taking a char argument
+int (\*x[5])[3];    // C static array of 5 pointers to static arrays of 3 ints
+int (\*x)(char);    // C pointer to a function taking a char argument
                    // and returning an int
-int (*[] x)(char); // x is an array of pointers to functions
+int (\*[] x)(char); // C array of pointers to functions
                    // taking a char argument and returning an int
---------------------
+)
+
+$(RATIONALE
+* In D types are straightforward to read from right to left,
+  unlike in C where parentheses are sometimes required and the type is
+  read iteratively using the clockwise/spiral rule.
+* For a C function pointer declaration `a (*b)(c);` a C parser needs
+  to attempt a type lookup in order to parse it unambiguously - it
+  could be a call to a function called `a` which returns a function
+  pointer, which is immediately called. D function pointer syntax
+  is unambiguous, avoiding the need for types to be forward declared.
+)
 
 $(H3 $(LNAME2 declaring-multiple-symbols, Declaring Multiple Symbols))
 
@@ -169,16 +171,106 @@ must be of the same type:
 )
 
 --------------------
-int x,y;   // x and y are ints
-int* x,y;  // x and y are pointers to ints
-int[] x,y; // x and y are arrays of ints
+int x, y;   // x and y are ints
+int* x, y;  // x and y are pointers to ints
+int[] x, y; // x and y are arrays of ints
+---
 
-// invalid C-style declarations
-int x,*y;  // error, multiple types
-int x[],y; // error, multiple types
---------------------
+$(P This is in contrast to C:)
 
-$(H2 $(LEGACY_LNAME2 AutoDeclaration, auto-declaration, Implicit Type Inference))
+$(CPPCODE
+int x, *y;  // x is an int, y is a pointer to int
+int x[], y; // x is an array/pointer, y is an int
+)
+
+$(H2 $(LNAME2 initialization, Initialization))
+
+        $(P When no *Initializer* is given, a variable is set to the
+        $(DDSUBLINK spec/property, init, default `.init` value) for
+        its type.)
+
+$(H3 $(LNAME2 initializers, Initializers))
+
+$(GRAMMAR
+$(GNAME Initializer):
+    $(GLINK VoidInitializer)
+    $(GLINK NonVoidInitializer)
+
+$(GNAME NonVoidInitializer):
+    $(GLINK2 arrays, ArrayInitializer)$(LEGACY_LNAME2 ArrayInitializer)
+    $(GLINK2 struct, StructInitializer)$(LEGACY_LNAME2 StructInitializer)
+    $(GLINK2 expression, AssignExpression)$(LEGACY_LNAME2 ExpInitializer)
+)
+
+        $(P A variable can be initialized with a $(I NonVoidInitializer).
+        An *ArrayInitializer* or *StructInitializer* takes precedence over
+        an expression initializer.)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+struct S { int i; }
+
+S s = {}; // struct initializer, not a function literal expression
+S[] a = [{2}]; // array initializer holding a struct initializer
+//a = [{2}]; // invalid array literal expression
+---
+)
+
+$(H3 $(LNAME2 void_init, Void Initialization))
+
+$(GRAMMAR
+$(GNAME VoidInitializer):
+    $(D void)
+)
+
+        $(P Normally a variable will be initialized.
+        However, if a variable initializer is $(D void), the variable is *not* initialized.
+        Void initializers for variables with a type that may contain
+        $(DDSUBLINK spec/function, safe-values, unsafe values) (such as types with pointers)
+        are not allowed in `@safe` code.
+        )
+
+        $(IMPLEMENTATION_DEFINED If a void initialized variable's value is
+        used before it is set, its value is implementation defined.
+
+        ---
+        void bad()
+        {
+            int x = void;
+            writeln(x);  // print implementation defined value
+        }
+        ---
+        )
+
+        $(UNDEFINED_BEHAVIOR If a void initialized variable's value is
+        used before it is set, and the value is a reference, pointer or an instance
+        of a struct with an invariant, the behavior is undefined.
+
+        ---
+        void muchWorse()
+        {
+            char[] p = void;
+            writeln(p);  // may result in apocalypse
+        }
+        ---
+        )
+
+        $(BEST_PRACTICE
+        $(OL
+        $(LI Void initializers are useful when a static array is on the stack,
+        but may only be partially used, such as a temporary buffer.
+        Void initializers will potentially speed up the code, but they introduce risk, since one must ensure
+        that array elements are always set before read.)
+        $(LI The same is true for structs.)
+        $(LI Use of void initializers is rarely useful for individual local variables,
+        as a modern optimizer will remove the dead store of its initialization if it is
+        initialized later.)
+        $(LI For hot code paths, it is worth profiling to see if the void initializer
+        actually improves results.)
+        )
+        )
+
+$(H3 $(LEGACY_LNAME2 AutoDeclaration, auto-declaration, Implicit Type Inference))
 
 $(GRAMMAR
 $(GNAME AutoDeclaration):
@@ -222,14 +314,33 @@ auto c = new C();  // c is a handle to an instance of class C
         auto v = ["resistance", "is", "useless"]; // type is string[], not string[3]
         ---
 
+$(H3 $(LNAME2 global_static_init, Global and Static Initializers))
+
+        $(P The $(GLINK Initializer) for a global or static variable must be
+        evaluatable at compile time.
+        Runtime initialization is done with $(DDSUBLINK spec/module, staticorder, static constructors).
+        )
+
+        $(IMPLEMENTATION_DEFINED
+        $(OL
+        $(LI Whether some pointers can be initialized with the addresses of other
+        functions or data.)
+        ))
+
 
 $(H2 $(LNAME2 alias, Alias Declarations))
 
+    $(NOTE New code should use the *AliasAssignments* form only.)
+
 $(GRAMMAR
 $(GNAME AliasDeclaration):
-    $(D alias) $(GLINK StorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK Declarators) $(D ;)
+    $(D alias) $(GLINK StorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 type, TypeSuffixes)$(OPT) $(GLINK Identifiers) $(D ;)
     $(D alias) $(GLINK StorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 function, FuncDeclarator) $(D ;)
     $(D alias) $(GLINK AliasAssignments) $(D ;)
+
+$(GNAME Identifiers):
+    $(GLINK_LEX Identifier)
+    $(GLINK_LEX Identifier) `,` $(GSELF Identifiers)
 
 $(GNAME AliasAssignments):
     $(GLINK AliasAssignment)
@@ -238,22 +349,25 @@ $(GNAME AliasAssignments):
 $(GNAME AliasAssignment):
     $(GLINK_LEX Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK StorageClasses)$(OPT) $(GLINK2 type, Type)
     $(GLINK_LEX Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK2 expression, FunctionLiteral)
-    $(GLINK_LEX Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK StorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT)
+    $(GLINK_LEX Identifier) $(GLINK2 template, TemplateParameters)$(OPT) $(D =) $(GLINK StorageClasses)$(OPT) $(GLINK2 type, Type) $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT)
 )
 
-    $(P $(I AliasDeclaration)s create a symbol name that refers to another symbol.
-        That symbol name can be used anywhere that the aliased symbol may appear.
-        The following symbols can be aliased:
+    $(P An $(I AliasDeclaration) creates a symbol name that refers to a type or another symbol.
+        That name can then be used anywhere that the target may appear.
+        The following can be aliased:
     )
     * $(RELATIVE_LINK2 alias-type, Types)
+        * $(RELATIVE_LINK2 alias-function, Function Types) (with default arguments)
     * $(RELATIVE_LINK2 alias-variable, Variables)
-    * Constants
+    * Manifest Constants
     * Modules
     * Packages
     * Functions
-    * Function Literals
+    * $(RELATIVE_LINK2 alias-overload, Overload Sets)
+    * $(DDSUBLINK spec/expression, function-literal-alias, Function Literals)
     * Templates
     * Template Instantiations
+    * Other Alias Declarations
 
 $(H3 $(LNAME2 alias-type, Type Aliases))
 
@@ -337,8 +451,9 @@ version (linux)
 --------------------
 
         $(P
-        Aliasing can be used to $(DDSUBLINK spec/module, import-declaration, `import`)
-        a symbol from an imported module or package into the current scope:
+        Aliasing can be used to 'import' a symbol from an
+        $(DDSUBLINK spec/module, import-declaration,
+        imported module or package) into the current scope:
         )
 
 --------------------
@@ -350,7 +465,7 @@ alias strlen = string.strlen;
 $(H3 $(LNAME2 alias-overload, Aliasing an Overload Set))
 
         $(P
-        Aliases can also `import` a set of overloaded functions, that can
+        Aliases can also 'import' a set of overloaded functions, that can
         be overloaded with functions in the current scope:
         )
 
@@ -382,32 +497,61 @@ void main()
 
 $(H3 $(LNAME2 alias-variable, Aliasing Variables))
 
-        $(P Aliases cannot be used for expressions:)
+        $(P Variables can be aliased, expressions cannot:)
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+-----------
+int i = 0;
+alias a = i; // OK
+alias b = a; // alias a variable alias
+a++;
+b++;
+assert(i == 2);
+
+//alias c = i * 2; // error
+//alias d = i + i; // error
+-----------
+)
+
+        $(P Members of an aggregate can be aliased, however non-static
+        field aliases cannot be accessed outside their parent type.)
 
 $(SPEC_RUNNABLE_EXAMPLE_RUN
 -----------
 struct S
 {
-    static int i;
-    static int j;
+    static int i = 0;
+    int j;
+    alias a = j; // OK
+
+    void inc() { a++; }
 }
 
-alias a = S.i; // OK, `S.i` is a symbol
-alias b = S.j; // OK. `S.j` is also a symbol
-//alias c = a + b; // illegal, `a + b` is an expression
-a = 2;         // sets `S.i` to `2`
-b = 4;         // sets `S.j` to `4`
-assert(S.i == 2);
-assert(S.j == 4);
+alias a = S.i; // OK
+a++;
+assert(S.i == 1);
+
+alias b = S.j; // allowed
+static assert(b.offsetof == 0);
+//b++;   // error, no instance of S
+//S.a++; // error, no instance of S
+
+S s = S(5);
+s.inc();
+assert(s.j == 6);
+//alias c = s.j; // scheduled for deprecation
 -----------
 )
 
 $(H3 $(LNAME2 alias-function, Aliasing a Function Type))
 
-        $(P Function types can be aliased:)
+        $(P $(DDSUBLINK spec/type, functions, Function types) can be
+        aliased:)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
-alias Fun = int(string p);
-int fun(string){return 0;}
+alias Fun = int(string);
+int fun(string) {return 0;}
 static assert(is(typeof(fun) == Fun));
 
 alias MemberFun1 = int() const;
@@ -415,38 +559,53 @@ alias MemberFun2 = const int();
 // leading attributes apply to the func, not the return type
 static assert(is(MemberFun1 == MemberFun2));
 --------------------
-
-        $(P Aliases can be used to call a function with different default
+)
+        $(P Type aliases can be used to call a function with different default
         arguments, change an argument from required to default or vice versa:)
 
 $(SPEC_RUNNABLE_EXAMPLE_RUN
 -----------
+import std.stdio : writeln;
+
+void fun(int v = 6)
+{
+    writeln("v: ", v);
+}
+
+void main()
+{
+    fun();  // prints v: 6
+
+    alias Foo = void function(int=7);
+    Foo foo = &fun;
+    foo();  // prints v: 7
+    foo(8); // prints v: 8
+}
+-----------
+)
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+-----------
 import std.stdio : writefln;
 
-void main() {
-    Foo foo = &foofoo;
-    foo();              // prints v: 6
-    foo(8);             // prints v: 8
-    Bar bar = &barbar;
-    // bar(4);             // compilation error, because the `Bar` alias
+void main()
+{
+    fun(4);          // prints a: 4, b: 6, c: 7
+
+    Bar bar = &fun;
+    //bar(4);           // compilation error, because the `Bar` alias
                         // requires an explicit 2nd argument
-    barbar(4);          // prints a: 4, b: 6, c: 7
     bar(4, 5);          // prints a: 4, b: 5, c: 9
     bar(4, 5, 6);       // prints a: 4, b: 5, c: 6
 
-    Baz baz = &barbar;
+    Baz baz = &fun;
     baz();              // prints a: 2, b: 3, c: 4
 }
 
-alias Foo = void function(int=6);
 alias Bar = void function(int, int, int=9);
 alias Baz = void function(int=2, int=3, int=4);
 
-void foofoo(int v = 6) {
-    writefln("v: %d", v);
-}
-
-void barbar(int a, int b = 6, int c = 7) {
+void fun(int a, int b = 6, int c = 7)
+{
     writefln("a: %d, b: %d, c: %d", a, b, c);
 }
 -----------
@@ -594,77 +753,11 @@ extern extern(C) int bar;
         connect with global variables declarations and functions in C or C++ files.)
         ))
 
-$(H2 $(LNAME2 void_init, Void Initializations))
-
-$(GRAMMAR
-$(GNAME VoidInitializer):
-    $(D void)
-)
-
-        $(P Normally, variables are initialized either with an explicit
-        $(GLINK Initializer) or are set to the default value for the
-        type of the variable. If the $(I Initializer) is $(D void),
-        however, the variable is not initialized.
-        Void initializers for objects that contain indirections is not
-        allowed in `@safe` code.
-        )
-
-        $(IMPLEMENTATION_DEFINED If a void initialized variable's value is
-        used before it is set, its value is implementation defined.
-
-        ---
-        void bad()
-        {
-            int x = void;
-            writeln(x);  // print implementation defined value
-        }
-        ---
-        )
-
-        $(UNDEFINED_BEHAVIOR If a void initialized variable's value is
-        used before it is set, and the value is a reference, pointer or an instance
-        of a struct with an invariant, the behavior is undefined.
-
-        ---
-        void muchWorse()
-        {
-            char[] p = void;
-            writeln(p);  // may result in apocalypse
-        }
-        ---
-        )
-
-        $(BEST_PRACTICE
-        $(OL
-        $(LI Void initializers are useful when a static array is on the stack,
-        but may only be partially used, such as a temporary buffer.
-        Void initializers will potentially speed up the code, but they introduce risk, since one must ensure
-        that array elements are always set before read.)
-        $(LI The same is true for structs.)
-        $(LI Use of void initializers is rarely useful for individual local variables,
-        as a modern optimizer will remove the dead store of its initialization if it is
-        initialized later.)
-        $(LI For hot code paths, it is worth profiling to see if the void initializer
-        actually improves results.)
-        )
-        )
-
-$(H2 $(LNAME2 global_static_init, Global and Static Initializers))
-
-        $(P The $(GLINK Initializer) for a global or static variable must be
-        evaluatable at compile time.
-        Runtime initialization is done with static constructors.
-        )
-
-        $(IMPLEMENTATION_DEFINED
-        $(OL
-        $(LI Whether some pointers can be initialized with the addresses of other
-        functions or data.)
-        ))
 
 $(H2 $(LNAME2 typequal_vs_storageclass, Type Qualifiers vs. Storage Classes))
 
-        $(P Type qualifer and storage classes are distinct.)
+        $(P $(DDLINK spec/const3, Type Qualifiers, Type qualifers) and
+        $(RELATIVE_LINK2 storage-classes, storage classes) are distinct concepts.)
 
         $(P A $(I type qualifier) creates a derived type from an existing base
         type, and the resulting type may be used to create multiple instances
@@ -689,6 +782,7 @@ ImmutableInt z;     // typeof(z) == immutable(int)
         with the $(D const) storage class to indicate that it does not modify
         its implicit $(D this) argument:)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 --------
 struct S
 {
@@ -700,16 +794,22 @@ struct S
     }
 }
 --------
-
-        $(P Although some keywords can be used both as a type qualifier and a
+)
+        $(P Although some keywords can be
+        $(RELATIVE_LINK2 methods-returning-qualified, used as both) a type qualifier and a
         storage class, there are some storage classes that cannot be used to
-        construct new types, such as $(D ref):)
+        construct new types, such as $(D ref).)
 
+$(H3 $(LNAME2 ref-storage, `ref` Storage Class))
+
+        $(P A parameter $(DDSUBLINK spec/function, ref-params, declared with `ref`)
+        is passed by reference:)
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 --------
-// ref declares the parameter x to be passed by reference
-void func(ref int x)
+void func(ref int i)
 {
-    x++; // so modifications to x will be visible in the caller
+    i++; // modifications to i will be visible in the caller
 }
 
 void main()
@@ -719,12 +819,14 @@ void main()
     assert(x == 2);
 
     // However, ref is not a type qualifier, so the following is illegal:
-    ref(int) y; // Error: ref is not a type qualifier.
+    //ref(int) y; // Error: ref is not a type qualifier.
 }
 --------
+)
+        $(P Functions can also be $(DDSUBLINK spec/function, ref-functions, declared as `ref`),
+        meaning their return value is passed by reference:)
 
-        $(P Functions can also be declared as `ref`, meaning their return value is
-        passed by reference:)
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 --------
 ref int func2()
 {
@@ -749,11 +851,51 @@ void main()
                           // does not inherit the ref storage class from func2().
 }
 --------
+)
+
+$(H4 $(LNAME2 ref-variables, `ref` Variables))
+
+        $(P From version 2.111, `ref` can be used to declare local, static, extern, and global variables.)
+
+$(COMMENT SPEC_RUNNABLE_EXAMPLE_RUN)
+---
+struct S { int a; }
+
+void main()
+{
+    S s;
+    ref int r = s.a;
+    r = 3;
+    assert(s.a == 3);
+}
+---
+
+        $(BEST_PRACTICE Use a `ref` variable instead of a pointer when pointer
+        arithmetic is not needed.)
+
+        $(P `auto ref` can also be used to declare local, static, extern, and global variables.)
+
+$(COMMENT SPEC_RUNNABLE_EXAMPLE_COMPILE)
+---
+void f()
+{
+    auto ref x = 0;
+    auto ref y = x;
+    static assert(!__traits(isRef, x));
+    static assert( __traits(isRef, y));
+}
+---
+
+        $(P See also: $(DDSUBLINK spec/template, auto-ref-parameters, `auto ref`)
+        template function parameters.)
+
+$(H3 $(LNAME2 methods-returning-qualified, Methods Returning a Qualified Type))
 
         $(P Some keywords, such as $(D const), can be used
         both as a type qualifier and a storage class.
         The distinction is determined by the syntax where it appears.)
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
         struct S
         {
@@ -763,8 +905,9 @@ void main()
              */
             const int* func() // a const function
             {
-                ++p;          // error, this.p is const
-                return p;     // error, cannot convert const(int)* to int*
+                //++p;          // error, this.p is const
+                //return p;     // error, cannot convert const(int)* to int*
+                return null;
             }
 
             const(int)* func() // a function returning a pointer to a const int
@@ -776,6 +919,7 @@ void main()
             int* p;
         }
         ---
+        )
 
         $(BEST_PRACTICE To avoid confusion, the type qualifier
         syntax with parentheses should be used for return types,
@@ -800,5 +944,5 @@ $(SPEC_SUBNAV_PREV_NEXT module, Modules, type, Types)
 
 
 Macros:
-        CHAPTER=5
+        CHAPTER=6
         TITLE=Declarations

@@ -1,6 +1,7 @@
 _=Macros for the dlang.org site look and feel. Please keep sorted by name. Multiline macros should keep one _= line before and after for clarity. Also, one _= line should be present when the first letter changes. (The "_="" is needed so there's no extra newline after the last macro defined in a group.)
 
 ACRONYM = <acronym title="$+">$1</acronym> ($+)
+ACC = $(GLOSSARY2 acc, Associated C Compiler)
 ASSIGNEXPRESSION = $(GLINK2 expression, AssignExpression)
 _=
 
@@ -180,12 +181,16 @@ GLINK=$(RELATIVE_LINK2 $0, $(I $0))
 GLINK2=$(DDSUBLINK spec/$1,$2,$(I $2))
 GLINK2_ALTTEXT=$(DDSUBLINK spec/$1,$2,$(I $3))
 GLINK_LEX=$(DDSUBLINK spec/lex,$1,$(I $1))
-GLOSSARY = $(HTTP dlang.org/glossary.html#$0, $0)
-GLOSSARY2 = $(HTTP dlang.org/glossary.html#$1, $2)
+GLOSSARY = $(HTTP dlang.org/spec/glossary.html#$0, $0)
+GLOSSARY2 = $(HTTP dlang.org/spec/glossary.html#$1, $2)
 GNAME=<a id="$0">$(SPANC gname, $0)</a>
+
+_=Any macro beginning with GRAMMAR will be picked up by ddoc/source/preprocessor.d
 GRAMMAR=$(TC pre, bnf notranslate, $0)
-GRAMMAR_INFORMATIVE=$(GRAMMAR $0)
+INFORMATIVE_GRAMMAR=$(GRAMMAR $0)
 GRAMMAR_LEX=$(GRAMMAR $0)
+INLINE_GRAMMAR=$(TC tt, bnf notranslate, $0)
+
 GREEN=$(SPANC green, $0)
 GSELF=$(I $0)
 GT=&gt;
@@ -268,9 +273,8 @@ $(SUBMENU_MANUAL
     $(SUBMENU_LINK irc://irc.libera.chat/d, IRC)
     $(SUBMENU_LINK https://discord.gg/bMZk9Q4, Community Discord)
     $(SUBMENU_LINK https://wiki.dlang.org, Wiki)
-    $(SUBMENU_LINK_DIVIDER https://github.com/dlang, GitHub)
-    $(SUBMENU_LINK $(ROOT_DIR)bugstats.html, Issues)
-    $(SUBMENU_LINK https://wiki.dlang.org/Get_involved, Get involved)
+    $(SUBMENU_LINK_DIVIDER $(ROOT_DIR)bugstats.html, Issues)
+    $(SUBMENU_LINK $(ROOT_DIR)contributing.html, Contributing)
     $(SUBMENU_LINK_DIVIDER $(ROOT_DIR)foundation/contributors.html, Contributors)
     $(SUBMENU_LINK $(ROOT_DIR)foundation/index.html, Foundation)
     $(SUBMENU_LINK $(ROOT_DIR)/security.html, Security Team)
@@ -297,7 +301,7 @@ $(SUBMENU_MANUAL
     $(SUBMENU_LINK $(VISUALD), Visual D)
     $(SUBMENU_LINK_DIVIDER $(ROOT_DIR)acknowledgements.html, Acknowledgments)
     $(SUBMENU_LINK $(ROOT_DIR)dstyle.html, D Style)
-    $(SUBMENU_LINK $(ROOT_DIR)glossary.html, Glossary)
+    $(SUBMENU_LINK $(ROOT_DIR)spec/glossary.html, Glossary)
     $(SUBMENU_LINK $(ROOT_DIR)sitemap.html, Sitemap)
 )
 _=
@@ -308,6 +312,7 @@ NG_digitalmars_D_announce = <a href="$(NEWS digitalmars.D.announce,$0)">D.announ
 NOTRANSLATE=$(SPANC notranslate, $0)
 NO=
 NOT_EBOOK=$0
+NOTE= $(DIVC note, $(B Note:) $0)
 NOTICE_L=<a href="$1" class="notice">$2</a>
 NOTICE=<span class="notice">$1</span>
 _=
@@ -335,6 +340,8 @@ $(DIVID tools, $(DIV,
 ))
 _=
 
+_=Group related info together
+PANEL=$(DIVC panel, $0)
 PC=$(TC p, $1, $+)
 _=
 
@@ -397,13 +404,19 @@ _=
 RELATIVE_LINK2=$(ALOCAL $1, $+)
 _=
 
+_=These take a ddoc example enclosed in `---`
 RUNNABLE_EXAMPLE=<div class="runnable-examples">
 $1
 </div>
+RUNNABLE_EXAMPLE_COMPILE=<div class="runnable-examples" data-compile=''>
+$1
+</div>
+RUNNABLE_EXAMPLE_FAIL=$(RUNNABLE_EXAMPLE $0)
+_=These go inside a RUNNABLE_EXAMPLE macro invocation before the first `---`
 RUNNABLE_EXAMPLE_STDIN=<code class="runnable-examples-stdin">$0</code>
 RUNNABLE_EXAMPLE_ARGS=<code class="runnable-examples-args">$0</code>
 
-SAMPLESRC=$(SPANC sample_src, $(AHTTPS github.com/dlang/dmd/blob/master/samples/$0, /dmd/samples/d/$0))
+SAMPLESRC=$(SPANC sample_src, $(AHTTPS github.com/dlang/dmd/blob/master/compiler/samples/$0, /dmd/compiler/samples/$0))
 SCINI=$(TC pre, scini notranslate, $0)
 SCRIPTLOAD=<script type="text/javascript" src="$1"$+></script>
 SEARCHDEFAULT_PHOBOS=
@@ -480,12 +493,15 @@ $(SUBNAV_TEMPLATE
         $(ROOT_DIR)articles/regular-expression.html, Regular Expressions,
         $(ROOT_DIR)articles/safed.html, SafeD,
         $(ROOT_DIR)articles/templates-revisited.html, Templates Revisited,
+        $(ROOT_DIR)articles/constraints.html, Template Constraints,
         $(ROOT_DIR)articles/ctarguments.html, Compile-time Sequences,
         $(ROOT_DIR)articles/variadic-function-templates.html, Variadic Templates,
+        $(ROOT_DIR)articles/template-comparison.html, Template Comparison,
         $(ROOT_DIR)articles/d-array-article.html, D Slices,
         $(ROOT_DIR)articles/cppcontracts.html, D's Contract Programming,
-        $(ROOT_DIR)articles/template-comparison.html, Template Comparison,
-        $(ROOT_DIR)articles/dll-linux.html, Writing Shared Libraries
+        $(ROOT_DIR)articles/dll-linux.html, Writing Shared Libraries for Linux,
+        $(ROOT_DIR)articles/RefReturnScope.html, Coralling Wild Pointers With ref return scope,
+        $(ROOT_DIR)articles/dll-windows.html, Creating Windows DLLs
     ))
 )
 SUBNAV_FOUNDATION=

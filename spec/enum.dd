@@ -22,6 +22,10 @@ $(GNAME EnumMembers):
     $(GLINK EnumMember) $(D ,)
     $(GLINK EnumMember) $(D ,) $(GSELF EnumMembers)
 
+$(GNAME EnumMember):
+    $(GLINK EnumMemberAttributes)$(OPT) $(GLINK_LEX Identifier)
+    $(GLINK EnumMemberAttributes)$(OPT) $(GLINK_LEX Identifier) $(D =) $(ASSIGNEXPRESSION)
+
 $(GNAME EnumMemberAttributes):
     $(GLINK EnumMemberAttribute)
     $(GLINK EnumMemberAttribute) $(GSELF EnumMemberAttributes)
@@ -29,15 +33,11 @@ $(GNAME EnumMemberAttributes):
 $(GNAME EnumMemberAttribute):
     $(GLINK2 attribute, DeprecatedAttribute)
     $(GLINK2 attribute, UserDefinedAttribute)
-    $(D @)$(LINK2 attribute.html#disable, $(D disable))
-
-$(GNAME EnumMember):
-    $(GLINK EnumMemberAttributes)$(OPT) $(GLINK_LEX Identifier)
-    $(GLINK EnumMemberAttributes)$(OPT) $(GLINK_LEX Identifier) $(D =) $(ASSIGNEXPRESSION)
-
+    $(D @) $(LINK2 attribute.html#disable, $(D disable))
+)
+$(GRAMMAR
 $(GNAME AnonymousEnumDeclaration):
     $(D enum) $(D :) $(GLINK EnumBaseType) $(D {) $(GLINK EnumMembers) $(D })
-    $(D enum) $(D {) $(GLINK EnumMembers) $(D })
     $(D enum) $(D {) $(GLINK AnonymousEnumMembers) $(D })
 
 $(GNAME AnonymousEnumMembers):
@@ -47,7 +47,7 @@ $(GNAME AnonymousEnumMembers):
 
 $(GNAME AnonymousEnumMember):
     $(GLINK EnumMember)
-    $(GLINK2 type, Type) $(GLINK_LEX Identifier) $(D =) $(ASSIGNEXPRESSION)
+    $(GLINK EnumMemberAttributes)$(OPT) $(GLINK2 type, Type) $(GLINK_LEX Identifier) $(D =) $(ASSIGNEXPRESSION)
 )
 
         $(P Enum declarations are used to define a group of constants.
@@ -63,40 +63,64 @@ $(H2 $(LNAME2 named_enums, Named Enums))
         )
 
         $(P This defines a new type $(CODE X) which has values
-        $(CODE X.A=0), $(CODE X.B=1), $(CODE X.C=2):)
+        $(CODE X.A = 0), $(CODE X.B = 1), $(CODE X.C = 2):)
 
         ---
         enum X { A, B, C }  // named enum
         ---
 
 
-        $(P If the $(I EnumBaseType) is not explicitly set, and the first
+        $(P If the $(GLINK EnumBaseType) is not explicitly set, and the first
         $(I EnumMember) has an *AssignExpression*, it is set to the type of that
         *AssignExpression*. Otherwise, it defaults to
         type $(CODE int).)
 
-        $(P Named enum members may not have individual $(I Type)s.
-        )
+        * A named enum member can be implicitly cast to its $(I EnumBaseType).
+        * An $(I EnumBaseType) instance cannot be implicitly cast to a named enum type.
 
-        $(P A named enum member can be implicitly cast to its $(GLINK EnumBaseType),
-        but $(I EnumBaseType) types
-        cannot be implicitly cast to an enum type.
-        )
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
+-------------------
+int i;
+
+enum Foo { E }
+Foo f;
+i = f;           // OK
+f = i;           // error
+f = cast(Foo)i;  // OK
+f = 0;           // error
+f = Foo.E;       // OK
+-------------------
+)
+
+        $(P A named enum member does not have an individual $(I Type).)
 
         $(P The value of an $(GLINK EnumMember) is given by its *AssignExpression* if present.
         If there is no *AssignExpression* and it is the first $(I EnumMember),
-        its value is $(GLINK EnumBaseType)`.init`.
+        its value is converted to $(GLINK EnumBaseType) from `0`.
         If there is no *AssignExpression* and it is not the first $(I EnumMember),
-        it is given the value of the previous $(I EnumMember)`+1`:)
+        it is given the value of the previous $(I EnumMember)` + 1`:)
 
         * If the value of the previous $(I EnumMember) is $(GLINK EnumBaseType)`.max`,
           it is an error. This prevents value overflow. It is an error if the previous
           member cannot be compared with *EnumBaseType*`.max` at compile-time.
         * It is an error if the base type does not define a compile-time
-          evaluable `+1` operation.
-        * If the value of the previous $(I EnumMember)`+1` is the same as the
+          evaluable `+ 1` operation.
+        * If the value of the previous $(I EnumMember)` + 1` is the same as the
           value of the previous $(I EnumMember), it is an error. (This can happen
           with floating point types).
+
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
+---
+enum E : char
+{
+    a,
+    b = char.max,
+    c // overflow
+}
+
+static assert(E.a == 0);
+---
+)
 
         $(P All $(I EnumMember)s are in scope for the *AssignExpression*s.
         )
@@ -123,20 +147,32 @@ enum E : C
 ---
 )
 
-        $(P An empty enum body (For example $(CODE enum E;)) signifies an opaque
-        enum - the enum members are unknown.)
+        $(P An empty enum body signifies an opaque enum - the enum members are unknown.)
+        ---
+        enum X;          // opaque enum
+        writeln(X.init); // error: enum X is opaque and has no default initializer
+        ---
 
-$(H3 $(LNAME2 enum_default_initializer, Enum Default Initializer))
+$(H3 $(LEGACY_LNAME2 enum_default_initializer, enum_variables, Enum Variables))
 
-        $(P The $(CODE .init) property of an enum type is the value
-        of the first member of that enum.
-        This is also the default initializer for the enum type.
+        $(P A variable can be of named enum type.
+        The default initializer is the first member defined for the enum type.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ------
-enum X { A=3, B, C }
-X x;      // x is initialized to 3
+enum X { A = 3, B, C }
+X x;
+assert(x == X.A);
+x |= X.B;
+assert(x & X.A);
 ------
+)
+
+        $(P The result type of a binary operation performed when the operands have
+        different types is defined $(DDSUBLINK spec/type, enum-ops, here).)
+
+        $(P See also: $(DDSUBLINK spec/statement, final-switch-statement, `final switch`).)
 
 $(H3 $(LNAME2 enum_properties, Enum Properties))
 
@@ -154,7 +190,7 @@ $(H3 $(LNAME2 enum_properties, Enum Properties))
         $(P For example:)
 
 ---
-enum X { A=3, B=1, C=4, D, E=2 }
+enum X { A = 3, B = 1, C = 4, D, E = 2 }
 X.init   // is X.A
 X.min    // is X.B
 X.max    // is X.D
@@ -163,6 +199,75 @@ X.sizeof // is same as int.sizeof
 
         $(P The $(GLINK EnumBaseType) of named enums must support comparison
         in order to compute the $(CODE .max) and $(CODE .min) properties.
+        )
+
+$(H3 $(LNAME2 enum_copying_and_assignment, Enum Copying and Assignment))
+
+        $(P A named enum type never has a
+        $(DDSUBLINK spec/struct, struct-copy-constructor, copy constructor),
+        $(DDSUBLINK spec/struct, struct-postblit, postblit), or
+        $(DDSUBLINK spec/struct, assign-overload, identity assignment overload),
+        even if one is defined by its $(GLINK EnumBaseType).)
+
+        $(P When copying a named enum value whose base type is a `struct` with
+        a copy constructor, the copy constructor is not called:)
+
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
+        ---
+        struct S
+        {
+            this(ref S rhs) { assert(0); }
+        }
+
+        enum E : S { A = S.init }
+
+        void main()
+        {
+            E e1;
+            E e2 = e1; // ok - copy constructor not called
+        }
+        ---
+        )
+
+        $(P When copying a named enum value whose base type is a `struct` with
+        a postblit, the postblit is not called:)
+
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
+        ---
+        struct S
+        {
+            this(this) { assert(0); }
+        }
+
+        enum E : S { A = S.init }
+
+        void main()
+        {
+            E e1;
+            E e2 = e1; // ok - postblit not called
+        }
+        ---
+        )
+
+        $(P When assigning a named enum value to another object of the same
+        type, if the base type of those values is a `struct` with an identity
+        assignment overload, the identity assignment overload is not called:)
+
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
+        ---
+        struct S
+        {
+            void opAssign(S rhs) { assert(0); }
+        }
+
+        enum E : S { A = S.init }
+
+        void main()
+        {
+            E e1, e2;
+            e2 = e1; // ok - opAssign not called
+        }
+        ---
         )
 
 
@@ -192,7 +297,7 @@ $(H2 $(LNAME2 anonymous_enums, Anonymous Enums))
 enum { A, B, C }  // anonymous enum
 ------
 
-        $(P Defines the constants A=0, B=1, C=2, all of type `int`.)
+        $(P Defines the constants $(CODE A = 0), $(CODE B = 1), $(CODE C = 2), all of type `int`.)
 
         $(P Enums must have at least one member.
         )
@@ -201,7 +306,7 @@ enum { A, B, C }  // anonymous enum
         If there is no *AssignExpression* and it is the first $(I EnumMember),
         its value is the $(CODE .init) property of the $(I EnumMember)'s type.
         If there is no *AssignExpression* and it is not the first $(I EnumMember),
-        it is given the value of the previous $(I EnumMember)`+1`:)
+        it is given the value of the previous $(I EnumMember)` + 1`:)
 
         * If the value of the previous $(I EnumMember) is the `.max` property
           of the previous $(I EnumMember)'s type, it is an error.
@@ -217,16 +322,16 @@ enum { A, B, C }  // anonymous enum
         )
 
 ------
-enum { A, B = 5+7, C, D = 8+C, E }
+enum { A, B = 5 + 7, C, D = 8 + C, E }
 ------
 
-        $(P Sets A=0, B=12, C=13, D=21, and E=22, all of type `int`.)
+        $(P Sets $(CODE A = 0), $(CODE B = 12), $(CODE C = 13), $(CODE D = 21), and $(CODE E = 22), all of type `int`.)
 
 ---
 enum : long { A = 3, B }
 ---
 
-        $(P Sets A=3, B=4 all of type `long`.)
+        $(P Sets $(CODE A = 3) and $(CODE B = 4), both of type `long`.)
 
 ---
 enum : string
@@ -247,7 +352,7 @@ enum
 }
 ---
 
-$(H2 $(LNAME2 manifest_constants, Manifest Constants))
+$(H2 $(LNAME2 single_member, Single Member Anonymous Enum))
 
         $(P If there is only one member of an anonymous enum, the `{ }` can
         be omitted. Gramatically speaking, this is an $(GLINK2 declaration, AutoDeclaration).
@@ -258,6 +363,10 @@ enum i = 4;      // i is 4 of type int
 enum long l = 3; // l is 3 of type long
 ---
 
+$(H2 $(LNAME2 manifest_constants, Manifest Constants))
+
+        $(P Enum members are manifest constants, which exist only at compile-time.)
+
         $(P Manifest constants are not lvalues, meaning their address
         cannot be taken.  They exist only in the memory of the compiler.)
 
@@ -265,7 +374,7 @@ enum long l = 3; // l is 3 of type long
 enum size = __traits(classInstanceSize, Foo);  // evaluated at compile-time
 ---
 
-        $(P The initializer for a manifest constant is evaluated using compile time function evaluation.)
+        $(P The initializer for a manifest constant is evaluated using compile-time function evaluation.)
 
 ---
 template Foo(T)
@@ -273,7 +382,7 @@ template Foo(T)
     // Not bad, but the 'size' variable will be located in the executable.
     const size_t size = T.sizeof;       // evaluated at compile-time
 
-    // ... use of 'size' at compile time ...
+    // ... use of 'size' at compile-time ...
 }
 
 template Bar(T)
@@ -293,6 +402,6 @@ $(SPEC_SUBNAV_PREV_NEXT interface, Interfaces, const3, Type Qualifiers)
 )
 
 Macros:
-    CHAPTER=17
+    CHAPTER=18
         TITLE=Enums
         CATEGORY_SPEC=$0

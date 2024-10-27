@@ -1,0 +1,435 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jun 01, 2023, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 11 major changes and 63 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 38 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.attr-inference-diag,Better error message when attribute inference fails down the call stack))
+$(LI $(RELATIVE_LINK2 dmd.empty-statement-error,Using `;` as an empty statement has been turned into an error))
+$(LI $(RELATIVE_LINK2 dmd.in-externd,Using `in` parameters with non `extern(D)`/`extern(C++)` functions is deprecated))
+$(LI $(RELATIVE_LINK2 dmd.in-ref,`in ref` on parameters has been deprecated in favor of `-preview=in`))
+$(LI $(RELATIVE_LINK2 dmd.throw-qualifier,Throwing qualified objects is now deprecated))
+$(LI $(RELATIVE_LINK2 dmd.uda-template-args,User Defined Attributes now parse Template Arguments))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 clamp_assert_message,Better static assert messages for `std.algorithm.comparison.clamp`))
+$(LI $(RELATIVE_LINK2 rebindable_all_types,`std.typecons.Rebindable` now supports all types))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Tools changes,
+
+$(LI $(RELATIVE_LINK2 rdmd_shared,rdmd supports `-shared`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 collect_c_source_and_headers_for_ImportC,Add new properties 'cSourcePaths' and 'cImportPaths' to SDL/JSON))
+$(LI $(RELATIVE_LINK2 hierarchy,The way packages are stored internally has changed))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.attr-inference-diag,Better error message when attribute inference fails down the call stack)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.attr-inference-diag.dd)
+$(P
+When a function fails to infer a function attribute, all callers of that function also fail to infer the attribute.
+The resulting error message only points to the top most function with the explicit attribute:
+)
+
+---
+void main() @nogc
+{
+    fun();
+}
+
+auto fun()
+{
+    funImpl();
+}
+
+auto funImpl()
+{
+    int[] a = [1, 2, 3];
+}
+---
+
+$(P
+$(CONSOLE
+app.d(4): Error: `@nogc` function `D main` cannot call non-@nogc function `app.fun`
+)
+)
+
+$(P
+This doesn't tell the underlying reason why `fun` wasn't inferred `@nogc`, and led to use of [workarounds to get better information](https://www.schveiguy.com/blog/2023/02/spelunking-attribute-inference-in-d/).
+The new error message will point to the function which failed to infer the attribute:
+)
+
+$(P
+$(CONSOLE
+app.d(4): Error: `@nogc` function `D main` cannot call non-@nogc function `app.fun`
+app.d(7):        which calls `app.funImpl`
+app.d(14):        which wasn't inferred `@nogc` because of:
+app.d(14):        array literal in `@nogc` function `app.funImpl` may cause a GC allocation
+)
+)
+
+$(P
+Note: this was already implemented for `@safe` since 2.101, but it has now been extended to `@nogc`, `nothrow`, and `pure`.
+)
+)
+
+$(LI $(LNAME2 dmd.empty-statement-error,Using `;` as an empty statement has been turned into an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.empty-statement-error.dd)
+$(P
+This has been deprecated since 2.075.0 because it's error prone:
+)
+
+---
+void main()
+{
+    foreach (i; 0 .. 8);
+    {
+        // Because of the accidental semicolon above,
+        // this block statement is executed once.
+        // It's not the loop body
+    }
+}
+---
+
+$(P
+It will now result in an error.
+)
+
+$(P
+$(CONSOLE
+app.d(3): Error: use `{ }` for an empty statement, not `;`
+)
+)
+)
+
+$(LI $(LNAME2 dmd.in-externd,Using `in` parameters with non `extern(D)`/`extern(C++)` functions is deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.in-externd.dd)
+$(P
+In preparation for enabling `-preview=in` by default,
+using `in` parameters on function that have neither D nor C++ linkage is deprecated.
+Users can replace instances of `in` with either `const` or `scope const`.
+Refer to [v2.101.0 changelog's](https://dlang.org/changelog/2.101.0.html#dmd.previewInLink)
+for a full rationale.
+)
+)
+
+$(LI $(LNAME2 dmd.in-ref,`in ref` on parameters has been deprecated in favor of `-preview=in`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.in-ref.dd)
+$(P
+Using `in ref` (or `ref in`) on function parameters will now yield a deprecation.
+Users are encouraged to remove the `ref` and compile with `-preview=in`,
+which will infer whether the parameter should be passed by reference or value.
+Users wanting a specific ABI are encouraged to use `scope const ref` instead.
+Note that this also applies to `auto ref in`, which is equivalent to `in` with `-preview=in`,
+but the latter doesn't require the function to be templated.
+)
+)
+
+$(LI $(LNAME2 dmd.throw-qualifier,Throwing qualified objects is now deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.throw-qualifier.dd)
+$(P
+Previously, an `immutable`, `const`, `inout` or `shared` exception could be
+thrown and then caught in an unqualified `catch (Exception e)` clause.
+That breaks type safety.
+Throwing a qualified object is now deprecated. This helps to prevent
+possible mutation of an immutable object in a `catch` clause.
+)
+
+$(P
+The runtime also modifies a thrown object (e.g. to contain a stack
+trace) which can violate `const` or `immutable` objects. Throwing
+qualified objects has been deprecated for this reason also.
+)
+)
+
+$(LI $(LNAME2 dmd.uda-template-args,User Defined Attributes now parse Template Arguments)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.uda-template-args.dd)
+$(P
+It was already allowed to put types in UDAs, but the parser would reject basic types written directly, requiring the use of an alias.
+)
+
+---
+alias Tint = int;
+
+@Tint void f();
+---
+
+$(P
+Also, simple literals that can appear in template instantiations without brackets (example: `foo!"arg"`) require parentheses when used as an attribute:
+)
+---
+@("my test") unittest
+{
+
+}
+---
+
+$(P
+Now, arguments that can appear after a template instantiation `foo!` can also appear after an `@` attribute.
+)
+---
+@int void f();
+
+@"my test" unittest
+{
+
+}
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 clamp_assert_message,Better static assert messages for `std.algorithm.comparison.clamp`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/clamp_assert_message.dd)
+$(P
+Until now, `clamp` used a template constraint to check if the passed types
+could be used. If they were not, it was very tedious to figure out why.
+)
+
+$(P
+As the template constraint is not used for overload resolution
+the constrains are moved into static asserts with expressive error
+messages.
+)
+)
+
+$(LI $(LNAME2 rebindable_all_types,`std.typecons.Rebindable` now supports all types)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/rebindable_all_types.dd)
+$(P
+`Rebindable` can now be used to store and rebind values of any type, including
+`immutable struct` values.
+)
+
+$(P
+To ensure const safety is preserved, the stored values cannot be accessed
+by reference.
+)
+
+$(P
+The implementation used for all previously supported types (classes, interfaces
+and arrays) is unchanged.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Tools changes,
+
+$(LI $(LNAME2 rdmd_shared,rdmd supports `-shared`)
+$(CHANGELOG_SOURCE_FILE tools, ../tools/changelog/rdmd_shared.dd)
+$(P
+rdmd now understands DMD's `-shared` switch, and sets the default output file name appropriately (`.dll`, `.so`, or `.dylib` depending on the platform), in the same way as `-lib`.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 collect_c_source_and_headers_for_ImportC,Add new properties 'cSourcePaths' and 'cImportPaths' to SDL/JSON)
+$(CHANGELOG_SOURCE_FILE dub, changelog/collect_c_source_and_headers_for_ImportC.dd)
+$(P
+`cSourcePaths` passes the C source files in all specified directories to the compiler.
+All C sources found in the given directories for 'cImportPaths' are passed to the D compiler.
+This ensures backward compatible behaviour for projects that stored C sources aside of D source file, while porting them to D.
+)
+
+$(P
+The second keyword 'cImportPaths' will add additional search paths for C headers. These directories are passed to the D compilers
+as addition include paths. The feature might need additional tweaking, because the include paths are currently joint with the
+D import paths. This might change in future to support independant search paths for C to be passed to the D compilers.
+)
+)
+
+$(LI $(LNAME2 hierarchy,The way packages are stored internally has changed)
+$(CHANGELOG_SOURCE_FILE dub, changelog/hierarchy.dd)
+$(P
+Previous versions of dub stored packages in the following format:
+`$CACHE_PATH/$PACKAGE_NAME-$PACKAGE_VERSION/$PACKAGE_NAME/`
+Starting from this version, the format will be:
+`$CACHE_PATH/$PACKAGE_NAME/$PACKAGE_VERSION/$PACKAGE_NAME`.
+)
+
+$(P
+Introducing a new level will help users quickly list what packages
+they actually have installed, and reduce visibility of packages that
+might update frequently. It will render various commands (e.g. `du`)
+more useful, pave the way for a package GC function, and make manual
+browsing easier.
+)
+
+$(P
+More importantly, it will allow future version of dub to infer the
+version from the path to the package, removing the need to read (or edit)
+the recipe file on every dub invocation.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 23764): Message printed twice: Usage of in on parameter)
+$(LI $(BUGZILLA 23832): dmd regression 2.103.0 silent error cannot call decode at runtime)
+$(LI $(BUGZILLA 23874):  -profile=gc segfaults / ICE regression)
+$(LI $(BUGZILLA 23882): ICE $(LPAREN)segfault$(RPAREN) on nasty alias this code)
+$(LI $(BUGZILLA 23905): Initialization of SumType with opaque enum causes ICE)
+$(LI $(BUGZILLA 23913): __traits$(LPAREN)getMember$(RPAREN) fails for some C symbols)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 12118): Modify immutable data using throw)
+$(LI $(BUGZILLA 18493): [betterC] Can't use aggregated type with postblit)
+$(LI $(BUGZILLA 19454): Name collisions with unnamed function parameters)
+$(LI $(BUGZILLA 19706): Attribute inference in struct fails)
+$(LI $(BUGZILLA 20737): TLS variables unusable with -betterC for Windows MSVC targets)
+$(LI $(BUGZILLA 21667): scope parameter causes 'no size because of forward references')
+$(LI $(BUGZILLA 22760): Segmentation fault in CppMangleVisitor.template_arg)
+$(LI $(BUGZILLA 22785): joiner does not support range over immutable)
+$(LI $(BUGZILLA 22960): importC: K&R-style functions assume variadic calling convention)
+$(LI $(BUGZILLA 23014): importC: static thread-locals do not work)
+$(LI $(BUGZILLA 23055): importC: using compound-literal array as pointer in CTFE gives 'dereference of invalid pointer')
+$(LI $(BUGZILLA 23402): importc function definitions from includes can cause D name conflicts)
+$(LI $(BUGZILLA 23427): ImportC: some bitfield combinations lead to wrong size struct)
+$(LI $(BUGZILLA 23509): ImportC: need statement expressions extension for GLibC's assert$(LPAREN)$(RPAREN))
+$(LI $(BUGZILLA 23691): compilable/test22294.i:16:1: control Z interpreted as end of file)
+$(LI $(BUGZILLA 23715): ImportC: No rejection of _Thread_local variables declared at function scope without 'static' as per C11 6.2.4-5)
+$(LI $(BUGZILLA 23727): ImportC support imaginary real numbers)
+$(LI $(BUGZILLA 23784): ImportC: __ptr32, __ptr64)
+$(LI $(BUGZILLA 23787): ImportC: __unaligned)
+$(LI $(BUGZILLA 23789): ImportC: __declspec$(LPAREN)align$(LPAREN)n$(RPAREN)$(RPAREN))
+$(LI $(BUGZILLA 23795): Cannot cast _Complex!double to _Complex!float)
+$(LI $(BUGZILLA 23801): ImportC: enumeration constant does not fit in an int)
+$(LI $(BUGZILLA 23802): ImportC: __volatile__ is yet another alias for volatile)
+$(LI $(BUGZILLA 23808): #include <stdlib.h> is not working with importc)
+$(LI $(BUGZILLA 23822): Deprecated struct alias ignored completely)
+$(LI $(BUGZILLA 23826): Deprecated type member passed to template doesn't warn)
+$(LI $(BUGZILLA 23836): Two errors printed for typeof$(LPAREN)super$(RPAREN) in non-static member context)
+$(LI $(BUGZILLA 23837): importc fails to link on windows x86 but successes on x64)
+$(LI $(BUGZILLA 23838): DMD lexer / parser examples might not compile)
+$(LI $(BUGZILLA 23861): Compiler segmentation fault with ref and alias this)
+$(LI $(BUGZILLA 23863): `typeof` rejects `AliasSeq!$(LPAREN)$(RPAREN)` as argument)
+$(LI $(BUGZILLA 23866): ImportC: Multiple __declspecs rejected)
+$(LI $(BUGZILLA 23867): ImportC: undefined identifier `__builtin_isnan`)
+$(LI $(BUGZILLA 23869): ImportC: undefined identifier `isfinite`)
+$(LI $(BUGZILLA 23873): [ICE] segfault on imported `static if ; else auto x`)
+$(LI $(BUGZILLA 23885): [CI] C++ interop tests with g++ fail)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 13577): More informative error message for refused immutable foreach loop)
+$(LI $(BUGZILLA 17374): Improve inferred attribute error message)
+$(LI $(BUGZILLA 20268): anonymous function parameter mismatch errors don't include parameters)
+$(LI $(BUGZILLA 22559): ImportC: support gnu case ranges)
+$(LI $(BUGZILLA 23401): ImportC: add -cpp=filename switch to select C preprocessor)
+$(LI $(BUGZILLA 23862): with statement should accept an expression with enum type)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 19642): std.range.slide!$(LPAREN)No.withPartial$(RPAREN) on lengthless forward range: get empty when expecting one window)
+$(LI $(BUGZILLA 22147): DList can't accept a struct with postblit disabled)
+$(LI $(BUGZILLA 22786): maxElement et al does not support range over immutable)
+$(LI $(BUGZILLA 23834): std.file : File links to c functions are invalid and need updating)
+$(LI $(BUGZILLA 23846): std.math can't compile under macos rosetta)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 6106): Keep track of changes during replace function)
+$(LI $(BUGZILLA 14478): isInputRange should allow ranges of non-copyable elements)
+$(LI $(BUGZILLA 23769): Lambda isn't a unary predicate for lambda that doesn't compile)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 14891): profilegc_setlogfilename w/o null-terminated string might fail during fopen)
+$(LI $(BUGZILLA 23949): core.stdc.assert_ for FreeBSD and DragonFlyBSD is incorrect)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 11989): Phase out TickDuration)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 14932): The language specification does not define what the shared attribute does)
+$(LI $(BUGZILLA 23698): ImportC: __stdcall is not documented as supported MSVC/DMC extensions)
+$(LI $(BUGZILLA 23699): ImportC: Unclear documentation that struct/union/enum introduce implicit typedefs)
+$(LI $(BUGZILLA 23872): Wrong example in Interfacing to C: Calling printf section)
+)
+)
+$(D_CONTRIBUTORS_HEADER 38)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR Andrew Lalis)
+    $(D_CONTRIBUTOR Ate Eskola)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Caleb Xu)
+    $(D_CONTRIBUTOR Christian Koestlin)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR Dmytro Katyukha)
+    $(D_CONTRIBUTOR drpriver)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Grim Maple)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR jamesragray)
+    $(D_CONTRIBUTOR Jan Jurzitza)
+    $(D_CONTRIBUTOR Jeremy)
+    $(D_CONTRIBUTOR Jordi Sayol)
+    $(D_CONTRIBUTOR Lance Bachmeier)
+    $(D_CONTRIBUTOR Lucian Danescu)
+    $(D_CONTRIBUTOR lucica28)
+    $(D_CONTRIBUTOR Marcelo Silva Nascimento Mancini)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR Max Haughton)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Temtaime)
+    $(D_CONTRIBUTOR Teodor Dutu)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.104.0
+    TITLE=Change Log: $(VER)

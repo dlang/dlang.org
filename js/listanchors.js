@@ -34,7 +34,7 @@ function addAnchors()
 function addVersionSelector() {
   // Latest version offered by the archive builds
   // This needs to be manually updated after new versions have been archived
-  var currentArchivedVersion = 99;
+  var currentArchivedVersion = 109;
   // build URLs for dlang.org: DDoc + Dox
   var ddocModuleURL = document.body.id.replace(/[.]/g, "_") + ".html";
   var ddoxModuleURL = document.body.id.replace(/[.]/g, "/") + ".html";
@@ -66,45 +66,43 @@ function addVersionSelector() {
       return {
         name: e,
         url: "https://docarchives.dlang.io/v" + e + ".0/" + currentRoot + ddocModuleURL,
-        selected: false,
       };
   });
 
-  var rootURL = location.href.split(/\/(phobos|library|spec)(-prerelease)?/)[0]
   var onlineVersions;
   if (isSpec) {
     onlineVersions = [{
       name: "master",
-      url: rootURL + "/spec/" + ddocModuleURL,
+      url: "https://dlang.org/spec/" + ddocModuleURL,
     }];
   } else {
     onlineVersions = [{
       name: "master",
-      url: rootURL + "/phobos-prerelease/" + ddocModuleURL,
+      url: "https://dlang.org/phobos-prerelease/" + ddocModuleURL,
     },{
       name: "master (ddox)",
-      url: rootURL + "/library-prerelease/" + ddoxModuleURL,
+      url: "https://dlang.org/library-prerelease/" + ddoxModuleURL,
     },{
       name: "stable",
-      url: rootURL + "/phobos/" + ddocModuleURL,
+      url: "https://dlang.org/phobos/" + ddocModuleURL,
     },{
       name: "stable (ddox)",
-      url: rootURL + "/library/" + ddoxModuleURL,
+      url: "https://dlang.org/library/" + ddoxModuleURL,
     }];
   }
 
   // set the current URL as selected
   var currentURL = location.href.split(/[#?]/)[0];
-  onlineVersions.forEach(function(v, i) {
-    onlineVersions[i].selected = v.url === currentURL;
+  var versions = onlineVersions.concat(archivedVersions);
+  versions.forEach(function(v, i) {
+    versions[i].selected = v.url === currentURL;
   });
   // Don't show the option chooser if the page hasn't been recognized
   // For example, Ddox symbol pages are currently not supported
-  if (onlineVersions.filter(function(v){return v.selected}).length === 0)
+  if (versions.filter(function(v){return v.selected}).length === 0)
     return;
 
   // build select box of all versions and append to current DOM
-  var versions = onlineVersions.concat(archivedVersions);
   var options = versions.map(function(e, i){
     return "<option value='" + i + "'" + (e.selected ? "selected" : "") + ">" + e.name + "</option>";
   });

@@ -1,0 +1,210 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Aug 01, 2024, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 4 major changes and 28 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 27 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.copying-to-void-arrays,Copying from `const(void)[]` to `void[]` is disallowed with `-preview=fixImmutableConv`))
+$(LI $(RELATIVE_LINK2 dmd.import-exp-hexstring,Import expressions are now treated as hex strings))
+$(LI $(RELATIVE_LINK2 dmd.unsafe-boolean-values,`bool` values other than 0 or 1 are not `@safe`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 selections_from_parent_dir,`dub.selections.json` files are now looked up in parent directories too))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.copying-to-void-arrays,Copying from `const(void)[]` to `void[]` is disallowed with `-preview=fixImmutableConv`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.copying-to-void-arrays.dd)
+$(P
+If `const(void)[]` data contains tail `const` pointers, copying to `void[]`
+can subsequently violate `const` data:
+)
+---
+void f(int*[] a, const int*[] b)
+{
+    void[] va = a;
+    const void[] vb = b;
+    va[] = vb[]; // fills `a` with pointers to const
+    *a[0] = 0; // const data mutated
+}
+---
+$(P
+Copying `vb` data to `va` is no longer allowed with the
+`-preview=fixImmutableConv` switch.
+)
+)
+
+$(LI $(LNAME2 dmd.import-exp-hexstring,Import expressions are now treated as hex strings)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.import-exp-hexstring.dd)
+$(P
+While [Import expressions](https://dlang.org/spec/expression.html#import_expressions) are typed as `string`, they are also used to embed binary files.
+By treating them the same as hex strings, they will implicitly convert to arrays of integral types other than `char`.
+)
+
+---
+// Formerly, a cast was required:
+immutable ubyte[] iconImg = cast(immutable ubyte[]) import("icon.png");
+
+// Now, it implicitly converts to integral arrays:
+immutable ubyte[] iconImg = import("icon.png");
+---
+)
+
+$(LI $(LNAME2 dmd.unsafe-boolean-values,`bool` values other than 0 or 1 are not `@safe`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.unsafe-boolean-values.dd)
+$(P
+The spec [was updated](https://dlang.org/spec/type.html#bool)
+(for 2.109) so that only 0 and 1 are
+[safe values](https://dlang.org/spec/function.html#safe-values)
+for `bool`. This means that reading a `bool` value whose underlying byte representation
+has other bits set is implementation-defined and should be avoided.
+Consequently the following are deprecated in `@safe` code:
+)
+
+$(P
+* `void` initialization of booleans (since 2.109)
+* Reading a `bool` field from a union (since 2.109)
+* Runtime casting a dynamic array to a `bool` dynamic array type
+* Runtime casting a `bool` dynamic array to a tail mutable dynamic array type
+* Casting a pointer to a `bool` pointer type
+* Casting a `bool` pointer to a tail mutable pointer type
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 selections_from_parent_dir,`dub.selections.json` files are now looked up in parent directories too)
+$(CHANGELOG_SOURCE_FILE dub, changelog/selections_from_parent_dir.dd)
+$(P
+In case the root package directory doesn't contain a `dub.selections.json`
+file, dub now looks in parent directories too and potentially uses the
+first (deepest) one it finds - if and only if that JSON file contains an
+optional new `"inheritable": true` flag.
+)
+
+$(P
+This allows using a 'central' `dub.selections.json` file for a repository
+containing multiple dub projects, making it automatically apply to all
+builds in that source tree if located in the repository root directory
+(unless a local `dub.selections.json` overrides it).
+)
+
+$(P
+Such an inherited selections file is never mutated when running dub for a
+nested project, i.e., changes are always saved to a *local*
+`dub.selections.json` file. E.g., when running `dub upgrade` for a nested
+project.
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 12885): const union wrongly converts implicitly to mutable)
+$(LI $(BUGZILLA 17148): Copying from const$(LPAREN)void$(RPAREN)[] to void[] breaks immutable)
+$(LI $(BUGZILLA 23957): Casting to derived extern$(LPAREN)C++$(RPAREN) class is unsafe)
+$(LI $(BUGZILLA 24534): Having a label on a declaration makes it possible to skip it with goto)
+$(LI $(BUGZILLA 24558): C asserts segfault on Glibc)
+$(LI $(BUGZILLA 24577): Struct with constructor returned from C++ wrong)
+$(LI $(BUGZILLA 24582): Detect unsafe `cast$(LPAREN)bool[]$(RPAREN)`)
+$(LI $(BUGZILLA 24583): di generator emits return scope and scope return in wrong order)
+$(LI $(BUGZILLA 24592): ImportC: Bitfield layout wrong for int64 on 32-bit Linux)
+$(LI $(BUGZILLA 24594): ImportC: Packed struct has wrong layout)
+$(LI $(BUGZILLA 24603): Can copy from non-void array into void[] in safe code)
+$(LI $(BUGZILLA 24622): Modify const data with void[] concatenation/append)
+$(LI $(BUGZILLA 24630): Casting a bool pointer to a mutable pointer type is unsafe)
+$(LI $(BUGZILLA 24631): Pointer cast allows changing @system field in @safe code)
+$(LI $(BUGZILLA 24634): Parse error initializing array from expression with StructInitializer)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 20243): inout not substituted for in associative array key type)
+$(LI $(BUGZILLA 24135): Eponymous template member overloads not shown as call candidates)
+$(LI $(BUGZILLA 24580): ImportC: Asm label after attributes results in syntax error)
+$(LI $(BUGZILLA 24598): OpenBSD: adapt compiler tests)
+$(LI $(BUGZILLA 24623): Rename version CppRuntime_Clang/Gcc to CppRuntime_libcxx/libstdcxx.)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 24564): std.file.DirEntry throws Exception instead of FileException)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 24579): stat_t has wrong size for Android armv7a)
+$(LI $(BUGZILLA 24626): hasUDA does not handle multiple UDAs of the same symbol)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 24590): Illegal instruction with module constructors cycle and shared libphobos2 in _d_criticalenter2)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 24543): The `@__future` attribute is $(LPAREN)almost$(RPAREN) undocumented)
+$(LI $(BUGZILLA 24548): [spec] Boolean condition conversion is not documented)
+$(LI $(BUGZILLA 24565): out contract variable is implicitly const)
+)
+$(BUGSTITLE_BUGZILLA Installer bug fixes,
+
+$(LI $(BUGZILLA 24600): DMD nightly builds are outdated)
+)
+)
+$(D_CONTRIBUTORS_HEADER 27)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR 0-v-0)
+    $(D_CONTRIBUTOR 0v0)
+    $(D_CONTRIBUTOR Alex Muscar)
+    $(D_CONTRIBUTOR Andrei Horodniceanu)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR Brad Roberts)
+    $(D_CONTRIBUTOR Brian Callahan)
+    $(D_CONTRIBUTOR Connor)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR Emmanuel Nyarko)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Jeremy Baxter)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Quirin Schroll)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR ryuukk)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR zopsicle)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.110.0
+    TITLE=Change Log: $(VER)

@@ -1,5 +1,7 @@
 Ddoc
 
+$(COMMENT BE CAREFUL TO USE &lt; AND &gt; INSIDE CPPCODE2)
+
 $(COMMUNITY Template Comparison,
 
 $(P C++ pioneered templates and template metaprogramming and has continued
@@ -23,8 +25,8 @@ templates based on the C++ experience.
 
         $(TR
             $(TD Argument list delineation)
-            $(TD Uses !( ), as in Foo!(int). $(BR)Can omit parens when the argument is a single lexical token: Foo!int)
-            $(TD Uses &lt; &gt; as in Foo&lt;int&gt;)
+            $(TD Uses `!( )`, as in `Foo!(int)`. $(BR)Can omit parens when the argument is a single lexical token: `Foo!int`)
+            $(TD Uses `< >` as in `Foo<int>`)
         )
 
         $(TR
@@ -77,14 +79,15 @@ T foo(T i)
 
         $(TR
             $(TD Constructor Templates)
-            $(TD No)
+            $(TD Yes)
             $(TD Yes)
         )
 
         $(TR
             $(TD Parameterize any Declaration)
-            $(TD Yes, classes, functions, typedefs,
-            variables, enums, etc. can be parameterized,
+            $(TD Yes, classes, functions, any
+            $(DDSUBLINK spec/declaration, alias, alias),
+            variables, any enum, etc. can be parameterized,
             such as this variable:
 ---
 template Foo(T)
@@ -97,7 +100,14 @@ template Foo(T)
                 $(B$(U C++98))$(BR)
                 No, only classes and functions
                 $(BR)$(B$(U C++11))$(BR)
-                Yes:
+                Added `using` type aliases:
+$(CPPCODE2
+template&lt;class T&gt;
+using ptr = T*;
+ptr&lt;int&gt; p;
+)
+                $(B$(U C++14))$(BR)
+                Added `constexpr` constant:
 $(CPPCODE2
 template&lt;class T&gt;
 constexpr T pi = T(3.1415926535897932385L);
@@ -133,7 +143,8 @@ MyFoo&lt;unsigned&gt; f;
 
         $(TR
             $(TD Sequence Constructors)
-            $(TD No)
+            $(TD No, use a
+                $(DDSUBLINK spec/function, typesafe_variadic_functions, variadic parameter) instead)
             $(TD
                 $(B$(U C++98))$(BR)
                 No
@@ -142,7 +153,7 @@ MyFoo&lt;unsigned&gt; f;
 $(CPPCODE2
 template &lt;class T&gt;
 class Foo {
-    Foo(std::initializer_list<T>);
+    Foo(std::initializer_list&lt;T&gt;);
 };
 
 Foo&lt;double&gt; f = { 1.2, 3.0, 6.8 };
@@ -197,7 +208,7 @@ template&lt;&gt; class factorial&lt;1&gt;
             based on Template Arguments)
             $(TD Yes:
 ---
-template void foo(T)(T i)
+void foo(T)(T i)
 {
   static if (can_fast_foo!(T))
     FastFoo f = fast_foo(i);
@@ -205,7 +216,8 @@ template void foo(T)(T i)
     SlowFoo f = slow_foo(i);
   use_foo(f);
 }
-
+---
+---
 class HashTable(T, int maxLength)
 {
     static if (maxLength < 0xFFFE)
@@ -223,23 +235,23 @@ $(CPPCODE2
 template&lt;class T&gt; void foo(T i)
 {
   // Differentiate using a
-  // Helper<bool> specialization
-  Helper<can_fast_foo<T>>::use_foo(i);
+  // Helper&lt;bool&gt; specialization
+  Helper&lt;can_fast_foo&lt;T&gt;&gt;::use_foo(i);
 };
 
 template&lt;class T, int maxLength&gt; class HashTable {
-    typedef typename std::conditional<
-            maxLength < 0xFFFE, uint16_t, uint32_t>
+    typedef typename std::conditional&lt;
+            maxLength &lt; 0xFFFE, uint16_t, uint32_t&gt;
         ::type CellIdx;
     CellIdx index;
 };
 )
             $(BR)$(B$(U C++17))$(BR)
-            Yes, but is limited to block scope:
+            Yes, but it's limited to block scope:
 $(CPPCODE2
 template&lt;class T&gt; void foo(T i)
 {
-  if constexpr (can_fast_foo<T>)
+  if constexpr (can_fast_foo&lt;T&gt;)
     FastFoo foo = fast_foo(i);
   else
     SlowFoo foo = slow_foo(i);
@@ -248,7 +260,7 @@ template&lt;class T&gt; void foo(T i)
 
 template&lt;class T, int maxLength&gt; class HashTable {
     // $(ERROR cannot use 'if' outside of a function)
-    if constexpr (maxLength < 0xFFFE)
+    if constexpr (maxLength &lt; 0xFFFE)
         using CellIdx = ushort;
     else
         using CellIdx = uint;
@@ -259,8 +271,8 @@ template&lt;class T, int maxLength&gt; class HashTable {
         )
 
         $(TR
-            $(TD Template Declarations (with no definition))
-            $(TD No)
+            $(TD Template Forward Declarations)
+            $(TD Not necessary)
             $(TD Yes:
 $(CPPCODE2
 template&lt;class T&gt;
@@ -289,15 +301,23 @@ class Foo {
     class Bar { ... };
     static T foo(T t, U u) { ... }
 };
-Foo<int, long>::bar b;
-return Foo<char, int>::foo('c', 3);
+Foo&lt;int, long&gt;::bar b;
+return Foo&lt;char, int&gt;::foo('c', 3);
 )
             )
         )
 
         $(TR
+        $(TD Deducing `this` parameter type)
+        $(TD $(DDSUBLINK spec/template, template_this_parameter, Yes))
+        $(TD $(B$(U C++23))$(BR)Yes)
+        )
+
+        $(TR
         $(TD Compile time execution of functions)
         $(TD $(DDSUBLINK spec/function, interpretation, Yes):
+
+$(RUNNABLE_EXAMPLE_COMPILE
 ---
 int factorial(int i)
 {
@@ -306,8 +326,9 @@ int factorial(int i)
     else
         return i * factorial(i - 1);
 }
-static f = factorial(6);
+pragma(msg, factorial(6));
 ---
+)
         )
         $(TD
             $(B$(U C++98))$(BR)
@@ -376,7 +397,7 @@ void foo()
 
         $(TR
             $(TD Reference Parameters)
-            $(TD No, D does not have a general reference type)
+            $(TD No, but an alias parameter can be used instead (see below).)
             $(TD Yes:
 $(CPPCODE2
 template&lt;double& D&gt;
@@ -466,7 +487,7 @@ void foo()
             $(TD String Parameters)
             $(TD Yes:
 ---
-void foo(char[] format)(int i)
+void foo(string format)(int i)
 {
     writefln(format, i);
 }
@@ -480,10 +501,10 @@ foo!("i = %s")(3);
                 $(BR)$(B$(U C++17))$(BR)
                 Only indirectly:
 $(CPPCODE2
-template &lt;const char*&gt;
+template &lt;const char *str&gt;
 struct S {};
 
-S&lt;"Foo"&gt; foo1; $(ERROR A string literal argument is still illegal)
+S&lt;"Foo"&gt; foo1; // $(ERROR A string literal argument is still illegal)
 const char foo_str[] = "foo";
 S&lt;foo_str&gt; foo2; // Literal types are allowed, including arrays.
 )
@@ -675,18 +696,17 @@ class Foo&lt; Bar&lt;T,U&gt; &gt;
 
         $(TR
             $(TD Overloading Function Templates with Functions)
-            $(TD No, but the equivalent can be done with explicitly specialized
-            templates:
+            $(TD Yes:
 ---
 void foo(T)(T t) { }
-void foo(T:int)(int t) { }
+void foo(int i) { }
 ---
             )
             $(TD Yes:
 $(CPPCODE2
 template&lt;class T&gt;
-void foo(T i) { }
-void foo(int t) { }
+void foo(T t) { }
+void foo(int i) { }
 )
             )
         )
@@ -708,19 +728,18 @@ void foo(int t) { }
             $(TD Can extract arguments of
             template instance)
             $(TD Yes:
----
-class Foo(T)
-{
-    static if (is(T x : T!A, A...))
-    {
-        pragma(msg, A);  // (int, float)
-    }
-}
 
+$(RUNNABLE_EXAMPLE_COMPILE
+---
 struct Bar(T1, T2) { }
 alias BarInst = Bar!(int, float);
-Foo!(BarInst) f;
+
+static if (is(BarInst : Template!Args, alias Template, Args...))
+{
+    pragma(msg, Args);  // (int, float)
+}
 ---
+)
             See $(DDSUBLINK spec/expression, IsExpression, is expressions).)
             $(TD No)
         )
@@ -947,7 +966,7 @@ Macros:
         NO1=<td class="compNo"><a href="$1">No</a></td>
         D_CODE = <pre class="d_code2">$0</pre>
         CPPCODE2 = <pre class="cppcode2">$0</pre>
-        ERROR = $(RED $(B error))
+        ERROR = $(RED $(B error) $0)
         SUBNAV=$(SUBNAV_ARTICLES)
 META_KEYWORDS=D Programming Language, template metaprogramming,
 variadic templates, type deduction, dependent base class

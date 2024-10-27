@@ -4,9 +4,7 @@ $(SPEC_S Functions,
 
 $(HEADERNAV_TOC)
 
-$(H2 $(LNAME2 grammar, Grammar))
-
-$(H3 Function declaration)
+$(H2 $(LNAME2 grammar, Function Declarations))
 
 $(GRAMMAR
 $(GNAME FuncDeclaration):
@@ -24,7 +22,15 @@ $(GNAME FuncDeclaratorSuffix):
     $(GLINK2 template, TemplateParameters) $(GLINK Parameters) $(GLINK MemberFunctionAttributes)$(OPT) $(GLINK2 template, Constraint)$(OPT)
 )
 
-$(H3 Parameters)
+        * A *FuncDeclaration* with a function body is called a
+          $(RELATIVE_LINK2 function-bodies, function definition).
+        * A *FuncDeclaration* without a function body is called a
+          $(RELATIVE_LINK2 function-declarations, function prototype).
+        * A *FuncDeclaration* with *TemplateParameters* defines a
+          $(DDSUBLINK spec/template, function-templates, function template).
+
+
+$(H3 Function Parameters)
 
 $(GRAMMAR
 $(GNAME Parameters):
@@ -32,17 +38,18 @@ $(GNAME Parameters):
 
 $(GNAME ParameterList):
     $(GLINK Parameter)
-    $(GLINK Parameter) $(D ,)
-    $(GLINK Parameter) $(D ,) $(GSELF ParameterList)
+    $(GLINK Parameter) $(D ,) $(GSELF ParameterList)$(OPT)
     $(GLINK VariadicArgumentsAttributes)$(OPT) $(D ...)
 
 $(GNAME Parameter):
+    $(GLINK ParameterDeclaration)
+    $(GLINK ParameterDeclaration) $(D ...)
+    $(GLINK ParameterDeclaration) $(D =) $(ASSIGNEXPRESSION)
+    $(GLINK ParameterDeclaration) $(D =) $(ASSIGNEXPRESSION) $(D ...)
+
+$(GNAME ParameterDeclaration):
     $(GLINK ParameterAttributes)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator)
-    $(GLINK ParameterAttributes)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator) $(D ...)
-    $(GLINK ParameterAttributes)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator) $(D =) $(ASSIGNEXPRESSION)
     $(GLINK ParameterAttributes)$(OPT) $(GLINK2 type, Type)
-    $(GLINK ParameterAttributes)$(OPT) $(GLINK2 type, Type) $(D ...)
-    $(GLINK ParameterAttributes)$(OPT) $(GLINK2 type, Type) $(D =) $(ASSIGNEXPRESSION)
 
 $(GNAME ParameterAttributes):
     $(GLINK ParameterStorageClass)
@@ -77,7 +84,7 @@ $(NOTE In D2, declaring a parameter `final` is a semantic error, but not a parse
 
 $(P See also: $(RELATIVE_LINK2 param-storage, parameter storage classes).)
 
-$(H3 Function attributes)
+$(H3 Function Attributes)
 
 $(GRAMMAR
 $(GNAME FunctionAttributes):
@@ -132,10 +139,8 @@ $(LEGACY_LNAME2 FunctionLiteralBody)
         $(DDSUBLINK spec/statement, ReturnStatement, return statement).
         This syntax also applies for $(DDSUBLINK spec/expression, function_literals, function literals).)
 
-        $(P $(B Note:) The *ShortenedFunctionBody* form requires the `-preview=shortenedMethods`
-        command-line switch, which is available starting in v2.096.0.)
 
-$(H3 $(LNAME2 function-declarations, Functions without Bodies))
+$(H3 $(LNAME2 function-declarations, Function Prototypes))
 
 $(GRAMMAR
 $(GNAME MissingFunctionBody):
@@ -144,16 +149,23 @@ $(GNAME MissingFunctionBody):
     $(GLINK FunctionContracts)$(OPT) $(GLINK InOutStatement)
 )
 
-    $(P Functions without bodies:)
+    $(P Function declarations with a *MissingFunctionBody*, e.g.:)
 
 ---
 int foo();
 ---
 
-    $(P that are not declared as $(D abstract) are expected to have their implementations
+    $(P that are not declared as $(DDSUBLINK spec/class, abstract, `abstract`)
+    are expected to have their implementations
     elsewhere, and that implementation will be provided at the link step.
     This enables an implementation of a function to be completely hidden from the user
     of it, and the implementation may be in another language such as C, assembler, etc.
+    Typically a function prototype would have non-`extern(D)`
+    $(DDSUBLINK spec/attribute, linkage, linkage).
+    )
+
+    $(P A function prototype can have `extern(D)` linkage.
+    This is useful for $(DDSUBLINK dmd, interface-files, D interface files).
     )
 
 
@@ -179,20 +191,6 @@ $(GNAME InOutContractExpression):
 $(GNAME InOutStatement):
     $(GLINK InStatement)
     $(GLINK OutStatement)
-
-$(GNAME InContractExpression):
-    $(D in $(LPAREN)) $(GLINK2 expression, AssertArguments) $(D $(RPAREN))
-
-$(GNAME OutContractExpression):
-    $(D out $(LPAREN) ;) $(GLINK2 expression, AssertArguments) $(D $(RPAREN))
-    $(D out $(LPAREN)) $(GLINK_LEX Identifier) $(D ;) $(GLINK2 expression, AssertArguments) $(D $(RPAREN))
-
-$(GNAME InStatement):
-    $(D in) $(GLINK2 statement, BlockStatement)
-
-$(GNAME OutStatement):
-    $(D out) $(GLINK2 statement, BlockStatement)
-    $(D out) $(D $(LPAREN)) $(GLINK_LEX Identifier) $(D $(RPAREN)) $(GLINK2 statement, BlockStatement)
 )
 
         $(P Function Contracts specify the preconditions and postconditions of a function.
@@ -203,20 +201,27 @@ $(GNAME OutStatement):
 
     $(H3 $(LNAME2 preconditions, Preconditions))
 
-        $(P An $(GLINK InContractExpression) is a precondition.)
+$(GRAMMAR
+$(GNAME InContractExpression):
+    $(D in $(LPAREN)) $(GLINK2 expression, AssertArguments) $(D $(RPAREN))
 
-        $(P The first $(GLINK2 expression, AssignExpression) of the $(GLINK2 expression, AssertArguments)
-        must evaluate to true. If it does not, the precondition has failed.)
+$(GNAME InStatement):
+    $(D in) $(GLINK2 statement, BlockStatement)
+)
 
-        $(P The second $(I AssignExpression), if present, must be implicitly convertible to type `const(char)[]`.
-        )
+        $(P An $(I InContractExpression) is a precondition.)
+
+        * The first $(GLINK2 expression, AssignExpression) of the $(I AssertArguments)
+          must evaluate to true. If it does not, the precondition has failed.)
+
+        * The second $(I AssignExpression), if present, must be implicitly convertible to type `const(char)[]`.
 
         $(P An $(GLINK InStatement) is also a precondition. Any $(GLINK2 expression, AssertExpression) appearing
         in an $(I InStatement) will be an $(I InContractExpression).
         )
 
         $(P Preconditions must semantically be satisfied before the function starts executing.
-        If it is not, the program enters an $(I Invalid State).
+        If a precondition fails, the program enters an $(I Invalid State).
         )
 
         $(IMPLEMENTATION_DEFINED Whether the preconditions are actually run or not is implementation defined.
@@ -258,20 +263,29 @@ $(GNAME OutStatement):
 
     $(H3 $(LNAME2 postconditions, Postconditions))
 
-        $(P An $(GLINK OutContractExpression) is a postcondition.)
+$(GRAMMAR
+$(GNAME OutContractExpression):
+    $(D out $(LPAREN) ;) $(GLINK2 expression, AssertArguments) $(D $(RPAREN))
+    $(D out $(LPAREN)) $(GLINK_LEX Identifier) $(D ;) $(GLINK2 expression, AssertArguments) $(D $(RPAREN))
 
-        $(P The first $(GLINK2 expression, AssignExpression) of the $(GLINK2 expression, AssertArguments)
-        must evaluate to true. If it does not, the postcondition has failed.)
+$(GNAME OutStatement):
+    $(D out) $(GLINK2 statement, BlockStatement)
+    $(D out) $(D $(LPAREN)) $(GLINK_LEX Identifier) $(D $(RPAREN)) $(GLINK2 statement, BlockStatement)
+)
 
-        $(P The second $(I AssignExpression), if present, must be implicitly convertible to type `const(char)[]`.
-        )
+        $(P An $(I OutContractExpression) is a postcondition.)
 
-        $(P An $(GLINK OutStatement) is also a postcondition. Any $(GLINK2 expression, AssertExpression) appearing
+        * The first $(GLINK2 expression, AssignExpression) of the $(I AssertArguments)
+          must evaluate to true. If it does not, the postcondition has failed.
+
+        * The second $(I AssignExpression), if present, must be implicitly convertible to type `const(char)[]`.
+
+        $(P An $(I OutStatement) is also a postcondition. Any $(GLINK2 expression, AssertExpression) appearing
         in an $(I OutStatement) will be an $(I OutContractExpression).
         )
 
         $(P Postconditions must semantically be satisfied after the function finishes executing.
-        If it is not, the program enters an $(I Invalid State).
+        If a postcondition fails, the program enters an $(I Invalid State).
         )
 
         $(IMPLEMENTATION_DEFINED Whether the postconditions are actually run or not is implementation defined.
@@ -281,8 +295,9 @@ $(GNAME OutStatement):
         $(I AssignExpression).
         )
 
-        $(BEST_PRACTICE Use postconditions to validate that the input arguments and return value have values that are
-        expected by the function.)
+        $(BEST_PRACTICE Use postconditions to validate that on leaving the function:)
+        * Any mutable input arguments each have the expected value/range of values.
+        * Any return value has a correct value/range of values.
 
         $(BEST_PRACTICE Since postconditions may or may not be actually checked at runtime, avoid
         using postconditions that have side effects.)
@@ -317,9 +332,10 @@ $(GNAME OutStatement):
         ---
 
         $(P The optional identifier in either type of postcondition is set to the return value
-        of the function, and can be accessed from within the postcondition.)
+        of the function, and can be accessed from within the postcondition.
+        It is implicitly `const`.)
 
-    $(H3 Example)
+    $(H3 $(LNAME2 example-contracts, Example))
 
         ---
         int fun(ref int a, int b)
@@ -384,7 +400,8 @@ $(H2 $(LNAME2 function-return-values, Function Return Values))
         unless:)
         $(UL
         $(LI the function executes an infinite loop)
-        $(LI the function executes an `assert(0)` statement)
+        $(LI the function executes an $(DDSUBLINK spec/expression, assert-ct,
+            `assert(0)` statement))
         $(LI the function evaluates an expression of type
             $(DDSUBLINK spec/type, noreturn, `noreturn`))
         $(LI the function contains inline assembler code)
@@ -407,26 +424,28 @@ $(H2 $(LNAME2 pure-functions, Pure Functions))
         $(LI Modify the local state of the function.)
         $(LI Throw exceptions.)
         )
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
         int x;
         immutable int y;
-        const int* pz;
 
         pure int foo(int i)
         {
             i++;     // ok, modifying local state
-            x = i;   // error, modifying global state
-            i = x;   // error, reading mutable global state
+            //x = i; // error, modifying global state
+            //i = x; // error, reading mutable global state
             i = y;   // ok, reading immutable global state
-            i = *pz; // error, reading const global state
             throw new Exception("failed"); // ok
         }
         ---
+        )
 
         $(P A pure function can override an impure function,
             but cannot be overridden by an impure function.
             I.e. it is covariant with an impure function.
         )
+
+$(H3 $(LNAME2 weak-purity, Strong vs Weak Purity))
 
         $(P A $(I weakly pure function) has parameters with mutable indirections.
             Program state can be modified transitively through the matching
@@ -450,17 +469,19 @@ $(H2 $(LNAME2 pure-functions, Pure Functions))
             and cannot modify any program state external to the function.
         )
 
+            $(SPEC_RUNNABLE_EXAMPLE_COMPILE
             ---
             struct S { double x; }
 
-            pure int foo(immutable(int)[] arr, int num, S val)
+            pure size_t foo(immutable(int)[] arr, int num, S val)
             {
                 //arr[num] = 1; // compile error
-                num = 2;        // has no side effect to the caller side
+                num = 2;        // has no side effect on the caller side
                 val.x = 3.14;   // ditto
                 return arr.length;
             }
             ---
+            )
 
         $(P A strongly pure function can call a weakly pure function.)
 
@@ -478,6 +499,8 @@ $(H3 $(LNAME2 pure-special-cases, Special Cases))
         initial state upon function exit. It is the programmer's responsibility
         to ensure this. Setting these flags is not allowed in `@safe` code.)
 
+$(H4 $(LNAME2 pure-debug, Debugging))
+
         $(P A pure function can perform impure operations in statements that are in a
         $(GLINK2 version, ConditionalStatement)
         controlled by a $(GLINK2 version, DebugCondition).
@@ -494,8 +517,11 @@ $(H3 $(LNAME2 pure-special-cases, Special Cases))
         }
         ---
 
+$(H4 $(LNAME2 pure-nested, Nested Functions))
+
         $(P $(RELATIVE_LINK2 nested, Nested functions) inside a pure function are implicitly marked as pure.)
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
         pure int foo(int x, immutable int y)
         {
@@ -522,18 +548,21 @@ $(H3 $(LNAME2 pure-special-cases, Special Cases))
             return bar() + baz();
         }
         ---
+        )
 
 $(H3 $(LNAME2 pure-factory-functions, Pure Factory Functions))
 
         $(P A $(I pure factory function) is a strongly pure function
-        that returns a result that has mutable indirections.
+        that returns a result that has only mutable indirections.
         All mutable
         memory returned by the call cannot be referenced by any other part of the
         program, i.e. it is newly allocated by the function.
         The mutable
         references of the result similarly cannot refer to any object that
         existed before the function call.
-        This allows the result to be implicitly cast to any qualifier.
+        This allows the result to be implicitly cast
+        from anything to `immutable` or `const shared`,
+        and from `shared` and `const shared` to (unshared) `const`.
         For example:)
 
         $(SPEC_RUNNABLE_EXAMPLE_COMPILE
@@ -543,7 +572,7 @@ $(H3 $(LNAME2 pure-factory-functions, Pure Factory Functions))
         pure List* make(int a, int b)
         {
             auto result = new List(a, null);
-            result.next = new List(b, result);
+            result.next = new List(b, null);
             return result;
         }
 
@@ -570,18 +599,46 @@ $(H3 $(LNAME2 pure-factory-functions, Pure Factory Functions))
 $(H3 $(LNAME2 pure-optimization, Optimization))
 
         $(IMPLEMENTATION_DEFINED An implementation may assume that a strongly pure
-        function that returns a result
+        function called with arguments that have only immutable indirections (or none)
+        that returns a result
         without mutable indirections will have the same effect for all invocations
         with equivalent arguments. It is allowed to memoize the result of the
-        function under the assumption that equivalent parameters always produce
+        function under the assumption that equivalent arguments always produce
         equivalent results.)
 
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+        ---
+        int a(int) pure; // no mutable indirections
+        int b(const Object) pure; // depends on argument passed
+        immutable(Object) c(immutable Object) pure; // always memoizable
+
+        void g();
+
+        void f(int n, const Object co, immutable Object io)
+        {
+            const int x = a(n);
+            g(); // `n` does not change between calls to `a`
+            int i = a(n); // same as `i = x`
+
+            const int y = b(co);
+            // `co` may have mutable indirection
+            g(); // may change fields of `co` through another reference
+            i = b(co); // call is not memoizable, result may differ
+
+            const int z = b(io);
+            i = b(io); // same as `i = z`
+        }
+        ---
+        )
+
         $(P
-        A strongly pure function may still have behavior
+        Such a function may still have behavior
         inconsistent with memoization by e.g. using `cast`s or by changing behavior
         depending on the address of its parameters. An implementation is currently
         not required to enforce validity of memoization in all cases.
-        If a strongly pure function throws an *Exception* or an *Error*, the
+        )
+        $(P
+        If a function throws an *Exception* or an *Error*, the
         assumptions related to memoization do not carry to the thrown
         exception.)
 
@@ -598,21 +655,33 @@ $(H2 $(LNAME2 nothrow-functions, Nothrow Functions))
 
 $(H2 $(LNAME2 ref-functions, Ref Functions))
 
-        $(P Ref functions allow functions to return by reference,
-        meaning that the return value must be an lvalue, and
-        the lvalue is returned, not the rvalue.
+        $(P A `ref` function returns by reference (instead of by value).
+        The return value of a `ref` function must be an lvalue
+        (whereas the return value of a non-`ref` function can be an rvalue, too).
+        An expression formed by calling a `ref` function is an lvalue
+        (whereas an expression formed by calling a non-`ref` function is an rvalue).
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---
+int *p;
+
 ref int foo()
 {
-    auto p = new int(2);
+    p = new int(2);
     return *p;
 }
-...
-int i = foo(); // i is set to 2
-foo() = 3;     // reference returns can be lvalues
+
+void main()
+{
+    int i = foo();
+    assert(i == 2);
+
+    foo() = 3;     // reference returns can be lvalues
+    assert(*p == 3);
+}
 ---
+)
 
         $(P Returning a reference to an expired function context is not allowed.
         This includes local variables, temporaries and parameters that are part
@@ -627,7 +696,8 @@ ref int sun()
 }
 ---
 
-        $(P A `ref` parameter may not be returned by `ref`.)
+        $(P A `ref` parameter may not be returned by `ref`, unless it is
+        $(RELATIVE_LINK2 return-ref-parameters, `return ref`).)
 ---
 ref int moon(ref int i)
 {
@@ -643,8 +713,7 @@ $(H2 $(LNAME2 auto-functions, Auto Functions))
     )
 
     $(P An auto function is declared without a return type.
-        If it does not already have a storage class, use the
-        $(D_KEYWORD auto) storage class.
+        Auto functions can use any valid $(GLINK2 declaration, StorageClass), not just `auto`.
     )
 
     $(P If there are multiple $(I ReturnStatement)s, the types
@@ -655,17 +724,25 @@ $(H2 $(LNAME2 auto-functions, Auto Functions))
         $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
         auto foo(int x) { return x + 3; }          // inferred to be int
-        auto bar(int x) { return x; return 2.5; }  // inferred to be double
+        pure bar(int x) { return x; return 2.5; }  // inferred to be double
         ---
         )
 
+    $(NOTE Return type inference also triggers
+    $(RELATIVE_LINK2 function-attribute-inference, attribute inference).)
+
+
 $(H2 $(LNAME2 auto-ref-functions, Auto Ref Functions))
 
-    $(P Auto ref functions infer their return type just as
+    $(P Auto ref functions can infer their return type just as
         $(RELATIVE_LINK2 auto-functions, auto functions) do.
         In addition, they become $(RELATIVE_LINK2 ref-functions, ref functions)
-        if all return expressions are lvalues,
-        and it would not be a reference to a local or a parameter.)
+        if all of these apply:)
+
+    * All expressions returned from the function are lvalues
+    * No local variables are returned
+    * Any parameters returned are reference parameters
+    * Each returned expression must implicitly convert to an lvalue of the deduced return type
 
         $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
@@ -673,7 +750,11 @@ $(H2 $(LNAME2 auto-ref-functions, Auto Ref Functions))
         auto ref f2()          { return 3; }  // value return
         auto ref f3(ref int x) { return x; }  // ref return
         auto ref f4(out int x) { return x; }  // ref return
-        auto ref f5() { static int x; return x; }  // ref return
+        auto ref f5()
+        {
+            static int x;
+            return x; // ref return
+        }
         ---
         )
 
@@ -687,16 +768,16 @@ $(H2 $(LNAME2 auto-ref-functions, Auto Ref Functions))
         auto ref f3(ref int x, ref double y)
         {
             return x; return y;
-            // The return type is deduced to double, but cast(double)x is not an lvalue,
-            // then become a value return.
+            // The return type is deduced to be double, but cast(double)x is not an lvalue,
+            // so f3 has a value return.
         }
         ---
         )
 
-    $(P Auto ref function can have explicit return type.)
+    $(P Auto ref functions can have an explicit return type.)
 
         ---
-        auto ref int (ref int x) { return x; }  // ok, ref return
+        auto ref int bar(ref int x) { return x; }  // ok, ref return
         auto ref int foo(double x) { return x; }   // error, cannot convert double to int
         ---
 
@@ -1216,11 +1297,17 @@ $(H2 $(LNAME2 function-overloading, Function Overloading))
         )
 
         $(OL
-        $(LI no match)
-        $(LI match with implicit conversions)
-        $(LI match with qualifier conversion (if the argument type is
+        $(LI No match)
+        $(LI Match with implicit conversions)
+        $(LI Match with qualifier conversion (if the argument type is
         $(GLOSSARY qualifier-convertible) to the parameter type))
-        $(LI exact match)
+        $(LI Exact match)
+        )
+
+        $(P Named arguments are resolved for a candidate according to
+        $(DDSUBLINK spec/expression, argument-parameter-matching, Matching Arguments to Parameters).
+        If this fails (for example, because the overload does not have a parameter matching a named argument),
+        the level is $(I no match). Other than that, named arguments do not affect the matching level.
         )
 
         $(P Each argument (including any $(CODE this) reference) is
@@ -1230,6 +1317,8 @@ $(H2 $(LNAME2 function-overloading, Function Overloading))
         arguments.)
 
         $(P Literals do not match $(CODE ref) or $(CODE out) parameters.)
+
+        $(P $(CODE scope) parameter storage class does not affect function overloading.)
 
         $(P If two or more functions have the same match level,
         then $(LNAME2 partial-ordering, $(I partial ordering))
@@ -1583,7 +1672,7 @@ void main()
 
         $(P See Also: $(RELATIVE_LINK2 lazy_variadic_functions, Lazy Variadic Functions))
 
-$(H3 $(LNAME2 function-default-args, Function Default Arguments))
+$(H3 $(LNAME2 function-default-args, Default Arguments))
 
         $(P Function parameter declarations can have default values:)
 
@@ -1601,14 +1690,14 @@ foo(4);   // same as foo(4, 3);
 ---
 module m;
 private immutable int b;
-pure void g(int a=b){}
+pure void g(int a = b) {}
 ---
 ---
 import m;
 int b;
 pure void f()
 {
-  g();  // ok, uses m.b
+    g();  // ok, uses m.b
 }
 ---
 
@@ -1617,20 +1706,20 @@ pure void f()
 ---
 module m;
 int b;
-pure void g(int a=b){}
+pure void g(int a = b) {}
 ---
 ---
 import m;
 enum int b = 3;
 pure void f()
 {
-  g();  // error, cannot access mutable global `m.b` in pure function
+    g();  // error, cannot access mutable global `m.b` in pure function
 }
 ---
 
-        $(P If the default value for a parameter is given, all following
-        parameters must also have default values.
-        )
+        $(P See also: function type aliases
+        $(DDSUBLINK spec/declaration, alias-function, with default values).)
+
 
 $(H3 $(LNAME2 return-ref-parameters, Return Ref Parameters))
 
@@ -1639,58 +1728,86 @@ $(H3 $(LNAME2 return-ref-parameters, Return Ref Parameters))
         returned reference will not outlive the matching argument's lifetime.
         )
 
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---
 ref int identity(return ref int x) {
-  return x; // pass-through function that does nothing
+    return x; // pass-through function that does nothing
 }
 
 ref int fun() {
-  int x;
-  return identity(x); // Error: escaping reference to local variable x
+    int x;
+    return identity(x); // Error: escaping reference to local variable x
 }
 
 ref int gun(return ref int x) {
-  return identity(x); // OK
+    return identity(x); // OK
 }
 ---
+)
+        $(P Returning the address of a `ref` variable is also checked in `@safe` code.)
 
-        $(P Struct non-static methods marked with the `return` attribute ensure the returned
-        reference will not outlive the struct instance.
-        )
-
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
 ---
-struct S
-{
-    private int x;
-    ref int get() return { return x; }
-}
-
-ref int escape()
-{
-    S s;
-    return s.get(); // Error: escaping reference to local variable s
-}
----
-
-        $(P Returning the address of a `ref` variable is also checked.)
-
----
-int* pluto(ref int i)
+int* pluto(ref int i) @safe
 {
     return &i; // error: returning &i escapes a reference to parameter i
 }
 
-int* mars(return ref int i)
+int* mars(return ref int i) @safe
 {
-    return &i;  // ok
+    return &i;  // OK with -preview=dip1000
+}
+---
+)
+
+$(PANEL
+If a function returns `void`, and the first parameter is `ref` or `out`, then
+all subsequent `return ref` parameters are considered as being assigned to
+the first parameter for lifetime checking.
+
+---
+void f(ref scope int* p, return ref int i) @safe
+{
+    p = &i; // OK with -preview=dip1000
+}
+
+void main() @safe
+{
+    int i;
+    int* p;
+    f(p, i); // OK, lifetime of p is shorter than i
+    *p = 5;
+    assert(i == 5);
+
+    int j;
+    //f(p, j); // error, lifetime of p is longer than j
 }
 ---
 
-$(P If the function returns `void`, and the first parameter is `ref` or `out`, then
-all subsequent `return ref` parameters are considered as being assigned to
-the first parameter for lifetime checking.
 The `this` reference parameter to a struct non-static member function is
-considered the first parameter.)
+considered the first parameter.
+
+---
+struct S
+{
+    private int* p;
+
+    void f(return ref int i) scope @safe
+    {
+        p = &i; // OK with -preview=dip1000
+    }
+}
+
+void main() @safe
+{
+    int i;
+    S s;
+    s.f(i); // OK, lifetime of `s` is shorter than `i`
+    *s.p = 2;
+    assert(i == 2);
+}
+---
+)
 
 $(P If there are multiple `return ref` parameters, the lifetime of the return
 value is the smallest lifetime of the corresponding arguments.)
@@ -1710,7 +1827,10 @@ int mercury(return ref int i)
 $(P Template functions, auto functions, nested functions and $(DDSUBLINK spec/expression, function_literals, lambdas)
  can deduce the `return` attribute.)
 
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
+@safe:
+
 ref int templateFunction()(ref int i)
 {
     return i; // ok
@@ -1727,15 +1847,58 @@ void uranus()
     {
         return i; // ok
     }
-}
-
-void venus()
-{
     auto lambdaFunction =
         (ref int i)
         {
             return &i; // ok
         };
+}
+---
+)
+
+$(H4 $(LNAME2 struct-return-methods, Struct Return Methods))
+
+        $(P Struct non-static methods can be marked with the `return` attribute to ensure a returned
+        reference will not outlive the struct instance.
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
+---
+struct S
+{
+    private int x;
+    ref int get() return { return x; }
+}
+
+ref int escape()
+{
+    S s;
+    return s.get(); // Error: escaping reference to local variable s
+}
+---
+)
+        $(P The hidden `this` ref-parameter then becomes `return ref`.)
+
+        $(P The `return` attribute can also be used to limit
+        the lifetime of the returned value, even when the method is not `ref`:
+        )
+
+---
+struct S
+{
+    private int i;
+    int* get() return @safe => &i;
+}
+
+void f() @safe
+{
+    int* p;
+    {
+        S s;
+        int *q = s.get(); // OK, q has shorter lifetime than s
+        p = s.get(); // error, p has longer lifetime
+        p = (new S).get(); // OK, heap allocated S
+    }
 }
 ---
 
@@ -1745,8 +1908,6 @@ $(H3 $(LNAME2 scope-parameters, Scope Parameters))
     (e.g. by being assigned to a global variable). It has no effect for non-reference types.
     `scope` escape analysis is only done for `@safe` functions. For other functions `scope`
     semantics must be manually enforced.)
-    $(NOTE `scope` escape analysis is currently only done by the `dmd` compiler
-    when the `-dip1000` switch is passed.)
 
 ---
 @safe:
@@ -1770,10 +1931,11 @@ int* balin(scope int* q, int* r)
 }
 ---
 
-    $(P As a `scope` parameter must not escape, the compiler can potentially avoid heap-allocating a
+    $(IMPLEMENTATION_DEFINED
+    As a `scope` parameter must not escape, the compiler can potentially avoid heap-allocating a
     unique argument to a `scope` parameter. Due to this, passing an array literal, delegate
     literal or a $(GLINK2 expression, NewExpression) to a scope parameter may be allowed in a
-    `@nogc` context, depending on the compiler implementation.)
+    `@nogc` context.)
 
 $(H3 $(LNAME2 return-scope-parameters, Return Scope Parameters))
 
@@ -2731,6 +2893,8 @@ $(H3 $(LEGACY_LNAME2 Local Static Variables, local-static-variables, Local Stati
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
+import std.stdio : writeln;
+
 void foo()
 {
     static int n;
@@ -3013,9 +3177,17 @@ $(H2 $(LNAME2 function-pointers-delegates, Function Pointers, Delegates and Clos
 
 $(H3 $(LNAME2 function-pointers, Function Pointers))
 
-        $(P A function pointer can point to a static nested function:)
+        $(P A function pointer is declared with the `function` keyword:)
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+void f(int);
+void function(int) fp = &f; // fp is a pointer to a function taking an int
+---
+)
+        $(P A function pointer can point to a static nested function:)
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ------
 int function() fp;  // fp is a pointer to a function returning an int
 
@@ -3027,10 +3199,12 @@ void test()
     fp = &foo;
 }
 
-void bar()
+void main()
 {
+    assert(!fp);
     test();
-    int i = fp();       // i is set to 10
+    int i = fp();
+    assert(i == 10);
 }
 ------
 )
@@ -3049,8 +3223,6 @@ int function(int)   fp1 = &abc;
 uint function(uint) fp2 = &def;
 // Do not rely on fp1 and fp2 being different values; the compiler may merge
 // them.
-
-void main() {}
 ------
 )
 
@@ -3082,7 +3254,9 @@ void main()
 
         $(P The stack variables referenced by a nested function are
         still valid even after the function exits (NOTE this is different
-        from D 1.0.) This is called a $(I closure).
+        from D 1.0).
+        This combining of the environment and the function is called
+        a $(I dynamic closure).
         )
 
         $(P Those referenced stack variables that make up the closure
@@ -3123,6 +3297,8 @@ void main()
         a closure and is an error.
         )
 
+$(H4 $(LNAME2 method-delegates, Method Delegates))
+
         $(P Delegates to non-static nested functions contain two pieces of
         data: the pointer to the stack frame of the lexically enclosing
         function (called the $(I context pointer)) and the address of the
@@ -3132,38 +3308,39 @@ void main()
         Both forms of delegates are indistinguishable, and are
         the same type.
         )
+        $(P A delegate can be set to a particular object and method using `&obj.method`:)
 
 $(SPEC_RUNNABLE_EXAMPLE_RUN
 ------
 struct Foo
 {
-    int a = 7;
-    int bar() { return a; }
+    int a;
+    int get() { return a; }
 }
 
-int foo(int delegate() dg)
+int add1(int delegate() dg)
 {
     return dg() + 1;
 }
 
 void main()
 {
-    Foo f;
-    int i = foo(&f.bar);
+    Foo f = {7};
+    int delegate() dg = &f.get; // bind to an instance of Foo and a method
+    assert(dg.ptr == &f);
+    assert(dg.funcptr == &Foo.get);
+
+    int i = add1(dg);
     assert(i == 8);
 
     int x = 27;
     int abc() { return x; }
 
-    i = foo(&abc);
+    i = add1(&abc);
     assert(i == 28);
 }
 ------
 )
-
-        $(P This combining of the environment and the function is called
-        a $(I dynamic closure).
-        )
 
         $(P The $(D .ptr) property of a delegate will return the
         $(I context pointer) value as a $(D void*).
@@ -3549,14 +3726,17 @@ $(H2 $(LNAME2 nogc-functions, No-GC Functions))
         )
 
         $(OL
-        $(LI $(DDSUBLINK spec/expression, ArrayLiteral, constructing an array) on the heap)
+        $(LI $(DDSUBLINK spec/expression, array-literal-heap, constructing an array) on the heap)
         $(LI resizing an array by writing to its $(D .length) property)
         $(LI $(DDSUBLINK spec/expression, CatExpression, array concatenation))
         $(LI $(DDSUBLINK spec/expression, simple_assignment_expressions, array appending))
         $(LI $(DDSUBLINK spec/expression, AssocArrayLiteral, constructing an associative array))
-        $(LI $(DDSUBLINK spec/expression, IndexExpression, indexing) an associative array
-            $(NOTE because it may throw $(D RangeError) if the specified key is not present))
-        $(LI $(DDSUBLINK spec/expression, NewExpression, allocating an object with `new`) on the heap)
+        $(LI $(DDSUBLINK spec/expression, IndexOperation, indexing) an associative array
+            $(RATIONALE Indexing may throw a $(D RangeError) if the specified key is not present.))
+        $(LI $(DDSUBLINK spec/expression, NewExpression, allocating an object with `new`) on the heap
+            $(NOTE `new` declarations of $(D class) types in function scopes are compatible with
+            $(D @nogc) if used to initialize a $(DDSUBLINK spec/attribute, scope-class-var, $(D scope) variable),
+            as they result in allocations on the stack.))
         $(LI calling functions that are not `@nogc`, unless the call is
             in a $(GLINK2 version, ConditionalStatement)
             controlled by a $(GLINK2 version, DebugCondition))
@@ -3574,6 +3754,7 @@ $(H2 $(LNAME2 nogc-functions, No-GC Functions))
                 aa["abc"];         // (6) error, indexing may allocate and throws
 
                 auto p = new int;  // (7) error, operator new allocates
+                scope auto p = new GenericClass(); // (7) Ok
                 bar();             // (8) error, bar() may allocate
                 debug bar();       // (8) Ok
             }
@@ -3612,6 +3793,14 @@ $(H2 $(LNAME2 nogc-functions, No-GC Functions))
             }
             ---
 
+        $(BEST_PRACTICE Since a function marked `@nogc` will not do any GC allocations,
+        that implies it will not cause any GC collections to run. However,
+        another thread may still allocate with the GC and trigger a collection.
+        The recommended way to prevent GC collections from being run is to call
+        $(LINK2 https://dlang.org/phobos/core_memory.html#GC.disable, core.memory.GC.disable())
+        instead. This will stop collections from being run in any thread until a corresponding
+        call to `core.memory.GC.enable()` is run. GC allocations can still be performed
+        when `GC.disable()` is in effect.)
 
 $(H2 $(LNAME2 function-safety, Function Safety))
 
@@ -3623,34 +3812,56 @@ $(H3 $(LNAME2 safe-functions, Safe Functions))
 
         $(P Safe functions have $(RELATIVE_LINK2 safe-interfaces, safe
         interfaces). An implementation must enforce this by restricting the
-        function's body to operations that are known safe.)
+        function's body to operations that are known to be safe,
+        except for calls to $(RELATIVE_LINK2 trusted-functions, `@trusted` functions).)
 
-        $(P The following operations are not allowed in safe
+        $(P The following restrictions are enforced by the compiler in safe
         functions:)
 
         $(UL
-        $(LI No casting from a pointer type to any type with pointers other than $(CODE void*).)
+        $(LI No casting from a pointer type `T` to any type `U` with pointers, except when:)
+            * `T` implicitly converts to `U`
+            * `U` $(DDSUBLINK spec/expression, cast_class, implements) class or interface
+              `T`, and both types are `extern(D)`
+            * `T.opCast!U` is `@safe`
+            * Both types $(DDSUBLINK spec/expression, cast_array, are dynamic arrays), or
+              both types $(DDSUBLINK spec/expression, cast_pointers, are raw pointers), and:
+                * The target element type is not a pointer type
+                * The target element type is not mutable when the source element type is a pointer type
+                * Either the target element type is a dynamic array, or the target element
+                  type is no larger than the source element type
+                * Any source element type modifiers implicitly convert to the target element type modifiers
+                * Neither element type is a function type
+                * The target element type is not mutable when the source type is `void[]`
+                * The target element type only stores $(RELATIVE_LINK2 safe-values, safe values)
+                * The source element type only stores safe values when the target element type is mutable
+                * Neither element type is $(DDSUBLINK spec/struct, opaque_struct_unions, opaque).
         $(LI No casting from any non-pointer type to a pointer type.)
-        $(LI No pointer arithmetic (including pointer indexing).)
-        $(LI Cannot access unions that have pointers or references overlapping
-        with other types.)
-        $(LI Cannot access unions that have fields with invariants overlapping
-        with other types.)
+        $(LI No $(DDSUBLINK spec/expression, pointer_arithmetic, pointer arithmetic)
+            (including pointer indexing & slicing).)
+        $(LI Cannot access union fields that:)
+            * Have pointers or references overlapping with other types
+            * Have invariants overlapping with other types
+            * Overlap with fields that could become $(RELATIVE_LINK2 safe-values, unsafe values)
         $(LI Calling any $(RELATIVE_LINK2 system-functions, System Functions).)
         $(LI No catching of exceptions that are not derived from
         $(LINK2 https://dlang.org/phobos/object.html#.Exception, $(D class Exception)).)
-        $(LI No inline assembler.)
-        $(LI No explicit casting of mutable objects to immutable.)
-        $(LI No explicit casting of immutable objects to mutable.)
-        $(LI No explicit casting of thread local objects to shared.)
-        $(LI No explicit casting of shared objects to thread local.)
-        $(LI Cannot access $(D __gshared) variables.)
-        $(LI Cannot use $(D void) initializers for pointers.)
-        $(LI Cannot use $(D void) initializers for class or interface references.)
-        $(LI Cannot use $(D void) initializers for types that have invariants.)
+        $(LI $(DDSUBLINK spec/iasm, asmstatements, Inline assembler) must be marked as
+            `@trusted`.)
+        $(LI No explicit casting (except with a matching `@safe` `opCast`) of:)
+            * mutable objects to immutable (except basic data types)
+            * immutable objects to mutable (except basic data types)
+            * thread local objects to shared
+            * shared objects to thread local
+        $(LI Cannot access $(DDSUBLINK spec/attribute, system-variables, `@system`)
+            or $(D __gshared) variables.)
+        $(LI Cannot use $(D void) initializers for types containing:)
+            * Pointers/reference types
+            * Types with invariants
+            * Unsafe values
         )
 
-        $(P When indexing or slicing an array, an out of bounds access
+        $(NOTE When indexing or slicing an array, an out of bounds access
             will cause a runtime error.
         )
 
@@ -3752,18 +3963,19 @@ $(H3 $(LNAME2 system-functions, System Functions))
 
 $(H3 $(LNAME2 safe-interfaces, Safe Interfaces))
 
-        $(P When it is only called with $(RELATIVE_LINK2 safe-values, safe
-        values) and $(RELATIVE_LINK2 safe-aliasing, safe aliasing), a
+        $(P When a function call's arguments, $(RELATIVE_LINK2 closures, any context)
+        and accessible globals each have $(RELATIVE_LINK2 safe-values, safe
+        values) with $(RELATIVE_LINK2 safe-aliasing, safe aliasing), that
         function has a safe interface when:)
         $(OL
             $(LI it cannot exhibit
-                $(DDSUBLINK glossary, undefined_behavior, undefined behavior),
+                $(DDSUBLINK spec/glossary, undefined_behavior, undefined behavior),
                 and)
-            $(LI it cannot create unsafe values that are accessible from other
-                parts of the program (e.g., via return values, global variables,
+            $(LI it cannot create unsafe values that are accessible from
+                `@safe` code (e.g., via return values, global variables,
                 or `ref` parameters), and)
             $(LI it cannot introduce unsafe aliasing that is accessible from
-                other parts of the program.)
+                `@safe` code.)
         )
 
         $(P Functions that meet these requirements may be
@@ -3828,7 +4040,12 @@ $(H3 $(LNAME2 safe-interfaces, Safe Interfaces))
 
 $(H3 $(LNAME2 safe-values, Safe Values))
 
-        $(P For $(DDSUBLINK spec/type, basic-data-types, basic data types), all
+        $(P A variable or field $(DDSUBLINK spec/attribute, system-variables,
+        marked as `@system`) does not hold a safe value, regardless of its type.)
+
+        $(P For a $(DDSUBLINK spec/type, bool, `bool`), only 0 and 1 are safe values.)
+
+        $(P For all other $(DDSUBLINK spec/type, basic-data-types, basic data types), all
         possible bit patterns are safe.)
 
         $(P A pointer is a safe value when it is one of:)
@@ -3868,9 +4085,11 @@ $(H3 $(LNAME2 safe-values, Safe Values))
         ---
         int[] f() @system
         {
+            bool b = true; /* b is initialized safe */
+            *(cast(ubyte*) &b) = 0xAA; /* b is now unsafe because it's not 0 or 1 */
             int[3] a;
-            int[] d1 = a[0 .. 2]; /* d1 is safe. */
-            int[] d2 = a.ptr[0 .. 3]; /* d2 is unsafe because it goes beyond a's
+            int[] d1 = a[0 .. 3]; /* d1 is safe. */
+            int[] d2 = a.ptr[0 .. 4]; /* d2 is unsafe because it goes beyond a's
                 bounds. */
             int*[] d3 = [cast(int*) 0xDEADBEEF]; /* d3 is unsafe because the
                 element is unsafe. */
@@ -3897,14 +4116,18 @@ $(H3 $(LNAME2 safe-values, Safe Values))
         $(P Examples:)
         $(SPEC_RUNNABLE_EXAMPLE_COMPILE
         ---
-        struct S { int* p; }
-        S s1 = S(new int); /* s1 is safe. */
-        S s2 = S(cast(int*) 0xDEADBEEF); /* s2 is unsafe, because s2.p is
-            unsafe. */
 
-        union U { int* p; size_t x; }
-        U u = U(new int); /* Even though both u.p and u.x are safe, u is unsafe
-            because of unsafe aliasing. */
+        void fun()
+        {
+            struct S { int* p; }
+            S s1 = S(new int); /* s1 is safe. */
+            S s2 = S(cast(int*) 0xDEADBEEF); /* s2 is unsafe, because s2.p is
+                unsafe. */
+
+            union U { int* p; size_t x; }
+            U u = U(new int); /* Even though both u.p and u.x are safe, u is unsafe
+                because of unsafe aliasing. */
+        }
         ---
         )
 
@@ -3951,20 +4174,29 @@ $(H3 $(LNAME2 safe-aliasing, Safe Aliasing))
 
     $(NOTE Safe aliasing does not imply that all aliased
     views of the data have $(RELATIVE_LINK2 safe-values, safe values).
-    Those must examined separately for safety.)
+    Those must be examined separately for safety.)
 
     $(P Examples:)
+
     $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
     void f1(ref ubyte x, ref float y) @safe { x = 0; y = float.init; }
     union U1 { ubyte x; float y; } // safe aliasing
-    U1 u1;
-    f1(u1.x, u1.y); // Ok
+
+    void test1()
+    {
+        U1 u1;
+        f1(u1.x, u1.y); // Ok
+    }
 
     void f2(ref int* x, ref int y) @trusted { x = new int; y = 0xDEADBEEF; }
     union U2 { int* x; int y; } // unsafe aliasing
-    U2 u2;
-    version (none) f1(u2.x, u2.y); // not safe
+
+    void test2()
+    {
+        U2 u2;
+        version (none) f1(u2.x, u2.y); // not safe
+    }
     ---
     )
 
@@ -4144,7 +4376,7 @@ $(SPEC_SUBNAV_PREV_NEXT const3, Type Qualifiers, operatoroverloading, Operator O
 )
 
 Macros:
-        CHAPTER=19
+        CHAPTER=20
         TITLE=Functions
         ASSIGNEXPRESSION=$(GLINK2 expression, AssignExpression)
         CHECK=&#10004;

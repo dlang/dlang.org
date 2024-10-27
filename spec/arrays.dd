@@ -107,16 +107,22 @@ int[]* e;     // pointer to dynamic array of ints
 ---------
 )
 
-$(H2 $(LNAME2 literals, Array Literals))
+$(H2 $(LNAME2 literals, Array Initializers & Literals))
 
+    $(P An $(GLINK ArrayInitializer) initializes a dynamic or static array:)
 ---
 auto a1 = [1,2,3];  // type is int[], with elements 1, 2, and 3
 auto a2 = [1u,2,3]; // type is uint[], with elements 1u, 2u, and 3u
 int[2] a3 = [1,2];  // type is int[2], with elements 1, and 2
 ---
-    $(P `[]` is an empty array literal.)
 
-    $(P See $(DDSUBLINK spec/expression, array_literals, Array Literals).)
+    $(P An $(DDSUBLINK spec/expression, array_literals, array literal) is an expression:)
+---
+void f(int[] a);
+
+f([1, 2]); // pass 2 elements
+f([]); // pass an empty array
+---
 
 $(LEGACY_LNAME2 usage)
 $(H2 $(LNAME2 assignment, Array Assignment))
@@ -204,7 +210,7 @@ assert(b[1] == 2);
 ---------
 )
 
-    $(P See also $(GLINK2 expression, IndexExpression).)
+    $(P See also $(GLINK2 expression, IndexOperation).)
 
 $(H3 $(LNAME2 pointer-arithmetic, Pointer Arithmetic))
 
@@ -229,33 +235,38 @@ assert(*p == 2);
 
     $(P See $(DDSUBLINK spec/expression, pointer_arithmetic, *AddExpression*) for details.)
 
+
 $(H2 $(LNAME2 slicing, Slicing))
 
         $(P $(I Slicing) an array means to specify a subarray of it.
+        This is done by supplying two index expressions.
+        The elements from the start index up until the end index are selected.
+        Any item at the end index is not included.
+        )
+        $(P
         An array slice does not copy the data, it is only another
         reference to it. Slicing produces a dynamic array.
-        For example:
         )
 
-$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
-void foo(int value)
-{
-  writeln("value=", value);
-}
-
-int[10] a;   // declare array of 10 ints
+int[3] a = [4, 5, 6]; // static array of 3 ints
 int[] b;
 
-b = a[1..3]; // a[1..3] is a 2 element array consisting of
+b = a[1..3]; // a[1..3] is a 2 element dynamic array consisting of
              // a[1] and a[2]
-foo(b[1]);   // equivalent to foo(0)
+assert(b == [5, 6]);
+assert(b.ptr == a.ptr + 1);
+
 a[2] = 3;
-foo(b[1]);   // equivalent to foo(3)
+assert(b == [5, 3]);
+
+b = b[1..2];
+assert(b == [3]);
 ---------
 )
 
-        $(P $(I Identifier)[] is shorthand for a slice of the entire array.
+        $(P $(I Expression)`[]` is shorthand for a slice of the entire array.
         )
 
         $(P Slicing
@@ -279,10 +290,13 @@ writeln(b[7]);      // 10
 ---------
 )
 
-    $(P See also $(GLINK2 expression, SliceExpression).)
+    $(P See also $(GLINK2 expression, SliceOperation).)
 
 
 $(H2 $(LNAME2 array-length, Array Length))
+
+        $(P The $(RELATIVE_LINK2 array-properties, `.length` property)
+        for static and dynamic arrays gives the number of elements in the array.)
 
         $(P When indexing or slicing a static or dynamic array,
         the symbol $(D $) represents the length of the array.
@@ -291,16 +305,18 @@ $(H2 $(LNAME2 array-length, Array Length))
 $(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
 int[4] foo;
-int[]  bar = foo;
+int[] bar;
 
-// These expressions are equivalent:
+// These assignments are equivalent:
 bar = foo;
 bar = foo[];
 bar = foo[0 .. 4];
 bar = foo[0 .. $];
 bar = foo[0 .. foo.length];
+assert(bar.length == 4);
 
-int* p = foo.ptr;
+int* p = foo.ptr; // a pointer has no length property
+bar = p[0 .. 4]; // OK
 //bar = p[0 .. $]; // error, '$' is not defined, since p is not an array
 
 int i;
@@ -348,10 +364,13 @@ $(H3 $(LNAME2 overlapping-copying, Overlapping Copying))
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-int[3] s;
+void main()
+{
+    int[3] s;
 
-s[0..2] = s[1..3]; // error, overlapping copy
-s[1..3] = s[0..2]; // error, overlapping copy
+    s[0..2] = s[1..3]; // error, overlapping copy
+    s[1..3] = s[0..2]; // error, overlapping copy
+}
 ---------
 )
 
@@ -465,9 +484,9 @@ a ~= b; // a becomes the concatenation of a and b
         setting dynamic array length) for details.
         )
 
-$(H2 $(LNAME2 array-operations, Array Operations))
+$(H2 $(LNAME2 array-operations, Vector Operations))
 
-        $(P Many array operations, also known as vector operations,
+        $(P Many array operations
         can be expressed at a high level rather than as a loop.
         For example, the loop:
         )
@@ -492,28 +511,50 @@ a[] = b[] + 4;
 
         $(P A vector operation is indicated by the slice operator appearing
         as the left-hand side of an assignment or an op-assignment expression.
-        The right-hand side can be an expression consisting either of an array
-        slice of the same length and type as the left-hand side or a scalar expression
-        of the element type of the left-hand side, in any combination.
-        )
+        The right-hand side can be certain combinations of:)
 
+        * An array $(GLINK2 expression, SliceOperation) of the same length
+          and type as the left-hand side
+        * A scalar expression of the same element type as the left-hand side
+
+        $(P The following operations are supported:)
+
+        * Unary: `-`, `~`
+        * Add: `+`, `-`
+        * Mul: `*`, `/`, `%`,
+        * Bitwise: `^`, `&`, `|`
+        * Pow: `^^`
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---
-T[] a, b, c;
-...
-a[] -= (b[] + 4) * c[];
+int[3] a = 0;
+int[] b = [1, 2, 3];
+
+a[] += 10 - (b[] ^^ 2);
+assert(a == [9, 6, 1]);
 ---
+)
+
+        $(NOTE In particular, an expression using
+        $(GLINK2 expression, ConditionalExpression),
+        $(DDSUBLINK spec/expression, logical_expressions, logical expressions),
+        $(GLINK2 expression, CmpExpression),
+        concatenation `~` or a function call is *not* a vector op.)
 
         $(P The slice on the left and any slices on the right must not overlap.
         All operands are evaluated exactly once, even if the array slice
         has zero elements in it.
         )
 
+        $(P If the element type defines matching overloaded operators,
+        those methods must be `pure nothrow @nogc`.)
+
         $(P The order in which the array elements are computed
         is implementation defined, and may even occur in parallel.
         An application must not depend on this order.
         )
 
-        $(P Implementation note: Many vector operations are expected
+        $(P $(B Implementation Note:) Many vector operations are expected
         to take advantage of any vector math instructions available on
         the target computer.
         )
@@ -542,8 +583,14 @@ double[][] matrix;
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
+import std.stdio : writeln;
+
 double[6][3] matrix = 0; // Sets all elements to 0.
-writeln(matrix); // [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
+
+void main()
+{
+    writeln(matrix); // [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
+}
 ---------
 )
 
@@ -554,11 +601,16 @@ writeln(matrix); // [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-double[6][3] matrix = 0;
-matrix[2][5] = 3.14; // Assignment to bottom right element.
-writeln(matrix); // [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 3.14]]
+import std.stdio : writeln;
 
-static assert(!__traits(compiles, matrix[5][2])); // Array index out of bounds.
+void main()
+{
+    double[6][3] matrix = 0;
+    matrix[2][5] = 3.14; // Assignment to bottom right element.
+    writeln(matrix); // [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 3.14]]
+
+    static assert(!__traits(compiles, matrix[5][2])); // Array index out of bounds.
+}
 ---------
 )
 
@@ -579,7 +631,7 @@ Returns an array literal with each element of the literal being the $(D .init) p
         $(TROW $(D .ptr), Returns a pointer to the first element of the array.)
         $(TROW $(D .dup), Create a dynamic array of the same size and copy the contents of the array into it. The copy will have any immutability or const stripped. If this conversion is invalid the call will not compile.)
         $(TROW $(D .idup), Create a dynamic array of the same size and copy the contents of the array into it. The copy is typed as being immutable. If this conversion is invalid the call will not compile.)
-        $(TROW $(D .tupleof), $(ARGS Returns an $(DDSUBLINK spec/template, homogeneous_sequences, lvalue sequence) of each element in the array:
+        $(TROW $(D .tupleof), $(ARGS Returns an $(DDSUBLINK spec/template, lvalue-sequences, lvalue sequence) of each element in the array:
             $(SPEC_RUNNABLE_EXAMPLE_RUN
             ---
             void foo(int, int, int) { /* ... */ }
@@ -605,30 +657,39 @@ Returns an array literal with each element of the literal being the $(D .init) p
         which is 8 in 32-bit builds and 16 on 64-bit builds.))
         $(TROW $(D .length), Get/set number of elements in the
         array. It is of type $(D size_t).)
-        $(TROW $(D .capacity), Returns the number of elements that can be appended to the array without reallocating.
+        $(TROW $(D .capacity), Returns the length an array can grow to without reallocating.
             See $(RELATIVE_LINK2 capacity-reserve, here) for details.)
-        $(TROW $(D .ptr), Returns a pointer to the first element of the array.)
+        $(TROW $(D .ptr), Returns a pointer to the first element of the array.
+            See $(RELATIVE_LINK2 assignment, assignment).)
         $(TROW $(D .dup), Create a dynamic array of the same size and copy the contents of the array into it. The copy will have any immutability or const stripped. If this conversion is invalid the call will not compile.)
         $(TROW $(D .idup), Create a dynamic array of the same size and copy the contents of the array into it. The copy is typed as being immutable. If this conversion is invalid the call will not compile.)
                 )
 
     $(P Examples:)
 
-$(SPEC_RUNNABLE_EXAMPLE_FAIL
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
 int* p;
 int[3] s;
 int[] a;
 
-p.length; // error, length not known for pointer
-s.length; // compile time constant 3
-a.length; // runtime value
+size_t len;
+//len = p.length;   // error, pointer has no length property
+enum sl = s.length; // compile time constant
+static assert(sl == 3);
 
-p.dup;    // error, length not known
-s.dup;    // creates an array of 3 elements, copies
-          // elements of s into it
-a.dup;    // creates an array of a.length elements, copies
-          // elements of a into it
+len = a.length; // runtime value
+assert(len == 0);
+
+//a = p.dup; // error, length not known
+a = s.dup;   // allocates an array of 3 elements, copies
+             // elements of `s` into it
+assert(a == s[]);
+assert(a.ptr != s.ptr);
+
+int[] b = a.dup; // allocates a new array of `a.length` elements, copies
+                 // elements of `a` into it
+assert(b !is a); // b is an independent copy of a
 ---------
 )
 
@@ -714,15 +775,18 @@ a[15] = 'z';   // does not affect c, because either a or c has reallocated.
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-int[] array;
-while (1)
+void fun()
 {
-    import core.stdc.stdio : getchar;
-    auto c = getchar;
-    if (!c)
-        break;
-    ++array.length;
-    array[array.length - 1] = c;
+    int[] array;
+    while (1)
+    {
+        import core.stdc.stdio : getchar;
+        auto c = getchar;
+        if (!c)
+            break;
+        ++array.length;
+        array[array.length - 1] = c;
+    }
 }
 ---------
 )
@@ -732,20 +796,23 @@ while (1)
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-int[] array;
-array.length = 100;        // guess
-int i;
-for (i = 0; ; i++)
+void fun()
 {
-    import core.stdc.stdio : getchar;
-    auto c = getchar;
-    if (!c)
-        break;
-    if (i == array.length)
-        array.length *= 2;
-    array[i] = c;
+    int[] array;
+    array.length = 100;        // guess
+    int i;
+    for (i = 0; ; i++)
+    {
+        import core.stdc.stdio : getchar;
+        auto c = getchar;
+        if (!c)
+            break;
+        if (i == array.length)
+            array.length *= 2;
+        array[i] = c;
+    }
+    array.length = i;
 }
-array.length = i;
 ---------
 )
 
@@ -759,11 +826,12 @@ array.length = i;
 $(H3 $(LNAME2 capacity-reserve, `capacity` and `reserve`))
 
         $(P The $(D capacity) property gives the maximum length a dynamic array
-        can grow to without reallocating. If the array does not point to
-        GC-allocated memory, the capacity will be zero.
-        The spare capacity for an array *a* is `a.capacity - a.length`.)
+        can grow to without reallocating.
+        The spare capacity for an array *a* is `a.capacity - a.length`.
+        The capacity for a slice is zero:)
 
-        $(P By default, `capacity` will be zero if an element has been stored after the slice.)
+        * If it does not point to GC-allocated dynamic array memory.
+        * By default, when an element has been stored after the slice.
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         ---
@@ -771,6 +839,7 @@ $(H3 $(LNAME2 capacity-reserve, `capacity` and `reserve`))
         assert(a.capacity == 0);
         a.length = 3; // may allocate spare capacity too
         assert(a.capacity >= 3);
+
         auto b = a[1..3];
         assert(b.capacity >= 2); // either a or b can append into any spare capacity
         b = a[0..2];
@@ -782,8 +851,9 @@ $(H3 $(LNAME2 capacity-reserve, `capacity` and `reserve`))
         elements in another slice. It is also necessary to protect immutable
         elements from being overwritten.)
 
-        $(P The $(D reserve)
-        function expands an array's capacity for use by the
+        $(P The $(REF1 reserve, object) function requests a minimum capacity for an array.
+        It returns the new capacity, which may be more than requested.
+        Any spare capacity can be used by the
         $(RELATIVE_LINK2 array-appending, append operator) or `.length` assignment.)
 
 $(SPEC_RUNNABLE_EXAMPLE_RUN
@@ -792,6 +862,7 @@ int[] array;
 const size_t cap = array.reserve(10); // request
 assert(cap >= 10); // allocated may be more than request
 assert(array.ptr != null);
+assert(array.length == 0);
 
 int[] copy = array;
 assert(copy.capacity == cap); // array and copy have same capacity
@@ -799,8 +870,9 @@ array ~= [1, 2, 3, 4, 5]; // grow in place
 assert(cap == array.capacity); // array memory was not reallocated
 assert(copy.ptr == array.ptr);
 assert(copy.capacity == 0);
-copy ~= 0; // new allocation
+copy ~= 0; // allocates a new array
 assert(copy.ptr != array.ptr);
+assert(array[0] == 1);
 ---------
 )
         $(P Above, `copy`'s length remains zero but it points to the same
@@ -809,7 +881,7 @@ assert(copy.ptr != array.ptr);
         is the address of `array[0]`. So `copy.capacity` will be zero to
         prevent any appending to `copy` from overwriting elements in `array`.)
 
-        $(NOTE The runtime uses the number of appended elements to track the
+        $(NOTE The runtime uses the last element of a slice to track the
         start of the spare capacity for the memory allocation.)
 
         $(P When an array with spare capacity has its length reduced, or is
@@ -818,7 +890,7 @@ assert(copy.ptr != array.ptr);
 
         $(P The `@system` function $(REF1 assumeSafeAppend, object) allows the
         capacity to be regained, but care must be taken not to overwrite
-        immutable elements that may exist in a longer slice.)
+        immutable elements that may exist in another slice.)
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         ---
@@ -834,7 +906,8 @@ assert(copy.ptr != array.ptr);
         acquire a global lock and perform a cache lookup.)
 
         $(BEST_PRACTICE Avoid intensive use of `.capacity` in performance-sensitive code.
-        Instead, track the capacity locally when building an array via a unique reference.)
+        Instead, track the capacity locally when building an array via a unique reference.
+        E.g. $(REF Appender, std,array).)
 
 
 $(H3 $(LNAME2 func-as-property, Functions as Array Properties))
@@ -853,18 +926,21 @@ $(H2 $(LNAME2 bounds, Array Bounds Checking))
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-import core.exception;
-try
+void main()
 {
-    auto array = [1, 2];
-    for (auto i = 0; ; i++)
+    import core.exception;
+    try
     {
-        array[i] = 5;
+        auto array = [1, 2];
+        for (auto i = 0; ; i++)
+        {
+            array[i] = 5;
+        }
     }
-}
-catch (ArrayIndexError)
-{
-    // terminate loop
+    catch (ArrayIndexError)
+    {
+        // terminate loop
+    }
 }
 ---------
 )
@@ -873,15 +949,18 @@ catch (ArrayIndexError)
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-auto array = [1, 2];
-for (auto i = 0; i < array.length; i++)
+void main()
 {
-    array[i] = 5;
+    auto array = [1, 2];
+    for (auto i = 0; i < array.length; i++)
+    {
+        array[i] = 5;
+    }
 }
 ---------
 )
 
-        $(P $(D Implementation Note:) Compilers should attempt to detect
+        $(P $(B Implementation Note:) Compilers should attempt to detect
         array bounds errors at compile time, for example:
         )
 
@@ -932,17 +1011,24 @@ $(H3 $(LNAME2 default-initialization, Default Initialization))
         )
 
 $(H3 $(LNAME2 length-initialization, Length Initialization))
-        $(P The $(D new) expression can be used to start a dynamic array
+
+        $(P The $(D new) expression can be used to allocate a dynamic array
         with a specified length by specifying its type and then using the
         `(size)` syntax:
         )
 
-$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
-int[] i = new int[](5); //i.length == 5
-int[][] j = new int[][](10, 5); //j.length == 10, j[0].length == 5
+int[] i = new int[](5);
+i = new int[5]; // same allocation, alternate syntax
+assert(i.length == 5);
+
+int[][] j = new int[][](10, 5);
+assert(j.length == 10);
+assert(j[0].length == 5);
 ---------
 )
+        $(P See $(GLINK2 expression, NewExpression) for details.)
 
 $(H3 $(LNAME2 void-initialization, Void Initialization))
 
@@ -957,14 +1043,29 @@ $(H3 $(LNAME2 void-initialization, Void Initialization))
         $(REF uninitializedArray, std,array).
         )
 
+$(H3 $(LNAME2 array-initializers, Array Initializers))
 
-$(H3 $(LNAME2 static-init-static, Static Initialization of Statically Allocated Arrays))
+$(GRAMMAR
+$(GNAME ArrayInitializer):
+    $(D [) $(I ArrayElementInitializers)$(OPT) $(D ])
 
-        $(P Static initalizations are supplied by a list of array
+$(GNAME ArrayElementInitializers):
+    $(I ArrayElementInitializer)
+    $(I ArrayElementInitializer) $(D ,)
+    $(I ArrayElementInitializer) $(D ,) $(GSELF ArrayElementInitializers)
+
+$(GNAME ArrayElementInitializer):
+    $(GLINK2 declaration, NonVoidInitializer)
+    $(GLINK2 expression, AssignExpression) $(D :) $(GLINK2 declaration, NonVoidInitializer)
+)
+
+        $(P An *ArrayInitializer* is a list of array
         element values enclosed in `[ ]`. The values can be optionally
         preceded by an index and a `:`.
         If an index is not supplied, it is set to the previous index
         plus 1, or 0 if it is the first value.
+        Any missing elements will be initialized to the default value
+        of the element type.
         )
 
 $(SPEC_RUNNABLE_EXAMPLE_RUN
@@ -990,6 +1091,36 @@ assert(value == [5, 6, 2]);
 ---------
 )
 
+        $(P Any indices must be known at compile-time.
+        Note that if the array type is not specified and every element has an index,
+        it will be inferred as an
+        $(DDSUBLINK spec/expression, associative_array_literals, associative array
+        literal).)
+
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
+        ---
+        int n = 4;
+        auto aa = [0:1, 3:n]; // associative array `int[int]`
+
+        int[] a = [1, 3:n, 5];
+        assert(a == [1, 0, 0, n, 5]);
+
+        //int[] e = [n:2]; // error, n not known at compile-time
+        ---
+        )
+
+$(H3 $(LNAME2 static-init-static, Static Initialization of Statically Allocated Arrays))
+
+        $(P All elements of a static array can be initialized to a specific value with:)
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---------
+int[4] a = 42; // set all elements of a to 42
+
+assert(a == [42, 42, 42, 42]);
+---------
+)
+
         $(P These arrays are statically allocated when they appear in global scope.
         Otherwise, they need to be marked with $(D const) or $(D static)
         storage classes to make them statically allocated arrays.)
@@ -999,79 +1130,71 @@ $(H2 $(LNAME2 special-array, Special Array Types))
 
 $(H3 $(LNAME2 strings, Strings))
 
-        $(P A string is
-        an array of characters. String literals are just
-        an easy way to write character arrays.
-        String literals are immutable (read only).
+        $(P A string is an array of $(DDSUBLINK spec/const3, immutable_type, immutable)
+        (read-only) characters. String literals essentially are
+        an easy way to write character array literals.
         )
 
-$(SPEC_RUNNABLE_EXAMPLE_FAIL
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
-char[] str1 = "abc";                // error, "abc" is not mutable
-char[] str2 = "abc".dup;            // ok, make mutable copy
-immutable(char)[] str3 = "abc";     // ok
-immutable(char)[] str4 = str1;      // error, str4 is not mutable
-immutable(char)[] str5 = str1.idup; // ok, make immutable copy
+char[] arr;
+//arr = "abc";          // error, cannot implicitly convert expression `"abc"` of type `string` to `char[]`
+arr = "abc".dup;        // ok, allocates mutable copy
+
+string str1 = "abc";    // ok, same types
+//str1 = arr;           // error, cannot implicitly convert expression `arr` of type `char[]` to `string`
+str1 = arr.idup;        // ok, allocates an immutable copy of elements
+assert(str1 == "abc");
+
+string str2 = str1;     // ok, mutable slice of same immutable array contents
 ---------
 )
 
-        $(P The name $(CODE string) is aliased to $(CODE immutable(char)[]),
-        so the above declarations could be equivalently written as:
+        $(P The name $(CODE string) is aliased to $(CODE immutable(char)[]).
+        The type $(D immutable(char)[]) represents an array of $(D immutable char)s. However, the reference to the string is
+        mutable.
         )
+---
+immutable(char)[] s = "foo";
+s[0] = 'a';  // error, s[0] is immutable
+s = "bar";   // ok, s itself is not immutable
+---
 
-$(SPEC_RUNNABLE_EXAMPLE_FAIL
----------
-char[] str1 = "abc";     // error, "abc" is not mutable
-char[] str2 = "abc".dup; // ok, make mutable copy
-string str3 = "abc";     // ok
-string str4 = str1;      // error, str4 is not mutable
-string str5 = str1.idup; // ok, make immutable copy
----------
-)
-
-        $(P $(CODE char[]) strings are in UTF-8 format.
-        $(CODE wchar[]) strings are in UTF-16 format.
-        $(CODE dchar[]) strings are in UTF-32 format.
+        $(P If the reference to the string needs to be immutable as well, it can be declared $(D immutable char[])
+        or $(D immutable string):
         )
+---
+immutable char[] s = "foo";
+s[0] = 'a';  // error, s refers to immutable data
+s = "bar";   // error, s is immutable
+---
 
         $(P Strings can be copied, compared, concatenated, and appended:)
 
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
-str1 = str2;
-if (str1 < str3) { ... }
-func(str3 ~ str4);
-str4 ~= str1;
----------
+string s1;
+immutable s2 = "ello";
+s1 = s2;
+s1 = "h" ~ s1;
+if (s1 > "farro")
+    s1 ~= " there";
 
-        $(P with the obvious semantics. Any generated temporaries get cleaned up
+assert(s1 == "hello there");
+---------
+)
+
+        $(P with array semantics. Any generated temporaries get cleaned up
         by the garbage collector (or by using $(CODE alloca())).
         Not only that, this works with any
         array not just a special String array.
         )
 
-        $(P A pointer to a char can be generated:
-        )
+$(H4 $(LNAME2 string-literal-types, String Literal Types))
 
----------
-char* p = &str[3]; // pointer to 4th element
-char* p = str;     // pointer to 1st element
----------
-
-        $(P Since strings, however, are not 0 terminated in D,
-        when transferring a pointer
-        to a string to C, add a terminating 0:
-        )
-
----------
-str ~= "\0";
----------
-
-        or use the function $(D std.string.toStringz).
-
-        $(P The type of a string is determined by the semantic phase of
-        compilation. The type is
-        one of: char[], wchar[], dchar[], and is determined by
-        implicit conversion rules.
+        $(P The type of a $(DDSUBLINK spec/expression, string_literals, string literal)
+        is determined by the semantic phase of compilation. The type is
+        determined by implicit conversion rules.
         If there are two equally applicable implicit conversions,
         the result is an error. To
         disambiguate these cases, a cast or a postfix of $(D c),
@@ -1079,31 +1202,44 @@ str ~= "\0";
         )
 
 ---------
-cast(immutable(wchar) [])"abc" // this is an array of wchar characters
+cast(immutable(wchar)[]) "abc" // this is an array of wchar characters
 "abc"w                         // so is this
 ---------
 
         $(P String literals that do not have a postfix character and that
         have not been cast can be implicitly converted between
-        string, wstring, and dstring as necessary.
+        `string`, `wstring`, and `dstring` (see below) as necessary.
         )
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---------
-char c;
-wchar w;
-dchar d;
+void fun()
+{
+    char c;
+    wchar w;
+    dchar d;
 
-c = 'b';     // c is assigned the character 'b'
-w = 'b';     // w is assigned the wchar character 'b'
-//w = 'bc';  // error - only one wchar character at a time
-w = "b"[0];  // w is assigned the wchar character 'b'
-w = "\r"[0]; // w is assigned the carriage return wchar character
-d = 'd';     // d is assigned the character 'd'
+    c = 'b';     // c is assigned the character 'b'
+    w = 'b';     // w is assigned the wchar character 'b'
+    //w = 'bc';  // error - only one wchar character at a time
+    w = "b"[0];  // w is assigned the wchar character 'b'
+    w = "\r"[0]; // w is assigned the carriage return wchar character
+    d = 'd';     // d is assigned the character 'd'
+}
 ---------
 )
 
 $(H4 $(LEGACY_LNAME2 strings_unicode, strings-unicode, Strings and Unicode))
+
+        $(P String data is encoded as follows:)
+
+        $(TABLE2,
+        $(THEAD Alias, Type, Encoding)
+        $(TROW `string`, $(CODE  immutable(char)[]), UTF-8)
+        $(TROW `wstring`, $(CODE immutable(wchar)[]), UTF-16)
+        $(TROW `dstring`, $(CODE immutable(dchar)[]), UTF-32)
+        )
+
         $(P Note that built-in comparison operators operate on a
         $(LINK2 http://www.unicode.org/glossary/#code_unit, code unit) basis.
         The end result for valid strings is the same as that of
@@ -1125,12 +1261,48 @@ $(H4 $(LEGACY_LNAME2 strings_unicode, strings-unicode, Strings and Unicode))
         that should be implemented in the standard library.
         )
 
-$(H4 $(LNAME2 printf, C's printf() and Strings))
+$(H4 $(LNAME2 char-pointers, Character Pointers and C strings))
 
-        $(P $(D printf()) is a C function and is not part of D. $(D printf())
+        $(P A pointer to a character can be generated:
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---------
+string str = "abcd";
+immutable(char)* p = &str[3]; // pointer to 4th element
+assert(*p == 'd');
+p = str.ptr; // pointer to 1st element
+assert(*p == 'a');
+---------
+)
+
+        $(P Only string *literals* are zero-terminated in D.
+        In general, when transferring a pointer
+        to string data to C, append a terminating `'\0'`:
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---------
+string str = "ab";
+assert(str.ptr[2] == '\0'); // OK
+str ~= "cd";
+// str is no longer zero-terminated
+str ~= "\0";
+assert(str[4] == '\0'); // OK
+str.length = 2;
+// str is no longer correctly zero-terminated
+assert(str.ptr[2] != '\0');
+---------
+)
+
+        The function $(REF toStringz, std,string) can also be used.
+
+$(H4 $(LNAME2 printf, Example: `printf`))
+
+        $(P $(REF printf, core,stdc,stdio) is a C function and is not part of D. $(D printf())
         will print C strings, which are 0 terminated. There are two ways
         to use $(D printf()) with D strings. The first is to add a
-        terminating 0, and cast the result to a char*:
+        terminating 0:
         )
 
 ---------
@@ -1152,22 +1324,22 @@ printf("the string is '%s'\n", std.string.toStringz(str));
 printf("the string is '%s'\n", "string literal".ptr);
 -----------
 
-        $(P So, why does the first string literal to printf not need
+        $(P So, why does the first string literal to `printf` not need
         the `.ptr`? The first parameter is prototyped as a `const(char)*`, and
-        a string literal can be implicitly `cast` to a `const(char)*`.
-        The rest of the arguments to printf, however, are variadic
-        (specified by ...),
-        and a string literal typed `immutable(char)[]` cannot pass
+        a string literal can be implicitly converted to a `const(char)*`.
+        The rest of the arguments to `printf`, however, are variadic
+        (specified by `...`),
+        and a string literal typed `immutable(char)[]` cannot be passed
         to variadic parameters.)
 
         $(P The second way is to use the precision specifier.
         The length comes first, followed by the pointer:)
 
 ---------
-printf("the string is '%.*s'\n", str.length, str.ptr);
+printf("the string is '%.*s'\n", cast(int)str.length, str.ptr);
 ---------
 
-        $(P The best way is to use std.stdio.writefln, which can handle
+        $(P The best way is to use $(REF writefln, std,stdio), which can handle
         D strings:)
 
 ---------
@@ -1177,43 +1349,57 @@ writefln("the string is '%s'", str);
 
 $(H3 $(LNAME2 void_arrays, Void Arrays))
 
-    $(P There is a special type of array which acts as a wildcard that can hold
-    arrays of any kind, declared as $(D void[]). Void arrays are used for
+    $(P There are special types of array with `void` element type which can hold
+    arrays of any kind. Void arrays are used for
     low-level operations where some kind of array data is being handled, but
     the exact type of the array elements are unimportant. The $(D .length) of a
     void array is the length of the data in bytes, rather than the number of
-    elements in its original type. Array indices in indexing and slicing
-    operations are interpreted as byte indices.)
+    elements in its original type. Array indices in slicing
+    operations are interpreted as byte indices. A void array cannot be indexed.)
 
-    $(P Arrays of any type can be implicitly converted to a void array; the
+    $(P Arrays of any type can be implicitly converted to a (tail qualified) void array - the
     compiler inserts the appropriate calculations so that the $(D .length) of
     the resulting array's size is in bytes rather than number of elements. Void
-    arrays cannot be converted back to the original type without using a cast,
+    arrays cannot be converted back to the original type without using an
+    $(DDSUBLINK spec/expression, cast_array, array cast),
     and it is an error to convert to an array type whose element size does not
     evenly divide the length of the void array.)
 
-$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+$(SPEC_RUNNABLE_EXAMPLE_RUN
 ---------
 void main()
 {
     int[] data1 = [1,2,3];
-    long[] data2;
 
     void[] arr = data1;            // OK, int[] implicit converts to void[].
     assert(data1.length == 3);
     assert(arr.length == 12);      // length is implicitly converted to bytes.
 
-    //data1 = arr;                 // Illegal: void[] does not implicitly
+    arr[0..4] = [5];               // Assign first 4 bytes to 1 int element
+    assert(data1 == [5,2,3]);
+
+    arr ~= [6];                    // Append the 4 bytes of an int
+    //data1 = arr;                 // Error: void[] does not implicitly
                                    // convert to int[].
-    int[] data3 = cast(int[]) arr; // OK, can convert with explicit cast.
-    data2 = cast(long[]) arr;      // Runtime error: long.sizeof == 8, which
+    int[] data2 = cast(int[]) arr; // OK, can convert with explicit cast.
+    assert(data2 is arr);          // both point to the same set of bytes
+    assert(data2 == [5,2,3,6]);
+}
+---------
+)
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---------
+void main()
+{
+    void[] arr = new void[12];
+    long[] bad = cast(long[]) arr; // Runtime error: long.sizeof == 8, which
                                    // does not divide arr.length, which is 12
                                    // bytes.
 }
 ---------
 )
 
-    $(P Void arrays can also be static if their length is known at
+    $(P Void arrays can be static arrays if their length is known at
     compile-time. The length is specified in bytes:)
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
@@ -1250,7 +1436,7 @@ $(H2 $(LNAME2 implicit-conversions, Implicit Conversions))
 
         $(P A static array $(D T[dim]) can be implicitly
         converted to
-        one of the following:
+        one of the following ($(D U) is a base class of $(D T)):
         )
 
         $(UL
@@ -1282,6 +1468,6 @@ $(SPEC_SUBNAV_PREV_NEXT statement, Statements, hash-map, Associative Arrays)
 )
 
 Macros:
-        CHAPTER=12
+        CHAPTER=13
         TITLE=Arrays
         _=

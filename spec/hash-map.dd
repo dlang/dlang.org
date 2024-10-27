@@ -359,25 +359,6 @@ $(SPEC_RUNNABLE_EXAMPLE_RUN
 
     $(P For details, see $(REF1 update, object).)
 
-$(H2 $(LNAME2 static_initialization, Static Initialization of AAs))
-
-        NOTE: Not yet implemented.
-
-        ---------
-        immutable long[string] aa = [
-          "foo": 5,
-          "bar": 10,
-          "baz": 2000
-        ];
-
-        unittest
-        {
-            assert(aa["foo"] == 5);
-            assert(aa["bar"] == 10);
-            assert(aa["baz"] == 2000);
-        }
-        ---------
-
 $(H2 $(LNAME2 runtime_initialization, Runtime Initialization of Immutable AAs))
 
     $(P Immutable associative arrays are often desirable, but sometimes
@@ -425,6 +406,7 @@ $(SPEC_RUNNABLE_EXAMPLE_RUN
         int[int] aa;             // defaults to null
         int[int] aa2 = aa;       // copies the null reference
 
+        assert(aa is null);
         aa[1] = 1;
         assert(aa2.length == 0); // aa2 still is null
         aa2 = aa;
@@ -432,6 +414,20 @@ $(SPEC_RUNNABLE_EXAMPLE_RUN
         assert(aa[2] == 2);      // now both refer to the same instance
         ------
 )
+
+    $(P A $(GLINK2 expression, NewExpression) allows constructing an associative array instance
+        immediately, rather than when $(DDSUBLINK spec/hash-map, construction_assignment_entries, inserting a key).)
+
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
+        ---
+        int[string] a = new int[string];
+        auto b = a; // a and b point to the same AA instance
+
+        assert(b !is null);
+        a["1"] = 1;
+        assert(b["1"] == 1);
+        ---
+        )
 
 $(H2 $(LNAME2 properties, Properties))
 
@@ -575,5 +571,5 @@ key: AG, value: 2
 $(SPEC_SUBNAV_PREV_NEXT arrays, Arrays, struct, Structs and Unions)
 
 Macros:
-        CHAPTER=13
+        CHAPTER=14
         TITLE=Associative Arrays
