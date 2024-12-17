@@ -3439,86 +3439,126 @@ $(H3 $(LNAME2 anonymous, Anonymous Functions and Anonymous Delegates))
         $(P See $(GLINK2 expression, FunctionLiteral)s.
         )
 
-$(H2 $(LNAME2 main, $(D main()) Function))
+$(H2 $(LNAME2 main, The $(D main) Function))
 
-        $(P For console programs, $(D main()) serves as the entry point.
+        $(P For console programs, the $(D main) function serves as the entry point.
         It gets called after all the $(DDSUBLINK spec/module, staticorder, module initializers)
         are run, and after any $(DDLINK spec/unittest, Unit Tests, unittests) are run.
         After it returns, all the module destructors are run.
-        $(D main()) must be declared as follows:
         )
 
-        $(GRAMMAR
-        $(GNAME MainFunction):
-            $(GLINK MainReturnDecl) $(D main$(LPAREN)$(RPAREN)) $(GLINK2 statement, MainFunctionBody)
-            $(GLINK MainReturnDecl) $(D main$(LPAREN)string[]) $(GLINK_LEX Identifier)$(D $(RPAREN)) $(GLINK2 statement, MainFunctionBody)
-
-        $(GNAME MainReturnDecl):
-            $(D void)
-            $(D int)
-            $(GLINK2 type, noreturn)
-            $(RELATIVE_LINK2 auto-functions, $(D auto))
-
-        $(GNAME MainFunctionBody):
-            $(GLINK ShortenedFunctionBody)
-            $(GLINK SpecifiedFunctionBody)
+        $(P The `main` function must be named `main`. Other names are not possible,
+        not even using `pragma(mangle)` to change the mangling to the expected one.
         )
+
+        $(P The return type of `main` must be a possibly qualified version of `void`, `int`,
+        any `enum` type backed by `int`, or `noreturn`.
 
         $(UL
         $(LI If `main` returns `void`, the OS will receive a zero value on success.)
         $(LI If `main` returns `void` or `noreturn`, the OS will receive a non-zero
         value on abnormal termination, such as an uncaught exception.)
+        $(LI If `main` returns `int` or an `enum` type backed by `int`,
+        the OS will receive the returned value on success
+        and a non-zero value on abnormal termination.)
         $(LI If `main` is declared as `auto`, the inferred return type must be
-        one of `void`, `int` and `noreturn`.)
+        one of the allowed types.)
         )
 
-        $(P If the $(D string[]) parameter is declared, the parameter will hold
-        arguments passed to the program by the OS. The first argument is typically
+        $(P The `main` function must have either no parameters or a single parameter.
+        If provided, the parameter must be a possibly qualified version of `char[][]`,
+        and can optionally have the $(GLINK ParameterAttributes) `in`, `return` or `scope`.
+        It is customary to use `immutable(char)[][]`, i.e. `string[]`,
+        but, in particular `char[][]` is also allowed.
+        The argument passed to a `main` function with parameter is mutable and unique,
+        which is why it converts to `immutable`, `inout`, or `shared`.
+        )
+
+        $(P If the parameter is declared, it will hold
+        arguments passed to the program by the operating system.
+        The index-0 element is typically
         the executable name, followed by any command-line arguments.)
 
         $(NOTE The runtime can remove any arguments prefixed `--DRT-`.)
-
-        $(NOTE The aforementioned return / parameter types may be annotated with $(D const),
-        $(D immutable). They may also be replaced by $(D enum)'s with matching base types.)
 
         $(P The main function must have D linkage.)
 
         $(P Attributes may be added as needed, e.g. `@safe`, `@nogc`, `nothrow`, etc.)
 
-    $(H3 $(LNAME2 betterc-main, $(D extern(C) main()) Function))
+        $(P The following grammar specification is an approximation of what is allowed for a D `main` function:)
 
-        $(P Programs may define an $(D extern(C) main) function as an alternative to the
+$(INFORMATIVE_GRAMMAR
+$(GNAME MainFunction):
+    $(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK MainReturnType) main $(D $(LPAREN)) $(GLINK MainParameters)$(OPT) $(D $(RPAREN)) $(GLINK FunctionAttributes)$(OPT) $(GLINK MainFunctionBody)
+    $(GLINK2 declaration, StorageClasses) main $(D $(LPAREN)) $(GLINK MainParameters)$(OPT) $(D $(RPAREN)) $(GLINK FunctionAttributes)$(OPT) $(GLINK MainFunctionBody)
+
+$(GNAME MainReturnType):
+    $(GLINK MainReturnBasicType)
+    $(GLINK2 type, TypeCtor) $(D $(LPAREN)) $(GLINK2 type, TypeCtors)$(OPT) $(GLINK MainReturnBasicType) $(D $(RPAREN))
+
+$(GNAME MainReturnBasicType):
+    $(D void)
+    $(D int)
+    $(GLINK_LEX Identifier)
+
+$(GNAME MainParameters):
+    $(GLINK MainParameter)
+    $(GLINK MainParameter) $(D ,)
+
+$(GNAME MainParameter):
+    $(GLINK MainParameterDeclaration)
+    $(GLINK MainParameterDeclaration) $(D =) $(GLINK2 expression, AssignExpression)
+
+$(GNAME MainParameterDeclaration):
+    $(GLINK ParameterAttributes)$(OPT) $(GLINK MainParameterBasicType) $(GLINK MainParameterTypeSuffixes)$(OPT) $(GLINK_LEX Identifier)$(OPT)
+
+$(GNAME MainParameterBasicType):
+    $(D char)
+    $(GLINK2 type, TypeCtor) $(D $(LPAREN)) $(GLINK2 type, TypeCtors)$(OPT) $(GLINK MainParameterBasicType) $(GLINK MainParameterTypeSuffixes)$(OPT) $(D $(RPAREN))
+    $(GLINK_LEX Identifier)
+
+$(GNAME MainParameterTypeSuffixes):
+    $(D [) $(D ])
+    $(D [) $(D ]) $(D [) $(D ])
+
+$(GNAME MainFunctionBody):
+    $(GLINK SpecifiedFunctionBody)
+    $(GLINK ShortenedFunctionBody)
+)
+
+    $(NOTE For $(GLINK MainReturnBasicType), the options of returning `noreturn` or an `enum` type are both covered by $(GLINK_LEX Identifier).)
+
+$(H2 $(LNAME2 betterc-main, $(D extern(C)) $(D main) Function))
+
+        $(P Programs may define a `main` function with $(D extern(C)) linkage as an alternative to the
         standard $(RELATIVE_LINK2 main, entry point). This form is required for
         $(DDLINK spec/betterc, Better C, $(B BetterC)) programs.)
 
-        $(P A C $(D main) function must be declared as follows:)
+        $(P A C `main` function differs from a D `main` function as follows:)
 
-        $(GRAMMAR
-        $(GNAME CMainFunction):
-            $(D extern (C)) $(GLINK MainReturnDecl) $(D main$(LPAREN)$(GLINK CmainParameters)$(OPT)$(RPAREN)) $(GLINK2 statement, BlockStatement)
-
-        $(GNAME CmainParameters):
-            $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
-            $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
+        $(UL
+        $(LI It has `extern(C)` linkage.)
+        $(LI If it has parameters, it has C `main` parameters instead of the D `main` parameter.)
+        $(LI No setup or teardown runs before or after a C `main` function.)
         )
 
-        $(P When defined, the first two parameters denote a C-style array (length + pointer)
-        that holds the arguments passed to the program by the OS. The third parameter is a POSIX
-        extension called $(D environ) and holds information about the current environment variables.)
+        $(P All other rules for a D `main` function apply to C `main` functions.)
 
-        $(NOTE The exemption for storage classes / $(D enum)'s defined for a D $(D main) function
-        also applies to C $(D main) functions.)
+        $(P A C `main` function may have no parameters, two parameters, or three parameters.
+        When defined, the first two parameters denote a C-style array (length and pointer)
+        that holds the arguments passed to the program by the operating system. The third parameter, if present,
+        holds information about the current environment variables.)
 
-        $(P This function takes the place of the C main function and is executed immediately without
-        any setup or teardown associated with a D $(D main) function. Programs reliant on module
-        constructors, module destructors, or unittests need to manually perform (de)initialization
+        $(P A C `main` function is executed immediately without
+        any setup or teardown associated with a D `main` function. Programs reliant on module
+        constructors, module destructors, or unittests need to manually perform (de-)initialization
         using the appropriate $(DDSUBLINK phobos/core_runtime, Runtime, runtime functions).)
 
         $(IMPLEMENTATION_DEFINED Other system-specific entry points may exist, such as
         `WinMain` and `DllMain` on Windows systems.
         )
 
-        $(NOTE Programs targeting platforms which require a different signature for $(D main) can use
+        $(NOTE Programs targeting platforms which require a different signature for `main` can use
         a function with $(DDSUBLINK spec/pragma, mangle, explicit mangling):
 
         ---
@@ -3528,9 +3568,52 @@ $(H2 $(LNAME2 main, $(D main()) Function))
             return 0;
         }
         ---
-
         )
 
+        $(P The following grammar specification is an approximation of what is allowed for a C `main` function:)
+
+$(INFORMATIVE_GRAMMAR
+$(GNAME CMainFunction):
+    $(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK MainReturnType) main $(D $(LPAREN)) $(GLINK CMainParameters)$(OPT) $(D $(RPAREN)) $(GLINK FunctionAttributes)$(OPT) $(GLINK MainFunctionBody)
+
+$(GNAME CMainParameters):
+    $(GLINK CMainParameterList)
+    $(GLINK CMainParameterList) $(D ,)
+
+$(GNAME CMainParameterList):
+    $(GLINK CMainFirstParameter) $(D ,) $(GLINK CMainNextParameter)
+    $(GLINK CMainFirstParameter) $(D ,) $(GLINK CMainNextParameter) $(D ,) $(GLINK CMainNextParameter)
+
+$(GNAME CMainFirstParameter):
+    $(GLINK CMainFirstParameterDeclaration)
+    $(GLINK CMainFirstParameterDeclaration) $(D =) $(GLINK2 expression, AssignExpression)
+
+$(GNAME CMainNextParameter):
+    $(GLINK CMainNextParameterDeclaration)
+    $(GLINK CMainNextParameterDeclaration) $(D =) $(GLINK2 expression, AssignExpression)
+
+$(GNAME CMainFirstParameterDeclaration):
+    $(GLINK ParameterAttributes)$(OPT) $(GLINK CMainFirstParameterBasicType) $(GLINK_LEX Identifier)$(OPT)
+
+$(GNAME CMainFirstParameterBasicType):
+    $(D int)
+    $(GLINK2 type, TypeCtor) $(D $(LPAREN)) $(GLINK2 type, TypeCtors)$(OPT) $(GLINK CMainFirstParameterBasicType) $(D $(RPAREN))
+    $(GLINK_LEX Identifier)
+
+$(GNAME CMainNextParameterDeclaration):
+    $(GLINK ParameterAttributes)$(OPT) $(GLINK CMainNextParameterBasicType) $(GLINK CMainParameterTypeSuffixes)$(OPT) $(GLINK_LEX Identifier)$(OPT)
+
+$(GNAME CMainNextParameterBasicType):
+    $(D char)
+    $(GLINK2 type, TypeCtor) $(D $(LPAREN)) $(GLINK2 type, TypeCtors)$(OPT) $(GLINK CMainNextParameterBasicType) $(GLINK CMainParameterTypeSuffixes)$(OPT) $(D $(RPAREN))
+    $(GLINK_LEX Identifier)
+
+$(GNAME CMainParameterTypeSuffixes):
+    $(D *)
+    $(D *) $(D *)
+)
+
+    $(NOTE For $(GLINK MainReturnBasicType), the options of returning `noreturn` or an `enum` type are both covered by $(GLINK_LEX Identifier).)
 
 $(H2 $(LNAME2 function-templates, Function Templates))
 
