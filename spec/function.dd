@@ -409,7 +409,6 @@ $(H2 $(LNAME2 function-return-values, Function Return Values))
 
         $(P Function return values not marked as $(RELATIVE_LINK2 ref-functions, `ref`)
         are considered to be rvalues.
-        This means they cannot be passed by reference to other functions.
         )
 
 $(H2 $(LNAME2 pure-functions, Pure Functions))
@@ -1538,8 +1537,6 @@ $(H3 $(LNAME2 in-params, In Parameters))
         When not in use, `in` is equivalent to `const`.)
         $(P The parameter is an input to the function. Input parameters behave as if they have
         the $(D const scope) storage classes. Input parameters may also be passed by reference by the compiler.)
-        $(P Unlike $(D ref) parameters$(COMMA) $(D in) parameters can bind to both lvalues and rvalues
-        (such as literals).)
         $(P Types that would trigger a side effect if passed by value (such as types with copy constructor$(COMMA)
         postblit$(COMMA) or destructor)$(COMMA) and types which cannot be copied
         (e.g. if their copy constructor is marked as $(D @disable)) will always be passed by reference.
@@ -1553,9 +1550,8 @@ $(H3 $(LNAME2 in-params, In Parameters))
 
 $(H3 $(LNAME2 ref-params, Ref and Out Parameters))
 
-        $(P By default, parameters take rvalue arguments.
-        A `ref` parameter takes an lvalue argument, so changes to its value will operate
-        on the caller's argument.)
+        $(P A `ref` parameter receives an lvalue reference to the caller's argument, so changes to its value will operate
+        on the caller's value.)
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         ---
@@ -1607,6 +1603,10 @@ $(H3 $(LNAME2 ref-params, Ref and Out Parameters))
         $(P For dynamic array and class object parameters, which are always passed
         by reference, `out` and `ref`
         apply only to the reference and not the contents.
+        )
+
+        $(P If the caller supplies an rvalue (ie; a literal or enum), a temporary is created on the caller's stack and passed by reference.
+        The temporary is destroyed by the caller immediately after the function completes.
         )
 
 $(H3 $(LNAME2 lazy-params, Lazy Parameters))
