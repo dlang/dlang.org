@@ -2,18 +2,19 @@ Ddoc
 
 $(CHANGELOG_NAV_INJECT)
 
-$(VERSION Aug 01, 2024, =================================================,
+$(VERSION Feb 01, 2025, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 4 major changes and 28 fixed Bugzilla issues.
+$(VER) comes with 5 major changes and 54 fixed Bugzilla issues.
         A huge thanks goes to the
-        $(LINK2 #contributors, 27 contributors)
+        $(LINK2 #contributors, 34 contributors)
         who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
 $(LI $(RELATIVE_LINK2 dmd.copying-to-void-arrays,Copying from `const(void)[]` to `void[]` is disallowed with `-preview=fixImmutableConv`))
 $(LI $(RELATIVE_LINK2 dmd.import-exp-hexstring,Import expressions are now treated as hex strings))
+$(LI $(RELATIVE_LINK2 dmd.isCOMClass,New trait isCOMClass to detect if a type is a COM class))
 $(LI $(RELATIVE_LINK2 dmd.unsafe-boolean-values,`bool` values other than 0 or 1 are not `@safe`))
 
 )
@@ -65,6 +66,15 @@ immutable ubyte[] iconImg = cast(immutable ubyte[]) import("icon.png");
 // Now, it implicitly converts to integral arrays:
 immutable ubyte[] iconImg = import("icon.png");
 ---
+)
+
+$(LI $(LNAME2 dmd.isCOMClass,New trait isCOMClass to detect if a type is a COM class)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.isCOMClass.dd)
+$(P
+A COM class inherits from a possibly user defined interface called ``IUnknown``.
+To detect this during compilation use the trait ``__traits(isCOMClass, Type)``.
+Or for during runtime use the ``TypeInfo_Class`` flag.
+)
 )
 
 $(LI $(LNAME2 dmd.unsafe-boolean-values,`bool` values other than 0 or 1 are not `@safe`)
@@ -122,11 +132,23 @@ project.
 
 $(CHANGELOG_SEP_TEXT_BUGZILLA)
 
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 24431): dmd -vcg-ast crashes printing failed template instantiation)
+$(LI $(BUGZILLA 24599): [REG2.103] Wrongly elided TypeInfo emission leading to undefined symbols at link-time)
+$(LI $(BUGZILLA 24687): [REG2.110] Cannot cast string-imports to select overload anymore)
+$(LI $(BUGZILLA 24699): [REG2.108] No short-circuit evaluation of mixing template bool argument)
+$(LI $(BUGZILLA 24812): [REG 2.106] Incorrect highlighting when diagnosing an empty enum declaration since #15664)
+$(LI $(BUGZILLA 24882): COM class is allocated using GC not malloc)
+)
 $(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
 
+$(LI $(BUGZILLA 10574): "auto ref" fails to match when IFTI succeeds $(LPAREN)strip to level const$(RPAREN))
 $(LI $(BUGZILLA 12885): const union wrongly converts implicitly to mutable)
 $(LI $(BUGZILLA 17148): Copying from const$(LPAREN)void$(RPAREN)[] to void[] breaks immutable)
+$(LI $(BUGZILLA 23722): Lambdas are mangled incorrectly when using multiple compilation units, resulting in incorrect code)
 $(LI $(BUGZILLA 23957): Casting to derived extern$(LPAREN)C++$(RPAREN) class is unsafe)
+$(LI $(BUGZILLA 24337): Segfault when printing an int[] cast from a string literal)
 $(LI $(BUGZILLA 24534): Having a label on a declaration makes it possible to skip it with goto)
 $(LI $(BUGZILLA 24558): C asserts segfault on Glibc)
 $(LI $(BUGZILLA 24577): Struct with constructor returned from C++ wrong)
@@ -139,6 +161,13 @@ $(LI $(BUGZILLA 24622): Modify const data with void[] concatenation/append)
 $(LI $(BUGZILLA 24630): Casting a bool pointer to a mutable pointer type is unsafe)
 $(LI $(BUGZILLA 24631): Pointer cast allows changing @system field in @safe code)
 $(LI $(BUGZILLA 24634): Parse error initializing array from expression with StructInitializer)
+$(LI $(BUGZILLA 24731): IFTI cannot handle integer expressions)
+$(LI $(BUGZILLA 24760): ICE on variadic after default argument)
+$(LI $(BUGZILLA 24764): ICE when -vcg-ast prints imported invariant)
+$(LI $(BUGZILLA 24790):  -vcg-ast ICE on lowered assign exp)
+$(LI $(BUGZILLA 24819): Optimizer changes result of float calculations on 32-bit)
+$(LI $(BUGZILLA 24832): Segfault in hex string)
+$(LI $(BUGZILLA 24884): backend generates wrong 32-bit code after inlining math with double[4])
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
@@ -147,15 +176,28 @@ $(LI $(BUGZILLA 24135): Eponymous template member overloads not shown as call ca
 $(LI $(BUGZILLA 24580): ImportC: Asm label after attributes results in syntax error)
 $(LI $(BUGZILLA 24598): OpenBSD: adapt compiler tests)
 $(LI $(BUGZILLA 24623): Rename version CppRuntime_Clang/Gcc to CppRuntime_libcxx/libstdcxx.)
+$(LI $(BUGZILLA 24841): UTF-16 surrogates when used as an escape of a string should hint on error)
+)
+$(BUGSTITLE_BUGZILLA Phobos regression fixes,
+
+$(LI $(BUGZILLA 23487): std.experimental.logger assigning FileLogger to sharedLog no longer works)
+$(LI $(BUGZILLA 24637): [REG 2.104] Cannot insert const/immutable elements into DList)
+$(LI $(BUGZILLA 24686): SumType stopped working on LDC 1.37 with unmatched DeducedParameterType template)
 )
 $(BUGSTITLE_BUGZILLA Phobos bug fixes,
 
 $(LI $(BUGZILLA 24564): std.file.DirEntry throws Exception instead of FileException)
+$(LI $(BUGZILLA 24773): Stable sort$(LPAREN)$(RPAREN) invokes the destructor on uninitialized elements)
+$(LI $(BUGZILLA 24809): In some cases, stable sort assigns to unininitialized elements)
+$(LI $(BUGZILLA 24824): std.process.browse returns on failure in forked child)
+$(LI $(BUGZILLA 24827): maxElement does not correctly handle types with opAssign)
 )
 $(BUGSTITLE_BUGZILLA Druntime bug fixes,
 
 $(LI $(BUGZILLA 24579): stat_t has wrong size for Android armv7a)
 $(LI $(BUGZILLA 24626): hasUDA does not handle multiple UDAs of the same symbol)
+$(LI $(BUGZILLA 24846): atomicLoad does not work for class arguments with -preview=nosharedaccess)
+$(LI $(BUGZILLA 24872): Assigning non-copyable value to array has no effect)
 )
 $(BUGSTITLE_BUGZILLA Druntime enhancements,
 
@@ -172,12 +214,13 @@ $(BUGSTITLE_BUGZILLA Installer bug fixes,
 $(LI $(BUGZILLA 24600): DMD nightly builds are outdated)
 )
 )
-$(D_CONTRIBUTORS_HEADER 27)
+$(D_CONTRIBUTORS_HEADER 34)
 $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR 0-v-0)
     $(D_CONTRIBUTOR 0v0)
     $(D_CONTRIBUTOR Alex Muscar)
     $(D_CONTRIBUTOR Andrei Horodniceanu)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
     $(D_CONTRIBUTOR Ben Jones)
     $(D_CONTRIBUTOR Brad Roberts)
     $(D_CONTRIBUTOR Brian Callahan)
@@ -186,9 +229,11 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Dennis Korpel)
     $(D_CONTRIBUTOR Emmanuel Nyarko)
     $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Ilya Yanok)
     $(D_CONTRIBUTOR Jeremy Baxter)
     $(D_CONTRIBUTOR Johan Engelen)
     $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR Luis Ferreira)
     $(D_CONTRIBUTOR Martin Kinkelin)
     $(D_CONTRIBUTOR Mathias Lang)
     $(D_CONTRIBUTOR Nicholas Wilson)
@@ -197,7 +242,11 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Quirin F. Schroll)
     $(D_CONTRIBUTOR Quirin Schroll)
     $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
+    $(D_CONTRIBUTOR RubyTheRoobster)
     $(D_CONTRIBUTOR ryuukk)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Sönke Ludwig)
     $(D_CONTRIBUTOR Tim Schendekehl)
     $(D_CONTRIBUTOR Walter Bright)
     $(D_CONTRIBUTOR zopsicle)
