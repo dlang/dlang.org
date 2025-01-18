@@ -1199,7 +1199,8 @@ $(H3 $(LNAME2 cast_expressions, Cast Expressions))
 $(GRAMMAR
 $(GNAME CastExpression):
     $(D cast $(LPAREN)) $(GLINK2 type, Type) $(D $(RPAREN)) $(GLINK UnaryExpression)
-    $(GLINK CastQual)
+    $(GLINK RefCast)
+    $(GLINK QualifierCast)
 )
 
     $(P A $(I CastExpression) converts the $(I UnaryExpression)
@@ -1598,14 +1599,31 @@ $(H4 $(LNAME2 cast_struct, Structs))
         ---
         )
 
+$(H4 $(LNAME2 refcast, Reference Cast))
+
+$(GRAMMAR
+$(GNAME RefCast):
+    $(D cast $(LPAREN)) $(D ref) $(GLINK2 type, Type) $(D $(RPAREN)) $(GLINK UnaryExpression)
+)
+
+    $(P A $(I RefCast) takes a $(I UnaryExpression) representing an lvalue and forcibly changes
+    its type to $(I Type). It is equivalent to the expression $(D *cast(Type*)&UnaryExpression).
+    )
+
+    ---
+    int i = 73;
+    float f = *cast(float*)&i;  // reinterprets the integer bit pattern as a float
+    float g = cast(ref float)i; // equivalent to the previous statement
+    ---
+
 $(H4 $(LNAME2 cast_qualifier, Qualifier Cast))
 
 $(GRAMMAR
-$(GNAME CastQual):
+$(GNAME QualifierCast):
     $(D cast $(LPAREN)) $(GLINK2 type, TypeCtors)$(OPT) $(D $(RPAREN)) $(GLINK UnaryExpression)
 )
 
-    $(P A $(I CastQual) replaces the qualifiers in the type of
+    $(P A $(I QualifierCast) replaces the qualifiers in the type of
         the $(I UnaryExpression):)
 
         $(SPEC_RUNNABLE_EXAMPLE_COMPILE
