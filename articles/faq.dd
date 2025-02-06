@@ -5,8 +5,12 @@ $(D_S $(TITLE),
         $(P The same questions keep cropping up, so the obvious thing to do is
         prepare a FAQ.)
 
-        $(P $(LINK2 http://www.digitalmars.com/d/1.0/faq.html, D 1.0 FAQ))
-        $(P $(LINK2 http://www.digitalmars.com/faq.html, C++ FAQ))
+        $(P See also:)
+
+        * $(DDLINK articles/const-faq, const(FAQ), const(FAQ)) for `const` and `immutable`.
+        * $(LINK2 http://www.prowiki.org/wiki4d/wiki.cgi?FaqRoadmap, The D wiki FAQ page)
+        * $(LINK2 http://www.digitalmars.com/d/1.0/faq.html, D 1.0 FAQ)
+        * $(LINK2 http://www.digitalmars.com/faq.html, C++ FAQ)
 
 $(H2 D 2.0 FAQ)
 
@@ -16,16 +20,6 @@ $(H2 D 2.0 FAQ)
         $(LI What other cool features are in the plans for D 2.0?)
 
         $(LI I suggested a great feature. Why was the suggestion ignored?)
-
-        $(LI Why const and immutable?)
-
-        $(LI Why the $(I names) const and immutable?)
-
-        $(LI How exactly is immutable related to multicores?)
-
-        $(LI Ok, I'm fine with immutable for safe data sharing among threads. But why do we need the uninformative const?)
-
-        $(LI Why are immutable strings favored in D 2.0?)
 
         $(LI I want to contribute to D 2.0. How can I effect that?)
 
@@ -48,9 +42,6 @@ $(H2 D 2.0 FAQ)
 $(H2 General D FAQ)
 
         $(UL
-
-        $(LI $(LINK2 http://www.prowiki.org/wiki4d/wiki.cgi?FaqRoadmap, The D wiki FAQ page)
-        with many more questions answered)
         $(LI $(LINK2 $(ROOT_DIR)comparison.html, What does D have that C++ doesn't?))
         $(ITEMR q1, Why the name D?)
         $(ITEMR q1_1, Could you change the name? D is kind of hard to search for on search engines.)
@@ -226,7 +217,7 @@ $(ITEM q4, Why is printf in D?)
         is not part of D, it is part of C's standard
         runtime library which is accessible from D.
         D's standard runtime library has
-        $(REF writefln, std,stdio)
+        $(REF writef, std,stdio)
         which is as powerful as $(LINK2 http://www.digitalmars.com/rtl/stdio.html#printf, printf)
         but is much easier to use.
         )
@@ -365,6 +356,7 @@ $(ITEM real, What is the point of 80 bit reals?)
 
 $(ITEM anonymous, How do I do anonymous struct/unions in D?)
 
+$(RUNNABLE_EXAMPLE
 -----------------------
 import std.stdio;
 
@@ -385,11 +377,12 @@ void main()
         Foo.d.offsetof);
 }
 -----------------------
+)
 
 $(ITEM printf, How do I get printf() to work with strings?)
 
-        In C, the normal way to printf a string is to use the $(B %s)
-        format:
+        $(P In C, the normal way to printf a string is to use the $(D %s)
+        format:)
 
 $(CCODE
 char s[8];
@@ -397,34 +390,61 @@ strcpy(s, "foo");
 printf("string = '%s'\n", s);
 )
 
-        Attempting this in D, as in:
+        $(P Attempting this in D:)
 
+$(RUNNABLE_EXAMPLE_FAIL
 ---------------------------------
+import core.stdc.stdio;
 string s;
 s = "foo";
-printf("string = '%s'\n", s);
+printf("string = '%s'\n", s); // Error
 ---------------------------------
+)
+        $(P The call gets flagged at compile-time (see
+        $(DDSUBLINK spec/pragma, printf, `pragma(printf)`))
+        because in general, `string` is not compatible with the `%s` specifier.
+        This prevents garbage being printed, or an access violation.)
 
-        usually results in garbage being printed, or an access violation.
-        The cause is that in C, strings are terminated by a 0 character.
-        The $(B %s) format prints until a 0 is encountered.
-        In D, strings are not 0 terminated, the size is determined
+        $(P In D, a string is an array, so it has a length and a pointer.
+        In C, a string is a pointer to memory terminated by a 0 character.
+        The $(D %s) format prints until a 0 is encountered.
+        In D, strings in general are not 0-terminated, the size is determined
         by a separate length value. So, strings are printf'd using the
-        $(B %.*s) format:
+        $(D %.*s) format:)
 
+$(RUNNABLE_EXAMPLE
 ---------------------------------
+import core.stdc.stdio;
 string s;
 s = "foo";
-printf("string = '%.*s'\n", s);
+printf("string = '%.*s'\n", cast(int) s.length, s.ptr);
 ---------------------------------
+)
+        $(P which will behave as expected, for that input data.
+        There are pitfalls:)
+        * printf's $(D %.*s) will print until the length
+          is reached or a 0 is encountered, so D strings with embedded 0's
+          will only print up to the first 0.
+        * printf's length argument is an int, so ensure `s.length <= int.max`.
 
-        $(P which will behave as expected.
-        Remember, though, that printf's $(B %.*s) will print until the length
-        is reached or a 0 is encountered, so D strings with embedded 0's
-        will only print up to the first 0.
+        $(P D string literals are actually 0-terminated, so `%s` can be used
+        with the `.ptr` property and printf will work for those.
+        However, non-literal strings often are not 0-terminated:)
+
+        $(RUNNABLE_EXAMPLE
+        ---
+        import core.stdc.stdio;
+        printf("string = '%s'\n", "bar".ptr); // OK, 0-terminated
+
+        string s = "food";
+        s = s[0..3]; // foo, not 0-terminated
+        printf("string = '%.*s'\n", cast(int) s.length, s.ptr);
+
+        s ~= "ie"; // s is still not 0-terminated
+        ---
         )
 
-        $(P Of course, the easier solution is just use $(REF writefln, std, stdio)
+        $(P Of course, the easier solution is just to use $(REF writef, std, stdio)
         which works correctly with D strings.
         )
 
@@ -791,7 +811,7 @@ $(ITEM gc_1, Isn't garbage collection slow and non-deterministic?)
         However, the use of GC instead of malloc enables advanced language
         constructs (especially, more powerful array syntax), which greatly
         reduce the number of memory allocations which need to be made.
-        This can mean that GC is actually faster than explict management.
+        This can mean that GC is actually faster than explicit management.
         )
 
 $(ITEM pure, Can't a sufficiently smart compiler figure out that a function is pure automatically?)

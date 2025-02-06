@@ -9,6 +9,7 @@ $(H2 $(LNAME2 grammar, Function Declarations))
 $(GRAMMAR
 $(GNAME FuncDeclaration):
     $(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK FuncDeclarator) $(GLINK FunctionBody)
+    $(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK FuncDeclarator) $(GLINK MissingFunctionBody)
     $(GLINK AutoFuncDeclaration)
 
 $(GNAME AutoFuncDeclaration):
@@ -45,6 +46,7 @@ $(GNAME Parameter):
     $(GLINK ParameterDeclaration)
     $(GLINK ParameterDeclaration) $(D ...)
     $(GLINK ParameterDeclaration) $(D =) $(ASSIGNEXPRESSION)
+    $(GLINK ParameterDeclaration) $(D =) $(ASSIGNEXPRESSION) $(D ...)
 
 $(GNAME ParameterDeclaration):
     $(GLINK ParameterAttributes)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator)
@@ -117,7 +119,6 @@ $(GRAMMAR
 $(GNAME FunctionBody):
     $(GLINK SpecifiedFunctionBody)
     $(GLINK ShortenedFunctionBody)
-    $(GLINK MissingFunctionBody)
 
 $(GNAME SpecifiedFunctionBody):
     $(D do)$(OPT) $(GLINK2 statement, BlockStatement)
@@ -401,7 +402,8 @@ $(H2 $(LNAME2 function-return-values, Function Return Values))
         unless:)
         $(UL
         $(LI the function executes an infinite loop)
-        $(LI the function executes an `assert(0)` statement)
+        $(LI the function executes an $(DDSUBLINK spec/expression, assert-ct,
+            `assert(0)` statement))
         $(LI the function evaluates an expression of type
             $(DDSUBLINK spec/type, noreturn, `noreturn`))
         $(LI the function contains inline assembler code)
@@ -1931,10 +1933,11 @@ int* balin(scope int* q, int* r)
 }
 ---
 
-    $(P As a `scope` parameter must not escape, the compiler can potentially avoid heap-allocating a
+    $(IMPLEMENTATION_DEFINED
+    As a `scope` parameter must not escape, the compiler can potentially avoid heap-allocating a
     unique argument to a `scope` parameter. Due to this, passing an array literal, delegate
     literal or a $(GLINK2 expression, NewExpression) to a scope parameter may be allowed in a
-    `@nogc` context, depending on the compiler implementation.)
+    `@nogc` context.)
 
 $(H3 $(LNAME2 return-scope-parameters, Return Scope Parameters))
 
@@ -3447,21 +3450,17 @@ $(H2 $(LNAME2 main, $(D main()) Function))
         $(D main()) must be declared as follows:
         )
 
-        $(GRAMMAR
-        $(GNAME MainFunction):
-            $(GLINK MainReturnDecl) $(D main$(LPAREN)$(RPAREN)) $(GLINK2 statement, MainFunctionBody)
-            $(GLINK MainReturnDecl) $(D main$(LPAREN)string[]) $(GLINK_LEX Identifier)$(D $(RPAREN)) $(GLINK2 statement, MainFunctionBody)
+$(GRAMMAR
+$(GNAME MainFunction):
+    $(GLINK MainReturnDecl) $(D main$(LPAREN)$(RPAREN)) $(GLINK FunctionBody)
+    $(GLINK MainReturnDecl) $(D main$(LPAREN)string[]) $(GLINK_LEX Identifier)$(D $(RPAREN)) $(GLINK FunctionBody)
 
-        $(GNAME MainReturnDecl):
-            $(D void)
-            $(D int)
-            $(GLINK2 type, noreturn)
-            $(RELATIVE_LINK2 auto-functions, $(D auto))
-
-        $(GNAME MainFunctionBody):
-            $(GLINK ShortenedFunctionBody)
-            $(GLINK SpecifiedFunctionBody)
-        )
+$(GNAME MainReturnDecl):
+    $(D void)
+    $(D int)
+    $(GLINK2 type, noreturn)
+    $(RELATIVE_LINK2 auto-functions, $(D auto))
+)
 
         $(UL
         $(LI If `main` returns `void`, the OS will receive a zero value on success.)
@@ -3492,14 +3491,14 @@ $(H2 $(LNAME2 main, $(D main()) Function))
 
         $(P A C $(D main) function must be declared as follows:)
 
-        $(GRAMMAR
-        $(GNAME CMainFunction):
-            $(D extern (C)) $(GLINK MainReturnDecl) $(D main$(LPAREN)$(GLINK CmainParameters)$(OPT)$(RPAREN)) $(GLINK2 statement, BlockStatement)
+$(GRAMMAR
+$(GNAME CMainFunction):
+    $(D extern (C)) $(GLINK MainReturnDecl) $(D main$(LPAREN)$(GLINK CmainParameters)$(OPT)$(RPAREN)) $(GLINK2 statement, BlockStatement)
 
-        $(GNAME CmainParameters):
-            $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
-            $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
-        )
+$(GNAME CmainParameters):
+    $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
+    $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
+)
 
         $(P When defined, the first two parameters denote a C-style array (length + pointer)
         that holds the arguments passed to the program by the OS. The third parameter is a POSIX
@@ -3838,6 +3837,7 @@ $(H3 $(LNAME2 safe-functions, Safe Functions))
         $(LI No casting from any non-pointer type to a pointer type.)
         $(LI No $(DDSUBLINK spec/expression, pointer_arithmetic, pointer arithmetic)
             (including pointer indexing & slicing).)
+        $(LI Cannot access array $(DDSUBLINK spec/arrays, ptr-property, `.ptr` property).)
         $(LI Cannot access union fields that:)
             * Have pointers or references overlapping with other types
             * Have invariants overlapping with other types
