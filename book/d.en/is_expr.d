@@ -344,7 +344,7 @@ The following function template uses different specifiers with this syntax of th
 ---
 void myFunction(T)(T parameter) {
     static if (is (T LocalAlias == struct)) {
-        writefln("\n--- struct ---");
+        writefln("\n-- struct --");
         // LocalAlias is the same as T. 'parameter' is the
         // struct object that has been passed to this
         // function.
@@ -355,7 +355,7 @@ void myFunction(T)(T parameter) {
     }
 
     static if (is (T baseTypes == super)) {
-        writeln("\n--- super ---");
+        writeln("\n-- super --");
         // The 'baseTypes' tuple contains all of the base
         // types of T. 'parameter' is the class variable that
         // has been passed to this function.
@@ -368,7 +368,7 @@ void myFunction(T)(T parameter) {
     }
 
     static if (is (T ImplT == enum)) {
-        writeln("\n--- enum ---");
+        writeln("\n-- enum --");
         // 'ImplT' is the actual implementation type of this
         //  enum type. 'parameter' is the enum value that has
         //  been passed to this function.
@@ -378,7 +378,7 @@ void myFunction(T)(T parameter) {
     }
 
     static if (is (T ReturnT == return)) {
-        writeln("\n--- return ---");
+        writeln("\n-- return --");
         // 'ReturnT' is the return type of the function
         // pointer that has been passed to this function.
 
@@ -418,18 +418,18 @@ The output:
 )
 
 $(SHELL_SMALL
---- struct ---
+-- struct --
 Constructing a new Point object by copying it.
 
---- super ---
+-- super --
 class AlarmClock has 2 base types.
 All of the bases: (Object, Clock)
 The topmost base: Object
 
---- enum ---
+-- enum --
 The implementation type of enum WeekDays is int
 
---- return ---
+-- return --
 This is a function with a return type of char:
     char function(double d, int i, Clock c)
 calling it... and the result is 'a'
@@ -497,7 +497,7 @@ The following program tests that $(C is) expression with four different types:
 import std.stdio;
 
 void myFunction(T)(T parameter) {
-    writefln("\n--- Called with %s ---", T.stringof);
+    writefln("\n-- Called with %s --", T.stringof);
 
     static if (is (T == Value[Key],
                    Value,
@@ -533,20 +533,20 @@ The condition is satisfied only if the key type is $(C string):
 )
 
 $(SHELL_SMALL
---- Called with int ---
+-- Called with int --
 No, the condition has not been satisfied.
 
---- Called with int[string] ---
+-- Called with int[string] --
 Yes, the condition has been satisfied.
 The value type: int
 The key type  : string
 
---- Called with double[string] ---
+-- Called with double[string] --
 Yes, the condition has been satisfied.
 The value type: double
 The key type  : string
 
---- Called with dchar[long] ---
+-- Called with dchar[long] --
 No, the condition has not been satisfied.
 )
 
