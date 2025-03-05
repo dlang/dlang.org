@@ -1957,13 +1957,15 @@ static assert(!isFooOrBar!(Point));
 )
 
         $(P The result is `true` if the two arguments are expressions
-        made up of literals or enums that evaluate to the same value.)
+        none of which are just symbols
+        that evaluate to the same value at compile-time.)
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
 enum e = 3;
-static assert(__traits(isSame, (e), 3));
-static assert(__traits(isSame, 5, 2 + e));
+static assert(!__traits(isSame,                 e,  3)); //  e  is a symbol
+static assert( __traits(isSame, cast(typeof(e)) e,  3)); // cast is an expression
+static assert( __traits(isSame, 5, 2 + e)); // 5 and 2 + e are expressions
 ---
 )
         $(P If the two arguments are both
