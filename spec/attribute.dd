@@ -4,6 +4,8 @@ $(SPEC_S Attributes,
 
 $(HEADERNAV_TOC)
 
+$(H2 $(LNAME2 grammar, Grammar))
+
 $(GRAMMAR
 $(GNAME AttributeSpecifier):
     $(GLINK Attribute) $(D :)
@@ -69,12 +71,37 @@ attribute:     // affects all declarations until the end of
   declaration;
   ...
 
-attribute {    // affects all declarations in the block
+attribute      // affects all declarations in the block
+{
   declaration;
   declaration;
   ...
 }
 ---
+        $(P Function attributes `@nogc`, `nothrow` and `pure` do not propagate inside
+        aggregate declarations.)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+const pure @safe
+{
+    int i; // function attributes ignored for non-functions
+    void f(); // const attribute ignored for free function
+
+    struct S
+    {
+        int i;
+        void f(); // pure ignored inside struct
+    }
+}
+static assert(is(typeof(i) == const int));
+static assert(is(typeof(&f) == void function() pure @safe));
+static assert(is(typeof(S.i) == const int));
+static assert(is(typeof(&S().f) == void delegate() const @safe));
+---
+)
+        $(P See also: $(MREF core, attribute) for other compiler-recognized attributes.)
+
 
 $(H2 $(LNAME2 linkage, Linkage Attribute))
 
@@ -97,8 +124,8 @@ $(GNAME LinkageType):
 
 $(GNAME NamespaceList):
     $(GLINK2 expression, ConditionalExpression)
-    $(GLINK2 expression, ConditionalExpression)$(D ,)
-    $(GLINK2 expression, ConditionalExpression)$(D ,) $(GSELF NamespaceList)
+    $(GLINK2 expression, ConditionalExpression) $(D ,)
+    $(GLINK2 expression, ConditionalExpression) $(D ,) $(GSELF NamespaceList)
 )
 
         $(P D provides an easy way to call C functions and operating
@@ -161,7 +188,7 @@ extern (Windows):
         $(P Note that a $(DDSUBLINK spec/declaration, extern, lone $(D extern) keyword)
         is used as a storage class.)
 
-$(H3 C++ $(LNAME2 namespace, Namespaces))
+$(H3 $(LNAME2 namespace, C++ Namespaces))
 
         $(P The linkage form $(D extern $(LPAREN)C++, )$(I QualifiedIdentifier)$(D $(RPAREN))
         creates C++ declarations that reside in C++ namespaces. The $(I QualifiedIdentifier)
@@ -215,6 +242,7 @@ $(H2 $(LNAME2 align, $(D align) Attribute))
 
 $(GRAMMAR
 $(GNAME AlignAttribute):
+    $(D align $(LPAREN) default $(RPAREN))
     $(D align)
     $(D align) $(D $(LPAREN)) $(GLINK2 expression, AssignExpression) $(D $(RPAREN))
 )
@@ -230,15 +258,14 @@ $(GNAME AlignAttribute):
         $(LI struct, union, and class types)
         )
 
-        $(P $(D align) by itself
-        sets it to the default, which matches the default member alignment
-        of the companion C compiler.)
+        $(P $(D align $(LPAREN) default $(RPAREN)) (re)sets it to the default, which matches the default member alignment
+        of the companion C compiler. $(D align) by itself is the same as $(D align $(LPAREN) default $(RPAREN)).)
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 --------
 struct S
 {
-  align:
+  align(default): // same as `align:`
     byte a;   // placed at offset 0
     int b;    // placed at offset 4
     long c;   // placed at offset 8
@@ -632,10 +659,14 @@ operations or overloads at compile time rather than relying on generating a
 runtime error.)
 
 ---
-@disable void foo() { }
----
----
-void main() { foo(); /* error, foo is disabled */ }
+@disable int x;
+@disable void foo();
+
+void main()
+{
+    x++;   // error, x is disabled
+    foo(); // error, foo is disabled
+}
 ---
 
         $(P $(DDSUBLINK spec/struct, disable_default_construction, `@disable this();`)
@@ -693,11 +724,11 @@ $(H3 $(LNAME2 pure, $(D pure) Attribute))
 
     $(P See $(DDSUBLINK spec/function, pure-functions, Pure Functions).)
 
-$(H3 $(LNAME2 ref, $(D ref) Attribute))
+$(H2 $(LNAME2 ref, $(D ref) Attribute))
 
     $(P See $(DDSUBLINK spec/declaration, ref-storage, `ref` Storage Class).)
 
-$(H3 $(LNAME2 return, $(D return) Attribute))
+$(H2 $(LNAME2 return, $(D return) Attribute))
 
     * $(DDSUBLINK spec/function, return-ref-parameters, Return Ref Parameters).
     * $(DDSUBLINK spec/function, return-scope-parameters, Return Scope Parameters).

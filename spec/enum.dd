@@ -33,7 +33,7 @@ $(GNAME EnumMemberAttributes):
 $(GNAME EnumMemberAttribute):
     $(GLINK2 attribute, DeprecatedAttribute)
     $(GLINK2 attribute, UserDefinedAttribute)
-    $(D @)$(LINK2 attribute.html#disable, $(D disable))
+    $(D @) $(LINK2 attribute.html#disable, $(D disable))
 )
 $(GRAMMAR
 $(GNAME AnonymousEnumDeclaration):
@@ -63,12 +63,31 @@ $(H2 $(LNAME2 named_enums, Named Enums))
         )
 
         $(P This defines a new type $(CODE X) which has values
-        $(CODE X.A=0), $(CODE X.B=1), $(CODE X.C=2):)
+        $(CODE X.A = 0), $(CODE X.B = 1), $(CODE X.C = 2):)
 
         ---
         enum X { A, B, C }  // named enum
         ---
 
+        $(LEGACY_LNAME2 enum_default_initializer, enum_variables)
+
+        $(P A variable can be of named enum type.
+        Its default initializer is the first member defined for the enum type.
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+------
+enum X { A = 3, B, C }
+
+X x;
+assert(x == X.A);
+x |= X.B;
+assert(x & X.A);
+------
+)
+
+        $(P The result type of a binary operation on a named enum is defined
+        $(DDSUBLINK spec/type, enum-ops, here).)
 
         $(P If the $(GLINK EnumBaseType) is not explicitly set, and the first
         $(I EnumMember) has an *AssignExpression*, it is set to the type of that
@@ -80,10 +99,10 @@ $(H2 $(LNAME2 named_enums, Named Enums))
 
 $(SPEC_RUNNABLE_EXAMPLE_FAIL
 -------------------
-int i;
-
 enum Foo { E }
+
 Foo f;
+int i;
 i = f;           // OK
 f = i;           // error
 f = cast(Foo)i;  // OK
@@ -92,20 +111,24 @@ f = Foo.E;       // OK
 -------------------
 )
 
-        $(P A named enum member does not have an individual $(I Type).)
+        $(P A named enum member cannot declare its own $(I Type).)
+
+        $(P See also: $(DDSUBLINK spec/statement, final-switch-statement, `final switch`) on a named enum.)
+
+$(H3 $(LNAME2 member_values, Enum Member Values))
 
         $(P The value of an $(GLINK EnumMember) is given by its *AssignExpression* if present.
         If there is no *AssignExpression* and it is the first $(I EnumMember),
         its value is converted to $(GLINK EnumBaseType) from `0`.
         If there is no *AssignExpression* and it is not the first $(I EnumMember),
-        it is given the value of the previous $(I EnumMember)`+1`:)
+        it is given the value of the previous $(I EnumMember)` + 1`:)
 
         * If the value of the previous $(I EnumMember) is $(GLINK EnumBaseType)`.max`,
           it is an error. This prevents value overflow. It is an error if the previous
           member cannot be compared with *EnumBaseType*`.max` at compile-time.
         * It is an error if the base type does not define a compile-time
-          evaluable `+1` operation.
-        * If the value of the previous $(I EnumMember)`+1` is the same as the
+          evaluable `+ 1` operation.
+        * If the value of the previous $(I EnumMember)` + 1` is the same as the
           value of the previous $(I EnumMember), it is an error. (This can happen
           with floating point types).
 
@@ -153,27 +176,6 @@ enum E : C
         writeln(X.init); // error: enum X is opaque and has no default initializer
         ---
 
-$(H3 $(LEGACY_LNAME2 enum_default_initializer, enum_variables, Enum Variables))
-
-        $(P A variable can be of named enum type.
-        The default initializer is the first member defined for the enum type.
-        )
-
-$(SPEC_RUNNABLE_EXAMPLE_RUN
-------
-enum X { A=3, B, C }
-X x;
-assert(x == X.A);
-x |= X.B;
-assert(x & X.A);
-------
-)
-
-        $(P The result type of a binary operation performed when the operands have
-        different types is defined $(DDSUBLINK spec/type, enum-ops, here).)
-
-        $(P See also: $(DDSUBLINK spec/statement, final-switch-statement, `final switch`).)
-
 $(H3 $(LNAME2 enum_properties, Enum Properties))
 
         $(P Enum properties only exist for named enums.
@@ -190,7 +192,7 @@ $(H3 $(LNAME2 enum_properties, Enum Properties))
         $(P For example:)
 
 ---
-enum X { A=3, B=1, C=4, D, E=2 }
+enum X { A = 3, B = 1, C = 4, D, E = 2 }
 X.init   // is X.A
 X.min    // is X.B
 X.max    // is X.D
@@ -297,7 +299,7 @@ $(H2 $(LNAME2 anonymous_enums, Anonymous Enums))
 enum { A, B, C }  // anonymous enum
 ------
 
-        $(P Defines the constants A=0, B=1, C=2, all of type `int`.)
+        $(P Defines the constants $(CODE A = 0), $(CODE B = 1), $(CODE C = 2), all of type `int`.)
 
         $(P Enums must have at least one member.
         )
@@ -306,7 +308,7 @@ enum { A, B, C }  // anonymous enum
         If there is no *AssignExpression* and it is the first $(I EnumMember),
         its value is the $(CODE .init) property of the $(I EnumMember)'s type.
         If there is no *AssignExpression* and it is not the first $(I EnumMember),
-        it is given the value of the previous $(I EnumMember)`+1`:)
+        it is given the value of the previous $(I EnumMember)` + 1`:)
 
         * If the value of the previous $(I EnumMember) is the `.max` property
           of the previous $(I EnumMember)'s type, it is an error.
@@ -322,16 +324,16 @@ enum { A, B, C }  // anonymous enum
         )
 
 ------
-enum { A, B = 5+7, C, D = 8+C, E }
+enum { A, B = 5 + 7, C, D = 8 + C, E }
 ------
 
-        $(P Sets A=0, B=12, C=13, D=21, and E=22, all of type `int`.)
+        $(P Sets $(CODE A = 0), $(CODE B = 12), $(CODE C = 13), $(CODE D = 21), and $(CODE E = 22), all of type `int`.)
 
 ---
 enum : long { A = 3, B }
 ---
 
-        $(P Sets A=3, B=4 all of type `long`.)
+        $(P Sets $(CODE A = 3) and $(CODE B = 4), both of type `long`.)
 
 ---
 enum : string
@@ -352,7 +354,7 @@ enum
 }
 ---
 
-$(H3 $(LNAME2 single_member, Single Member Syntax))
+$(H2 $(LNAME2 single_member, Single Member Anonymous Enum))
 
         $(P If there is only one member of an anonymous enum, the `{ }` can
         be omitted. Gramatically speaking, this is an $(GLINK2 declaration, AutoDeclaration).
@@ -374,7 +376,7 @@ $(H2 $(LNAME2 manifest_constants, Manifest Constants))
 enum size = __traits(classInstanceSize, Foo);  // evaluated at compile-time
 ---
 
-        $(P The initializer for a manifest constant is evaluated using compile time function evaluation.)
+        $(P The initializer for a manifest constant is evaluated using compile-time function evaluation.)
 
 ---
 template Foo(T)
@@ -382,7 +384,7 @@ template Foo(T)
     // Not bad, but the 'size' variable will be located in the executable.
     const size_t size = T.sizeof;       // evaluated at compile-time
 
-    // ... use of 'size' at compile time ...
+    // ... use of 'size' at compile-time ...
 }
 
 template Bar(T)

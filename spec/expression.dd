@@ -96,14 +96,20 @@ $(GLINK OrOrExpression) (`||`), such that $(I expr) is a subexpression of $(I sc
 ---
 ((f() * 2 && g()) + 1) || h()
 ---
-The smallest short-circuit expression
-of the subexpression `f() * 2` above is `f() * 2 && g()`. Example:
+$(P The smallest short-circuit expression
+of the subexpression `f() * 2` above is `f() * 2 && g()`. Example:)
 ---
 (f() && g()) + h()
 ---
-The subexpression `h()` above has no smallest short-circuit expression.
+$(P The subexpression `h()` above has no smallest short-circuit expression.)
+
 
 $(H2 $(LNAME2 order-of-evaluation, Order Of Evaluation))
+
+$(BEST_PRACTICE Even when the order of evaluation is well-defined, writing code that
+depends on it is rarely recommended.)
+
+$(H3 $(LNAME2 order-increment, Increment and Decrement))
 
 $(P Built-in prefix unary expressions `++` and `--` are evaluated as if lowered (rewritten) to
 $(RELATIVE_LINK2 assignment_operator_expressions, assignments) as follows:)
@@ -129,6 +135,21 @@ $(TABLE
 $(P Therefore, the result of postfix
 `++` and `--` is an rvalue just before the side effect has been effected.)
 
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+int i = 0;
+assert(++i == 1);
+assert(i++ == 1);
+assert(i == 2);
+
+int* p = [1, 2].ptr;
+assert(*p++ == 1);
+assert(*p == 2);
+---
+)
+
+$(H3 $(LNAME2 order-binary, Binary Expressions))
+
 $(P Binary expressions except for $(GLINK AssignExpression), $(GLINK OrOrExpression), and
 $(GLINK AndAndExpression) are evaluated in lexical order (left-to-right). Example:)
 
@@ -145,14 +166,24 @@ first. Then, $(GLINK OrOrExpression) evaluates its right-hand side if and only i
 side does not evaluate to nonzero. $(GLINK AndAndExpression) evaluates its right-hand side if and
 only if its left-hand side evaluates to nonzero.)
 
+    $(IMPLEMENTATION_DEFINED The order of evaluation of the operands of $(GLINK AssignExpression).)
+
+$(H3 $(LNAME2 order-conditional, Conditional Expressions))
+
 $(P $(GLINK ConditionalExpression) evaluates its left-hand side argument
 first. Then, if the result is nonzero, the second operand is evaluated. Otherwise, the third operand
 is evaluated.)
 
+$(H3 $(LNAME2 order-calls, Function Calls))
+
 $(P Calls to functions  with `extern(D)` $(DDSUBLINK spec/attribute, linkage, linkage) (which is
-the default linkage) are evaluated in the following order: first, if necessary, the address of the
-function to call is evaluated (e.g. in the case of a computed function pointer or delegate). Then,
-arguments are evaluated left to right. Finally, transfer is passed to the function. Example:)
+the default linkage) are evaluated in the following order:)
+1. If necessary, the address of the
+   function to call is evaluated (e.g. in the case of a computed function pointer or delegate).
+1. Arguments are evaluated left to right.
+1. Transfer of execution is passed to the function.
+
+$(P Example calling a $(DDSUBLINK spec/function, function-pointers, function pointer):)
 
 $(SPEC_RUNNABLE_EXAMPLE_RUN
 ---
@@ -173,14 +204,8 @@ fun()(f1(), f3(f2()), f4());
 ---
 )
 
-    $(IMPLEMENTATION_DEFINED
-    $(OL
-    $(LI The order of evaluation of the operands of $(GLINK AssignExpression).)
-    $(LI The order of evaluation of function arguments for functions with linkage other than `extern (D)`.)
-    ))
+    $(IMPLEMENTATION_DEFINED The order of evaluation of function arguments for functions with linkage other than `extern(D)`.)
 
-    $(BEST_PRACTICE Even though the order of evaluation is well-defined, writing code that
-    depends on it is rarely recommended.)
 
 $(H2 $(LNAME2 temporary-lifetime, Lifetime of Temporaries))
 
@@ -275,10 +300,28 @@ $(GNAME CommaExpression):
 )
 
     $(P The left operand of the $(D ,) is evaluated, then the right operand
-        is evaluated. The type of the expression is the type of the right
-        operand, and the result is the result of the right operand.
-        Using the result of comma expressions isn't allowed.
+        is evaluated.
+        In C, the result of a comma expression is the result of the right operand.
+        In D, using the result of a comma expression isn't allowed.
+        Consequently a comma expression is only useful when each operand has
+        a side effect.
     )
+
+$(SPEC_RUNNABLE_EXAMPLE_RUN
+---
+int x, y;
+// expression statement
+x = 1, y = 1;
+// evaluate a comma expression at the end of each loop iteration
+for (; y < 10; x++, y *= 2)
+    writefln("%s, %s", x, y);
+---
+)
+    $(RATIONALE The comma expression has been used unintentionally, either by
+    bracket nesting mistakes or when users expect a sequence of arguments instead
+    of a single expression. Those bugs can be hard to detect in code review.
+    Disallowing use of the result turns those bugs into errors.)
+
 
 $(H2 $(LNAME2 assign_expressions, Assign Expressions))
 
@@ -842,7 +885,7 @@ $(P A container such as an associative array
     $(DDSUBLINK spec/hash-map, testing_membership, can be tested) to see if it contains a certain key:)
 
         -------------
-        int foo[string];
+        int[string] foo;
         ...
         if ("hello" in foo)
         {
@@ -1366,7 +1409,27 @@ $(H4 $(LNAME2 cast_array, Arrays))
     $(UNDEFINED_BEHAVIOR Casting a non-literal array to `bool[]` when any
         element has a byte representation $(DDSUBLINK spec/type, bool, other than 0 or 1).)
 
-    $(DDOC_SEE_ALSO $(RELATIVE_LINK2 cast_array_literal, Casting array literals).)
+    $(P $(B See also:) $(RELATIVE_LINK2 cast_array_literal, Casting array literals).)
+
+    $(P A slice of statically known length can be cast to a static array type when the
+        byte counts of their respective data match.)
+
+        $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+        ---
+        void f(int[] b)
+        {
+            char[4] a;
+            static assert(!__traits(compiles, a = cast(char[4]) b)); // unknown length
+            static assert(!__traits(compiles, a = cast(char[4]) b[0..2])); // too many bytes
+
+            a = cast(char[4]) b[0..1]; // OK
+            const i = 1;
+            a = cast(char[4]) b[i..2]; // OK
+        }
+        ---
+        )
+
+    $(P $(B See also:) $(RELATIVE_LINK2 slice_to_static_array, Slice conversion to static array).)
 
 $(H4 $(LNAME2 cast_static_array, Static Arrays))
 
@@ -1484,12 +1547,56 @@ $(H4 $(LNAME2 cast_floating, Floating Point))
 
 $(H4 $(LNAME2 cast_struct, Structs))
 
-    $(P Casting a value $(I v) to a struct $(I S), when value is not a struct
-        of the same type, is equivalent to:)
+    $(P An expression `e` can be cast to a struct type `S`:)
 
+        * The compiler attempts a
+          $(RELATIVE_LINK2 type-constructor-arguments, *PostfixExpression*) `S(e)`.
+          If that would fail:
+        * When `e` is a struct or static array instance, its data is reinterpreted as
+          the target type `S`. The data sizes must match.
+        * Otherwise, it is an error.
+
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
         ---
-        S(v)
+        struct S
+        {
+            int i;
+        }
+        struct R
+        {
+            short[2] a;
+        }
+
+        S s = cast(S) 5; // same as S(5)
+        assert(s.i == 5);
+        static assert(!__traits(compiles, cast(S) long.max)); // S(long.max) is invalid
+
+        R r = R([1, 2]);
+        s = cast(S) r; // reinterpret r
+        assert(s.i == 0x00020001);
+
+        byte[4] a = [1, 0, 2, 0];
+        assert(r == cast(R) a); // reinterpret a
         ---
+        )
+
+    $(P A struct instance can be cast to a static array type when
+        their `.sizeof` properties each give the same result.)
+
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
+        ---
+        struct S { short a, b, c; }
+
+        S s = S(1, 2, 3);
+        static assert(!__traits(compiles, cast(short[2]) s)); // size mismatch
+
+        short[3] x = cast(short[3]) s;
+        assert(x.tupleof == s.tupleof);
+
+        auto y = cast(byte[6]) s;
+        assert(y == [1, 0, 2, 0, 3, 0]);
+        ---
+        )
 
 $(H4 $(LNAME2 cast_qualifier, Qualifier Cast))
 
@@ -1613,6 +1720,8 @@ $(TABLE
         * Access a $(DDLINK spec/property, Properties, property) of a type or expression.
         * Access a member of a module, package, aggregate type or instance, enum
           or template instance.
+        * Dereference a $(DDSUBLINK spec/struct, struct-pointer, pointer to a struct/union)
+          instance and access a member of it.
         * Call a free function using $(DDSUBLINK spec/function, pseudo-member, UFCS).
     )
     $(TROW `.` *NewExpression*, Instantiate a $(DDSUBLINK spec/class, nested-explicit,
@@ -1621,8 +1730,10 @@ $(TABLE
     $(TROW `--`, Decrement after use)
     $(TROW `(args)`,
         Either:
-        * Call an expression with optional arguments
-        * Construct a type with optional arguments
+        * $(RELATIVE_LINK2 callable_expressions, Call an expression) with optional arguments
+        * Call $(DDSUBLINK spec/operatoroverloading, static-opcall,
+          static `opCall`) on a user-defined type
+        * $(RELATIVE_LINK2 type-constructor-arguments, Construct a type) with optional arguments
     )
     $(TROW *IndexOperation*, Select a single element)
     $(TROW *SliceOperation*, Select a series of elements)
@@ -1645,6 +1756,8 @@ $(GNAME NamedArgument):
     $(IDENTIFIER) $(D :) $(GLINK AssignExpression)
     $(GLINK AssignExpression)
 )
+
+$(H4 $(LNAME2 callable_expressions, Callable Expressions))
 
     $(P A callable expression can precede a list of named arguments in parentheses.
         The following expressions can be called:)
@@ -1687,6 +1800,7 @@ $(H4 $(LNAME2 type-constructor-arguments, Constructing a Type with an Argument L
     $(P A type can precede a list of arguments. See:)
 
     * $(DDSUBLINK spec/struct, struct-literal, Struct Literals)
+    * $(DDSUBLINK spec/struct, struct-constructor, Struct Constructors)
     * $(RELATIVE_LINK2 uniform_construction_syntax, Uniform construction syntax for built-in scalar types)
 
 $(H3 $(LEGACY_LNAME2 index_operations, index_expressions, Index Operations))
@@ -1894,6 +2008,7 @@ $(GNAME PrimaryExpression):
     $(GLINK IsExpression)
     $(D $(LPAREN)) $(GLINK Expression) $(D $(RPAREN))
     $(GLINK SpecialKeyword)
+    $(GLINK RvalueExpression)
     $(GLINK2 traits, TraitsExpression)
 
 $(GNAME LiteralExpression):
@@ -2143,7 +2258,9 @@ $(GNAME ArrayLiteral):
         are inserted as expressions in place of the sequence.
     )
 
-    $(P Escaping array literals are allocated on the memory managed heap.
+$(H4 $(LNAME2 array-literal-heap, GC Allocation))
+
+    $(P Escaping array literals are always allocated on the memory managed heap.
         Thus, they can be returned safely from functions:)
 
         ---
@@ -2152,6 +2269,40 @@ $(GNAME ArrayLiteral):
             return [1, 2, 3];
         }
         ---
+
+    $(P An array literal is not GC allocated if:)
+
+    * It initializes or assigns to a static array.
+    * It is an argument to a $(DDSUBLINK spec/function, scope-parameters, `scope`
+      function parameter).
+    * It initializes a $(DDSUBLINK spec/attribute, scope, `scope`) slice (`-preview=dip1000`
+      $(LINK2 $(ROOT_DIR)changelog/2.102.0.html#dmd.scope-array-on-stack,
+      is required for this)).
+    * It is used on one side of an $(GLINK EqualExpression) or $(GLINK RelExpression).
+    * It is immediately $(RELATIVE_LINK2 index_operations, indexed) and used as an rvalue.
+    * It is used as a `foreach` aggregate where the element variable is not `ref`.
+
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+    ---
+    void f(scope int[] a, int[2] sa) @nogc
+    {
+        sa = [7, 8];
+    }
+    void g(int[] b) @nogc; // `b` is not scope, so may escape
+
+    void main() @nogc
+    {
+        int[3] sa = [1, 2, 3];
+        f([1, 2], [3, 4]);
+        //scope int[] a = [5, 6]; // requires `-preview=dip1000`
+        //g([1, 2]); // error, array literal heap allocated
+        assert([1, 2] < [3, 2]);
+        assert([1, 2][1] == 2);
+        foreach (e; [4, 2, 9])
+            assert(e > 0);
+    }
+    ---
+    )
 
 $(H4 $(LNAME2 cast_array_literal, Casting))
 
@@ -2242,11 +2393,14 @@ $(H3 $(LNAME2 function_literals, Function Literals))
 
 $(GRAMMAR
 $(GNAME FunctionLiteral):
-    $(D function) $(GLINK RefOrAutoRef)$(OPT) $(GLINK2 type, Type)$(OPT) $(GLINK ParameterWithAttributes)$(OPT) $(GLINK FunctionLiteralBody)
-    $(D delegate) $(GLINK RefOrAutoRef)$(OPT) $(GLINK2 type, Type)$(OPT) $(GLINK ParameterWithMemberAttributes)$(OPT) $(GLINK FunctionLiteralBody)
+    $(D function) $(GLINK RefOrAutoRef)$(OPT) $(GLINK BasicTypeWithSuffixes)$(OPT) $(GLINK ParameterWithAttributes)$(OPT) $(GLINK FunctionLiteralBody)
+    $(D delegate) $(GLINK RefOrAutoRef)$(OPT) $(GLINK BasicTypeWithSuffixes)$(OPT) $(GLINK ParameterWithMemberAttributes)$(OPT) $(GLINK FunctionLiteralBody)
     $(GLINK RefOrAutoRef)$(OPT) $(GLINK ParameterWithMemberAttributes) $(GLINK FunctionLiteralBody)
     $(GLINK2 statement, BlockStatement)
     $(IDENTIFIER) $(D =>) $(GLINK AssignExpression)
+
+$(GNAME BasicTypeWithSuffixes):
+    $(GLINK2 type, BasicType) $(GLINK2 type, TypeSuffixes)$(OPT)
 
 $(GNAME ParameterWithAttributes):
     $(GLINK2 function, Parameters) $(GLINK2 function, FunctionAttributes)$(OPT)
@@ -2664,10 +2818,29 @@ $(H4 $(LNAME2 assert-ct, Compile-time Evaluation))
     Compile Time Function Execution (CTFE) is not attempted.
     )
 
+    $(P This allows the compiler to suppress an error when there is a
+    missing return statement:)
+
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+    ---
+    int f(int x)
+    {
+        if (x > 0)
+        {
+            return 5 / x;
+        }
+        assert(0);
+        // no need to use a dummy return statement here
+    }
+    ---
+    )
+
     $(P The implementation may handle the case of the first $(I AssignExpression) evaluating to `false`
     at compile time differently - even when other `assert`s are ignored,
     it may still generate a $(D HLT) instruction or equivalent.
     )
+
+    $(RATIONALE Halting the program prevents undefined behaviour from occurring.)
 
     $(P See also: $(DDSUBLINK spec/version, static-assert, `static assert`).)
 
@@ -2685,7 +2858,7 @@ $(H4 $(LNAME2 assert-message, Assert Message))
         }
         ----
 
-    $(P When compiled and run, it will produce the message:)
+    $(P When compiled and run, typically it will produce the message:)
 
     $(CONSOLE core.exception.AssertError@test.d(3) an error message)
 
@@ -2758,38 +2931,52 @@ $(GNAME NewExpression):
         collected) heap by default.
     )
 
-    $(P The `new` *Type* form constructs an instance of a type and default-initializes it.)
-    $(P The *Type(NamedArgumentList)* form allows passing either a single initializer
-        of the same type, or multiple arguments for more complex types.
-        For class types, *NamedArgumentList* is passed to the class constructor.
-        For a dynamic array, the argument sets the initial array length.
-        For multidimensional dynamic arrays, each argument corresponds to
-        an initial length (see $(RELATIVE_LINK2 new_multidimensional, below)).)
+    $(P `new T` constructs an instance of type `T` and default-initializes it.
+        The result's type is:)
+    * `T` when `T` is a reference type (e.g. classes,
+      $(DDSUBLINK spec/hash-map, construction_and_ref_semantic, associative arrays))
+    * `T*` when `T` is a value type (e.g. basic types, structs)
 
     $(SPEC_RUNNABLE_EXAMPLE_RUN
     ---
     int* i = new int;
-    assert(*i == 0);
-    i = new int(5);
-    assert(*i == 5);
+    assert(*i == 0); // int.init
 
     Object o = new Object;
-    Exception e = new Exception("info");
+    //int[] a = new int[]; // error, need length argument
+    ---
+    )
+    $(P The $(INLINE_GRAMMAR *Type(NamedArgumentList)*) form allows passing either a single initializer
+        of the same type, or multiple arguments for more complex types:)
 
-    auto a = new int[](2);
+    * For class and struct types, *NamedArgumentList* is passed to the constructor.
+    * For a dynamic array, the argument sets the initial array length.
+    * For multidimensional dynamic arrays, each argument corresponds to
+      an initial length (see $(RELATIVE_LINK2 new_multidimensional, below)).
+
+    $(SPEC_RUNNABLE_EXAMPLE_RUN
+    ---
+    int* i = new int(5);
+    assert(*i == 5);
+
+    Exception e = new Exception("info");
+    assert(e.msg == "info");
+
+    int[] a = new int[](2);
     assert(a.length == 2);
+    a = new int[2]; // same, see below
     ---
     )
 
-    $(P The *Type[AssignExpression]* form allocates a dynamic array with
+    $(P The $(INLINE_GRAMMAR *Type[AssignExpression]*) form allocates a dynamic array with
         length equal to *AssignExpression*.
-        It is preferred to use the *Type(NamedArgumentList)* form when allocating
+        It is preferred to use the $(INLINE_GRAMMAR *Type(NamedArgumentList)*) form when allocating
         dynamic arrays instead, as it is more general.)
 
     $(NOTE It is not possible to allocate a static array directly with
         `new` (only by using a type alias).)
 
-    $(P The result is a $(DDSUBLINK const3, unique-expressions, unique expression)
+    $(P The result is a $(DDSUBLINK spec/const3, unique-expressions, unique expression)
     which can implicitly convert to other qualifiers:)
 
     ---
@@ -3266,7 +3453,7 @@ void foo()
 
 $(H4 $(LNAME2 is-parameter-list, Parameter List Forms))
 
-$(GRAMMAR_INFORMATIVE
+$(INFORMATIVE_GRAMMAR
 $(D is $(LPAREN)) $(I Type) $(D :) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
 $(D is $(LPAREN)) $(I Type) $(D ==) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
 $(D is $(LPAREN)) $(I Type) $(I Identifier) $(D :) $(I TypeSpecialization) $(D ,) $(GLINK2 template, TemplateParameterList) $(D $(RPAREN))
@@ -3347,6 +3534,65 @@ $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
 )
 
+
+$(H3 $(LNAME2 RvalueExpression, Rvalue Expression))
+
+$(GRAMMAR
+$(GNAME RvalueExpression):
+    $(D __rvalue $(LPAREN)) $(GLINK AssignExpression) $(D $(RPAREN))
+)
+
+    $(P The $(I RvalueExpression) causes the embedded $(I AssignExpression) to be
+    treated as an rvalue whether it is an rvalue or an lvalue.)
+
+$(H4 Overloading)
+
+    $(P If both ref and non-ref parameter overloads are present, an rvalue is preferably matched to the
+    non-ref parameters, and an lvalue is preferably matched to the ref parameter.
+    An $(I RvalueExpression) will preferably match with the non-ref parameter.)
+
+$(H4 Semantics of Arguments Matched to Rvalue Parameters)
+
+    $(P An rvalue argument is owned by the function called. Hence, if an lvalue is matched
+    to the rvalue argument, a copy is made of the lvalue to be passed to the function. The function
+    will then call the destructor (if any) on the parameter at the conclusion of the function.
+    An rvalue argument is not copied, as it is assumed to already be unique, and is also destroyed at
+    the conclusion of the function.)
+
+    $(P The called function's semantics are the same whether a parameter originated as an rvalue
+    or is a copy of an lvalue.
+    This means that an $(I RvalueExpression) argument destroys the expression upon function return.
+    Attempts to continue to use the lvalue expression are invalid. The compiler won't always be able
+    to detect a use after being passed to the function, which means that the destructor for the object
+    must reset the object's contents to its initial value, or at least a benign value that can
+    be destructed more than once.
+    )
+
+---
+struct S
+{
+    ubyte* p;
+    ~this()
+    {
+      free(p);
+      // add `p = null;` here to prevent double free
+    }
+}
+
+void aggh(S s)
+{
+}
+
+void oops()
+{
+    S s;
+    s.p = cast(ubyte*)malloc(10);
+    aggh(__rvalue(s));
+    // destructor of s called at end of scope, double-freeing s.p
+}
+---
+
+    $(P $(I RvalueExpression)s enable the use of $(I move constructor)s and $(I move assignment)s.)
 
 $(H3 $(LNAME2 specialkeywords, Special Keywords))
 

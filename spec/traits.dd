@@ -52,10 +52,14 @@ $(GNAME TraitsKeyword):
     $(RELATIVE_LINK2 isCOMClass, $(D isCOMClass))
     $(RELATIVE_LINK2 hasMember, $(D hasMember))
     $(RELATIVE_LINK2 hasCopyConstructor, $(D hasCopyConstructor))
+    $(RELATIVE_LINK2 hasMoveConstructor, $(D hasMoveConstructor))
     $(RELATIVE_LINK2 hasPostblit, $(D hasPostblit))
     $(RELATIVE_LINK2 identifier, $(D identifier))
+    $(RELATIVE_LINK2 fullyQualifiedName, $(D fullyQualifiedName))
     $(RELATIVE_LINK2 getAliasThis, $(D getAliasThis))
     $(RELATIVE_LINK2 getAttributes, $(D getAttributes))
+    $(RELATIVE_LINK2 getBitfieldOffset, $(D getBitfieldOffset))
+    $(RELATIVE_LINK2 getBitfieldWidth, $(D getBitfieldWidth))
     $(RELATIVE_LINK2 getFunctionAttributes, $(D getFunctionAttributes))
     $(RELATIVE_LINK2 getFunctionVariadicStyle, $(D getFunctionVariadicStyle))
     $(RELATIVE_LINK2 getLinkage, $(D getLinkage))
@@ -406,7 +410,45 @@ static assert(__traits(isZeroInit, void));
 
 $(H3 $(GNAME hasCopyConstructor))
 
-        $(P The argument is a type. If it is a struct with a copy constructor, returns $(D true). Otherwise, return $(D false). Note that a copy constructor is distinct from a postblit.
+        $(P The argument is a type.
+        If it is a struct with a copy constructor, returns $(D true). Otherwise, return $(D false).
+        A copy constructor is distinct from a move constructor or a postblit.
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+
+import std.stdio;
+
+struct S { }
+
+class C { }
+
+struct P
+{
+    this(ref P rhs) {} // copy constructor
+}
+
+struct B
+{
+    this(this) {} // postblit
+}
+
+void main()
+{
+    writeln(__traits(hasCopyConstructor, S)); // false
+    writeln(__traits(hasCopyConstructor, C)); // false
+    writeln(__traits(hasCopyConstructor, P)); // true
+    writeln(__traits(hasCopyConstructor, B)); // false, this is a postblit
+}
+---
+)
+
+$(H3 $(GNAME hasMoveConstructor))
+
+        $(P The argument is a type.
+        If it is a struct with a move constructor, returns $(D true). Otherwise, return $(D false).
+        A move constructor is distinct from a copy constructor or a postblit.
         )
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
@@ -416,28 +458,27 @@ import std.stdio;
 
 struct S
 {
+    this(S rhs) {} // move constructor
 }
 
-class C
-{
-}
+class C { }
 
 struct P
 {
-    this(ref P rhs) {}
+    this(ref P rhs) {} // copy constructor
 }
 
 struct B
 {
-    this(this) {}
+    this(this) {} // postblit
 }
 
 void main()
 {
-    writeln(__traits(hasCopyConstructor, S)); // false
-    writeln(__traits(hasCopyConstructor, C)); // false
-    writeln(__traits(hasCopyConstructor, P)); // true
-    writeln(__traits(hasCopyConstructor, B)); // false, this is a postblit
+    writeln(__traits(hasMoveConstructor, S)); // true
+    writeln(__traits(hasMoveConstructor, C)); // false
+    writeln(__traits(hasMoveConstructor, P)); // false
+    writeln(__traits(hasMoveConstructor, B)); // false, this is a postblit
 }
 ---
 )
@@ -1357,6 +1398,55 @@ tuple((Foo))
 )
 )
 
+$(SECTION3 $(GNAME getBitfieldOffset),
+     $(P Takes one argument, a qualified name that resolve to a field in a struct or class.
+     )
+     $(P If the field is a bitfield, it returns as a `uint` the bit number of the least significant
+     bit in the field. The rightmost bit is at offset 0, the leftmost bit is at offset 31 (for
+     32 bit int fields).
+     )
+     $(P If the field is a not bitfield, it returns as a `uint` the number 0.
+     )
+
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
+---
+// OK with -preview=bitfields
+struct S
+{
+    int a,b;
+    int :2, c:3;
+}
+
+static assert(__traits(getBitfieldOffset, S.b) == 0);
+static assert(__traits(getBitfieldOffset, S.c) == 2);
+---
+)
+
+)
+
+$(SECTION3 $(GNAME getBitfieldWidth),
+     $(P Takes one argument, a qualified name that resolve to a field in a struct or class.
+     )
+     $(P If the field is a bitfield, it returns as a `uint` the width of the bit field as
+     a number of bits.
+     )
+     $(P If the field is a not bitfield, it returns the number of bits in the type.
+     )
+$(SPEC_RUNNABLE_EXAMPLE_FAIL
+---
+// OK with -preview=bitfields
+struct S
+{
+    int a,b;
+    int :2, c:3;
+}
+
+static assert(__traits(getBitfieldWidth, S.b) == 32);
+static assert(__traits(getBitfieldWidth, S.c) == 3);
+---
+)
+)
+
 $(H3 $(GNAME getLinkage))
 
         $(P Takes one argument, which is a declaration symbol, or the type of a function, delegate,
@@ -1433,13 +1523,13 @@ void main()
 
 $(H3 $(GNAME getOverloads))
 
-        $(P The first argument is an aggregate (e.g. struct/class/module).
-        The second argument is a `string` that matches the name of
-        the member(s) to return.
-        The third argument is a `bool`, and is optional.  If `true`, the
-        result will also include template overloads.
-        The result is a symbol sequence of all the overloads of the supplied name.
-        )
+        * The first argument is an aggregate type or instance, or a module.
+        * The second argument is a `string` that matches the name of
+          the member(s) to return.
+        * The third argument is a `bool`, and is optional.  If `true`, the
+          result will also include template overloads.
+        * The result is a $(DDSUBLINK spec/template, homogeneous_sequences, symbol sequence)
+          of all the overloads of the supplied name.
 
 $(SPEC_RUNNABLE_EXAMPLE_COMPILE
 ---
@@ -1447,8 +1537,6 @@ import std.stdio;
 
 class D
 {
-    this() { }
-    ~this() { }
     void foo() { }
     int foo(int) { return 2; }
     void bar(T)() { return T.init; }
@@ -1459,18 +1547,24 @@ void main()
 {
     D d = new D();
 
-    foreach (t; __traits(getOverloads, D, "foo"))
-        writeln(typeid(typeof(t)));
+    alias fooOverloads = __traits(getOverloads, D, "foo");
+    foreach (o; fooOverloads)
+        writeln(typeid(typeof(o)));
 
-    alias b = typeof(__traits(getOverloads, D, "foo"));
-    foreach (t; b)
-        writeln(typeid(t));
+    // typeof on a symbol sequence gives a type sequence
+    foreach (T; typeof(fooOverloads))
+        writeln(typeid(T));
 
-    auto i = __traits(getOverloads, d, "foo")[1](1);
-    writeln(i);
+    // calls d.foo(3)
+    auto i = __traits(getOverloads, d, "foo")[1](3);
+    assert(i == 2);
 
-    foreach (t; __traits(getOverloads, D, "bar", true))
-        writeln(t.stringof);
+    // pass true to include templates
+    // calls std.stdio.writeln(i)
+    __traits(getOverloads, std.stdio, "writeln", true)[0](i);
+
+    foreach (o; __traits(getOverloads, D, "bar", true))
+        writeln(o.stringof);
 }
 ---
 )
@@ -1478,10 +1572,10 @@ void main()
         Prints:
 
 $(CONSOLE
-void()
-int()
-void()
-int()
+void function()
+int function(int)
+void function()
+int function(int)
 2
 bar(T)()
 bar(int n)
@@ -1541,6 +1635,43 @@ void main()
 $(CONSOLE
 export
 public
+)
+
+$(H3 $(GNAME fullyQualifiedName))
+
+        $(P Takes one argument, which can be a type, expression, or symbol, and returns a string.)
+
+        $(UL
+        $(LI A $(D type) returns a string representing the type.)
+        $(LI A $(D expression) returns a string representing the type of the expression.)
+        $(LI A $(D symbol) returns a string representing the fully qualified name of the symbol.)
+        )
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+module plugh;
+import std.stdio;
+
+void main()
+{
+    auto s = __traits(fullyQualifiedName, int);
+    writeln(s);
+
+    auto t = __traits(fullyQualifiedName, 1.0);
+    writeln(t);
+
+    auto u = __traits(fullyQualifiedName, t);
+    writeln(u);
+}
+---
+)
+
+        Prints:
+
+$(CONSOLE
+int
+double
+plugh.main.t
 )
 
 $(H3 $(GNAME getProtection))
@@ -1798,6 +1929,30 @@ static assert(__traits(isSame, object, object));
 
 alias daz = foo;
 static assert(__traits(isSame, foo, daz));
+---
+)
+        $(P isSame matches against non-instantiated templates.)
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+struct Foo(T){
+    T x;
+}
+
+struct Bar(T){
+    T x;
+}
+
+struct Point(T){
+    T x;
+    T y;
+}
+
+enum isFooOrBar(alias FB) = __traits(isSame, FB, Foo) || __traits(isSame, FB, Bar);
+
+static assert(isFooOrBar!(Foo));
+static assert(isFooOrBar!(Bar));
+static assert(!isFooOrBar!(Point));
 ---
 )
 

@@ -9,6 +9,7 @@ $(H2 $(LNAME2 grammar, Function Declarations))
 $(GRAMMAR
 $(GNAME FuncDeclaration):
     $(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK FuncDeclarator) $(GLINK FunctionBody)
+    $(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK FuncDeclarator) $(GLINK MissingFunctionBody)
     $(GLINK AutoFuncDeclaration)
 
 $(GNAME AutoFuncDeclaration):
@@ -45,6 +46,7 @@ $(GNAME Parameter):
     $(GLINK ParameterDeclaration)
     $(GLINK ParameterDeclaration) $(D ...)
     $(GLINK ParameterDeclaration) $(D =) $(ASSIGNEXPRESSION)
+    $(GLINK ParameterDeclaration) $(D =) $(ASSIGNEXPRESSION) $(D ...)
 
 $(GNAME ParameterDeclaration):
     $(GLINK ParameterAttributes)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator)
@@ -115,7 +117,6 @@ $(GRAMMAR
 $(GNAME FunctionBody):
     $(GLINK SpecifiedFunctionBody)
     $(GLINK ShortenedFunctionBody)
-    $(GLINK MissingFunctionBody)
 
 $(GNAME SpecifiedFunctionBody):
     $(D do)$(OPT) $(GLINK2 statement, BlockStatement)
@@ -399,7 +400,8 @@ $(H2 $(LNAME2 function-return-values, Function Return Values))
         unless:)
         $(UL
         $(LI the function executes an infinite loop)
-        $(LI the function executes an `assert(0)` statement)
+        $(LI the function executes an $(DDSUBLINK spec/expression, assert-ct,
+            `assert(0)` statement))
         $(LI the function evaluates an expression of type
             $(DDSUBLINK spec/type, noreturn, `noreturn`))
         $(LI the function contains inline assembler code)
@@ -1758,11 +1760,32 @@ int* mars(return ref int i) @safe
 ---
 )
 
-$(P If a function returns `void`, and the first parameter is `ref` or `out`, then
+$(PANEL
+If a function returns `void`, and the first parameter is `ref` or `out`, then
 all subsequent `return ref` parameters are considered as being assigned to
 the first parameter for lifetime checking.
+
+---
+void f(ref scope int* p, return ref int i) @safe
+{
+    p = &i; // OK with -preview=dip1000
+}
+
+void main() @safe
+{
+    int i;
+    int* p;
+    f(p, i); // OK, lifetime of p is shorter than i
+    *p = 5;
+    assert(i == 5);
+
+    int j;
+    //f(p, j); // error, lifetime of p is longer than j
+}
+---
+
 The `this` reference parameter to a struct non-static member function is
-considered the first parameter.)
+considered the first parameter.
 
 ---
 struct S
@@ -1771,7 +1794,7 @@ struct S
 
     void f(return ref int i) scope @safe
     {
-        p = &i;
+        p = &i; // OK with -preview=dip1000
     }
 }
 
@@ -1779,11 +1802,12 @@ void main() @safe
 {
     int i;
     S s;
-    s.f(i); // OK with -preview=dip1000, lifetime of `s` is shorter than `i`
+    s.f(i); // OK, lifetime of `s` is shorter than `i`
     *s.p = 2;
     assert(i == 2);
 }
 ---
+)
 
 $(P If there are multiple `return ref` parameters, the lifetime of the return
 value is the smallest lifetime of the corresponding arguments.)
@@ -1907,10 +1931,11 @@ int* balin(scope int* q, int* r)
 }
 ---
 
-    $(P As a `scope` parameter must not escape, the compiler can potentially avoid heap-allocating a
+    $(IMPLEMENTATION_DEFINED
+    As a `scope` parameter must not escape, the compiler can potentially avoid heap-allocating a
     unique argument to a `scope` parameter. Due to this, passing an array literal, delegate
     literal or a $(GLINK2 expression, NewExpression) to a scope parameter may be allowed in a
-    `@nogc` context, depending on the compiler implementation.)
+    `@nogc` context.)
 
 $(H3 $(LNAME2 return-scope-parameters, Return Scope Parameters))
 
@@ -3423,21 +3448,17 @@ $(H2 $(LNAME2 main, $(D main()) Function))
         $(D main()) must be declared as follows:
         )
 
-        $(GRAMMAR
-        $(GNAME MainFunction):
-            $(GLINK MainReturnDecl) $(D main$(LPAREN)$(RPAREN)) $(GLINK2 statement, MainFunctionBody)
-            $(GLINK MainReturnDecl) $(D main$(LPAREN)string[]) $(GLINK_LEX Identifier)$(D $(RPAREN)) $(GLINK2 statement, MainFunctionBody)
+$(GRAMMAR
+$(GNAME MainFunction):
+    $(GLINK MainReturnDecl) $(D main$(LPAREN)$(RPAREN)) $(GLINK FunctionBody)
+    $(GLINK MainReturnDecl) $(D main$(LPAREN)string[]) $(GLINK_LEX Identifier)$(D $(RPAREN)) $(GLINK FunctionBody)
 
-        $(GNAME MainReturnDecl):
-            $(D void)
-            $(D int)
-            $(GLINK2 type, noreturn)
-            $(RELATIVE_LINK2 auto-functions, $(D auto))
-
-        $(GNAME MainFunctionBody):
-            $(GLINK ShortenedFunctionBody)
-            $(GLINK SpecifiedFunctionBody)
-        )
+$(GNAME MainReturnDecl):
+    $(D void)
+    $(D int)
+    $(GLINK2 type, noreturn)
+    $(RELATIVE_LINK2 auto-functions, $(D auto))
+)
 
         $(UL
         $(LI If `main` returns `void`, the OS will receive a zero value on success.)
@@ -3468,14 +3489,14 @@ $(H2 $(LNAME2 main, $(D main()) Function))
 
         $(P A C $(D main) function must be declared as follows:)
 
-        $(GRAMMAR
-        $(GNAME CMainFunction):
-            $(D extern (C)) $(GLINK MainReturnDecl) $(D main$(LPAREN)$(GLINK CmainParameters)$(OPT)$(RPAREN)) $(GLINK2 statement, BlockStatement)
+$(GRAMMAR
+$(GNAME CMainFunction):
+    $(D extern (C)) $(GLINK MainReturnDecl) $(D main$(LPAREN)$(GLINK CmainParameters)$(OPT)$(RPAREN)) $(GLINK2 statement, BlockStatement)
 
-        $(GNAME CmainParameters):
-            $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
-            $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
-        )
+$(GNAME CmainParameters):
+    $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
+    $(D int) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier), $(D char**) $(GLINK_LEX Identifier)
+)
 
         $(P When defined, the first two parameters denote a C-style array (length + pointer)
         that holds the arguments passed to the program by the OS. The third parameter is a POSIX
@@ -3701,16 +3722,17 @@ $(H2 $(LNAME2 nogc-functions, No-GC Functions))
         )
 
         $(OL
-        $(LI $(DDSUBLINK spec/expression, ArrayLiteral, constructing an array) on the heap)
+        $(LI $(DDSUBLINK spec/expression, array-literal-heap, constructing an array) on the heap)
         $(LI resizing an array by writing to its $(D .length) property)
         $(LI $(DDSUBLINK spec/expression, CatExpression, array concatenation))
         $(LI $(DDSUBLINK spec/expression, simple_assignment_expressions, array appending))
         $(LI $(DDSUBLINK spec/expression, AssocArrayLiteral, constructing an associative array))
         $(LI $(DDSUBLINK spec/expression, IndexOperation, indexing) an associative array
-            $(NOTE because it may throw $(D RangeError) if the specified key is not present))
+            $(RATIONALE Indexing may throw a $(D RangeError) if the specified key is not present.))
         $(LI $(DDSUBLINK spec/expression, NewExpression, allocating an object with `new`) on the heap
-            $(NOTE `new` declarations of $(D class types) in function scopes are compatible with
-            $(D @nogc) if used for $(D scope) variables, as they result in allocations on the stack))
+            $(NOTE `new` declarations of $(D class) types in function scopes are compatible with
+            $(D @nogc) if used to initialize a $(DDSUBLINK spec/attribute, scope-class-var, $(D scope) variable),
+            as they result in allocations on the stack.))
         $(LI calling functions that are not `@nogc`, unless the call is
             in a $(GLINK2 version, ConditionalStatement)
             controlled by a $(GLINK2 version, DebugCondition))
@@ -3807,16 +3829,17 @@ $(H3 $(LNAME2 safe-functions, Safe Functions))
                 * Any source element type modifiers implicitly convert to the target element type modifiers
                 * Neither element type is a function type
                 * The target element type is not mutable when the source type is `void[]`
-                * The target element type is not $(DDSUBLINK spec/type, bool, `bool`)
-                * The source element type is not `bool` when the target element type is mutable
+                * The target element type only stores $(RELATIVE_LINK2 safe-values, safe values)
+                * The source element type only stores safe values when the target element type is mutable
                 * Neither element type is $(DDSUBLINK spec/struct, opaque_struct_unions, opaque).
         $(LI No casting from any non-pointer type to a pointer type.)
         $(LI No $(DDSUBLINK spec/expression, pointer_arithmetic, pointer arithmetic)
             (including pointer indexing & slicing).)
+        $(LI Cannot access array $(DDSUBLINK spec/arrays, ptr-property, `.ptr` property).)
         $(LI Cannot access union fields that:)
             * Have pointers or references overlapping with other types
             * Have invariants overlapping with other types
-            * Contain a $(DDSUBLINK spec/type, bool, `bool`)
+            * Overlap with fields that could become $(RELATIVE_LINK2 safe-values, unsafe values)
         $(LI Calling any $(RELATIVE_LINK2 system-functions, System Functions).)
         $(LI No catching of exceptions that are not derived from
         $(LINK2 https://dlang.org/phobos/object.html#.Exception, $(D class Exception)).)
@@ -3832,7 +3855,7 @@ $(H3 $(LNAME2 safe-functions, Safe Functions))
         $(LI Cannot use $(D void) initializers for types containing:)
             * Pointers/reference types
             * Types with invariants
-            * `bool`
+            * Unsafe values
         )
 
         $(NOTE When indexing or slicing an array, an out of bounds access
@@ -4014,7 +4037,10 @@ $(H3 $(LNAME2 safe-interfaces, Safe Interfaces))
 
 $(H3 $(LNAME2 safe-values, Safe Values))
 
-        $(P For a `bool`, only 0 and 1 are safe values.)
+        $(P A variable or field $(DDSUBLINK spec/attribute, system-variables,
+        marked as `@system`) does not hold a safe value, regardless of its type.)
+
+        $(P For a $(DDSUBLINK spec/type, bool, `bool`), only 0 and 1 are safe values.)
 
         $(P For all other $(DDSUBLINK spec/type, basic-data-types, basic data types), all
         possible bit patterns are safe.)
@@ -4238,6 +4264,13 @@ $(H2 $(LNAME2 pseudo-member, Uniform Function Call Syntax (UFCS)))
         It also enables
         $(HTTP www.drdobbs.com/architecture-and-design/component-programming-in-d/240008321,
         function chaining and component programming).
+        )
+        This general idea has different names in other programming languages.
+        The following is a short list:
+        $(UL
+        $(LI C#: Extension methods)
+        $(LI Kotlin: Extension functions)
+        $(LI Zig: Dot notation)
         )
 
         $(P A more complex example:)

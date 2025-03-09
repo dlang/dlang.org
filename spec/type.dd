@@ -107,8 +107,8 @@ $(H2 $(LEGACY_LNAME2 Basic Data Types, basic-data-types, Basic Data Types))
     $(TROW $(D uint), $(D 0u), unsigned 32 bits)
     $(TROW $(D long), $(D 0L), signed 64 bits)
     $(TROW $(D ulong), $(D 0uL), unsigned 64 bits)
-    $(TROW $(D cent), $(D 0), signed 128 bits)
-    $(TROW $(D ucent), $(D 0u), unsigned 128 bits)
+    $(TROW $(GDEPRECATED $(D cent)), $(D 0), signed 128 bits)
+    $(TROW $(GDEPRECATED $(D ucent)), $(D 0u), unsigned 128 bits)
     $(TROW $(D float), $(D float.nan), 32 bit floating point)
     $(TROW $(D double), $(D double.nan), 64 bit floating point)
     $(TROW $(D real), $(D real.nan), largest floating point size available)
@@ -130,6 +130,9 @@ $(H2 $(LEGACY_LNAME2 Basic Data Types, basic-data-types, Basic Data Types))
     type supported by the x86 FPU.
     )
 
+    $(NOTE 128-bit integer types `cent` and `ucent`
+    $(DDSUBLINK deprecate, 128-bit integer types, have been deprecated).)
+
     $(P NOTE: Complex and imaginary types `ifloat`, `idouble`, `ireal`, `cfloat`, `cdouble`,
     and `creal` have been deprecated in favor of `std.complex.Complex`.)
 
@@ -142,7 +145,22 @@ $(H2 $(LEGACY_LNAME2 Derived Data Types, derived-data-types, Derived Data Types)
     $(LI $(DDLINK spec/hash-map, Associative Array, Associative Arrays))
     $(LI $(RELATIVE_LINK2 functions, Function Types))
     $(LI $(RELATIVE_LINK2 delegates, Delegate Types))
+    $(LI $(DDSUBLINK spec/template, homogeneous_sequences, Type Sequences))
     )
+
+$(SPEC_RUNNABLE_EXAMPLE_COMPILE
+---
+int* p; // pointer
+int[2] sa; // static array
+int[] da; // dynamic array/slice
+
+int[string] aa; // associative array
+void function() fp; // function pointer
+
+import std.meta : AliasSeq;
+AliasSeq!(int, string) tsi; // type sequence instance
+---
+)
 
 $(H3 $(LNAME2 pointers, Pointers))
 
@@ -597,7 +615,7 @@ $(H2 $(LNAME2 functions, Function Types))
 
 $(P A function type has the form:)
 
-$(GRAMMAR_INFORMATIVE
+$(INFORMATIVE_GRAMMAR
 $(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK Type) $(GLINK2 function, Parameters) $(GLINK2 function, FunctionAttributes)$(OPT)
 )
 
@@ -608,7 +626,7 @@ A function type is only used for type tests or as the target type of a pointer.)
 $(P Instantiating a function type is illegal. Instead, a pointer to function
 or delegate can be used. Those have these type forms respectively:)
 
-$(GRAMMAR_INFORMATIVE
+$(INFORMATIVE_GRAMMAR
 $(GLINK Type) `function` $(GLINK2 function, Parameters) $(GLINK2 function, FunctionAttributes)$(OPT)
 $(GLINK Type) `delegate` $(GLINK2 function, Parameters) $(GLINK2 function, MemberFunctionAttributes)$(OPT)
 )

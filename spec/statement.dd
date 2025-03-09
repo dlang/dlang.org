@@ -239,10 +239,18 @@ $(GNAME IfStatement):
 
 $(GNAME IfCondition):
     $(EXPRESSION)
-    $(D auto) $(GLINK_LEX Identifier) $(D =) $(EXPRESSION)
-    $(D scope) $(GLINK_LEX Identifier) $(D =) $(EXPRESSION)
-    $(GLINK2 type, TypeCtors) $(GLINK_LEX Identifier) $(D =) $(EXPRESSION)
-    $(GLINK2 type, TypeCtors)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator) $(D =) $(EXPRESSION)
+    $(GLINK IfConditionStorageClasses) $(GLINK_LEX Identifier) $(D =) $(EXPRESSION)
+    $(GLINK IfConditionStorageClasses)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator) $(D =) $(EXPRESSION)
+
+$(GNAME IfConditionStorageClasses):
+    $(GLINK IfConditionStorageClass)
+    $(GLINK IfConditionStorageClass) $(GSELF IfConditionStorageClasses)
+
+$(GNAME IfConditionStorageClass):
+    $(D scope)
+    $(D auto)
+    $(D ref)
+    $(GLINK2 type, TypeCtor)
 
 $(GNAME ThenStatement):
     $(PSSCOPE)
@@ -254,8 +262,9 @@ $(GNAME ElseStatement):
         $(P If there is a declared *Identifier* variable,
         $(RELATIVE_LINK2 condition-variables, it is evaluated).
         Otherwise, *Expression* is evaluated. The result is converted to a
-        boolean.
-        If the boolean is `true`, the $(I ThenStatement) is transferred
+        boolean.)
+
+        $(P If the boolean is `true`, the $(I ThenStatement) is transferred
         to, otherwise the $(I ElseStatement) is transferred to.)
 
         $(P The $(I ElseStatement) is associated with the innermost `if`
@@ -276,8 +285,9 @@ $(H3 $(LNAME2 boolean-conditions, Boolean Conversion))
         )
         $(P If none of these are valid, it is an error to use the value in a condition.)
 
-        $(NOTE A dynamic array can be used in a condition, which is `true` when non-null.
-        However, using this should be avoided as it can be bug-prone.
+        $(NOTE A dynamic array `a` can be used in a condition, which is `true` when
+        `a !is []`.
+        However, using an array as a boolean condition should be avoided as it can be bug-prone.
         This may be disallowed in a future edition.)
 
 $(H3 $(LNAME2 condition-variables, Condition Variables))
@@ -285,18 +295,28 @@ $(H3 $(LNAME2 condition-variables, Condition Variables))
         $(P
         When an $(I Identifier) form of *IfCondition* is used, a
         variable is declared with that name and initialized to the
-        value of the *Expression*.
+        value of the $(I Expression).
         )
 
-        * If $(D auto) $(I Identifier) is provided, the type of the variable
-          is the same as *Expression*.
+        *   If both `auto` and `ref` are present among $(I IfConditionStorageClasses),
+            the variable is a reference
+            if and only if the $(I Expression) is an lvalue;
 
-        * If $(I TypeCtors) $(I Identifier) is provided, the variable is
-          declared to be the type of *Expression* but with $(I TypeCtors) applied.
+        *   If `ref` is present without `auto`,
+            the variable is a reference and $(I Expression) must be an lvalue.
 
-        * If the $(I BasicType) form is provided, it declares the type of the
-          variable as it would for a normal
-          $(DDSUBLINK spec/declaration, variable-declarations, variable declaration).
+        *   If `auto` is present without `ref`, the type of the variable
+            is the same as $(I Expression).
+            The presence of `auto` in combination with any $(I IfConditionStorageClasses)
+            except `ref` (cf. first bullet point)
+            has no effect.
+            Only if no other $(I IfConditionStorageClasses) are meaningful,
+            `auto` provides an option to declare a variable.
+            Using `auto` without `ref` when $(I BasicType) is given is not allowed.
+
+        *   If $(I TypeCtors) are provided and possibly the $(I BasicType) is given,
+            the variable is declared as it would for a normal
+            $(DDSUBLINK spec/declaration, variable-declarations, variable declaration).
 
         $(P The scope of the variable is the *ThenStatement* only.)
 
@@ -346,18 +366,7 @@ while (i < 10)
 }
 ---
 
-$(P If an $(D auto) $(I Identifier) is provided, it is declared and
-initialized to the value and type of the *Expression*. Its scope
-extends from when it is initialized to the end of the *ScopeStatement*.)
-
-$(P If a $(I TypeCtors) $(I Identifier) is provided, it is declared
-to be of the type specified by $(I TypeCtors) and is initialized with
-the value of the *Expression*. Its scope extends from when it is
-initialized to the end of the *ScopeStatement*.)
-
-$(P If a $(I Declarator) is provided, it is declared and initialized
-to the value of the *Expression*. Its scope extends from when it is
-initialized to the end of the *ScopeStatement*.)
+$(P If the $(I IfCondition) declares a variable, $(RELATIVE_LINK2 condition-variables, it is initialized and evaluated) on every loop iteration.)
 
 $(P A $(GLINK BreakStatement) will exit the loop.)
 
