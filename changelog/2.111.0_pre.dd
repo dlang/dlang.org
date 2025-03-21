@@ -5,7 +5,7 @@ $(CHANGELOG_NAV_INJECT)
 $(VERSION Apr 01, 2025, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 40 major changes and 123 fixed Bugzilla issues.
+$(VER) comes with 41 major changes and 126 fixed Bugzilla issues.
         A huge thanks goes to the
         $(LINK2 #contributors, 79 contributors)
         who made $(VER) possible.)
@@ -24,6 +24,7 @@ $(LI $(RELATIVE_LINK2 dmd.deprecation-throwing-contracts,An error is now issued 
 $(LI $(RELATIVE_LINK2 dmd.deprecation-typesafe-variadic-class,Typesafe variadic class parameters have been deprecated))
 $(LI $(RELATIVE_LINK2 dmd.deprecation-version-debug-number,Integers in `debug` or `version` statements have been removed from the language))
 $(LI $(RELATIVE_LINK2 dmd.error-messages,Many error messages have changed))
+$(LI $(RELATIVE_LINK2 dmd.extern-std-cpp23,The compiler now accepts `-extern-std=c++23`))
 $(LI $(RELATIVE_LINK2 dmd.ftime-trace,Build time profiling has been added to DMD))
 $(LI $(RELATIVE_LINK2 dmd.getBitfieldInfo,New traits `getBitfieldOffset` and `getBitfieldWidth` for built-in bitfields))
 $(LI $(RELATIVE_LINK2 dmd.import-c-i,Using the compiler flag `-i` will now properly pick up C source files))
@@ -495,6 +496,14 @@ $(P
 )
 )
 
+$(LI $(LNAME2 dmd.extern-std-cpp23,The compiler now accepts `-extern-std=c++23`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.extern-std-cpp23.dd)
+$(P
+The compiler now accepts c++23 as a supported standard for `-extern-std=`.
+Currently this only changes the value of `__traits(getTargetInfo, "cppStd")`.
+)
+)
+
 $(LI $(LNAME2 dmd.ftime-trace,Build time profiling has been added to DMD)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.ftime-trace.dd)
 $(P
@@ -771,8 +780,25 @@ efficient, as, say, a string can be moved rather than copied/deleted.
 )
 
 $(P
-A moved object can still be destructed, so take that into account when moving
+A moved object will still be destructed, so take that into account when moving
 a field - set it to a benign value that can be destructed.
+)
+
+$(P
+`__rvalue` may also be used as an attribute on a function which returns by ref
+to declare that the result should be treated as an rvalue at the callsite:
+)
+```
+ref T move(T)(return ref T source) __rvalue
+{
+    return source;
+}
+
+S s;
+S t = move(s); // call expression rewritten as: S t = __rvalue(move(s))
+```
+$(P
+This is used as an internal tool to implement library primitives such as `move` and `forward`.
 )
 )
 
@@ -1248,6 +1274,7 @@ $(LI $(BUGZILLA 20691): Converting scope static array to scope dynamic array sho
 $(LI $(BUGZILLA 20812): _d_assocarrayliteralTX segfault assigning a shared associative array an AA literal)
 $(LI $(BUGZILLA 20831): __traits$(LPAREN)getAttributes$(RPAREN) failes to compile when used on a parameter with no name)
 $(LI $(BUGZILLA 20912): Compiler incorrectly lists non-matching overloads as matching in diagnostic)
+$(LI $(BUGZILLA 21020): named import in with block masks local symbol)
 $(LI $(BUGZILLA 21995): Struct with size uint.max or greater causes ICE)
 $(LI $(BUGZILLA 23131): With -vasm all the X87 instructions are printed wrong.)
 $(LI $(BUGZILLA 23294): [dip1000] parameter to parameter assignment leads to incorrect scope inference)
@@ -1293,6 +1320,7 @@ $(LI $(BUGZILLA 20516): [D 2.0 FAQ])
 $(LI $(BUGZILLA 20614): CTFE supports typeid$(LPAREN)stuff$(RPAREN).name but not classinfo.name)
 $(LI $(BUGZILLA 20888): std.range.Cycle does not compose with `const`)
 $(LI $(BUGZILLA 20960):  -profile=gc does not track class objects allocated with new)
+$(LI $(BUGZILLA 20982): Add a pragma to suppress deprecation messages)
 $(LI $(BUGZILLA 21564): Allow assignment syntax for instantiating mixin templates)
 $(LI $(BUGZILLA 23449): spellchecker should suggest corrections for pointer members)
 $(LI $(BUGZILLA 23812): ImportC: allow adding function attributes to imported C functions)
@@ -1308,6 +1336,7 @@ $(LI $(BUGZILLA 64): Unhandled errors should go to stderr)
 $(LI $(BUGZILLA 10581): Undefined identifier "std.uni.isWhite" when passing string lambda to std.algorithm.filter)
 $(LI $(BUGZILLA 10607): DirEntry has no constructor)
 $(LI $(BUGZILLA 10647): AutoImplement should implement overridden member functions with 'override' attributes)
+$(LI $(BUGZILLA 10680): BigInt uses deprecated std.traits.unsigned)
 $(LI $(BUGZILLA 14138): std.parallelism.task breaks @safety)
 $(LI $(BUGZILLA 15315): can break immutable with std.algorithm.move)
 $(LI $(BUGZILLA 20870): std.outbuffer.printf is trusted)
