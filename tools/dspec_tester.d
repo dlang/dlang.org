@@ -221,7 +221,10 @@ auto compileAndCheck(R)(R buffer, CompileConfig config, string modImport)
     {
         if (ret == 0)
         {
-            stderr.writefln("Compilation should have failed for:\n%s", buffer);
+            stderr.writeln("Compilation should have failed for:");
+            stderr.writeln("---");
+            stderr.writeln(buffer);
+            stderr.writeln("---");
             ret = 1;
         }
         else
