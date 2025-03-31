@@ -141,12 +141,17 @@ int main(string[] args)
             modImport = modImport.replace(dirSeparator, ".");
         }
         const text = file.readText;
-        // Find all examples in the specification
+        // Lazy range of matching examples code contents
         alias findExamples = (ddocKey) => text
             .findDdocMacro(ddocKey)
             .map!ddocMacroToCode;
         auto allTests = specTypes.map!(c => findExamples(c.key)
-            .map!(e => compileAndCheck(e, CompileConfig(c.mode), modImport)))
+            .map!((e) {
+                auto code = compileAndCheck(e, CompileConfig(c.mode), modImport);
+                if (code)
+                    writefln("%s: Error testing above example", file[rootDir.length+1..$]);
+                return code;
+            }))
             .joiner;
         if (!allTests.empty)
         {
