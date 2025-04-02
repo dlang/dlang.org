@@ -162,6 +162,13 @@ void main(string[] args)
         only(docRoot ~ `/favicon.ico`)
     ).array();
 
+    // Ensure favicon.ico is explicitly copied to root of offline documentation
+    if (chm && exists(docRoot ~ `/favicon.ico`))
+    {
+        stderr.writeln("Ensuring favicon.ico is properly copied");
+        copy(docRoot ~ `/favicon.ico`, chmDir ~ `/files/favicon.ico`);
+    }
+
     foreach (filePath; files)
     {
         scope(failure) stderr.writeln("Error while processing file: ", filePath);
