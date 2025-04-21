@@ -301,10 +301,10 @@ STYLES=$(addsuffix .css, $(addprefix css/, \
 # HTML Files
 ################################################################################
 
-DDOC=$(addsuffix .ddoc, macros html dlang.org doc ${GENERATED}/${LATEST}) $(NODATETIME) $G/dblog_latest.ddoc
-STD_DDOC_LATEST=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
-STD_DDOC_RELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-release) $(NODATETIME)
-STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
+DDOC=$(addsuffix .ddoc, macros html dlang.org keywords doc ${GENERATED}/${LATEST}) $(NODATETIME) $G/dblog_latest.ddoc
+STD_DDOC_LATEST=$(addsuffix .ddoc, macros html keywords dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
+STD_DDOC_RELEASE=$(addsuffix .ddoc, macros html keywords dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-release) $(NODATETIME)
+STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html keywords dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
 SPEC_DDOC=${DDOC} spec/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
@@ -694,20 +694,23 @@ $(PHOBOS_LIB): $(DMD)
 apidocs-prerelease : $W/library-prerelease/sitemap.xml $W/library-prerelease/.htaccess
 apidocs-latest : $W/library/sitemap.xml $W/library/.htaccess
 apidocs-serve : $G/docs-prerelease.json
-	${DPL_DOCS} ${DPL_DOCS_FLAGS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
+	${DPL_DOCS} ${DPL_DOCS_FLAGS} serve-html --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc \
+		--std-macros=keywords.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 		--override-macros=std-ddox-override.ddoc --package-order=std \
 		--git-target=master --web-file-dir=. $<
 
 $W/library-prerelease/sitemap.xml : $G/docs-prerelease.json
 	@mkdir -p $(dir $@)
-	${DPL_DOCS} ${DPL_DOCS_FLAGS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
+	${DPL_DOCS} ${DPL_DOCS_FLAGS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc \
+		--std-macros=std.ddoc --std-macros=keywords.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 		--override-macros=std-ddox-override.ddoc --package-order=std \
 		--git-target=master $(DPL_DOCS_PATH_RUN_FLAGS) \
 		$< $W/library-prerelease
 
 $W/library/sitemap.xml : $G/docs-latest.json
 	@mkdir -p $(dir $@)
-	${DPL_DOCS} ${DPL_DOCS_FLAGS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc --std-macros=std.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
+	${DPL_DOCS} ${DPL_DOCS_FLAGS} generate-html --file-name-style=lowerUnderscored --std-macros=html.ddoc --std-macros=dlang.org.ddoc \
+		--std-macros=std.ddoc --std-macros=keywords.ddoc --std-macros=macros.ddoc --std-macros=std-ddox.ddoc \
 		--override-macros=std-ddox-override.ddoc --package-order=std \
 		--git-target=v${LATEST} $(DPL_DOCS_PATH_RUN_FLAGS) \
 		$< $W/library
