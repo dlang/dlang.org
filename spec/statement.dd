@@ -220,7 +220,7 @@ $(GNAME DeclarationStatement):
     $(GLINK2 declaration, StorageClasses)$(OPT) $(GLINK2 declaration, Declaration)
 )
 
-        $(P Some declaration statements:)
+        $(P Examples of statements:)
 
 ----
 int a;        // declare a as type int and initialize it to 0
@@ -651,8 +651,7 @@ foreach (char c; b)
     --------------
     )
 
-        $(P which would print:
-        )
+    which would print:
 
 $(CONSOLE
 'a'
@@ -707,169 +706,297 @@ foreach (string s, double d; aa)
 
 $(H3 $(LNAME2 foreach_over_struct_and_classes, Foreach over Structs and Classes with `opApply`))
 
-    $(P If the aggregate expression is a struct or class object,
-        the $(D foreach) is defined by the
-        special $(LEGACY_LNAME2 opApply, op-apply, $(D opApply)) member function, and the
-        `foreach_reverse` behavior is defined by the special
+    $(P If the aggregate expression is a `struct` or `class` object,
+        iteration with $(D foreach) can be defined by implementing the
+        $(LEGACY_LNAME2 opApply, op-apply, $(D opApply)) member function, and the
+        `foreach_reverse` behavior is defined by the
         $(LEGACY_LNAME2 opApplyReverse, op-apply-reverse, $(D opApplyReverse)) member function.
-        These functions must each have the signature below:
+        These functions must each take exactly one function parameter of delegate type.
     )
 
-$(GRAMMAR
-$(GNAME OpApplyDeclaration):
-    `int opApply` `(` `scope` `int delegate` `(` $(I OpApplyParameters) `)` `dg` `)` `;`
-
-$(GNAME OpApplyParameters):
-    *OpApplyParameter*
-    *OpApplyParameter*, *OpApplyParameters*
-
-$(GNAME OpApplyParameter):
-    $(GLINK ForeachTypeAttributes)$(OPT) $(GLINK2 type, BasicType) $(GLINK2 declaration, Declarator)
-)
-
-    $(P where each $(I OpApplyParameter) of `dg` must match a $(GLINK ForeachType)
-        in a $(GLINK ForeachStatement),
-        otherwise the *ForeachStatement* will cause an error.)
-
-    $(P Any *ForeachTypeAttribute* cannot be `enum`.)
-
     $(PANEL
-    To support a `ref` iteration variable, the delegate must take a `ref` parameter:
+    To support a `ref` iteration, the delegate must take `ref` parameters:
 
     $(SPEC_RUNNABLE_EXAMPLE_COMPILE
     ---
     struct S
     {
-        int opApply(scope int delegate(ref uint n) dg);
+        uint n;
+        int opApply(scope int delegate(ref uint) body) => body(n);
     }
-    void f(S s)
+    void main()
     {
+        S s = S(41);
         foreach (ref uint i; s)
-            i++;
+        {
+            i++; // effectively s.n++
+        }
+        foreach (i; s)
+        {
+            static assert(is(typeof(i) == uint));
+            assert(i == 42);
+        }
     }
     ---
     )
-    Above, `opApply` is still matched when `i` is not `ref`, so by using
-    a `ref` delegate parameter both forms are supported.
+    Above, `opApply` is matched both when `i` is and is not `ref`, so by using
+    a `ref` delegate parameter, both forms are supported.
+
+    Stating the type of the variable (as in the first loop) is optional,
+    as is showcased in the second loop, where the type is inferred.
     )
 
-    $(P There can be multiple $(D opApply) and $(D opApplyReverse) functions -
-        one is selected
-        by matching each parameter of `dg` to each $(I ForeachType)
-        declared in the $(I ForeachStatement).)
-
-    $(P The body of the apply
-        function iterates over the elements it aggregates, passing each one
-        in successive calls to the `dg` delegate. The delegate return value
-        determines whether to interrupt iteration:)
+    $(P The apply
+        function iterates over the elements it aggregates by passing each one
+        in successive calls to the `body` delegate. The return value
+        of the `body` delegate determines how to proceed:)
 
     $(UL
-        $(LI If the result is nonzero, apply must cease
+        $(LI If the result is nonzero, the apply function $(B must) cease
         iterating and return that value.)
-        $(LI If the result is 0, then iteration should continue.
+        $(LI If the result is `0`, then iteration should continue.
         If there are no more elements to iterate,
-        apply must return 0.)
+        the apply function $(B must) return `0`.)
     )
 
-    $(P The result of calling the delegate will be nonzero if the *ForeachStatement*
+    $(P The result of the `body` delegate will be nonzero if the *ForeachStatement*
         body executes a matching $(GLINK BreakStatement), $(GLINK ReturnStatement), or
         $(GLINK GotoStatement) whose matching label is outside the *ForeachStatement*.
     )
 
-    $(P For example, consider a class that is a container for two elements:)
+    $(P The $(D opApply) and $(D opApplyReverse) member functions can be overloaded.
+        Selection works similar to overload resolution by
+        comparing the number of `foreach` variables with the number of parameters of `body` and,
+        if more than one overload remains,
+        matching each parameter of `body` against each $(I ForeachType)
+        declared in the $(I ForeachStatement).)
+
+    $(BEST_PRACTICE Overload apply functions only with delegates differing in number of parameters
+        to enable type inference for `foreach` variables.
+    )
+
+    $(P For example, consider a class that is a container for some elements:)
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         --------------
-        class Foo
+        class Tree
         {
-            uint[] array;
+            int label;
+            Tree[] children;
 
-            int opApply(scope int delegate(ref uint) dg)
+            this(int l) @safe { label = l; }
+
+            int opApply(scope int delegate(ref int) @safe body) @safe
             {
-                foreach (e; array)
+                int result = body(label);
+                if (result != 0) return result;
+
+                foreach (child; children)
                 {
-                    int result = dg(e);
-                    if (result)
-                        return result;
+                    int childResult = child.opApply(body);
+                    if (childResult != 0) return childResult;
                 }
                 return 0;
             }
         }
 
-        void main()
+        void main() @safe
         {
             import std.stdio;
 
-            Foo a = new Foo();
-            a.array = [73, 82, 2, 9];
+            Tree tree = new Tree(1);
+            tree.children = [ new Tree(2), new Tree(6) ];
+            tree.children[0].children = [ new Tree(3) ];
+            tree.children[1].children = [ new Tree(7), new Tree(8) ];
+            tree.children[0].children[0].children = [ new Tree(4), new Tree(5) ];
 
-            foreach (uint u; a)
+            foreach (int label; tree)
             {
-                if (u < 5)
-                    break;
-
-                writeln(u);
+                writeln(label);
+                if (label == 4) break;
             }
         }
         --------------
         )
 
-    $(P This would print:)
+This would print:
 
 $(CONSOLE
-73
-82
+1
+2
+3
+4
 )
-    $(PANEL
-    The `scope` storage class on the $(D dg) parameter means that the delegate does
-    not escape the scope of the $(D opApply) function (an example would be assigning $(D dg) to a
-    global variable). If it cannot be statically guaranteed that $(D dg) does not escape, a closure may
-    be allocated for it on the heap instead of the stack.
 
-    $(BEST_PRACTICE Annotate delegate parameters to `opApply` functions with `scope` when possible.)
+    $(BEST_PRACTICE Annotate delegate parameters to apply functions with `scope` when possible.)
+
+    $(PANEL
+        The `scope` storage class on the `body` parameter means that the delegate does
+        not escape the scope of the apply function (e.g. assigning `body` to a
+        global variable). If it cannot be statically guaranteed that `body` does not escape, a closure may
+        be allocated for it on the heap instead of the stack.
     )
 
-    $(P $(B Important:) If $(D opApply) catches any exceptions, ensure that those
-        exceptions did not originate from the delegate passed to $(D opApply). The user would expect
-        exceptions thrown from a `foreach` body to both terminate the loop, and propagate outside
+    $(NOTE If an apply function catches any exceptions, ensure that those
+        exceptions did not originate from the delegate. The user would expect
+        exceptions thrown from a `foreach` body to both terminate the loop and propagate outside
         the `foreach` body.
      )
 
 $(H4 $(LNAME2 template-op-apply, Template `opApply`))
 
-    $(P $(D opApply) can also be a templated function,
-        which will infer the types of parameters based on the $(I ForeachStatement).
-        For example:)
+    $(P `opApply` and `opApplyReverse` can also be function templates,
+        which can optionally infer the types of parameters based on the $(I ForeachStatement).
+    )
+
+    $(NOTE An apply function template cannot infer `foreach` variable types.)
 
         $(SPEC_RUNNABLE_EXAMPLE_RUN
         --------------
         struct S
         {
-            import std.traits : ParameterTypeTuple;  // introspection template
-            import std.stdio;
-
-            int opApply(Dg)(scope Dg dg)
-            if (ParameterTypeTuple!Dg.length == 2) // foreach with 2 parameters
+            int opApply(Body)(scope Body body)
             {
-                writeln(2);
-                return 0;
-            }
-
-            int opApply(Dg)(scope Dg dg)
-            if (ParameterTypeTuple!Dg.length == 3) // foreach with 3 parameters
-            {
-                writeln(3);
+                pragma(msg, Body);
                 return 0;
             }
         }
 
         void main()
         {
-            foreach (int a, int b; S()) { }  // calls first opApply function
-            foreach (int a, int b, float c; S()) { }  // calls second opApply function
+            foreach (int a, int b; S()) { } // int delegate(ref int, ref int) pure nothrow @nogc @safe
+            foreach (bool b, string s; S()) { } // int delegate(ref bool, ref string) pure nothrow @nogc @safe
+            //foreach (x; S()) { } // Error: cannot infer type for `foreach` variable `x`, perhaps set it explicitly
         }
         --------------
         )
+
+$(H4 $(LNAME2 template-instance-op-apply, `opApply` with Attribute Inference))
+
+    $(P Like any other function, `opApply` and `opApplyReverse` can be aliases to a function or function template.
+        However, special treatment is given to apply functions that are aliases of an appropriate function template instance.)
+
+    $(P In that case, the aliased function template instance is used for overload selection and `foreach` variable type inference,
+        but the template is instantiated again with the actual delegate type of the `foreach` body.
+        This way, apply functions can infer attributes depending on the attributes of the `body` delegate.)
+
+        $(SPEC_RUNNABLE_EXAMPLE_RUN
+        --------------
+        struct A
+        {
+            // Vanilla
+            int opApply(scope int delegate(long) body) => body(42);
+        }
+        struct B
+        {
+            // Template
+            int opApply(Body)(scope Body body) => body(42);
+        }
+        struct C
+        {
+            // Alias to an explicit function template instance
+            alias opApply = opApplyImpl!(int delegate(long));
+            int opApplyImpl(Body)(scope Body body) => body(42);
+        }
+        void main() @nogc nothrow pure @safe
+        {
+            // Error: `@nogc` function `D main` cannot call non-@nogc function `onlineapp.A.opApply`
+            // Error: `pure` function `D main` cannot call impure function `onlineapp.A.opApply`
+            // Error: `@safe` function `D main` cannot call `@system` function `onlineapp.A.opApply`
+            // Error: function `onlineapp.A.opApply` is not `nothrow`
+            // (You might not encounter all of these errors at once.)
+            static assert(!__traits(compiles, () @safe {
+                foreach (x; A()) { }
+            }));
+
+            // Error: cannot infer type for `foreach` variable `x`, perhaps set it explicitly
+            static assert(!__traits(compiles, {
+                foreach (x; B()) { }
+            }));
+
+            // Good
+            foreach (x; C())
+            {
+                static assert(is(typeof(x) == long));
+                assert(x == 42);
+            }
+        }
+        --------------
+        )
+
+    $(PANEL The `opApplyImpl` pattern is generally preferable to
+        overloading many apply functions with all possible combinations of attributes.)
+
+    $(P Multiple apply function aliases can exist, and selection and `foreach` variable type inference work.
+        They can alias instances of the same function template or different function templates.)
+
+    $(SPEC_RUNNABLE_EXAMPLE_RUN
+    --------------
+    class Tree(T)
+    {
+        private T label;
+        private Tree[] children;
+
+        this(T label, Tree[] children = null)
+        {
+            this.label = label;
+            this.children = children;
+        }
+
+        alias opApply = opApplyImpl!(int delegate(ref T label));
+        alias opApply = opApplyImpl!(int delegate(size_t depth, ref T label));
+        alias opApply = opApplyImpl!(int delegate(size_t depth, bool isLastChild, ref T label));
+
+        int opApplyImpl(Body)(scope Body body) => opApplyImpl2(0, true, body);
+        int opApplyImpl2(Body)(size_t depth, bool lastChild, scope Body body)
+        {
+            import std.meta : AliasSeq;
+            static if (is(Body : int delegate(size_t, bool, ref T)))
+                alias args = AliasSeq!(depth, lastChild, label);
+            else static if (is(Body : int delegate(size_t, ref T)))
+                alias args = AliasSeq!(depth, label);
+            else
+                alias args = label;
+            if (auto result = body(args)) return result;
+            foreach (i, child; children)
+            {
+                if (auto result = child.opApplyImpl2!Body(depth + 1, i + 1 == children.length, body))
+                    return result;
+            }
+            return 0;
+        }
+    }
+
+    void printTree(Tree)(Tree tree)
+    {
+        // Selects the unique one with 2 parameters.
+        // Infers types: size_t and whatever label type the tree has.
+        foreach (depth, ref label; tree)
+        {
+            import std.stdio;
+            foreach (_; 0 .. depth) write("::");
+            writeln(label);
+        }
+    }
+
+    void main() @safe
+    {
+        alias T = Tree!int;
+        printTree(new T(0, [new T(1, [new T(2), new T(3)]), new T(4, [new T(5)])]));
+    }
+    --------------
+    )
+
+This would print:
+
+$(CONSOLE
+0
+::1
+::::2
+::::3
+::4
+::::5
+)
 
 $(H3 $(LEGACY_LNAME2 foreach_with_ranges, foreach-with-ranges, Foreach over Structs and Classes with Ranges))
 
@@ -898,7 +1025,7 @@ $(H3 $(LEGACY_LNAME2 foreach_with_ranges, foreach-with-ranges, Foreach over Stru
         foreach (e; range) { ... }
         ---
 
-    $(P translates to:)
+translates to:
 
         ---
         for (auto __r = range; !__r.empty; __r.popFront())
@@ -930,7 +1057,7 @@ $(H3 $(LEGACY_LNAME2 foreach_with_ranges, foreach-with-ranges, Foreach over Stru
         foreach_reverse (e; range) { ... }
         ---
 
-    $(P translates to:)
+translates to:
 
         ---
         for (auto __r = range; !__r.empty; __r.popBack())
@@ -1037,16 +1164,16 @@ $(H3 $(LNAME2 foreach_over_delegates, Foreach over Delegates))
 $(SPEC_RUNNABLE_EXAMPLE_RUN
     --------------
     // Custom loop implementation, that iterates over powers of 2 with
-    // alternating sign. The foreach loop body is passed in dg.
-    int myLoop(scope int delegate(int) dg)
+    // alternating sign. The foreach loop body is passed in `body`.
+    int myLoop(scope int delegate(int) body)
     {
         for (int z = 1; z < 128; z *= -2)
         {
-            auto ret = dg(z);
+            auto result = body(z);
 
-            // If the loop body contains a break, ret will be non-zero.
-            if (ret != 0)
-                return ret;
+            // If the loop body contains a break, result will be non-zero.
+            if (result != 0)
+                return result;
         }
         return 0;
     }
@@ -1139,7 +1266,7 @@ void fun()
 -----
 )
 
-        $(P Output:)
+prints:
 
 $(CONSOLE
 7.4 has type double
@@ -1425,7 +1552,7 @@ $(GNAME LastExp):
         case 1: .. case 3:
         ---
 
-        $(P The above is equivalent to:)
+The above is equivalent to:
 
         ---
         case 1, 2, 3:
@@ -1592,7 +1719,7 @@ foreach (item; list)
         $(P Any intervening $(RELATIVE_LINK2 try-statement, `finally`) clauses are executed,
         and any intervening synchronization objects are released.)
 
-        $(P $(D Note:) If a `finally` clause executes a `throw` out of the finally
+        $(NOTE If a `finally` clause executes a `throw` out of the finally
         clause, the continue target is never reached.)
 
 $(H2 $(LEGACY_LNAME2 BreakStatement, break-statement, Break Statement))
@@ -1622,7 +1749,7 @@ foreach (i; 2 .. n)
 writeln("finished");
 ---
 )
-        $(P Output:)
+prints:
 
 $(CONSOLE
 Trying: 2
@@ -1805,7 +1932,7 @@ with (expression)
 }
 ---
 
-        is semantically equivalent to:
+        is roughly equivalent to:
 
 --------------
 (auto ref tmp)
