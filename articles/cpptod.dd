@@ -495,6 +495,7 @@ $(H4 The D Way)
         Properties can be get and set using the normal field syntax,
         yet the get and set will invoke methods instead.
 
+$(RUNNABLE_EXAMPLE
 ------
 class Abc
 {
@@ -507,15 +508,13 @@ class Abc
   private:
     int myprop;
 }
-------
 
-        which is used as:
-
-------
 Abc a = new Abc;
 a.property = 3;
 int x = a.property;
+assert(x == 3);
 ------
+)
 
         Thus, in D a property is treated like it was a simple field name.
         A property can start out actually being a simple field name,
@@ -563,6 +562,8 @@ $(H4 The D Way)
         $(HTTPS dlang.org/spec/template.html#implicit_template_properties,
         Eponymous Templates) - promotion of single template members to the
         enclosing name space:
+
+$(RUNNABLE_EXAMPLE_COMPILE
 ------
 template factorial(int n)
 {
@@ -574,19 +575,26 @@ template factorial(int n : 1)
     enum factorial = 1;
 }
 
-void test()
+unittest
 {
+    import std.stdio;
     writeln(factorial!(4));  // prints 24
 }
 ------
+)
         The template blocks can be made shorter using
         $(HTTPS dlang.org/spec/template.html#variable-template,
         Enum Template) syntax:
+
+$(RUNNABLE_EXAMPLE_COMPILE
 ------
 enum factorial(int n) = n * .factorial!(n-1);
 
 enum factorial(int n : 1) = 1;
+
+static assert(factorial!(4) == 24);
 ------
+)
 
 <hr>$(COMMENT  -------------------------------------------- )
 
@@ -712,6 +720,7 @@ $(H4 The D Way)
         It compiles quickly, and gives a sensible compile time message
         if it fails.
 
+$(RUNNABLE_EXAMPLE
 ------
 import std.stdio;
 
@@ -739,6 +748,7 @@ int main()
     return 0;
 }
 ------
+)
 
 <hr>$(COMMENT  -------------------------------------------- )
 
@@ -784,6 +794,7 @@ $(H4 The D Way)
         can be done in D without resorting to template argument
         pattern matching:
 
+$(RUNNABLE_EXAMPLE_COMPILE
 ------
 template IsFunctionT(T)
 {
@@ -793,27 +804,30 @@ template IsFunctionT(T)
         const int IsFunctionT = 1;
 }
 
-void test()
+unittest
 {
     alias int fp(int);
 
-    assert(IsFunctionT!(fp) == 1);
+    static assert(IsFunctionT!(fp) == 1);
 }
 ------
+)
 
         The task of discovering if a type is a function doesn't need a
         template at all, nor does it need the subterfuge of attempting to
         create the invalid array of functions type.
         The $(ISEXPRESSION) expression can test it directly:
 
+$(RUNNABLE_EXAMPLE_COMPILE
 ------
-void test()
+unittest
 {
     alias int fp(int);
 
-    assert( is(fp == function) );
+    static assert( is(fp == function) );
 }
 ------
+)
 
 $(HR)
 
@@ -928,7 +942,7 @@ void main()
 
     auto d2 = gallery[0];
     d2.id = 1;
-    assert(d2.id == gallery[0].id, "neither ref nor pointer");
+    assert(d2.id != gallery[0].id); // d2 is neither ref nor pointer
 }
 ------
 )
@@ -937,6 +951,8 @@ void main()
 
 ------
     auto d2 = &gallery[0];
+    d2.id = 1;
+    assert(d2.id == gallery[0].id);
 ------
 
 )

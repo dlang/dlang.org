@@ -78,7 +78,7 @@ To see this logic in action, let's try the following program that takes advantag
 import std.stdio;
 
 void main() {
-    writeln("\n--- these are written in decimal ---");
+    writeln("\n-- these are written in decimal --");
 
     // fits an int, so the type is int
     writeln(       2_147_483_647, "\t\t",
@@ -88,7 +88,7 @@ void main() {
     writeln(       2_147_483_648, "\t\t",
             typeof(2_147_483_648).stringof);
 
-    writeln("\n--- these are NOT written in decimal ---");
+    writeln("\n-- these are NOT written in decimal --");
 
     // fits an int, so the type is int
     writeln(       0x7FFF_FFFF, "\t\t",
@@ -113,11 +113,11 @@ The output:
 )
 
 $(SHELL
---- these are written in decimal ---
+-- these are written in decimal --
 2147483647		int
 2147483648		long
 
---- these are NOT written in decimal ---
+-- these are NOT written in decimal --
 2147483647		int
 2147483648		uint
 4294967296		long

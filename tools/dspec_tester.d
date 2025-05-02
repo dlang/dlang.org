@@ -72,7 +72,10 @@ unittest
 
 auto findDdocMacro(R)(R text, string ddocKey)
 {
-    return text.splitter(ddocKey).map!untilClosingParentheses.dropOne;
+    auto sr = text.splitter(ddocKey);
+    // don't let RUNNABLE_EXAMPLE match RUNNABLE_EXAMPLE_FOO
+    auto fr = sr.filter!(s => s.length ? s[0] != '_' : true);
+    return fr.map!untilClosingParentheses.dropOne;
 }
 
 auto ddocMacroToCode(R)(R text)
@@ -95,6 +98,7 @@ int main(string[] args)
 
     const rootDir = __FILE_FULL_PATH__.dirName.dirName;
     const specDir = rootDir.buildPath("spec");
+    const articlesDir = rootDir.buildPath("articles");
     const stdDir = rootDir.buildPath("..", "phobos", "std");
 
     config.dmdBinPath = environment.get("DMD", "dmd");
@@ -117,9 +121,12 @@ int main(string[] args)
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_COMPILE", CompileConfig.TestMode.compile),
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_RUN", CompileConfig.TestMode.run),
         SpecType("$(SPEC_RUNNABLE_EXAMPLE_FAIL", CompileConfig.TestMode.fail),
+        SpecType("$(RUNNABLE_EXAMPLE_COMPILE", CompileConfig.TestMode.compile),
         SpecType("$(RUNNABLE_EXAMPLE", CompileConfig.TestMode.run),
+        SpecType("$(RUNNABLE_EXAMPLE_FAIL", CompileConfig.TestMode.fail),
     ];
     auto files = chain(specDir.dirEntries("*.dd", SpanMode.depth),
+        articlesDir.dirEntries("*.dd", SpanMode.depth),
         stdDir.dirEntries("*.d", SpanMode.depth));
     shared bool hasFailed;
     foreach (file; files.parallel(1))
@@ -134,12 +141,17 @@ int main(string[] args)
             modImport = modImport.replace(dirSeparator, ".");
         }
         const text = file.readText;
-        // Find all examples in the specification
+        // Lazy range of matching examples code contents
         alias findExamples = (ddocKey) => text
             .findDdocMacro(ddocKey)
             .map!ddocMacroToCode;
         auto allTests = specTypes.map!(c => findExamples(c.key)
-            .map!(e => compileAndCheck(e, CompileConfig(c.mode), modImport)))
+            .map!((e) {
+                auto code = compileAndCheck(e, CompileConfig(c.mode), modImport);
+                if (code)
+                    writefln("%s: Error testing above example", file[rootDir.length+1..$]);
+                return code;
+            }))
             .joiner;
         if (!allTests.empty)
         {
@@ -214,7 +226,10 @@ auto compileAndCheck(R)(R buffer, CompileConfig config, string modImport)
     {
         if (ret == 0)
         {
-            stderr.writefln("Compilation should have failed for:\n%s", buffer);
+            stderr.writeln("Compilation should have failed for:");
+            stderr.writeln("---");
+            stderr.writeln(buffer);
+            stderr.writeln("---");
             ret = 1;
         }
         else

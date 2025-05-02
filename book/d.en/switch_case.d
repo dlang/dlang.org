@@ -123,7 +123,7 @@ import std.stdio;
 
 void main() {
     foreach (value; [ 1, 2, 3, 10, 20 ]) {
-        writefln("--- value: %s ---", value);
+        writefln("-- value: %s --", value);
 
         switch (value) {
 
@@ -156,19 +156,19 @@ The output:
 )
 
 $(SHELL
---- value: 1 ---
+-- value: 1 --
 case 1
 case 2
 case 10
---- value: 2 ---
+-- value: 2 --
 case 2
 case 10
---- value: 3 ---
+-- value: 3 --
 case 3
 default
---- value: 10 ---
+-- value: 10 --
 case 10
---- value: 20 ---
+-- value: 20 --
 default
 )
 
