@@ -1,0 +1,414 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jun 01, 2025, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 9 major changes and 55 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 44 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.auto-ref-return,Keywords `auto` and `ref` must be adjacent for `auto ref` return.))
+$(LI $(RELATIVE_LINK2 dmd.extern-std-cpp23,The compiler now accepts `-extern-std=c++23`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 druntime.int128,`core.int128`: Add `mul` and `udivmod` overloads for 64-bit operands))
+$(LI $(RELATIVE_LINK2 druntime.macos-15-4-segfault,Fixed generated binaries crashing on macOS 15.4))
+$(LI $(RELATIVE_LINK2 druntime.macro-templates,C Macro translations in druntime have been translated to templates))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 add_lazycache_function,Add lazyCache to std.algorithm.iteration))
+$(LI $(RELATIVE_LINK2 emulate_getrandom,`getrandom()` backwards compatibility shim))
+$(LI $(RELATIVE_LINK2 entropy_system,Add an internal multi-backend entropy system))
+$(LI $(RELATIVE_LINK2 write-text,Add `writeText`, `writeWText`, and `writeDText` to `std.conv`))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.auto-ref-return,Keywords `auto` and `ref` must be adjacent for `auto ref` return.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.auto-ref-return.dd)
+$(P
+Similar to `auto ref` parameters in 2.111, it's now deprecated to declare an `auto ref` return type without putting those two keywords next to each other as well.
+)
+
+---
+ref auto int f() => 3;
+auto { ref int g() => 3; }
+
+// Correction:
+auto ref f() => 3;
+auto ref g() => 3;
+---
+)
+
+$(LI $(LNAME2 dmd.extern-std-cpp23,The compiler now accepts `-extern-std=c++23`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.extern-std-cpp23.dd)
+$(P
+The compiler now accepts c++23 as a supported standard for `-extern-std=`.
+Currently this only changes the value of `__traits(getTargetInfo, "cppStd")`.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 druntime.int128,`core.int128`: Add `mul` and `udivmod` overloads for 64-bit operands)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.int128.dd)
+$(P
+These map to a single x86_64 instruction and have accordingly been optimized via inline assembly.
+)
+
+---
+import core.int128;
+
+ulong a, b;
+Cent product128 = mul(a, b);
+
+ulong divisor64 = …;
+ulong modulus64;
+ulong quotient64 = udivmod(product128, divisor64, modulus64);
+---
+)
+
+$(LI $(LNAME2 druntime.macos-15-4-segfault,Fixed generated binaries crashing on macOS 15.4)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.macos-15-4-segfault.dd)
+$(P
+macOS 15.4 has introduced an undocumented ABI change to the format of
+thread local variable section, which causes almost all executable built with
+previous D compiler versions to crash during initialization, if they use
+DRuntime. This release introduces a mitigation for this issue that is
+backwards compatible with previous versions of macOS.
+)
+)
+
+$(LI $(LNAME2 druntime.macro-templates,C Macro translations in druntime have been translated to templates)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.macro-templates.dd)
+$(P
+This prevents linking errors when using `-betterC`.
+For example:
+)
+
+---
+import core.sys.posix.stdlib;
+import core.sys.posix.unistd;
+
+extern(C) int main()
+{
+    int status, pid = vfork();
+    if (pid == 0)
+    {
+        // ...
+        return 0;
+    }
+
+    waitpid(pid, &status, 0);
+    if (WIFEXITED(status))
+    {
+        // ...
+    }
+    return 0;
+}
+---
+
+$(P
+This would fail to compile with the `-betterC` flag:
+)
+
+---
+$(CONSOLE
+Error: undefined reference to `core.sys.posix.sys.wait.WIFEXITED(int)`
+       referenced from `main`
+)
+---
+
+$(P
+The reason is that `WIFEXITED` is a C macro that was translated to a D function in druntime, which requires linking with druntime to use.
+Now that it's a template, it will be lazily instantiated and the program compiles.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 add_lazycache_function,Add lazyCache to std.algorithm.iteration)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/add_lazycache_function.dd)
+$(P
+The new `lazyCache` function provides a lazily evaluated range caching mechanism.
+Unlike `cache`, which eagerly evaluates range elements during construction,
+`lazyCache` defers evaluation until elements are explicitly requested.
+)
+
+---
+auto result = iota(-4, 5).map!(a => tuple(a, expensiveComputation(a)))().lazyCache();
+// No computations performed at this point
+
+auto firstElement = result.front;
+// First element is now evaluated
+---
+
+$(P
+See the $(REF lazyCache, std,algorithm,iteration) documentation for more details.
+)
+)
+
+$(LI $(LNAME2 emulate_getrandom,`getrandom()` backwards compatibility shim)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/emulate_getrandom.dd)
+$(P
+To restore compatibility with older Linux platforms where `getrandom()` is
+unavailable either due to an outdated kernel or a legacy C library, Phobos now
+ships with a shim that emulates a limited subset of `getrandom()`’s behavior
+by reading random bytes from `/dev/urandom`.
+)
+
+$(P
+To enable the shim, build DMD and Phobos with the environment variable
+`LINUX_LEGACY_EMULATE_GETRANDOM` set to `1`.
+)
+
+```
+cd phobos
+LINUX_LEGACY_EMULATE_GETRANDOM=1 make
+```
+
+$(P
+This functionality is a temporary fix and expected to be removed again soon
+by an upcoming release (approx. v2.112.0 or v2.113.0).
+The expected change is to replace the current “binding or shim” solution with
+a syscall wrapper and automatic `/dev/urandom` fallback.
+)
+)
+
+$(LI $(LNAME2 entropy_system,Add an internal multi-backend entropy system)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/entropy_system.dd)
+$(P
+This Phobos release introduces an internal multi-backend system for the
+retrieval of entropy (as in cryptographically-secure random numbers obtained
+from a suitable random number generator provided by the operating system).
+)
+
+$(P
+The current implementation supports the `getrandom` syscall on Linux.
+)
+
+$(P
+On BSD systems `arc4random_buf` or `getentropy` are used — depending on
+which is implemented by the OS and powered by a secure (non-RC4) algorithm.
+)
+
+$(P
+Additionally, reading entropy from the character devices `/dev/urandom` and
+`/dev/random` is available on all POSIX targets.
+)
+
+$(P
+On Windows `BCryptGenRandom` (from the
+$(I Cryptography API: Next Generation (“BCrypt”))) is provided as a backend.
+`CryptGenRandom` from the legacy $(I CryptoAPI) is not supported for the time
+being.
+)
+
+$(P
+Furthermore, this replaces the `getrandom` backwards compatibility shim
+that had been added by v2.111.1 for Linux targets.
+Instead backwards compatibility is now provided by a hunt strategy algorithm
+that tries potentially available entropy sources one by one to find one that
+is available on the running system.
+Given that the character devices serve as a fallback option here,
+`urandom` is favored over `random`. That is because modern kernel versions —
+where `random` would exhibit the usually more preferable behavior of blocking
+only until the entropy pool has been initialized — will also provide the
+`getrandom` syscall in the first place. Performing the syscall, in turn, is
+even better as it does not depend on the runtime environment exposing the
+special devices in predefined locations, thus working also within chroot
+environments.
+)
+)
+
+$(LI $(LNAME2 write-text,Add `writeText`, `writeWText`, and `writeDText` to `std.conv`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/write-text.dd)
+$(P
+These functions are variants of the existing `text`, `wtext`, and `dtext`
+functions. Instead of returning a string, they write their output to an output
+range.
+)
+
+$(P
+Like `text`, `writeText` can accept an
+$(LINK2 $(ROOT_DIR)spec/istring.html, interpolated expression sequence) as an
+argument.
+)
+
+$(P
+Example:
+)
+
+---
+import std.conv : writeText;
+import std.array : appender;
+
+auto output = appender!string();
+output.writeText(i"2 + 2 == $(2 + 2)");
+assert(output.data == "2 + 2 == 4");
+---
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_BUGZILLA DMD Compiler regression fixes,
+
+$(LI $(BUGZILLA 10440): shared library on osx: worked in 2.062, fails in 2.063 / 2.063.2)
+$(LI $(BUGZILLA 10577): 2.063 Mixin Regression $(LPAREN)works with 2.062$(RPAREN))
+$(LI $(BUGZILLA 17481): [REG 2.069.0] synchronized: Access Violation with dmd -O on win32)
+$(LI $(BUGZILLA 21258): Tuple parameters with defaults use the first tuple element for all defaults since 2.094.0-beta.1)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler bug fixes,
+
+$(LI $(BUGZILLA 2): Hook up new dmd command line arguments)
+$(LI $(BUGZILLA 4184): associative array with certain key types results in corrupt values during iteration)
+$(LI $(BUGZILLA 4191): [FreeBSD] real constants are rounded to double precision)
+$(LI $(BUGZILLA 4217): Function overloads are not distinguished when instantiating templates)
+$(LI $(BUGZILLA 4224): alias this and opDispatch)
+$(LI $(BUGZILLA 9829): rdmd passes '--' to dmd)
+$(LI $(BUGZILLA 10513): pure overriding method cannot call impure out contract of base class)
+$(LI $(BUGZILLA 10540): variable used before set for empty static arrays, with -inline -O)
+$(LI $(BUGZILLA 10742): CTFE of std.digest.digest.digest$(LPAREN)$(RPAREN) crashes DMD.)
+$(LI $(BUGZILLA 18263): selective import with same name masks out this reference in mixin template)
+$(LI $(BUGZILLA 20318): Illegal instruction $(LPAREN)core dumped$(RPAREN))
+$(LI $(BUGZILLA 20499): bad error message caused by UFCS attempt on the identifier matching to an import)
+$(LI $(BUGZILLA 20855): stack overflow when compiling large file)
+$(LI $(BUGZILLA 20901): static foreach must deep-copy front$(LPAREN)$(RPAREN) per iteration)
+$(LI $(BUGZILLA 21052): buildkite ldc-developers/ldc log file contains not a clue what it is attempting to do)
+$(LI $(BUGZILLA 21054): Test Suite test/run.d has no documentation on how the dmd under test is specified)
+$(LI $(BUGZILLA 21126): d_do_test should be built with bootstrap compiler, not compiler being tested)
+$(LI $(BUGZILLA 21153): DWARF: DMD emits the mangled name for DW_AT_name)
+$(LI $(BUGZILLA 21179): Test Suite: circleci times out with useless log message)
+$(LI $(BUGZILLA 21207): Mixin get processed in lexical order, resulting in forward reference issues)
+$(LI $(BUGZILLA 21225): preview=dtorfields inserts unnecessary dtor call in nothrow ctors)
+$(LI $(BUGZILLA 21271): C++ header generation ignores extern$(LPAREN)D$(RPAREN) class methods affecting vtable layout)
+$(LI $(BUGZILLA 21280): No error output "cast$(LPAREN)ubyte[4]$(RPAREN)$(LPAREN)"ABCDEF"[0..4]$(RPAREN);")
+$(LI $(BUGZILLA 21298): Missing error when overriding interface method without in contract with class method with contract)
+$(LI $(BUGZILLA 21304): dtoh silently ignore default parameters, leading to invalid headers)
+)
+$(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
+
+$(LI $(BUGZILLA 10491): Type inference for function arguments with default value)
+$(LI $(BUGZILLA 10523): Don't call array op functions for short vector ops)
+$(LI $(BUGZILLA 20075): allow cast$(LPAREN)ref T$(RPAREN)lvalue for casting lvalues)
+$(LI $(BUGZILLA 20334): posix.mak clean target does not remove all generated files)
+$(LI $(BUGZILLA 21098): poor diagnostic when trying to assign a string literal to a `char*`)
+$(LI $(BUGZILLA 21203): Accept pragma$(LPAREN)mangle$(RPAREN) on aggregate types)
+$(LI $(BUGZILLA 21247): AssertArguments should allow for tuple auto expansion)
+$(LI $(BUGZILLA 21259): struct initialization with deprecated fields should issue deprecation warnings)
+$(LI $(BUGZILLA 21317): Copy constructor defined but blitting still occurs)
+)
+$(BUGSTITLE_BUGZILLA Phobos bug fixes,
+
+$(LI $(BUGZILLA 10550): Xorshift32 and Xorshift160 do not generate uniformly-distributed random numbers)
+$(LI $(BUGZILLA 20502): Converting std.typecons.RefCounted!T to a string gives T's storage location instead of T's fields when T is a struct without an explicit toString)
+$(LI $(BUGZILLA 21210): std.traits : isAssignable false positive on disabled copy struct)
+$(LI $(BUGZILLA 21215): std.range.recurrence leads to an infinite loop)
+)
+$(BUGSTITLE_BUGZILLA Phobos enhancements,
+
+$(LI $(BUGZILLA 21068): Cannot sort a RandomAccessFinite range)
+$(LI $(BUGZILLA 21267): Make std.complex work with -betterC)
+)
+$(BUGSTITLE_BUGZILLA Druntime bug fixes,
+
+$(LI $(BUGZILLA 4222): druntime should apply @safe/@system/@trusted)
+$(LI $(BUGZILLA 9584): Exceptions in D are ludicrously slow $(LPAREN)far worse than Java$(RPAREN))
+$(LI $(BUGZILLA 10701): [GC] segfault in GC)
+)
+$(BUGSTITLE_BUGZILLA Druntime enhancements,
+
+$(LI $(BUGZILLA 9585): [AA] Implement getPair$(LPAREN)$(RPAREN) for Associative Arrays)
+)
+$(BUGSTITLE_BUGZILLA dlang.org bug fixes,
+
+$(LI $(BUGZILLA 10731): byLine description incorrect)
+$(LI $(BUGZILLA 21150): The specification is unclear $(LPAREN)static foreach$(RPAREN))
+$(LI $(BUGZILLA 21189): Plain Old Data and copy constructors)
+$(LI $(BUGZILLA 21241): html display of changelog does not work in Chrome browser)
+)
+$(BUGSTITLE_BUGZILLA dlang.org enhancements,
+
+$(LI $(BUGZILLA 18127): homepage: Fast code, fast.)
+$(LI $(BUGZILLA 21105): Casting from a function pointer to a delegate)
+$(LI $(BUGZILLA 21161): [Variadic Templates] uses outdated example from D1 / Tango)
+)
+)
+$(D_CONTRIBUTORS_HEADER 44)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Abhay Pratap)
+    $(D_CONTRIBUTOR abul)
+    $(D_CONTRIBUTOR Abul Hossain Khan)
+    $(D_CONTRIBUTOR Aditya Chincholkar)
+    $(D_CONTRIBUTOR Akshat Sharma)
+    $(D_CONTRIBUTOR Akshat(DeterminedSage))
+    $(D_CONTRIBUTOR Albert24GG)
+    $(D_CONTRIBUTOR Aleksandr Treyger)
+    $(D_CONTRIBUTOR Artha)
+    $(D_CONTRIBUTOR Ay1nDas)
+    $(D_CONTRIBUTOR Ayan Das)
+    $(D_CONTRIBUTOR bangbangsheshotmedown)
+    $(D_CONTRIBUTOR David Isinta Nyakawa)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR drpriver)
+    $(D_CONTRIBUTOR Elias Batek)
+    $(D_CONTRIBUTOR Emily)
+    $(D_CONTRIBUTOR fossdd)
+    $(D_CONTRIBUTOR gulugulubing)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Inkrementator)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Matthew Qiu)
+    $(D_CONTRIBUTOR Nayaab Zameer)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Parmar Mahipalsinh)
+    $(D_CONTRIBUTOR Patrick Schlüter)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Prthmsh7)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
+    $(D_CONTRIBUTOR Samrendra Pratap Singh)
+    $(D_CONTRIBUTOR Shivang Shukla)
+    $(D_CONTRIBUTOR shivangshukla7020)
+    $(D_CONTRIBUTOR Sönke Ludwig)
+    $(D_CONTRIBUTOR Tomas Fabrizio Orsi)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.112.0
+    TITLE=Change Log: $(VER)
