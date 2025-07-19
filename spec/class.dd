@@ -32,22 +32,15 @@ $(H2 $(LNAME2 declaration, Class Declarations))
 $(GRAMMAR
 $(GNAME ClassDeclaration):
     $(D class) $(GLINK_LEX Identifier) $(D ;)
-    $(D class) $(GLINK_LEX Identifier) $(GLINK BaseClassList)$(OPT) $(GLINK2 struct, AggregateBody)
+    $(D class) $(GLINK_LEX Identifier) $(GLINK SupertypeList)$(OPT) $(GLINK2 struct, AggregateBody)
     $(GLINK2 template, ClassTemplateDeclaration)
 
-$(GNAME BaseClassList):
-    $(D :) $(GLINK SuperClassOrInterface)
-    $(D :) $(GLINK SuperClassOrInterface) $(D ,) $(GLINK Interfaces)
+$(GNAME SupertypeList):
+    $(D :) $(GLINK BasicTypes)
 
-$(GNAME SuperClassOrInterface):
+$(GNAME BasicTypes):
     $(GLINK2 type, BasicType)
-
-$(GNAME Interfaces):
-    $(GLINK Interface)
-    $(GLINK Interface) $(D ,) $(GSELF Interfaces)
-
-$(GNAME Interface):
-    $(GLINK2 type, BasicType)
+    $(GLINK2 type, BasicType) $(D ,) $(GSELF BasicTypes)
 )
 
 $(P A class consists of:)
@@ -1520,20 +1513,17 @@ $(H3 $(LNAME2 anonymous, Anonymous Nested Classes))
 
 $(GRAMMAR
 $(GNAME NewAnonClassExpression):
-    $(D new) $(D class) $(GLINK ConstructorArgs)$(OPT) $(GLINK AnonBaseClassList)$(OPT) $(GLINK2 struct, AggregateBody)
+    $(D new) $(D class) $(GLINK ConstructorArgs)$(OPT) $(GLINK BasicTypes)$(OPT) $(GLINK2 struct, AggregateBody)
 
 $(GNAME ConstructorArgs):
     $(D $(LPAREN)) $(GLINK2 expression, NamedArgumentList)$(OPT) $(D $(RPAREN))
 
-$(GNAME AnonBaseClassList):
-    $(GLINK SuperClassOrInterface)
-    $(GLINK SuperClassOrInterface) $(D ,) $(GLINK Interfaces)
 )
 
 which is equivalent to:
 
 $(INFORMATIVE_GRAMMAR
-$(D class) $(GLINK_LEX Identifier) $(D :) $(I AnonBaseClassList) $(I AggregateBody)
+$(D class) $(GLINK_LEX Identifier) $(D :) $(I BasicTypes) $(I AggregateBody)
 // ...
 $(D new) $(I Identifier) $(I ConstructorArgs)
 )
