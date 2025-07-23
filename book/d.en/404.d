@@ -6,7 +6,7 @@ $(D_S $(TITLE),
 $(HTMLTAG3 img, src="$(STATIC images/dman-scared.jpg)")
 
 $(P
-If you think there should be something here, please $(LINK2 $(BUGZILLA_NEW_BUG_URL)$(AMP)bug_severity=normal, report a bug).
+If you think there should be something here, please $(LINK2 $(BUGZILLA_NEW_BUG_URL)$(AMP)label=Severity:normal, report a bug).
 )))
 $(RED Some text here)
 Macros:
