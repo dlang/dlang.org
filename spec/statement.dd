@@ -1178,8 +1178,16 @@ hi has type string
 [2, 5] has type int[]
 )
 
-        $(P Each $(GLINK ForeachType) declaration will be a runtime variable,
-        unless `alias` or `enum` are specified:)
+$(H4 $(LNAME2 foreach_sequence_symbols, Sequence Symbol Kinds))
+
+        $(P Each $(GLINK ForeachType) declaration (without `alias`/`enum`)
+        will attempt to generate:)
+
+            * Compile-time symbols for element values known at compile-time
+            * Runtime variables for element values not known at compile-time
+            * Symbolic aliases for elements that are not values
+
+        $(P `alias` or `enum` can be specified in a *ForeachType*:)
 
         * The `alias` storage class will create a symbolic alias
         * The `enum` storage class will create a compile-time constant
@@ -1192,11 +1200,20 @@ void main()
 
     int i = 1;
 
+    // without `alias`, `a` would be a separate variable initialized from `i`
     foreach (alias a; AliasSeq!(i, i))
     {
         a++;
     }
     assert(i == 3);
+
+    foreach (e; AliasSeq!(i, 1))
+    {
+        static if (__traits(compiles, &e))
+            assert(e == 3); // first e is a runtime variable
+        else
+            static assert(e == 1); // second e is a compile-time constant
+    }
 }
 ---
 )
