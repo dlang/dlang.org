@@ -394,6 +394,8 @@ auto genSwitches(string fileText)
 
     foreach (option; Usage.options)
     {
+        if (!option.documented)
+            continue;
         string flag = option.flag;
         string helpText = option.helpText;
         if (!option.ddocText.empty)
