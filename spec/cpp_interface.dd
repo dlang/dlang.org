@@ -950,17 +950,124 @@ $(H2 $(LNAME2 packing-and-alignment, Packing and Alignment))
 
 $(H2 $(LNAME2 lifetime-management, Lifetime Management))
 
-    $(P C++ constructors, copy constructors, move constructors and destructors
-    cannot be called directly in D code, and D constructors, postblit operators
-    and destructors cannot be directly exported to C++ code. Interoperation of
-    types with these special operators is possible by either 1$(RPAREN)
-    disabling the operator in the client language and only using it in the host
-    language, or 2$(RPAREN) faithfully reimplementing the operator in the
-    client language. With the latter approach, care needs to be taken to ensure
-    observable semantics remain the same with both implementations, which can be
-    difficult, or in some edge cases impossible, due to differences in how the
-    operators work in the two languages. For example, in D all objects are
-    movable and there is no move constructor.)
+    $(P C++ constructors, copy constructors, and destructors can be called directly in D code.
+    C++ move constructors cannot be called directly in D code.
+    )
+
+    $(P In a foo.cpp file: )
+
+$(CPPLISTING
+#include $(LT)iostream$(GT)
+
+using namespace std;
+
+class A
+{
+public:
+    A(int i);
+    ~A();
+};
+
+A::A(int i)
+{
+    cout << "calling C++ integer constructor " << endl;
+}
+
+A::~A()
+{
+    cout << "calling C++ destructor " << endl;
+}
+)
+
+    $(P In a bar.d file: )
+
+------
+extern(C++) class A
+{
+    this(int i);
+    ~this();
+}
+
+void main()
+{
+    auto obj1 = new A(5); // calls the constructor
+    destroy!false(obj1);    //calls the destructor
+}
+------
+
+    $(P Compiling, linking, and running produces the output:)
+
+$(CONSOLE
+$(GT) g++ -c foo.cpp
+$(GT) dmd bar.d foo.o -L-lstdc++ && ./bar
+calling C++ integer constructor
+calling C++ destructor
+)
+
+    $(P Note that the C++ Copy constructor cannot be called using D classes since classes in D are reference types.
+    Value semantics are needed to be able to copy, so use a D struct.)
+
+    $(P In a foo.cpp file: )
+
+$(CPPLISTING
+#include $(LT)iostream$(GT)
+
+using namespace std;
+
+class A
+{
+public:
+    A(int i);
+    A(A const& other);
+    ~A();
+};
+
+A::A(int i)
+{
+    cout << "calling C++ integer constructor" << endl;
+}
+
+A::A(A const& other)
+{
+    cout << "calling C++ copy constructor" << endl;
+}
+
+A::~A()
+{
+    cout << "calling C++ destructor" << endl;
+}
+)
+
+    $(P In a bar.d file: )
+
+------
+extern(C++, class) struct A
+{
+    this(int i);
+    this(ref const A other);
+    ~this();
+}
+
+void main()
+{
+    A obj1 = 6;  // calls the integer constructor
+    auto obj2 = A(obj1);     // calls the copy constructor
+}
+------
+
+    $(P Compiling, linking, and running produces the output:)
+
+$(CONSOLE
+$(GT) g++ -c foo.cpp
+$(GT) dmd bar.d foo.o -L-lstdc++ && ./bar
+calling C++ integer constructor
+calling C++ copy constructor
+calling C++ destructor
+calling C++ destructor
+)
+
+    $(P Notice there's no need to call destroy on a struct object to invoke the destructor
+    since it does stack allocation(by default) and its lifetime ends with its declaration scope.)
 
 $(H2 $(LNAME2 operator-overloading, Operator Overloading))
     $(P D's operator overloading is primarily involved with overloading its unary
