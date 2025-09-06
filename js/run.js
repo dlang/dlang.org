@@ -42,11 +42,6 @@ All examples are replaced with custom form by default. You need to do additional
 your example to have default standard input or default standard arguments.
 */
 
-var nl2br = function()
-{
-    return this.replace(/\n/g, "<br>");
-}
-
 function safeVar(data, path)
 {
     var p = path.split(".");
@@ -150,10 +145,7 @@ function parseOutput(res, o, oTitle)
     if (res.cstatus != 0)
     {
         oTitle.text("Compilation output ("+res.cstatus+": "+res.cerr+")");
-        if ($.browser.msie)
-            o.html(nl2br(res.cout));
-        else
-            o.text(res.cout);
+        o.text(res.cout);
 
         return;
     }
@@ -172,10 +164,7 @@ function parseOutput(res, o, oTitle)
             oTitle.text("Application output ("+res.rstatus+": "+res.rerr+")");
     }
 
-    if ($.browser.msie)
-        o.html(nl2br(res.cout));
-    else
-        o.text(output);
+    o.text(output);
 }
 
 // wraps a unittest into a runnable script
@@ -197,7 +186,7 @@ function wrapIntoMain(code, compile) {
     }
 }
 
-$(document).ready(function()
+$(function()
 {
     setUpExamples();
 
