@@ -339,7 +339,6 @@ else
 //writeln(m.pre);      // Error: undefined identifier 'm'
 ---
 )
-    )
 
 $(H2 $(LEGACY_LNAME2 WhileStatement, while-statement, While Statement))
 
@@ -1860,12 +1859,18 @@ object.)
 
 $(GRAMMAR
 $(GNAME WithStatement):
-    $(D with) $(D $(LPAREN)) $(EXPRESSION) $(D $(RPAREN)) $(PSSCOPE)
-    $(D with) $(D $(LPAREN)) $(GLINK2 template, Symbol) $(D $(RPAREN)) $(PSSCOPE)
-    $(D with) $(D $(LPAREN)) $(GLINK2 template, TemplateInstance) $(D $(RPAREN)) $(PSSCOPE)
+    $(GLINK WithClause) $(PSSCOPE)
+    $(GLINK WithClause) : $(GLINK StatementList)
+
+    $(GNAME WithClause):
+        $(D with) $(D $(LPAREN)) $(EXPRESSION) $(D $(RPAREN))
+        $(D with) $(D $(LPAREN)) $(GLINK2 template, Symbol) $(D $(RPAREN))
+        $(D with) $(D $(LPAREN)) $(GLINK2 template, TemplateInstance) $(D $(RPAREN))
 )
 
-        where *Expression* evaluates to one of:
+    $(P The *StatementList* form is equivalent to the *ScopeStatement* form.)
+
+    $(P *Expression* evaluates to one of:)
 
         $(UL
         $(LI a class reference)
@@ -1874,8 +1879,8 @@ $(GNAME WithStatement):
         $(LI a pointer to one of the above)
         )
 
-        Within the with body the referenced object is searched first for
-        identifier symbols.
+        Within the `with` $(I ScopeStatement) or $(I StatementList) the referenced object is
+        searched first for identifier symbols.
 
 ---
 enum E { A, B }
@@ -1913,8 +1918,8 @@ with (expression)
 }(expression);
 --------------
 
-        $(P Note that *Expression* only gets evaluated once and is not copied.
-        The with statement does not change what $(D this) or
+        $(NOTE *Expression* only gets evaluated once and is not copied.
+        The *WithStatement* does not change what $(D this) or
         $(D super) refer to.
         )
 
@@ -2021,6 +2026,10 @@ void main()
                        // not implemented in `main`'s scope, so resolution is
                        // subsequently forward to module scope.
     }
+
+    with(foo):         // StatementList form
+        f();           // prints "Foo.f"
+        f();           // prints "Foo.f"
 }
 ---
 )
