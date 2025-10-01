@@ -38,6 +38,7 @@ $(P So how does D improve things?  In many ways, D's arrays are similar to C's a
 
 $(P Let's see some D slices in action:)
 
+$(RUNNABLE_EXAMPLE
 ------
 import std.stdio;
 
@@ -69,6 +70,7 @@ void main()
     b = d[0..2];         // slices can point at fixed sized arrays too!
 }
 ------
+)
 
 $(P You may notice something puzzling about the description of the allocation of the array: "allocate a dynamic array of integers that has at least 5 elements, and give me a slice to the first 5."  Why isn't it just "allocate a dynamic array of 5 elements"?  Even experienced D coders have trouble with D's array concepts sometimes, and for quite good reason.  D's slices are $(I not) proper dynamic array types (at least not under the hood) even though they appear to be.  What they do is provide a safe and easy $(I interface) to arrays of any type (dynamic or otherwise).  So let's discuss probably the most common misconception of D slices.
 )
@@ -84,6 +86,7 @@ $(P So where is the true dynamic array type in D?  It's hidden by the runtime, a
 $(P Another consequence of this is that the length is not an array property, it's a slice property.  This means the length field is not necessarily the length of the array, it's the length of the slice.  This can be confusing to newcomers to the language.  For instance, this code has a large flaw in it:
 )
 
+$(RUNNABLE_EXAMPLE
 ------
 import std.stdio;
 
@@ -100,6 +103,7 @@ void main()
     writeln(arr.length); // outputs 5
 }
 ------
+)
 
 $(P This might look like you changed the passed $(D arr)'s length to 2, but it actually did not affect anything (as is proven by the output from $(D writeln)).  This is because even though the data is passed by reference, the actual pointer and length are passed by value.  Many languages have an array type whose properties are all passed by reference.  Notably, C# and Java arrays are actually fully referenced Objects.  C++'s vector either passes both its data and properties by reference or by value.)
 
@@ -117,6 +121,7 @@ $(H2 $(LNAME2 append-on, A Slice You Can Append On))
 
 $(P D's slices support appending more data to the end of the slice, much like a true dynamic array type.  The language has a specific operator used for concatenation and appending, the tilde ($(D ~)).  Here are some operations that append and concatenate arrays:)
 
+$(RUNNABLE_EXAMPLE
 ------
 int[] a;     // an empty slice references no data, but still can be appended to
 a ~= 1;      // append some integers, this automatically allocates a new
@@ -124,12 +129,15 @@ a ~= 2;      // array to hold the elements.
 
 a ~= [3, 4]; // append another array (this time, an array literal)
 a = a ~ a;   // concatenate a with itself, a is now [1, 2, 3, 4, 1, 2, 3, 4]
+writeln(a);
 
 int[5] b;    // a fixed-size array on the stack
 a = b[1..$]; // a is a slice of b
 a ~= 5;      // since a was pointing to stack data, appending always reallocates,
              // but works!
+writeln(a);  // [0, 0, 0, 0, 5]
 ------
+)
 
 $(P Anyone who cares about performance will wonder what happens when you append the four elements.  The slice does not own its data, so how does one avoid reallocating a new array on each append operation?  One of the main requirements of D slices are that they are efficient.  Otherwise, coders would not use them.  D has solved this problem in a way that is virtually transparent to the programmer, and this is one of the reasons slices seem more like true dynamic arrays.)
 
@@ -211,18 +219,22 @@ foreach (int i; 0..50)
 
 $(P $(REF1_ALTTEXT $(D size_t capacity), capacity, object): A property which gives you the number of elements the slice can hold via appending.  If the slice cannot be appended in place, this returns 0.  Note that capacity (if non-zero) includes the current slice elements.)
 
+$(RUNNABLE_EXAMPLE
 ------
 int[] slice = new int[5];
 assert(slice.capacity == 7);  // includes the 5 pre-allocated elements
+
 int[] slice2 = slice;
 slice.length = 6;
 assert(slice.capacity == 7);  // appending in place doesn't change the capacity.
 assert(slice2.capacity == 0); // cannot append slice2 because it would stomp on
                               // slice's 6th element
 ------
+)
 
 $(P $(REF1_ALTTEXT $(D assumeSafeAppend()), assumeSafeAppend, object): This method forces the runtime to assume it is safe to append a slice.  Essentially this adjusts the $(I used) field of the array to end at the same spot the slice ends.)
 
+$(RUNNABLE_EXAMPLE
 ------
 int[] slice = new int[5];
 slice = slice[0..2];
@@ -230,8 +242,9 @@ assert(slice.capacity == 0); // not safe to append, there is other valid data in
 slice.assumeSafeAppend();
 assert(slice.capacity == 7); // force the used data to 2 elements
 ------
+)
 
-$(P If D slices' append performance just isn't up to snuff for your performance requirements, there is another alternative.  The $(REF Appender, std,array) type will append data to an array as fast as possible, without any need to look up metadata from the runtime.  $(REF Appender, std,array) also supports the output range idiom via an append operation (normal slices only support the output range by overwriting their own data).)
+$(P If D slices' append performance just isn't up to snuff for your performance requirements, there is another alternative.  The $(REF Appender, std,array) type will append data to an array as fast as possible, without any need to look up metadata from the runtime.  $(REF Appender, std,array) also supports the $(REF_ALTTEXT output range, isOutputRange, std,range,primitives) idiom via an append operation (normal slices only support the output range by overwriting their own data).)
 
 $(H2 $(LNAME2 conclusion, Conclusion))
 

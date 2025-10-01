@@ -291,15 +291,31 @@ auto genGrammar(string fileText)
                 continue;
 
             enum grammarKey = "$(GRAMMAR";
-            auto text = entry.fileName.readText.find(grammarKey);
-            if (text.length)
-                newContent ~= "$(H2 $(LNAME2 %s, %s))\n".format(entry.title.toLower, entry.title);
-            for (; text.length; text = text[ grammarKey.length .. $].find(grammarKey))
+
+            static string findKey(string s)
+            {
+                s = s.find(grammarKey);
+                // retry if no space after
+                if (s.length > grammarKey.length && !s[grammarKey.length].isWhite)
+                {
+                    return findKey(s[grammarKey.length .. $]);
+                }
+                return s;
+            }
+            auto text = findKey(entry.fileName.readText);
+            if (!text.length)
+                continue;
+
+            newContent ~= "$(H2 $(LNAME2 %s, %s))\n".format(entry.title.toLower, entry.title);
+            do
             {
                 newContent ~= grammarKey;
-                newContent ~= text.drop(grammarKey.length).untilClosingParentheses.to!string;
+                text.popFrontN(grammarKey.length);
+                newContent ~= text.untilClosingParentheses.to!string;
                 newContent ~= ")\n";
+                text = findKey(text);
             }
+            while (text.length);
         }
         return updateDdocTag(fileText, ddocKey, newContent);
     }
@@ -378,6 +394,8 @@ auto genSwitches(string fileText)
 
     foreach (option; Usage.options)
     {
+        if (!option.documented)
+            continue;
         string flag = option.flag;
         string helpText = option.helpText;
         if (!option.ddocText.empty)
