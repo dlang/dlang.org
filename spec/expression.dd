@@ -2931,7 +2931,7 @@ $(GNAME PlacementExpression):
 
     $(P $(I NewExpression)s allocate memory on the
         $(DDLINK spec/garbage, Garbage Collection, garbage
-        collected) heap unless there is a $(RELATIVE_LINK2 PlacementExpression, PlacementExpression).
+        collected) heap unless there is a $(RELATIVE_LINK2 placement-expression, *PlacementExpression*).
     )
 
     $(P `new T` constructs an instance of type `T` and default-initializes it.
@@ -3040,7 +3040,7 @@ $(H4 $(LNAME2 new_multidimensional, Multidimensional Arrays))
         }
         -----------
 
-$(H4 $(LNAME2 PlacementExpression, Placement Expression))
+$(H4 $(LNAME2 placement-expression, Placement Expression))
 
     $(P The $(I PlacementExpression) explicitly provides the storage for $(I NewExpression) to initialize with
     the newly created value, rather than using the $(DDLINK spec/garbage, Garbage Collection, garbage
@@ -3077,7 +3077,7 @@ $(H4 $(LNAME2 PlacementExpression, Placement Expression))
     ---
     )
 
-    (If Type is a class, the $(I PlacementExpression) must produce an lvalue of type that is of a
+    (If Type is a class, the $(I PlacementExpression) must produce an lvalue of a type that is of a
     sufficient size to hold the class object such as `void[__traits(classInstanceSize, Type)]`
     or a dynamic array representing sufficient memory for the class object.)
 
@@ -3090,10 +3090,10 @@ $(H4 $(LNAME2 PlacementExpression, Placement Expression))
 
     void main()
     {
-        void[__traits(classInstanceSize, C)] k;
+        void[__traits(classInstanceSize, C)] k = void;
         C c = new(k) C;
         assert(c.j == 4);
-        assert(cast(void*)c == cast(void*)k.ptr);
+        assert(cast(void*) c == k.ptr);
     }
     ---
     )
@@ -3102,7 +3102,7 @@ $(H4 $(LNAME2 PlacementExpression, Placement Expression))
     are designed to be on the GC heap. The size of the associative array allocated is determined
     by the runtime library, and cannot be set by the user.)
 
-    $(P The use of $(PlacementExpression) is not allowed in `@safe` code.)
+    $(P The use of $(I PlacementExpression) is not allowed in `@safe` code.)
 
     $(P To allocate storage with an allocator function such as `malloc()`, a simple template can be used:)
 
