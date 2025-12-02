@@ -430,55 +430,65 @@ $(SPEC_RUNNABLE_EXAMPLE_RUN
         ---
         )
 
-$(H2 $(LNAME2 properties, Properties))
+$(H2 $(LNAME2 properties, Properties and Operations))
 
-$(P Properties for associative arrays are:)
+$(P Properties and operations for associative arrays are:)
 
     $(TABLE_2COLS Associative Array Properties,
-        $(THEAD Property, Description)
-        $(TROW $(D .sizeof), Returns the size of the reference to the associative
-        array; it is 4 in 32-bit builds and 8 on 64-bit builds.)
-        $(TROW $(D .length), $(ARGS Returns number of values in the
+        $(THEAD Property/Operation, Description)
+        $(TROW $(D sizeof), $(ARGS The size of the reference to the associative
+        array; it is 4 in 32-bit builds and 8 on 64-bit builds.))
+        $(TROW $(D empty), $(ARGS $(D true) if the associative array has no elements; otherwise $(D false).))
+        $(TROW $(D length), $(ARGS The number of values in the
         associative array. Unlike for dynamic arrays, it is read-only.))
-        $(TROW $(D .dup), Create a new associative array of the same size
+        $(TROW $(D dup()), Creates a new associative array of the same size
         and copy the contents of the associative array into it.)
-        $(TROW $(D .keys), $(ARGS Returns dynamic array, the elements of which are the keys in
+        $(TROW $(D keys()), $(ARGS Returns dynamic array, the elements of which are the keys in
         the associative array.))
-        $(TROW $(D .values), $(ARGS Returns dynamic array, the elements of which are the values in
+        $(TROW $(D values()), $(ARGS Returns dynamic array, the elements of which are the values in
         the associative array.))
-        $(TROW $(D .rehash), $(ARGS Reorganizes the associative array in place so that lookups
+        $(TROW $(D rehash()), $(ARGS Reorganizes the associative array in place so that lookups
         are more efficient. $(D rehash) is effective when, for example,
         the program is done loading up a symbol table and now needs
         fast lookups in it. Returns a reference to the reorganized array.))
-        $(TROW $(D .clear), $(ARGS Removes all remaining keys and values from an associative array.
+        $(TROW $(D clear()), $(ARGS Removes all remaining keys and values from an associative array.
         The array is not rehashed after removal, to allow for the existing storage to be reused.
         This will affect all references to the same instance and is not equivalent to `destroy(aa)`
         which only sets the current reference to `null`))
-        $(TROW $(D .byKey()), $(ARGS Returns a forward range suitable for use
+        $(TROW $(D byKey()), $(ARGS Returns a forward range suitable for use
         as a $(I ForeachAggregate) to a $(GLINK2 statement, ForeachStatement)
         which will iterate over the keys of the associative array.))
-        $(TROW $(D .byValue()), $(ARGS Returns a forward range suitable for use
+        $(TROW $(D byValue()), $(ARGS Returns a forward range suitable for use
         as a $(I ForeachAggregate) to a $(GLINK2 statement, ForeachStatement)
         which will iterate over the values of the associative array.))
-        $(TROW $(D .byKeyValue()), $(ARGS Returns a forward range suitable for
+        $(TROW $(D byKeyValue()), $(ARGS Returns a forward range suitable for
         use as a $(I ForeachAggregate) to a $(GLINK2 statement,
         ForeachStatement) which will iterate over key-value pairs of the
         associative array. The returned pairs are represented by an opaque type
-        with $(D .key) and $(D .value) properties for accessing the key and
+        with $(D key) and $(D value) properties for accessing the key and
         value of the pair, respectively.  Note that this is a low-level
         interface to iterating over the associative array and is not compatible
         with the $(LINK2 $(ROOT_DIR)phobos/std_typecons.html#.Tuple,`Tuple`)
         type in Phobos.  For compatibility with `Tuple`, use
         $(LINK2 $(ROOT_DIR)phobos/std_array.html#.byPair,std.array.byPair) instead.))
-        $(TROW $(D .get(Key key, lazy Value defVal)),
-        $(ARGS Looks up $(D key); if it exists returns corresponding value
-        else evaluates and returns $(D defVal).))
-        $(TROW $(D .require(Key key, lazy Value value)),
-        $(ARGS Looks up $(D key); if it exists returns corresponding value
-        else evaluates $(D value), adds it to the associative array and returns it.))
-        $(TROW $(D .update(Key key, Value delegate() create, Value delegate(Value) update)),
-        $(ARGS Looks up $(D key); if it exists applies the $(D update) delegate
-        else evaluates the $(D create) delegate and adds it to the associative array))
+        $(TROW $(D Value get(Key key, lazy Value defVal)),
+        $(ARGS Looks up $(D key);
+        if it exists, returns corresponding value;
+        otherwise evaluates and returns $(D defVal) without associating it with $(D key).))
+        $(TROW $(D ref Value require(Key key, lazy Value value)),
+        $(ARGS Looks up $(D key);
+        if it exists, returns corresponding value by reference;
+        otherwise evaluates $(D value) and associates it with $(D key) in the associative array,
+        then returns the newly stored value by reference.))
+        $(TROW $(D void update(Key key, Value delegate() creator, Value delegate(Value) updater)),
+        $(ARGS Looks up $(D key);
+        if it exists, invokes the $(D updater) on the value (passed by reference if possible)
+        and associates the result with the key;
+        otherwise invokes the $(D creator) and associates the result with $(D key) in the associative array))
+        $(TROW $(D void update(Key key, Value delegate() creator, void delegate(ref Value) updater)),
+        $(ARGS Looks up $(D key);
+        if it exists, invokes the $(D updater) on the value (passed by reference)
+        otherwise invokes the $(D creator) and associates the result with $(D key) in the associative array))
     )
 
 $(H2 $(LNAME2 examples, Examples))
