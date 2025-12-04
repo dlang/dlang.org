@@ -432,44 +432,39 @@ $(SPEC_RUNNABLE_EXAMPLE_RUN
 
 $(H2 $(LNAME2 properties, Properties and Operations))
 
-$(P Properties and operations for associative arrays are:)
-
     $(TABLE_2COLS Associative Array Properties,
-        $(THEAD Property/Operation, Description)
+        $(THEAD Property name, Description)
         $(TROW $(D sizeof), $(ARGS The size of the reference to the associative
         array; it is 4 in 32-bit builds and 8 on 64-bit builds.))
         $(TROW $(D length), $(ARGS The number of values in the
         associative array. Unlike for dynamic arrays, it is read-only.))
-        $(TROW $(D dup()), Creates a new associative array of the same size
-        and copy the contents of the associative array into it.)
-        $(TROW $(D keys()), $(ARGS Returns dynamic array, the elements of which are the keys in
-        the associative array.))
-        $(TROW $(D values()), $(ARGS Returns dynamic array, the elements of which are the values in
-        the associative array.))
+    )
+
+    $(P There is no built-in `empty` property.
+        Phobos provides an implementation of `empty` in `std.range.primitives`.)
+
+    $(TABLE_2COLS Associative Array Operations,
+        $(THEAD Operation, Description)
+        $(TROW $(D dup()), Returns `null` If the associative array is `null`;
+        otherwise returns a newly allocated associative array with copies of the keys and values of the associative array.)
+        $(TROW $(D keys()), $(ARGS Returns a newly allocated dynamic array containing copies of the keys in
+        the associative array in an order that is consistent with `values()` but otherwise unspecified.))
+        $(TROW $(D values()), $(ARGS Returns a newly allocated dynamic arraycontaining copies of the values in
+        the associative array in an order that is consistent with `keys()` but otherwise unspecified.))
         $(TROW $(D rehash()), $(ARGS Reorganizes the associative array in place so that lookups
-        are more efficient. $(D rehash) is effective when, for example,
-        the program is done loading up a symbol table and now needs
-        fast lookups in it. Returns a reference to the reorganized array.))
-        $(TROW $(D clear()), $(ARGS Removes all remaining keys and values from an associative array.
-        The array is not rehashed after removal, to allow for the existing storage to be reused.
+        are more efficient.))
+        $(TROW $(D clear()), $(ARGS Removes all keys and values from an associative array.
+        The array is not rehashed after removal to allow for the existing storage to be reused.
         This will affect all references to the same instance and is not equivalent to `destroy(aa)`
         which only sets the current reference to `null`))
-        $(TROW $(D byKey()), $(ARGS Returns a forward range suitable for use
-        as a $(I ForeachAggregate) to a $(GLINK2 statement, ForeachStatement)
-        which will iterate over the keys of the associative array.))
-        $(TROW $(D byValue()), $(ARGS Returns a forward range suitable for use
-        as a $(I ForeachAggregate) to a $(GLINK2 statement, ForeachStatement)
-        which will iterate over the values of the associative array.))
-        $(TROW $(D byKeyValue()), $(ARGS Returns a forward range suitable for
-        use as a $(I ForeachAggregate) to a $(GLINK2 statement,
-        ForeachStatement) which will iterate over key-value pairs of the
-        associative array. The returned pairs are represented by an opaque type
-        with $(D key) and $(D value) properties for accessing the key and
-        value of the pair, respectively.  Note that this is a low-level
-        interface to iterating over the associative array and is not compatible
-        with the $(LINK2 $(ROOT_DIR)phobos/std_typecons.html#.Tuple,`Tuple`)
-        type in Phobos.  For compatibility with `Tuple`, use
-        $(LINK2 $(ROOT_DIR)phobos/std_array.html#.byPair,std.array.byPair) instead.))
+        $(TROW $(D byKey()), $(ARGS Returns a forward range enumerating the keys by reference
+        in an order that is consistent with `byValue()` but otherwise unspecified.
+        $(B Bug:) The keys are provided as mutable, but mutating them is undefined behavior.))
+        $(TROW $(D byValue()), $(ARGS Returns a forward range enumerating the values by reference
+        in an order that is consistent with `byKey()` but otherwise unspecified.))
+        $(TROW $(D byKeyValue()), $(ARGS Returns a forward range enumerating opaque objects that provide a `key` and a `value` property
+        in an unspecified order. The two properties return their result by reference.
+        $(B Bug:) The keys are provided as mutable, but mutating them is undefined behavior.))
         $(TROW $(D Value get(Key key, lazy Value defVal)),
         $(ARGS Looks up $(D key);
         if it exists, returns corresponding value;
@@ -489,6 +484,35 @@ $(P Properties and operations for associative arrays are:)
         if it exists, invokes the $(D updater) on the value (passed by reference)
         otherwise invokes the $(D creator) and associates the result with $(D key) in the associative array))
     )
+
+    $(P Calling $(D rehash) is effective when, for example,
+        the program is done loading up a symbol table and now needs
+        fast lookups in it. Returns a reference to the reorganized array.)
+
+    $(P The order of keys/values returned by
+        `keys()` and `values()` as well as
+        `byKey()`, `byValue()`, and `byKeyValue()` is unspecified,
+        but is guaranteed to be consistent to each other
+        as long as the associative array has not been reorganized,
+        e.g. by adding or removing keys between the calls.
+        Associating an existing key to a new value does not reorganize an associative array.
+        Reorganizing an associative array invalidates any present input ranges
+        returned by `byKey()`, `byValue()`, and `byKeyValue()`.)
+
+    $(P Calling `keys()` and `values()` incurs an allocation unless the associative array is `null` or empty.
+        Use them if you need an independent copy of the keys and/or values;
+        otherwise consider `byKey()` and `byValue()`.)
+
+    $(P Note that `byKeyValue()` is not compatible
+        with the $(LINK2 $(ROOT_DIR)phobos/std_typecons.html#.Tuple,`Tuple`)
+        type in Phobos. For compatibility with `Tuple`, use
+        $(LINK2 $(ROOT_DIR)phobos/std_array.html#.byPair,std.array.byPair) instead.)
+
+    $(P Associative arrays support $(LINK2 $(ROOT_DIR)spec/statement.html#foreach_over_associative_arrays, `foreach`)
+        directly for value iteration and key-value iteration.
+        It is recommended to use `ref` on the key and value variables to avoid unnecessary copies.
+        For iterating the keys only, use key-value iteration and ignore the value.
+        Use `byKey()`, `byValue()`, or `byKeyValue()` for more elaborate cases such as range algorithms.)
 
 $(H2 $(LNAME2 examples, Examples))
 
