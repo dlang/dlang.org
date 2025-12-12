@@ -2,12 +2,12 @@ Ddoc
 
 $(CHANGELOG_NAV_INJECT)
 
-$(VERSION Oct 01, 2025, =================================================,
+$(VERSION Dec 12, 2025, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 21 major changes and 127 fixed Bugzilla issues.
+$(VER) comes with 22 major changes and 132 fixed Bugzilla issues.
         A huge thanks goes to the
-        $(LINK2 #contributors, 72 contributors)
+        $(LINK2 #contributors, 73 contributors)
         who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
@@ -18,6 +18,7 @@ $(LI $(RELATIVE_LINK2 dmd.bitfields,Bitfields Are Now Incorporated))
 $(LI $(RELATIVE_LINK2 dmd.dangling-else,An error is now issued for dangling `else` statements))
 $(LI $(RELATIVE_LINK2 dmd.extern-std-cpp23,The compiler now accepts `-extern-std=c++23`))
 $(LI $(RELATIVE_LINK2 dmd.external-import-path,External import path switch))
+$(LI $(RELATIVE_LINK2 dmd.import-c-modules,C files can now include a module statement))
 $(LI $(RELATIVE_LINK2 dmd.truncating.conversion,Implicit integer conversions in `int op= float` assignments has been deprecated))
 
 )
@@ -160,6 +161,67 @@ It is used on Windows when the ``dllimport`` override switch is set to anything 
 
 $(P
 If a build system supports the external import path switch, it is recommend to **not** use the ``all`` option for the ``dllimport`` override switch which applies to symbols that should not be getting DllImport'd.
+)
+)
+
+$(LI $(LNAME2 dmd.import-c-modules,C files can now include a module statement)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.import-c-modules.dd)
+$(P
+Similar to the `__import` extension, the `__module` keyword brings D's module declaration to C.
+)
+
+$(P
+It's particularly useful when you want to import multiple C files with the same name
+(e.g. hello/utils.c and world/utils.c), since both have to be imported with `import utils` when
+they are listed on the command line, resulting in conflicts.
+)
+
+$(P
+Now you can do:
+)
+
+$(P
+hello/utils.c:
+)
+
+```C
+
+#if __IMPORTC__
+__module hello.utils;
+#endif
+
+int sqr(int x) { return x * x; }
+```
+
+$(P
+world/utils.c:
+)
+```C
+
+#if __IMPORTC__
+__module world.utils;
+#endif
+
+int max(int a, int b) { return a > b ? a : b; }
+```
+
+$(P
+app.d:
+)
+```D
+import hello.utils;
+import world.utils;
+
+static assert(sqr(3) == 9);
+static assert(max(3, 5) == 5);
+```
+
+$(P
+A __module declaration can appear anywhere in the top level scope.
+When there are multiple, the first one will be used.
+Therefore, every `#include` containing a __module declaration should come after the file's own module declaration,
+or it will be overwritten.
+When you always put the __module declaration at the very top like in D, there won't be such problems.
 )
 )
 
@@ -586,6 +648,7 @@ $(LI $(BUGZILLA 21280): No error output "cast$(LPAREN)ubyte[4]$(RPAREN)$(LPAREN)
 $(LI $(BUGZILLA 21298): Missing error when overriding interface method without in contract with class method with contract)
 $(LI $(BUGZILLA 21303): Segfault with -preview=dip1021 and -inline on trivial std.socket code)
 $(LI $(BUGZILLA 21304): dtoh silently ignore default parameters, leading to invalid headers)
+$(LI $(BUGZILLA 21403): dmd/backend/cgcs.d:375 assert failed)
 $(LI $(BUGZILLA 21406): CatAssign wrong evaluation/load order at run-time)
 $(LI $(BUGZILLA 21416): betterC mode program with C++ interface fails to link)
 $(LI $(BUGZILLA 21476): [codegen] 64 bit C ABI not followed when returning struct with 3 floats)
@@ -593,12 +656,15 @@ $(LI $(BUGZILLA 21478): Setting a default value to an object field which is a 2D
 $(LI $(BUGZILLA 21479): ternary operator returns wrong val with ref return)
 $(LI $(BUGZILLA 21504): Incorrect eponymous overload called by codegen)
 $(LI $(BUGZILLA 21549): array ignored in alias declaration)
+$(LI $(BUGZILLA 21576): __traits$(LPAREN)compile$(RPAREN) does not automatically infer to empty parameter function template)
 $(LI $(BUGZILLA 21619): Parameter-less function literal in expression statement fails to parse)
+$(LI $(BUGZILLA 21646): Speculative recursive reference to struct with semantic error prints "error: unknown")
 $(LI $(BUGZILLA 21665): Void initialization should not be allowed for instances of struct with invariant)
 $(LI $(BUGZILLA 21690): Unable to dynamic cast extern$(LPAREN)C++$(RPAREN) classes)
 $(LI $(BUGZILLA 21693): extern$(LPAREN)C++$(RPAREN) class instance dtors are never called, breaking RAII)
 $(LI $(BUGZILLA 21745): Closure created in struct constructor passed to class constructor refers to expired stack frame)
 $(LI $(BUGZILLA 21874): The test suite fails with most recent GDB versions)
+$(LI $(BUGZILLA 21945): importC AssertError@src/dmd/dsymbolsem.d$(LPAREN)4787$(RPAREN): Assertion failure)
 )
 $(BUGSTITLE_BUGZILLA DMD Compiler enhancements,
 
@@ -638,6 +704,7 @@ $(LI $(BUGZILLA 10802): std.regex: ctRegex fails to compile with backreference)
 $(LI $(BUGZILLA 18950): Std.zip vulnerable to arbitrary file write)
 $(LI $(BUGZILLA 20301): std.regex.regex doesn't accept a const/immutable array of patterns)
 $(LI $(BUGZILLA 20502): Converting std.typecons.RefCounted!T to a string gives T's storage location instead of T's fields when T is a struct without an explicit toString)
+$(LI $(BUGZILLA 20985): std.socket random failures due to environment socket.d$(LPAREN)1004$(RPAREN))
 $(LI $(BUGZILLA 21210): std.traits : isAssignable false positive on disabled copy struct)
 $(LI $(BUGZILLA 21215): std.range.recurrence leads to an infinite loop)
 $(LI $(BUGZILLA 21382): std.random.uniform!T$(LPAREN)urng$(RPAREN) when T is an integer type and urng.front is floating point is broken)
@@ -691,7 +758,7 @@ $(BUGSTITLE_BUGZILLA Installer bug fixes,
 $(LI $(BUGZILLA 20473): Missing file & directory)
 )
 )
-$(D_CONTRIBUTORS_HEADER 72)
+$(D_CONTRIBUTORS_HEADER 73)
 $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Abhay Pratap)
     $(D_CONTRIBUTOR abul)
@@ -729,6 +796,7 @@ $(D_CONTRIBUTORS
     $(D_CONTRIBUTOR Inkrementator)
     $(D_CONTRIBUTOR jmh530)
     $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR limepoutine)
     $(D_CONTRIBUTOR Manu Evans)
     $(D_CONTRIBUTOR Martin Kinkelin)
     $(D_CONTRIBUTOR Mathias Lang)
