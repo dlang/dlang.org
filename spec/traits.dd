@@ -560,7 +560,7 @@ $(H3 $(GNAME getPointerBitmap))
     )
     $(P The first element of the array is the size of the type (for classes it is
     the $(GLINK classInstanceSize)).)
-    $(P The following elements describe the locations of GC managed pointers within the
+    $(P If the type contains pointers, then the following elements describe the locations of GC managed pointers within the
     memory occupied by an instance of the type.
     For type T, there are $(D T.sizeof / size_t.sizeof) possible pointers represented
     by the bits of the array values.)
@@ -588,8 +588,14 @@ void main()
         void delegate () dg; // { context, func }
     }
 
+    static struct S_no_pointers
+    {
+        int[200000000] x;
+    }
+
     static assert (__traits(getPointerBitmap, C) == [6*size_t.sizeof, 0b010100]);
     static assert (__traits(getPointerBitmap, S) == [7*size_t.sizeof, 0b0110110]);
+    static assert (__traits(getPointerBitmap, S_no_pointers) == [200000000*int.sizeof]);
 }
 ---
 )
