@@ -1,0 +1,811 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Jan 07, 2026, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 22 major changes and 0 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 73 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.aa-lowered-to-templates,The compiler now lowers associative array operations to a templated implementation in druntime))
+$(LI $(RELATIVE_LINK2 dmd.auto-ref-return,Keywords `auto` and `ref` must be adjacent for `auto ref` return.))
+$(LI $(RELATIVE_LINK2 dmd.bitfields,Bitfields Are Now Incorporated))
+$(LI $(RELATIVE_LINK2 dmd.dangling-else,An error is now issued for dangling `else` statements))
+$(LI $(RELATIVE_LINK2 dmd.extern-std-cpp23,The compiler now accepts `-extern-std=c++23`))
+$(LI $(RELATIVE_LINK2 dmd.external-import-path,External import path switch))
+$(LI $(RELATIVE_LINK2 dmd.import-c-modules,C files can now include a module statement))
+$(LI $(RELATIVE_LINK2 dmd.truncating.conversion,Implicit integer conversions in `int op= float` assignments has been deprecated))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 druntime._d_arraysetlengthT_Template,Templatized `_d_arraysetlengthT` to remove `TypeInfo` dependency))
+$(LI $(RELATIVE_LINK2 druntime.d_arrayappendcTX_template,Templatize `_d_arrayappendcTX` runtime hook))
+$(LI $(RELATIVE_LINK2 druntime.d_arraysetcapacity_template,Templatize `_d_arraysetcapacity` runtime hook))
+$(LI $(RELATIVE_LINK2 druntime.int128,`core.int128`: Add `mul` and `udivmod` overloads for 64-bit operands))
+$(LI $(RELATIVE_LINK2 druntime.macos-15-4-segfault,Fixed generated binaries crashing on macOS 15.4))
+$(LI $(RELATIVE_LINK2 druntime.macro-templates,C Macro translations in druntime have been translated to templates))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 add_lazycache_function,Add lazyCache to std.algorithm.iteration))
+$(LI $(RELATIVE_LINK2 emulate_getrandom,`getrandom()` backwards compatibility shim))
+$(LI $(RELATIVE_LINK2 entropy_system,Add an internal multi-backend entropy system))
+$(LI $(RELATIVE_LINK2 unicode-17,std.uni has been upgraded from Unicode 16.0.0 to 17.0.0))
+$(LI $(RELATIVE_LINK2 uuidv7,Add uuid v7 support to `std.uuid`))
+$(LI $(RELATIVE_LINK2 write-text,Add `writeText`, `writeWText`, and `writeDText` to `std.conv`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 add-dest,Added `--dest` command line build option.))
+$(LI $(RELATIVE_LINK2 add-frameworks,Add `frameworks` dubfile key.))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.aa-lowered-to-templates,The compiler now lowers associative array operations to a templated implementation in druntime)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.aa-lowered-to-templates.dd)
+$(P
+The compiler now lowers associative array operations to templates defined in `core.internal.newaa`
+instead of relying on a precompiled implementation based on `TypeInfo`.
+)
+
+$(P
+In addition to better performance by not having to go through `TypeInfo` and allowing inlining of
+simple operations, this paves the way for proper inference of
+function attributes inherited from key and value constructors, `toHash()` on the key and comparison of
+key values. This inference is currently mostly avoided to keep backward compatibility with
+the runtime implementation that doesn't check function attributes.
+)
+
+$(P
+Some changes that are the result of the refactoring:
+)
+
+$(P
+- AA support no longer available at CTFE without `object.d`/`newaa.d`. Some operations used to work,
+  but now need the lowerings before these can be intercepted by the interpreter.
+)
+
+$(P
+- creating an AA literal at runtime passes keys and values as arguments normally, not with
+  special move/blit operations, so more postblit/destructor operations can happen
+)
+
+$(P
+- `_d_assocarrayliteralTXTrace` removed. Apart from the creation of associative array literals
+  no other AA operation is hooked for `-profile-gc`. You will now see the allocations as done
+  by the AA implementation.
+)
+
+$(P
+- `aa[key] = S()` with `S.__ctor` and `S.opAssign` is no longer a double lookup
+)
+
+$(P
+- `aa.remove(key)` now works with alias this
+)
+)
+
+$(LI $(LNAME2 dmd.auto-ref-return,Keywords `auto` and `ref` must be adjacent for `auto ref` return.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.auto-ref-return.dd)
+$(P
+Similar to `auto ref` parameters in 2.111, it's now deprecated to declare an `auto ref` return type without putting those two keywords next to each other as well.
+)
+
+---
+ref auto int f() => 3;
+auto { ref int g() => 3; }
+
+// Correction:
+auto ref f() => 3;
+auto ref g() => 3;
+---
+)
+
+$(LI $(LNAME2 dmd.bitfields,Bitfields Are Now Incorporated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.bitfields.dd)
+$(P
+There is no longer a requirement to throw the switch `-preview=bitfields`.
+)
+)
+
+$(LI $(LNAME2 dmd.dangling-else,An error is now issued for dangling `else` statements)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.dangling-else.dd)
+$(P
+This used to give a warning when compiled with `-w` and now gives an error:
+)
+```
+int i, j;
+if (i)
+    if (j)
+        return 1;
+    else    // Error: else is dangling, add { } after condition `if (i)`
+        return 2;
+```
+)
+
+$(LI $(LNAME2 dmd.extern-std-cpp23,The compiler now accepts `-extern-std=c++23`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.extern-std-cpp23.dd)
+$(P
+The compiler now accepts c++23 as a supported standard for `-extern-std=`.
+Currently this only changes the value of `__traits(getTargetInfo, "cppStd")`.
+)
+)
+
+$(LI $(LNAME2 dmd.external-import-path,External import path switch)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.external-import-path.dd)
+$(P
+A new switch is added, the external import path (``-extI``).
+It is similar to the import path switch (``-I``) except it indicates that a module found from it is external to the currently compiling binary.
+)
+
+$(P
+It is used on Windows when the ``dllimport`` override switch is set to anything other than ``none`` to force an external module's symbols as DllImport.
+)
+
+$(P
+If a build system supports the external import path switch, it is recommend to **not** use the ``all`` option for the ``dllimport`` override switch which applies to symbols that should not be getting DllImport'd.
+)
+)
+
+$(LI $(LNAME2 dmd.import-c-modules,C files can now include a module statement)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.import-c-modules.dd)
+$(P
+Similar to the `__import` extension, the `__module` keyword brings D's module declaration to C.
+)
+
+$(P
+It's particularly useful when you want to import multiple C files with the same name
+(e.g. hello/utils.c and world/utils.c), since both have to be imported with `import utils` when
+they are listed on the command line, resulting in conflicts.
+)
+
+$(P
+Now you can do:
+)
+
+$(P
+hello/utils.c:
+)
+
+```C
+
+#if __IMPORTC__
+__module hello.utils;
+#endif
+
+int sqr(int x) { return x * x; }
+```
+
+$(P
+world/utils.c:
+)
+```C
+
+#if __IMPORTC__
+__module world.utils;
+#endif
+
+int max(int a, int b) { return a > b ? a : b; }
+```
+
+$(P
+app.d:
+)
+```D
+import hello.utils;
+import world.utils;
+
+static assert(sqr(3) == 9);
+static assert(max(3, 5) == 5);
+```
+
+$(P
+A __module declaration can appear anywhere in the top level scope.
+When there are multiple, the first one will be used.
+Therefore, every `#include` containing a __module declaration should come after the file's own module declaration,
+or it will be overwritten.
+When you always put the __module declaration at the very top like in D, there won't be such problems.
+)
+)
+
+$(LI $(LNAME2 dmd.truncating.conversion,Implicit integer conversions in `int op= float` assignments has been deprecated)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.truncating.conversion.dd)
+$(P
+This is to prevent potential mistakes when `op=` assignment would implicitly
+truncate the right hand side expression from a non-zero value to zero.
+)
+```
+uint a;
+float b = 0.1;
+a += b; // Deprecation: `uint += float` is performing truncating conversion
+```
+
+$(P
+The corrective action if truncating was intentional is to explicitly cast the
+floating point expression to integer.
+)
+```
+a += cast(uint) b;
+```
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 druntime._d_arraysetlengthT_Template,Templatized `_d_arraysetlengthT` to remove `TypeInfo` dependency)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime._d_arraysetlengthT_Template.dd)
+$(P
+The internal runtime function `_d_arraysetlengthT` was templatized to
+operate directly on the type `T`, removing its dependency on `TypeInfo`.
+This improves type safety, reduces runtime reflection, and allows the
+compiler to generate specialized code paths for different array element types.
+)
+
+$(P
+This change preserves the semantics of `.length` assignment on dynamic arrays,
+ensuring memory allocation, element initialization, and postblit handling
+continue to work as expected.
+)
+
+-------
+/**
+Resize a dynamic array by setting its `.length` property.
+
+New elements are initialized according to their type:
+- Zero-initialized if applicable
+- Default-initialized via `emplace`
+- Or `memcpy` if trivially copyable
+*/
+size_t _d_arraysetlengthT(Tarr : T[], T)(return ref scope Tarr arr, size_t newlength);
+-------
+-------
+int[] a = [1, 2];
+a.length = 3; // becomes _d_arraysetlengthT!(int)(a, 3)
+-------
+
+$(P
+This reduces runtime dependency on `TypeInfo`, making the function more predictable and performant.
+)
+
+$(P
+See also: $(LINK2 https://github.com/dlang/dmd/pull/21151, PR #21151)
+)
+)
+
+$(LI $(LNAME2 druntime.d_arrayappendcTX_template,Templatize `_d_arrayappendcTX` runtime hook)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.d_arrayappendcTX_template.dd)
+$(P
+This refactorization discards the `TypeInfo` parameter, replacing it with a template type parameter.
+)
+)
+
+$(LI $(LNAME2 druntime.d_arraysetcapacity_template,Templatize `_d_arraysetcapacity` runtime hook)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.d_arraysetcapacity_template.dd)
+$(P
+This refactorization discards the `TypeInfo` parameter, replacing it with a template type parameter.
+)
+)
+
+$(LI $(LNAME2 druntime.int128,`core.int128`: Add `mul` and `udivmod` overloads for 64-bit operands)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.int128.dd)
+$(P
+These map to a single x86_64 instruction and have accordingly been optimized via inline assembly.
+)
+
+---
+import core.int128;
+
+ulong a, b;
+Cent product128 = mul(a, b);
+
+ulong divisor64 = …;
+ulong modulus64;
+ulong quotient64 = udivmod(product128, divisor64, modulus64);
+---
+)
+
+$(LI $(LNAME2 druntime.macos-15-4-segfault,Fixed generated binaries crashing on macOS 15.4)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.macos-15-4-segfault.dd)
+$(P
+macOS 15.4 has introduced an undocumented ABI change to the format of
+thread local variable section, which causes almost all executable built with
+previous D compiler versions to crash during initialization, if they use
+DRuntime. This release introduces a mitigation for this issue that is
+backwards compatible with previous versions of macOS.
+)
+)
+
+$(LI $(LNAME2 druntime.macro-templates,C Macro translations in druntime have been translated to templates)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.macro-templates.dd)
+$(P
+This prevents linking errors when using `-betterC`.
+For example:
+)
+
+---
+import core.sys.posix.stdlib;
+import core.sys.posix.unistd;
+
+extern(C) int main()
+{
+    int status, pid = vfork();
+    if (pid == 0)
+    {
+        // ...
+        return 0;
+    }
+
+    waitpid(pid, &status, 0);
+    if (WIFEXITED(status))
+    {
+        // ...
+    }
+    return 0;
+}
+---
+
+$(P
+This would fail to compile with the `-betterC` flag:
+)
+
+---
+$(CONSOLE
+Error: undefined reference to `core.sys.posix.sys.wait.WIFEXITED(int)`
+       referenced from `main`
+)
+---
+
+$(P
+The reason is that `WIFEXITED` is a C macro that was translated to a D function in druntime, which requires linking with druntime to use.
+Now that it's a template, it will be lazily instantiated and the program compiles.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 add_lazycache_function,Add lazyCache to std.algorithm.iteration)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/add_lazycache_function.dd)
+$(P
+The new `lazyCache` function provides a lazily evaluated range caching mechanism.
+Unlike `cache`, which eagerly evaluates range elements during construction,
+`lazyCache` defers evaluation until elements are explicitly requested.
+)
+
+---
+auto result = iota(-4, 5).map!(a => tuple(a, expensiveComputation(a)))().lazyCache();
+// No computations performed at this point
+
+auto firstElement = result.front;
+// First element is now evaluated
+---
+
+$(P
+See the $(REF lazyCache, std,algorithm,iteration) documentation for more details.
+)
+)
+
+$(LI $(LNAME2 emulate_getrandom,`getrandom()` backwards compatibility shim)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/emulate_getrandom.dd)
+$(P
+To restore compatibility with older Linux platforms where `getrandom()` is
+unavailable either due to an outdated kernel or a legacy C library, Phobos now
+ships with a shim that emulates a limited subset of `getrandom()`’s behavior
+by reading random bytes from `/dev/urandom`.
+)
+
+$(P
+To enable the shim, build DMD and Phobos with the environment variable
+`LINUX_LEGACY_EMULATE_GETRANDOM` set to `1`.
+)
+
+```
+cd phobos
+LINUX_LEGACY_EMULATE_GETRANDOM=1 make
+```
+
+$(P
+This functionality is a temporary fix and expected to be removed again soon
+by an upcoming release (approx. v2.112.0 or v2.113.0).
+The expected change is to replace the current “binding or shim” solution with
+a syscall wrapper and automatic `/dev/urandom` fallback.
+)
+)
+
+$(LI $(LNAME2 entropy_system,Add an internal multi-backend entropy system)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/entropy_system.dd)
+$(P
+This Phobos release introduces an internal multi-backend system for the
+retrieval of entropy (as in cryptographically-secure random numbers obtained
+from a suitable random number generator provided by the operating system).
+)
+
+$(P
+The current implementation supports the `getrandom` syscall on Linux.
+)
+
+$(P
+On BSD systems `arc4random_buf` or `getentropy` are used — depending on
+which is implemented by the OS and powered by a secure (non-RC4) algorithm.
+)
+
+$(P
+Additionally, reading entropy from the character devices `/dev/urandom` and
+`/dev/random` is available on all POSIX targets.
+)
+
+$(P
+On Windows `BCryptGenRandom` (from the
+$(I Cryptography API: Next Generation (“BCrypt”))) is provided as a backend.
+`CryptGenRandom` from the legacy $(I CryptoAPI) is not supported for the time
+being.
+)
+
+$(P
+Furthermore, this replaces the `getrandom` backwards compatibility shim
+that had been added by v2.111.1 for Linux targets.
+Instead backwards compatibility is now provided by a hunt strategy algorithm
+that tries potentially available entropy sources one by one to find one that
+is available on the running system.
+Given that the character devices serve as a fallback option here,
+`urandom` is favored over `random`. That is because modern kernel versions —
+where `random` would exhibit the usually more preferable behavior of blocking
+only until the entropy pool has been initialized — will also provide the
+`getrandom` syscall in the first place. Performing the syscall, in turn, is
+even better as it does not depend on the runtime environment exposing the
+special devices in predefined locations, thus working also within chroot
+environments.
+)
+)
+
+$(LI $(LNAME2 unicode-17,std.uni has been upgraded from Unicode 16.0.0 to 17.0.0)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/unicode-17.dd)
+$(P
+This Unicode update was released September 9, 2025, and adds new blocks with characters.
+See: https://www.unicode.org/versions/Unicode17.0.0/
+)
+
+```
+import std;
+
+void main()
+{
+    const alphaCount = iota(0, dchar.max).filter!(std.uni.isAlpha).walkLength;
+    writeln(alphaCount);
+    // formerly: 142759
+    // now:      147421
+}
+```
+)
+
+$(LI $(LNAME2 uuidv7,Add uuid v7 support to `std.uuid`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/uuidv7.dd)
+$(P
+Add uuid v7 support to the UUID type located in `std.uuid`.
+The first 48 bits of v7 stores the milliseconds since the unix epoch
+(1970-01-01), additionally 74 bit are used to store random data.
+)
+
+$(P
+Example:
+)
+---
+SysTime st = DateTime(2025, 8, 19, 10, 38, 45);
+UUID u = UUID(st);
+SysTime o = u.v7Timestamp();
+assert(o == st);
+
+string s = u.toString();
+UUID u2 = UUID(s);
+SysTime o2 = u2.v7Timestamp();
+assert(o2 == st);
+---
+)
+
+$(LI $(LNAME2 write-text,Add `writeText`, `writeWText`, and `writeDText` to `std.conv`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/write-text.dd)
+$(P
+These functions are variants of the existing `text`, `wtext`, and `dtext`
+functions. Instead of returning a string, they write their output to an output
+range.
+)
+
+$(P
+Like `text`, `writeText` can accept an
+$(LINK2 $(ROOT_DIR)spec/istring.html, interpolated expression sequence) as an
+argument.
+)
+
+$(P
+Example:
+)
+
+---
+import std.conv : writeText;
+import std.array : appender;
+
+auto output = appender!string();
+output.writeText(i"2 + 2 == $(2 + 2)");
+assert(output.data == "2 + 2 == 4");
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 add-dest,Added `--dest` command line build option.)
+$(CHANGELOG_SOURCE_FILE dub, changelog/add-dest.dd)
+$(P
+Adds support for specifying a root directory for staging, essentially
+acts as a prefix to the `targetPath` and `workingDirectory` dubfile
+entries.
+)
+)
+
+$(LI $(LNAME2 add-frameworks,Add `frameworks` dubfile key.)
+$(CHANGELOG_SOURCE_FILE dub, changelog/add-frameworks.dd)
+$(P
+Adds support for specifying macOS frameworks to link against,
+this replaces the need to manually specify frameworks via lflags or dflags.
+)
+
+$(P
+Before:
+)
+-------
+lflags "-framework" "Cocoa"
+-------
+
+$(P
+After:
+)
+-------
+frameworks "Cocoa" "OpenGL"
+-------
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_GITHUB DMD Compiler bug fixes,
+
+$(LI $(DMDGITHUB 17462): object.require modifies AA before populating value)
+$(LI $(DMDGITHUB 17481): Memory leak in rt.minfo sortCtor)
+$(LI $(DMDGITHUB 17804): not an associative array initializer)
+$(LI $(DMDGITHUB 18018): goto across assignment to AA fails and reports false Error)
+$(LI $(DMDGITHUB 18101): wrong code generated for bitfield assignment to ?:)
+$(LI $(DMDGITHUB 18127): ImportC: redeclaration of struct in different translation unit doesn’t check compatibility)
+$(LI $(DMDGITHUB 18247): Bitfield with 64 bits always zero)
+$(LI $(DMDGITHUB 18263): ImportC fails when DMD is installed in path with spaces)
+$(LI $(DMDGITHUB 18614): RTInfo generation can fail for structs defined in imported modules)
+$(LI $(DMDGITHUB 18950): CodeView: debug info for return type of ref return function)
+$(LI $(DMDGITHUB 19587): No debug line info for simple code blocks)
+$(LI $(DMDGITHUB 19788): parameters inherit function UDAs)
+$(LI $(DMDGITHUB 19983): ImportC function redeclarations should be allowed in function scope)
+$(LI $(DMDGITHUB 20075): "none of the overloads of `__ctor` are callable using a `immutable` object" error message is backwards)
+$(LI $(DMDGITHUB 20092): importC: can't take address of some compound-literals)
+$(LI $(DMDGITHUB 20114): AA in operator does not work with static if)
+$(LI $(DMDGITHUB 20157): ImportC: only 1 designator currently allowed for C struct field initializer)
+$(LI $(DMDGITHUB 20184): ImportC recognizes .i and .c files, but not .h files)
+$(LI $(DMDGITHUB 20301): "The CodeView record is corrupted" heisenbug)
+$(LI $(DMDGITHUB 20318): Compiler should explain why implicit conversion to mutable fails)
+$(LI $(DMDGITHUB 20334): ImportC: enums created from string literal #defines don’t implicitly convert to const$(LPAREN)char$(RPAREN)* in D.)
+$(LI $(DMDGITHUB 20365): -preview=bitfields: Bit field address escapes through `ref`)
+$(LI $(DMDGITHUB 20473): Struct with both bitfields and a slice or class instance ref doesn't compile.)
+$(LI $(DMDGITHUB 20499): [ImportC] typedef struct with name as a pointer cannot be used with struct name)
+$(LI $(DMDGITHUB 20502): importc: macro conflicts with struct of same name)
+$(LI $(DMDGITHUB 20855): -v command line switch should show import sources)
+$(LI $(DMDGITHUB 20901): dip1000: can escape stack pointer through indexed array literal)
+$(LI $(DMDGITHUB 20917): `@nogc` check fails when there are both nested `@nogc` function **and** a closure inside `__trait$(LPAREN)compiles$(RPAREN)`)
+$(LI $(DMDGITHUB 20985): `runnable\exe1.c` heisenbugs on Win64)
+$(LI $(DMDGITHUB 21024): Optimize x^^0, x^^1 and x^^2 expressions)
+$(LI $(DMDGITHUB 21033): DMD ICE: Can't link simple program with `-profile=gc`)
+$(LI $(DMDGITHUB 21052): Missing `@nogc` check for enum variable initialization)
+$(LI $(DMDGITHUB 21054): No location for array literal sliced from init symbol)
+$(LI $(DMDGITHUB 21068): Hidden base class constructor call message suggests impossible alias)
+$(LI $(DMDGITHUB 21098): Can't compile a module with a single import statement, while the imported module compiles fine)
+$(LI $(DMDGITHUB 21105): Is-expressions should not generate unnecessary code for lowerings)
+$(LI $(DMDGITHUB 21126): Crash before main$(LPAREN)$(RPAREN) on macOS 15.4)
+$(LI $(DMDGITHUB 21142): seg fault on floating point code)
+$(LI $(DMDGITHUB 21150): ImportC: alignment value expected, not `_Alignof`)
+$(LI $(DMDGITHUB 21153): [REG 2.111.0] Infinite loop in isAliasThisTuple)
+$(LI $(DMDGITHUB 21161): placement new fails on default-init struct)
+$(LI $(DMDGITHUB 21179): Failure to convert const$(LPAREN)T$(RPAREN) to T after type is used in cast$(LPAREN)$(RPAREN))
+$(LI $(DMDGITHUB 21189): wrong/missing error line when source file isn't regular)
+$(LI $(DMDGITHUB 21203): Placement new doesn't count as 'initialisation')
+$(LI $(DMDGITHUB 21207): enum AA as a function parameter default value causes dmd to crash)
+$(LI $(DMDGITHUB 21210): ImportC: Initializing struct containing array with `= {0}` fails)
+$(LI $(DMDGITHUB 21215): Wrong location for "not a member" error when constructing a struct literal)
+$(LI $(DMDGITHUB 21225): ImportC: macro interpreted as an enum conflicts with function)
+$(LI $(DMDGITHUB 21241): ImportC: wrong static function called after linking when static functions in different C imports have same name)
+$(LI $(DMDGITHUB 21247): DMD hangs in CTFE)
+$(LI $(DMDGITHUB 21258): Phobos 3 build broken due to recent changes)
+$(LI $(DMDGITHUB 21259): Wrong 'not an lvalue' error when assigning to sequence)
+$(LI $(DMDGITHUB 21267): ImportC: __forceinline ignored)
+$(LI $(DMDGITHUB 21271): ImportC: incorrect compatibility macro for `__pragma`)
+$(LI $(DMDGITHUB 21280): Add `__NR_getrandom`)
+$(LI $(DMDGITHUB 21298): [iasmgcc] Missing string literal for instruction template not always diagnosed )
+$(LI $(DMDGITHUB 21303): struct destructor not called when sizeof == 0)
+$(LI $(DMDGITHUB 21304): Redundant "cannot use array to initialize `_error_`" message when initializing invalid array)
+$(LI $(DMDGITHUB 21317): Wrong Location for error messages)
+$(LI $(DMDGITHUB 21382): CodeView: final class functions are marked as virtual even though they are not in the vtbl)
+$(LI $(DMDGITHUB 21384): CodeView: function arguments are shown in the wrong order in a debugger)
+$(LI $(DMDGITHUB 21403): Incorrect function contract syntax segfaults the compiler.)
+$(LI $(DMDGITHUB 21406): [Regression 2.111] generating header with `debug` condition crashes compiler)
+$(LI $(DMDGITHUB 21408): Array comparison with recursive inferred opEquals gives confusing error message)
+$(LI $(DMDGITHUB 21414): `__rvalue` must be `@system`)
+$(LI $(DMDGITHUB 21416): `__rvalue` ignored on call to `ref` function)
+$(LI $(DMDGITHUB 21426): Windows GC only wakes up one thread when doing parallel scanning)
+$(LI $(DMDGITHUB 21429): mixin templates cannot produce opDispatch or opBinary overloads with multiple mixins)
+$(LI $(DMDGITHUB 21435): Bad codegen when building dmd with optimizations)
+$(LI $(DMDGITHUB 21452): substInout converts to enum base type if it is an array)
+$(LI $(DMDGITHUB 21456): foreach over associative array allows incompatible types for key and value)
+$(LI $(DMDGITHUB 21476): Presence of move constructor causes overload error)
+$(LI $(DMDGITHUB 21478): Ref parameter overload not called when struct implements copy constructor)
+$(LI $(DMDGITHUB 21479): Unable to compile cast expression with `-inline` flag)
+$(LI $(DMDGITHUB 21504): __traits$(LPAREN)compiles$(RPAREN) affects inference of @nogc in functions)
+$(LI $(DMDGITHUB 21523): A template function in an imported module does not inline functions annotated with pragma$(LPAREN)inline, true$(RPAREN))
+$(LI $(DMDGITHUB 21549): Compiler crashing, maybe codegen issue...)
+$(LI $(DMDGITHUB 21562): Trying to fill a `void[]` causes dmd to segfault)
+$(LI $(DMDGITHUB 21576): "need 'this' to access member" in shorthand constructor)
+$(LI $(DMDGITHUB 21605): Bad test: bug19652)
+$(LI $(DMDGITHUB 21615): [Regression 2.110] Array length assignment does not extend into subsequent pages)
+$(LI $(DMDGITHUB 21619): ICE core.exception.AssertError@src/dmd/pragmasem.d$(LPAREN)456$(RPAREN): Assertion failure)
+$(LI $(DMDGITHUB 21630): `enum` and `alias` ignored on runtime foreach loop variables)
+$(LI $(DMDGITHUB 21646): [REG2.112] Compile-error regression with disabled opCast and `-checkaction=context`)
+$(LI $(DMDGITHUB 21660): Error overlapping initialization for D bit-fields)
+$(LI $(DMDGITHUB 21663): Bit-fields missing from DWARF debug info)
+$(LI $(DMDGITHUB 21665): Incorrect CodeView debug info for bitfields)
+$(LI $(DMDGITHUB 21679): ImportC: Handle C code tokens in GCC IASM)
+$(LI $(DMDGITHUB 21690): ICE when statically initializing a multidimensional AA)
+$(LI $(DMDGITHUB 21693): __rvalue ignored with component expressions)
+$(LI $(DMDGITHUB 21718): importC: _Alignas specifiers cannot reduce alignment of variables)
+$(LI $(DMDGITHUB 21740): ImportC: UCN accepts invalid characters as part of the symbol name)
+$(LI $(DMDGITHUB 21744): ImportC: four-digit UCN identifiers \unnnn don't match eight-digit \Unnnnnnnn)
+$(LI $(DMDGITHUB 21745): ImportC: __func__ is not generated if referenced inside a __check$(LPAREN)$(RPAREN) expression)
+$(LI $(DMDGITHUB 21757): MS Linker may fail on 32 bit debug builds: stack overflow or LNK1318 fatal error.)
+$(LI $(DMDGITHUB 21774): resolveAddressesWithAtos leaks PIDs and leads to file descriptor exhaustion)
+$(LI $(DMDGITHUB 21813): ImportC dies on `_declspec$(LPAREN)deprecated$(RPAREN)`)
+$(LI $(DMDGITHUB 21874): Calling typesafe variadic function of primitive or struct non-array type with no arguments will give compile error: "Error: unkown, [...]")
+$(LI $(DMDGITHUB 21945): [REG] DIP1000 scope array of arrays comparison results in weird error)
+$(LI $(DMDGITHUB 22323): [Regression master]  error "cannot get frame pointer" with AA in struct literal)
+)
+$(BUGSTITLE_GITHUB Phobos bug fixes,
+
+$(LI $(PHOBOSGITHUB 9829): [optimization]: std.conv.parse!$(LPAREN)int, string$(RPAREN) counts when doCount is false)
+$(LI $(PHOBOSGITHUB 10440): Template constraint on `each` is too wide)
+$(LI $(PHOBOSGITHUB 10491): Complex!float.abs / hypot invalid result when argument is small)
+$(LI $(PHOBOSGITHUB 10506): std.string.wrap has no policy on how it counts columns)
+$(LI $(PHOBOSGITHUB 10513): The current implementation of powmod is very slow for the ulong type)
+$(LI $(PHOBOSGITHUB 10540): rename the variable "degrees" in sumtype.d at least in the kelvin case)
+$(LI $(PHOBOSGITHUB 10550): formattedWrite should support string interpolation)
+$(LI $(PHOBOSGITHUB 10577): [std.math] `std.math.algebraic.cbrt` is not `pure`)
+$(LI $(PHOBOSGITHUB 10701): Broken link in documentation of `randomUUID`)
+$(LI $(PHOBOSGITHUB 10731): Windows link error with std.random.uniform$(LPAREN)$(RPAREN) in v2.111)
+$(LI $(PHOBOSGITHUB 10742): `std.path.withExtension` does not work for ranges incompatible with const)
+$(LI $(PHOBOSGITHUB 10775): Respect TZDIR)
+$(LI $(PHOBOSGITHUB 10801): sgnGamma$(LPAREN)-0.5$(RPAREN) should be -1)
+$(LI $(PHOBOSGITHUB 10802): digamma handling of zero inconsistent with how gamma handles it)
+$(LI $(PHOBOSGITHUB 10811): [REG2.111.0] RedBlackTree compile error for structs with move constructor)
+$(LI $(PHOBOSGITHUB 10840): writeln doesn't support printing bit-fields)
+)
+$(BUGSTITLE_GITHUB dlang.org bug fixes,
+
+$(LI $(DLANGORGGITHUB 4184): The spec should warn against using copy constructors, not warn against using postblit constructors)
+$(LI $(DLANGORGGITHUB 4191): Warn against using mixin$(LPAREN)__FUNCTION__$(RPAREN))
+$(LI $(DLANGORGGITHUB 4217): [spec/expression] wrongly says EqualExpression doesn't handle `null` for classes)
+$(LI $(DLANGORGGITHUB 4222): Comparison docs have wrong wording)
+$(LI $(DLANGORGGITHUB 4224): [spec/expression] wrongly says *CmpExpression* doesn't handle `null` for classes)
+$(LI $(DLANGORGGITHUB 4234): Document that calling a method on a struct rvalue is allowed)
+$(LI $(DLANGORGGITHUB 4251): Associative array foreach key type can be `ref` when type is const-convertible)
+$(LI $(DLANGORGGITHUB 4260): Types spec should have a section for `void`)
+$(LI $(DLANGORGGITHUB 4266): "report a spec bug" still links to bugzilla)
+$(LI $(DLANGORGGITHUB 4267): Clarify the *two* ct foreach statements)
+$(LI $(DLANGORGGITHUB 4305): The shop is hidden)
+)
+)
+$(D_CONTRIBUTORS_HEADER 71)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Abhay Pratap)
+    $(D_CONTRIBUTOR abul)
+    $(D_CONTRIBUTOR Abul Hossain Khan)
+    $(D_CONTRIBUTOR Adam Wilson)
+    $(D_CONTRIBUTOR Aditya Chincholkar)
+    $(D_CONTRIBUTOR Akshat Sharma)
+    $(D_CONTRIBUTOR Akshat(DeterminedSage))
+    $(D_CONTRIBUTOR Albert24GG)
+    $(D_CONTRIBUTOR Aleksandr Treyger)
+    $(D_CONTRIBUTOR Andrei Horodniceanu)
+    $(D_CONTRIBUTOR Artha)
+    $(D_CONTRIBUTOR Ay1nDas)
+    $(D_CONTRIBUTOR Ayan Das)
+    $(D_CONTRIBUTOR bangbangsheshotmedown)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR Brian Callahan)
+    $(D_CONTRIBUTOR David Isinta Nyakawa)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR drpriver)
+    $(D_CONTRIBUTOR Elias Batek)
+    $(D_CONTRIBUTOR Emily)
+    $(D_CONTRIBUTOR Emmankoko)
+    $(D_CONTRIBUTOR Emmanuel Ferdman)
+    $(D_CONTRIBUTOR Emmanuel Nyarko)
+    $(D_CONTRIBUTOR fossdd)
+    $(D_CONTRIBUTOR George-Alex-Berea)
+    $(D_CONTRIBUTOR Georgy Markov)
+    $(D_CONTRIBUTOR gulugulubing)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR Inkrementator)
+    $(D_CONTRIBUTOR jmh530)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR limepoutine)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Matthew Qiu)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Mindy Batek)
+    $(D_CONTRIBUTOR Mohamed El Shorbagy)
+    $(D_CONTRIBUTOR Nayaab Zameer)
+    $(D_CONTRIBUTOR naydef)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR papadil)
+    $(D_CONTRIBUTOR Parmar Mahipalsinh)
+    $(D_CONTRIBUTOR Patrick Schlüter)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Prthmsh7)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Samrendra Pratap Singh)
+    $(D_CONTRIBUTOR Sergei Giniatulin)
+    $(D_CONTRIBUTOR Sergii K)
+    $(D_CONTRIBUTOR Sertonix)
+    $(D_CONTRIBUTOR Shivang Shukla)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Sönke Ludwig)
+    $(D_CONTRIBUTOR Teodor Dutu)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Timon Gehr)
+    $(D_CONTRIBUTOR Tomas Fabrizio Orsi)
+    $(D_CONTRIBUTOR Tony Edgin)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.112.0
+    TITLE=Change Log: $(VER)
