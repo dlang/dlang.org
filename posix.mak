@@ -883,13 +883,13 @@ $G/changelog/next-version: ${DMD_DIR}/VERSION
 
 changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
 							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
-	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_STABLE) -o $@ --version "${NEXT_VERSION}" \
 		--prev-version="${LATEST}" --date "To be released"
 
 changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
 							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
-	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_MASTER) -o $@ --version "${NEXT_VERSION}" \
 		--prev-version="${LATEST}" --date "To be released"
 
