@@ -1722,6 +1722,156 @@ $(H3 $(LNAME2 implicit-move-constructors, Implicit Move Constructors))
     )
 
 
+$(H2 $(LEGACY_LNAME2 StructMoveConstructor, struct-move-constructor, Struct Move Constructors))
+
+    $(P Move constructors are used to initialize a `struct` instance from
+    another instance of the same type, and then the other instance is reset to its initial state.
+    This effects a move rather than a copy. A `struct` that defines a move constructor
+    is not $(RELATIVE_LINK2 POD, POD).)
+
+    $(P A constructor declaration is a move constructor declaration if it meets
+    the following requirements:)
+
+    $(UL
+    $(LI The `this` part of the declaration is preceded by an `=`, i.e. `=this` to distinguish
+    the move constructor from other constructors.)
+
+    $(LI It takes exactly one parameter without a
+    $(DDSUBLINK spec/function, function-default-args, default argument),
+    followed by any number of parameters with default arguments.)
+
+    $(LI Its first parameter is a $(B not)
+    $(DDSUBLINK spec/function, ref-params, `ref` parameter).)
+
+    $(LI The type of its first parameter is the same type as
+    $(DDSUBLINK spec/type, typeof, `typeof(this)`), optionally with one or more
+    $(DDLINK spec/const3, Type Qualifiers, type qualifiers) applied to it.)
+
+    $(LI It is not a
+    $(DDSUBLINK spec/template, template_ctors, template constructor declaration).)
+    )
+
+    ---
+    struct A
+    {
+        =this(return scope A rhs) {}                        // move constructor
+        =this(return scope const A rhs, int b = 7) {}       // move constructor with default parameter
+    }
+    ---
+
+    $(P The move constructor is type checked as a normal constructor.)
+
+    $(P If a move constructor is defined, implicit calls to it will be inserted
+    in the following situations:)
+
+    $(OL
+    $(LI When an rvalue is used to initialize a variable:)
+
+    $(SPEC_RUNNABLE_EXAMPLE_RUN
+    ---
+    struct A
+    {
+        int[] arr;
+        =this(return scope A rhs) { arr = rhs.arr; rhs.arr = null; }
+    }
+
+    void main()
+    {
+        A a;
+        a.arr = [1, 2];
+
+        A b = __rvalue(a); // move constructor gets called
+        b.arr[] += 1;
+        assert(a.arr is null); // a was reset to initial state
+        assert(b.arr == [2, 3]);
+    }
+    ---
+    )
+
+    $(LI When a parameter is passed by value to a function:)
+
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+    ---
+    struct A
+    {
+        =this(return scope A another) {}
+    }
+
+    void fun(A a) {}
+
+    void main()
+    {
+        A a;
+        fun(__rvalue(a));    // move constructor gets called
+    }
+    ---
+    )
+
+    $(LI When a parameter is returned by value from a function and Named Return Value Optimization (NRVO)
+    cannot be performed:)
+
+    $(SPEC_RUNNABLE_EXAMPLE_COMPILE
+    ---
+    struct A
+    {
+        =this(return scope A another) {}
+    }
+
+    A fun()
+    {
+        A a;
+        return a;       // NRVO, no move constructor call
+    }
+
+    A a;
+    A gun()
+    {
+        return __rvalue(a);   // cannot perform NRVO, a moved to return value
+    }
+
+    void main()
+    {
+        A a = fun();
+        A b = gun();
+    }
+    ---
+    )
+    )
+
+$(H3 $(LNAME2 disable-move, Disabled Moving))
+
+    $(P Disabling move construction works analogously to
+      $(RELATIVE_LINK2 disable-copy, Disabled Copying).)
+
+$(H3 $(LNAME2 move-constructor-attributes, Move Constructor Attributes))
+
+    $(P Move constructor attributes work analogously to
+      $(RELATIVE_LINK2 copy-constructor-attributes, Copy Constructor Attributes).)
+
+$(H3 $(LNAME2 implicit-move-constructors, Implicit Move Constructors))
+
+    $(P A move constructor is generated implicitly by the compiler for a `struct S`
+    if all of the following conditions are met:)
+
+    $(OL
+    $(LI `S` does not explicitly declare any move constructors;)
+    $(LI `S` defines at least one direct member that has a move constructor, and that
+    member is not overlapped (by means of `union`) with any other member.)
+    )
+
+    $(P If the restrictions above are met, the following move constructor is generated:)
+
+    ---
+    =this(return scope inout(S) src) inout
+    {
+        foreach (i, ref inout field; src.tupleof)
+            this.tupleof[i] = field;
+    }
+    ---
+
+    $(P If the generated move constructor fails to type check, it will receive the `@disable` attribute.)
+
+
 $(H2 $(LEGACY_LNAME2 StructPostblit, struct-postblit, Struct Postblits))
 
 $(GRAMMAR
