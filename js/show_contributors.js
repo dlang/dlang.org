@@ -14,7 +14,7 @@ function isPackage()
     return $('.tip.smallprint a[href*="package.d"]').length > 0;
 }
 
-$(document).ready(function()
+$(function()
 {
     // only for library documentation
     if (!$('body').hasClass("std"))

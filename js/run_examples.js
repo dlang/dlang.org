@@ -37,7 +37,7 @@ function wrapIntoMain(code) {
     return codeOut;
 }
 
-$(document).ready(function()
+$(function()
 {
     if ($('body')[0].id == "Home")
         return;
