@@ -207,6 +207,12 @@ MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
 MOD_EXCLUDES_LATEST=$(MOD_EXCLUDES_PRERELEASE)
 MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE)
 
+# list core.sys modules with proper docs
+MOD_SYS_INCLUDES=$(shell ./tools/core_sys_docs.sh $(DRUNTIME_DIR)/src/core/sys)
+
+# include lists, overrides excludes
+MOD_INCLUDES=$(addprefix --dump , object std etc core $(MOD_SYS_INCLUDES) dmd rt core.internal.array core.internal.util)
+
 # rdmd must fetch the model, imports, and libs from the specified version
 DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)
 RDMD=rdmd --compiler=$(DMD) $(DFLAGS)
@@ -417,19 +423,19 @@ ${GENERATED}/modlist-${LATEST}.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_L
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) $< $(DRUNTIME_LATEST_DIR)/src $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)/compiler/src $(MOD_EXCLUDES_LATEST) \
 		$(addprefix --internal=, dmd rt core.internal) \
-		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
+		$(MOD_INCLUDES) >$@
 
 ${GENERATED}/modlist-release.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) $< $(DRUNTIME_DIR)/src $(PHOBOS_DIR) $(DMD_DIR)/compiler/src $(MOD_EXCLUDES_RELEASE) \
 		$(addprefix --internal=, dmd rt core.internal) \
-		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
+		$(MOD_INCLUDES) >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) $< $(DRUNTIME_DIR)/src $(PHOBOS_DIR) $(DMD_DIR)/compiler/src $(MOD_EXCLUDES_PRERELEASE) \
 		$(addprefix --internal=, dmd rt core.internal) \
-		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
+		$(MOD_INCLUDES) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-phobos
