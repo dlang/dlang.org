@@ -1,5 +1,9 @@
 #!/bin/sh
-# list all modules in $1 which have more than one doc-comment
+# Usage: ./core_sys_docs.sh DIR
+#
+# List all modules in DIR which have more than one doc-comment.
+# The first doc-comment is just the module and is probably uninteresting.
+
 find $1 -name '*.d' \
     | xargs grep -Ec '/\*\*|/\+\+|///' \
     | grep -vE ':[01]$' \
