@@ -32,9 +32,6 @@ function addAnchors()
 
 // Add a version selector button
 function addVersionSelector() {
-  // Latest version offered by the archive builds
-  // This needs to be manually updated after new versions have been archived
-  var currentArchivedVersion = 110;
   // build URLs for dlang.org: DDoc + Dox
   var ddocModuleURL = document.body.id.replace(/[.]/g, "_") + ".html";
   var ddoxModuleURL = document.body.id.replace(/[.]/g, "/") + ".html";
@@ -45,27 +42,22 @@ function addVersionSelector() {
     root = "spec/";
     var uriParts = window.location.pathname.split("/");
     ddocModuleURL = uriParts[uriParts.length - 1];
-    // these versions use a different layout
-    var plainSpecVersions = ["2.066", "2.067", "2.068", "2.069"];
   }
 
-  // build list of versions available in the docarchives
-  var archivedVersions = [];
-  while (currentArchivedVersion >= 66) {
-    if (currentArchivedVersion < 100) {
-      archivedVersions.push("2.0" + currentArchivedVersion--);
-    } else {
-      archivedVersions.push("2." + currentArchivedVersion--);
-    }
-  }
+  // List of versions available in the docarchives
+  // This needs to be manually updated/rotated after new versions
+  // have been archived
+  var archivedVersions = [
+      "2.112",
+      "2.111",
+      "2.108",
+      "2.103",
+      "2.100",
+  ];
   archivedVersions = archivedVersions.map(function(e) {
-      var currentRoot = root;
-      if (isSpec && plainSpecVersions.indexOf(e) >= 0) {
-        currentRoot = "";
-      }
       return {
         name: e,
-        url: "https://docarchives.dlang.io/v" + e + ".0/" + currentRoot + ddocModuleURL,
+        url: "https://docarchives.dlang.io/v" + e + ".0/" + root + ddocModuleURL,
       };
   });
 
