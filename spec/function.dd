@@ -2132,9 +2132,27 @@ $(H3 $(LNAME2 ref-return-scope-parameters, Ref Return Scope Parameters))
         When a parameter is passed by `ref` and has both the `return` and `scope` storage classes,
         it gets $(LINK2 #return-scope-parameters, `return scope`) semantics if and only if the `return` and `scope`
         keywords appear adjacent to each other, in that order.
-        Specifying a `return ref` and `scope` parameter enables returning a reference to a scope pointer.
-        In all other cases, the parameter has $(LINK2 #return-ref-parameters, `return ref`) semantics
-        and regular $(LINK2 #scope-parameters, `scope`) semantics.)
+        This behavior is summarized as follows:)
+
+        $(TABLE2 Combinations of `ref` $(COMMA) `return` and `scope`,
+        $(THEAD Order, Interpretation)
+        $(TROW `ref`,                                               $(REFP))
+        $(TROW `return`,                                            $(RETURN_SCOPE))
+        $(TROW `scope`,                                             $(SCOPE))
+        $(TROW `return ref` and `ref return`,                       $(RETURN_REF))
+        $(TROW `return scope` and `scope return`,                   $(RETURN_SCOPE))
+        $(TROW `ref scope` and `scope ref`,                         $(REFP) and $(SCOPE))
+        $(TROW `ref return scope` and `return scope ref`,           $(REFP) and $(RETURN_SCOPE))
+        $(TROW `ref scope return`$(COMMA) `return ref scope`$(COMMA)
+               `scope return ref`$(COMMA) and `scope ref return`,   $(RETURN_REF) and $(SCOPE))
+
+        )
+
+        $(BEST_PRACTICE do not use `ref return` and `scope return`.)
+
+        $(P Specifying a `return ref` and `scope` parameter enables returning a reference to a scope pointer.
+        In all other cases, the parameter has $(RETURN_REF) semantics
+        and regular $(SCOPE) semantics.)
 
 ---
 U xerxes(       ref return scope V v) // (1) ref and return scope
@@ -4573,3 +4591,7 @@ Macros:
         TITLE=Functions
         ASSIGNEXPRESSION=$(GLINK2 expression, AssignExpression)
         CHECK=&#10004;
+        REFP=$(LINK2 #ref-params, $(D ref))
+        RETURN_REF=$(LINK2 #return-ref-parameters, $(D return ref))
+        SCOPE=$(LINK2 #scope-parameters, $(D scope))
+        RETURN_SCOPE=$(LINK2 #return-scope-parameters, $(D return scope))
