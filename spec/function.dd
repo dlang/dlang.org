@@ -1844,6 +1844,40 @@ pure void f()
         $(DDSUBLINK spec/declaration, alias-function, with default values).)
 
 
+$(H3 $(LNAME2 unused-params, Unused Function Parameters))
+
+        $(P With the $(D -preview=warnunusedparams) compiler flag, the compiler
+        warns about named function parameters that are never used within the
+        function body. This is often an indication of a bug or dead code.)
+
+---
+void foo(int x, int y) // Warning: function parameter `y` is never used
+{
+    return x * 2;
+}
+---
+
+        $(P To intentionally leave a parameter unused $(LPAREN)ie; to match an
+        interface or callback signature$(RPAREN), omit the parameter name:)
+
+---
+void callback(int x, int) // no warning for unnamed parameter
+{
+    use(x);
+}
+---
+
+        $(P Alternatively, $(D cast$(LPAREN)void$(RPAREN)) can be used to explicitly mark
+        a named parameter as intentionally unused, particularly around conditional compilation:)
+
+---
+void bar(int x, int y)
+{
+    cast(void)y; // suppress unused parameter warning
+    use(x);
+}
+---
+
 $(H3 $(LNAME2 return-ref-parameters, Return Ref Parameters))
 
         $(P Return ref parameters are used with
