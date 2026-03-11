@@ -465,14 +465,25 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
     flag = flag.replaceAll(sre, r"[$$(I $1)]");
 
     // <foo> or <foo.bar>
-    enum re = regex(r"<(\w+?.?\w*?)>");
-    string rep = r"$$(I $1)";
-    flag = flag.replaceAll(re, rep);
-    helpText = helpText.replaceAll(re, rep);
+    enum fr = regex(r"<(\w+?\.?\w*?)>");
+    alias fcb = (caps) {
+        // first replace foo or <foo> in helpText
+        auto hr = regex([
+            text("<(", caps[1], ")>"),
+            text(r"\b(", caps[1], r")\b")]);
+        // don't double italicise
+        alias hcb = hc => hc.pre.canFind("$(I ") ?
+            hc[0] : text("$(I ", hc[1], ")");
+        helpText = helpText.replaceAll!hcb(hr);
+        return text("$(I ", caps[1], ")");
+    };
+    flag = flag.replaceAll!fcb(fr);
 }
 
+// flags
 unittest
 {
+    // flag, output
     string[2][] tests = [
         // []
         ["boundscheck=[on|safeonly|off]",
@@ -481,16 +492,13 @@ unittest
         ["check=[assert|bounds|in|invariant|out|switch][=[on|off]]",
          "check=[$(I assert|bounds|in|invariant|out|switch)][=[$(I on|off)]]"],
         // <>
-        ["mv=<foo.bar>=<filespec>",
-         "mv=$(I foo.bar)=$(I filespec)"],
+        ["mv=<pack.mod>=<filespec>",
+         "mv=$(I pack.mod)=$(I filespec)"],
         // <> []
         ["edition[=<NNNN>[<filename>]]",
          "edition[=$(I NNNN)[$(I $(I filename))]]"],
         ["target=<arch>-[<vendor>-]<os>[-<cenv>[-<cppenv>]]",
          "target=$(I arch)-[$(I $(I vendor)-)]$(I os)[-$(I cenv)[$(I -$(I cppenv))]]"],
-        // <> works even inside ``
-        ["This behavior can be overridden by providing patterns via `-i=<pattern>`.",
-         "This behavior can be overridden by providing patterns via `-i=$(I pattern)`."],
         ];
     foreach (test; tests)
     {
@@ -498,6 +506,38 @@ unittest
         auto text = "";
         highlightSpecialWords(flag, text);
         assert(flag == test[1]);
+    }
+}
+
+// helpText
+unittest
+{
+    // flag, helpText, output
+    string[3][] tests = [
+        // <foo> should match foo
+        ["Df<filename>",
+            "write documentation file to filename",
+            "write documentation file to $(I filename)"],
+        // <> works even inside ``
+        ["i[=<pattern>]",
+            "This behavior can be overridden by providing patterns via `-i=<pattern>`.",
+            "This behavior can be overridden by providing patterns via `-i=$(I pattern)`."],
+        // <foo.bar>
+        ["mv=<pack.mod>=<filespec>",
+            "use <filespec> as source file for <pack.mod>",
+            "use $(I filespec) as source file for $(I pack.mod)"],
+        // don't double italicise
+        ["deps=<filename>",
+            `Without $(I filename), print mod dependencies],`,
+            `Without $(I filename), print mod dependencies],`],
+        ];
+    foreach (test; tests)
+    {
+        auto text = test[1].idup;
+        highlightSpecialWords(test[0], text);
+        text.writeln;
+        test[2].writeln;
+        assert(text == test[2]);
     }
 }
 
