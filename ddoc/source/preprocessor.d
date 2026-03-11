@@ -447,12 +447,6 @@ auto genSwitches(string fileText)
     return updateDdocTag(fileText, ddocKey, content);
 }
 
-auto italic(string w)
-{
-    return "$(I %s )".format(w);
-}
-
-
 // capitalize the first letter
 auto capitalize(string w)
 {
@@ -462,31 +456,48 @@ auto capitalize(string w)
 
 private void highlightSpecialWords(ref string flag, ref string helpText)
 {
-    if (flag.canFind("<", "[") && flag.canFind(">", "]"))
+    import std.conv : text;
+    import std.regex;
+
+    // [italic] or [plain[italic]plain]
+    enum nsb = r"[^\[\]]+?"; // chars except []
+    enum sre = regex(text(r"\[(", nsb, r")\]"));
+    flag = flag.replaceAll(sre, r"[$$(I $1)]");
+
+    // <foo> or <foo.bar>
+    enum re = regex(r"<(\w+?.?\w*?)>");
+    string rep = r"$$(I $1)";
+    flag = flag.replaceAll(re, rep);
+    helpText = helpText.replaceAll(re, rep);
+}
+
+unittest
+{
+    string[2][] tests = [
+        // []
+        ["boundscheck=[on|safeonly|off]",
+         "boundscheck=[$(I on|safeonly|off)]"],
+        // nested [], only inner gets italic
+        ["check=[assert|bounds|in|invariant|out|switch][=[on|off]]",
+         "check=[$(I assert|bounds|in|invariant|out|switch)][=[$(I on|off)]]"],
+        // <>
+        ["mv=<foo.bar>=<filespec>",
+         "mv=$(I foo.bar)=$(I filespec)"],
+        // <> []
+        ["edition[=<NNNN>[<filename>]]",
+         "edition[=$(I NNNN)[$(I $(I filename))]]"],
+        ["target=<arch>-[<vendor>-]<os>[-<cenv>[-<cppenv>]]",
+         "target=$(I arch)-[$(I $(I vendor)-)]$(I os)[-$(I cenv)[$(I -$(I cppenv))]]"],
+        // <> works even inside ``
+        ["This behavior can be overridden by providing patterns via `-i=<pattern>`.",
+         "This behavior can be overridden by providing patterns via `-i=$(I pattern)`."],
+        ];
+    foreach (test; tests)
     {
-        string specialWord;
-
-        // detect special words in <...> and highlight them
-        static foreach (t; [["<", ">"], ["[", "]"]])
-        {
-            if (flag.canFind(t[0]))
-            {
-                specialWord = flag.findSplit(t[0])[2].until(t[1]).to!string;
-                // keep []
-                auto replaceWord = t[0] == "<" ? t[0] ~ specialWord ~ t[1] : specialWord;
-                flag = flag.replace(replaceWord, specialWord.italic);
-            }
-        }
-
-        // highlight individual words in the description
-        helpText = helpText
-            .splitter(" ")
-            .map!((w){
-                auto wPlain = w.filter!(c => !c.among('<', '>', '`', '\'')).to!string;
-                return wPlain == specialWord ? wPlain.italic: w;
-            })
-            .joiner(" ")
-            .to!string;
+        auto flag = test[0].idup;
+        auto text = "";
+        highlightSpecialWords(flag, text);
+        assert(flag == test[1]);
     }
 }
 
