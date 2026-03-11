@@ -486,6 +486,10 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
             caps[1] : text("$(I ", caps[1], ")");
     };
     flag = flag.replaceAll!fcb(fr);
+    // replace any <foo> not in flag
+    alias hcb = hc => hc.pre.ignoreAfter ?
+        hc[0] : text("$(I ", hc[1], ")");
+    helpText = helpText.replaceAll!hcb(fr);
 }
 
 // flags
@@ -542,6 +546,9 @@ unittest
         ["I=<directory>",
             r"current working \directory is searched instead.",
             r"current working \directory is searched instead."],
+        ["HCd=<directory>",
+            "ignored if `-HCf=<filename>` is not present",
+            "ignored if `-HCf=$(I filename)` is not present"],
         ];
     foreach (test; tests)
     {
