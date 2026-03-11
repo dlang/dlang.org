@@ -454,6 +454,13 @@ auto capitalize(string w)
     return w.take(1).asUpperCase.chain(w.dropOne);
 }
 
+// don't double italicise
+// allow escaping words to prevent italic
+bool ignoreAfter(string pre)
+{
+    return pre.endsWith("$(I ") || pre[$-1] == '\\';
+}
+
 private void highlightSpecialWords(ref string flag, ref string helpText)
 {
     import std.conv : text;
@@ -471,11 +478,12 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
         auto hr = regex([
             text("<(", caps[1], ")>"),
             text(r"\b(", caps[1], r")\b")]);
-        // don't double italicise
-        alias hcb = hc => hc.pre.canFind("$(I ") ?
+        alias hcb = hc => hc.pre.ignoreAfter ?
             hc[0] : text("$(I ", hc[1], ")");
         helpText = helpText.replaceAll!hcb(hr);
-        return text("$(I ", caps[1], ")");
+        // now replace flag
+        return caps.pre.ignoreAfter ?
+            caps[1] : text("$(I ", caps[1], ")");
     };
     flag = flag.replaceAll!fcb(fr);
 }
@@ -496,9 +504,9 @@ unittest
          "mv=$(I pack.mod)=$(I filespec)"],
         // <> []
         ["edition[=<NNNN>[<filename>]]",
-         "edition[=$(I NNNN)[$(I $(I filename))]]"],
+         "edition[=$(I NNNN)[$(I filename)]]"],
         ["target=<arch>-[<vendor>-]<os>[-<cenv>[-<cppenv>]]",
-         "target=$(I arch)-[$(I $(I vendor)-)]$(I os)[-$(I cenv)[$(I -$(I cppenv))]]"],
+         "target=$(I arch)-[$(I vendor-)]$(I os)[-$(I cenv)[$(I -$(I cppenv))]]"],
         ];
     foreach (test; tests)
     {
@@ -530,6 +538,10 @@ unittest
         ["deps=<filename>",
             `Without $(I filename), print mod dependencies],`,
             `Without $(I filename), print mod dependencies],`],
+        // allow escaping plain words
+        ["I=<directory>",
+            r"current working \directory is searched instead.",
+            r"current working \directory is searched instead."],
         ];
     foreach (test; tests)
     {
