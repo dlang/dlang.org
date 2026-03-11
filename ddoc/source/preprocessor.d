@@ -455,10 +455,9 @@ auto capitalize(string w)
 }
 
 // don't double italicise
-// allow escaping words to prevent italic
 bool ignoreAfter(string pre)
 {
-    return pre.endsWith("$(I ") || pre[$-1] == '\\';
+    return pre.endsWith("$(I ");
 }
 
 private void highlightSpecialWords(ref string flag, ref string helpText)
@@ -471,7 +470,7 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
     enum sre = regex(text(r"\[(", nsb, r")\]"));
     flag = flag.replaceAll(sre, r"[$$(I $1)]");
 
-    // <foo> or <foo.bar>
+    // match <foo> or <foo.bar> in flag
     enum fr = regex(r"<(\w+?\.?\w*?)>");
     alias fcb = (caps) {
         // first replace foo or <foo> in helpText
@@ -542,10 +541,6 @@ unittest
         ["deps=<filename>",
             `Without $(I filename), print mod dependencies],`,
             `Without $(I filename), print mod dependencies],`],
-        // allow escaping plain words
-        ["I=<directory>",
-            r"current working \directory is searched instead.",
-            r"current working \directory is searched instead."],
         ["HCd=<directory>",
             "ignored if `-HCf=<filename>` is not present",
             "ignored if `-HCf=$(I filename)` is not present"],
