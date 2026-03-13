@@ -457,7 +457,7 @@ auto capitalize(string w)
 // don't double italicise
 bool ignoreAfter(string pre)
 {
-    return pre.endsWith("$(I ");
+    return pre.endsWith("$(I ") || pre.endsWith("<");
 }
 
 private void highlightSpecialWords(ref string flag, ref string helpText)
@@ -473,19 +473,20 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
     // match <foo> or <foo.bar> in flag
     enum fr = regex(r"<(\w+?\.?\w*?)>");
     alias fcb = (caps) {
-        // first replace foo or <foo> in helpText
-        auto hr = regex([
-            text("<(", caps[1], ")>"),
-            text(r"\b(", caps[1], r")\b")]);
-        alias hcb = hc => hc.pre.ignoreAfter ?
-            hc[0] : text("$(I ", hc[1], ")");
-        helpText = helpText.replaceAll!hcb(hr);
+        // first replace 'foo' in helpText
+        if (!caps[1].canFind('.'))
+        {
+            auto hr = regex(text(r"\b", caps[1], r"\b"));
+            alias hcb = hc => hc.pre.ignoreAfter ?
+                hc[0] : text("$(I ", hc[0], ")");
+            helpText = helpText.replaceAll!hcb(hr);
+        }
         // now replace flag
         return caps.pre.ignoreAfter ?
             caps[1] : text("$(I ", caps[1], ")");
     };
     flag = flag.replaceAll!fcb(fr);
-    // replace any <foo> not in flag
+    // replace any <foo> in helpText
     alias hcb = hc => hc.pre.ignoreAfter ?
         hc[0] : text("$(I ", hc[1], ")");
     helpText = helpText.replaceAll!hcb(fr);
