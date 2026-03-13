@@ -555,8 +555,6 @@ unittest
     {
         auto text = test[1].idup;
         highlightSpecialWords(test[0], text);
-        text.writeln;
-        test[2].writeln;
         assert(text == test[2]);
     }
 }
