@@ -463,7 +463,7 @@ bool ignoreAfter(string pre)
 private void highlightSpecialWords(ref string flag, ref string helpText)
 {
     import std.conv : text;
-    import std.regex;
+    import std.regex : regex, replaceAll;
 
     // [italic] or [plain[italic]plain]
     enum nsb = r"[^\[\]]+?"; // chars except []
@@ -476,10 +476,15 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
         // first replace 'foo' in helpText
         if (!caps[1].canFind('.'))
         {
-            auto hr = regex(text(r"\b", caps[1], r"\b"));
-            alias hcb = hc => hc.pre.ignoreAfter ?
-                hc[0] : text("$(I ", hc[0], ")");
-            helpText = helpText.replaceAll!hcb(hr);
+            const specialWord = caps[1];
+            helpText = helpText
+                .splitter(" ")
+                .map!((w) {
+                    auto wPlain = w.filter!(c => !c.among('<', '>', '`', '\'')).to!string;
+                    return wPlain == specialWord ? text("$(I ", wPlain, ")") : w;
+                })
+                .joiner(" ")
+                .to!string;
         }
         // now replace flag
         return caps.pre.ignoreAfter ?
