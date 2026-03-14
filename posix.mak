@@ -153,6 +153,10 @@ TOOLS_DIR=../tools
 INSTALLER_DIR=../installer
 DUB_DIR=../dub
 
+# After spec is migrated to dmd repository:
+# SPEC_DIR=$(DMD_DIR)/spec
+SPEC_DIR=spec
+
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
 include $(DMD_DIR)/compiler/src/osmodel.mak
@@ -311,7 +315,7 @@ DDOC=$(addsuffix .ddoc, macros html dlang.org keywords doc ${GENERATED}/${LATEST
 STD_DDOC_LATEST=$(addsuffix .ddoc, macros html keywords dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
 STD_DDOC_RELEASE=$(addsuffix .ddoc, macros html keywords dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-release) $(NODATETIME)
 STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html keywords dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
-SPEC_DDOC=${DDOC} spec/spec.ddoc
+SPEC_DDOC=${DDOC} $(SPEC_DIR)/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
@@ -319,17 +323,18 @@ CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
 PREMADE=fetch-issue-cnt.php robots.txt .htaccess .dpl_rewrite_map.txt ads.txt \
 		d-keyring.gpg d-keyring.gpg.sig d-security.asc
 
-# Language spec root filenames. They have extension .dd in the source
-# and .html in the generated HTML. These are also used for the mobi
-# book generation, for which reason the list is sorted by chapter.
-SPEC_ROOT=$(addprefix spec/, \
+# Language spec base filenames (no directory, no extension). Sorted by chapter
+# for mobi book generation. SPEC_ROOT adds the output prefix (spec/), and
+# SPEC_DD adds the source prefix (SPEC_DIR/) with .dd extension.
+SPEC_NAMES=\
 	spec intro lex istring grammar module declaration type property attribute \
 	pragma expression statement arrays hash-map struct class interface enum \
 	const3 function operatoroverloading template template-mixin contracts \
 	version traits errors unittest garbage float iasm ddoc \
 	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
-	abi simd betterc importc ob windows glossary legacy editions)
-SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
+	abi simd betterc importc ob windows glossary legacy editions
+SPEC_ROOT=$(addprefix spec/,$(SPEC_NAMES))
+SPEC_DD=$(addsuffix .dd,$(addprefix $(SPEC_DIR)/,$(SPEC_NAMES)))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 ifneq (1,$(ENABLE_RELEASE))
@@ -472,8 +477,8 @@ $W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DDO
 $W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DDOC_BIN) | $(DMD)
 	$(DDOC_BIN_DMD) -conf= $(DDOCFLAGS) -Df$@ $(CHANGELOG_DDOC) $<
 
-$W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -Df$@ $(SPEC_DDOC) $<
+$W/spec/%.html : $(SPEC_DIR)/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
+	$(DDOC_BIN_DMD) --spec-dir=$(SPEC_DIR) -Df$@ $(SPEC_DDOC) $<
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= $(DDOCFLAGS) -Df$@ $(DDOC) errorpage.ddoc $<
@@ -792,13 +797,13 @@ ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 ################################################################################
 
 # testing menu generation
-chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+chm-nav-latest.json : $(DDOC) std.ddoc $(SPEC_DIR)/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
-chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+chm-nav-release.json : $(DDOC) std.ddoc $(SPEC_DIR)/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
-chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+chm-nav-prerelease.json : $(DDOC) std.ddoc $(SPEC_DIR)/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
 ################################################################################

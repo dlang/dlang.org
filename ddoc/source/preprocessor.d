@@ -24,6 +24,7 @@ struct Config
 {
     string dmdBinPath = "dmd";
     string cwd = __FILE_FULL_PATH__.dirName.dirName.dirName;
+    string specDir;
 }
 Config config;
 
@@ -36,6 +37,7 @@ int main(string[] rootArgs)
         rootArgs, std.getopt.config.passThrough,
         std.getopt.config.required,
         "compiler", "Compiler to use", &config.dmdBinPath,
+        "spec-dir", "Directory containing the language spec .dd files", &config.specDir,
     );
     if (helpInformation.helpWanted)
     {
@@ -254,7 +256,7 @@ auto specTocEntries()
     alias Entry = Tuple!(string, "name", string, "title", string, "fileName");
     Entry[] entries;
 
-    immutable specDir = config.cwd.buildNormalizedPath("spec");
+    immutable specDir = config.specDir.length ? config.specDir : config.cwd.buildNormalizedPath("spec");
     immutable mainFile = specDir.buildPath("./spec.ddoc");
 
     auto specText = mainFile.readText;
