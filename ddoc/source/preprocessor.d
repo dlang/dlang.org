@@ -479,10 +479,7 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
             const specialWord = caps[1];
             helpText = helpText
                 .splitter(" ")
-                .map!((w) {
-                    auto wPlain = w.filter!(c => !c.among('<', '>', '`', '\'')).to!string;
-                    return wPlain == specialWord ? text("$(I ", wPlain, ")") : w;
-                })
+                .map!(w => w == specialWord ? text("$(I ", w, ")") : w)
                 .joiner(" ")
                 .to!string;
         }
