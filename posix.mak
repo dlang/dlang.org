@@ -153,9 +153,7 @@ TOOLS_DIR=../tools
 INSTALLER_DIR=../installer
 DUB_DIR=../dub
 
-# After spec is migrated to dmd repository:
-# SPEC_DIR=$(DMD_DIR)/spec
-SPEC_DIR=spec
+SPEC_DIR=$(DMD_DIR)/spec
 
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
