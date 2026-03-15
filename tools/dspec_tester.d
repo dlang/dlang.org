@@ -150,14 +150,14 @@ int main(string[] args)
             .map!((e) {
                 auto code = compileAndCheck(e, CompileConfig(c.mode), modImport);
                 if (code)
-                    writefln("%s: Error testing above example", file[rootDir.length+1..$]);
+                    writefln("%s: Error testing above example", file.name.relativePath(rootDir));
                 return code;
             }))
             .joiner;
         if (!allTests.empty)
         {
             import core.atomic;
-            writefln("%s: %d examples found", file[rootDir.length+1..$], allTests.walkLength);
+            writefln("%s: %d examples found", file.name.relativePath(rootDir), allTests.walkLength);
             if (allTests.any!(a => a != 0))
                 atomicStore(hasFailed, true);
         }
