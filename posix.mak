@@ -154,6 +154,9 @@ INSTALLER_DIR=../installer
 DUB_DIR=../dub
 
 SPEC_DIR=$(DMD_DIR)/spec
+# Git root of the spec source and the path within that repo (for correct SRCFILENAME in generated HTML)
+SPEC_GIT_DIR=$(patsubst %/,%,$(dir $(SPEC_DIR)))
+SPEC_WITHIN_GIT=$(notdir $(SPEC_DIR))
 
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
@@ -476,7 +479,16 @@ $W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DDOC_BIN) | $(DMD)
 	$(DDOC_BIN_DMD) -conf= $(DDOCFLAGS) -Df$@ $(CHANGELOG_DDOC) $<
 
 $W/spec/%.html : $(SPEC_DIR)/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) --spec-dir=$(SPEC_DIR) -Df$@ $(SPEC_DDOC) $<
+	cd $(SPEC_GIT_DIR) && $(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD)) \
+		--spec-dir=$(SPEC_WITHIN_GIT) -Df$(abspath $@) \
+		$(abspath $(SPEC_DDOC)) $(SPEC_WITHIN_GIT)/$*.dd
+
+# cd into the spec's git root so SRCFILENAME is 'spec/foo.dd' (not '../dmd/spec/foo.dd'),
+# which the preprocessor needs to locate spec.ddoc for TOC/grammar generation.
+$W/spec/%.verbatim : $(SPEC_DIR)/%.dd verbatim.ddoc $(DDOC_BIN)
+	cd $(SPEC_GIT_DIR) && $(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD)) \
+		--spec-dir=$(SPEC_WITHIN_GIT) $(DDOCFLAGS) -Df$(abspath $@) \
+		$(abspath verbatim.ddoc) $(SPEC_WITHIN_GIT)/$*.dd
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= $(DDOCFLAGS) -Df$@ $(DDOC) errorpage.ddoc $<
