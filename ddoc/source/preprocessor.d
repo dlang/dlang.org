@@ -462,9 +462,13 @@ bool ignoreAfter(string pre)
     return pre.endsWith("$(I ") || pre.endsWith("<");
 }
 
+string italic(string w)
+{
+    return text("$(I ", w, ")");
+}
+
 private void highlightSpecialWords(ref string flag, ref string helpText)
 {
-    import std.conv : text;
     import std.regex : regex, replaceAll;
 
     // [italic] or [plain[italic]plain]
@@ -474,25 +478,12 @@ private void highlightSpecialWords(ref string flag, ref string helpText)
 
     // match <foo> or <foo.bar> in flag
     enum fr = regex(r"<(\w+?\.?\w*?)>");
-    alias fcb = (caps) {
-        // first replace 'foo' in helpText
-        if (!caps[1].canFind('.'))
-        {
-            const specialWord = caps[1];
-            helpText = helpText
-                .splitter(" ")
-                .map!(w => w == specialWord ? text("$(I ", w, ")") : w)
-                .joiner(" ")
-                .to!string;
-        }
-        // now replace flag
-        return caps.pre.ignoreAfter ?
-            caps[1] : text("$(I ", caps[1], ")");
-    };
+    alias fcb = caps => caps.pre.ignoreAfter ?
+        caps[1] : caps[1].italic;
     flag = flag.replaceAll!fcb(fr);
     // replace any <foo> in helpText
     alias hcb = hc => hc.pre.ignoreAfter ?
-        hc[0] : text("$(I ", hc[1], ")");
+        hc[0] : hc[1].italic;
     helpText = helpText.replaceAll!hcb(fr);
 }
 
@@ -530,10 +521,10 @@ unittest
 {
     // flag, helpText, output
     string[3][] tests = [
-        // <foo> should match foo
+        // <foo> no longer matches foo
         ["Df<filename>",
             "write documentation file to filename",
-            "write documentation file to $(I filename)"],
+            "write documentation file to filename"],
         // <> works even inside ``
         ["i[=<pattern>]",
             "This behavior can be overridden by providing patterns via `-i=<pattern>`.",
