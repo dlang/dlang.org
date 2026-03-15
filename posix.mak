@@ -153,9 +153,10 @@ TOOLS_DIR=../tools
 INSTALLER_DIR=../installer
 DUB_DIR=../dub
 
-# After spec is migrated to dmd repository:
-# SPEC_DIR=$(DMD_DIR)/spec
-SPEC_DIR=spec
+SPEC_DIR=$(DMD_DIR)/spec
+# Git root of the spec source and the path within that repo (for correct SRCFILENAME in generated HTML)
+SPEC_GIT_DIR=$(patsubst %/,%,$(dir $(SPEC_DIR)))
+SPEC_WITHIN_GIT=$(notdir $(SPEC_DIR))
 
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
@@ -478,7 +479,16 @@ $W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DDOC_BIN) | $(DMD)
 	$(DDOC_BIN_DMD) -conf= $(DDOCFLAGS) -Df$@ $(CHANGELOG_DDOC) $<
 
 $W/spec/%.html : $(SPEC_DIR)/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) --spec-dir=$(SPEC_DIR) -Df$@ $(SPEC_DDOC) $<
+	cd $(SPEC_GIT_DIR) && $(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD)) \
+		--spec-dir=$(SPEC_WITHIN_GIT) -Df$(abspath $@) \
+		$(abspath $(SPEC_DDOC)) $(SPEC_WITHIN_GIT)/$*.dd
+
+# cd into the spec's git root so SRCFILENAME is 'spec/foo.dd' (not '../dmd/spec/foo.dd'),
+# which the preprocessor needs to locate spec.ddoc for TOC/grammar generation.
+$W/spec/%.verbatim : $(SPEC_DIR)/%.dd verbatim.ddoc $(DDOC_BIN)
+	cd $(SPEC_GIT_DIR) && $(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD)) \
+		--spec-dir=$(SPEC_WITHIN_GIT) $(DDOCFLAGS) -Df$(abspath $@) \
+		$(abspath verbatim.ddoc) $(SPEC_WITHIN_GIT)/$*.dd
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= $(DDOCFLAGS) -Df$@ $(DDOC) errorpage.ddoc $<
@@ -537,7 +547,7 @@ $G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
 $G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
+	$(DDOC_BIN_DMD) -conf= --spec-dir=$(SPEC_DIR) -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
 
 $G/dlangspec.zip : $G/dlangspec.html ebook.css
 	rm -f $@
@@ -825,7 +835,7 @@ d-prerelease.tag d-tags-prerelease.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FIL
 
 test_dspec: tools/dspec_tester.d $(DMD) $(PHOBOS_LIB)
 	@echo "Test the D Language specification"
-	$(DMD) -run $< --compiler=$(DMD)
+	$(DMD) -run $< --compiler=$(DMD) --spec-dir=$(SPEC_DIR)
 
 .PHONY:
 test: test_dspec test/next_version.sh all | $(STABLE_DMD) $(DUB)
