@@ -547,7 +547,7 @@ $G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
 $G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
+	$(DDOC_BIN_DMD) -conf= --spec-dir=$(SPEC_DIR) -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
 
 $G/dlangspec.zip : $G/dlangspec.html ebook.css
 	rm -f $@
