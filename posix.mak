@@ -835,7 +835,7 @@ d-prerelease.tag d-tags-prerelease.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FIL
 
 test_dspec: tools/dspec_tester.d $(DMD) $(PHOBOS_LIB)
 	@echo "Test the D Language specification"
-	$(DMD) -run $< --compiler=$(DMD)
+	$(DMD) -run $< --compiler=$(DMD) --spec-dir=$(SPEC_DIR)
 
 .PHONY:
 test: test_dspec test/next_version.sh all | $(STABLE_DMD) $(DUB)

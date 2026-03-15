@@ -97,15 +97,16 @@ int main(string[] args)
     import std.typecons : Tuple;
 
     const rootDir = __FILE_FULL_PATH__.dirName.dirName;
-    const specDir = rootDir.buildPath("spec");
     const articlesDir = rootDir.buildPath("articles");
     const stdDir = rootDir.buildPath("..", "phobos", "std");
 
+    string specDir = rootDir.buildPath("spec");
     config.dmdBinPath = environment.get("DMD", "dmd");
     auto helpInformation = getopt(
         args,
         "l|lines", "Show the line numbers on errors", cast(bool*) &config.printLineNumbers,
         "compiler", "D compiler to use", cast(string*) &config.dmdBinPath,
+        "spec-dir", "Path to the spec directory", &specDir,
     );
 
     if (helpInformation.helpWanted)
