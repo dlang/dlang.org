@@ -104,8 +104,8 @@ int main(string[] args)
 
         private static string indent(size_t len)
         {
-            static immutable spaces = "                    ";
-            return spaces[0 .. 2 * len];
+            import std.array : replicate;
+            return " ".replicate(2 * len);
         }
 
         @disable this(this);
