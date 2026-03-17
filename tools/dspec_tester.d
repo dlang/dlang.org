@@ -153,11 +153,14 @@ int main(string[] args)
                     writefln("%s: Error testing above example", file.name.relativePath(rootDir));
                 return code;
             }))
-            .joiner;
+            .joiner.array;
         if (!allTests.empty)
         {
             import core.atomic;
-            writefln("%s: %d examples found", file.name.relativePath(rootDir), allTests.walkLength);
+            writefln("%s: %d examples found", 
+                file.name.relativePath(rootDir), 
+                allTests.length);
+                
             if (allTests.any!(a => a != 0))
                 atomicStore(hasFailed, true);
         }
