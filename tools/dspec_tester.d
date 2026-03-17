@@ -157,10 +157,7 @@ int main(string[] args)
         if (!allTests.empty)
         {
             import core.atomic;
-            writefln("%s: %d examples found", 
-                file.name.relativePath(rootDir), 
-                allTests.length);
-                
+            writefln("%s: %d examples found", file.name.relativePath(rootDir), allTests.length);
             if (allTests.any!(a => a != 0))
                 atomicStore(hasFailed, true);
         }
