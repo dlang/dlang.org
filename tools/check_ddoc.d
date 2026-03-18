@@ -31,9 +31,18 @@ void checkLine(alias errorFun)(string file, size_t lineNr, const(char)[] line)
     if (line.canFind("UNDEFINED MACRO"))
         errorFun(ErrorMessages.undefinedMacro, file, lineNr, line);
 
-    if (line.findSplitAfter("$(")
-            .pipe!(a => !a.expand.only.any!empty && a[1].front != '\''))
-        errorFun(ErrorMessages.rawMacroLeakage, file, lineNr, line);
+    auto rest = line;
+    while (true)
+    {
+        auto parts = rest.findSplitAfter("$(");
+        if (parts[0].empty || parts[1].empty) break;
+        if (parts[1].front != '\'')
+        {
+            errorFun(ErrorMessages.rawMacroLeakage, file, lineNr, line);
+            break;
+        }
+        rest = parts[1];
+    }
 
     if (line.equal(")"))
         errorFun(ErrorMessages.trailingParenthesis, file, lineNr, line);
@@ -74,6 +83,7 @@ unittest
     assert(check("  $('") is null);
     assert(check("  $(") is null);
     assert(check("  $(FOO)") == ErrorMessages.rawMacroLeakage);
+    assert(check("  $(' ) $(FOO)") == ErrorMessages.rawMacroLeakage);
 
     assert(check("  )") is null);
     assert(check(") ") is null);
