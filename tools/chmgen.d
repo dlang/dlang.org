@@ -371,7 +371,10 @@ void lint()
             if (brokenLinks.canFind(url))
                 continue;
             stderr.writeln("Warning: Unknown page: " ~ url);
-            stderr.writefln("  (linked from %d pages e.g. %s)", unknownPages[url].length, unknownPages[url][0]);
+            if (unknownPages[url].length > 0)
+                stderr.writefln("  (linked from %d pages e.g. %s)", unknownPages[url].length, unknownPages[url][0]);
+            else
+                stderr.writefln("  (linked from %d pages)", unknownPages[url].length);
         }
     }
 
