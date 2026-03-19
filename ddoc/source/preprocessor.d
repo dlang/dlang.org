@@ -346,7 +346,7 @@ auto genChangelogVersion(string fileName, string fileText)
         // inject the changelog footer
         auto fileBaseName = fileName.baseName;
         auto r = changelogFiles.chain("pending.dd".only).enumerate.find!(a => a.value.baseName == fileBaseName);
-        if (r.length != 0)
+        if (r.length != 0 && !changelogFiles.empty)
         {
             auto el = r.front;
             macros ~= "\nCHANGELOG_NAV_INJECT=";
