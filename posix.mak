@@ -347,7 +347,7 @@ ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
 PAGES_ROOT=$(SPEC_ROOT) 404 acknowledgements areas-of-d-usage $(ARTICLE_FILES) \
 	ascii-table bugstats $(CHANGELOG_FILES) community comparison contributing \
 	deprecate dmd dmd-freebsd dmd-linux dmd-osx dmd-windows \
-	documentation download dstyle forum-template gpg_keys \
+	documentation download dstyle format forum-template gpg_keys \
 	howto-promote htod index install \
 	menu orgs-using-d overview rdmd resources search security tuple wc windbg \
 	$(addprefix foundation/, index about donate prman sponsors upb-scholarship) \
