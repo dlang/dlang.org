@@ -24,6 +24,7 @@ struct Config
 {
     string dmdBinPath = "dmd";
     string cwd = __FILE_FULL_PATH__.dirName.dirName.dirName;
+    string specDir;
 }
 Config config;
 
@@ -36,6 +37,7 @@ int main(string[] rootArgs)
         rootArgs, std.getopt.config.passThrough,
         std.getopt.config.required,
         "compiler", "Compiler to use", &config.dmdBinPath,
+        "spec-dir", "Directory containing the language spec .dd files", &config.specDir,
     );
     if (helpInformation.helpWanted)
     {
@@ -254,7 +256,7 @@ auto specTocEntries()
     alias Entry = Tuple!(string, "name", string, "title", string, "fileName");
     Entry[] entries;
 
-    immutable specDir = config.cwd.buildNormalizedPath("spec");
+    immutable specDir = config.specDir.length ? config.specDir : config.cwd.buildNormalizedPath("spec");
     immutable mainFile = specDir.buildPath("./spec.ddoc");
 
     auto specText = mainFile.readText;
@@ -447,12 +449,6 @@ auto genSwitches(string fileText)
     return updateDdocTag(fileText, ddocKey, content);
 }
 
-auto italic(string w)
-{
-    return "$(I %s )".format(w);
-}
-
-
 // capitalize the first letter
 auto capitalize(string w)
 {
@@ -460,33 +456,96 @@ auto capitalize(string w)
     return w.take(1).asUpperCase.chain(w.dropOne);
 }
 
+// don't double italicise
+bool ignoreAfter(string pre)
+{
+    return pre.endsWith("$(I ") || pre.endsWith("<");
+}
+
+string italic(string w)
+{
+    return text("$(I ", w, ")");
+}
+
 private void highlightSpecialWords(ref string flag, ref string helpText)
 {
-    if (flag.canFind("<", "[") && flag.canFind(">", "]"))
+    import std.regex : regex, replaceAll;
+
+    // [italic] or [plain[italic]plain]
+    enum nsb = r"[^\[\]]+?"; // chars except []
+    enum sre = regex(text(r"\[(", nsb, r")\]"));
+    flag = flag.replaceAll(sre, r"[$$(I $1)]");
+
+    // match <foo> or <foo.bar> in flag
+    enum fr = regex(r"<(\w+?\.?\w*?)>");
+    alias fcb = caps => caps.pre.ignoreAfter ?
+        caps[1] : caps[1].italic;
+    flag = flag.replaceAll!fcb(fr);
+    // replace any <foo> in helpText
+    alias hcb = hc => hc.pre.ignoreAfter ?
+        hc[0] : hc[1].italic;
+    helpText = helpText.replaceAll!hcb(fr);
+}
+
+// flags
+unittest
+{
+    // flag, output
+    string[2][] tests = [
+        // []
+        ["boundscheck=[on|safeonly|off]",
+         "boundscheck=[$(I on|safeonly|off)]"],
+        // nested [], only inner gets italic
+        ["check=[assert|bounds|in|invariant|out|switch][=[on|off]]",
+         "check=[$(I assert|bounds|in|invariant|out|switch)][=[$(I on|off)]]"],
+        // <>
+        ["mv=<pack.mod>=<filespec>",
+         "mv=$(I pack.mod)=$(I filespec)"],
+        // <> []
+        ["edition[=<NNNN>[<filename>]]",
+         "edition[=$(I NNNN)[$(I filename)]]"],
+        ["target=<arch>-[<vendor>-]<os>[-<cenv>[-<cppenv>]]",
+         "target=$(I arch)-[$(I vendor-)]$(I os)[-$(I cenv)[$(I -$(I cppenv))]]"],
+        ];
+    foreach (test; tests)
     {
-        string specialWord;
+        auto flag = test[0].idup;
+        auto text = "";
+        highlightSpecialWords(flag, text);
+        assert(flag == test[1]);
+    }
+}
 
-        // detect special words in <...> and highlight them
-        static foreach (t; [["<", ">"], ["[", "]"]])
-        {
-            if (flag.canFind(t[0]))
-            {
-                specialWord = flag.findSplit(t[0])[2].until(t[1]).to!string;
-                // keep []
-                auto replaceWord = t[0] == "<" ? t[0] ~ specialWord ~ t[1] : specialWord;
-                flag = flag.replace(replaceWord, specialWord.italic);
-            }
-        }
-
-        // highlight individual words in the description
-        helpText = helpText
-            .splitter(" ")
-            .map!((w){
-                auto wPlain = w.filter!(c => !c.among('<', '>', '`', '\'')).to!string;
-                return wPlain == specialWord ? wPlain.italic: w;
-            })
-            .joiner(" ")
-            .to!string;
+// helpText
+unittest
+{
+    // flag, helpText, output
+    string[3][] tests = [
+        // <foo> no longer matches foo
+        ["Df<filename>",
+            "write documentation file to filename",
+            "write documentation file to filename"],
+        // <> works even inside ``
+        ["i[=<pattern>]",
+            "This behavior can be overridden by providing patterns via `-i=<pattern>`.",
+            "This behavior can be overridden by providing patterns via `-i=$(I pattern)`."],
+        // <foo.bar>
+        ["mv=<pack.mod>=<filespec>",
+            "use <filespec> as source file for <pack.mod>",
+            "use $(I filespec) as source file for $(I pack.mod)"],
+        // don't double italicise
+        ["deps=<filename>",
+            `Without $(I filename), print mod dependencies],`,
+            `Without $(I filename), print mod dependencies],`],
+        ["HCd=<directory>",
+            "ignored if `-HCf=<filename>` is not present",
+            "ignored if `-HCf=$(I filename)` is not present"],
+        ];
+    foreach (test; tests)
+    {
+        auto text = test[1].idup;
+        highlightSpecialWords(test[0], text);
+        assert(text == test[2]);
     }
 }
 

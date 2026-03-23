@@ -13,14 +13,17 @@ int main(string[] args)
     string[] excludes, packages, internal;
 
     auto prog = getopt(args,
-        "ex", &excludes,
-        "dump", &packages, // specifies order and inclusions (negations of exclusions)
-        "internal", &internal,
+        "ex", "Module/package to exclude, e.g. `core.internal`", &excludes,
+        // specifies order
+        "dump", "Module/package to include (required, can override `--ex`)", &packages,
+        "internal", "Module/package to list after MENU_INTERNAL_SEPARATOR", &internal,
     );
 
-    if (prog.helpWanted || args.length <= 1)
+    if (prog.helpWanted || args.length <= 1 || !packages.length)
     {
-        defaultGetoptPrinter("./modlist <dir1> <dir2> ... <dirN>", prog.options);
+        defaultGetoptPrinter("./modlist <dir1> <dir2> ... <dirN> <options>\n\n"
+            ~ "There must be at least one directory and at least one `--dump` option provided.\n",
+            prog.options);
         return 64; // EX_USAGE
     }
 
@@ -101,8 +104,8 @@ int main(string[] args)
 
         private static string indent(size_t len)
         {
-            static immutable spaces = "                    ";
-            return spaces[0 .. 2 * len];
+            import std.array : replicate;
+            return " ".replicate(2 * len);
         }
 
         @disable this(this);
