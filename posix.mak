@@ -153,6 +153,11 @@ TOOLS_DIR=../tools
 INSTALLER_DIR=../installer
 DUB_DIR=../dub
 
+SPEC_DIR=$(DMD_DIR)/spec
+# Git root of the spec source and the path within that repo (for correct SRCFILENAME in generated HTML)
+SPEC_GIT_DIR=$(patsubst %/,%,$(dir $(SPEC_DIR)))
+SPEC_WITHIN_GIT=$(notdir $(SPEC_DIR))
+
 # Auto-cloning missing directories
 $(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 ${GIT_HOME}/dmd $(DMD_DIR))
 include $(DMD_DIR)/compiler/src/osmodel.mak
@@ -196,7 +201,7 @@ MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
 	core.internal core.stdc.config core.sys \
 	std.algorithm.internal std.c std.internal std.regex.internal \
 	std.digest.digest \
-	std.windows.registry etc.linux.memoryerror \
+	std.windows.registry \
 	std.typetuple \
 	msvc_dmc msvc_lib \
 	dmd.libmach dmd.libmscoff \
@@ -206,6 +211,12 @@ MOD_EXCLUDES_PRERELEASE=$(addprefix --ex=, \
 
 MOD_EXCLUDES_LATEST=$(MOD_EXCLUDES_PRERELEASE)
 MOD_EXCLUDES_RELEASE=$(MOD_EXCLUDES_PRERELEASE)
+
+# list core.sys modules with proper docs
+MOD_SYS_INCLUDES=$(shell ./tools/core_sys_docs.sh $(DRUNTIME_DIR)/src/core/sys)
+
+# include lists, overrides excludes
+MOD_INCLUDES=$(addprefix --dump , object std etc core $(MOD_SYS_INCLUDES) dmd rt core.internal.array core.internal.util)
 
 # rdmd must fetch the model, imports, and libs from the specified version
 DFLAGS=-m$(MODEL) -I$(DRUNTIME_DIR)/import -I$(PHOBOS_DIR) -L-L$(PHOBOS_DIR)/generated/$(OS)/release/$(MODEL)
@@ -305,7 +316,7 @@ DDOC=$(addsuffix .ddoc, macros html dlang.org keywords doc ${GENERATED}/${LATEST
 STD_DDOC_LATEST=$(addsuffix .ddoc, macros html keywords dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-${LATEST}) $(NODATETIME)
 STD_DDOC_RELEASE=$(addsuffix .ddoc, macros html keywords dlang.org ${GENERATED}/${LATEST} std std_navbar-release ${GENERATED}/modlist-release) $(NODATETIME)
 STD_DDOC_PRERELEASE=$(addsuffix .ddoc, macros html keywords dlang.org ${GENERATED}/${LATEST} std std_navbar-prerelease ${GENERATED}/modlist-prerelease) $(NODATETIME)
-SPEC_DDOC=${DDOC} spec/spec.ddoc
+SPEC_DDOC=${DDOC} $(SPEC_DIR)/spec.ddoc
 CHANGELOG_DDOC=${DDOC} changelog/changelog.ddoc $(NODATETIME)
 CHANGELOG_PRE_DDOC=${CHANGELOG_DDOC} changelog/prerelease.ddoc
 CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
@@ -313,17 +324,18 @@ CHANGELOG_PENDING_DDOC=${CHANGELOG_DDOC} changelog/pending.ddoc
 PREMADE=fetch-issue-cnt.php robots.txt .htaccess .dpl_rewrite_map.txt ads.txt \
 		d-keyring.gpg d-keyring.gpg.sig d-security.asc
 
-# Language spec root filenames. They have extension .dd in the source
-# and .html in the generated HTML. These are also used for the mobi
-# book generation, for which reason the list is sorted by chapter.
-SPEC_ROOT=$(addprefix spec/, \
+# Language spec base filenames (no directory, no extension). Sorted by chapter
+# for mobi book generation. SPEC_ROOT adds the output prefix (spec/), and
+# SPEC_DD adds the source prefix (SPEC_DIR/) with .dd extension.
+SPEC_NAMES=\
 	spec intro lex istring grammar module declaration type property attribute \
 	pragma expression statement arrays hash-map struct class interface enum \
 	const3 function operatoroverloading template template-mixin contracts \
 	version traits errors unittest garbage float iasm ddoc \
 	interfaceToC cpp_interface objc_interface portability entity memory-safe-d \
-	abi simd betterc importc ob windows glossary legacy editions)
-SPEC_DD=$(addsuffix .dd,$(SPEC_ROOT))
+	abi simd betterc importc ob windows glossary legacy editions
+SPEC_ROOT=$(addprefix spec/,$(SPEC_NAMES))
+SPEC_DD=$(addsuffix .dd,$(addprefix $(SPEC_DIR)/,$(SPEC_NAMES)))
 
 CHANGELOG_FILES:=$(basename $(subst _pre.dd,.dd,$(wildcard changelog/*.dd)))
 ifneq (1,$(ENABLE_RELEASE))
@@ -417,19 +429,19 @@ ${GENERATED}/modlist-${LATEST}.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_L
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) $< $(DRUNTIME_LATEST_DIR)/src $(PHOBOS_LATEST_DIR) $(DMD_LATEST_DIR)/compiler/src $(MOD_EXCLUDES_LATEST) \
 		$(addprefix --internal=, dmd rt core.internal) \
-		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
+		$(MOD_INCLUDES) >$@
 
 ${GENERATED}/modlist-release.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) $< $(DRUNTIME_DIR)/src $(PHOBOS_DIR) $(DMD_DIR)/compiler/src $(MOD_EXCLUDES_RELEASE) \
 		$(addprefix --internal=, dmd rt core.internal) \
-		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
+		$(MOD_INCLUDES) >$@
 
 ${GENERATED}/modlist-prerelease.ddoc : tools/modlist.d ${STABLE_DMD} $(DRUNTIME_DIR) $(PHOBOS_DIR) $(DMD_DIR)
 	mkdir -p $(dir $@)
 	$(STABLE_RDMD) $< $(DRUNTIME_DIR)/src $(PHOBOS_DIR) $(DMD_DIR)/compiler/src $(MOD_EXCLUDES_PRERELEASE) \
 		$(addprefix --internal=, dmd rt core.internal) \
-		$(addprefix --dump , object std etc core dmd rt core.internal.array core.internal.util) >$@
+		$(MOD_INCLUDES) >$@
 
 # Run "make -j rebase" for rebasing all dox in parallel!
 rebase: rebase-dlang rebase-dmd rebase-phobos
@@ -466,8 +478,17 @@ $W/changelog/pending.html : changelog/pending.dd $(CHANGELOG_PENDING_DDOC) $(DDO
 $W/changelog/%.html : changelog/%.dd $(CHANGELOG_DDOC) $(DDOC_BIN) | $(DMD)
 	$(DDOC_BIN_DMD) -conf= $(DDOCFLAGS) -Df$@ $(CHANGELOG_DDOC) $<
 
-$W/spec/%.html : spec/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -Df$@ $(SPEC_DDOC) $<
+$W/spec/%.html : $(SPEC_DIR)/%.dd $(SPEC_DDOC) $(DMD) $(DDOC_BIN)
+	cd $(SPEC_GIT_DIR) && $(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD)) \
+		--spec-dir=$(SPEC_WITHIN_GIT) -Df$(abspath $@) \
+		$(abspath $(SPEC_DDOC)) $(SPEC_WITHIN_GIT)/$*.dd
+
+# cd into the spec's git root so SRCFILENAME is 'spec/foo.dd' (not '../dmd/spec/foo.dd'),
+# which the preprocessor needs to locate spec.ddoc for TOC/grammar generation.
+$W/spec/%.verbatim : $(SPEC_DIR)/%.dd verbatim.ddoc $(DDOC_BIN)
+	cd $(SPEC_GIT_DIR) && $(abspath $(DDOC_BIN)) --compiler=$(abspath $(DMD)) \
+		--spec-dir=$(SPEC_WITHIN_GIT) $(DDOCFLAGS) -Df$(abspath $@) \
+		$(abspath verbatim.ddoc) $(SPEC_WITHIN_GIT)/$*.dd
 
 $W/404.html : 404.dd $(DDOC) $(DMD)
 	$(DMD) -conf= $(DDOCFLAGS) -Df$@ $(DDOC) errorpage.ddoc $<
@@ -526,7 +547,7 @@ $G/dlangspec.d : $(SPEC_DD) ${STABLE_DMD}
 	$(STABLE_RDMD) $(TOOLS_DIR)/catdoc.d -o$@ $(SPEC_DD)
 
 $G/dlangspec.html : $(DDOC) ebook.ddoc $G/dlangspec.d $(DMD) $(DDOC_BIN)
-	$(DDOC_BIN_DMD) -conf= -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
+	$(DDOC_BIN_DMD) -conf= --spec-dir=$(SPEC_DIR) -Df$@ $(DDOC) ebook.ddoc $G/dlangspec.d
 
 $G/dlangspec.zip : $G/dlangspec.html ebook.css
 	rm -f $@
@@ -786,13 +807,13 @@ ${STABLE_DMD} ${STABLE_RDMD} ${DUB}: ${STABLE_DMD_ROOT}/.downloaded
 ################################################################################
 
 # testing menu generation
-chm-nav-latest.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+chm-nav-latest.json : $(DDOC) std.ddoc $(SPEC_DIR)/spec.ddoc ${GENERATED}/modlist-${LATEST}.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
-chm-nav-release.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+chm-nav-release.json : $(DDOC) std.ddoc $(SPEC_DIR)/spec.ddoc ${GENERATED}/modlist-release.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
-chm-nav-prerelease.json : $(DDOC) std.ddoc spec/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
+chm-nav-prerelease.json : $(DDOC) std.ddoc $(SPEC_DIR)/spec.ddoc ${GENERATED}/modlist-prerelease.ddoc changelog/changelog.ddoc chm-nav.dd $(DMD) $(DDOC_BIN)
 	$(DDOC_BIN_DMD) -conf= -c -o- -Df$@ $(filter-out $(DMD) $(DDOC_BIN),$^)
 
 ################################################################################
@@ -814,7 +835,7 @@ d-prerelease.tag d-tags-prerelease.json : tools/chmgen.d $(STABLE_DMD) $(ALL_FIL
 
 test_dspec: tools/dspec_tester.d $(DMD) $(PHOBOS_LIB)
 	@echo "Test the D Language specification"
-	$(DMD) -run $< --compiler=$(DMD)
+	$(DMD) -run $< --compiler=$(DMD) --spec-dir=$(SPEC_DIR)
 
 .PHONY:
 test: test_dspec test/next_version.sh all | $(STABLE_DMD) $(DUB)
@@ -883,13 +904,13 @@ $G/changelog/next-version: ${DMD_DIR}/VERSION
 
 changelog/prerelease.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
 							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
-	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_STABLE) -o $@ --version "${NEXT_VERSION}" \
 		--prev-version="${LATEST}" --date "To be released"
 
 changelog/pending.dd: $G/changelog/next-version $(LOOSE_CHANGELOG_FILES) | \
 							${STABLE_DMD} $(TOOLS_DIR) $(INSTALLER_DIR) $(DUB_DIR)
-	$(STABLE_RDMD) -version=Contributors_Lib $(TOOLS_DIR)/changed.d \
+	$(STABLE_RDMD) $(TOOLS_DIR)/changed.d \
 		$(CHANGELOG_VERSION_MASTER) -o $@ --version "${NEXT_VERSION}" \
 		--prev-version="${LATEST}" --date "To be released"
 

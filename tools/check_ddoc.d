@@ -46,7 +46,7 @@ int main(string[] args)
 
     auto files = args[1 .. $];
     foreach (file; files.parallel(1))
-        foreach (nr, line; File(file, "r").byLine.enumerate)
+        foreach (nr, line; File(file, "r").byLine.enumerate(1))
             checkLine!error(file, nr, line);
 
     if (errors > 0)

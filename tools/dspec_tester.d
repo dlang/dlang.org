@@ -97,15 +97,16 @@ int main(string[] args)
     import std.typecons : Tuple;
 
     const rootDir = __FILE_FULL_PATH__.dirName.dirName;
-    const specDir = rootDir.buildPath("spec");
     const articlesDir = rootDir.buildPath("articles");
     const stdDir = rootDir.buildPath("..", "phobos", "std");
 
+    string specDir = rootDir.buildPath("spec");
     config.dmdBinPath = environment.get("DMD", "dmd");
     auto helpInformation = getopt(
         args,
         "l|lines", "Show the line numbers on errors", cast(bool*) &config.printLineNumbers,
         "compiler", "D compiler to use", cast(string*) &config.dmdBinPath,
+        "spec-dir", "Path to the spec directory", &specDir,
     );
 
     if (helpInformation.helpWanted)
@@ -149,14 +150,14 @@ int main(string[] args)
             .map!((e) {
                 auto code = compileAndCheck(e, CompileConfig(c.mode), modImport);
                 if (code)
-                    writefln("%s: Error testing above example", file[rootDir.length+1..$]);
+                    writefln("%s: Error testing above example", file.name.relativePath(rootDir));
                 return code;
             }))
-            .joiner;
+            .joiner.array;
         if (!allTests.empty)
         {
             import core.atomic;
-            writefln("%s: %d examples found", file[rootDir.length+1..$], allTests.walkLength);
+            writefln("%s: %d examples found", file.name.relativePath(rootDir), allTests.length);
             if (allTests.any!(a => a != 0))
                 atomicStore(hasFailed, true);
         }
