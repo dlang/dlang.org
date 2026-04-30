@@ -65,7 +65,7 @@ If you only want to build a specific part (e.g. Phobos), run:
 make -f posix.mak phobos-prerelease
 ```
 
-(`docs-prerelease` is a shorthand for `dmd-prerelease`, `druntime-prerelease`, `phobos-releas` and `apidocs-prerelease`)
+(`docs-prerelease` is a shorthand for `dmd-prerelease`, `druntime-prerelease`, `phobos-prerelease` and `apidocs-prerelease`)
 
 The output is in `web/phobos-prerelease` and `library-prerelease`.
 
