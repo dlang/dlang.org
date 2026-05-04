@@ -32,7 +32,7 @@ install_deps() {
         fi
     done
 
-    source "$(CURL_USER_AGENT=\"$CURL_USER_AGENT\" bash install.sh dmd-$HOST_DMD_VER --activate)"
+    source "$(CURL_USER_AGENT="$CURL_USER_AGENT" bash install.sh dmd-$HOST_DMD_VER --activate)"
     $DC --version
     env
 }
@@ -104,7 +104,7 @@ setup_repos()
 run_make()
 {
     # Load environment for bootstrap compiler
-    source "$(CURL_USER_AGENT=\"$CURL_USER_AGENT\" bash ~/dlang/install.sh dmd-$HOST_DMD_VER --activate)"
+    source "$(CURL_USER_AGENT="$CURL_USER_AGENT" bash ~/dlang/install.sh dmd-$HOST_DMD_VER --activate)"
     export PATH="$(pwd)/make:$PATH"
     make -v
 
