@@ -6,14 +6,6 @@
  * License: http://boost.org/LICENSE_1_0.txt, Boost License 1.0
  */
 
-// turns asserts into writeln
-function reformatExample(code) {
-    return code.replace(/(<span class="(?:d_keyword|kwd)">assert<\/span>(?:<span class="pun">)?\((.*)==(.*)\);)+/g, function(match, text, left, right) {
-        return "writeln(" + left.trim() + "); "
-            + "<span class='d_comment'>// " + right.trim() + "</span>";
-    });
-}
-
 // wraps a unittest into a runnable script
 function wrapIntoMain(code) {
     var currentPackage = document.body.id;
@@ -61,9 +53,6 @@ function wrapIntoMain(code) {
         codeBlocks.forEach(function(currentExample) {
             var orig = currentExample.innerHTML;
 
-            // disable regex assert -> writeln rewrite logic (for now)
-            //orig = reformatExample(orig);
-
             // check whether it is from a ddoced unittest
             // 1) check is for ddoc, 2) for ddox
             var p1 = currentExample.parentNode && currentExample.parentNode.parentNode;
@@ -106,13 +95,10 @@ function wrapIntoMain(code) {
             setupTextarea(ta, {
                 parent: btnParent,
                 outputDiv: outputDiv,
-                stdin: false,
-                args: false,
                 transformOutput: wrapIntoMain,
                 defaultOutput: "All tests passed",
                 keepCode: true,
                 outputHeight: "auto",
-                backend: "tour"
             });
         });
     });

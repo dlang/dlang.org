@@ -45,7 +45,6 @@ function toggleTree()
 	return false;
 }
 
-var searchCounter = 0;
 var lastSearchString = "";
 
 function performSymbolSearch(maxlen)
@@ -59,7 +58,6 @@ function performSymbolSearch(maxlen)
 	if (searchstring == lastSearchString) return;
 	lastSearchString = searchstring;
 
-	var scnt = ++searchCounter;
 	var results_el = document.getElementById('symbolSearchResults');
 	if (results_el) {
 		results_el.style.display = 'none';

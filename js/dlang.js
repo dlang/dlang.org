@@ -4,20 +4,12 @@
         else document.addEventListener('DOMContentLoaded', fn);
     }
 
-    function closestMatching(el, selector) {
-        while (el && el !== document) {
-            if (el.matches && el.matches(selector)) return el;
-            el = el.parentNode;
-        }
-        return null;
-    }
-
     function parentsMatching(el, selector) {
         var result = [];
-        var node = el.parentNode;
-        while (node && node !== document) {
-            if (node.matches && node.matches(selector)) result.push(node);
-            node = node.parentNode;
+        var node = el.parentElement;
+        while (node) {
+            if (node.matches(selector)) result.push(node);
+            node = node.parentElement;
         }
         return result;
     }
@@ -44,7 +36,7 @@
             }
             if (current) {
                 // direct li parent containing the link
-                var liParent = closestMatching(current.parentNode, 'li');
+                var liParent = current.parentElement.closest('li');
                 if (liParent) liParent.classList.add('active');
                 // topmost li parent, e.g. 'std'
                 parentsMatching(current, '#top .expand-container').forEach(function(p) {
@@ -58,7 +50,7 @@
             var open_main_item = null;
             document.querySelectorAll('.expand-toggle').forEach(function(toggle) {
                 toggle.addEventListener('click', function(e) {
-                    var container = closestMatching(toggle.parentNode, '.expand-container');
+                    var container = toggle.parentElement.closest('.expand-container');
                     if (!container) { e.preventDefault(); return false; }
                     container.classList.toggle('open');
 
