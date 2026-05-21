@@ -42,11 +42,6 @@ All examples are replaced with custom form by default. You need to do additional
 your example to have default standard input or default standard arguments.
 */
 
-var nl2br = function()
-{
-    return this.replace(/\n/g, "<br>");
-}
-
 function safeVar(data, path)
 {
     var p = path.split(".");
@@ -66,6 +61,31 @@ function safeVar(data, path)
     return res;
 }
 
+// helpers
+function childMatching(el, selector) {
+    for (var i = 0; i < el.children.length; i++) {
+        if (el.children[i].matches(selector)) return el.children[i];
+    }
+    return null;
+}
+function childrenMatching(el, selector) {
+    var out = [];
+    for (var i = 0; i < el.children.length; i++) {
+        if (el.children[i].matches(selector)) out.push(el.children[i]);
+    }
+    return out;
+}
+function isVisible(el) {
+    if (!el) return false;
+    return getComputedStyle(el).display !== 'none' && el.offsetParent !== null;
+}
+function setText(el, t) { if (el) el.textContent = t; }
+function emptyEl(el) { while (el && el.firstChild) el.removeChild(el.firstChild); }
+function runReady(fn) {
+    if (document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+}
+
 // compile the examples on the prerelease pages with dmd-nightly
 var dmdCompilerBranch = location.href.indexOf("-prerelease/") >= 0 ? "dmd-nightly" : "dmd";
 
@@ -74,7 +94,14 @@ var backends = {
     url: "https://dpaste.dzfl.pl/request/",
     contentType: "application/x-www-form-urlencoded; charset=UTF-8",
     requestTransform: function(data) {
-      return data;
+      // serialize as URL-encoded form
+      var params = [];
+      for (var k in data) {
+        if (data.hasOwnProperty(k)) {
+          params.push(encodeURIComponent(k) + "=" + encodeURIComponent(data[k]));
+        }
+      }
+      return params.join("&");
     },
     parseOutput: function(data, opts) {
       var r = {};
@@ -106,7 +133,6 @@ var backends = {
             runtimeArgs: "--DRT-testmode=run-main",
             compiler: dmdCompilerBranch
         }
-        // only send set attributes
         if (data.stdin) {
           req.stdin = data.stdin;
         }
@@ -140,24 +166,22 @@ function parseOutput(res, o, oTitle)
 {
     if (!res)
     {
-        o.text("Temporarily unavailable");
+        setText(o, "Temporarily unavailable");
         return;
     }
 
     var output = "";
-    var defaultOutput = res.defaultOutput || '-- No output --';
 
     if (res.cstatus != 0)
     {
-        oTitle.text("Compilation output ("+res.cstatus+": "+res.cerr+")");
-        o.text(res.cout);
-
+        setText(oTitle, "Compilation output ("+res.cstatus+": "+res.cerr+")");
+        setText(o, res.cout);
         return;
     }
     else
     {
-        oTitle.text("Application output");// (compile "+ctime+"ms, run "+rtime+"ms)");
-        if ( res.cout != "")
+        setText(oTitle, "Application output");
+        if (res.cout != "")
             output = 'Compilation output: \n' + res.cout + "\n";
 
         output += (res.stdout == "" && res.stderr == "" ? res.defaultOutput : res.stdout);
@@ -166,23 +190,20 @@ function parseOutput(res, o, oTitle)
             output += res.stderr;
 
         if (res.rstatus != 0)
-            oTitle.text("Application output ("+res.rstatus+": "+res.rerr+")");
+            setText(oTitle, "Application output ("+res.rstatus+": "+res.rerr+")");
     }
 
-    o.text(output);
+    setText(o, output);
 }
 
 // wraps a unittest into a runnable script
 function wrapIntoMain(code, compile) {
-    var currentPackage = $('body')[0].id;
-
     // dynamically wrap into main if needed
     if (compile || code.indexOf("void main") >= 0 || code.indexOf("int main") >= 0) {
         return code;
     }
     else {
         var codeOut = "void main()\n{\n";
-        // writing to the stdout is probably often used
         codeOut += "    import std.stdio: write, writeln, writef, writefln;\n    ";
         codeOut += "#line 1\n";
         codeOut += code.split("\n").join("\n    ");
@@ -191,21 +212,19 @@ function wrapIntoMain(code, compile) {
     }
 }
 
-$(document).ready(function()
+runReady(function()
 {
     setUpExamples();
 
-    var currentPage = $(location).attr('pathname');
+    document.querySelectorAll('.runnable-examples').forEach(function(root) {
+        var el = childMatching(root, 'pre');
+        if (!el) return;
 
-    $('.runnable-examples').each(function(index)
-    {
-        var root = $(this);
-        var el = root.children("pre");
+        var stdinNode = childMatching(root, '.runnable-examples-stdin');
+        var argsNode = childMatching(root, '.runnable-examples-args');
+        var stdin = stdinNode ? stdinNode.textContent : '';
+        var args = argsNode ? argsNode.textContent : '';
 
-        var stdin = root.children(".runnable-examples-stdin").text();
-        var args = root.children(".runnable-examples-args").text();
-
-        // only show stdin or args if they are set
         if (stdin.length > 0)
         {
             stdin = '<div class="d_code_stdin"><span class="d_code_title">Standard input</span><br>'
@@ -217,15 +236,14 @@ $(document).ready(function()
                 + '<textarea class="d_code_args">'+args+'</textarea></div>';
         }
 
-        var compile = el.parent()[0].hasAttribute('data-compile');
-        var runAttrs = `value="${compile ? 'Compile' : 'Run'}"`;
+        var compile = el.parentNode.hasAttribute('data-compile');
+        var runAttrs = 'value="' + (compile ? 'Compile' : 'Run') + '"';
         if (!compile)
             runAttrs += ' title="Note: Wraps code in `main` automatically if `main` is missing'
                 + ' & imports std.stdio.write[f][ln]"';
-        var currentExample = el;
-        var orig = currentExample.html();
+        var orig = el.innerHTML;
 
-        currentExample.replaceWith(
+        var html =
             '<div class="d_code"><pre class="d_code">'+orig+'</pre></div>'
             + '<div class="d_run_code">'
             + '<textarea class="d_code" style="display: none;"></textarea>'
@@ -234,19 +252,27 @@ $(document).ready(function()
             + '<input type="button" class="editButton" value="Edit">'
             + (args.length > 0 ? '<input type="button" class="argsButton" value="Args">' : '')
             + (stdin.length > 0 ? '<input type="button" class="inputButton" value="Input">' : '')
-            + `<input type="button" class="runButton" ${runAttrs}>`
+            + '<input type="button" class="runButton" ' + runAttrs + '>'
             + '<input type="button" class="resetButton" value="Reset">'
-            + '<input type="button" class="openInEditorButton" value="Open in IDE"></div>'
-        );
+            + '<input type="button" class="openInEditorButton" value="Open in IDE"></div>';
+
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        var parent = el.parentNode;
+        while (tmp.firstChild) {
+            parent.insertBefore(tmp.firstChild, el);
+        }
+        parent.removeChild(el);
     });
 
-    $('textarea[class=d_code]').each(function(index) {
-        var parent = $(this).parent();
-        var outputDiv = parent.children("div.d_code_output");
-        var hasStdin = parent.children(".inputButton").length > 0;
-        var hasArgs  = parent.children(".argsButton").length > 0;
-        var compile = parent.parent()[0].hasAttribute('data-compile');
-        setupTextarea(this, {
+    document.querySelectorAll('textarea.d_code').forEach(function(ta) {
+        if (ta.className !== 'd_code') return; // jQuery's [class=d_code] = exact match
+        var parent = ta.parentNode;
+        var outputDiv = childMatching(parent, 'div.d_code_output');
+        var hasStdin = childrenMatching(parent, '.inputButton').length > 0;
+        var hasArgs  = childrenMatching(parent, '.argsButton').length > 0;
+        var compile = parent.parentNode.hasAttribute('data-compile');
+        setupTextarea(ta, {
           parent: parent,
           outputDiv: outputDiv,
           stdin: hasStdin,
@@ -261,8 +287,7 @@ $(document).ready(function()
 function setupTextarea(el, opts)
 {
     opts = opts || {};
-    // set default opts
-    opts = jQuery.extend({}, {
+    opts = Object.assign({}, {
         stdin: false,
         args: false,
         transformOutput: function(out) { return out }
@@ -270,23 +295,21 @@ function setupTextarea(el, opts)
 
     var backend = backends[opts.backend || "tour"];
 
-    if (!!opts.parent)
-        var parent = opts.parent;
-    else
-        console.error("parent node node not found");
+    var parent = opts.parent;
+    if (!parent) console.error("parent node node not found");
+    var outputDiv = opts.outputDiv;
+    if (!outputDiv) console.error("outputDiv node not found");
 
-    if (!!opts.outputDiv)
-        var outputDiv = opts.outputDiv;
-    else
-        console.error("outputDiv node not found");
-
-    var thisObj = $(el);
-    parent.css("display", "block");
-    var orgSrc = parent.parent().children("div.d_code").children("pre.d_code");
+    parent.style.display = 'block';
+    var orgSrc;
+    {
+        var siblingCodeDiv = childMatching(parent.parentNode, 'div.d_code');
+        orgSrc = siblingCodeDiv ? childMatching(siblingCodeDiv, 'pre.d_code') : null;
+    }
 
     var prepareForMain = function()
     {
-        var src = orgSrc.text();
+        var src = orgSrc ? orgSrc.textContent : '';
         var arr = src.split("\n");
         var str = "";
         for (var i = 0; i < arr.length; i++)
@@ -297,11 +320,10 @@ function setupTextarea(el, opts)
     };
 
     var editor;
-    var code;
+    var code; // wrapper element produced by CodeMirror
     function initializeEditor(){
-      if (typeof editor !== "undefined")
-        return;
-      editor = CodeMirror.fromTextArea(thisObj[0], {
+      if (typeof editor !== "undefined") return;
+      editor = CodeMirror.fromTextArea(el, {
           lineNumbers: true,
           tabSize: 4,
           indentUnit: 4,
@@ -313,152 +335,138 @@ function setupTextarea(el, opts)
           matchBrackets: true
       });
       editor.setValue(prepareForMain());
-      code = $(editor.getWrapperElement());
-      code.css('display', 'none');
-
+      code = editor.getWrapperElement();
+      code.style.display = 'none';
     }
 
     var height = function(diff) {
-        var par = code != null ? code : parent.parent().children("div.d_code");
-        return (parseInt(par.css('height')) - diff) + 'px';
+        var par = code != null ? code : childMatching(parent.parentNode, 'div.d_code');
+        if (!par) return '0px';
+        return (parseInt(getComputedStyle(par).height) - diff) + 'px';
     };
 
-    var runBtn = parent.children(".runButton");
-    var editBtn = parent.children(".editButton");
-    var resetBtn = parent.children(".resetButton");
-    var openInEditorBtn = parent.children(".openInEditorButton");
+    var runBtn = childMatching(parent, '.runButton');
+    var editBtn = childMatching(parent, '.editButton');
+    var resetBtn = childMatching(parent, '.resetButton');
+    var openInEditorBtn = childMatching(parent, '.openInEditorButton');
 
-    var plainSourceCode = parent.parent().children("div.d_code");
+    var plainSourceCode = childMatching(parent.parentNode, 'div.d_code');
 
-    var output = outputDiv.children("pre.d_code_output");
-    var outputTitle = outputDiv.children("span.d_code_title");
+    var output = childMatching(outputDiv, 'pre.d_code_output');
+    var outputTitle = childMatching(outputDiv, 'span.d_code_title');
+    var argsBtn, argsDiv, argsArea, orgArgs;
+    var inputBtn, stdinDiv, stdinArea, orgStdin;
     if (opts.args) {
-        var argsBtn = parent.children("input.argsButton");
-        var argsDiv = parent.children("div.d_code_args");
-        var args = argsDiv.children("textarea.d_code_args");
-        var orgArgs = args.val();
+        argsBtn = childMatching(parent, 'input.argsButton');
+        argsDiv = childMatching(parent, 'div.d_code_args');
+        argsArea = argsDiv ? childMatching(argsDiv, 'textarea.d_code_args') : null;
+        orgArgs = argsArea ? argsArea.value : '';
     }
     if (opts.stdin) {
-        var inputBtn = parent.children("input.inputButton");
-        var stdinDiv = parent.children("div.d_code_stdin");
-        var stdin = stdinDiv.children("textarea.d_code_stdin");
-        var orgStdin = stdin.val();
+        inputBtn = childMatching(parent, 'input.inputButton');
+        stdinDiv = childMatching(parent, 'div.d_code_stdin');
+        stdinArea = stdinDiv ? childMatching(stdinDiv, 'textarea.d_code_stdin') : null;
+        orgStdin = stdinArea ? stdinArea.value : '';
     }
 
     var hideAllWindows = function(optArguments)
     {
         optArguments = optArguments || {};
-        if (opts.stdin) {
-            stdinDiv.css('display', 'none');
+        if (opts.stdin && stdinDiv) stdinDiv.style.display = 'none';
+        if (opts.args && argsDiv) argsDiv.style.display = 'none';
+        outputDiv.style.display = 'none';
+        if (!optArguments.keepPlainSourceCode && plainSourceCode) {
+            plainSourceCode.style.display = 'none';
         }
-        if (opts.args) {
-            argsDiv.css('display', 'none');
-        }
-        outputDiv.css('display', 'none');
-        if (!optArguments.keepPlainSourceCode) {
-          plainSourceCode.css('display', 'none');
-        }
-        if (!optArguments.keepCode) {
-          code.css('display', 'none');
+        if (!optArguments.keepCode && code) {
+            code.style.display = 'none';
         }
     };
 
-    if (opts.args) {
-        argsBtn.click(function(){
-            resetBtn.css('display', 'inline-block');
-            args.css('height', height(31));
+    if (opts.args && argsBtn) {
+        argsBtn.addEventListener('click', function(){
+            resetBtn.style.display = 'inline-block';
+            if (argsArea) argsArea.style.height = height(31);
             hideAllWindows();
-            argsDiv.css('display', 'block');
-            args.focus();
+            argsDiv.style.display = 'block';
+            if (argsArea) argsArea.focus();
         });
     }
 
-    if (opts.stdin) {
-        inputBtn.click(function(){
-            resetBtn.css('display', 'inline-block');
-            stdin.css('height', height(31));
+    if (opts.stdin && inputBtn) {
+        inputBtn.addEventListener('click', function(){
+            resetBtn.style.display = 'inline-block';
+            if (stdinArea) stdinArea.style.height = height(31);
             hideAllWindows();
-            stdinDiv.css('display', 'block');
-            stdin.focus();
+            stdinDiv.style.display = 'block';
+            if (stdinArea) stdinArea.focus();
         });
     }
 
-    editBtn.click(function(){
+    editBtn.addEventListener('click', function(){
         initializeEditor();
-        resetBtn.css('display', 'inline-block');
+        resetBtn.style.display = 'inline-block';
         hideAllWindows();
-        code.css('display', 'block');
+        code.style.display = 'block';
         editor.refresh();
         editor.focus();
     });
-    resetBtn.click(function(){
-        resetBtn.css('display', 'none');
+    resetBtn.addEventListener('click', function(){
+        resetBtn.style.display = 'none';
         editor.setValue(prepareForMain());
-        if (opts.args) {
-            args.val(orgArgs);
-        }
-        if (opts.stdin) {
-            stdin.val(orgStdin);
-        }
+        if (opts.args && argsArea) argsArea.value = orgArgs;
+        if (opts.stdin && stdinArea) stdinArea.value = orgStdin;
         hideAllWindows();
-        plainSourceCode.css('display', 'block');
+        if (plainSourceCode) plainSourceCode.style.display = 'block';
     });
-    runBtn.click(function(){
+    runBtn.addEventListener('click', function(){
         initializeEditor();
-        resetBtn.css('display', 'inline-block');
-        $(this).attr("disabled", true);
+        resetBtn.style.display = 'inline-block';
+        runBtn.disabled = true;
         var optArguments = {};
-        // check what boxes are currently open
         if (opts.keepCode) {
-          optArguments.keepCode = code.is(":visible");
-          optArguments.keepPlainSourceCode = plainSourceCode.is(":visible");
+            optArguments.keepCode = isVisible(code);
+            optArguments.keepPlainSourceCode = isVisible(plainSourceCode);
         }
         hideAllWindows(optArguments);
-        output.css('height', opts.outputHeight || height(31));
-        outputDiv.css('display', 'block');
-        outputTitle.text("Application output");
-        output.html("Running...");
-        output.focus();
+        if (output) output.style.height = opts.outputHeight || height(31);
+        outputDiv.style.display = 'block';
+        setText(outputTitle, 'Application output');
+        if (output) output.innerHTML = 'Running...';
+        if (output) output.focus();
 
         var data = {
           code: opts.transformOutput(editor.getValue(), opts.compile)
         };
-        if (opts.stdin) {
-            data.stdin = stdin.val();
-        }
-        if (opts.args) {
-            data.args = args.val();
-        }
-        $.ajax({
-            type: 'POST',
-            url: backend.url,
-            contentType: backend.contentType,
-            dataType: "json",
-            data: backend.requestTransform(data),
-            success: function(data)
-            {
-                parseOutput(backend.parseOutput(data, opts), output, outputTitle);
-                runBtn.attr("disabled", false);
-            },
-            error: function(jqXHR, textStatus, errorThrown )
-            {
-                output.html("Temporarily unavailable");
-                if (typeof console != "undefined")
-                {
-                    console.log(textStatus + ": " + errorThrown);
-                }
+        if (opts.stdin && stdinArea) data.stdin = stdinArea.value;
+        if (opts.args && argsArea) data.args = argsArea.value;
 
-                runBtn.attr("disabled", false);
-            }
+        fetch(backend.url, {
+            method: 'POST',
+            headers: { 'Content-Type': backend.contentType },
+            body: backend.requestTransform(data)
+        })
+        .then(function(resp) {
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            return resp.json();
+        })
+        .then(function(data) {
+            parseOutput(backend.parseOutput(data, opts), output, outputTitle);
+            runBtn.disabled = false;
+        })
+        .catch(function(err) {
+            if (output) output.innerHTML = 'Temporarily unavailable';
+            if (typeof console != 'undefined') console.log(String(err));
+            runBtn.disabled = false;
         });
     });
-    openInEditorBtn.click(function(){
-      var text = (editor && editor.getValue()) || prepareForMain();
-      var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&args=-unittest&source=" + encodeURIComponent(opts.transformOutput(text));
-      window.open(url, "_blank");
+    openInEditorBtn.addEventListener('click', function(){
+        var text = (editor && editor.getValue()) || prepareForMain();
+        var url = "https://run.dlang.io?compiler=" + dmdCompilerBranch + "&args=-unittest&source=" + encodeURIComponent(opts.transformOutput(text));
+        window.open(url, "_blank");
     });
     return editor;
-};
+}
 
 
 function setUpExamples()
@@ -466,32 +474,32 @@ function setUpExamples()
     /* Sets up expandable example boxes.
      * max-height and CSS transitions are used to animate the closing and opening for smooth animations even on less powerful devices
      */
-    $('.example-box').each(function() {
-        var $box = $(this);
-        var boxId = $box.attr('id');
-        // A little juggling here because the content needs to be a block element and the control needs to be an inline
-        // element in the previous paragraph.
-        var $control = $('#' + boxId + '-control');
-        $control.attr('aria-controls', boxId);
-        var $showLabel = $('<span>Show example <i class="fa fa-caret-down"></i></span>');
-        var $hideLabel = $('<span>Hide example <i class="fa fa-caret-up"></i></span>');
+    document.querySelectorAll('.example-box').forEach(function(box) {
+        var boxId = box.id;
+        var control = document.getElementById(boxId + '-control');
+        if (!control) return;
+        control.setAttribute('aria-controls', boxId);
+        var showLabel = '<span>Show example <i class="fa fa-caret-down"></i></span>';
+        var hideLabel = '<span>Hide example <i class="fa fa-caret-up"></i></span>';
         function toggle() {
-            if ($box.attr('aria-hidden') === 'true') {
-                $box.attr('aria-hidden', false);
-                $control.attr('aria-expanded', true);
-                $control.empty().append($hideLabel);
-                $box.css('max-height', $box[0].scrollHeight);
+            if (box.getAttribute('aria-hidden') === 'true') {
+                box.setAttribute('aria-hidden', 'false');
+                control.setAttribute('aria-expanded', 'true');
+                control.innerHTML = hideLabel;
+                box.style.maxHeight = box.scrollHeight + 'px';
             } else {
-                $box.attr('aria-hidden', true);
-                $control.attr('aria-expanded', false);
-                $control.empty().append($showLabel);
-                $box.css('max-height', 0);
+                box.setAttribute('aria-hidden', 'true');
+                control.setAttribute('aria-expanded', 'false');
+                control.innerHTML = showLabel;
+                box.style.maxHeight = '0';
             }
             return false;
         }
-        $control.on('click', toggle);
+        control.addEventListener('click', function(e) { toggle(); e.preventDefault(); });
         toggle();
     });
     // NB: href needed for browsers to include the controls in the (keyboard) tab order
-    $('.example-control').attr('href', '#');
+    document.querySelectorAll('.example-control').forEach(function(c) {
+        c.setAttribute('href', '#');
+    });
 }

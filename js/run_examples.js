@@ -16,7 +16,7 @@ function reformatExample(code) {
 
 // wraps a unittest into a runnable script
 function wrapIntoMain(code) {
-    var currentPackage = $('body')[0].id;
+    var currentPackage = document.body.id;
     var codeOut = "";
 
     // dynamically wrap into main if needed
@@ -26,7 +26,7 @@ function wrapIntoMain(code) {
         codeOut += code;
     }
     else {
-        var codeOut = "void main()\n{\n";
+        codeOut = "void main()\n{\n";
         codeOut += "    import " + currentPackage + ";\n";
         // writing to the stdout is probably often used
         codeOut += (currentPackage == "std.file") ? "    import std.stdio: writeln, writef, writefln;\n    " : "    import std.stdio: write, writeln, writef, writefln;\n    ";
@@ -37,33 +37,44 @@ function wrapIntoMain(code) {
     return codeOut;
 }
 
-$(document).ready(function()
-{
-    if ($('body')[0].id == "Home")
-        return;
+(function() {
+    function ready(fn) {
+        if (document.readyState !== 'loading') fn();
+        else document.addEventListener('DOMContentLoaded', fn);
+    }
 
-    // only for std at the moment
-    if (!$('body').hasClass("std"))
-        return;
+    function childMatching(el, selector) {
+        for (var i = 0; i < el.children.length; i++) {
+            if (el.children[i].matches(selector)) return el.children[i];
+        }
+        return null;
+    }
 
-    // first selector is for ddoc - second for ddox
-    var codeBlocks = $('pre[class~=d_code]').add('pre[class~=code]');
-    codeBlocks.each(function(index)
-    {
-        var currentExample = $(this);
-        var orig = currentExample.html();
+    ready(function() {
+        if (document.body.id == 'Home') return;
 
-        // disable regex assert -> writeln rewrite logic (for now)
-        //orig = reformatExample(orig);
+        // only for std at the moment
+        if (!document.body.classList.contains('std')) return;
 
-        // check whether it is from a ddoced unittest
-        // 1) check is for ddoc, 2) for ddox
-        // manual created tests most likely can't be run without modifications
-        if (!($(this).parent().parent().prev().hasClass("dlang_runnable") ||
-              $(this).prev().children(":last").hasClass("dlang_runnable")))
-            return;
+        // first selector is for ddoc - second for ddox
+        var codeBlocks = document.querySelectorAll('pre.d_code, pre.code');
+        codeBlocks.forEach(function(currentExample) {
+            var orig = currentExample.innerHTML;
 
-        currentExample.replaceWith(
+            // disable regex assert -> writeln rewrite logic (for now)
+            //orig = reformatExample(orig);
+
+            // check whether it is from a ddoced unittest
+            // 1) check is for ddoc, 2) for ddox
+            var p1 = currentExample.parentNode && currentExample.parentNode.parentNode;
+            var prev1 = p1 ? p1.previousElementSibling : null;
+            var prev2 = currentExample.previousElementSibling;
+            var lastChildPrev2 = prev2 ? prev2.lastElementChild : null;
+            var isRunnable = (prev1 && prev1.classList.contains('dlang_runnable'))
+                || (lastChildPrev2 && lastChildPrev2.classList.contains('dlang_runnable'));
+            if (!isRunnable) return;
+
+            var html =
                 '<div class="unittest_examples">'
                     + '<div class="d_code">'
                         + '<pre class="d_code">'+orig+'</pre>'
@@ -72,30 +83,37 @@ $(document).ready(function()
                         + '<textarea class="d_code" style="display: none;"></textarea>'
                     + '</div>'
                     + '<div class="d_example_buttons">'
-          + '<div class="editButton"><i class="fa fa-edit" aria-hidden="true"></i> Edit</div>'
-          + '<div class="runButton"><i class="fa fa-play" aria-hidden="true"></i> Run</div>'
-          + '<div class="resetButton" style="display:none"><i class="fa fa-undo " aria-hidden="true"></i> Reset</div>'
-          + '<div class="openInEditorButton" title="Open in an external editor"><i class="fa fa-external-link" aria-hidden="true"></i>Open in IDE</div>'
+                        + '<div class="editButton"><i class="fa fa-edit" aria-hidden="true"></i> Edit</div>'
+                        + '<div class="runButton"><i class="fa fa-play" aria-hidden="true"></i> Run</div>'
+                        + '<div class="resetButton" style="display:none"><i class="fa fa-undo " aria-hidden="true"></i> Reset</div>'
+                        + '<div class="openInEditorButton" title="Open in an external editor"><i class="fa fa-external-link" aria-hidden="true"></i>Open in IDE</div>'
                     + '</div>'
                     + '<div class="d_code_output"><span class="d_code_title">Application output</span><br><pre class="d_code_output" readonly>Running...</pre>'
-                + '</div>'
-        );
-    });
+                + '</div>';
 
-    $('textarea[class=d_code]').each(function(index) {
-        var parent = $(this).parent();
-        var btnParent = parent.parent().children(".d_example_buttons");
-        var outputDiv = parent.parent().children(".d_code_output");
-        var editor = setupTextarea(this,  {
-          parent: btnParent,
-          outputDiv: outputDiv,
-          stdin: false,
-          args: false,
-          transformOutput: wrapIntoMain,
-          defaultOutput: "All tests passed",
-          keepCode: true,
-          outputHeight: "auto",
-          backend: "tour"
+            var tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            var p = currentExample.parentNode;
+            while (tmp.firstChild) p.insertBefore(tmp.firstChild, currentExample);
+            p.removeChild(currentExample);
+        });
+
+        document.querySelectorAll('textarea.d_code').forEach(function(ta) {
+            if (ta.className !== 'd_code') return; // exact class match
+            var parent = ta.parentNode;
+            var btnParent = childMatching(parent.parentNode, '.d_example_buttons');
+            var outputDiv = childMatching(parent.parentNode, '.d_code_output');
+            setupTextarea(ta, {
+                parent: btnParent,
+                outputDiv: outputDiv,
+                stdin: false,
+                args: false,
+                transformOutput: wrapIntoMain,
+                defaultOutput: "All tests passed",
+                keepCode: true,
+                outputHeight: "auto",
+                backend: "tour"
+            });
         });
     });
-});
+})();

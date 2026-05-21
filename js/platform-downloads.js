@@ -37,7 +37,13 @@
         html = '<div class="hbox">' + html + '</div>';
     }
 
-    var btn = $('.download a.btn');
-    btn.before(html);
-    btn.text('Other Downloads');
+    var btn = document.querySelector('.download a.btn');
+    if (btn) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        while (tmp.firstChild) {
+            btn.parentNode.insertBefore(tmp.firstChild, btn);
+        }
+        btn.textContent = 'Other Downloads';
+    }
 })();
