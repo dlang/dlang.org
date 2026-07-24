@@ -1,0 +1,306 @@
+Ddoc
+
+$(D_S $(TITLE),
+
+$(P
+$(B dlang-dockerized) is a $(EM community project) that packages D compilers as OCI images.
+These can be used with OCI-compliant container engines — such as
+$(LINK2 https://docs.docker.com/engine/install/, Docker)
+$(LINK2 https://podman.io/get-started, Podman) or
+$(LINK2 https://kubernetes.io/docs/concepts/overview/, Kubernetes).
+)
+
+$(NOTE
+OCI stands for $(STRONG $(LINK2 https://opencontainers.org/, Open Container Initiative)).
+)
+
+
+$(H2 Quick Start)
+
+$(H3 Docker)
+$(CONSOLE docker run --init --rm -it -v .:/src ghcr.io/dlang-dockerized/dmd:latest dmd)
+
+$(H3 Podman)
+$(CONSOLE podman run --init --rm -it -v .:/src ghcr.io/dlang-dockerized/dmd:latest dmd)
+
+$(H3 Common CLI flags)
+
+$(P
+The provided command runs the container image for $(CODE dmd) from $(CODE ghcr.io).
+It mounts the current working directory $(CODE .) as volume $(LPAREN)$(ARG -v)$(RPAREN) under $(CODE /src) in the container.
+)
+
+$(P
+$(ARG --rm) instructs the container engine to automatically remove the container
+and any anonymous unnamed volume associated with the container when it exits.
+)
+
+$(P
+$(ARG -it) is actually a combination of the flags $(ARG -i) and $(ARG)
+and requests an interactive session — even if detached — with a pseudo-TTY.
+)
+
+$(P
+Given that most applications are not designed to be run as PID $(CODE 1),
+using $(ARG --init) the container engine can be instructed to inject a tiny $(EM init system)
+which takes care of the $(EM signal handling) requirements for PID $(CODE 1) of the Linux kernel
+as well as $(EM reaping orphaned zombie processes).
+)
+
+Further information can be found in the corresponding manuals:
+$(UL
+$(LI $(LINK https://docs.docker.com/reference/cli/docker/container/run/))
+$(LI $(LINK https://docs.podman.io/en/latest/markdown/podman-run.1.html))
+)
+
+
+$(H2 Containerfiles)
+
+$(UL
+$(LI $(CODE $(NBSP)ghcr.io/dlang-dockerized/dmd))
+$(LI $(CODE $(NBSP)ghcr.io/dlang-dockerized/ldc))
+$(LI $(CODE docker.io/dlangdockerized/dmd))
+$(LI $(CODE docker.io/dlangdockerized/ldc))
+)
+
+$(P
+Container images are built from so-called $(EM Containerfile)s —
+also known as $(EM Dockerfile)s when used with $(EM Docker).
+)
+
+$(P
+These Containerfiles are compiled from templates and meta data.
+)
+
+$(P
+A repository providing pre-rendered Containerfiles can be found at:
+$(LINK https://github.com/dlang-dockerized/containerfiles)
+)
+
+$(P
+The source template files as well as the template engine are located in the $(EM packaging) repository:
+$(LINK https://github.com/dlang-dockerized/packaging)
+)
+
+$(P
+Documentation for the format of Containerfiles can be found over there:
+$(LINK https://github.com/podman-container-tools/container-libs/blob/main/common/docs/Containerfile.5.md)
+)
+
+
+$(H3 Packaged software)
+
+$(UL
+$(LI $(H4 DMD — Digital Mars D Compiler)
+    $(UL
+    $(LI DUB — official package manager for the D programming language)
+    $(LI rdmd — rapid edit-run cycle companion)
+    )
+)
+$(LI $(H4 LDC — LLVM-based D Compiler)
+    $(UL
+    $(LI DUB — official package manager for the D programming language)
+    $(LI LLD — Linker of the LLVM project)
+    $(LI LLDB — Debugger of the LLVM project)
+    $(LI rdmd — rapid edit-run cycle companion)
+    )
+)
+)
+
+$(NOTE
+Please note that not all software listed above is available across all image versions.
+This applies to images providing legacy compiler versions in particular.
+)
+
+
+$(H3 Compiler versions)
+
+$(P
+$(I dlang-dockerized) aims to package the latest compilers as well as “relevant” legacy versions.
+)
+
+$(P
+To select a specific version of a container image, append a version prefix to the image name.
+)
+
+$(NOTE
+The prefix $(CODE latest) refers to the latest stable release of the corresponding image.
+)
+
+$(CONSOLE $(SHE) Containerfile
+
+$(SHE) latest stable release
+FROM ghcr.io/dlang-dockerized/dmd:latest
+
+$(SHE) latest release of the 2.100.x branch (→ 2.100.2)
+FROM ghcr.io/dlang-dockerized/dmd:2.100
+
+$(SHE) 2.100.0 release
+FROM ghcr.io/dlang-dockerized/dmd:2.100.0
+)
+
+$(P
+Images are rebuilt from time to time in order to ship dependency updates and similar.
+)
+
+$(P
+For legacy versions of the bundled software it may be necessary to apply
+custom patches and/or backports in order prior to building.
+These modifications can be found in the
+$(LINK2 https://github.com/dlang-dockerized/packaging/tree/main/resources/patches, $(CODE patches) subfolder)
+in the $(EM packaging) repository.
+)
+
+
+$(H3 Base images)
+
+$(P
+A base image is the start of all Containerfiles.
+It serves as the base of the container and as such provides a runtime environment.
+)
+
+$(P
+A common convention is to append a suffix to the tag of the container image
+that consists of an alias referring to the base image.
+)
+
+$(UL
+$(LI $(CODE ghcr.io/dlang-dockerized/dmd:$(EM baseimage)))
+$(LI $(CODE ghcr.io/dlang-dockerized/dmd:latest-$(EM baseimage)))
+$(LI $(CODE ghcr.io/dlang-dockerized/dmd:2-$(EM baseimage)))
+$(LI $(CODE ghcr.io/dlang-dockerized/dmd:2.100.2-$(EM baseimage)))
+$(LI $(SMALL and so on))
+)
+
+
+$(H3 Maintained versions and images)
+
+$(P
+The $(STRONG maintenance policy) of $(I dlang-dockerized) is outlined in the MAINTENANCE document of the project.
+It can be found at $(LINK https://github.com/dlang-dockerized/packaging/blob/main/MAINTENANCE.md).
+)
+
+$(NOTE:
+Keep in mind, this is work done by volunteers.
+)
+
+
+$(H2 Container registries)
+
+Container images are pushed to two container registries:
+$(UL
+$(LI GitHub Container Registry: $(LINK https://github.com/orgs/dlang-dockerized/packages/container/package/dmd))
+$(LI Docker Hub: $(LINK https://hub.docker.com/r/dlangdockerized/dmd/tags))
+)
+
+The registry to pull an image from is selected
+by prepending the corresponding registry host and vendor name to the image name:
+$(UL
+$(LI GitHub Container Registry: $(CODE $(EM ghcr.io/dlang-dockerized/)dmd))
+$(LI Docker Hub: $(CODE $(EM docker.io/dlangdockerized/)dmd))
+)
+
+$(NOTE
+At the time of writing, $(STRONG $(EM ghcr.io)) is the $(STRONG recommended registry) to pull these images from.
+)
+
+$(NOTE
+$(EM Docker) defaults to $(CODE docker.io);
+allowing users to omit that prefix.
+$(BR)
+Best practice is, however, to explicitly specify the source registry of an image.
+This ensures compatibility across container engines and user configurations.
+)
+
+
+$(H2 Tips and tricks)
+
+$(H3 Debugging with LLDB)
+
+$(P
+At the time of writing, due to a limitation in LLDB,
+$(EM seccomp confinement) needs to be turned off for the debugger to work.
+$(CONSOLE docker run --security-opt seccomp=unconfined -it dlang-dockerized/ldc:latest lldb /src/my-app)
+)
+
+$(P
+For further information check out: $(LINK https://github.com/llvm/llvm-project/issues/61899)
+)
+
+
+$(H2 Issue tracker)
+
+See: $(LINK https://github.com/dlang-dockerized/packaging/issues)
+
+
+$(H2 Packaging your own app as container image)
+
+$(P
+The following examples outline how one can build and package their own application using OCI containers.
+They are meant to be used as a starting point only.
+Downstream users are expected to adjust them accordingly to fit their requirements and tune them to their liking.
+)
+
+$(NOTE
+The D community is usually more than happy to help you with getting your Containerfile set up and running.
+)
+
+
+$(H3 No build system)
+
+$(OL
+$(LI Navigate into the root folder of your project.)
+$(LI Create a file named $(CODE Dockerfile) $(LPAREN)no file extension$(RPAREN) in that directory.)
+$(LI Copy and paste the following template:
+$(CONSOLE $(SHE) build stage
+FROM ghcr.io/dlang-dockerized/dmd:latest AS build-stage
+COPY . /d-project
+RUN dmd -inline -O -i -I=/d-project/src /d-project/src/app.d -of=/my-d-app
+
+$(SHE) runtime stage
+FROM docker.io/debian:latest
+COPY --from=build-stage /my-d-app /usr/local/bin/my-d-app
+CMD ["/usr/local/bin/my-d-app"]
+)
+)
+$(LI Adjust as needed.)
+$(LI Run $(ICODE docker build . --tag my-d-app:v1.0.0) to build the container image.)
+)
+
+
+$(H3 Using DUB)
+$(OL
+$(LI Navigate into the folder of your project
+    where your $(I DUB recipe) $(LPAREN)i.e. $(CODE dub.json) or $(CODE dub.sdl)$(RPAREN) is located.)
+$(LI Specify a $(CODE targetPath) and a $(CODE targetName) in your DUB recipe.
+$(SMALL While this step is optional,
+it will make it easier to copy the right binary into the runtime stage later.)
+)
+$(LI Create a file named $(CODE Dockerfile) $(LPAREN)no file extension$(RPAREN) in that directory.)
+$(LI Copy and paste the following template:
+$(CONSOLE $(SHE) build stage
+FROM ghcr.io/dlang-dockerized/dmd:latest AS build-stage
+COPY . /d-project
+RUN dub build --build=plain
+
+$(SHE) runtime stage
+FROM docker.io/debian:latest
+COPY --from=build-stage /targetPath/targetName /usr/local/bin/my-d-app
+CMD ["/usr/local/bin/my-d-app"]
+)
+)
+$(LI Adjust as needed.)
+$(LI Run $(ICODE docker build . --tag my-d-app:v1.0.0) to build the container image.)
+)
+
+)
+
+
+Macros:
+    TITLE=Docker and OCI images
+
+    ARG=$(TC code, arg, $0)
+    CODE=$(T code, $0)
+    CONSOLE=$(PRE $(CODE $1))
+    ICODE=$(T code, $(T b, $1))
+    SHE=#
