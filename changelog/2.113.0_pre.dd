@@ -1,0 +1,876 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Aug 05, 2026, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 16 major changes and 0 fixed Bugzilla issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 236 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.bitfield-default-init,Support for default values in C-style bitfields))
+$(LI $(RELATIVE_LINK2 dmd.exception-rewrite,Destructors now run in a nothrow function when an Error unwinds through it))
+$(LI $(RELATIVE_LINK2 dmd.fastdfa,New experimental Data Flow Analysis Engine for nullability and truthiness))
+$(LI $(RELATIVE_LINK2 dmd.fastdfa.uninitialized,Fast DFA reports on uninitialized variable reads))
+$(LI $(RELATIVE_LINK2 dmd.ftime-trace-template-args,Improve `-ftime-trace` template instance detail))
+$(LI $(RELATIVE_LINK2 dmd.hasElaborateDestructor,Added `__traits(needsDestruction, T)`))
+$(LI $(RELATIVE_LINK2 dmd.isOverlapped,New trait `__traits(isOverlapped, field)` to detect overlapping fields))
+$(LI $(RELATIVE_LINK2 dmd.nullderefcheck,An optional check for null dereference is added))
+$(LI $(RELATIVE_LINK2 dmd.saferPrintf,Allow certain `pragma(printf)` function calls to be treated as `@safe`))
+$(LI $(RELATIVE_LINK2 dmd.sarr-length-infer,Add support for static array length inference))
+$(LI $(RELATIVE_LINK2 dmd.two-pass-inliner,The compiler now inlines `pragma(inline, true)` functions in a separate pass))
+$(LI $(RELATIVE_LINK2 dmd.vgc-closure,-vgc now reports locations of nested functions that create closures))
+$(LI $(RELATIVE_LINK2 dmd.with-assign,Add support for `with(auto x = expression())`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 druntime.filterthrown,Gravedigger approach to Throwables escaping a thread entry point is now available))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 variant_disabled_this,variant: Support big structs with @disabled this()))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 dustmite-timeout,Added `--timeout` option to `dub dustmite` command.))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.bitfield-default-init,Support for default values in C-style bitfields)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.bitfield-default-init.dd)
+$(P
+D now supports specifying default values for C-style bitfields in structs and classes.
+This brings valid D code closer to behavior allowed in C++20 and allows for more concise initialization of bitfield members.
+)
+
+$(P
+Value range checking is performed at compile-time to ensure the default value fits within the specified number of bits.
+)
+
+-------
+struct S
+{
+    int a : 4 = 2;   // OK
+    int b : 2 = 5;   // Error: bitfield initializer `5` does not fit in 2 bits
+    uint c : 1 = 1;  // OK
+    bool d : 1 = 1;  // OK
+}
+-------
+)
+
+$(LI $(LNAME2 dmd.exception-rewrite,Destructors now run in a nothrow function when an Error unwinds through it)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.exception-rewrite.dd)
+$(P
+Destructors and scope(exit) blocks internally generate try-finally statements.
+Since 2018, DMD has optimized `finally` blocks in `nothrow` try bodies by rewriting them into a simple sequence,
+avoiding the overhead of exception unwinding. However, this optimization also skipped `finally` blocks when
+an `Error` was thrown, preventing expected cleanup from running.
+)
+
+$(P
+This optimization has been reverted to the pre-2018 behavior: `finally` blocks always run, regardless of whether
+the try body can throw an `Exception`.
+)
+
+$(P
+To reenable the optimization, use the new `-nothrow-optimizations` switch.
+)
+
+$(P
+The following example demonstrates the fix - "exiting!" is now printed even though `callMe` is a `nothrow` function:
+)
+
+```d
+import core.stdc.stdio;
+
+void main()
+{
+    S s2;
+    callMe();
+}
+
+struct S
+{
+    ~this()
+    {
+        printf("exiting\n");
+    }
+}
+
+void callMe() nothrow
+{
+    throw new Error("hi there :)");
+}
+```
+
+$(P
+The `-betterC` switch is unaffected by this change.
+)
+)
+
+$(LI $(LNAME2 dmd.fastdfa,New experimental Data Flow Analysis Engine for nullability and truthiness)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.fastdfa.dd)
+$(P
+A new experimental Data Flow Analysis (DFA) has been implemented under the preview flag ``-preview=fastdfa``.
+The intent of the engine is to be both fast and free from false positives, if successful it may in the future be turned on by default.
+)
+
+$(P
+No attributes have been implemented to date, before they are considered the engine itself must be both usable with the right tradeoffs and have desirable features.
+This has some side effects, it prevent separate compilation, function pointers, and cyclic functions from being analysable.
+These limitations are not supposed to prevent a successful compilation when in use.
+)
+
+$(P
+The engine itself is variable centric with a strong focus on giving up on analysing a variable if things get too complex for it.
+This can result in messages that may not appear to make sense for where they are emitted, due to the way shortcutting of analysis works.
+As an example of loops:
+)
+
+```d
+void loopy()
+{
+    int* ptr = new int;
+
+    foreach (i; 0 .. 2) // Error: Variable `ptr` was required to be non-null and has become null
+    {
+        int val = *ptr;
+        ptr = null;
+    }
+}
+```
+
+$(P
+If the engine is successful, the reporting mechanism would be replaced with a tracing state pass.
+This would offer for a function line by line explanation of how and why the engine thought something was true.
+)
+
+$(P
+The engine has been tested on a 100k LOC defensively written codebase without any false positives.
+The performance is similar to DIP1000 and is not supposed to be noticeable.
+)
+)
+
+$(LI $(LNAME2 dmd.fastdfa.uninitialized,Fast DFA reports on uninitialized variable reads)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.fastdfa.uninitialized.dd)
+$(P
+The fast DFA engine has gained the ability to error when a variable can be proven to being in an uninitialized state, and is read.
+)
+
+```d
+void readFromUninit() @system
+{
+    int val1 = void;
+    int val2 = val1; // error
+
+    int* ptr = &val1;
+    int val3 = *ptr; // error
+}
+```
+
+$(P
+As part of this it is now capable of looking through pointers and seeing properties of variables that are on the stack.
+)
+
+$(P
+An application of this feature is the prevention of mathematical operators from accessing default initialized floating point types.
+)
+
+```d
+void checkFloatInit(bool condition)
+{
+    float v;
+    float t = v * 2; // error math op
+
+    if (condition)
+        v = 2;
+
+    float u = v * 2; // no error
+}
+```
+
+$(P
+It will not activate for other expressions, or statements.
+Only in a mathematical expression.
+)
+
+$(P
+This was not originally part of the fast DFA engines scope, its continued existence depends upon community feedback as part of usage.
+)
+)
+
+$(LI $(LNAME2 dmd.ftime-trace-template-args,Improve `-ftime-trace` template instance detail)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.ftime-trace-template-args.dd)
+$(P
+The `-ftime-trace` profiling output now includes template argument types
+in the event name for template instance events, allowing users to
+distinguish between different instantiations of the same template
+(e.g. `isArray!(int)` instead of just `isArray`).
+)
+)
+
+$(LI $(LNAME2 dmd.hasElaborateDestructor,Added `__traits(needsDestruction, T)`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.hasElaborateDestructor.dd)
+$(P
+True if T is a *value* type needing elaborate destruction. This includes structs with explicit `~this()` destructors and/or compiler-generated destructors (caused by fields needing destruction), static arrays thereof, and enums with such base types.
+)
+
+---
+class C { ~this(); }
+struct S { ~this(); }
+
+static assert(!__traits(needsDestruction, C));
+static assert(__traits(needsDestruction, S));
+static assert(!__traits(needsDestruction, S[0]));
+static assert(__traits(needsDestruction, S[1]));
+---
+)
+
+$(LI $(LNAME2 dmd.isOverlapped,New trait `__traits(isOverlapped, field)` to detect overlapping fields)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.isOverlapped.dd)
+$(P
+D now provides a compile-time trait to check whether a struct or class field overlaps with other fields in memory. This is useful for serialization libraries, code generators, and metaprogramming tasks that need to identify fields sharing the same memory location.
+)
+
+$(P
+The trait takes a single field argument, returning `true` if the field's storage overlaps with other fields (typically because it is part of a union).
+)
+
+```d
+struct S
+{
+    int a;
+    union
+    {
+        int x;  // overlaps with y
+        float y;  // overlaps with x
+    }
+    int b;
+}
+
+static assert(__traits(isOverlapped, S.x));  // true
+static assert(__traits(isOverlapped, S.y));  // true
+static assert(!__traits(isOverlapped, S.a)); // false - regular field
+static assert(!__traits(isOverlapped, S.b)); // false - regular field
+```
+
+$(P
+The trait works with both anonymous and named unions:
+)
+
+```d
+union NamedUnion
+{
+    int x;
+    float y;
+}
+
+static assert(__traits(isOverlapped, NamedUnion.x));  // true
+static assert(__traits(isOverlapped, NamedUnion.y));  // true
+```
+
+$(P
+This trait is particularly useful for:
+- Serialization libraries that need to handle only one field from overlapping sets
+- Understanding memory layout and field interaction
+- Implementing correct destructors for types with overlapping fields
+- Generic code that needs to reason about field storage semantics
+)
+
+$(P
+The trait exposes DMD's internal overlap tracking (`VarDeclaration.overlapped`), providing a direct way to query this semantic property.
+)
+)
+
+$(LI $(LNAME2 dmd.nullderefcheck,An optional check for null dereference is added)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.nullderefcheck.dd)
+$(P
+A new check has been implemented that injects code to check a pointer for null before it is dereferenced.
+)
+
+$(P
+It will be typically be used if you need a backtrace generated (when one is not automatically done), or if you want to catch and handle the Error as part of a scheduler.
+)
+
+$(P
+This can be enabled by using ``-check=nullderef=on`` by default it is off.
+What happens may be customized by the ``-checkaction`` switch and by setting a new handler in ``core.exception``.
+)
+
+$(P
+Due to issues in dmd's backend, not all pointer dereferences are guaranteed to get a check.
+)
+)
+
+$(LI $(LNAME2 dmd.saferPrintf,Allow certain `pragma(printf)` function calls to be treated as `@safe`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.saferPrintf.dd)
+$(P
+`printf` function calls in general are unsafe. Many calls, however,
+can be automatically checked for safety.
+)
+
+$(P
+This change allows calling a $(DDSUBLINK spec/pragma, printf,
+`pragma(printf)`) function from @safe code when:
+)
+
+$(P
+- the callee is marked `@safe` or `@trusted`
+- the format string passed is a literal
+- no zero-terminated string format specifiers are used
+)
+
+$(P
+Note: `pragma(printf)` already enforces type safety.
+)
+
+$(P
+For example:
+)
+
+```d
+extern(C) pragma(printf)
+void printf(const char* format, ...) @trusted;
+
+@safe void func(int i, char* s)
+{
+    printf("i is %d\n", i);  // allowed
+    printf("s is %s\n", s);  // Error: call is not safe
+    printf(s);               // Error: call is not safe
+}
+```
+)
+
+$(LI $(LNAME2 dmd.sarr-length-infer,Add support for static array length inference)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.sarr-length-infer.dd)
+$(P
+Added support for using `$` to automatically infer the length of a static array from its initializer. This allows for cleaner declarations without manually counting elements.
+)
+
+```d
+int[$] arr = [1, 2, 3]; // Length is inferred as 3
+```
+)
+
+$(LI $(LNAME2 dmd.two-pass-inliner,The compiler now inlines `pragma(inline, true)` functions in a separate pass)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.two-pass-inliner.dd)
+$(P
+The compiler now considers `pragma(inline, true)` functions for inlining in a dedicated pass
+before trying to inline other eligible functions. This provides better control of inlining
+decisions, for example:
+)
+
+```d
+auto staticSquares(uint n)()
+{
+    int[n] arr;
+    static foreach(i; 0 .. n)
+        arr[i] = (i + 1) ^^ 2;
+    return arr;
+}
+
+pragma(inline, true) int thirtyThirty()
+{
+    return staticSquares!30[$ - 1];
+}
+```
+
+$(P
+Previously, `dmd -inline` would first inline `staticSquares()` into `thirtyThirty()` and
+subsequently fail to inline `thirtyThirty()` into its callers. With the new implementation,
+the programmer can expect the compiler to replace calls to `thirtyThirty()` with
+`staticSquares!30[$ - 1]` before making other inlining decisions.
+)
+)
+
+$(LI $(LNAME2 dmd.vgc-closure,-vgc now reports locations of nested functions that create closures)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.vgc-closure.dd)
+$(P
+When a GC-allocated closure was created, the `-vgc` switch would only point to the outer function that a closure was created for.
+For a big function, this still requires you to search where the nested function requiring the closure actually is.
+It now reports the closure function and variable location just like in error messages for `@nogc`.
+)
+
+```
+auto closure()
+{
+    int x;
+    int bar() { return x; }
+    return &bar;
+}
+```
+
+$(P
+After:
+)
+
+$(P
+$(CONSOLE
+vgc.d(1): vgc: using closure causes GC allocation
+)
+)
+
+$(P
+$(CONSOLE
+vgc.d(1): vgc: using closure causes GC allocation
+vgc.d(4): vgc: function `bar` closes over variable `x`
+vgc.d(3): vgc: `x` declared here
+)
+)
+)
+
+$(LI $(LNAME2 dmd.with-assign,Add support for `with(auto x = expression())`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.with-assign.dd)
+$(P
+Added support for using `with` statements with an expression initialiser as an `AssignExpression`, like `if`, `while` for` and `switch`.
+For backwards compatibility, `with` still also accepts a qualified expression without assignment to a variable as in `with(immutable expression())`.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 druntime.filterthrown,Gravedigger approach to Throwables escaping a thread entry point is now available)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.filterthrown.dd)
+$(P
+A new method is added to `ThreadBase` enabling filtering of any `Throwable`'s before it is handled by the thread abstraction.
+This may be used per-thread and globally, to log that an `Error` has occured or to exit the process.
+)
+
+$(P
+A reasonable error handler that may be of use is:
+)
+
+```d
+import core.exception;
+
+void main()
+{
+    filterThreadThrowableHandler = (ref Throwable t) {
+        import core.stdc.stdio;
+        import core.stdc.stdlib;
+
+        if (auto e = cast(Error) t)
+        {
+            auto msg = e.message();
+            fprintf(stderr, "Thread death due to error: %.*s\n", cast(int)msg.length, msg.ptr);
+            fflush(stderr);
+            abort();
+        }
+    };
+}
+```
+
+$(P
+For a per thread handler the following example may be what you want:
+)
+
+```d
+import core.thread;
+
+class MyThread : Thread
+{
+    this( void function() fn, size_t sz = 0 ) @safe pure nothrow @nogc
+    {
+        super(fn, sz);
+    }
+
+    this( void delegate() dg, size_t sz = 0 ) @safe pure nothrow @nogc
+    {
+        super(dg, sz);
+    }
+
+    override void filterCaughtThrowable(ref Throwable t) @system nothrow
+    {
+        import core.stdc.stdio;
+        import core.stdc.stdlib;
+
+        if (auto e = cast(Error) t)
+        {
+            auto msg = e.message();
+            fprintf(stderr, "Thread death due to error: %.*s\n", cast(int)msg.length, msg.ptr);
+            fflush(stderr);
+            abort();
+        }
+
+        super.filterCaughtThrowable(t);
+    }
+}
+```
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 variant_disabled_this,variant: Support big structs with @disabled this())
+$(CHANGELOG_SOURCE_FILE phobos, changelog/variant_disabled_this.dd)
+$(P
+std.variant didn't compile when the payload was a struct that was bigger than
+its internal buffer and had to be allocated on the heap if that struct
+`@disabled this()`. The new handling now always skips the constructor and just
+copies the directly to the allocated regions.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 dustmite-timeout,Added `--timeout` option to `dub dustmite` command.)
+$(CHANGELOG_SOURCE_FILE dub, changelog/dustmite-timeout.dd)
+$(P
+Adds a timeout (in seconds) for each oracle invocation, preventing
+the dustmite process from hanging indefinitely when the test command
+does not terminate. Requires the `timeout` command to be available
+(coreutils on Linux/macOS).
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_GITHUB DMD Compiler bug fixes,
+
+$(LI $(DMDGITHUB 17224): No way to get notified about D runtime termination.)
+$(LI $(DMDGITHUB 17531): Using a custom pow function for ^^)
+$(LI $(DMDGITHUB 18337): Coverage always report 0000000 for inlined function)
+$(LI $(DMDGITHUB 19499): pragms$(LPAREN)lib$(RPAREN) and pragma$(LPAREN)linkerDirective$(RPAREN) can emit duplicate entries to the object)
+$(LI $(DMDGITHUB 19675): fatal error LNK1179 on windows-x86_64-dmd with MSVC)
+$(LI $(DMDGITHUB 19721): __traits$(LPAREN)getMember$(RPAREN) should not allow safe code to access private fields)
+$(LI $(DMDGITHUB 19829): Appending to keys of an empty associative array "cannot be interpreted at compile time")
+$(LI $(DMDGITHUB 19905): Type list $(LPAREN)tuple$(RPAREN) not expanded in delegate during IFTI)
+$(LI $(DMDGITHUB 20053): Line with spaces in cmdfile is treated as multiple arguments)
+$(LI $(DMDGITHUB 20425): ImportC: Assignment to double complex fails when using ternary operator)
+$(LI $(DMDGITHUB 20439): "Undefined reference to internal" when -c with SysTime.max in init)
+$(LI $(DMDGITHUB 20578): dmd -inline segfault on windows, mac, linux)
+$(LI $(DMDGITHUB 20997): Alias template parameter with type specialization rejects valid argument)
+$(LI $(DMDGITHUB 21039): Zero-length static array with scalar initializer causes ICE)
+$(LI $(DMDGITHUB 21194): Modifying global char[] initialized with dup of string literal causes segfault)
+$(LI $(DMDGITHUB 21637): ICE in tuple comparison)
+$(LI $(DMDGITHUB 21707): Segfault with `-vcg-ast` and foreach on a sequence)
+$(LI $(DMDGITHUB 21839): ICE - Crash when using void[N].init)
+$(LI $(DMDGITHUB 21976): [REG 2.112.0] Array comparison performance regression)
+$(LI $(DMDGITHUB 22153): importc: cannot use forward declaration of static function when building a library)
+$(LI $(DMDGITHUB 22229): `scope` should be inferred when assigning a scope variable to another variable)
+$(LI $(DMDGITHUB 22282): Applying a UDA to a `File`-type variable causes DMD to crash)
+$(LI $(DMDGITHUB 22363): Noreturn variable access is not always detected)
+$(LI $(DMDGITHUB 22381): out-of-bounds access when masking ushort)
+$(LI $(DMDGITHUB 22394): Error in lambda should show call line as well as definition line)
+$(LI $(DMDGITHUB 22397): DMD 2.112.0 fails to compile an array variable initialization with an array literal and a UDA)
+$(LI $(DMDGITHUB 22399): Low-level threading support on Windows DLLs are broken)
+$(LI $(DMDGITHUB 22406): [REG 2.112] Error: function '_d_aaLen' is not callable using argument types '$(LPAREN)shared$(LPAREN)int[int]$(RPAREN)$(RPAREN)')
+$(LI $(DMDGITHUB 22427): Premature removal of ternary of type `noreturn`)
+$(LI $(DMDGITHUB 22430): noreturn evaluation in ConditionalExpression is ignored)
+$(LI $(DMDGITHUB 22463): SOURCE_DATE_EPOCH parsing incorrectly affected by system timezone)
+$(LI $(DMDGITHUB 22481): Inliner silently removes `return` in loops)
+$(LI $(DMDGITHUB 22489): DMD miscompiles `real` types in the presence of aliasing)
+$(LI $(DMDGITHUB 22504): [REG 2.112] druntime fails to build on powerpc64le-linux-gnu)
+$(LI $(DMDGITHUB 22512): [REG 2.112] druntime fails to build on sparcv9-sun-solaris2.11)
+$(LI $(DMDGITHUB 22517): [REG 2.106] Allocating an array of type void[] is marked as not containing pointers)
+$(LI $(DMDGITHUB 22544): [REG 2.112] Cannot index AA in `with` block)
+$(LI $(DMDGITHUB 22560): [REG master] Can supposedly index AA with mismatching key type)
+$(LI $(DMDGITHUB 22594): [REG 2.101] TypeInfo_Class.m_flags wrong wrt. noPointers flag when the only pointers come from tuple members)
+$(LI $(DMDGITHUB 22613): Consecutive initialization fails with postblits)
+$(LI $(DMDGITHUB 22621): Anonymous struct inside anonymous union not considered overlapped)
+$(LI $(DMDGITHUB 22647): dmd as library fails to link with dub test --coverage)
+$(LI $(DMDGITHUB 22658): `__traits$(LPAREN)isCopyable$(RPAREN)` fails on static array of non-copyable struct)
+$(LI $(DMDGITHUB 22659): ICE when assigning to a slice cast to static array type)
+$(LI $(DMDGITHUB 22667): ImportC: generating .di turns `void` into `_IO_lock_t`)
+$(LI $(DMDGITHUB 22711): -ftime-trace: semantic_analysis block is too coarse for useful profiling)
+$(LI $(DMDGITHUB 22754): I really want a way to omit `__monitor` from `Object`)
+$(LI $(DMDGITHUB 22769): ICE on IFTI call inside interpolated string)
+$(LI $(DMDGITHUB 22925): [REG 2.113] ICE: AssertError@expression.d$(LPAREN)508$(RPAREN) with invalid case range statement)
+$(LI $(DMDGITHUB 22980): "named arguments not allowed here" in const constructor)
+$(LI $(DMDGITHUB 23065): [REG2.112.0] AA-equality fails compilation with self-referential types)
+$(LI $(DMDGITHUB 23081): druntime parallel GC livelock: scanBackground spins when evStackFilled left set with empty scan stack)
+$(LI $(DMDGITHUB 23133): [Reg 2.109.1] GC.collect$(LPAREN)$(RPAREN) no longer scans in concurrent threads)
+$(LI $(DMDGITHUB 23182): [REG 2.112.0] Duplicate __aaget declaration for simple expression with associative array)
+$(LI $(DMDGITHUB 23320): Constness and immutability of AA keys is handled unflexibly)
+$(LI $(DMDGITHUB 23359): Tuple parameter UDAs not propagated to expanded elements)
+)
+$(BUGSTITLE_GITHUB Phobos bug fixes,
+
+$(LI $(PHOBOSGITHUB 9783): std.variant doesn't do postblit/dtor correctly for large structs)
+$(LI $(PHOBOSGITHUB 9871): cartesianProduct should have length for finite ranges)
+$(LI $(PHOBOSGITHUB 10062): std.variant does not observe value semantics for large value types.)
+$(LI $(PHOBOSGITHUB 10429): Variant and tuples by index)
+$(LI $(PHOBOSGITHUB 10743): Nullable should implement opCmp)
+$(LI $(PHOBOSGITHUB 10858): Documentation of `std.logger`: `trace$(LPAREN)$(RPAREN)` does not work by default)
+$(LI $(PHOBOSGITHUB 10916): std.format reads past end of input)
+$(LI $(PHOBOSGITHUB 10940): Inconsistent treatment of s=0,∞ by gammaIncomplete$(LPAREN)s, x$(RPAREN))
+$(LI $(PHOBOSGITHUB 11035): std.regex: multi-digit backreference silently drops the overshooting digit)
+)
+$(BUGSTITLE_GITHUB dlang.org bug fixes,
+
+$(LI $(DLANGORGGITHUB 4380): Documentation fullyQualifiedName duplicate)
+$(LI $(DLANGORGGITHUB 4424): [dmd cli.d] Some words need escaping)
+)
+)
+$(D_CONTRIBUTORS_HEADER 236)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR Abhishek Bhosale)
+    $(D_CONTRIBUTOR Abul)
+    $(D_CONTRIBUTOR Abul Hossain Khan)
+    $(D_CONTRIBUTOR Adam D. Ruppe)
+    $(D_CONTRIBUTOR Adam Wilson)
+    $(D_CONTRIBUTOR Aditya Singh)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR AhmedMaged)
+    $(D_CONTRIBUTOR Airbus5717)
+    $(D_CONTRIBUTOR Albert24GG)
+    $(D_CONTRIBUTOR Aleksandr Treyger)
+    $(D_CONTRIBUTOR Alexibu)
+    $(D_CONTRIBUTOR Amaury)
+    $(D_CONTRIBUTOR Andra Maslaev)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Andrej Mitrovic)
+    $(D_CONTRIBUTOR Andrej Petrović)
+    $(D_CONTRIBUTOR Andrey Zherikov)
+    $(D_CONTRIBUTOR apz28)
+    $(D_CONTRIBUTOR Arun Chandrasekaran)
+    $(D_CONTRIBUTOR Aryan Dadwal)
+    $(D_CONTRIBUTOR ashnaaseth2325-oss)
+    $(D_CONTRIBUTOR Ate Eskola)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Ayan Das)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Basile-z)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR BBasile)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR Benjamin L. Merritt)
+    $(D_CONTRIBUTOR blackbird)
+    $(D_CONTRIBUTOR blobbo)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Brian Schott)
+    $(D_CONTRIBUTOR brianush1)
+    $(D_CONTRIBUTOR bscuron)
+    $(D_CONTRIBUTOR BVRazvan)
+    $(D_CONTRIBUTOR carblue)
+    $(D_CONTRIBUTOR Cauterite)
+    $(D_CONTRIBUTOR Chibisi Chima-Okereke)
+    $(D_CONTRIBUTOR CHIKI)
+    $(D_CONTRIBUTOR Claude Code)
+    $(D_CONTRIBUTOR Clouuday)
+    $(D_CONTRIBUTOR Clouudy)
+    $(D_CONTRIBUTOR Codex CLI)
+    $(D_CONTRIBUTOR Craig Barnes)
+    $(D_CONTRIBUTOR Daniel Murphy)
+    $(D_CONTRIBUTOR Daniel Pflager)
+    $(D_CONTRIBUTOR Daniel Zuncke)
+    $(D_CONTRIBUTOR Dante Broggi)
+    $(D_CONTRIBUTOR David Gileadi)
+    $(D_CONTRIBUTOR David Nadlinger)
+    $(D_CONTRIBUTOR Dawson Frakes)
+    $(D_CONTRIBUTOR dd)
+    $(D_CONTRIBUTOR Dejan Lekic)
+    $(D_CONTRIBUTOR Dejan Lekić)
+    $(D_CONTRIBUTOR Demetrius Kanios)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Dennis)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR devmynote)
+    $(D_CONTRIBUTOR Dibyendu Majumdar)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR Dmitry Olshansky)
+    $(D_CONTRIBUTOR dokutoku)
+    $(D_CONTRIBUTOR Drehuta Andreea)
+    $(D_CONTRIBUTOR drug007)
+    $(D_CONTRIBUTOR Dumitrache Adrian-George)
+    $(D_CONTRIBUTOR e-y-e)
+    $(D_CONTRIBUTOR earthfront)
+    $(D_CONTRIBUTOR Eduard Staniloiu)
+    $(D_CONTRIBUTOR Emanuele Torre)
+    $(D_CONTRIBUTOR Emmankoko)
+    $(D_CONTRIBUTOR Emmanuel Ferdman)
+    $(D_CONTRIBUTOR Emmanuel Nyarko)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Etienne Brateau)
+    $(D_CONTRIBUTOR etienne02)
+    $(D_CONTRIBUTOR Eugene 'Vindex' Stulin)
+    $(D_CONTRIBUTOR Final Evilution)
+    $(D_CONTRIBUTOR FinalEvilution)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR Flying-Toast)
+    $(D_CONTRIBUTOR fourst4r)
+    $(D_CONTRIBUTOR Gabriel)
+    $(D_CONTRIBUTOR Gaofei Qiu)
+    $(D_CONTRIBUTOR Garrett D'Amore)
+    $(D_CONTRIBUTOR Gautam Kotian)
+    $(D_CONTRIBUTOR Giannis Vrentzos)
+    $(D_CONTRIBUTOR Giles Bathgate)
+    $(D_CONTRIBUTOR Gnav)
+    $(D_CONTRIBUTOR Grim Maple)
+    $(D_CONTRIBUTOR guai)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR Hara Kenji)
+    $(D_CONTRIBUTOR hariprakazz)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR IchorDev)
+    $(D_CONTRIBUTOR ichordev)
+    $(D_CONTRIBUTOR IchorDev)
+    $(D_CONTRIBUTOR IDONTUSEGH)
+    $(D_CONTRIBUTOR iFreilicht)
+    $(D_CONTRIBUTOR Ilya Yaroshenko)
+    $(D_CONTRIBUTOR Imperatorn)
+    $(D_CONTRIBUTOR Inkrementator)
+    $(D_CONTRIBUTOR ioanavivi12)
+    $(D_CONTRIBUTOR Iskaban10)
+    $(D_CONTRIBUTOR Jack Stouffer)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR Jakob Øvrum)
+    $(D_CONTRIBUTOR James S Blachly, MD)
+    $(D_CONTRIBUTOR jamesragray)
+    $(D_CONTRIBUTOR Jan Jurzitza)
+    $(D_CONTRIBUTOR Jeremy)
+    $(D_CONTRIBUTOR Jeremy Baxter)
+    $(D_CONTRIBUTOR Jeremy DeHaan)
+    $(D_CONTRIBUTOR jibal)
+    $(D_CONTRIBUTOR jmh530)
+    $(D_CONTRIBUTOR Joakim Noah)
+    $(D_CONTRIBUTOR Joe)
+    $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR Johannes Loher)
+    $(D_CONTRIBUTOR John Kilpatrick)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR Jonathan Marler)
+    $(D_CONTRIBUTOR jordan4ibanez)
+    $(D_CONTRIBUTOR João Lourenço)
+    $(D_CONTRIBUTOR Julian Fondren)
+    $(D_CONTRIBUTOR K)
+    $(D_CONTRIBUTOR Kai Nacke)
+    $(D_CONTRIBUTOR Kazuya Takahashi)
+    $(D_CONTRIBUTOR Kotet)
+    $(D_CONTRIBUTOR Kuzko Sergii)
+    $(D_CONTRIBUTOR Kyle Foley)
+    $(D_CONTRIBUTOR Lander Brandt)
+    $(D_CONTRIBUTOR Laurent Tréguier)
+    $(D_CONTRIBUTOR leitimmel)
+    $(D_CONTRIBUTOR lempiji)
+    $(D_CONTRIBUTOR limepoutine)
+    $(D_CONTRIBUTOR linkrope)
+    $(D_CONTRIBUTOR Luca-Sanders)
+    $(D_CONTRIBUTOR Luís Ferreira)
+    $(D_CONTRIBUTOR Madhur Kumar)
+    $(D_CONTRIBUTOR Mai-Lapyst)
+    $(D_CONTRIBUTOR Manav Gupta)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Marc Schütz)
+    $(D_CONTRIBUTOR Marcelo Silva Nascimento Mancini)
+    $(D_CONTRIBUTOR Mark)
+    $(D_CONTRIBUTOR Mark Isaacson)
+    $(D_CONTRIBUTOR Markus Laker)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mateiuss)
+    $(D_CONTRIBUTOR Mathias Baumann)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR matthriscu)
+    $(D_CONTRIBUTOR Max Haughton)
+    $(D_CONTRIBUTOR MetaLang)
+    $(D_CONTRIBUTOR mhh)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Mindy Batek)
+    $(D_CONTRIBUTOR Mingming SUN)
+    $(D_CONTRIBUTOR Mohamed El Shorbagy)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR naydef)
+    $(D_CONTRIBUTOR Nelson Brochado)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Nils Lankila)
+    $(D_CONTRIBUTOR nordlow)
+    $(D_CONTRIBUTOR Passw)
+    $(D_CONTRIBUTOR Patrick Schlüter)
+    $(D_CONTRIBUTOR Paul Backus)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR phebert5009)
+    $(D_CONTRIBUTOR Pierre Grimaud)
+    $(D_CONTRIBUTOR Pranjal Kole)
+    $(D_CONTRIBUTOR ProgramGamer)
+    $(D_CONTRIBUTOR Prthmsh7)
+    $(D_CONTRIBUTOR qchikara)
+    $(D_CONTRIBUTOR quassy)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Quirin Schroll)
+    $(D_CONTRIBUTOR Rainer Orth)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Rareș Constantin)
+    $(D_CONTRIBUTOR Razvan Mihai Popa)
+    $(D_CONTRIBUTOR Razvan Nitu)
+    $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
+    $(D_CONTRIBUTOR Richard Manthorpe)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Robert Grancsa)
+    $(D_CONTRIBUTOR Robert Stoica)
+    $(D_CONTRIBUTOR Ross Harrison)
+    $(D_CONTRIBUTOR RubyTheRoobster)
+    $(D_CONTRIBUTOR RUSshy)
+    $(D_CONTRIBUTOR sarneaud)
+    $(D_CONTRIBUTOR Sean Enck)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
+    $(D_CONTRIBUTOR Sergii K)
+    $(D_CONTRIBUTOR Sergii Kuzko)
+    $(D_CONTRIBUTOR Shachar Shemesh)
+    $(D_CONTRIBUTOR Shriramana Sharma)
+    $(D_CONTRIBUTOR Simen Kjærås)
+    $(D_CONTRIBUTOR Sinisa Susnjar)
+    $(D_CONTRIBUTOR skoppe)
+    $(D_CONTRIBUTOR Stanislav Blinov)
+    $(D_CONTRIBUTOR Steven Dwy)
+    $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Sönke Ludwig)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Timon Gehr)
+    $(D_CONTRIBUTOR Timothee Cour)
+    $(D_CONTRIBUTOR Titouan Vervack)
+    $(D_CONTRIBUTOR TJesionowski)
+    $(D_CONTRIBUTOR Tony Edgin)
+    $(D_CONTRIBUTOR tsbockman)
+    $(D_CONTRIBUTOR Tushar)
+    $(D_CONTRIBUTOR Ulrich Küttler)
+    $(D_CONTRIBUTOR Valentino Giudice)
+    $(D_CONTRIBUTOR vindexbit)
+    $(D_CONTRIBUTOR Vladimir Panteleev)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Witold Baryluk)
+    $(D_CONTRIBUTOR wolframw)
+    $(D_CONTRIBUTOR Wyatt Kennedy)
+    $(D_CONTRIBUTOR xiren7)
+    $(D_CONTRIBUTOR yelninei)
+    $(D_CONTRIBUTOR Zach Tollen)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.113.0
+    TITLE=Change Log: $(VER)
