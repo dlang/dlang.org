@@ -2,41 +2,41 @@ Ddoc
 
 $(CHANGELOG_NAV_INJECT)
 
-$(VERSION Aug 15, 2026, =================================================,
+$(VERSION Aug 17, 2026, =================================================,
 
 $(CHANGELOG_HEADER_STATISTICS
-$(VER) comes with 16 major changes and 78 fixed Github issues.
+$(VER) comes with 16 major changes and 82 fixed GitHub issues.
         A huge thanks goes to the
-        $(LINK2 #contributors, 65 contributors)
+        $(LINK2 #contributors, 230 contributors)
         who made $(VER) possible.)
 
 $(BUGSTITLE_TEXT_HEADER Compiler changes,
 
 $(LI $(RELATIVE_LINK2 dmd.bitfield-default-init,Support for default values in C-style bitfields))
-$(LI $(RELATIVE_LINK2 dmd.exception-rewrite,Destructors now run in a `nothrow` function when an `Error` unwinds through it))
+$(LI $(RELATIVE_LINK2 dmd.exception-rewrite,Destructors now run in a nothrow function when an Error unwinds through it))
 $(LI $(RELATIVE_LINK2 dmd.fastdfa,New experimental Data Flow Analysis Engine for nullability and truthiness))
 $(LI $(RELATIVE_LINK2 dmd.fastdfa.uninitialized,Fast DFA reports on uninitialized variable reads))
 $(LI $(RELATIVE_LINK2 dmd.ftime-trace-template-args,Improve `-ftime-trace` template instance detail))
-$(LI $(RELATIVE_LINK2 dmd.needsDestruction,Added `__traits(needsDestruction, T)`))
+$(LI $(RELATIVE_LINK2 dmd.hasElaborateDestructor,Added `__traits(needsDestruction, T)`))
 $(LI $(RELATIVE_LINK2 dmd.isOverlapped,New trait `__traits(isOverlapped, field)` to detect overlapping fields))
-$(LI $(RELATIVE_LINK2 dmd.nullderefcheck,Checks for null dereferences))
+$(LI $(RELATIVE_LINK2 dmd.nullderefcheck,An optional check for null dereference is added))
 $(LI $(RELATIVE_LINK2 dmd.saferPrintf,Allow certain `pragma(printf)` function calls to be treated as `@safe`))
 $(LI $(RELATIVE_LINK2 dmd.sarr-length-infer,Add support for static array length inference))
 $(LI $(RELATIVE_LINK2 dmd.two-pass-inliner,The compiler now inlines `pragma(inline, true)` functions in a separate pass))
-$(LI $(RELATIVE_LINK2 dmd.vgc-closure,`-vgc` now reports locations of nested functions that create closures))
-$(LI $(RELATIVE_LINK2 dmd.with-assign,Add support for `with (auto x = expression())`))
+$(LI $(RELATIVE_LINK2 dmd.vgc-closure,-vgc now reports locations of nested functions that create closures))
+$(LI $(RELATIVE_LINK2 dmd.with-assign,Add support for `with(auto x = expression())`))
 
 )
 
 $(BUGSTITLE_TEXT_HEADER Runtime changes,
 
-$(LI $(RELATIVE_LINK2 druntime.filterthrown,Gravedigger approach to `Throwable`s escaping a thread entry point is now available))
+$(LI $(RELATIVE_LINK2 druntime.filterthrown,Gravedigger approach to Throwables escaping a thread entry point is now available))
 
 )
 
 $(BUGSTITLE_TEXT_HEADER Library changes,
 
-$(LI $(RELATIVE_LINK2 variant_disabled_this,variant: Support big structs with `@disable this()`))
+$(LI $(RELATIVE_LINK2 variant_disabled_this,variant: Support big structs with @disabled this()))
 
 )
 
@@ -74,10 +74,10 @@ struct S
 -------
 )
 
-$(LI $(LNAME2 dmd.exception-rewrite,Destructors now run in a `nothrow` function when an `Error` unwinds through it)
+$(LI $(LNAME2 dmd.exception-rewrite,Destructors now run in a nothrow function when an Error unwinds through it)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.exception-rewrite.dd)
 $(P
-Destructors and `scope(exit)` blocks internally generate try-finally statements.
+Destructors and scope(exit) blocks internally generate try-finally statements.
 Since 2018, DMD has optimized `finally` blocks in `nothrow` try bodies by rewriting them into a simple sequence,
 avoiding the overhead of exception unwinding. However, this optimization also skipped `finally` blocks when
 an `Error` was thrown, preventing expected cleanup from running.
@@ -93,7 +93,7 @@ To reenable the optimization, use the new `-nothrow-optimizations` switch.
 )
 
 $(P
-The following example demonstrates the fix - "exiting" is now printed even though `callMe` is a `nothrow` function:
+The following example demonstrates the fix - "exiting!" is now printed even though `callMe` is a `nothrow` function:
 )
 
 ```d
@@ -128,12 +128,12 @@ $(LI $(LNAME2 dmd.fastdfa,New experimental Data Flow Analysis Engine for nullabi
 $(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.fastdfa.dd)
 $(P
 A new experimental Data Flow Analysis (DFA) has been implemented under the preview flag ``-preview=fastdfa``.
-The intent of the engine is to be both fast and free from false positives; if successful, it may in the future be turned on by default.
+The intent of the engine is to be both fast and free from false positives, if successful it may in the future be turned on by default.
 )
 
 $(P
-No attributes have been implemented to date; before they are considered, the engine itself must be both usable with the right tradeoffs and have desirable features.
-This has some side effects: it prevents separate compilation, function pointers, and cyclic functions from being analysable.
+No attributes have been implemented to date, before they are considered the engine itself must be both usable with the right tradeoffs and have desirable features.
+This has some side effects, it prevent separate compilation, function pointers, and cyclic functions from being analysable.
 These limitations are not supposed to prevent a successful compilation when in use.
 )
 
@@ -158,7 +158,7 @@ void loopy()
 
 $(P
 If the engine is successful, the reporting mechanism would be replaced with a tracing state pass.
-This would offer a line by line explanation of how and why the engine thought something was true for a function.
+This would offer for a function line by line explanation of how and why the engine thought something was true.
 )
 
 $(P
@@ -170,7 +170,7 @@ The performance is similar to DIP1000 and is not supposed to be noticeable.
 $(LI $(LNAME2 dmd.fastdfa.uninitialized,Fast DFA reports on uninitialized variable reads)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.fastdfa.uninitialized.dd)
 $(P
-The fast DFA engine has gained the ability to error when a variable can be proven to be in an uninitialized state, and is read.
+The fast DFA engine has gained the ability to error when a variable can be proven to being in an uninitialized state, and is read.
 )
 
 ```d
@@ -211,7 +211,7 @@ Only in a mathematical expression.
 )
 
 $(P
-This was not originally part of the fast DFA engine's scope; its continued existence depends upon community feedback as part of usage.
+This was not originally part of the fast DFA engines scope, its continued existence depends upon community feedback as part of usage.
 )
 )
 
@@ -225,8 +225,8 @@ distinguish between different instantiations of the same template
 )
 )
 
-$(LI $(LNAME2 dmd.needsDestruction,Added `__traits(needsDestruction, T)`)
-$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.needsDestruction.dd)
+$(LI $(LNAME2 dmd.hasElaborateDestructor,Added `__traits(needsDestruction, T)`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.hasElaborateDestructor.dd)
 $(P
 True if T is a *value* type needing elaborate destruction. This includes structs with explicit `~this()` destructors and/or compiler-generated destructors (caused by fields needing destruction), static arrays thereof, and enums with such base types.
 )
@@ -298,37 +298,20 @@ The trait exposes DMD's internal overlap tracking (`VarDeclaration.overlapped`),
 )
 )
 
-$(LI $(LNAME2 dmd.nullderefcheck,Checks for null dereferences)
+$(LI $(LNAME2 dmd.nullderefcheck,An optional check for null dereference is added)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.nullderefcheck.dd)
 $(P
 A new check has been implemented that injects code to check a pointer for null before it is dereferenced.
 )
 
 $(P
-It will typically be used if you need a backtrace generated or you want to catch and handle the `Error` as part of a scheduler.
+It will be typically be used if you need a backtrace generated (when one is not automatically done), or if you want to catch and handle the Error as part of a scheduler.
 )
 
 $(P
-This can be enabled for all functions by using `-check=nullderef=on` or exclusively for `@safe` functions with `-check=nullderef=safeonly`.
-By default it is off.
-What happens may be customized by the `-checkaction` switch and by setting a new handler in `core.exception`.
+This can be enabled by using ``-check=nullderef=on`` by default it is off.
+What happens may be customized by the ``-checkaction`` switch and by setting a new handler in ``core.exception``.
 )
-
----
-@safe void foo()
-{
-    int* p;
-    // if -check=nullderef=on or -check=nullderef=safeonly is set:
-    int x = *p; // null dereference error thrown at runtime
-}
-
-@system void bar()
-{
-    int* p;
-    // if -check=nullderef=on is set:
-    int x = *p; // no explicit check; relies on OS signal/exception
-}
----
 
 $(P
 Due to issues in dmd's backend, not all pointer dereferences are guaranteed to get a check.
@@ -350,7 +333,7 @@ This change allows calling a $(DDSUBLINK spec/pragma, printf,
 $(P
 - the callee is marked `@safe` or `@trusted`
 - the format string passed is a literal
-- no string format specifiers are used
+- no zero-terminated string format specifiers are used
 )
 
 $(P
@@ -416,7 +399,7 @@ the programmer can expect the compiler to replace calls to `thirtyThirty()` with
 )
 )
 
-$(LI $(LNAME2 dmd.vgc-closure,`-vgc` now reports locations of nested functions that create closures)
+$(LI $(LNAME2 dmd.vgc-closure,-vgc now reports locations of nested functions that create closures)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.vgc-closure.dd)
 $(P
 When a GC-allocated closure was created, the `-vgc` switch would only point to the outer function that a closure was created for.
@@ -425,7 +408,7 @@ It now reports the closure function and variable location just like in error mes
 )
 
 ```
-auto foo()
+auto closure()
 {
     int x;
     int bar() { return x; }
@@ -434,17 +417,13 @@ auto foo()
 ```
 
 $(P
-Before:
+After:
 )
 
 $(P
 $(CONSOLE
 vgc.d(1): vgc: using closure causes GC allocation
 )
-)
-
-$(P
-After:
 )
 
 $(P
@@ -456,11 +435,11 @@ vgc.d(3): vgc: `x` declared here
 )
 )
 
-$(LI $(LNAME2 dmd.with-assign,Add support for `with (auto x = expression())`)
+$(LI $(LNAME2 dmd.with-assign,Add support for `with(auto x = expression())`)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.with-assign.dd)
 $(P
-Added support for using `with` statements with an expression initialiser as an `AssignExpression`, like `if`, `while`, `for` and `switch`.
-For backwards compatibility, `with` still also accepts a qualified expression without assignment to a variable, e.g. `with (immutable expression())`.
+Added support for using `with` statements with an expression initialiser as an `AssignExpression`, like `if`, `while` for` and `switch`.
+For backwards compatibility, `with` still also accepts a qualified expression without assignment to a variable as in `with(immutable expression())`.
 )
 )
 
@@ -469,11 +448,11 @@ For backwards compatibility, `with` still also accepts a qualified expression wi
 
 $(BUGSTITLE_TEXT_BODY Runtime changes,
 
-$(LI $(LNAME2 druntime.filterthrown,Gravedigger approach to `Throwable`s escaping a thread entry point is now available)
+$(LI $(LNAME2 druntime.filterthrown,Gravedigger approach to Throwables escaping a thread entry point is now available)
 $(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.filterthrown.dd)
 $(P
-A new method is added to `ThreadBase` enabling filtering of any `Throwable` before it is handled by the thread abstraction.
-This may be used per-thread and globally, to log that an `Error` has occurred or to exit the process.
+A new method is added to `ThreadBase` enabling filtering of any `Throwable`'s before it is handled by the thread abstraction.
+This may be used per-thread and globally, to log that an `Error` has occured or to exit the process.
 )
 
 $(P
@@ -543,13 +522,13 @@ class MyThread : Thread
 
 $(BUGSTITLE_TEXT_BODY Library changes,
 
-$(LI $(LNAME2 variant_disabled_this,variant: Support big structs with `@disable this()`)
+$(LI $(LNAME2 variant_disabled_this,variant: Support big structs with @disabled this())
 $(CHANGELOG_SOURCE_FILE phobos, changelog/variant_disabled_this.dd)
 $(P
 std.variant didn't compile when the payload was a struct that was bigger than
-its internal buffer, had to be allocated on the heap, and had `@disable this()`.
-The new handling now always skips the constructor and just copies the payload
-directly to the allocated region.
+its internal buffer and had to be allocated on the heap if that struct
+`@disabled this()`. The new handling now always skips the constructor and just
+copies the directly to the allocated regions.
 )
 )
 
@@ -634,14 +613,18 @@ $(LI $(DMDGITHUB 22658): `__traits$(LPAREN)isCopyable$(RPAREN)` fails on static 
 $(LI $(DMDGITHUB 22659): ICE when assigning to a slice cast to static array type)
 $(LI $(DMDGITHUB 22667): ImportC: generating .di turns `void` into `_IO_lock_t`)
 $(LI $(DMDGITHUB 22711): -ftime-trace: semantic_analysis block is too coarse for useful profiling)
+$(LI $(DMDGITHUB 22754): I really want a way to omit `__monitor` from `Object`)
 $(LI $(DMDGITHUB 22769): ICE on IFTI call inside interpolated string)
+$(LI $(DMDGITHUB 22925): [REG 2.113] ICE: AssertError@expression.d$(LPAREN)508$(RPAREN) with invalid case range statement)
 $(LI $(DMDGITHUB 22980): "named arguments not allowed here" in const constructor)
 $(LI $(DMDGITHUB 23065): [REG2.112.0] AA-equality fails compilation with self-referential types)
 $(LI $(DMDGITHUB 23081): druntime parallel GC livelock: scanBackground spins when evStackFilled left set with empty scan stack)
 $(LI $(DMDGITHUB 23133): [Reg 2.109.1] GC.collect$(LPAREN)$(RPAREN) no longer scans in concurrent threads)
 $(LI $(DMDGITHUB 23182): [REG 2.112.0] Duplicate __aaget declaration for simple expression with associative array)
+$(LI $(DMDGITHUB 23262): [REG v2.113.0-beta.1] ICE when trying to cast a class instance to a C++ interface)
 $(LI $(DMDGITHUB 23320): Constness and immutability of AA keys is handled unflexibly)
 $(LI $(DMDGITHUB 23359): Tuple parameter UDAs not propagated to expanded elements)
+$(LI $(DMDGITHUB 23524): Cross-compiling to macos crashes on Windows)
 )
 $(BUGSTITLE_GITHUB Phobos bug fixes,
 
@@ -655,79 +638,245 @@ $(LI $(PHOBOSGITHUB 10916): std.format reads past end of input)
 $(LI $(PHOBOSGITHUB 10940): Inconsistent treatment of s=0,∞ by gammaIncomplete$(LPAREN)s, x$(RPAREN))
 $(LI $(PHOBOSGITHUB 11035): std.regex: multi-digit backreference silently drops the overshooting digit)
 )
+)
 $(BUGSTITLE_GITHUB dlang.org bug fixes,
 
 $(LI $(DLANGORGGITHUB 4380): Documentation fullyQualifiedName duplicate)
 $(LI $(DLANGORGGITHUB 4424): [dmd cli.d] Some words need escaping)
 )
-)
-$(D_CONTRIBUTORS_HEADER 65)
+
+$(D_CONTRIBUTORS_HEADER 230)
 $(D_CONTRIBUTORS
-    $(D_CONTRIBUTOR 0-v-0)
-    $(D_CONTRIBUTOR AaritPanda-git)
-    $(D_CONTRIBUTOR Aayush Mainali)
     $(D_CONTRIBUTOR Abhishek Bhosale)
     $(D_CONTRIBUTOR Abul Hossain Khan)
+    $(D_CONTRIBUTOR Adam D. Ruppe)
     $(D_CONTRIBUTOR Adam Wilson)
     $(D_CONTRIBUTOR Aditya Singh)
+    $(D_CONTRIBUTOR aG0aep6G)
+    $(D_CONTRIBUTOR AhmedMaged)
+    $(D_CONTRIBUTOR Airbus5717)
+    $(D_CONTRIBUTOR Albert24GG)
+    $(D_CONTRIBUTOR Aleksandr Treyger)
+    $(D_CONTRIBUTOR Alexibu)
     $(D_CONTRIBUTOR Amaury)
+    $(D_CONTRIBUTOR Andra Maslaev)
+    $(D_CONTRIBUTOR Andrei Alexandrescu)
+    $(D_CONTRIBUTOR Andrej Mitrovic)
+    $(D_CONTRIBUTOR Andrej Petrović)
+    $(D_CONTRIBUTOR Andrey Zherikov)
     $(D_CONTRIBUTOR apz28)
+    $(D_CONTRIBUTOR Arun Chandrasekaran)
     $(D_CONTRIBUTOR Aryan Dadwal)
     $(D_CONTRIBUTOR ashnaaseth2325-oss)
+    $(D_CONTRIBUTOR Ate Eskola)
     $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Ayan Das)
+    $(D_CONTRIBUTOR Basile Burg)
+    $(D_CONTRIBUTOR Basile-z)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR BBasile)
+    $(D_CONTRIBUTOR Ben Jones)
+    $(D_CONTRIBUTOR Benjamin L. Merritt)
+    $(D_CONTRIBUTOR blackbird)
+    $(D_CONTRIBUTOR blobbo)
+    $(D_CONTRIBUTOR Boris Carvajal)
+    $(D_CONTRIBUTOR Brian Schott)
+    $(D_CONTRIBUTOR brianush1)
     $(D_CONTRIBUTOR bscuron)
+    $(D_CONTRIBUTOR BVRazvan)
+    $(D_CONTRIBUTOR carblue)
+    $(D_CONTRIBUTOR Cauterite)
+    $(D_CONTRIBUTOR Chibisi Chima-Okereke)
     $(D_CONTRIBUTOR CHIKI)
+    $(D_CONTRIBUTOR Claude Code)
+    $(D_CONTRIBUTOR Clouuday)
+    $(D_CONTRIBUTOR Clouudy)
     $(D_CONTRIBUTOR Codex CLI)
+    $(D_CONTRIBUTOR Craig Barnes)
+    $(D_CONTRIBUTOR Daniel Murphy)
+    $(D_CONTRIBUTOR Daniel Pflager)
+    $(D_CONTRIBUTOR Daniel Zuncke)
+    $(D_CONTRIBUTOR Dante Broggi)
+    $(D_CONTRIBUTOR David Gileadi)
+    $(D_CONTRIBUTOR David Nadlinger)
+    $(D_CONTRIBUTOR Dawson Frakes)
     $(D_CONTRIBUTOR dd)
+    $(D_CONTRIBUTOR Dejan Lekic)
     $(D_CONTRIBUTOR Dejan Lekić)
     $(D_CONTRIBUTOR Demetrius Kanios)
     $(D_CONTRIBUTOR Denis Feklushkin)
     $(D_CONTRIBUTOR Dennis Korpel)
-    $(D_CONTRIBUTOR Divyansh Sharma)
+    $(D_CONTRIBUTOR devmynote)
+    $(D_CONTRIBUTOR Dibyendu Majumdar)
+    $(D_CONTRIBUTOR dkorpel)
+    $(D_CONTRIBUTOR Dmitry Olshansky)
+    $(D_CONTRIBUTOR dokutoku)
+    $(D_CONTRIBUTOR Drehuta Andreea)
+    $(D_CONTRIBUTOR drug007)
+    $(D_CONTRIBUTOR Dumitrache Adrian-George)
+    $(D_CONTRIBUTOR e-y-e)
+    $(D_CONTRIBUTOR earthfront)
+    $(D_CONTRIBUTOR Eduard Staniloiu)
+    $(D_CONTRIBUTOR Emanuele Torre)
     $(D_CONTRIBUTOR Emmankoko)
     $(D_CONTRIBUTOR Emmanuel Ferdman)
     $(D_CONTRIBUTOR Emmanuel Nyarko)
+    $(D_CONTRIBUTOR Ernesto Castellotti)
+    $(D_CONTRIBUTOR Etienne Brateau)
+    $(D_CONTRIBUTOR etienne02)
     $(D_CONTRIBUTOR Eugene 'Vindex' Stulin)
     $(D_CONTRIBUTOR Final Evilution)
+    $(D_CONTRIBUTOR Florian)
+    $(D_CONTRIBUTOR Flying-Toast)
+    $(D_CONTRIBUTOR fourst4r)
+    $(D_CONTRIBUTOR Gabriel)
     $(D_CONTRIBUTOR Gaofei Qiu)
+    $(D_CONTRIBUTOR Garrett D'Amore)
+    $(D_CONTRIBUTOR Gautam Kotian)
+    $(D_CONTRIBUTOR Giannis Vrentzos)
+    $(D_CONTRIBUTOR Giles Bathgate)
     $(D_CONTRIBUTOR Gnav)
+    $(D_CONTRIBUTOR Grim Maple)
+    $(D_CONTRIBUTOR guai)
+    $(D_CONTRIBUTOR H. S. Teoh)
+    $(D_CONTRIBUTOR Hara Kenji)
     $(D_CONTRIBUTOR hariprakazz)
     $(D_CONTRIBUTOR Hiroki Noda)
     $(D_CONTRIBUTOR Iain Buclaw)
     $(D_CONTRIBUTOR IchorDev)
+    $(D_CONTRIBUTOR ichordev)
+    $(D_CONTRIBUTOR IchorDev)
     $(D_CONTRIBUTOR IDONTUSEGH)
+    $(D_CONTRIBUTOR iFreilicht)
+    $(D_CONTRIBUTOR Ilya Yaroshenko)
+    $(D_CONTRIBUTOR Imperatorn)
     $(D_CONTRIBUTOR Inkrementator)
+    $(D_CONTRIBUTOR ioanavivi12)
     $(D_CONTRIBUTOR Iskaban10)
+    $(D_CONTRIBUTOR Jack Stouffer)
+    $(D_CONTRIBUTOR Jacob Carlborg)
+    $(D_CONTRIBUTOR Jakob Øvrum)
+    $(D_CONTRIBUTOR James S Blachly, MD)
+    $(D_CONTRIBUTOR jamesragray)
+    $(D_CONTRIBUTOR Jan Jurzitza)
+    $(D_CONTRIBUTOR Jeremy)
+    $(D_CONTRIBUTOR Jeremy Baxter)
+    $(D_CONTRIBUTOR Jeremy DeHaan)
+    $(D_CONTRIBUTOR jibal)
+    $(D_CONTRIBUTOR jmh530)
+    $(D_CONTRIBUTOR Joakim Noah)
+    $(D_CONTRIBUTOR Joe)
     $(D_CONTRIBUTOR Johan Engelen)
+    $(D_CONTRIBUTOR Johannes Loher)
+    $(D_CONTRIBUTOR John Kilpatrick)
     $(D_CONTRIBUTOR Jonathan M Davis)
-    $(D_CONTRIBUTOR Kapendev)
+    $(D_CONTRIBUTOR Jonathan Marler)
+    $(D_CONTRIBUTOR jordan4ibanez)
+    $(D_CONTRIBUTOR João Lourenço)
+    $(D_CONTRIBUTOR Julian Fondren)
+    $(D_CONTRIBUTOR K)
+    $(D_CONTRIBUTOR Kai Nacke)
+    $(D_CONTRIBUTOR Kazuya Takahashi)
+    $(D_CONTRIBUTOR Kotet)
+    $(D_CONTRIBUTOR Kyle Foley)
+    $(D_CONTRIBUTOR Lander Brandt)
+    $(D_CONTRIBUTOR Laurent Tréguier)
+    $(D_CONTRIBUTOR leitimmel)
+    $(D_CONTRIBUTOR lempiji)
     $(D_CONTRIBUTOR limepoutine)
+    $(D_CONTRIBUTOR linkrope)
     $(D_CONTRIBUTOR Luca-Sanders)
+    $(D_CONTRIBUTOR Luís Ferreira)
     $(D_CONTRIBUTOR Madhur Kumar)
+    $(D_CONTRIBUTOR Mai-Lapyst)
     $(D_CONTRIBUTOR Manav Gupta)
+    $(D_CONTRIBUTOR Manu Evans)
+    $(D_CONTRIBUTOR Marc Schütz)
+    $(D_CONTRIBUTOR Marcelo Silva Nascimento Mancini)
+    $(D_CONTRIBUTOR Mark)
+    $(D_CONTRIBUTOR Mark Isaacson)
+    $(D_CONTRIBUTOR Markus Laker)
     $(D_CONTRIBUTOR Martin Kinkelin)
-    $(D_CONTRIBUTOR Me1m0th)
+    $(D_CONTRIBUTOR Martin Nowak)
+    $(D_CONTRIBUTOR Mateiuss)
+    $(D_CONTRIBUTOR Mathias Baumann)
+    $(D_CONTRIBUTOR Mathias Lang)
+    $(D_CONTRIBUTOR Mathis Beer)
+    $(D_CONTRIBUTOR matthriscu)
+    $(D_CONTRIBUTOR Max Haughton)
+    $(D_CONTRIBUTOR MetaLang)
+    $(D_CONTRIBUTOR mhh)
+    $(D_CONTRIBUTOR Mike Franklin)
+    $(D_CONTRIBUTOR Mike Parker)
     $(D_CONTRIBUTOR Mindy Batek)
+    $(D_CONTRIBUTOR Mingming SUN)
     $(D_CONTRIBUTOR Mohamed El Shorbagy)
+    $(D_CONTRIBUTOR MoonlightSentinel)
+    $(D_CONTRIBUTOR Nathan Sashihara)
+    $(D_CONTRIBUTOR naydef)
+    $(D_CONTRIBUTOR Nelson Brochado)
     $(D_CONTRIBUTOR Nicholas Wilson)
     $(D_CONTRIBUTOR Nick Treleaven)
-    $(D_CONTRIBUTOR Nikhil Ludder)
-    $(D_CONTRIBUTOR Niyati Jain)
+    $(D_CONTRIBUTOR Nils Lankila)
+    $(D_CONTRIBUTOR nordlow)
+    $(D_CONTRIBUTOR Passw)
+    $(D_CONTRIBUTOR Patrick Schlüter)
+    $(D_CONTRIBUTOR Paul Backus)
     $(D_CONTRIBUTOR Per Nordlöw)
-    $(D_CONTRIBUTOR Peter Alexander)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR phebert5009)
+    $(D_CONTRIBUTOR Pierre Grimaud)
+    $(D_CONTRIBUTOR Pranjal Kole)
+    $(D_CONTRIBUTOR ProgramGamer)
+    $(D_CONTRIBUTOR Prthmsh7)
+    $(D_CONTRIBUTOR qchikara)
+    $(D_CONTRIBUTOR quassy)
     $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Quirin Schroll)
     $(D_CONTRIBUTOR Rainer Orth)
     $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Rareș Constantin)
+    $(D_CONTRIBUTOR Razvan Mihai Popa)
+    $(D_CONTRIBUTOR Razvan Nitu)
     $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
+    $(D_CONTRIBUTOR Richard Manthorpe)
     $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Robert Grancsa)
+    $(D_CONTRIBUTOR Robert Stoica)
+    $(D_CONTRIBUTOR Ross Harrison)
+    $(D_CONTRIBUTOR RubyTheRoobster)
+    $(D_CONTRIBUTOR RUSshy)
+    $(D_CONTRIBUTOR sarneaud)
+    $(D_CONTRIBUTOR Sean Enck)
+    $(D_CONTRIBUTOR Sebastian Wilzbach)
     $(D_CONTRIBUTOR Sergii Kuzko)
-    $(D_CONTRIBUTOR Sönke Ludwig)
+    $(D_CONTRIBUTOR Shachar Shemesh)
+    $(D_CONTRIBUTOR Shriramana Sharma)
+    $(D_CONTRIBUTOR Simen Kjærås)
+    $(D_CONTRIBUTOR Sinisa Susnjar)
+    $(D_CONTRIBUTOR skoppe)
+    $(D_CONTRIBUTOR Stanislav Blinov)
+    $(D_CONTRIBUTOR Steven Dwy)
     $(D_CONTRIBUTOR Steven Schveighoffer)
+    $(D_CONTRIBUTOR Sönke Ludwig)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Timon Gehr)
+    $(D_CONTRIBUTOR Timothee Cour)
+    $(D_CONTRIBUTOR Titouan Vervack)
+    $(D_CONTRIBUTOR TJesionowski)
     $(D_CONTRIBUTOR Tony Edgin)
+    $(D_CONTRIBUTOR tsbockman)
+    $(D_CONTRIBUTOR Tushar)
+    $(D_CONTRIBUTOR Ulrich Küttler)
     $(D_CONTRIBUTOR Valentino Giudice)
     $(D_CONTRIBUTOR Vladimir Panteleev)
     $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR Witold Baryluk)
+    $(D_CONTRIBUTOR wolframw)
+    $(D_CONTRIBUTOR Wyatt Kennedy)
+    $(D_CONTRIBUTOR xiren7)
     $(D_CONTRIBUTOR yelninei)
+    $(D_CONTRIBUTOR Zach Tollen)
 )
 $(D_CONTRIBUTORS_FOOTER)
 $(CHANGELOG_NAV_INJECT)
