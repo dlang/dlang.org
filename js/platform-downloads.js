@@ -1,10 +1,5 @@
 (function() {
-    var script = document.currentScript;
-    if (!script) { // polyfill for IE
-        var scripts = document.getElementsByTag('script');
-        script = scripts[scripts.length - 1]; // depends on synchronous load
-    }
-    var latest = script.dataset.latest,
+    var latest = document.currentScript.dataset.latest,
         platform = navigator.platform.toLowerCase();
 
     var model = 64;
@@ -16,14 +11,12 @@
         files = [{name: 'dmd-' + latest, suffix: '.exe', text: 'Windows Installer'}];
     else if (platform.indexOf('mac') != -1)
         files = [{name: 'dmd.' + latest, suffix: '.dmg', text: 'DMG File'}];
-    else if (model == null) // platforms with multiple archs follow
-        return;
     else if (platform.indexOf('linux') != -1)
         files = [{name: 'dmd_' + latest + '-0_' + (model == 64 ? 'amd64' : 'i386'), suffix: '.deb', text: 'DEB File'},
                  {name: 'dmd-' + latest + '-0.fedora.' + (model == 64 ? 'x86_64' : 'i386'), suffix: '.rpm', text: 'RPM File'}
         ];
     else if (platform.indexOf('freebsd') != -1)
-        files = [{name: 'dmd.' + latest + '.freebsd-' + model.toString(), suffix: '.tar.xz', text: 'Compressed Archive'}];
+        files = [{name: 'dmd.' + latest + '.freebsd-' + model, suffix: '.tar.xz', text: 'Compressed Archive'}];
     else
         return;
 
@@ -37,7 +30,13 @@
         html = '<div class="hbox">' + html + '</div>';
     }
 
-    var btn = $('.download a.btn');
-    btn.before(html);
-    btn.text('Other Downloads');
+    var btn = document.querySelector('.download a.btn');
+    if (btn) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        while (tmp.firstChild) {
+            btn.parentNode.insertBefore(tmp.firstChild, btn);
+        }
+        btn.textContent = 'Other Downloads';
+    }
 })();
