@@ -303,7 +303,7 @@ IMAGES=favicon.ico images/d002.ico $(filter-out $(wildcard images/*_hq.*) images
 
 JAVASCRIPT=$(addsuffix .js, $(addprefix js/, \
 	codemirror-compressed dlang ddox listanchors platform-downloads run \
-	run_examples show_contributors jquery-3.7.1.min))
+	run_examples show_contributors))
 
 STYLES=$(addsuffix .css, $(addprefix css/, \
 	style print codemirror ddox))
