@@ -178,7 +178,7 @@ The only difference between the $(C for) and $(C while) loops is the name scope 
         // ...
     }
 
-    writeln(i);   $(DERLEME_HATASI)
+    writeln(i);   $(COMPILATION_ERROR)
                   //   i is not accessible here
 ---
 

@@ -671,9 +671,9 @@ There is an alternative syntax for functions like $(C format) in the standard li
 import std.stdio;
 
 void main() {
-    writefln!"%s %s"(1);       $(DERLEME_HATASI) (extra %s)
-    writefln!"%s"(1, 2);       $(DERLEME_HATASI) (extra 2)
-    writefln!"%s %d"(1, 2.5);  $(DERLEME_HATASI) (mismatched %d and 2.5)
+    writefln!"%s %s"(1);       $(COMPILATION_ERROR) (extra %s)
+    writefln!"%s"(1, 2);       $(COMPILATION_ERROR) (extra 2)
+    writefln!"%s %d"(1, 2.5);  $(COMPILATION_ERROR) (mismatched %d and 2.5)
 }
 ---
 

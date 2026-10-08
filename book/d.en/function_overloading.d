@@ -51,7 +51,7 @@ double sevenTimes(double value) {
 
 void main() {
     int value = 5;
-    auto result = sevenTimes(value);    $(DERLEME_HATASI)
+    auto result = sevenTimes(value);    $(COMPILATION_ERROR)
 }
 ---
 

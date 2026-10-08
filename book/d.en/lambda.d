@@ -667,7 +667,7 @@ alias Calculator = int function(int);
 
 Calculator makeCalculator() {
     int increment = 10;
-    return value => $(HILITE increment) + value;    $(DERLEME_HATASI)
+    return value => $(HILITE increment) + value;    $(COMPILATION_ERROR)
 }
 ---
 

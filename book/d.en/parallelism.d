@@ -354,7 +354,7 @@ double bar(int i) {
 
 void main() {
     auto tasks = [ task$(HILITE !)foo(1),
-                   task$(HILITE !)bar(2) ];    $(DERLEME_HATASI)
+                   task$(HILITE !)bar(2) ];    $(COMPILATION_ERROR)
 }
 ---
 
@@ -766,7 +766,7 @@ $(I $(B Note:) The free-standing $(C averageGrade()) function above is needed du
 
 ---
 auto results =
-    taskPool.map!(a => a.averageGrade)(students, 3);  $(DERLEME_HATASI)
+    taskPool.map!(a => a.averageGrade)(students, 3);  $(COMPILATION_ERROR)
 ---
 
 $(P

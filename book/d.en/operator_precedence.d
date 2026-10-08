@@ -187,7 +187,7 @@ Some operators cannot be chained:
 )
 
 ---
-    if (a > b == c) {      $(DERLEME_HATASI)
+    if (a > b == c) {      $(COMPILATION_ERROR)
         // ...
     }
 ---
@@ -239,7 +239,7 @@ Precedence between bitwise operators and logical operators are not specified by 
 )
 
 ---
-    if (a & b == c) {      $(DERLEME_HATASI)
+    if (a & b == c) {      $(COMPILATION_ERROR)
         // ...
     }
 ---

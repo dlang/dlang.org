@@ -370,7 +370,7 @@ It is not possible to add elements to fixed-length arrays:
 
 ---
     int[$(HILITE 10)] array;
-    array ~= 7;                 $(DERLEME_HATASI)
+    array ~= 7;                 $(COMPILATION_ERROR)
 ---
 
 $(H6 $(IX remove, array) Removing elements from dynamic arrays)
@@ -453,7 +453,7 @@ The $(C ~=) operator cannot be used when the left-hand side array is a fixed-len
 ---
     int[20] result;
     // ...
-    result $(HILITE ~=) first;          $(DERLEME_HATASI)
+    result $(HILITE ~=) first;          $(COMPILATION_ERROR)
 ---
 
 $(P

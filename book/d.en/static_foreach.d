@@ -74,7 +74,7 @@ Like regular $(C foreach), compile-time $(C foreach) can only be used inside fun
 import std.meta;
 
 // Attempting to define function overloads at module scope:
-foreach (T; AliasSeq!(int, double)) {    $(DERLEME_HATASI)
+foreach (T; AliasSeq!(int, double)) {    $(COMPILATION_ERROR)
     T twoTimes(T arg) {
         return arg * 2;
     }

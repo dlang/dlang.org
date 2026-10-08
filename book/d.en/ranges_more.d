@@ -148,7 +148,7 @@ Naturally, being just an $(C InputRange), $(C Negative) cannot be used with algo
     writeln(FibonacciSeries()
             .take(5)
             .negative
-            .cycle        $(DERLEME_HATASI)
+            .cycle        $(COMPILATION_ERROR)
             .take(10));
 ---
 
@@ -354,7 +354,7 @@ A natural consequence of this fact is that different range types cannot be assig
 ---
     auto range = [11, 22].negative;
     // ... at a later point ...
-    range = FibonacciSeries();    $(DERLEME_HATASI)
+    range = FibonacciSeries();    $(COMPILATION_ERROR)
 ---
 
 $(P

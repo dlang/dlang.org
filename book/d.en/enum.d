@@ -285,7 +285,7 @@ As we saw in the formatted outputs above, an $(C enum) value can automatically b
 )
 
 ---
-    Suit suit = 1;       $(DERLEME_HATASI)
+    Suit suit = 1;       $(COMPILATION_ERROR)
 ---
 
 $(P

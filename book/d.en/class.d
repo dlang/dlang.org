@@ -264,7 +264,7 @@ class ChessPiece {
 }
 
 void main() {
-    auto king = new ChessPiece('♔', 100);  $(DERLEME_HATASI)
+    auto king = new ChessPiece('♔', 100);  $(COMPILATION_ERROR)
 }
 ---
 

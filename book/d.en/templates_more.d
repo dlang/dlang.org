@@ -822,7 +822,7 @@ As long as it matches the way it is used in the template, any symbol can be used
 
 ---
     int variable;
-    caller!variable();    $(DERLEME_HATASI)
+    caller!variable();    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -1256,7 +1256,7 @@ As the ternary operator would be compiled to be executed at run time, there is n
 )
 
 ---
-    writeln(sum!4());    $(DERLEME_HATASI)
+    writeln(sum!4());    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -1468,7 +1468,7 @@ Although arguably the error is with the code that uses the template with an inco
 ---
 void useSoundEmittingObject(T)(T object) {
     // ... some operations ...
-    writeln(object.emitSound());    $(DERLEME_HATASI)
+    writeln(object.emitSound());    $(COMPILATION_ERROR)
     // ... more operations ...
 }
 ---
@@ -1711,7 +1711,7 @@ class Pigeon {
 // ...
 
     use(new ModelAirplane);    // ← compiles
-    use(new Pigeon);           $(DERLEME_HATASI)
+    use(new Pigeon);           $(COMPILATION_ERROR)
 ---
 
 $(P

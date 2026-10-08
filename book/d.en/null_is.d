@@ -103,7 +103,7 @@ However, because the $(C ==) operator needs actual objects to compare, the expre
 )
 
 ---
-    if (variable == null)     $(DERLEME_HATASI)
+    if (variable == null)     $(COMPILATION_ERROR)
 ---
 
 $(P

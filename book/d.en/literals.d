@@ -346,7 +346,7 @@ $(PROBLEM
 The following line causes a compilation error:
 
 ---
-    int amount = 10_000_000_000;    $(DERLEME_HATASI)
+    int amount = 10_000_000_000;    $(COMPILATION_ERROR)
 ---
 
 $(P

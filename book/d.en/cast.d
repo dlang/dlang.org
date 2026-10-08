@@ -12,7 +12,7 @@ All of the expressions that we have written so far always had compatible types b
 
 ---
     char[] slice;
-    writeln(slice + 5);    $(DERLEME_HATASI)
+    writeln(slice + 5);    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -311,7 +311,7 @@ As we have also seen earlier, the opposite conversion is not automatic. A $(C co
 
 ---
 char[] parenthesized(const char[] text) {
-    char[] argument = text;  $(DERLEME_HATASI)
+    char[] argument = text;  $(COMPILATION_ERROR)
 // ...
 }
 ---
@@ -337,8 +337,8 @@ Because $(C immutable) specifies that a variable can never change, neither conve
 
 ---
     string a = "hello";    // immutable characters
-    char[] b = a;          $(DERLEME_HATASI)
-    string c = b;          $(DERLEME_HATASI)
+    char[] b = a;          $(COMPILATION_ERROR)
+    string c = b;          $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -378,7 +378,7 @@ The opposite conversion is not automatic: Integer values are not automatically c
 )
 
 ---
-    Suit suit = 2;    $(DERLEME_HATASI)
+    Suit suit = 2;    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -416,7 +416,7 @@ Other literal values cannot be converted to $(C bool) automatically:
 )
 
 ---
-    bool b = 2;    $(DERLEME_HATASI)
+    bool b = 2;    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -522,8 +522,8 @@ The following program is trying to convert a $(C double) value to $(C short) and
 void main() {
     double d = -1.75;
 
-    short s = d;     $(DERLEME_HATASI)
-    int i = "42";    $(DERLEME_HATASI)
+    short s = d;     $(COMPILATION_ERROR)
+    int i = "42";    $(COMPILATION_ERROR)
 }
 ---
 
@@ -591,7 +591,7 @@ void main() {
     // ... various other modifications ...
     numbers[0] = 42;
 
-    calculate(numbers);    $(DERLEME_HATASI)
+    calculate(numbers);    $(COMPILATION_ERROR)
 }
 ---
 

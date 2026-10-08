@@ -25,7 +25,7 @@ void foo(ref int r) {
         mayThrow();
 
     } catch (Exception exc) {
-        r -= addend;           $(DERLEME_HATASI)
+        r -= addend;           $(COMPILATION_ERROR)
     }
 }
 ---

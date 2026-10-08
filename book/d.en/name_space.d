@@ -20,7 +20,7 @@ void main() {
 
     $(HILITE }) // ← 'inner' is not available beyond this point
 
-    inner = 3;  $(DERLEME_HATASI)
+    inner = 3;  $(COMPILATION_ERROR)
                 //   'inner' is not available in the outer scope
 }
 ---
@@ -37,7 +37,7 @@ It is not legal to define the same name in an inner scope:
     size_t $(HILITE length) = oddNumbers.length;
 
     if (aCondition) {
-        size_t $(HILITE length) = primeNumbers.length; $(DERLEME_HATASI)
+        size_t $(HILITE length) = primeNumbers.length; $(COMPILATION_ERROR)
     }
 ---
 
@@ -48,7 +48,7 @@ As we have been doing in all of the programs so far, variables must be defined b
 )
 
 ---
-    writeln(number);     $(DERLEME_HATASI)
+    writeln(number);     $(COMPILATION_ERROR)
                          //   number is not known yet
     int number = 42;
 ---

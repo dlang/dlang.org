@@ -179,7 +179,7 @@ Conversely, it is not possible to return a reference to a variable that is not g
 ---
 $(HILITE ref) string parenthesized(string phrase) {
     string result = '(' ~ phrase ~ ')';
-    return result;    $(DERLEME_HATASI)
+    return result;    $(COMPILATION_ERROR)
 } // ← the lifetime of result ends here
 ---
 
@@ -251,7 +251,7 @@ However, as it works only with $(C immutable) strings, the function can be seen 
 ---
     char[] m;    // has mutable elements
     m ~= "hello";
-    writeln(parenthesized(m));    $(DERLEME_HATASI)
+    writeln(parenthesized(m));    $(COMPILATION_ERROR)
 ---
 
 $(SHELL_SMALL
@@ -408,18 +408,18 @@ int pureFunction(ref int i, int[] slice) $(HILITE pure) {
     auto p = new int;
 
     // Cannot access mutable global state:
-    i = mutableGlobal;    $(DERLEME_HATASI)
+    i = mutableGlobal;    $(COMPILATION_ERROR)
 
     // Cannot perform input and output operations:
-    writeln(i);           $(DERLEME_HATASI)
+    writeln(i);           $(COMPILATION_ERROR)
 
     static int mutableStatic;
 
     // Cannot access mutable static state:
-    i = mutableStatic;    $(DERLEME_HATASI)
+    i = mutableStatic;    $(COMPILATION_ERROR)
 
     // Cannot call impure functions:
-    impureFunction();     $(DERLEME_HATASI)
+    impureFunction();     $(COMPILATION_ERROR)
 
     return 0;
 }
@@ -455,7 +455,7 @@ void templ(size_t N)() {
 }
 
 void foo() $(HILITE pure) {
-    templ!0();    $(DERLEME_HATASI)
+    templ!0();    $(COMPILATION_ERROR)
 }
 
 void main() {
@@ -557,7 +557,7 @@ void foo(int delegate(double) $(HILITE pure) dg) {
 void main() {
     foo(a => 42);                // ← compiles
 
-    foo((a) {                    $(DERLEME_HATASI)
+    foo((a) {                    $(COMPILATION_ERROR)
             writeln("hello");
             return 42;
         });
@@ -623,7 +623,7 @@ Such a function can neither throw an exception itself nor can call a function th
 
 ---
 int add(int lhs, int rhs) nothrow {
-    writeln("adding");    $(DERLEME_HATASI)
+    writeln("adding");    $(COMPILATION_ERROR)
     return lhs + rhs;
 }
 ---
@@ -718,7 +718,7 @@ The compiler guarantees that a $(C @nogc) function does not involve GC operation
 void foo() $(HILITE @nogc) {
     int[] slice;
     // ...
-    append(slice);    $(DERLEME_HATASI)
+    append(slice);    $(COMPILATION_ERROR)
 }
 ---
 

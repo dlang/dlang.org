@@ -202,7 +202,7 @@ For example, the following code that tries to capitalize the first letter of a $
 
 ---
     string cannotBeMutated = "hello";
-    cannotBeMutated[0] = 'H';             $(DERLEME_HATASI)
+    cannotBeMutated[0] = 'H';             $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -210,7 +210,7 @@ We may think of defining the variable as a $(C char[]) instead of the $(C string
 )
 
 ---
-    char[] a_slice = "hello";  $(DERLEME_HATASI)
+    char[] a_slice = "hello";  $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -255,7 +255,7 @@ Similarly, $(C char[]) cannot be used where a $(C string) is needed. In such cas
 )
 
 ---
-    string result = s ~ '.';          $(DERLEME_HATASI)
+    string result = s ~ '.';          $(COMPILATION_ERROR)
 ---
 
 $(P

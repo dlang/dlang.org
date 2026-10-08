@@ -226,7 +226,7 @@ class SoundEmitter {
     // ...
 }
 
-class AlarmClock : Clock$(HILITE , SoundEmitter) {    $(DERLEME_HATASI)
+class AlarmClock : Clock$(HILITE , SoundEmitter) {    $(COMPILATION_ERROR)
     // ...
 }
 ---
@@ -677,7 +677,7 @@ It is not possible to construct objects of abstract classes:
 )
 
 ---
-    auto piece = new ChessPiece;    $(DERLEME_HATASI)
+    auto piece = new ChessPiece;    $(COMPILATION_ERROR)
 ---
 
 $(P

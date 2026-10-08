@@ -1549,8 +1549,8 @@ void foo(bool b) {
 
 // ...
 
-    foo(duration);                $(DERLEME_HATASI)
-    bool b = duration;            $(DERLEME_HATASI)
+    foo(duration);                $(COMPILATION_ERROR)
+    bool b = duration;            $(COMPILATION_ERROR)
 ---
 
 $(SHELL
