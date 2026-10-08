@@ -301,7 +301,7 @@ Like $(C const), $(C in) parameters cannot be modified:
 
 ---
 void foo(in int value) {
-    value = 1;    $(DERLEME_HATASI)
+    value = 1;    $(COMPILATION_ERROR)
 }
 ---
 
@@ -561,7 +561,7 @@ However, defining the function that way would cause a compilation error:
 ---
 int[] inner($(HILITE const(int)[]) slice) {
     // ...
-    return slice;    $(DERLEME_HATASI)
+    return slice;    $(COMPILATION_ERROR)
 }
 ---
 
@@ -591,7 +591,7 @@ Although the code now compiles, it brings a limitation: even when the function i
 
 ---
     int[] numbers = [ 5, 6, 7, 8, 9 ];
-    int[] middle = inner(numbers);    $(DERLEME_HATASI)
+    int[] middle = inner(numbers);    $(COMPILATION_ERROR)
     middle[] *= 10;
 ---
 
@@ -754,8 +754,8 @@ $(SHELL_OBSERVED $) dmd -dip1000 deneme.d
 int[] globalSlice;
 
 $(HILITE @safe) int[] foo($(HILITE scope) int[] parameter) {
-    globalSlice = parameter;    $(DERLEME_HATASI)
-    return parameter;           $(DERLEME_HATASI)
+    globalSlice = parameter;    $(COMPILATION_ERROR)
+    return parameter;           $(COMPILATION_ERROR)
 }
 
 void main() {
@@ -781,7 +781,7 @@ void foo($(HILITE shared) int[] i) {
 
 void main() {
     int[] numbers = [ 10, 20 ];
-    foo(numbers);    $(DERLEME_HATASI)
+    foo(numbers);    $(COMPILATION_ERROR)
 }
 ---
 
@@ -809,7 +809,7 @@ import std.stdio;
 import std.random;
 
 $(HILITE ref) int pick($(HILITE ref) int lhs, $(HILITE ref) int rhs) {
-    return uniform(0, 2) ? lhs : rhs;    $(DERLEME_HATASI)
+    return uniform(0, 2) ? lhs : rhs;    $(COMPILATION_ERROR)
 }
 
 void main() {
@@ -842,7 +842,7 @@ Unfortunately, one of the arguments of $(C pick()) may have a shorter lifetime t
 import std.random;
 
 ref int pick(ref int lhs, ref int rhs) {
-    return uniform(0, 2) ? lhs : rhs;    $(DERLEME_HATASI)
+    return uniform(0, 2) ? lhs : rhs;    $(COMPILATION_ERROR)
 }
 
 ref int foo() {
@@ -880,7 +880,7 @@ ref int foo() {
     int a;
     int b;
 
-    return pick(a, b);    $(DERLEME_HATASI)
+    return pick(a, b);    $(COMPILATION_ERROR)
 }
 
 void main() {

@@ -25,8 +25,8 @@ $(C readingTime) cannot be modified:
 )
 
 ---
-    readingTime = TimeOfDay(16, 0);    $(DERLEME_HATASI)
-    readingTime.minute += 10;          $(DERLEME_HATASI)
+    readingTime = TimeOfDay(16, 0);    $(COMPILATION_ERROR)
+    readingTime.minute += 10;          $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -47,7 +47,7 @@ int totalSeconds(ref Duration duration) {
 }
 // ...
     $(HILITE immutable) warmUpTime = Duration(3);
-    totalSeconds(warmUpTime);    $(DERLEME_HATASI)
+    totalSeconds(warmUpTime);    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -75,7 +75,7 @@ Such functions can receive $(C immutable) objects as parameters because the immu
 
 ---
 int totalSeconds(const ref Duration duration) {
-    duration.minute = 7;    $(DERLEME_HATASI)
+    duration.minute = 7;    $(COMPILATION_ERROR)
 // ...
 }
 ---
@@ -176,7 +176,7 @@ Further, calling $(C toString()) on an $(C immutable) object explicitly would ca
 )
 
 ---
-    auto s = start.toString(); $(DERLEME_HATASI)
+    auto s = start.toString(); $(COMPILATION_ERROR)
 ---
 
 $(P

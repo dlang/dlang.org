@@ -547,7 +547,7 @@ Naturally, trying to use this definition of $(C Polygon) with a loop counter wou
 )
 
 ---
-    foreach ($(HILITE i), point; polygon) {    $(DERLEME_HATASI)
+    foreach ($(HILITE i), point; polygon) {    $(COMPILATION_ERROR)
         writefln("%s: %s", i, point);
     }
 ---

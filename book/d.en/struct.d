@@ -310,8 +310,8 @@ Otherwise it would not be possible to mark an object first as $(C immutable) and
 
 ---
     $(HILITE immutable) TimeOfDay periodStart;
-    periodStart.hour = 8;      $(DERLEME_HATASI)
-    periodStart.minute = 30;   $(DERLEME_HATASI)
+    periodStart.hour = 8;      $(COMPILATION_ERROR)
+    periodStart.minute = 30;   $(COMPILATION_ERROR)
 ---
 
 $(H6 Trailing members need not be specified)

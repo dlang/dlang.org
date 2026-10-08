@@ -173,7 +173,7 @@ import std.stdio $(HILITE : writeln;)
 
 // ...
 
-    write$(HILITE f)ln("Hello %s.", name);    $(DERLEME_HATASI)
+    write$(HILITE f)ln("Hello %s.", name);    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -281,7 +281,7 @@ import car.jaguar;
 
 // ...
 
-    auto conflicted =  Jaguar();            $(DERLEME_HATASI)
+    auto conflicted =  Jaguar();            $(COMPILATION_ERROR)
 
     auto myAnimal = animal.jaguar.Jaguar(); $(CODE_NOTE compiles)
     auto myCar    =    car.jaguar.Jaguar(); $(CODE_NOTE compiles)

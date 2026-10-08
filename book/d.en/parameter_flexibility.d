@@ -319,7 +319,7 @@ The first two parameters are mandatory:
 )
 
 ---
-    parenthesize("{");     $(DERLEME_HATASI)
+    parenthesize("{");     $(COMPILATION_ERROR)
 ---
 
 $(P

@@ -332,7 +332,7 @@ When there is no property function that modifies a member variable, then that me
 )
 
 ---
-    garden.width = 100;    $(DERLEME_HATASI)
+    garden.width = 100;    $(COMPILATION_ERROR)
 ---
 
 $(P

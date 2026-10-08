@@ -68,7 +68,7 @@ void main() {
     int b;
 
     readf(" %s", &a);          $(CODE_NOTE compiles)
-    readf(" %s", &(a + b));    $(DERLEME_HATASI)
+    readf(" %s", &(a + b));    $(COMPILATION_ERROR)
 }
 ---
 
@@ -84,7 +84,7 @@ If mutable, an lvalue can be assigned a new value, while an rvalue cannot be:
 
 ---
     a = 1;          $(CODE_NOTE compiles)
-    (a + b) = 2;    $(DERLEME_HATASI)
+    (a + b) = 2;    $(COMPILATION_ERROR)
 ---
 
 $(SHELL
@@ -105,7 +105,7 @@ void incrementByTen($(HILITE ref int) value) {
 // ...
 
     incrementByTen(a);        $(CODE_NOTE compiles)
-    incrementByTen(a + b);    $(DERLEME_HATASI)
+    incrementByTen(a + b);    $(COMPILATION_ERROR)
 ---
 
 $(SHELL
@@ -129,7 +129,7 @@ void print($(HILITE ref const(int)) value) {
 // ...
 
     print(a);        $(CODE_NOTE compiles)
-    print(a + b);    $(DERLEME_HATASI)
+    print(a + b);    $(COMPILATION_ERROR)
 ---
 
 $(SHELL

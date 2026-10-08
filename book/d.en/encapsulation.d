@@ -291,7 +291,7 @@ The following program cannot be compiled because $(C writeln) is not visible to 
 import school.school;
 
 void main() {
-    writeln("hello");    $(DERLEME_HATASI)
+    writeln("hello");    $(COMPILATION_ERROR)
 }
 ---
 

@@ -207,7 +207,7 @@ One might think that the varying part of the message can be selected with the $(
 
 ---
     writeln(
-        (count == 12) ? "A dozen" : count, $(DERLEME_HATASI)
+        (count == 12) ? "A dozen" : count, $(COMPILATION_ERROR)
         " items will be shipped.");
 ---
 

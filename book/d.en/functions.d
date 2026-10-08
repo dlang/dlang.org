@@ -176,7 +176,7 @@ $(B Note:) When you write and use your own functions with parameters of type $(C
 ---
     char[] anEntry;
     anEntry ~= "Take square root";
-    printMenu(anEntry);  $(DERLEME_HATASI)
+    printMenu(anEntry);  $(COMPILATION_ERROR)
 ---
 
 $(P

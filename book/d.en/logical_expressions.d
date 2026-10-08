@@ -315,7 +315,7 @@ void main() {
     int value = 15;
 
     writeln("Is between: ",
-            10 < value < 20);        $(DERLEME_HATASI)
+            10 < value < 20);        $(COMPILATION_ERROR)
 }
 ---
 
@@ -325,7 +325,7 @@ Try using parentheses around the whole expression:
 
 ---
     writeln("Is between: ",
-            (10 < value < 20));      $(DERLEME_HATASI)
+            (10 < value < 20));      $(COMPILATION_ERROR)
 ---
 
 $(P

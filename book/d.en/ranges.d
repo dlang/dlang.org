@@ -89,7 +89,7 @@ That output may suggest that $(C filter()) returns an $(C int[]) but this is not
 )
 
 ---
-    int[] chosen = values.filter!(value => value > 10); $(DERLEME_HATASI)
+    int[] chosen = values.filter!(value => value > 10); $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -470,7 +470,7 @@ Since it is not possible to remove elements from fixed-length arrays, $(C popFro
 
 ---
 void print(T)(T range) {
-    for ( ; !range.empty; range.popFront()) {  $(DERLEME_HATASI)
+    for ( ; !range.empty; range.popFront()) {  $(COMPILATION_ERROR)
         write(' ', range.front);
     }
 
@@ -493,7 +493,7 @@ void print(T)(T range)
     // ...
 }
 // ...
-    print(array);    $(DERLEME_HATASI)
+    print(array);    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -613,7 +613,7 @@ import std.array;
 
 void main() {
     char[] s = "hello".dup;
-    s.front = 'H';                   $(DERLEME_HATASI)
+    s.front = 'H';                   $(COMPILATION_ERROR)
 }
 ---
 

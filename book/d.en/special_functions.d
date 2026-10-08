@@ -147,7 +147,7 @@ struct Test {
          int    i = int.init,
          double d = double.init) {
         // An attempt to assign an 'in' parameter to itself!
-        c = c;    $(DERLEME_HATASI)
+        c = c;    $(COMPILATION_ERROR)
         i = i;
         d = d;
     }
@@ -266,7 +266,7 @@ struct S {
         this.m = 42;    $(CODE_NOTE assignment (possible for mutable member))
 
         this.i = i;     $(CODE_NOTE construction)
-        this.i = i;     $(DERLEME_HATASI)
+        this.i = i;     $(COMPILATION_ERROR)
     }
 }
 
@@ -282,7 +282,7 @@ A constructor that is defined by the programmer makes some uses of the compiler-
 )
 
 ---
-    time.decrement(Duration(12));    $(DERLEME_HATASI)
+    time.decrement(Duration(12));    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -312,7 +312,7 @@ A user-defined constructor disables constructing objects by the $(C {&nbsp;}) sy
 )
 
 ---
-    Duration duration = { 5 };    $(DERLEME_HATASI)
+    Duration duration = { 5 };    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -343,7 +343,7 @@ Let's consider the following constructor that tries to print some information ev
 
 ---
 struct Test {
-    this() {    $(DERLEME_HATASI)
+    this() {    $(COMPILATION_ERROR)
         writeln("A Test object is being constructed.");
     }
 }
@@ -659,7 +659,7 @@ void salute(Student student) {
     writeln("Hello ", student.name);
 }
 // ...
-    salute("Jane");    $(DERLEME_HATASI)
+    salute("Jane");    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -719,7 +719,7 @@ struct Archive {
 
 // ...
 
-    auto archive = Archive();    $(DERLEME_HATASI)
+    auto archive = Archive();    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -1072,7 +1072,7 @@ struct Archive {
 // ...
 
     auto a = Archive("records");
-    auto b = a;                     $(DERLEME_HATASI)
+    auto b = a;                     $(COMPILATION_ERROR)
 ---
 
 $(P

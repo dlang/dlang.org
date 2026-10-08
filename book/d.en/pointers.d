@@ -833,7 +833,7 @@ $(C void*) pointers are limited in functionality. As a consequence of their flex
 )
 
 ---
-    *canPointAtAnything = 43;     $(DERLEME_HATASI)
+    *canPointAtAnything = 43;     $(COMPILATION_ERROR)
 ---
 
 $(P

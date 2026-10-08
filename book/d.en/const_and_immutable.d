@@ -99,7 +99,7 @@ As expected, the values of $(C enum) constants cannot be modified:
 )
 
 ---
-    ++totalSquares;    $(DERLEME_HATASI)
+    ++totalSquares;    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -249,7 +249,7 @@ When defining variables the $(C const) keyword has the same effect as $(C immuta
 
 ---
     $(HILITE const) half = total / 2;
-    half = 10;    $(DERLEME_HATASI)
+    half = 10;    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -322,7 +322,7 @@ The compiler does not allow passing $(C immutable) variables as arguments to suc
 
 ---
     $(HILITE immutable) int[] slice = [ 10, 20, 30, 40 ];
-    halve(slice);    $(DERLEME_HATASI)
+    halve(slice);    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -345,7 +345,7 @@ import std.stdio;
 
 void main() {
     immutable int[] slice = [ 10, 20, 30, 40 ];
-    print(slice);    $(DERLEME_HATASI)
+    print(slice);    $(COMPILATION_ERROR)
 }
 
 void print(int[] slice) {
@@ -389,7 +389,7 @@ A parameter that is not modified in a function but is not specified as $(C const
 
 ---
 void print($(HILITE const) int[] slice) {
-    slice[0] = 42;    $(DERLEME_HATASI)
+    slice[0] = 42;    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -420,7 +420,7 @@ void main() {
               int[]    slice = [ 8, 9 ];
 
     func(immSlice);      // compiles
-    func(slice);         $(DERLEME_HATASI)
+    func(slice);         $(COMPILATION_ERROR)
 }
 ---
 
@@ -460,7 +460,7 @@ void main() {
 /* A function that takes its parameter as const, in order to
  * be more useful. */
 void foo(const int[] slice) {
-    bar(slice);    $(DERLEME_HATASI)
+    bar(slice);    $(COMPILATION_ERROR)
 }
 
 /* A function that takes its parameter as immutable, for a
@@ -536,12 +536,12 @@ We have seen above that the type of an $(C immutable) slice has been printed as 
 
 ---
     immutable int[] immSlice = [ 1, 2 ];
-    immSlice ~= 3;               $(DERLEME_HATASI)
-    immSlice[0] = 3;             $(DERLEME_HATASI)
-    immSlice.length = 1;         $(DERLEME_HATASI)
+    immSlice ~= 3;               $(COMPILATION_ERROR)
+    immSlice[0] = 3;             $(COMPILATION_ERROR)
+    immSlice.length = 1;         $(COMPILATION_ERROR)
 
     immutable int[] immOtherSlice = [ 10, 11 ];
-    immSlice = immOtherSlice;    $(DERLEME_HATASI)
+    immSlice = immOtherSlice;    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -555,7 +555,7 @@ To specify that only the elements are immutable we use the $(C immutable) keywor
 ---
     immutable$(HILITE (int))[] immSlice = [ 1, 2 ];
     immSlice ~= 3;               // can add elements
-    immSlice[0] = 3;             $(DERLEME_HATASI)
+    immSlice[0] = 3;             $(COMPILATION_ERROR)
     immSlice.length = 1;         // can drop elements
 
     immutable int[] immOtherSlice = [ 10, 11 ];
@@ -633,7 +633,7 @@ void foo($(HILITE string) s) {
 
 void main() {
     char[] salutation;
-    foo(salutation);                $(DERLEME_HATASI)
+    foo(salutation);                $(COMPILATION_ERROR)
     foo(salutation$(HILITE .idup));           // ← this compiles
 }
 ---

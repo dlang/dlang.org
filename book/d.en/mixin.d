@@ -157,7 +157,7 @@ However, if $(C std.string) is not imported at the actual $(C mixin) site, then 
 import a;
 
 void main() {
-    mixin A!int;    $(DERLEME_HATASI)
+    mixin A!int;    $(COMPILATION_ERROR)
 }
 ---
 
@@ -338,7 +338,7 @@ string makeStruct(string name, string member) {
   return format!"struct %s {\n  int %s\n}"(name, member);
 }
 
-mixin (makeStruct("S", "m"));    $(DERLEME_HATASI)
+mixin (makeStruct("S", "m"));    $(COMPILATION_ERROR)
 
 void main() {
 }
@@ -427,7 +427,7 @@ void main() {
     mixin Templ;
     mixin Templ;
 
-    i = 42;        $(DERLEME_HATASI)
+    i = 42;        $(COMPILATION_ERROR)
 }
 ---
 
@@ -458,7 +458,7 @@ Let's first see a similar name conflict with string mixins:
 ---
 void main() {
     mixin ("int i;");
-    mixin ("int i;");    $(DERLEME_HATASI)
+    mixin ("int i;");    $(COMPILATION_ERROR)
 
     i = 42;
 }

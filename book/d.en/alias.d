@@ -95,7 +95,7 @@ import palace;
 
 // ...
 
-    Queen person;             $(DERLEME_HATASI)
+    Queen person;             $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -251,7 +251,7 @@ class Sub : Super {
 
 void main() {
     auto object = new Sub;
-    object.foo(42);            $(DERLEME_HATASI)
+    object.foo(42);            $(COMPILATION_ERROR)
 }
 ---
 
@@ -346,7 +346,7 @@ Regardless of one being a member variable and the other a member function, the n
 ---
 void main() {
     auto object = new Sub;
-    object.city = 42;        $(DERLEME_HATASI)
+    object.city = 42;        $(COMPILATION_ERROR)
 }
 ---
 

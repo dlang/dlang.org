@@ -187,7 +187,7 @@ Although being able to specify the parentheses makes the function more usable, s
 )
 
 ---
-    printInParens(42, '→', '←');      $(DERLEME_HATASI)
+    printInParens(42, '→', '←');      $(COMPILATION_ERROR)
 ---
 
 $(SHELL_SMALL
@@ -343,7 +343,7 @@ Although the instantiation of $(C getResponse()) for the $(C Point) type itself 
 
 ---
     Point response;
-    readf(" %s", &response);    $(DERLEME_HATASI)
+    readf(" %s", &response);    $(COMPILATION_ERROR)
 ---
 
 $(P
@@ -528,7 +528,7 @@ Simply converting $(C Point) to a template would cause compilation errors in cod
 )
 
 ---
-T getResponse(T : Point)(string question) {  $(DERLEME_HATASI)
+T getResponse(T : Point)(string question) {  $(COMPILATION_ERROR)
     writefln("%s (Point)", question);
 
     auto x = getResponse!int("  x");
@@ -645,7 +645,7 @@ Every instantiation of a template for a given set of types is considered to be a
 )
 
 ---
-Point!int point3 = Point!double(0.25, 0.75); $(DERLEME_HATASI)
+Point!int point3 = Point!double(0.25, 0.75); $(COMPILATION_ERROR)
 ---
 
 $(P

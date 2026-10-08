@@ -71,7 +71,7 @@ void worker($(HILITE bool * isDone)) {
 
 void main() {
     bool isDone = false;
-    spawn(&worker, $(HILITE &isDone));      $(DERLEME_HATASI)
+    spawn(&worker, $(HILITE &isDone));      $(COMPILATION_ERROR)
 
     // ...
 

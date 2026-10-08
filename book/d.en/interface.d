@@ -288,8 +288,8 @@ struct Foo {
     int i;
 
     $(HILITE static) void commonFunction(int value) {
-        i = value;         $(DERLEME_HATASI)
-        this.i = value;    $(DERLEME_HATASI)
+        i = value;         $(COMPILATION_ERROR)
+        this.i = value;    $(COMPILATION_ERROR)
     }
 }
 ---

@@ -56,8 +56,8 @@ As usual, the names of the nested definitions are valid only in the scopes that 
 
 ---
 void main() {
-    auto a = NestedStruct();              $(DERLEME_HATASI)
-    auto b = outerFunc.NestedStruct();    $(DERLEME_HATASI)
+    auto a = NestedStruct();              $(COMPILATION_ERROR)
+    auto b = outerFunc.NestedStruct();    $(COMPILATION_ERROR)
 }
 ---
 
@@ -173,7 +173,7 @@ void outerFunc(int parameter) {
         int i;
 
         this() {
-            i = parameter;    $(DERLEME_HATASI)
+            i = parameter;    $(COMPILATION_ERROR)
         }
     }
 }
