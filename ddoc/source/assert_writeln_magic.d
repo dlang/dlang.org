@@ -119,6 +119,7 @@ class TestVisitor(Out) : ASTVisitor
     {
         import std.uni : isWhite;
         import std.format : format;
+        import std.string : stripRight;
 
         if (fromAssert && !fromStaticAssert &&
             lastEqualExpression !is null && lastAssert !is null)
@@ -129,6 +130,13 @@ class TestVisitor(Out) : ASTVisitor
                 // libdparse starts the line count with 1
                 auto lineNr = lastAssert.line - 1;
 
+                static immutable negation = "// no-writeln";
+
+                if (fl[lineNr].endsWith(negation))
+                {
+                    fl[lineNr] = fl[lineNr][0 .. $ - negation.length].stripRight;
+                }
+                else
                 // only replace single-line expressions (for now)
                 if (fl[lineNr].endsWith(";"))
                 {
@@ -306,6 +314,7 @@ unittest
 unittest
 {
 assert(1 == 2);
+assert(1 == 2);  // no-writeln
 assert(foo() == "bar");
 assert(foo() == bar);
 assert(arr == [0, 1, 2]);
@@ -315,6 +324,7 @@ assert(r.back == 1);
     auto res = runTest(testCode);
     assert(res.lines[3 .. $ - 2] == [
         "writeln(1); // 2",
+        "assert(1 == 2);",
         "writeln(foo()); // \"bar\"",
         "writeln(foo()); // bar",
         "writeln(arr); // [0, 1, 2]",
