@@ -65,6 +65,7 @@ All unknown options are passed to the compiler.
     text = genChangelogVersion(inputFile, text);
     text = genSwitches(text);
     text = fixDdocBugs(inputFile, text);
+    text = injectFmtLogic(inputFile, text);
 
     // Phobos index.d should have been named index.dd
     if (inputFile.endsWith(".d") && !inputFile.endsWith("index.d"))
@@ -559,6 +560,21 @@ string fixDdocBugs(string inputFile, string text)
     {
         text = text.replace(`typeof(new E("", __FILE__, __LINE__)`, `typeof(new E("", string.init, size_t.init)`);
         text = text.replace(`typeof(new E(__FILE__, __LINE__)`, `typeof(new E(string.init, size_t.init)`);
+    }
+    return text;
+}
+
+// injects format logic documentation to relevant functions
+string injectFmtLogic(string fileName, string text)
+{
+    if (fileName.canFind("std/stdio.d") || fileName.canFind("std/format.d") || fileName.canFind("std/format/package.d"))
+    {
+        import std.regex : regex, replaceAll;
+        // Add a notice about format logic syntax to common functions in these modules.
+        // It's added as an additional ddoc line just before the function/declaration.
+        // DMD will merge these sequential ddoc comments.
+        static auto re = regex(`((\s*)(?:///.*|/\*\*[\s\S]*?\*/))\n(\s*)(?=.*(writefl?n|readfl?n|format|formattedRead|formattedWrite)\s*\()`, "gm");
+        return text.replaceAll(re, "$1\n$3/// $(FMT_LOGIC)\n$3");
     }
     return text;
 }
