@@ -98,10 +98,16 @@ function addVersionSelector() {
   var options = versions.map(function(e, i){
     return "<option value='" + i + "'" + (e.selected ? "selected" : "") + ">" + e.name + "</option>";
   });
-  $("h1").after("<div class='version-changer-container fa-select'><select id='version-changer'>" + options.join("") + "</select></div>");
+  var h1 = document.querySelector("h1");
+  if (!h1) return;
+  var container = document.createElement("div");
+  container.className = "version-changer-container fa-select";
+  container.innerHTML = "<select id='version-changer'>" + options.join("") + "</select>";
+  h1.parentNode.insertBefore(container, h1.nextSibling);
   // attach event listener to select box -> change URL
-  $("#version-changer").change(function(){
-    var selected = parseInt($(this).find("option:selected").val());
+  var changer = document.getElementById("version-changer");
+  changer.addEventListener("change", function() {
+    var selected = parseInt(changer.value);
     var option = versions[selected];
     if (!option.selected) {
       window.location.href = option.url;

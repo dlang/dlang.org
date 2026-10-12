@@ -1,78 +1,111 @@
-(function($) {
-    $(function() {
+(function() {
+    function ready(fn) {
+        if (document.readyState !== 'loading') fn();
+        else document.addEventListener('DOMContentLoaded', fn);
+    }
+
+    function parentsMatching(el, selector) {
+        var result = [];
+        var node = el.parentElement;
+        while (node) {
+            if (node.matches(selector)) result.push(node);
+            node = node.parentElement;
+        }
+        return result;
+    }
+
+    ready(function() {
         if (typeof cssmenu_no_js === 'undefined') {
             // add subnav toggle
-            $('.subnav').addClass('expand-container');
-            $('.subnav').prepend(
-                $('.subnav h2').clone().addClass('expand-toggle')
-            );
+            document.querySelectorAll('.subnav').forEach(function(subnav) {
+                subnav.classList.add('expand-container');
+                var h2 = subnav.querySelector('h2');
+                if (h2) {
+                    var toggle = h2.cloneNode(true);
+                    toggle.classList.add('expand-toggle');
+                    subnav.insertBefore(toggle, subnav.firstChild);
+                }
+            });
 
             // highlight menu entry of the current page
             var href = window.location.href.split('#')[0];
-            var current;
-            var res = $('#top a, .subnav a').each(function (_, a) {
-                if (a.href == href) {
-                    current = a;
-                    return false;
-                }
-            });
-            current = $(current);
-            // direct li parent containing the link
-            current.parent('li').addClass('active');
-            // topmost li parent, e.g. 'std'
-            current.parents('#top .expand-container').addClass('active');
-            current.parents('.subnav .expand-container')
-                .addClass('open');
+            var current = null;
+            var links = document.querySelectorAll('#top a, .subnav a');
+            for (var i = 0; i < links.length; i++) {
+                if (links[i].href == href) { current = links[i]; break; }
+            }
+            if (current) {
+                // direct li parent containing the link
+                var liParent = current.parentElement.closest('li');
+                if (liParent) liParent.classList.add('active');
+                // topmost li parent, e.g. 'std'
+                parentsMatching(current, '#top .expand-container').forEach(function(p) {
+                    p.classList.add('active');
+                });
+                parentsMatching(current, '.subnav .expand-container').forEach(function(p) {
+                    p.classList.add('open');
+                });
+            }
 
             var open_main_item = null;
-            $('.expand-toggle').click(function(e) {
-                var container = $(this).parent('.expand-container');
-                container.toggleClass('open');
+            document.querySelectorAll('.expand-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function(e) {
+                    var container = toggle.parentElement.closest('.expand-container');
+                    if (!container) { e.preventDefault(); return false; }
+                    container.classList.toggle('open');
 
-                /* In the main menu, let only one dropdown be open at a
-                time. Also close any open main menu dropdown when clicking
-                elsewhere. */
-                if (open_main_item !== container && open_main_item !== null) {
-                    open_main_item.removeClass("open");
-                }
-                var clicking_main_bar = container.parents("#top").length > 0;
-                var clicking_hamburger = this === $('.hamburger')[0];
-                if (clicking_main_bar && !clicking_hamburger) {
-                    open_main_item = container.hasClass('open')
-                        ? container : null;
-                }
-                return false;
+                    if (open_main_item !== container && open_main_item !== null) {
+                        open_main_item.classList.remove('open');
+                    }
+                    var clicking_main_bar = parentsMatching(container, '#top').length > 0;
+                    var hamburger = document.querySelector('.hamburger');
+                    var clicking_hamburger = toggle === hamburger;
+                    if (clicking_main_bar && !clicking_hamburger) {
+                        open_main_item = container.classList.contains('open') ? container : null;
+                    }
+                    e.preventDefault();
+                    return false;
+                });
             });
 
-            $('html').click(function(e) {
-                var clicking_main_bar = $(e.target).parents("#top").length > 0;
+            document.querySelector('html').addEventListener('click', function(e) {
+                var clicking_main_bar = parentsMatching(e.target, '#top').length > 0;
                 if (clicking_main_bar) return;
                 if (open_main_item !== null) {
-                    open_main_item.removeClass('open');
+                    open_main_item.classList.remove('open');
                 }
                 open_main_item = null;
             });
         }
 
-        $('.search-container .expand-toggle').click(function() {
-            $('#search-query input').focus();
+        document.querySelectorAll('.search-container .expand-toggle').forEach(function(t) {
+            t.addEventListener('click', function() {
+                var input = document.querySelector('#search-query input');
+                if (input) input.focus();
+            });
         });
 
         // Insert the show/hide button if the contents section exists
-        $('.page-contents-header').append('<span><a href="javascript:void(0);">[hide]</a></span>');
+        document.querySelectorAll('.page-contents-header').forEach(function(h) {
+            var span = document.createElement('span');
+            span.innerHTML = '<a href="javascript:void(0);">[hide]</a>';
+            h.appendChild(span);
+        });
 
-        // Event to hide or show the "contents" section when the hide button
-        // is clicked
-        $(".page-contents-header a").click(function () {
-            var elem = $('.page-contents > ol');
-
-            if (elem.is(':visible')) {
-                $(this).text("[show]");
-                elem.hide();
-            } else {
-                $(this).text("[hide]");
-                elem.show();
-            }
+        // Event to hide or show the "contents" section when the hide button is clicked
+        document.querySelectorAll('.page-contents-header a').forEach(function(a) {
+            a.addEventListener('click', function() {
+                var elem = document.querySelector('.page-contents > ol');
+                if (!elem) return;
+                var visible = elem.offsetParent !== null && elem.style.display !== 'none';
+                if (visible) {
+                    a.textContent = '[show]';
+                    elem.style.display = 'none';
+                } else {
+                    a.textContent = '[hide]';
+                    elem.style.display = '';
+                }
+            });
         });
     });
-})(jQuery);
+})();
