@@ -48,6 +48,7 @@ function addVersionSelector() {
   // This needs to be manually updated/rotated after new versions
   // have been archived
   var archivedVersions = [
+      "2.113",
       "2.112",
       "2.111",
       "2.108",

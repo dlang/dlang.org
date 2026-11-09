@@ -1,0 +1,986 @@
+Ddoc
+
+$(CHANGELOG_NAV_INJECT)
+
+$(VERSION Nov 01, 2026, =================================================,
+
+$(CHANGELOG_HEADER_STATISTICS
+$(VER) comes with 27 major changes and 132 fixed GitHub issues.
+        A huge thanks goes to the
+        $(LINK2 #contributors, 62 contributors)
+        who made $(VER) possible.)
+
+$(BUGSTITLE_TEXT_HEADER Compiler changes,
+
+$(LI $(RELATIVE_LINK2 dmd.atomic,Shared static constructors/destructors in templates now lower to `object._d_atomicOp`))
+$(LI $(RELATIVE_LINK2 dmd.cov-inline-pragma,Coverage counters are now emitted at call sites of inlined functions))
+$(LI $(RELATIVE_LINK2 dmd.ctfe_attribute,Added `@__ctfe` attribute for compile-time function enforcement))
+$(LI $(RELATIVE_LINK2 dmd.deprecations,Many deprecations have been turned into errors))
+$(LI $(RELATIVE_LINK2 dmd.fastdfa.escapeanalysis,The fast DFA engine has gained escape analysis capabilities))
+$(LI $(RELATIVE_LINK2 dmd.foreach-shadow-error,Foreach variable shadowing is now an error))
+$(LI $(RELATIVE_LINK2 dmd.ftime-trace-inline,`-ftime-trace`: add instrumentation for the inliner pass))
+$(LI $(RELATIVE_LINK2 dmd.ftime-trace-sema-subspans,`-ftime-trace`: break up the template instance span into sub-phases))
+$(LI $(RELATIVE_LINK2 dmd.importc-c23-single-arg-static-assert,ImportC supports single-argument `_Static_assert(expr)`))
+$(LI $(RELATIVE_LINK2 dmd.importc-construct-consideration-pragmas,ImportC pragmas for C construct consideration))
+$(LI $(RELATIVE_LINK2 dmd.monitor-field,The `Object.__monitor` field has been moved to druntime))
+$(LI $(RELATIVE_LINK2 dmd.more-wasi-reserved-versions,`WASIp1`, `WASIp2`, and `WASIp3` are now reserved version identifiers))
+$(LI $(RELATIVE_LINK2 dmd.named-args-ifti,Implicit Function Template Instantiation (IFTI) handled named arguments better))
+$(LI $(RELATIVE_LINK2 dmd.newpdb,Improved CodeView / PDB symbolic debug info on Windows))
+$(LI $(RELATIVE_LINK2 dmd.qstring-crlf,Token strings now normalize `\r\n` to `\n`))
+$(LI $(RELATIVE_LINK2 dmd.struct-rvalue-assign,Disallow discarding an assignment to a struct rvalue))
+$(LI $(RELATIVE_LINK2 dmd.tuple-unpacking,Tuple unpacking is now supported!))
+$(LI $(RELATIVE_LINK2 dmd.ucrt-runtime,UCRT is now used for the C runtime on Windows))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Runtime changes,
+
+$(LI $(RELATIVE_LINK2 druntime.importc-initial-msvc-intrinsics,ImportC implements the vast majority of MSVC's intrinsics: 461 of them to be exact.))
+$(LI $(RELATIVE_LINK2 druntime.pow,Translate `^^` operator to druntime hook))
+$(LI $(RELATIVE_LINK2 druntime.timerfd,`core.sys.linux.timerfd` moved to `core.sys.linux.sys.timerfd`))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Library changes,
+
+$(LI $(RELATIVE_LINK2 gc_heap_mallocator,New `GCHeapMallocator` allocator in `std.experimental.allocator`))
+$(LI $(RELATIVE_LINK2 getopt_callback_index,getopt: add callback handler with element index))
+$(LI $(RELATIVE_LINK2 specialcasing,Language dependent casing rules are now implemented in std.uni))
+
+)
+
+$(BUGSTITLE_TEXT_HEADER Dub changes,
+
+$(LI $(RELATIVE_LINK2 ldc-conf,Fixed `--conf` options not being passed to LDC's linker step.))
+$(LI $(RELATIVE_LINK2 ninja-generator,Added `dub generate ninja` command.))
+$(LI $(RELATIVE_LINK2 windows-response-file-escape,Fix Windows response file quoting for paths with trailing backslashes))
+
+)
+
+$(CHANGELOG_SEP_HEADER_TEXT_NONEMPTY)
+
+$(CHANGELOG_SEP_HEADER_TEXT)
+
+$(BUGSTITLE_TEXT_BODY Compiler changes,
+
+$(LI $(LNAME2 dmd.atomic,Shared static constructors/destructors in templates now lower to `object._d_atomicOp`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.atomic.dd)
+$(P
+When a shared static constructor or destructor appears inside a template, it may
+be instantiated in multiple modules, causing it to run multiple times. A shared
+gate variable is used to count and guard executions, ensuring the body runs
+exactly once across all modules. The atomic operation on that gate is necessary
+because multiple threads may initialize modules concurrently.
+)
+
+$(P
+This gate operation previously called `core.atomic.atomicOp` directly.
+)
+
+---
+shared static this()
+{
+    if (atomicOp!"+="(gate, 1) != 1) return;
+    // inside a template instantiation
+}
+---
+
+$(P
+It now lowers to `object._d_atomicOp`, consistent with how other compiler-generated
+runtime hooks are handled.
+)
+
+---
+if (.object._d_atomicOp!"+="(gate, 1) != 1) return;
+---
+)
+
+$(LI $(LNAME2 dmd.cov-inline-pragma,Coverage counters are now emitted at call sites of inlined functions)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.cov-inline-pragma.dd)
+$(P
+Functions marked `pragma(inline, true)` (and functions inlined via the
+`-inline` flag) would always show `0000000` in `-cov` coverage reports
+even when executed. The inlined function body is never called as a
+standalone function at runtime - only the inlined copy inside the caller
+runs, so its coverage counters stayed at zero.
+)
+
+$(P
+Coverage counters are now emitted at each call site where a function is
+inlined, so the function's lines correctly reflect how many times they
+were executed.
+)
+
+$(P
+Fixes $(LINK2 https://issues.dlang.org/show_bug.cgi?id=5848, Issue 5848) /
+$(LINK2 https://github.com/dlang/dmd/issues/18337, #18337)
+)
+)
+
+$(LI $(LNAME2 dmd.ctfe_attribute,Added `@__ctfe` attribute for compile-time function enforcement)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.ctfe_attribute.dd)
+$(P
+A new `@__ctfe` attribute has been added to mark functions that can only be executed
+at compile time. Functions marked with `@__ctfe` cannot be called from runtime code and
+will not generate any object code.
+)
+
+$(P
+When a `@__ctfe` function is used in a runtime context, the compiler will emit an error:
+)
+
+```d
+int add(int a) @__ctfe => a + 2;
+
+void main() {
+    int x = add(9); // Error: function add marked with @__ctfe cannot be called at runtime
+}
+```
+
+$(P
+The attribute is useful for defining helper functions that should only be evaluated
+during compilation, ensuring they don't contribute to binary size or runtime overhead:
+)
+
+```d
+@__ctfe int square(int x) => x * x;
+
+enum Result = square(5); // OK - evaluated at compile time
+static assert(Result == 25);
+```
+
+$(P
+Taking the address of a `@__ctfe` function in runtime code is also an error:
+)
+
+```d
+int add(int a) @__ctfe => a + 2;
+
+void main() {
+    auto fp = &add; // Error: cannot take address of function marked with @__ctfe
+}
+```
+)
+
+$(LI $(LNAME2 dmd.deprecations,Many deprecations have been turned into errors)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.deprecations.dd)
+$(P
+Using `return` statements in scope guards is now an error (in addition to contracts and `try...finally`)
+)
+)
+
+$(LI $(LNAME2 dmd.fastdfa.escapeanalysis,The fast DFA engine has gained escape analysis capabilities)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.fastdfa.escapeanalysis.dd)
+$(P
+The engine works on the fundamental concept on "cells", a cell is a location in memory that holds something.
+So a variable that is on the stack has a cell that provides it, but also may point to another cell if its typed as a pointer.
+)
+
+$(P
+Due to the fast DFA engine not being able to model indirection, the cell of a variable and its containing pointer is considered separately from cells seen via indirection.
+This is particularly interesting with how by-ref parameters handle it.
+The cell pointed at by the by-ref is the outer cell, even if its typed as a pointer.
+)
+
+```d
+// Think of parameter as int* not int, so the outer cell is the container for the int.
+int* pointToRefCell(ref int arg) => &arg;
+```
+$(P
+This allows you to escape values that come from indirection:
+)
+
+```d
+struct Animal {
+    int* datem;
+}
+
+int* grabFromAnimal(scope Animal* animal) => animal.datem;
+```
+
+$(P
+Partial violations of ``scope`` is allowed in non-@safe functions.
+Escaping via a throw statement will still error.
+)
+
+$(P
+The first 29 parameters may be treated as outputs, all others must be inputs only.
+This does not include the this pointer.
+)
+
+$(P
+No attributes have been added at this time for users to use, you must rely solely on existing ones and inference.
+)
+
+$(P
+Experimentally it may promote stack variables that are typed as a class to stack automatically.
+This may be disabled in the future if it is shown to cause problems.
+)
+)
+
+$(LI $(LNAME2 dmd.foreach-shadow-error,Foreach variable shadowing is now an error)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.foreach-shadow-error.dd)
+$(P
+A deprecation introduced in DMD 2.089.0 for foreach variables shadowing
+outer scope symbols has been upgraded to an error.
+)
+
+$(P
+This affects both variables declared inside a foreach body that shadow
+outer variables, and duplicate variable names in foreach parameter lists
+when using `opApply`.
+)
+
+---
+void main()
+{
+    int[int] arr;
+    int x;
+    foreach (i, j; arr)
+    {
+        int x; // Error: variable `x` is shadowing variable `...x`
+    }
+}
+---
+
+---
+struct Foo
+{
+    int opApply(scope int delegate(size_t, size_t, ref uint)) => 0;
+}
+
+void main()
+{
+    foreach (x, y, x; Foo()) {} // Error: variable `x` is shadowing variable `...x`
+}
+---
+)
+
+$(LI $(LNAME2 dmd.ftime-trace-inline,`-ftime-trace`: add instrumentation for the inliner pass)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.ftime-trace-inline.dd)
+$(P
+The `-ftime-trace` output previously had no coverage for the inliner pass.
+When compiling with `-inline`, the time spent scanning and inlining functions
+did not appear in the trace at all.
+)
+
+$(P
+Two new spans are now emitted: `Inlining` covers the entire inliner pass, and
+`Inline: <function>` covers each function scanned individually.
+These are visible in trace viewers like $(LINK2 https://ui.perfetto.dev/, Perfetto).
+)
+)
+
+$(LI $(LNAME2 dmd.ftime-trace-sema-subspans,`-ftime-trace`: break up the template instance span into sub-phases)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.ftime-trace-sema-subspans.dd)
+$(P
+The `-ftime-trace` output previously showed template instantiation as a single
+flat block, making it hard to tell where the time was actually going.
+)
+
+$(P
+The `Sema1: Template Instance` span now contains sub-spans for each phase:
+`Sema1: Template Arg Semantic`, `Sema1: Overload Resolution`,
+`Sema1: Template Members`, `Sema2: Template Instance`, and `Sema3: Template Instance`.
+These are visible in trace viewers like $(LINK2 https://ui.perfetto.dev/, Perfetto).
+)
+)
+
+$(LI $(LNAME2 dmd.importc-c23-single-arg-static-assert,ImportC supports single-argument `_Static_assert(expr)`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.importc-c23-single-arg-static-assert.dd)
+$(P
+C23 makes the message operand of a static assertion optional.
+ImportC now accepts both forms:
+)
+
+-------
+_Static_assert(sizeof(int) == 4);
+_Static_assert(sizeof(int) == 4, "unexpected int size");
+-------
+
+$(P
+The two-argument form continues to work as before. When the assertion
+fails and no message was supplied, the diagnostic reports that the
+condition is false.
+)
+)
+
+$(LI $(LNAME2 dmd.importc-construct-consideration-pragmas,ImportC pragmas for C construct consideration)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.importc-construct-consideration-pragmas.dd)
+$(P
+ImportC now has a number of pragmas which may be used to alter
+whether ImportC considers or ignores declarations and definitions with specific identifiers.
+)
+
+$(P
+Those pragmas are:
+- `#pragma function_decl(ignore, <identifier>,...)`
+- `#pragma function_decl(consider, <identifier>,...)`
+- `#pragma function_def(ignore, <identifier>,...)`
+- `#pragma function_def(consider, <identifier>,...)`
+)
+
+$(P
+These pragmas are for situations where it is desirable for ImportC to look past
+a C declaration/definition of a symbol, and to instead use a declaration/definition
+from an `__import`ed D module.
+)
+
+$(P
+For example, a small subset of a C library's functions may rely
+on non-standard compiler extensions that are unsupported by ImportC;
+in such a situation `#pragma function_def(ignore, <identifier>,...)`
+can be used to ignore the offending functions so that they can
+instead be implemented in D and made available to ImportC via an `__import`ed D module.
+)
+
+$(P
+Likewise, a C library may rely on externally-defined functions
+which are not defined when compiling via ImportC;
+`#pragma function_decl(ignore, <identifier>,...)` can be used to ignore the function declarations
+and those functions can instead be implemented in D and `__import`ed in C.
+)
+
+$(P
+$(HR)
+)
+
+$(P
+The Construct Consideration pragmas are used as follows:
+- `#pragma function_decl(ignore, <identifier>,...)`
+- `#pragma function_decl(consider, <identifier>,...)`
+- `#pragma function_def(ignore, <identifier>,...)`
+- `#pragma function_def(consider, <identifier>,...)`
+)
+
+$(P
+`#pragma function_decl` is used to alter whether ImportC ignores or considers (stops ignoring) *function declarations*
+with the same name as any of the identifiers supplied to the pragma.
+)
+
+$(P
+`#pragma function_def` is used to alter whether ImportC ignores or considers (stops ignoring) *function definitions*
+with the same name as any of the identifiers supplied to the pragma.
+)
+
+$(P
+For example:
+)
+```c
+// We start ignoring function-declarations and function-definitions of `foo` and `bar`.
+#pragma function_decl(ignore, foo, bar)
+#pragma function_def(ignore, foo, bar)
+// This declaration of `foo` is ignored.
+void foo(int);
+// As is this definition of `foo`.
+void foo(int x)
+{}
+
+// We stop ignoring function-definitions of `bar`.
+#pragma function_def(consider, bar)
+// This declaration of `bar` is ignored.
+void bar(int);
+// This definition of `bar` is not ignored.
+float bar(float x, float y)
+{
+    return x * y;
+}
+```
+)
+
+$(LI $(LNAME2 dmd.monitor-field,The `Object.__monitor` field has been moved to druntime)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.monitor-field.dd)
+$(P
+This field was previously hard coded into the compiler, and is used as a mutex for `synchronized(obj)` blocks.
+By declaring it explicitly in druntime's `Object`, custom druntimes can now omit it entirely, saving 8 bytes per class instance when `synchronized` is not needed.
+)
+
+$(P
+The field is treated specially by the compiler and remains excluded from:
+)
+
+$(P
+- `__traits(allMembers, Object)`
+- `Object.tupleof`
+- `__traits(getPointerBitmap, T)` (it is not GC-managed)
+)
+)
+
+$(LI $(LNAME2 dmd.more-wasi-reserved-versions,`WASIp1`, `WASIp2`, and `WASIp3` are now reserved version identifiers)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.more-wasi-reserved-versions.dd)
+$(P
+New version identifiers are reserved for WASI, corresponding to previews 1, 2, and 3 of the WebAssembly System Interface.
+)
+
+$(P
+The existing `WASI` identifier is retained, meaning ANY version of WASI. i.e. `WASI` is always defined whenever `WASIp{1|2|3}` is.
+)
+)
+
+$(LI $(LNAME2 dmd.named-args-ifti,Implicit Function Template Instantiation (IFTI) handled named arguments better)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.named-args-ifti.dd)
+$(P
+https://github.com/dlang/dmd/issues/21335
+https://github.com/dlang/dmd/issues/22878
+)
+
+$(P
+When calling a function template with named arguments, parameters that are
+skipped (because their named argument was not provided) now correctly use
+their template parameter defaults for type deduction.
+)
+
+---
+void f(A = int, B = int)(A a = A.init, B b = B.init) {}
+
+void main()
+{
+    f(b: "hello"); // A = int (template default), B = string (deduced)
+}
+---
+
+$(P
+Named arguments that appear behind variadic arguments can now be assigned to:
+)
+
+---
+void error(T...)(T args, string file = __FILE__, int line = __LINE__) {}
+
+auto text(T...)(T args, Allocator alloc) {}
+
+void foo(Allocator gc)
+{
+    error("Code: ", code, file: __FILE__, line: __LINE__)
+
+    return text("hello", "world", alloc: gc);
+}
+---
+)
+
+$(LI $(LNAME2 dmd.newpdb,Improved CodeView / PDB symbolic debug info on Windows)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.newpdb.dd)
+$(P
+The Windows CodeView / PDB debug information emitter (used with `-g` when producing MS-COFF object files) now emits additional modern records expected by Microsoft and LLVM debugging tools. These improvements are enabled by default, so debugging with Visual Studio, WinDbg and LLVM-based tools works better out of the box.
+)
+
+$(P
+The following are now generated:
+)
+
+$(P
+$(LIST
+    * `S_OBJNAME` and `S_COMPILE3` compiland records reporting the configured language and the real compiler version string,
+    * `S_ENVBLOCK` and `S_BUILDINFO` (`LF_BUILDINFO`) records describing the build environment,
+    * `S_FRAMEPROC` records describing each function's stack frame,
+    * `LF_UDT_SRC_LINE` records recording the source file and line where each user-defined type (struct, class, enum) is defined, so debuggers can jump to a type's definition,
+    * blake3 source-file checksums in the file-checksums subsection so debuggers can verify the source matches.
+)
+)
+
+$(P
+No action is required; simply compile with `-g` as before:
+)
+
+```console
+dmd -g myapp.d
+```
+)
+
+$(LI $(LNAME2 dmd.qstring-crlf,Token strings now normalize `\r\n` to `\n`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.qstring-crlf.dd)
+$(P
+Token strings (`q{...}`) now normalize carriage return + line feed sequences to
+a single line feed, consistent with other string literal types.
+)
+
+```d
+const string s = q{a
+b}; // file saved with CRLF line endings
+static assert(s == "a\nb");
+```
+)
+
+$(LI $(LNAME2 dmd.struct-rvalue-assign,Disallow discarding an assignment to a struct rvalue)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.struct-rvalue-assign.dd)
+$(P
+It has always been an error for $(DDSUBLINK spec/struct, POD, POD) structs
+to assign from an rvalue. It is now an error to discard the result of an
+assignment from a struct rvalue when it would call `opAssign`, `opOpAssign`,
+`opUnary!"++"`, or `opUnary!"--"` and the struct has no tail-mutable pointer
+fields:
+)
+
+---
+struct S
+{
+    int i;
+
+    void opAssign(S s);
+}
+
+S foo();
+
+void main()
+{
+    foo() = S(2); // Error, possible no-op
+}
+---
+
+$(P
+Above, unless `opAssign` mutates global data, the assignment in `main`
+will have no effect and indicates a bug.
+)
+
+$(P
+If a struct rvalue assignment is needed to mutate global state, either
+call the operator overload method directly or use an lvalue.
+Note: Calling a non-const method on a struct rvalue
+$(DDSUBLINK spec/struct, member-functions, is allowed).
+)
+)
+
+$(LI $(LNAME2 dmd.tuple-unpacking,Tuple unpacking is now supported!)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.tuple-unpacking.dd)
+$(P
+D now supports tuple unpacking for variable declarations, `foreach` loops, and function literal
+template parameters.
+This feature is available as a preview and can be enabled with the `-preview=tuples` compiler switch.
+It allows extracting multiple values from a tuple or compile-time sequence directly into distinct variables.
+)
+
+-------
+// Requires -preview=tuples
+import std.typecons : tuple;
+
+void main()
+{
+    auto (x, y, z) = tuple(1, 2.5, "three");
+    assert(x == 1);
+    assert(y == 2.5);
+    assert(z == "three");
+
+    // Types can be specified explicitly
+    (int a, string b) = tuple(4, "five");
+
+    // Unpacking works in foreach loops
+    foreach ((i, s); [tuple(1, "one"), tuple(2, "two")])
+    {
+        // ...
+    }
+}
+-------
+
+$(P
+For more information, see the D blog article: $(LINK2 https://blog.dlang.org/2026/04/12/dip-1053-a-tale-of-tuples/, DIP 1053 - A Tale of Tuples).
+)
+)
+
+$(LI $(LNAME2 dmd.ucrt-runtime,UCRT is now used for the C runtime on Windows)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/dmd.ucrt-runtime.dd)
+$(P
+DMD on Windows now uses the Universal CRT (UCRT) for its C runtime in all cases.
+)
+
+$(P
+For installations with Visual Studio 2015 (or later) or the Windows 10 SDK, the default
+C runtime is unchanged: it remains $(TT libcmt), which statically links the UCRT.
+)
+
+$(P
+When no such Visual C installation is found, DMD now falls back on the UCRT-based
+libraries bundled in the MinGW folder shipped with DMD ($(TT ucrtbase.lib) together with
+$(TT vcruntime140.lib)), instead of the old $(TT msvcrt120) runtime which did not support
+modern format specifiers such as `%zd`. This fallback is fully supported.
+)
+
+$(P
+If no UCRT-capable toolchain is detected and no $(TT -mscrtlib) switch is given, DMD now
+reports a clear error instead of silently producing a non-working link.
+)
+
+$(P
+Detection of Visual Studio versions older than 2015 (2008 - 2013) is deprecated, because
+those versions predate the UCRT. Falling back on such an installation emits a deprecation
+warning.
+)
+
+$(P
+The $(TT -mscrtlib) switch is unchanged and can still be used to select any C runtime,
+including $(TT msvcrt) (dynamic), the debug variants $(TT libcmtd) / $(TT msvcrtd), or a
+legacy $(TT msvcrtNNN) runtime.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Runtime changes,
+
+$(LI $(LNAME2 druntime.importc-initial-msvc-intrinsics,ImportC implements the vast majority of MSVC's intrinsics: 461 of them to be exact.)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.importc-initial-msvc-intrinsics.dd)
+$(P
+ImportC now implements the vast majority of MSVC's intrinsics: 461 of them to be exact.
+All but three of the intrinsics [listed here](https://web.archive.org/web/20240412171516/https://learn.microsoft.com/en-ie/cpp/intrinsics/alphabetical-listing-of-intrinsic-functions?view=msvc-170) are implemented, alongside a handful of undocumented intrinsics, accompanied by a smattering of ISA-specific intrinsics.
+)
+
+$(P
+The presence of these intrinsics greatly improves ImportC's ability to successfully import C headers when targeting Windows.
+Notably, `Windows.h` can now be successfully included by ImportC.
+)
+
+$(P
+To make use of MSVC intrinsics in ImportC, simply `#include` the `importc_msvc_builtins.h` header before any C code that uses MSVC intrinsics:
+)
+```c
+#include &lt;importc_msvc_builtins.h&gt;
+#include &lt;windows.h&gt;
+```
+$(P
+MSVC intrinsics are available when targeting the Microsoft C runtime (that is, when the `CRuntime_Microsoft` version identifier is defined).
+)
+
+$(P
+Every intrinsic implemented has received optimised code for LDC, GDC, and DMD.
+Each intrinsic, where possible, has a CTFE-compatible code path.
+)
+
+$(P
+(Owing to the newness of DMD's AArch64 backend, MSVC intrinsics have not yet been implemented for DMD AArch64 targets. They have been implemented for LDC and GDC AArch64 targets.)
+)
+)
+
+$(LI $(LNAME2 druntime.pow,Translate `^^` operator to druntime hook)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.pow.dd)
+$(P
+The exponentiation operator (`^^`) is now lowered to a druntime hook call instead of being expanded inline by the compiler.
+This change moves the implementation logic into the runtime library, allowing for easier maintenance and platform-specific optimizations without requiring compiler modifications.
+)
+
+```d
+auto _d_pow(Base, Exp)(Base base, Exp exp);
+auto _d_sqrt(T)(T x);
+```
+)
+
+$(LI $(LNAME2 druntime.timerfd,`core.sys.linux.timerfd` moved to `core.sys.linux.sys.timerfd`)
+$(CHANGELOG_SOURCE_FILE dmd, changelog/druntime.timerfd.dd)
+$(P
+Usually, a linux header that's included in C like `#include <sys/time.h>` gets its translation in `core/sys/linux/sys/time.d`.
+timerfd.d was an exception, not being put in the `sys` package.
+The module has been moved there, and the old module still exists as a deprecated module that publicly imports the new module.
+)
+
+---
+import core.sys.linux.timerfd; // deprecated
+import core.sys.linux.sys.timerfd; // corrective action
+---
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Library changes,
+
+$(LI $(LNAME2 gc_heap_mallocator,New `GCHeapMallocator` allocator in `std.experimental.allocator`)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/gc_heap_mallocator.dd)
+$(P
+$(REF_ALTTEXT `GCHeapMallocator`, GCHeapMallocator, std, experimental, allocator, gc_allocator)
+allocates from the D runtime's garbage-collected heap, but expects the memory to
+be released manually via `deallocate` instead of leaving it for the collector.
+The memory is still scanned for pointers by the GC.
+)
+
+$(P
+It offers the same allocation, reallocation and deallocation behaviour that
+$(REF_ALTTEXT `GCAllocator`, GCAllocator, std, experimental, allocator, gc_allocator)
+has today, under a name that says so explicitly.
+)
+
+-------
+import std.experimental.allocator.gc_allocator : GCHeapMallocator;
+
+auto buffer = GCHeapMallocator.instance.allocate(1024 * 1024 * 4);
+scope(exit) GCHeapMallocator.instance.deallocate(buffer);
+-------
+)
+
+$(LI $(LNAME2 getopt_callback_index,getopt: add callback handler with element index)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/getopt_callback_index.dd)
+$(P
+This adds a new callback handler variant to getopt.
+The handler is of the form $(D (string option, string value, size_t index)).
+The $(D index) is the position of the currently processed option
+in the argument array passed to getopt.
+This enables getopt to handle positional arguments.
+)
+)
+
+$(LI $(LNAME2 specialcasing,Language dependent casing rules are now implemented in std.uni)
+$(CHANGELOG_SOURCE_FILE phobos, changelog/specialcasing.dd)
+$(P
+The functions ``toLowerSpecial`` and ``toUpperSpecial`` provide case conversion when a language Lithuanian, Turkish or Azeri is provided to it that follows that languages rules.
+)
+
+$(P
+This solves the problem of trying to make the letter ``i`` upper case into the Turkish ``İ``.
+)
+)
+
+
+)
+
+$(BUGSTITLE_TEXT_BODY Dub changes,
+
+$(LI $(LNAME2 ldc-conf,Fixed `--conf` options not being passed to LDC's linker step.)
+$(CHANGELOG_SOURCE_FILE dub, changelog/ldc-conf.dd)
+$(P
+Packages can now use `--conf` as a dflag to modify LDC's linker
+behavior for a package.
+)
+
+$(P
+Example:
+)
+-------
+dflags "--conf=$KON_PACKAGE_DIR/55-wasm-wasi.conf" platform="wasm32"
+-------
+)
+
+$(LI $(LNAME2 ninja-generator,Added `dub generate ninja` command.)
+$(CHANGELOG_SOURCE_FILE dub, changelog/ninja-generator.dd)
+$(P
+Introduces a Ninja build backend for DUB. Running `dub generate ninja`
+produces a `build.ninja` file with compile and link rules for all source
+files in the project, using the correct flag syntax for DMD, LDC, and GDC.
+)
+)
+
+$(LI $(LNAME2 windows-response-file-escape,Fix Windows response file quoting for paths with trailing backslashes)
+$(CHANGELOG_SOURCE_FILE dub, changelog/windows-response-file-escape.dd)
+$(P
+When dub writes spaced compiler flags into `@` response files, a trailing
+directory separator before the closing quote could escape that quote under
+DMD/LDC response expansion. This broke ldc2 builds for users whose dub cache
+paths contain spaces (regression since import paths gained trailing slashes).
+)
+
+$(P
+Related: ldc-developers/ldc#5134
+)
+)
+
+
+)
+
+$(CHANGELOG_SEP_TEXT_BUGZILLA)
+
+$(BUGSTITLE_GITHUB DMD Compiler bug fixes,
+
+$(LI $(DMDGITHUB 17210): emplace uses wrong init value for enum)
+$(LI $(DMDGITHUB 17259): GC doesn't respect type alignments > 16 bytes)
+$(LI $(DMDGITHUB 17280): Safe left shift for checkedint)
+$(LI $(DMDGITHUB 17361): Windows header files: bcrypt and ncrypt)
+$(LI $(DMDGITHUB 17447): Missing const in IIDFromString$(LPAREN)$(RPAREN) in core.sys.windows.objbase.d)
+$(LI $(DMDGITHUB 17464): LUID is defined incorrectly in core.sys.windows.winnt)
+$(LI $(DMDGITHUB 17665): Error on debug specification mixin)
+$(LI $(DMDGITHUB 17751): q{} strings don't normalize CRLF to LF)
+$(LI $(DMDGITHUB 17758): Confusing error message when concatenating const$(LPAREN)char$(RPAREN)*)
+$(LI $(DMDGITHUB 17824): DDOC_CONSTRAINT macro not applied to constraints that aren't on functions)
+$(LI $(DMDGITHUB 17834): -transition=intpromote deprecation message confusing)
+$(LI $(DMDGITHUB 17906): try with recursion fails to catch, possibly TCO gone too far)
+$(LI $(DMDGITHUB 18251): Allow opApply with default parameters)
+$(LI $(DMDGITHUB 18274): misleading "cannot `goto` into `try` block" when skipping variable with destructor)
+$(LI $(DMDGITHUB 18337): Coverage always report 0000000 for inlined function)
+$(LI $(DMDGITHUB 18382): detect static array parts of array literal)
+$(LI $(DMDGITHUB 18479): -H and non-object object handled incorrectly)
+$(LI $(DMDGITHUB 18481): Wrong `escaping reference` error on returning static array)
+$(LI $(DMDGITHUB 18518): Add mixin template members to -X json output)
+$(LI $(DMDGITHUB 18567): Use of spawnlp and spawnl in 'link.c' does not account for paths/filenames with spaces.)
+$(LI $(DMDGITHUB 18705): Error Message when lvalue required doesn't mention mismatch)
+$(LI $(DMDGITHUB 18754): dmd should automatically add newline at end of ddoc file)
+$(LI $(DMDGITHUB 18763): Spellchecker should not suggest recursive definitions)
+$(LI $(DMDGITHUB 18857): Analysis improvement of compile-time array slices length)
+$(LI $(DMDGITHUB 18923): Not good error message with not compatible lambda template argument)
+$(LI $(DMDGITHUB 19075): Operator ^^= fails to compile for many numeric type combinations)
+$(LI $(DMDGITHUB 19346): Struct members missing from docs when the struct has a ditto ddoc comment)
+$(LI $(DMDGITHUB 19591): __gshared members of class not listed in debug info)
+$(LI $(DMDGITHUB 19807): Unimplemented interface method from abstract base class not detected)
+$(LI $(DMDGITHUB 19908): UTF8: Column numbers reported by -vcolumns don't respect multibyte characters)
+$(LI $(DMDGITHUB 19947): Color syntax highlight doesn't escape backticks in symbol names)
+$(LI $(DMDGITHUB 19974): Markdown trailing list breaks unittest example)
+$(LI $(DMDGITHUB 20078): Subclasses of C++ classes missing from generated header)
+$(LI $(DMDGITHUB 20108): wrong result of integer division in presence of assert within conditional operator expression)
+$(LI $(DMDGITHUB 20189): deeper recursive assertions fail to compile)
+$(LI $(DMDGITHUB 20242): Missing switch case fallthrough error when generating cases with `static foreach`)
+$(LI $(DMDGITHUB 20247): Can't strip shared qualifier from static array type)
+$(LI $(DMDGITHUB 20345): Params section in ddoc comments causes warnings with unnamed parameters)
+$(LI $(DMDGITHUB 20375): pragma$(LPAREN)inline, true$(RPAREN) is wrongly applied when having nested functions)
+$(LI $(DMDGITHUB 20528): pragma$(LPAREN)printf$(RPAREN) gives me the wrong fix)
+$(LI $(DMDGITHUB 20529): IFTI fails for variadic static array parameter with narrowing conversion on templated length)
+$(LI $(DMDGITHUB 20560): Bad error message for invalid code)
+$(LI $(DMDGITHUB 20811): Constructor flow analysis doesn't understand noreturn)
+$(LI $(DMDGITHUB 20842): Expanding an empty tuple erases side effects)
+$(LI $(DMDGITHUB 20875): Error: unknown when calling a type with too many arguments)
+$(LI $(DMDGITHUB 20997): Alias template parameter with type specialization rejects valid argument)
+$(LI $(DMDGITHUB 20998): Alias template parameter accepts mismatched argument)
+$(LI $(DMDGITHUB 21039): Zero-length static array with scalar initializer causes ICE)
+$(LI $(DMDGITHUB 21110): core.sys.linux.sys.timerfd header missing)
+$(LI $(DMDGITHUB 21194): Modifying global char[] initialized with dup of string literal causes segfault)
+$(LI $(DMDGITHUB 21197): typeof$(LPAREN)$(LPAREN)int[]$(RPAREN).front$(RPAREN) produces invalid suggestion)
+$(LI $(DMDGITHUB 21256): Empty hex string causes ICE)
+$(LI $(DMDGITHUB 21296): Cannot access member function through member AliasSeq)
+$(LI $(DMDGITHUB 21335): Named arguments don't work with IFTI)
+$(LI $(DMDGITHUB 21362): ICE: Implicit delegate to boolean conversion at compile-time)
+$(LI $(DMDGITHUB 21395): IRpcStubBuffer.Invoke has incorrect parameter signature)
+$(LI $(DMDGITHUB 21458): Header generation produces `.di` file with syntax errors)
+$(LI $(DMDGITHUB 21487): Wrong C++ header generation of `enum string` members)
+$(LI $(DMDGITHUB 21496): Wrong output of static foreach in the C/C++ headers)
+$(LI $(DMDGITHUB 21637): ICE in tuple comparison)
+$(LI $(DMDGITHUB 21638): AA operations don't honor left-to-right evaluation order)
+$(LI $(DMDGITHUB 21707): Segfault with `-vcg-ast` and foreach on a sequence)
+$(LI $(DMDGITHUB 21899): Bogus `matches conflicting symbols` error for exact same symbol)
+$(LI $(DMDGITHUB 22054): An attached thread that starts non-D-fibers can cause the GC to crash while scanning the stack)
+$(LI $(DMDGITHUB 22204): Mismatching mixin IDs cause link failure)
+$(LI $(DMDGITHUB 22269): cast$(LPAREN)T[1]$(RPAREN) succeeds for structs and static arrays, but fails for basic types)
+$(LI $(DMDGITHUB 22496): `__traits$(LPAREN)isDisabled$(RPAREN)` errors with unqualified variable symbol)
+$(LI $(DMDGITHUB 22584): unexpected deprecation on duplicate foreach vars)
+$(LI $(DMDGITHUB 22659): ICE when assigning to a slice cast to static array type)
+$(LI $(DMDGITHUB 22663): Bad codegen when using not operator on bool bitfield)
+$(LI $(DMDGITHUB 22671): GC alloc inside __ctfe blocks in @nogc functions?)
+$(LI $(DMDGITHUB 22709): Use of extern$(LPAREN)C++$(RPAREN) destructor is hidden)
+$(LI $(DMDGITHUB 22782): Spec: class ABI is wrong about order of interfaces vptr and class fields)
+$(LI $(DMDGITHUB 22813): Removing __monitor from Object leads to errors)
+$(LI $(DMDGITHUB 22815): Optional monitor causes global variables Object classes to ICE)
+$(LI $(DMDGITHUB 22819): extern$(LPAREN)C++$(RPAREN) opBinary error with getOverloads)
+$(LI $(DMDGITHUB 22842): [REG 2.112] template instance `core.internal.array.construction._d_arrayliteralTXTrace!$(LPAREN)UpaTester$(RPAREN)` error instantiating)
+$(LI $(DMDGITHUB 22860): DMD emits hardcoded calls to core.atomic)
+$(LI $(DMDGITHUB 22878): IFTI fails with named arguments after template variadic)
+$(LI $(DMDGITHUB 22892): importC: declspec$(LPAREN)align$(RPAREN) reduces alignment)
+$(LI $(DMDGITHUB 22902): Named arguments not cleared after re-ordering)
+$(LI $(DMDGITHUB 22942): Field destructor not called for extern$(LPAREN)C++$(RPAREN) class without explicit destructor)
+$(LI $(DMDGITHUB 22956): ICE calling function pointer with noreturn parameter)
+$(LI $(DMDGITHUB 22983): Named argument allowed in `int$(LPAREN)x: 3$(RPAREN)`)
+$(LI $(DMDGITHUB 23021): getOverloads indexed result .mangleof causes assertion failure)
+$(LI $(DMDGITHUB 23040): `-check=nullderef` should support `=safeonly`)
+$(LI $(DMDGITHUB 23084): Interpolated expression errors show 'filename-mixin-N' pseudo-location)
+$(LI $(DMDGITHUB 23117): @standalone static constructors get called multiple times when they're part of a cycle)
+$(LI $(DMDGITHUB 23166): Using importC for struct definitions generates reference to object.RTInfoImpl)
+$(LI $(DMDGITHUB 23185): ICE on final switch error at CTFE)
+$(LI $(DMDGITHUB 23192): sarif output doesn't escape JSON strings)
+$(LI $(DMDGITHUB 23202): Errors for mixin templates lose the last level of the instantiation stack)
+$(LI $(DMDGITHUB 23210): Disabled initializer in inner type error message $(LPAREN)Feature Request$(RPAREN))
+$(LI $(DMDGITHUB 23226): ImportC C23: single-argument _Static_assert$(LPAREN)expr$(RPAREN))
+$(LI $(DMDGITHUB 23233): Inconsistent application of `nosharedaccess`)
+$(LI $(DMDGITHUB 23241): Duplicate deprecation message when a deprecated enum member is accessed by name)
+$(LI $(DMDGITHUB 23270): compile time string value of NaN should be float.nan instead of nanF)
+$(LI $(DMDGITHUB 23271): inconsistency of uda syntax on modules)
+$(LI $(DMDGITHUB 23278): backend miscompiles float[2][2] literal return)
+$(LI $(DMDGITHUB 23326): Lambda function missing parens in generated D import file)
+$(LI $(DMDGITHUB 23332): Segfault in Master)
+$(LI $(DMDGITHUB 23392): CI suddenly broke with DMD nightly)
+$(LI $(DMDGITHUB 23431): Windows: libraries built with debug symbols often emit warnings about multiple objects of the same name)
+$(LI $(DMDGITHUB 23470): Unimplemented final interface methods)
+$(LI $(DMDGITHUB 23551): extern$(LPAREN)C++$(RPAREN) class has wrong vtbl pointer for interface)
+$(LI $(DMDGITHUB 23605): extern$(LPAREN)C++$(RPAREN) destructor uses wrong ABI on x86 in derived class)
+$(LI $(DMDGITHUB 23711): Internal compiler error array literal should have been lowered to a _d_arrayliteralTX template.)
+$(LI $(DMDGITHUB 23839): How to build DMD with PGO?)
+$(LI $(DMDGITHUB 23900): Spurious 'incompatible types' conversion error in 2D array intializer)
+$(LI $(DMDGITHUB 23908): ICE: `new` of an enum with an associative array base type)
+$(LI $(DMDGITHUB 23964): [REG 2.112] AA-index lvalue as opIndexAssign receiver causes SIGILL $(LPAREN)variant of #22567 not covered by #22622$(RPAREN))
+$(LI $(DMDGITHUB 24090): [REG 2.106.1][ICE] failed to detect static initialization of associative array)
+)
+$(BUGSTITLE_GITHUB Phobos bug fixes,
+
+$(LI $(PHOBOSGITHUB 9824): allocator.dispose does not work for array of qualified type)
+$(LI $(PHOBOSGITHUB 9840): taggedPointer accessors are not scope)
+$(LI $(PHOBOSGITHUB 10161): Replacement for std.utf.validate which does not throw)
+$(LI $(PHOBOSGITHUB 10568): to!string with inout enum argument fails to compile)
+$(LI $(PHOBOSGITHUB 10712): std.format rejects valid format string with position before width)
+$(LI $(PHOBOSGITHUB 10791): std.getopt: No support for empty string values with `--key=value` syntax)
+$(LI $(PHOBOSGITHUB 10849): nthPermutation has a problem)
+$(LI $(PHOBOSGITHUB 10902): std.getopt does not support order-sensitive options)
+$(LI $(PHOBOSGITHUB 10947): Formatting `BigInt` with `%x` inserts digit separators)
+$(LI $(PHOBOSGITHUB 10981): Wrong usage of the write$(LPAREN)$(RPAREN) system call in std.file.write$(LPAREN)$(RPAREN) and in std.file.copy$(LPAREN)$(RPAREN))
+$(LI $(PHOBOSGITHUB 10989): std.array calls non-existent Trace hook in version$(LPAREN)D_ProfileGC$(RPAREN))
+$(LI $(PHOBOSGITHUB 10993): std.range: switch fallthrough in only$(LPAREN)$(RPAREN) index assignment)
+$(LI $(PHOBOSGITHUB 11000): TZDIR without a trailing slash not handled properly by PosixTimeZone.getInstalledTZNames)
+$(LI $(PHOBOSGITHUB 11005): LockingTextWriter silently drops fputc/fputwc errors)
+$(LI $(PHOBOSGITHUB 11006): EINTR signal causes spurious failure in std.stdio writes)
+$(LI $(PHOBOSGITHUB 11017): [std.checkedint] Saturate claims to support bitwise operators, but doesn't)
+$(LI $(PHOBOSGITHUB 11025): Std.regex: backreferences do not match text with different casing)
+$(LI $(PHOBOSGITHUB 11027): std.bitmanip.peek does not work with ranges with slicing)
+$(LI $(PHOBOSGITHUB 11028): std.bitmanip.write does not work with ranges with slicing)
+$(LI $(PHOBOSGITHUB 11068): `dirEntries` is not `@safe` without `-preview=dip1000`)
+)
+)
+$(D_CONTRIBUTORS_HEADER 62)
+$(D_CONTRIBUTORS
+    $(D_CONTRIBUTOR 0-v-0)
+    $(D_CONTRIBUTOR AaritPanda-git)
+    $(D_CONTRIBUTOR Aayush Mainali)
+    $(D_CONTRIBUTOR AayushMainali-Github)
+    $(D_CONTRIBUTOR Abul Hossain Khan)
+    $(D_CONTRIBUTOR Adam Wilson)
+    $(D_CONTRIBUTOR apz28)
+    $(D_CONTRIBUTOR Atila Neves)
+    $(D_CONTRIBUTOR Bastiaan Veelo)
+    $(D_CONTRIBUTOR bscuron)
+    $(D_CONTRIBUTOR CHIKI Badreddine)
+    $(D_CONTRIBUTOR Claude Code)
+    $(D_CONTRIBUTOR dd)
+    $(D_CONTRIBUTOR Demetrius Kanios)
+    $(D_CONTRIBUTOR Denis Feklushkin)
+    $(D_CONTRIBUTOR Dennis Korpel)
+    $(D_CONTRIBUTOR eakmyr)
+    $(D_CONTRIBUTOR Eugene 'Vindex' Stulin)
+    $(D_CONTRIBUTOR Final Evilution)
+    $(D_CONTRIBUTOR Gaofei Qiu)
+    $(D_CONTRIBUTOR gulugulubing)
+    $(D_CONTRIBUTOR hariprakazz)
+    $(D_CONTRIBUTOR Harry Gillanders)
+    $(D_CONTRIBUTOR Hiroki Noda)
+    $(D_CONTRIBUTOR Iain Buclaw)
+    $(D_CONTRIBUTOR jamesragray)
+    $(D_CONTRIBUTOR Jonathan M Davis)
+    $(D_CONTRIBUTOR Jordi Sayol)
+    $(D_CONTRIBUTOR Kapendev)
+    $(D_CONTRIBUTOR limepoutine)
+    $(D_CONTRIBUTOR Martin Kinkelin)
+    $(D_CONTRIBUTOR Matheus C. França)
+    $(D_CONTRIBUTOR Me1m0th)
+    $(D_CONTRIBUTOR Mike Parker)
+    $(D_CONTRIBUTOR Mindy Batek)
+    $(D_CONTRIBUTOR Nicholas Wilson)
+    $(D_CONTRIBUTOR Nick Treleaven)
+    $(D_CONTRIBUTOR Nikhil Ludder)
+    $(D_CONTRIBUTOR Niyati Jain)
+    $(D_CONTRIBUTOR Per Nordlöw)
+    $(D_CONTRIBUTOR Petar Kirov)
+    $(D_CONTRIBUTOR Peter Alexander)
+    $(D_CONTRIBUTOR pgmtx)
+    $(D_CONTRIBUTOR Quirin F. Schroll)
+    $(D_CONTRIBUTOR Rainer Orth)
+    $(D_CONTRIBUTOR Rainer Schuetze)
+    $(D_CONTRIBUTOR Richard (Rikki) Andrew Cattermole)
+    $(D_CONTRIBUTOR Robert burner Schadek)
+    $(D_CONTRIBUTOR Sergii Kuzko)
+    $(D_CONTRIBUTOR SevenSidedVoxel)
+    $(D_CONTRIBUTOR Shivam)
+    $(D_CONTRIBUTOR Sidd-R)
+    $(D_CONTRIBUTOR Suyash Kumar)
+    $(D_CONTRIBUTOR suyashkumar102)
+    $(D_CONTRIBUTOR Tim Schendekehl)
+    $(D_CONTRIBUTOR Timon Gehr)
+    $(D_CONTRIBUTOR usefahmed07)
+    $(D_CONTRIBUTOR Walter Bright)
+    $(D_CONTRIBUTOR xoxorwr)
+    $(D_CONTRIBUTOR Yelninei)
+    $(D_CONTRIBUTOR Youssef Ahmed)
+    $(D_CONTRIBUTOR zkxjzmswkwl)
+)
+$(D_CONTRIBUTORS_FOOTER)
+$(CHANGELOG_NAV_INJECT)
+
+Macros:
+    VER=2.114.0
+    TITLE=Change Log: $(VER)
