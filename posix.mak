@@ -350,7 +350,7 @@ ARTICLE_FILES=$(addprefix articles/, index builtin code_coverage const-faq \
 		migrate-to-shared mixin pretod rationale regular-expression \
 		safed templates-revisited variadic-function-templates warnings \
 		cppcontracts template-comparison dll-linux \
-		RefReturnScope dll-windows \
+		RefReturnScope dll-windows ai-policy \
 	)
 
 # Website root filenames. They have extension .dd in the source
